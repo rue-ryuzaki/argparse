@@ -1,0 +1,888 @@
+#include "catch2/catch.hpp"
+
+#include "argparse.hpp"
+
+TEST_CASE("initization check", "[argument_parser]")
+{
+    auto parser = argparse::ArgumentParser();
+
+    SECTION("default values") {
+        REQUIRE(parser.prog() == "untitled");
+        REQUIRE(parser.usage() == "");
+        REQUIRE(parser.description() == "");
+        REQUIRE(parser.epilog() == "");
+        REQUIRE(parser.prefix_chars() == "-");
+        REQUIRE(parser.fromfile_prefix_chars() == "");
+        REQUIRE(parser.argument_default() == "");
+        REQUIRE(parser.add_help() == true);
+        REQUIRE(parser.allow_abbrev() == true);
+        REQUIRE(parser.exit_on_error() == true);
+    }
+
+    SECTION("change values") {
+        std::string prog = "prog";
+        std::string usage = "prog usage";
+        std::string description = "description";
+        std::string epilog = "epilog";
+        std::string prefix_chars = "-+/";
+        std::string fromfile_prefix_chars = "@";
+        std::string argument_default = "42";
+        bool add_help = false;
+        bool allow_abbrev = false;
+        bool exit_on_error = false;
+
+        parser.prog(prog)
+                .usage(usage)
+                .description(description)
+                .epilog(epilog)
+                .prefix_chars(prefix_chars)
+                .fromfile_prefix_chars(fromfile_prefix_chars)
+                .argument_default(argument_default)
+                .add_help(add_help)
+                .allow_abbrev(allow_abbrev)
+                .exit_on_error(exit_on_error);
+
+        REQUIRE(parser.prog() == prog);
+        REQUIRE(parser.usage() == usage);
+        REQUIRE(parser.description() == description);
+        REQUIRE(parser.epilog() == epilog);
+        REQUIRE(parser.prefix_chars() == prefix_chars);
+        REQUIRE(parser.fromfile_prefix_chars() == fromfile_prefix_chars);
+        REQUIRE(parser.argument_default() == argument_default);
+        REQUIRE(parser.add_help() == add_help);
+        REQUIRE(parser.allow_abbrev() == allow_abbrev);
+        REQUIRE(parser.exit_on_error() == exit_on_error);
+
+        // check properties, which can be cleared
+        parser.usage("")
+                .description("")
+                .epilog("")
+                .fromfile_prefix_chars("")
+                .argument_default("");
+
+        REQUIRE_FALSE(parser.usage() == usage);
+        REQUIRE_FALSE(parser.description() == description);
+        REQUIRE_FALSE(parser.epilog() == epilog);
+        REQUIRE_FALSE(parser.fromfile_prefix_chars() == fromfile_prefix_chars);
+        REQUIRE_FALSE(parser.argument_default() == argument_default);
+
+        // check properties, which can't be cleared
+        parser.prog("").prefix_chars("");
+
+        REQUIRE(parser.prog() == prog);
+        REQUIRE(parser.prefix_chars() == prefix_chars);
+    }
+}
+
+TEST_CASE("optional arguments", "[argument_parser]")
+{
+    std::string global_default = "global";
+    std::string local_default = "local";
+
+    auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+    parser.add_argument({ "-f", "--foo" });
+    parser.add_argument({ "-b", "--bar" }).default_value(local_default);
+
+    std::string foo = "foo";
+    std::string bar = "bar";
+
+    SECTION("no arguments") {
+        auto args = parser.parse_args({ });
+        REQUIRE(args.get<std::string>("-f") == global_default);
+        REQUIRE(args.get<std::string>("-b") == local_default);
+        REQUIRE(args.get<std::string>("--foo") == global_default);
+        REQUIRE(args.get<std::string>("--bar") == local_default);
+    }
+
+    SECTION("one argument") {
+        auto args1 = parser.parse_args({ "-f", foo });
+        REQUIRE(args1.get<std::string>("-f") == foo);
+        REQUIRE(args1.get<std::string>("-b") == local_default);
+        REQUIRE(args1.get<std::string>("--foo") == foo);
+        REQUIRE(args1.get<std::string>("--bar") == local_default);
+
+        auto args2 = parser.parse_args({ "--bar", bar });
+        REQUIRE(args2.get<std::string>("-f") == global_default);
+        REQUIRE(args2.get<std::string>("-b") == bar);
+        REQUIRE(args2.get<std::string>("--foo") == global_default);
+        REQUIRE(args2.get<std::string>("--bar") == bar);
+    }
+
+    SECTION("both arguments") {
+        auto args = parser.parse_args({ "-f", foo, "--bar", bar });
+        REQUIRE(args.get<std::string>("-f") == foo);
+        REQUIRE(args.get<std::string>("-b") == bar);
+        REQUIRE(args.get<std::string>("--foo") == foo);
+        REQUIRE(args.get<std::string>("--bar") == bar);
+    }
+
+    SECTION("use equal '='") {
+        auto args = parser.parse_args({ "-f=" + foo, "--bar=" + bar });
+        REQUIRE(args.get<std::string>("-f") == foo);
+        REQUIRE(args.get<std::string>("-b") == bar);
+        REQUIRE(args.get<std::string>("--foo") == foo);
+        REQUIRE(args.get<std::string>("--bar") == bar);
+    }
+
+    SECTION("arguments override") {
+        auto args = parser.parse_args({ "-f", foo, "--bar", bar, "--foo", bar, "-b", foo });
+        REQUIRE(args.get<std::string>("-f") == bar);
+        REQUIRE(args.get<std::string>("-b") == foo);
+        REQUIRE(args.get<std::string>("--foo") == bar);
+        REQUIRE(args.get<std::string>("--bar") == foo);
+    }
+
+    SECTION("allow_abbrev=true") {
+        parser.allow_abbrev(true);
+
+        auto args = parser.parse_args({ "--f", foo, "--ba", bar });
+        REQUIRE(args.get<std::string>("-f") == foo);
+        REQUIRE(args.get<std::string>("-b") == bar);
+        REQUIRE(args.get<std::string>("--foo") == foo);
+        REQUIRE(args.get<std::string>("--bar") == bar);
+    }
+
+    SECTION("allow_abbrev=false") {
+        parser.allow_abbrev(false);
+
+        REQUIRE_THROWS(parser.parse_args({ "--", foo }));
+        REQUIRE_THROWS(parser.parse_args({ "--f", foo }));
+        REQUIRE_THROWS(parser.parse_args({ "--fo", foo }));
+        REQUIRE_THROWS(parser.parse_args({ "--b", bar }));
+        REQUIRE_THROWS(parser.parse_args({ "--ba", bar }));
+    }
+}
+
+TEST_CASE("positional arguments", "[argument_parser]")
+{
+    std::string global_default = "global";
+    std::string local_default = "local";
+
+    auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+    parser.add_argument({ "foo" });
+    parser.add_argument({ "bar" }).default_value(local_default);
+
+    std::string foo = "foo";
+    std::string bar = "bar";
+
+    SECTION("no arguments") {
+        REQUIRE_THROWS(parser.parse_args({ }));
+    }
+
+    SECTION("one argument") {
+        REQUIRE_THROWS(parser.parse_args({ foo }));
+        REQUIRE_THROWS(parser.parse_args({ bar }));
+    }
+
+    SECTION("both arguments") {
+        auto args1 = parser.parse_args({ foo, bar });
+        REQUIRE(args1.get<std::string>("foo") == foo);
+        REQUIRE(args1.get<std::string>("bar") == bar);
+
+        auto args2 = parser.parse_args({ bar, foo });
+        REQUIRE(args2.get<std::string>("foo") == bar);
+        REQUIRE(args2.get<std::string>("bar") == foo);
+    }
+
+    SECTION("excess arguments") {
+        REQUIRE_THROWS(parser.parse_args({ foo, bar, foo + bar }));
+        REQUIRE_THROWS(parser.parse_args({ foo, bar, foo, bar }));
+    }
+}
+
+TEST_CASE("optional and positional arguments", "[argument_parser]")
+{
+    std::string global_default = "global";
+    std::string local_default = "local";
+
+    auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+    parser.add_argument({ "-f" });
+    parser.add_argument({ "-b" }).default_value(local_default);
+    parser.add_argument({ "foo" });
+    parser.add_argument({ "bar" }).default_value(local_default);
+
+    std::string foo = "foo";
+    std::string bar = "bar";
+
+    SECTION("no positional arguments") {
+        REQUIRE_THROWS(parser.parse_args({ }));
+        REQUIRE_THROWS(parser.parse_args({ "-f", foo }));
+        REQUIRE_THROWS(parser.parse_args({ "-b", bar, "-f", foo }));
+    }
+
+    SECTION("with positional arguments") {
+        auto args1 = parser.parse_args({ foo, bar });
+        REQUIRE(args1.get<std::string>("-f") == global_default);
+        REQUIRE(args1.get<std::string>("-b") == local_default);
+        REQUIRE(args1.get<std::string>("foo") == foo);
+        REQUIRE(args1.get<std::string>("bar") == bar);
+
+        auto args2 = parser.parse_args({ foo, "-f", foo, bar, "-b", bar });
+        REQUIRE(args2.get<std::string>("-f") == foo);
+        REQUIRE(args2.get<std::string>("-b") == bar);
+        REQUIRE(args2.get<std::string>("foo") == foo);
+        REQUIRE(args2.get<std::string>("bar") == bar);
+    }
+}
+
+TEST_CASE("argument choices", "[argument]")
+{
+    std::string global_default = "global";
+    std::string local_default = "local";
+
+    auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+    parser.add_argument({ "--foo" }).choices({ "foo1", "foo2", "foo3" });
+    parser.add_argument({ "--bar" }).choices({ "bar1", "bar2", "bar3" }).default_value(local_default);
+    parser.add_argument({ "foobar" }).choices({ "foobar1", "foobar2", "foobar3" });
+
+    REQUIRE_THROWS(parser.parse_args({ "foo" }));
+    REQUIRE_THROWS(parser.parse_args({ "foobar" }));
+    REQUIRE_THROWS(parser.parse_args({ "foobar1", "--foo", "bar1" }));
+    REQUIRE_THROWS(parser.parse_args({ "foobar2", "--foo", "bar1", "--bar=bar1" }));
+
+    auto args1 = parser.parse_args({ "foobar1" });
+    REQUIRE(args1.get<std::string>("--foo") == global_default);
+    REQUIRE(args1.get<std::string>("--bar") == local_default);
+    REQUIRE(args1.get<std::string>("foobar") == "foobar1");
+
+    auto args2 = parser.parse_args({ "--foo=foo3", "foobar3" });
+    REQUIRE(args2.get<std::string>("--foo") == "foo3");
+    REQUIRE(args2.get<std::string>("--bar") == local_default);
+    REQUIRE(args2.get<std::string>("foobar") == "foobar3");
+}
+
+TEST_CASE("argument dest", "[argument]")
+{
+    std::string global_default = "global";
+    std::string local_default = "local";
+
+    std::string dest_foo = "foo_dest";
+    std::string dest_bar = "bar_dest";
+    std::string dest_foobar = "foobar_dest";
+
+    auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+    parser.add_argument({ "--foo" }).dest(dest_foo);
+    parser.add_argument({ "--bar" }).dest(dest_bar).default_value(local_default);
+    parser.add_argument({ "foobar" }).dest(dest_foobar);
+
+    auto args1 = parser.parse_args({ "foobar" });
+    REQUIRE_THROWS(args1.get<std::string>("--foo"));
+    REQUIRE_THROWS(args1.get<std::string>("--bar"));
+    REQUIRE_THROWS(args1.get<std::string>("foobar"));
+
+    REQUIRE(args1.get<std::string>(dest_foo) == global_default);
+    REQUIRE(args1.get<std::string>(dest_bar) == local_default);
+    REQUIRE(args1.get<std::string>(dest_foobar) == "foobar");
+
+    auto args2 = parser.parse_args({ "--foo=foo", "foobar" });
+    REQUIRE(args2.get<std::string>(dest_foo) == "foo");
+    REQUIRE(args2.get<std::string>(dest_bar) == local_default);
+    REQUIRE(args2.get<std::string>(dest_foobar) == "foobar");
+}
+
+TEST_CASE("argument actions", "[argument]")
+{
+    // TODO : with argument_default (store_true, store_false, count) actions are invalid in python
+    std::string const_value = "const";
+    std::string new_value = "new";
+
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("optional arguments") {
+        parser.add_argument({ "--store" }).action(argparse::store);
+        parser.add_argument({ "--store_const" }).action(argparse::store_const).const_value(const_value);
+        parser.add_argument({ "--store_true" }).action(argparse::store_true);
+        parser.add_argument({ "--store_false" }).action(argparse::store_false);
+        parser.add_argument({ "--append" }).action(argparse::append);
+        parser.add_argument({ "--append_const" }).action(argparse::append_const).const_value(const_value);
+        parser.add_argument({ "--count" }).action(argparse::count);
+        parser.add_argument({ "--extend" }).action(argparse::extend);
+
+        // no args
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("--store") == "");
+        REQUIRE(args1.get<std::string>("--store_const") == "");
+        REQUIRE(args1.get<bool>("--store_true") == false);
+        REQUIRE(args1.get<bool>("--store_false") == true);
+        REQUIRE(args1.get<std::string>("--append") == "");
+        REQUIRE(args1.get<std::string>("--append_const") == "");
+        REQUIRE(args1.get<size_t>("--count") == 0);
+        REQUIRE(args1.get<std::string>("--extend") == "");
+
+        // all args
+        auto args2 = parser.parse_args({ "--store", new_value, "--store_const", "--store_true", "--store_false", "--append", new_value, "--append_const", "--count", "--extend", new_value });
+        REQUIRE(args2.get<std::string>("--store") == new_value);
+        REQUIRE(args2.get<std::string>("--store_const") == const_value);
+        REQUIRE(args2.get<bool>("--store_true") == true);
+        REQUIRE(args2.get<bool>("--store_false") == false);
+        REQUIRE(args2.get<std::string>("--append") == new_value); // TODO : return array value
+        REQUIRE(args2.get<std::string>("--append_const") == const_value); // TODO : return array value
+        REQUIRE(args2.get<size_t>("--count") == 1);
+        REQUIRE(args2.get<std::string>("--extend") == new_value); // TODO : return array value
+    }
+
+    SECTION("positional arguments") {
+        parser.add_argument({ "store" }).action(argparse::store);
+        parser.add_argument({ "store_const" }).action(argparse::store_const).const_value(const_value);
+        parser.add_argument({ "store_true" }).action(argparse::store_true);
+        parser.add_argument({ "store_false" }).action(argparse::store_false);
+        parser.add_argument({ "append" }).action(argparse::append);
+        parser.add_argument({ "append_const" }).action(argparse::append_const).const_value(const_value);
+        parser.add_argument({ "count" }).action(argparse::count);
+        parser.add_argument({ "extend" }).action(argparse::extend);
+
+        REQUIRE_THROWS(parser.parse_args({ }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
+
+        auto args = parser.parse_args({ new_value, new_value, new_value });
+        REQUIRE(args.get<std::string>("store") == new_value);
+        REQUIRE(args.get<std::string>("store_const") == const_value);
+        REQUIRE(args.get<bool>("store_true") == true);
+        REQUIRE(args.get<bool>("store_false") == false);
+        REQUIRE(args.get<std::string>("append") == new_value); // TODO : return array value
+        REQUIRE(args.get<std::string>("append_const") == const_value); // TODO : return array value
+        REQUIRE(args.get<size_t>("count") == 1);
+        REQUIRE(args.get<std::string>("extend") == new_value); // TODO : return array value
+    }
+}
+
+TEST_CASE("argument nargs", "[argument]")
+{
+    // TODO : with argument_default (store_true, store_false, count) actions are invalid in python
+    std::string default_value = "local";
+    std::string const_value = "const";
+    std::string new_value = "new";
+
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("nargs break actions") {
+        REQUIRE_THROWS(parser.add_argument({ "--store_const?" }).action(argparse::store_const).const_value(const_value).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "--store_const*" }).action(argparse::store_const).const_value(const_value).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "--store_const+" }).action(argparse::store_const).const_value(const_value).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "--store_constN" }).action(argparse::store_const).const_value(const_value).nargs(2));
+        REQUIRE_THROWS(parser.add_argument({ "--store_true?" }).action(argparse::store_true).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "--store_true*" }).action(argparse::store_true).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "--store_true+" }).action(argparse::store_true).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "--store_trueN" }).action(argparse::store_true).nargs(2));
+        REQUIRE_THROWS(parser.add_argument({ "--store_false?" }).action(argparse::store_false).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "--store_false*" }).action(argparse::store_false).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "--store_false+" }).action(argparse::store_false).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "--store_falseN" }).action(argparse::store_false).nargs(2));
+        REQUIRE_THROWS(parser.add_argument({ "--append_const?" }).action(argparse::append_const).const_value(const_value).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "--append_const*" }).action(argparse::append_const).const_value(const_value).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "--append_const+" }).action(argparse::append_const).const_value(const_value).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "--append_constN" }).action(argparse::append_const).const_value(const_value).nargs(2));
+        REQUIRE_THROWS(parser.add_argument({ "--count?" }).action(argparse::count).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "--count*" }).action(argparse::count).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "--count+" }).action(argparse::count).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "--countN" }).action(argparse::count).nargs(2));
+
+        REQUIRE_THROWS(parser.add_argument({ "store_const?" }).action(argparse::store_const).const_value(const_value).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "store_const*" }).action(argparse::store_const).const_value(const_value).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "store_const+" }).action(argparse::store_const).const_value(const_value).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "store_constN" }).action(argparse::store_const).const_value(const_value).nargs(2));
+        REQUIRE_THROWS(parser.add_argument({ "store_true?" }).action(argparse::store_true).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "store_true*" }).action(argparse::store_true).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "store_true+" }).action(argparse::store_true).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "store_trueN" }).action(argparse::store_true).nargs(2));
+        REQUIRE_THROWS(parser.add_argument({ "store_false?" }).action(argparse::store_false).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "store_false*" }).action(argparse::store_false).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "store_false+" }).action(argparse::store_false).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "store_falseN" }).action(argparse::store_false).nargs(2));
+        REQUIRE_THROWS(parser.add_argument({ "append_const?" }).action(argparse::append_const).const_value(const_value).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "append_const*" }).action(argparse::append_const).const_value(const_value).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "append_const+" }).action(argparse::append_const).const_value(const_value).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "append_constN" }).action(argparse::append_const).const_value(const_value).nargs(2));
+        REQUIRE_THROWS(parser.add_argument({ "count?" }).action(argparse::count).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument({ "count*" }).action(argparse::count).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument({ "count+" }).action(argparse::count).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument({ "countN" }).action(argparse::count).nargs(2));
+    }
+
+    SECTION("nargs ? optional") {
+        parser.add_argument({ "--store" }).action(argparse::store).nargs("?").default_value(default_value);
+        parser.add_argument({ "--append" }).action(argparse::append).nargs("?"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "--extend" }).action(argparse::extend).nargs("?"); // TODO: default value are invalid in python if flag used
+
+        // no args
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("--store") == default_value);
+        REQUIRE(args1.get<std::string>("--append") == "");
+        REQUIRE(args1.get<std::string>("--extend") == "");
+
+        // all args
+        auto args2 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value });
+        REQUIRE(args2.get<std::string>("--store") == new_value);
+        REQUIRE(args2.get<std::string>("--append") == new_value); // TODO : return array value
+        REQUIRE(args2.get<std::string>("--extend") == new_value); // TODO : return array value
+
+        // override args
+        auto args3 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value,
+                                         "--store", new_value, new_value, "--append", new_value, new_value, "--extend", new_value, new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 2);
+        REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 3);
+        REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
+    }
+
+    SECTION("nargs ? positional") {
+        parser.add_argument({ "store" }).action(argparse::store).nargs("?").default_value(default_value);
+        parser.add_argument({ "append" }).action(argparse::append).nargs("?");
+//        parser.add_argument({ "extend" }).action(argparse::extend).nargs("?"); // TODO : invalid in python without arguments
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("store") == default_value);
+        REQUIRE(args1.get<std::string>("append") == ""); // TODO : return array value
+
+        auto args2 = parser.parse_args({ new_value });
+        REQUIRE(args2.get<std::string>("store") == new_value);
+        REQUIRE(args2.get<std::string>("append") == ""); // TODO : return array value
+
+        auto args3 = parser.parse_args({ new_value, new_value });
+        REQUIRE(args3.get<std::string>("store") == new_value);
+        REQUIRE(args3.get<std::string>("append") == new_value); // TODO : return array value
+
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value }));
+    }
+
+    SECTION("nargs * optional") {
+        parser.add_argument({ "--store" }).action(argparse::store).nargs("*").default_value(default_value);
+        parser.add_argument({ "--append" }).action(argparse::append).nargs("*"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "--extend" }).action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
+
+        // no args
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("--store") == default_value);
+        REQUIRE(args1.get<std::string>("--append") == "");
+        REQUIRE(args1.get<std::string>("--extend") == "");
+
+        // all args
+        auto args2 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value });
+        REQUIRE(args2.get<std::string>("--store") == new_value);
+        REQUIRE(args2.get<std::string>("--append") == new_value); // TODO : return array value
+        REQUIRE(args2.get<std::string>("--extend") == new_value); // TODO : return array value
+
+        // override args
+        auto args3 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value,
+                                         "--store", new_value, new_value, "--append", new_value, new_value, "--extend", new_value, new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 2);
+        REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 3);
+        REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
+    }
+
+    SECTION("nargs * positional") {
+        parser.add_argument({ "store" }).action(argparse::store).nargs("*").default_value(default_value);
+        parser.add_argument({ "append" }).action(argparse::append).nargs("*"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "extend" }).action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("store") == default_value);
+        REQUIRE(args1.get<std::string>("append") == "");
+        REQUIRE(args1.get<std::string>("extend") == "");
+        REQUIRE(args1.get<std::vector<std::string> >("store").size() == 1);
+        REQUIRE(args1.get<std::vector<std::string> >("append").size() == 0);
+        REQUIRE(args1.get<std::vector<std::string> >("extend").size() == 0);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value, new_value });
+        REQUIRE(args2.get<std::vector<std::string> >("store").size() == 4);
+        REQUIRE(args2.get<std::vector<std::string> >("append").size() == 0);
+        REQUIRE(args2.get<std::vector<std::string> >("extend").size() == 0);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("store").size() == 5);
+        REQUIRE(args3.get<std::vector<std::string> >("append").size() == 0);
+        REQUIRE(args3.get<std::vector<std::string> >("extend").size() == 0);
+    }
+
+    SECTION("nargs * positional [2]") {
+        parser.add_argument({ "append" }).action(argparse::append).nargs("*"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "extend" }).action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "store" }).action(argparse::store).nargs("*").default_value(default_value);
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("store") == default_value);
+        REQUIRE(args1.get<std::string>("append") == "");
+        REQUIRE(args1.get<std::string>("extend") == "");
+        REQUIRE(args1.get<std::vector<std::string> >("store").size() == 1);
+        REQUIRE(args1.get<std::vector<std::string> >("append").size() == 0);
+        REQUIRE(args1.get<std::vector<std::string> >("extend").size() == 0);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value, new_value });
+        REQUIRE(args2.get<std::string>("store") == default_value);
+        REQUIRE(args2.get<std::vector<std::string> >("store").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("append").size() == 4);
+        REQUIRE(args2.get<std::vector<std::string> >("extend").size() == 0);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::string>("store") == default_value);
+        REQUIRE(args3.get<std::vector<std::string> >("store").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("append").size() == 5);
+        REQUIRE(args3.get<std::vector<std::string> >("extend").size() == 0);
+    }
+
+    SECTION("nargs + optional") {
+        parser.add_argument({ "--store" }).action(argparse::store).nargs("+").default_value(default_value);
+        parser.add_argument({ "--append" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "--extend" }).action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
+
+        // no args
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("--store") == default_value);
+        REQUIRE(args1.get<std::string>("--append") == "");
+        REQUIRE(args1.get<std::string>("--extend") == "");
+
+        // all args
+        auto args2 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value });
+        REQUIRE(args2.get<std::string>("--store") == new_value);
+        REQUIRE(args2.get<std::string>("--append") == new_value); // TODO : return array value
+        REQUIRE(args2.get<std::string>("--extend") == new_value); // TODO : return array value
+
+        // override args
+        auto args3 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value,
+                                         "--store", new_value, new_value, "--append", new_value, new_value, "--extend", new_value, new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 2);
+        REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 3);
+        REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
+    }
+
+    SECTION("nargs + positional") {
+        parser.add_argument({ "store" }).action(argparse::store).nargs("+").default_value(default_value);
+        parser.add_argument({ "append" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "extend" }).action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
+
+        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
+
+        auto args1 = parser.parse_args({ new_value, new_value, new_value });
+        REQUIRE(args1.get<std::string>("store") == new_value);
+        REQUIRE(args1.get<std::string>("append") == new_value);
+        REQUIRE(args1.get<std::string>("extend") == new_value);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value, new_value });
+        REQUIRE(args2.get<std::vector<std::string> >("store").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("append").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("extend").size() == 1);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("store").size() == 3);
+        REQUIRE(args3.get<std::vector<std::string> >("append").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("extend").size() == 1);
+    }
+
+    SECTION("nargs + positional [2]") {
+        parser.add_argument({ "append" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "extend" }).action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "store" }).action(argparse::store).nargs("+").default_value(default_value);
+
+        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
+
+        auto args1 = parser.parse_args({ new_value, new_value, new_value });
+        REQUIRE(args1.get<std::string>("append") == new_value);
+        REQUIRE(args1.get<std::string>("extend") == new_value);
+        REQUIRE(args1.get<std::string>("store") == new_value);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value, new_value });
+        REQUIRE(args2.get<std::vector<std::string> >("append").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("extend").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("store").size() == 1);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("append").size() == 3);
+        REQUIRE(args3.get<std::vector<std::string> >("extend").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("store").size() == 1);
+    }
+
+    SECTION("nargs mixed positional") {
+        parser.add_argument({ "append" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "extend" }).action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "store" }).action(argparse::store).nargs("+").default_value(default_value);
+
+        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+
+        auto args1 = parser.parse_args({ new_value, new_value });
+        REQUIRE(args1.get<std::string>("append") == new_value);
+        REQUIRE(args1.get<std::string>("extend") == "");
+        REQUIRE(args1.get<std::string>("store") == new_value);
+        REQUIRE(args1.get<std::vector<std::string> >("append").size() == 1);
+        REQUIRE(args1.get<std::vector<std::string> >("extend").size() == 0);
+        REQUIRE(args1.get<std::vector<std::string> >("store").size() == 1);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value });
+        REQUIRE(args2.get<std::vector<std::string> >("append").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("extend").size() == 0);
+        REQUIRE(args2.get<std::vector<std::string> >("store").size() == 1);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("append").size() == 3);
+        REQUIRE(args3.get<std::vector<std::string> >("extend").size() == 0);
+        REQUIRE(args3.get<std::vector<std::string> >("store").size() == 1);
+    }
+
+    SECTION("nargs mixed positional [2]") {
+        parser.add_argument({ "append1" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "append2" }).action(argparse::append).nargs("?"); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "store" }).action(argparse::store).nargs("+").default_value(default_value);
+
+        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+
+        auto args1 = parser.parse_args({ new_value, new_value });
+        REQUIRE(args1.get<std::string>("append1") == new_value);
+        REQUIRE(args1.get<std::string>("append2") == "");
+        REQUIRE(args1.get<std::string>("store") == new_value);
+        REQUIRE(args1.get<std::vector<std::string> >("append1").size() == 1);
+        REQUIRE(args1.get<std::vector<std::string> >("append2").size() == 0);
+        REQUIRE(args1.get<std::vector<std::string> >("store").size() == 1);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value });
+        REQUIRE(args2.get<std::vector<std::string> >("append1").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("append2").size() == 0);
+        REQUIRE(args2.get<std::vector<std::string> >("store").size() == 1);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("append1").size() == 3);
+        REQUIRE(args3.get<std::vector<std::string> >("append2").size() == 0);
+        REQUIRE(args3.get<std::vector<std::string> >("store").size() == 1);
+    }
+
+    SECTION("nargs mixed positional [3]") {
+        parser.add_argument({ "store1" }).action(argparse::store).nargs("*").default_value(default_value);
+        parser.add_argument({ "store2" }).action(argparse::store).nargs("?").default_value(default_value);
+        parser.add_argument({ "store3" }).action(argparse::store).nargs("+").default_value(default_value);
+        parser.add_argument({ "store4" }).action(argparse::store).nargs("*").default_value(default_value);
+        parser.add_argument({ "store5" }).action(argparse::store).nargs("?").default_value(default_value);
+        parser.add_argument({ "store6" }).action(argparse::store).nargs("+").default_value(default_value);
+
+        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+
+        auto args1 = parser.parse_args({ new_value, new_value });
+        REQUIRE(args1.get<std::string>("store1") == default_value);
+        REQUIRE(args1.get<std::string>("store2") == default_value);
+        REQUIRE(args1.get<std::string>("store3") == new_value);
+        REQUIRE(args1.get<std::string>("store4") == default_value);
+        REQUIRE(args1.get<std::string>("store5") == default_value);
+        REQUIRE(args1.get<std::string>("store6") == new_value);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value });
+        REQUIRE(args2.get<std::string>("store1") == new_value);
+        REQUIRE(args2.get<std::string>("store2") == default_value);
+        REQUIRE(args2.get<std::string>("store3") == new_value);
+        REQUIRE(args2.get<std::string>("store4") == default_value);
+        REQUIRE(args2.get<std::string>("store5") == default_value);
+        REQUIRE(args2.get<std::string>("store6") == new_value);
+        REQUIRE(args2.get<std::vector<std::string> >("store1").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("store3").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("store6").size() == 1);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::string>("store2") == default_value);
+        REQUIRE(args3.get<std::string>("store3") == new_value);
+        REQUIRE(args3.get<std::string>("store4") == default_value);
+        REQUIRE(args3.get<std::string>("store5") == default_value);
+        REQUIRE(args3.get<std::string>("store6") == new_value);
+        REQUIRE(args3.get<std::vector<std::string> >("store1").size() == 2);
+        REQUIRE(args3.get<std::vector<std::string> >("store3").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("store6").size() == 1);
+    }
+
+    SECTION("nargs mixed positional [4]") {
+        parser.add_argument({ "store1" }).action(argparse::store).nargs("+").default_value(default_value);
+        parser.add_argument({ "store2" }).action(argparse::store).nargs("?").default_value(default_value);
+        parser.add_argument({ "store3" }).action(argparse::store).nargs("*").default_value(default_value);
+        parser.add_argument({ "store4" }).action(argparse::store).nargs("+").default_value(default_value);
+        parser.add_argument({ "store5" }).action(argparse::store).nargs("?").default_value(default_value);
+        parser.add_argument({ "store6" }).action(argparse::store).nargs("*").default_value(default_value);
+
+        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+
+        auto args1 = parser.parse_args({ new_value, new_value });
+        REQUIRE(args1.get<std::string>("store1") == new_value);
+        REQUIRE(args1.get<std::string>("store2") == default_value);
+        REQUIRE(args1.get<std::string>("store3") == default_value);
+        REQUIRE(args1.get<std::string>("store4") == new_value);
+        REQUIRE(args1.get<std::string>("store5") == default_value);
+        REQUIRE(args1.get<std::string>("store6") == default_value);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value });
+        REQUIRE(args2.get<std::string>("store2") == default_value);
+        REQUIRE(args2.get<std::string>("store3") == default_value);
+        REQUIRE(args2.get<std::string>("store4") == new_value);
+        REQUIRE(args2.get<std::string>("store5") == default_value);
+        REQUIRE(args2.get<std::string>("store6") == default_value);
+        REQUIRE(args2.get<std::vector<std::string> >("store1").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("store4").size() == 1);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::string>("store2") == default_value);
+        REQUIRE(args3.get<std::string>("store3") == default_value);
+        REQUIRE(args3.get<std::string>("store4") == new_value);
+        REQUIRE(args3.get<std::string>("store5") == default_value);
+        REQUIRE(args3.get<std::string>("store6") == default_value);
+        REQUIRE(args3.get<std::vector<std::string> >("store1").size() == 3);
+        REQUIRE(args3.get<std::vector<std::string> >("store4").size() == 1);
+    }
+
+    SECTION("nargs mixed positional [5]") {
+        parser.add_argument({ "store1" }).action(argparse::store).nargs("+").default_value(default_value);
+        parser.add_argument({ "store2" }).action(argparse::store).nargs(2).default_value(default_value);
+        parser.add_argument({ "store3" }).action(argparse::store).nargs("*").default_value(default_value);
+        parser.add_argument({ "store4" }).action(argparse::store).nargs("+").default_value(default_value);
+        parser.add_argument({ "store5" }).action(argparse::store).nargs(2).default_value(default_value);
+        parser.add_argument({ "store6" }).action(argparse::store).nargs("*").default_value(default_value);
+
+        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value, new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value, new_value, new_value }));
+
+        auto args1 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args1.get<std::string>("store1") == new_value);
+        REQUIRE(args1.get<std::string>("store3") == default_value);
+        REQUIRE(args1.get<std::string>("store4") == new_value);
+        REQUIRE(args1.get<std::string>("store6") == default_value);
+        REQUIRE(args1.get<std::vector<std::string> >("store1").size() == 1);
+        REQUIRE(args1.get<std::vector<std::string> >("store2").size() == 2);
+        REQUIRE(args1.get<std::vector<std::string> >("store4").size() == 1);
+        REQUIRE(args1.get<std::vector<std::string> >("store5").size() == 2);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args2.get<std::string>("store3") == default_value);
+        REQUIRE(args2.get<std::string>("store4") == new_value);
+        REQUIRE(args2.get<std::string>("store6") == default_value);
+        REQUIRE(args2.get<std::vector<std::string> >("store1").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("store2").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("store4").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("store5").size() == 2);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::string>("store3") == default_value);
+        REQUIRE(args3.get<std::string>("store4") == new_value);
+        REQUIRE(args3.get<std::string>("store6") == default_value);
+        REQUIRE(args3.get<std::vector<std::string> >("store1").size() == 3);
+        REQUIRE(args3.get<std::vector<std::string> >("store2").size() == 2);
+        REQUIRE(args3.get<std::vector<std::string> >("store4").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("store5").size() == 2);
+    }
+
+    SECTION("nargs mixed positional [6]") {
+        parser.add_argument({ "store1" }).action(argparse::store).nargs("*").default_value(default_value);
+        parser.add_argument({ "store2" }).action(argparse::store).nargs(2).default_value(default_value);
+        parser.add_argument({ "store3" }).action(argparse::store).nargs("+").default_value(default_value);
+        parser.add_argument({ "store4" }).action(argparse::store).nargs("*").default_value(default_value);
+        parser.add_argument({ "store5" }).action(argparse::store).nargs(2).default_value(default_value);
+        parser.add_argument({ "store6" }).action(argparse::store).nargs("+").default_value(default_value);
+
+        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value, new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value, new_value, new_value }));
+
+        auto args1 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args1.get<std::string>("store1") == default_value);
+        REQUIRE(args1.get<std::string>("store3") == new_value);
+        REQUIRE(args1.get<std::string>("store4") == default_value);
+        REQUIRE(args1.get<std::string>("store6") == new_value);
+        REQUIRE(args1.get<std::vector<std::string> >("store2").size() == 2);
+        REQUIRE(args1.get<std::vector<std::string> >("store3").size() == 1);
+        REQUIRE(args1.get<std::vector<std::string> >("store5").size() == 2);
+        REQUIRE(args1.get<std::vector<std::string> >("store6").size() == 1);
+
+        auto args2 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args2.get<std::string>("store1") == new_value);
+        REQUIRE(args2.get<std::string>("store3") == new_value);
+        REQUIRE(args2.get<std::string>("store4") == default_value);
+        REQUIRE(args2.get<std::string>("store6") == new_value);
+        REQUIRE(args2.get<std::vector<std::string> >("store1").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("store2").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("store3").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("store5").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("store6").size() == 1);
+
+        auto args3 = parser.parse_args({ new_value, new_value, new_value, new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args3.get<std::string>("store3") == new_value);
+        REQUIRE(args3.get<std::string>("store4") == default_value);
+        REQUIRE(args3.get<std::string>("store6") == new_value);
+        REQUIRE(args3.get<std::vector<std::string> >("store1").size() == 2);
+        REQUIRE(args3.get<std::vector<std::string> >("store2").size() == 2);
+        REQUIRE(args3.get<std::vector<std::string> >("store3").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("store5").size() == 2);
+        REQUIRE(args3.get<std::vector<std::string> >("store6").size() == 1);
+    }
+
+    SECTION("nargs N optional") {
+        parser.add_argument({ "--store" }).action(argparse::store).nargs(1).default_value(default_value);
+        parser.add_argument({ "--append" }).action(argparse::append).nargs(2); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "--extend" }).action(argparse::extend).nargs(3); // TODO: default value are invalid in python if flag used
+
+        // no args
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("--store") == default_value);
+        REQUIRE(args1.get<std::string>("--append") == "");
+        REQUIRE(args1.get<std::string>("--extend") == "");
+
+        // all args
+        auto args2 = parser.parse_args({ "--store", new_value, "--append", new_value, new_value, "--extend", new_value, new_value, new_value });
+        REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("--append").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 3);
+
+        REQUIRE_THROWS(parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value }));
+
+        // override args
+        auto args3 = parser.parse_args({ "--store", new_value, "--append", new_value, new_value, "--extend", new_value, new_value, new_value,
+                                         "--store", new_value, "--append", new_value, new_value, "--extend", new_value, new_value, new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 4);
+        REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 6);
+    }
+
+    SECTION("nargs N positional") {
+        parser.add_argument({ "store" }).action(argparse::store).nargs(1).default_value(default_value);
+        parser.add_argument({ "append" }).action(argparse::append).nargs(2); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "extend" }).action(argparse::extend).nargs(3); // TODO: default value are invalid in python if flag used
+
+        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value, new_value }));
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value, new_value, new_value }));
+
+        auto args = parser.parse_args({ new_value, new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args.get<std::vector<std::string> >("store").size() == 1);
+        REQUIRE(args.get<std::vector<std::string> >("append").size() == 2);
+        REQUIRE(args.get<std::vector<std::string> >("extend").size() == 3);
+
+        REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value, new_value, new_value, new_value, new_value }));
+    }
+
+    SECTION("nargs N optional + positional") {
+        parser.add_argument({ "--store" }).action(argparse::store).nargs(1).default_value(default_value);
+        parser.add_argument({ "store" }).action(argparse::store).nargs(2); // TODO: default value are invalid in python if flag used
+        parser.add_argument({ "extend" }).action(argparse::extend).nargs(2); // TODO: default value are invalid in python if flag used
+
+        REQUIRE_THROWS(parser.parse_args({ new_value, "--store", new_value, new_value, new_value, new_value, new_value, new_value }));
+
+        // no args
+        auto args1 = parser.parse_args({ new_value, new_value, new_value, new_value });
+        REQUIRE(args1.get<std::string>("--store") == default_value);
+        REQUIRE(args1.get<std::vector<std::string> >("store").size() == 2);
+        REQUIRE(args1.get<std::vector<std::string> >("extend").size() == 2);
+
+        // all args
+        auto args2 = parser.parse_args({ "--store", new_value, new_value, new_value, new_value, new_value });
+        REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("store").size() == 2);
+        REQUIRE(args2.get<std::vector<std::string> >("extend").size() == 2);
+    }
+}
