@@ -113,6 +113,20 @@ static inline bool _starts_with(std::string const& str, std::string const& patte
 {
     return str.compare(0, pattern.size(), pattern) == 0;
 }
+
+static inline bool _is_optional_argument(std::string const& arg, std::string const& prefix_chars)
+{
+    return std::find(std::begin(prefix_chars), std::end(prefix_chars), arg.front()) != std::end(prefix_chars);
+}
+
+static inline std::string _flag_name(std::string str)
+{
+    char prefix = str.front();
+    str.erase(std::begin(str),
+              std::find_if(std::begin(str), std::end(str),
+                           [prefix] (char c) -> bool { return c != prefix; }));
+    return str;
+}
 } // details
 
 enum Action
@@ -851,37 +865,20 @@ public:
         if (flag_name.empty()) {
             throw std::logic_error("IndexError: string index out of range");
         }
-        auto prefix = std::find(std::begin(m_prefix_chars), std::end(m_prefix_chars), flag_name.front());
-
-        auto _is_optional_argument = [] (std::string const& arg, std::string const& prefix_chars) -> bool
-        {
-            return std::find(std::begin(prefix_chars), std::end(prefix_chars), arg.front()) != std::end(prefix_chars);
-        };
-        auto _flag_name = [=] (std::string const& str, char prefix) -> std::string
-        {
-            auto s = str;
-            s.erase(std::begin(s),
-                    std::find_if(std::begin(s), std::end(s),
-                                 [prefix] (char c) -> bool { return c != prefix; }));
-            if (s.empty() || s.size() == str.size()) {
-                throw std::logic_error("error: incorrect optional argument '" + str + "'");
-            }
-            return s;
-        };
 
         auto prefixes = 0ul;
-        auto _update_flag_name = [&flag_name, &prefixes, _flag_name] (std::string const& arg, char prefix) -> void
+        auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg) -> void
         {
-            auto name = _flag_name(arg, prefix);
+            auto name = detail::_flag_name(arg);
             auto count_prefixes = arg.size() - name.size();
             if (prefixes < count_prefixes) {
                 prefixes = count_prefixes;
                 flag_name = name;
             }
         };
-        bool is_optional = prefix != std::end(m_prefix_chars);
+        bool is_optional = detail::_is_optional_argument(flag_name, prefix_chars());
         if (is_optional) {
-            _update_flag_name(flag_name, *prefix);
+            _update_flag_name(flag_name);
         } else if (flags.size() > 1) {
             // no positional multiflag
             throw std::invalid_argument("ValueError: invalid option string " + flags.front() + ": must starts with a character '" + m_prefix_chars + "'");
@@ -892,11 +889,11 @@ public:
             if (flag.empty()) {
                 throw std::logic_error("IndexError: string index out of range");
             }
-            if (!_is_optional_argument(flag, m_prefix_chars)) {
+            if (!detail::_is_optional_argument(flag, prefix_chars())) {
                 // no positional and optional args
                 throw std::invalid_argument("ValueError: invalid option string " + flag + ": must starts with a character '" + m_prefix_chars + "'");
             }
-            _update_flag_name(flag, *prefix);
+            _update_flag_name(flag);
         }
         m_arguments.emplace_back(Argument(this, flags, flag_name, is_optional ? Argument::Type::Optional : Argument::Type::Positional));
         return m_arguments.back();
@@ -968,10 +965,6 @@ private:
             }
             parsed_arguments = std::move(temp);
         }
-        auto _is_optional_argument = [] (std::string const& arg, std::string const& prefix_chars) -> bool
-        {
-            return std::find(std::begin(prefix_chars), std::end(prefix_chars), arg.front()) != std::end(prefix_chars);
-        };
         auto _get_argument_flags = [] (Argument const& arg) -> std::vector<std::string>
         {
             return arg.dest().empty() ? arg.flags() : std::vector<std::string>{ arg.dest() };
@@ -1056,7 +1049,7 @@ private:
                     break;
                 } else {
                     auto next = parsed_arguments.at(i);
-                    if (!_is_optional_argument(next, m_prefix_chars)) {
+                    if (!detail::_is_optional_argument(next, prefix_chars())) {
                         values.push_back(next);
                     } else {
                         --i;
@@ -1337,7 +1330,7 @@ private:
                                     break;
                                 } else {
                                     auto next = parsed_arguments.at(i);
-                                    if (!_is_optional_argument(next, m_prefix_chars)) {
+                                    if (!detail::_is_optional_argument(next, prefix_chars())) {
                                         _store_argument_value(*temp, next);
                                         ++n;
                                     } else if (n == 0) {
