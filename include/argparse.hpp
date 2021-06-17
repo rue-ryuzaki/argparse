@@ -530,8 +530,10 @@ public:
         template <typename... Args> struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
 
     public:
-        Arguments(std::map<std::string, ArgumentValue> const& arguments)
-            : m_arguments(arguments)
+        Arguments(std::map<std::string, ArgumentValue> const& arguments,
+                  std::string const& prefix_chars)
+            : m_arguments(arguments),
+              m_prefix_chars(prefix_chars)
         { }
 
         Arguments& operator =(Arguments const&) = delete;
@@ -649,6 +651,12 @@ public:
             if (m_arguments.count(key) != 0) {
                 return m_arguments.at(key);
             }
+            for (auto const& pair : m_arguments) {
+                if (detail::_is_optional_argument(pair.first, m_prefix_chars)
+                        && detail::_flag_name(pair.first) == key) {
+                    return pair.second;
+                }
+            }
             throw std::invalid_argument("AttributeError: 'Namespace' object has no attribute '" + key + "'");
         }
 
@@ -682,6 +690,7 @@ public:
         }
 
         std::map<std::string, ArgumentValue> m_arguments;
+        std::string m_prefix_chars;
     };
 
 public:
@@ -1472,7 +1481,7 @@ private:
                 arg.second.second.push_back(_default_argument_value(*argument));
             }
         }
-        return Arguments(result);
+        return Arguments(result, prefix_chars());
     }
 
     void handle_error(std::string const& error = "error: unknown") const

@@ -92,6 +92,10 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("-b") == local_default);
         REQUIRE(args.get<std::string>("--foo") == global_default);
         REQUIRE(args.get<std::string>("--bar") == local_default);
+        REQUIRE(args.get<std::string>("f") == global_default);
+        REQUIRE(args.get<std::string>("b") == local_default);
+        REQUIRE(args.get<std::string>("foo") == global_default);
+        REQUIRE(args.get<std::string>("bar") == local_default);
     }
 
     SECTION("one argument") {
@@ -100,12 +104,20 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args1.get<std::string>("-b") == local_default);
         REQUIRE(args1.get<std::string>("--foo") == foo);
         REQUIRE(args1.get<std::string>("--bar") == local_default);
+        REQUIRE(args1.get<std::string>("f") == foo);
+        REQUIRE(args1.get<std::string>("b") == local_default);
+        REQUIRE(args1.get<std::string>("foo") == foo);
+        REQUIRE(args1.get<std::string>("bar") == local_default);
 
         auto args2 = parser.parse_args({ "--bar", bar });
         REQUIRE(args2.get<std::string>("-f") == global_default);
         REQUIRE(args2.get<std::string>("-b") == bar);
         REQUIRE(args2.get<std::string>("--foo") == global_default);
         REQUIRE(args2.get<std::string>("--bar") == bar);
+        REQUIRE(args2.get<std::string>("f") == global_default);
+        REQUIRE(args2.get<std::string>("b") == bar);
+        REQUIRE(args2.get<std::string>("foo") == global_default);
+        REQUIRE(args2.get<std::string>("bar") == bar);
     }
 
     SECTION("both arguments") {
@@ -114,6 +126,10 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("-b") == bar);
         REQUIRE(args.get<std::string>("--foo") == foo);
         REQUIRE(args.get<std::string>("--bar") == bar);
+        REQUIRE(args.get<std::string>("f") == foo);
+        REQUIRE(args.get<std::string>("b") == bar);
+        REQUIRE(args.get<std::string>("foo") == foo);
+        REQUIRE(args.get<std::string>("bar") == bar);
     }
 
     SECTION("use equal '='") {
@@ -122,6 +138,10 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("-b") == bar);
         REQUIRE(args.get<std::string>("--foo") == foo);
         REQUIRE(args.get<std::string>("--bar") == bar);
+        REQUIRE(args.get<std::string>("f") == foo);
+        REQUIRE(args.get<std::string>("b") == bar);
+        REQUIRE(args.get<std::string>("foo") == foo);
+        REQUIRE(args.get<std::string>("bar") == bar);
     }
 
     SECTION("arguments override") {
@@ -130,6 +150,10 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("-b") == foo);
         REQUIRE(args.get<std::string>("--foo") == bar);
         REQUIRE(args.get<std::string>("--bar") == foo);
+        REQUIRE(args.get<std::string>("f") == bar);
+        REQUIRE(args.get<std::string>("b") == foo);
+        REQUIRE(args.get<std::string>("foo") == bar);
+        REQUIRE(args.get<std::string>("bar") == foo);
     }
 
     SECTION("allow_abbrev=true") {
@@ -140,6 +164,10 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("-b") == bar);
         REQUIRE(args.get<std::string>("--foo") == foo);
         REQUIRE(args.get<std::string>("--bar") == bar);
+        REQUIRE(args.get<std::string>("f") == foo);
+        REQUIRE(args.get<std::string>("b") == bar);
+        REQUIRE(args.get<std::string>("foo") == foo);
+        REQUIRE(args.get<std::string>("bar") == bar);
     }
 
     SECTION("allow_abbrev=false") {
