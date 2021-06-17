@@ -836,6 +836,11 @@ public:
         return m_exit_on_error;
     }
 
+    Argument& add_argument(char const* flag)
+    {
+        return add_argument({ std::string(flag) });
+    }
+
     Argument& add_argument(std::vector<std::string> flags)
     {
         if (flags.empty()) {
