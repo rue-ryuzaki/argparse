@@ -1523,12 +1523,12 @@ private:
     std::vector<Argument> optional_arguments() const
     {
         std::vector<Argument> result;
+        if (m_add_help) {
+            result.push_back(m_help_argument);
+        }
         for (auto const& parent : m_parents) {
             auto const args = parent.optional_arguments();
             result.insert(std::end(result), std::begin(args), std::end(args));
-        }
-        if (m_add_help) {
-            result.push_back(m_help_argument);
         }
         for (auto const& arg : m_arguments) {
             if (arg.type() == Argument::Type::Optional) {
