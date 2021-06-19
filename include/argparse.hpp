@@ -1286,7 +1286,7 @@ private:
 
         for (size_t i = 0; i < parsed_arguments.size(); ++i) {
             auto arg = parsed_arguments.at(i);
-            if (m_allow_abbrev && result.count(arg) == 0) {
+            if (m_allow_abbrev && !arg.empty() && result.count(arg) == 0) {
                 std::string args;
                 std::vector<std::string> keys;
                 for (auto const& pair : optional) {
