@@ -1261,8 +1261,25 @@ private:
                     }
                 }
             } else {
-                for (auto const& arg : arguments) {
-                    unrecognized_arguments.push_back(arg);
+                size_t i = 0;
+                for ( ; position < finish; ++position) {
+                    auto const& argument = positional.at(position);
+                    if (_is_positional_argument_stored(argument)) {
+                        continue;
+                    }
+                    auto const& nargs = argument.nargs();
+                    if (nargs.empty()) {
+                        _store_argument_value(argument, arguments.at(i));
+                        ++i;
+                    } else {
+                        size_t num_args = size_t(std::stoull(nargs));
+                        for (size_t n = 0; n < num_args; ++i, ++n) {
+                            _store_argument_value(argument, arguments.at(i));
+                        }
+                    }
+                }
+                for ( ; i < arguments.size(); ++i) {
+                    unrecognized_arguments.push_back(arguments.at(i));
                 }
             }
         };
