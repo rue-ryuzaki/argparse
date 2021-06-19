@@ -1028,7 +1028,7 @@ private:
         _create_result(positional, result);
         _create_result(optional, result);
 
-        auto _get_argument = [=] (std::string const& key) -> Argument const*
+        auto _get_optional_argument = [=] (std::string const& key) -> Argument const*
         {
             for (auto const& arg : optional) {
                 if (!arg.dest().empty() && arg.dest() == key) {
@@ -1301,7 +1301,7 @@ private:
             if (splitted.size() == 2) {
                 arg = splitted.front();
             }
-            auto const* temp = _get_argument(arg);
+            auto const* temp = _get_optional_argument(arg);
             if (temp) {
                 switch (temp->action()) {
                     case argparse::store :
@@ -1474,7 +1474,7 @@ private:
         }
         for (auto& arg : result) {
             if (arg.second.second.empty() && arg.second.first != count) {
-                Argument const* argument = _get_argument(arg.first);
+                Argument const* argument = _get_optional_argument(arg.first);
                 if (!argument) {
                     continue;
                 }
