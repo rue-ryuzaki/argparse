@@ -175,6 +175,22 @@ public:
               m_dest()
         { }
 
+        Argument(Argument const& orig)
+            : m_parent(orig.m_parent),
+              m_flags(orig.m_flags),
+              m_name(orig.m_name),
+              m_type(orig.m_type),
+              m_action(orig.m_action),
+              m_nargs(orig.m_nargs),
+              m_const(orig.m_const),
+              m_default(orig.m_default),
+              m_choices(orig.m_choices),
+              m_required(orig.m_required),
+              m_help(orig.m_help),
+              m_metavar(orig.m_metavar),
+              m_dest(orig.m_dest)
+        { }
+
         Argument& operator =(Argument const& rhs)
         {
             if (this != &rhs) {
