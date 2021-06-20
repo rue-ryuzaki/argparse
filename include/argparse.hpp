@@ -288,11 +288,11 @@ public:
             if (m_action == store_const || m_action == store_true || m_action == store_false || m_action == append_const || m_action == count) {
                 throw std::logic_error("TypeError: got an unexpected keyword argument 'nargs'");
             }
-            m_nargs = detail::_trim_copy(value);
             auto const available_values = { "?", "*", "+" };
-            if (std::find(std::begin(available_values), std::end(available_values), m_nargs) == std::end(available_values)) {
+            if (std::find(std::begin(available_values), std::end(available_values), value) == std::end(available_values)) {
                 throw std::invalid_argument("ValueError: invalid nargs value");
             }
+            m_nargs = detail::_trim_copy(value);
             return *this;
         }
 
