@@ -1007,8 +1007,7 @@ private:
             auto const& choices = arg.choices();
             if (!choices.empty()) {
                 auto str = detail::_remove_quotes(value);
-                auto it = std::find(std::begin(choices), std::end(choices), str);
-                if (it == std::end(choices)) {
+                if (std::find(std::begin(choices), std::end(choices), str) == std::end(choices)) {
                     std::string values;
                     for (auto const& choice : choices) {
                         if (!values.empty()) {
@@ -1393,8 +1392,7 @@ private:
                                         break;
                                     }
                                 }
-                                if (nargs.empty()
-                                        || (num_args != 0 && n == num_args)) {
+                                if (nargs.empty() || (num_args != 0 && n == num_args)) {
                                     break;
                                 }
                             }
