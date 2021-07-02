@@ -30,6 +30,7 @@
 #define ARGPARSE_VERSION_MAJOR 0
 #define ARGPARSE_VERSION_MINOR 1
 #define ARGPARSE_VERSION_PATCH 1
+#define ARGPARSE_VERSION_RC 0
 
 #include <algorithm>
 #include <array>
