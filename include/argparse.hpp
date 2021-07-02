@@ -1509,7 +1509,10 @@ private:
                 if (!argument) {
                     continue;
                 }
-                arg.second.second.push_back(_default_argument_value(*argument));
+                auto value = _default_argument_value(*argument);
+                if (!value.empty()) {
+                    arg.second.second.push_back(value);
+                }
             }
         }
         return Arguments(result, prefix_chars());
