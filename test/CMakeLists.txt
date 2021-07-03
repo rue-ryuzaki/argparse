@@ -1,4 +1,4 @@
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../external")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../third_party")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../include")
 
 add_library(catch_main OBJECT
