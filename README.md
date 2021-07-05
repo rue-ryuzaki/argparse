@@ -32,9 +32,9 @@ usage: FooBar [-h] [-f FOO] [-b BAR]
 foo
 
 optional arguments:
-  -h, --help	show this help message and exit
-  -f FOO, --foo FOO	FOO help
-  -b BAR, --bar BAR	BAR help
+  -h, --help         show this help message and exit
+  -f FOO, --foo FOO  FOO help
+  -b BAR, --bar BAR  BAR help
 
 bar
 foo: foobar
