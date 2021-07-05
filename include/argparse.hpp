@@ -52,6 +52,8 @@
 
 namespace argparse {
 namespace detail {
+size_t const _argument_help_limit = 24;
+
 static inline void _ltrim(std::string& s)
 {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), not1(std::ptr_fun<int, int>(isspace))));
@@ -442,7 +444,7 @@ public:
             return res;
         }
 
-        std::string print() const
+        std::string flags_to_string() const
         {
             std::string res;
             if (type() == Optional) {
@@ -458,9 +460,18 @@ public:
             } else {
                 res += get_nargs_suffix();
             }
-            res = "  " + res;
+            return res;
+        }
+
+        std::string print(size_t limit = detail::_argument_help_limit) const
+        {
+            std::string res = "  " + flags_to_string();
             if (!help().empty()) {
-                res += "\t" + help();
+                if (res.size() + 2 > limit) {
+                    res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
+                } else {
+                    res += std::string(limit - res.size(), ' ') + help();
+                }
             }
             return res;
         }
@@ -955,18 +966,33 @@ public:
         if (!m_description.empty()) {
             os << std::endl << m_description << std::endl;
         }
+        size_t argument_help_size = 0;
         auto const positional = positional_arguments();
+        auto const optional = optional_arguments();
+        for (auto const& arg : positional) {
+            if (argument_help_size < arg.flags_to_string().size()) {
+                argument_help_size = arg.flags_to_string().size();
+            }
+        }
+        for (auto const& arg : optional) {
+            if (argument_help_size < arg.flags_to_string().size()) {
+                argument_help_size = arg.flags_to_string().size();
+            }
+        }
+        argument_help_size += 4;
+        if (argument_help_size > detail::_argument_help_limit) {
+            argument_help_size = detail::_argument_help_limit;
+        }
         if (!positional.empty()) {
             os << std::endl << "positional arguments:" << std::endl;
             for (auto const& arg : positional) {
-                os << arg.print() << std::endl;
+                os << arg.print(argument_help_size) << std::endl;
             }
         }
-        auto const optional = optional_arguments();
         if (!optional.empty()) {
             os << std::endl << "optional arguments:" << std::endl;
             for (auto const& arg : optional) {
-                os << arg.print() << std::endl;
+                os << arg.print(argument_help_size) << std::endl;
             }
         }
         if (!m_epilog.empty()) {
