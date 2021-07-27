@@ -198,19 +198,19 @@ public:
         Argument& operator =(Argument const& rhs)
         {
             if (this != &rhs) {
-                this->m_parent = rhs.m_parent;
-                this->m_flags = rhs.m_flags;
-                this->m_name = rhs.m_name;
-                this->m_type = rhs.m_type;
-                this->m_action = rhs.m_action;
-                this->m_nargs = rhs.m_nargs;
-                this->m_const = rhs.m_const;
+                this->m_parent  = rhs.m_parent;
+                this->m_flags   = rhs.m_flags;
+                this->m_name    = rhs.m_name;
+                this->m_type    = rhs.m_type;
+                this->m_action  = rhs.m_action;
+                this->m_nargs   = rhs.m_nargs;
+                this->m_const   = rhs.m_const;
                 this->m_default = rhs.m_default;
                 this->m_choices = rhs.m_choices;
-                this->m_required = rhs.m_required;
-                this->m_help = rhs.m_help;
+                this->m_required= rhs.m_required;
+                this->m_help    = rhs.m_help;
                 this->m_metavar = rhs.m_metavar;
-                this->m_dest = rhs.m_dest;
+                this->m_dest    = rhs.m_dest;
             }
             return *this;
         }
@@ -308,11 +308,12 @@ public:
             if (m_action == store_const || m_action == store_true || m_action == store_false || m_action == append_const || m_action == count) {
                 throw std::logic_error("TypeError: got an unexpected keyword argument 'nargs'");
             }
+            auto param = detail::_trim_copy(value);
             auto const available_values = { "?", "*", "+" };
-            if (std::find(std::begin(available_values), std::end(available_values), value) == std::end(available_values)) {
-                throw std::invalid_argument("ValueError: invalid nargs value");
+            if (std::find(std::begin(available_values), std::end(available_values), param) == std::end(available_values)) {
+                throw std::invalid_argument("ValueError: invalid nargs value '" + param + "'");
             }
-            m_nargs = detail::_trim_copy(value);
+            m_nargs = param;
             return *this;
         }
 
@@ -949,8 +950,10 @@ public:
                 return parse_known_args(parsed_arguments);
             } catch (std::exception& e) {
                 std::cerr << e.what() << std::endl;
-                exit(1);
+            } catch (...) {
+                std::cerr << "error: unexpected error" << std::endl;
             }
+            exit(1);
         } else {
             return parse_known_args(parsed_arguments);
         }
@@ -1483,7 +1486,7 @@ private:
                             }
                             args += f;
                         }
-                        required_arguments.push_back(args);
+                        required_arguments.emplace_back(args);
                         break;
                     }
                 }
@@ -1533,7 +1536,7 @@ private:
         }
         for (auto& arg : result) {
             if (arg.second.second.empty() && arg.second.first != count) {
-                Argument const* argument = _get_optional_argument(arg.first);
+                auto const* argument = _get_optional_argument(arg.first);
                 if (!argument) {
                     continue;
                 }
@@ -1604,7 +1607,6 @@ private:
     {
         if (m_usage.empty()) {
             auto res = m_prog;
-
             size_t argument_usage_size = 0;
             auto const positional = positional_arguments();
             auto const optional = optional_arguments();
