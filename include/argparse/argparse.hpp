@@ -577,14 +577,12 @@ public:
                 return T(args.second.size());
             }
             if (args.second.empty()) {
-                // TODO
                 return T();
             }
             if (args.second.size() != 1) {
                 throw std::logic_error("error: ambiguous option: trying to get data from array argument '" + key + "'");
             }
             if (args.second.front().empty()) {
-                // TODO
                 return T();
             }
             return to_type<T>(args.second.front());
@@ -600,14 +598,12 @@ public:
                 throw std::logic_error("error: invalid get type for argument '" + key + "'");
             }
             if (args.second.empty()) {
-                // TODO
                 return T();
             }
             if (args.second.size() != 1) {
                 throw std::logic_error("error: ambiguous option: trying to get data from array argument '" + key + "'");
             }
             if (args.second.front().empty()) {
-                // TODO
                 return T();
             }
             return to_type<T>(args.second.front());
