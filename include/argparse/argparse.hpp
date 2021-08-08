@@ -1374,6 +1374,9 @@ private:
                             if (!nargs.empty() && nargs != "?" && nargs != "*" && nargs != "+" && nargs != "1") {
                                 handle_error("error: argument " + arg + ": expected " + nargs + " arguments");
                             }
+                            if (splitted.back().empty()) {
+                                handle_error("error: argument " + arg + ": expected one argument");
+                            }
                             _store_argument_value(*temp, splitted.back());
                         } else {
                             auto const& nargs = temp->nargs();
