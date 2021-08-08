@@ -142,6 +142,8 @@ enum Action
     append,
     append_const,
     count,
+    help,
+    version,
     extend,
 };
 
@@ -176,7 +178,8 @@ public:
               m_required(false),
               m_help(),
               m_metavar(),
-              m_dest()
+              m_dest(),
+              m_version()
         { }
 
         Argument(Argument const& orig)
@@ -192,7 +195,8 @@ public:
               m_required(orig.m_required),
               m_help(orig.m_help),
               m_metavar(orig.m_metavar),
-              m_dest(orig.m_dest)
+              m_dest(orig.m_dest),
+              m_version(orig.m_version)
         { }
 
         Argument& operator =(Argument const& rhs)
@@ -211,6 +215,7 @@ public:
                 this->m_help    = rhs.m_help;
                 this->m_metavar = rhs.m_metavar;
                 this->m_dest    = rhs.m_dest;
+                this->m_version = rhs.m_version;
             }
             return *this;
         }
@@ -218,50 +223,64 @@ public:
         Argument& action(std::string const& value)
         {
             if (value == "store") {
-                return action(store);
+                return action(Action::store);
             } else if (value == "store_const") {
-                return action(store_const);
+                return action(Action::store_const);
             } else if (value == "store_true") {
-                return action(store_true);
+                return action(Action::store_true);
             } else if (value == "store_false") {
-                return action(store_false);
+                return action(Action::store_false);
             } else if (value == "append") {
-                return action(append);
+                return action(Action::append);
             } else if (value == "append_const") {
-                return action(append_const);
+                return action(Action::append_const);
             } else if (value == "count") {
-                return action(count);
+                return action(Action::count);
+            } else if (value == "help") {
+                return action(Action::help);
+            } else if (value == "version") {
+                return action(Action::version);
             } else if (value == "extend") {
-                return action(extend);
+                return action(Action::extend);
             }
             throw std::invalid_argument("ValueError: unknown action '" + value + "'");
         }
 
         Argument& action(Action value)
         {
+            if (m_action == Action::version) {
+                m_help.clear();
+            }
             m_action = value;
             switch (m_action) {
-                case store_true :
+                case Action::store_true :
                     m_default = "0";
                     m_const = "1";
                     m_nargs = "0";
                     m_choices.clear();
                     break;
-                case store_false :
+                case Action::store_false :
                     m_default = "1";
                     m_const = "0";
                     m_nargs = "0";
                     m_choices.clear();
                     break;
-                case store_const :
-                case append_const :
-                case count :
+                case Action::version :
+                    m_help = "show program's version number and exit";
+                case Action::help :
+                    if (type() == Positional) {
+                        // TODO: version and help actions cannot be positional
+                        throw std::logic_error("TypeError: got an unexpected keyword argument 'required'");
+                    }
+                case Action::store_const :
+                case Action::append_const :
+                case Action::count :
                     m_nargs = "0";
                     m_choices.clear();
                     break;
-                case store :
-                case append :
-                case extend :
+                case Action::store :
+                case Action::append :
+                case Action::extend :
                     if (m_nargs == "0") {
                         m_nargs.clear();
                     }
@@ -274,19 +293,21 @@ public:
         Argument& nargs(uint32_t value)
         {
             switch (m_action) {
-                case store_const :
-                case store_true :
-                case store_false :
-                case append_const :
-                case count :
+                case Action::store_const :
+                case Action::store_true :
+                case Action::store_false :
+                case Action::append_const :
+                case Action::help :
+                case Action::version :
+                case Action::count :
                     throw std::logic_error("TypeError: got an unexpected keyword argument 'nargs'");
-                case store :
+                case Action::store :
                     if (value == 0) {
                         throw std::invalid_argument("ValueError: nargs for store actions must be != 0; if you have nothing to store, actions such as store true or store const may be more appropriate");
                     }
                     break;
-                case append :
-                case extend :
+                case Action::append :
+                case Action::extend :
                     if (value == 0) {
                         throw std::invalid_argument("ValueError: nargs for append actions must be != 0; if arg strings are not supplying the value to append, the append const action may be more appropriate");
                     }
@@ -305,7 +326,13 @@ public:
 
         Argument& nargs(std::string const& value)
         {
-            if (m_action == store_const || m_action == store_true || m_action == store_false || m_action == append_const || m_action == count) {
+            if (m_action == Action::store_const
+                    || m_action == Action::store_true
+                    || m_action == Action::store_false
+                    || m_action == Action::append_const
+                    || m_action == Action::help
+                    || m_action == Action::version
+                    || m_action == Action::count) {
                 throw std::logic_error("TypeError: got an unexpected keyword argument 'nargs'");
             }
             auto param = detail::_trim_copy(value);
@@ -321,8 +348,8 @@ public:
         {
             if (m_action == store_const || m_action == append_const) {
                 m_const = detail::_trim_copy(value);
-//            } else {
-//                m_parent->handle_error("TypeError: got an unexpected keyword argument 'const'");
+            } else {
+                m_parent->handle_error("TypeError: got an unexpected keyword argument 'const'");
             }
             return *this;
         }
@@ -337,7 +364,13 @@ public:
 
         Argument& choices(std::vector<std::string> const& value)
         {
-            if (m_action == store_const || m_action == store_true || m_action == store_false || m_action == append_const || m_action == count) {
+            if (m_action == Action::store_const
+                    || m_action == Action::store_true
+                    || m_action == Action::store_false
+                    || m_action == Action::append_const
+                    || m_action == Action::help
+                    || m_action == Action::version
+                    || m_action == Action::count) {
                 throw std::logic_error("TypeError: got an unexpected keyword argument 'choices'");
             }
             m_choices.clear();
@@ -374,6 +407,16 @@ public:
         Argument& dest(std::string const& value)
         {
             m_dest = detail::_trim_copy(value);
+            return *this;
+        }
+
+        Argument& version(std::string const& value)
+        {
+            if (m_action == Action::version) {
+                m_version = detail::_trim_copy(value);
+            } else {
+                m_parent->handle_error("TypeError: got an unexpected keyword argument 'version'");
+            }
             return *this;
         }
 
@@ -425,6 +468,11 @@ public:
         std::string const& dest() const
         {
             return m_dest;
+        }
+
+        std::string const& version() const
+        {
+            return m_version;
         }
 
         Type type() const
@@ -537,6 +585,7 @@ public:
         std::string m_help;
         std::string m_metavar;
         std::string m_dest;
+        std::string m_version;
     };
 
     class Arguments
@@ -1070,7 +1119,19 @@ private:
         _create_result(positional, result);
         _create_result(optional, result);
 
-        auto _get_optional_argument = [=] (std::string const& key) -> Argument const*
+        auto _get_optional_argument_by_flag = [=] (std::string const& key) -> Argument const*
+        {
+            for (auto const& arg : optional) {
+                for (auto const& flag : arg.flags()) {
+                    if (flag == key) {
+                        return &arg;
+                    }
+                }
+            }
+            return nullptr;
+        };
+
+        auto _get_optional_argument_by_dest = [=] (std::string const& key) -> Argument const*
         {
             for (auto const& arg : optional) {
                 if (!arg.dest().empty() && arg.dest() == key) {
@@ -1092,14 +1153,13 @@ private:
         auto _store_positional_arguments = [&] (size_t& i) -> void
         {
             std::vector<std::string> values;
-            auto arg = parsed_arguments.at(i);
-            values.push_back(arg);
+            values.push_back(parsed_arguments.at(i));
             while (true) {
                 ++i;
                 if (i == parsed_arguments.size()) {
                     break;
                 } else {
-                    auto next = parsed_arguments.at(i);
+                    auto const& next = parsed_arguments.at(i);
                     if (!detail::_is_optional_argument(next, prefix_chars())) {
                         values.push_back(next);
                     } else {
@@ -1326,29 +1386,158 @@ private:
             }
         };
 
-        for (size_t i = 0; i < parsed_arguments.size(); ++i) {
-            auto arg = parsed_arguments.at(i);
-            if (m_allow_abbrev && !arg.empty() && result.count(arg) == 0) {
-                std::string args;
-                std::vector<std::string> keys;
-                for (auto const& pair : optional) {
-                    for (auto const& flag : pair.flags()) {
-                        if (detail::_starts_with(flag, arg)) {
-                            keys.push_back(flag);
-                            if (!args.empty()) {
-                                args += ",";
+        auto _check_abbreviations = [=] (std::vector<std::string>& arguments) -> void
+        {
+            std::vector<std::string> temp_arguments;
+            for (auto const& arg : arguments) {
+                if (!arg.empty() && result.count(arg) == 0
+                        && detail::_is_optional_argument(arg, prefix_chars())) {
+                    if (m_allow_abbrev) {
+                        bool add_flag = false;
+                        std::string args;
+                        std::vector<std::string> keys;
+                        for (auto const& opt : optional) {
+                            for (auto const& flag : opt.flags()) {
+                                if (detail::_starts_with(flag, arg)) {
+                                    add_flag = true;
+                                    keys.push_back(flag);
+                                    if (!args.empty()) {
+                                        args += ",";
+                                    }
+                                    args += " " + flag;
+                                    break;
+                                }
+                                if (flag.size() == 2 && detail::_starts_with(arg, flag)) {
+                                    keys.push_back(arg);
+                                    if (!args.empty()) {
+                                        args += ",";
+                                    }
+                                    args += " " + flag;
+                                    break;
+                                }
                             }
-                            args += " " + flag;
-                            break;
+                        }
+                        if (keys.size() > 1) {
+                            throw std::invalid_argument("error: ambiguous option: '" + arg + "' could match" + args);
+                        }
+                        if (add_flag) {
+                            temp_arguments.push_back(keys.empty() ? arg : keys.front());
+                        } else {
+                            auto name = detail::_flag_name(keys.empty() ? arg : keys.front());
+                            if (name.size() + 1 == arg.size()) {
+                                std::vector<std::string> flags;
+                                for (size_t i = 0; i < name.size(); ++i) {
+                                    if (name.at(i) == '=') {
+                                        if (flags.empty()) {
+                                            flags.push_back(name.substr(i));
+                                        } else {
+                                            flags.back() += name.substr(i);
+                                        }
+                                        break;
+                                    }
+                                    Argument const* argument = nullptr;
+                                    for (auto const& opt : optional) {
+                                        for (auto const& flag : opt.flags()) {
+                                            if (flag.size() == 2 && flag.back() == name.at(i)) {
+                                                flags.push_back(flag);
+                                                argument = &opt;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (flags.size() == i) {
+                                        // not found
+                                        if (flags.empty()) {
+                                            flags.push_back(name.substr(i));
+                                        } else {
+                                            auto str = name.substr(i + 1);
+                                            if (detail::_starts_with(str, "=")) {
+                                                flags.back() += str;
+                                            } else {
+                                                flags.back() += "=" + str;
+                                            }
+                                        }
+                                        break;
+                                    } else if (argument->action() != Action::count) {
+                                        auto str = name.substr(i + 1);
+                                        if (detail::_starts_with(str, "=")) {
+                                            flags.back() += str;
+                                        } else {
+                                            flags.back() += "=" + str;
+                                        }
+                                        break;
+                                    }
+                                }
+                                for (auto const& f : flags) {
+                                    temp_arguments.push_back(f);
+                                }
+                            } else {
+                                temp_arguments.push_back(arg);
+                            }
+                        }
+                    } else {
+                        auto name = detail::_flag_name(arg);
+                        if (name.size() + 1 == arg.size()) {
+                            std::vector<std::string> flags;
+                            for (size_t i = 0; i < name.size(); ++i) {
+                                if (name.at(i) == '=') {
+                                    if (flags.empty()) {
+                                        flags.push_back(name.substr(i));
+                                    } else {
+                                        flags.back() += name.substr(i);
+                                    }
+                                    break;
+                                }
+                                Argument const* argument = nullptr;
+                                for (auto const& opt : optional) {
+                                    for (auto const& flag : opt.flags()) {
+                                        if (flag.size() == 2 && flag.back() == name.at(i)) {
+                                            flags.push_back(flag);
+                                            argument = &opt;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (flags.size() == i) {
+                                    // not found
+                                    if (flags.empty()) {
+                                        flags.push_back(name.substr(i));
+                                    } else {
+                                        auto str = name.substr(i + 1);
+                                        if (detail::_starts_with(str, "=")) {
+                                            flags.back() += str;
+                                        } else {
+                                            flags.back() += "=" + str;
+                                        }
+                                    }
+                                    break;
+                                } else if (argument->action() != Action::count) {
+                                    auto str = name.substr(i + 1);
+                                    if (detail::_starts_with(str, "=")) {
+                                        flags.back() += str;
+                                    } else {
+                                        flags.back() += "=" + str;
+                                    }
+                                    break;
+                                }
+                            }
+                            for (auto const& f : flags) {
+                                temp_arguments.push_back(f);
+                            }
+                        } else {
+                            temp_arguments.push_back(arg);
                         }
                     }
-                }
-                if (keys.size() == 1) {
-                    arg = keys.front();
-                } else if (!keys.empty()) {
-                    throw std::invalid_argument("error: ambiguous option: '" + arg + "' could match" + args);
+                } else {
+                    temp_arguments.push_back(arg);
                 }
             }
+            arguments = std::move(temp_arguments);
+        };
+        _check_abbreviations(parsed_arguments);
+
+        for (size_t i = 0; i < parsed_arguments.size(); ++i) {
+            auto arg = parsed_arguments.at(i);
             if (m_add_help
                     && std::find(std::begin(m_help_argument.flags()),
                                  std::end(m_help_argument.flags()), arg)
@@ -1360,7 +1549,7 @@ private:
             if (splitted.size() == 2) {
                 arg = splitted.front();
             }
-            auto const* temp = _get_optional_argument(arg);
+            auto const* temp = _get_optional_argument_by_flag(arg);
             if (temp) {
                 switch (temp->action()) {
                     case argparse::store :
@@ -1400,7 +1589,7 @@ private:
                                     }
                                     break;
                                 } else {
-                                    auto next = parsed_arguments.at(i);
+                                    auto const& next = parsed_arguments.at(i);
                                     if (!detail::_is_optional_argument(next, prefix_chars())) {
                                         _store_argument_value(*temp, next);
                                         ++n;
@@ -1449,6 +1638,25 @@ private:
                                 }
                                 result.at(flag).second.push_back(temp->const_value());
                             }
+                        } else {
+                            handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                        }
+                        break;
+                    case argparse::help :
+                        if (splitted.size() == 1) {
+                            print_help();
+                            exit(0);
+                        } else {
+                            handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                        }
+                        break;
+                    case argparse::version :
+                        if (splitted.size() == 1) {
+                            if (temp->version().empty()) {
+                                handle_error("AttributeError: 'ArgumentParser' object has no attribute 'version'");
+                            }
+                            std::cout << temp->version() << std::endl;
+                            exit(0);
                         } else {
                             handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
@@ -1535,7 +1743,7 @@ private:
         }
         for (auto& arg : result) {
             if (arg.second.second.empty() && arg.second.first != count) {
-                auto const* argument = _get_optional_argument(arg.first);
+                auto const* argument = _get_optional_argument_by_dest(arg.first);
                 if (!argument) {
                     continue;
                 }

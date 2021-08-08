@@ -73,6 +73,6 @@ bar: 101
 - [x] 'append' - This stores a list, and appends each argument value to the list. This is useful to allow an option to be specified multiple times.
 - [x] 'append_const' - This stores a list, and appends the value specified by the const keyword argument to the list.
 - [x] 'count' - This counts the number of times a keyword argument occurs.
-- [ ] 'help' - This prints a complete help message for all the options in the current parser and then exits.
-- [ ] 'version' - This expects a version= keyword argument in the add_argument() call, and prints version information and exits when invoked.
+- [x] 'help' - This prints a complete help message for all the options in the current parser and then exits.
+- [x] 'version' - This expects a version= keyword argument in the add_argument() call, and prints version information and exits when invoked.
 - [x] 'extend' - This stores a list, and extends each argument value to the list.
