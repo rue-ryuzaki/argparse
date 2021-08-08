@@ -960,3 +960,131 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args2.get<std::vector<std::string> >("extend").size() == 2);
     }
 }
+
+TEST_CASE("abbreviations", "[argument]")
+{
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("simple count test") {
+        parser.add_argument({ "-c" }).action(argparse::count);
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<uint32_t>("-c") == 0);
+
+        auto args2 = parser.parse_args({ "-c" });
+        REQUIRE(args2.get<uint32_t>("-c") == 1);
+
+        auto args3 = parser.parse_args({ "-cc" });
+        REQUIRE(args3.get<uint32_t>("-c") == 2);
+
+        auto args4 = parser.parse_args({ "-ccc" });
+        REQUIRE(args4.get<uint32_t>("-c") == 3);
+
+        auto args5 = parser.parse_args({ "-ccc", "-cc" });
+        REQUIRE(args5.get<uint32_t>("-c") == 5);
+    }
+
+    SECTION("multiargument test") {
+        parser.add_argument({ "-c" }).action(argparse::count);
+        parser.add_argument({ "-d" }).action(argparse::count);
+        parser.add_argument({ "-e" }).action(argparse::count);
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<uint32_t>("-c") == 0);
+        REQUIRE(args1.get<uint32_t>("-d") == 0);
+        REQUIRE(args1.get<uint32_t>("-e") == 0);
+
+        auto args2 = parser.parse_args({ "-c" });
+        REQUIRE(args2.get<uint32_t>("-c") == 1);
+        REQUIRE(args2.get<uint32_t>("-d") == 0);
+        REQUIRE(args2.get<uint32_t>("-e") == 0);
+
+        auto args3 = parser.parse_args({ "-cddec" });
+        REQUIRE(args3.get<uint32_t>("-c") == 2);
+        REQUIRE(args3.get<uint32_t>("-d") == 2);
+        REQUIRE(args3.get<uint32_t>("-e") == 1);
+
+        auto args4 = parser.parse_args({ "-cccee" });
+        REQUIRE(args4.get<uint32_t>("-c") == 3);
+        REQUIRE(args4.get<uint32_t>("-d") == 0);
+        REQUIRE(args4.get<uint32_t>("-e") == 2);
+
+        auto args5 = parser.parse_args({ "-ccce", "-ddcc" });
+        REQUIRE(args5.get<uint32_t>("-c") == 5);
+        REQUIRE(args5.get<uint32_t>("-d") == 2);
+        REQUIRE(args5.get<uint32_t>("-e") == 1);
+    }
+
+    SECTION("multiargument store test") {
+        parser.add_argument({ "-c" }).action(argparse::count);
+        parser.add_argument({ "-d" }).action(argparse::store);
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<uint32_t>("-c") == 0);
+        REQUIRE(args1.get<std::string>("-d") == "");
+
+        auto args2 = parser.parse_args({ "-c" });
+        REQUIRE(args2.get<uint32_t>("-c") == 1);
+        REQUIRE(args2.get<std::string>("-d") == "");
+
+        auto args3 = parser.parse_args({ "-cddec" });
+        REQUIRE(args3.get<uint32_t>("-c") == 1);
+        REQUIRE(args3.get<std::string>("-d") == "dec");
+
+        auto args4 = parser.parse_args({ "-cccdd" });
+        REQUIRE(args4.get<uint32_t>("-c") == 3);
+        REQUIRE(args4.get<std::string>("-d") == "d");
+
+        REQUIRE_THROWS(parser.parse_args({ "-cccd" }));
+    }
+
+    SECTION("same name test (allow_abbrev=true)") {
+        parser.add_argument({ "-c" }).action(argparse::count);
+        parser.add_argument({ "-ccc" }).action(argparse::store_true);
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<uint32_t>("-c") == 0);
+        REQUIRE(args1.get<bool>("-ccc") == false);
+
+        auto args2 = parser.parse_args({ "-c" });
+        REQUIRE(args2.get<uint32_t>("-c") == 1);
+        REQUIRE(args2.get<bool>("-ccc") == false);
+
+        REQUIRE_THROWS(parser.parse_args({ "-cc" }));
+
+        auto args4 = parser.parse_args({ "-ccc" });
+        REQUIRE(args4.get<uint32_t>("-c") == 0);
+        REQUIRE(args4.get<bool>("-ccc") == true);
+
+        auto args5 = parser.parse_args({ "-cccc" });
+        REQUIRE(args5.get<uint32_t>("-c") == 4);
+        REQUIRE(args5.get<bool>("-ccc") == false);
+    }
+
+    SECTION("same name test (allow_abbrev=false)") {
+        parser.allow_abbrev(false);
+
+        parser.add_argument({ "-c" }).action(argparse::count);
+        parser.add_argument({ "-ccc" }).action(argparse::store_true);
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<uint32_t>("-c") == 0);
+        REQUIRE(args1.get<bool>("-ccc") == false);
+
+        auto args2 = parser.parse_args({ "-c" });
+        REQUIRE(args2.get<uint32_t>("-c") == 1);
+        REQUIRE(args2.get<bool>("-ccc") == false);
+
+        auto args3 = parser.parse_args({ "-cc" });
+        REQUIRE(args3.get<uint32_t>("-c") == 2);
+        REQUIRE(args3.get<bool>("-ccc") == false);
+
+        auto args4 = parser.parse_args({ "-ccc" });
+        REQUIRE(args4.get<uint32_t>("-c") == 0);
+        REQUIRE(args4.get<bool>("-ccc") == true);
+
+        auto args5 = parser.parse_args({ "-cccc" });
+        REQUIRE(args5.get<uint32_t>("-c") == 4);
+        REQUIRE(args5.get<bool>("-ccc") == false);
+    }
+}
