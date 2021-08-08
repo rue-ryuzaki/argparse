@@ -4,7 +4,7 @@ Python-like argument parser for C++11+ projects
 ```
 #include <iostream>
 
-#include "argparse.hpp"
+#include <argparse/argparse.hpp>
 
 int main(int argc, char* argv[])
 {

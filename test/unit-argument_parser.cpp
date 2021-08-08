@@ -1,6 +1,6 @@
-#include "catch2/catch.hpp"
+#include <catch2/catch.hpp>
 
-#include "argparse.hpp"
+#include <argparse/argparse.hpp>
 
 TEST_CASE("initization check", "[argument_parser]")
 {
