@@ -131,6 +131,20 @@ static inline std::string _flag_name(std::string str)
                            [prefix] (char c) -> bool { return c != prefix; }));
     return str;
 }
+
+static inline std::string _vector_string_to_string(std::vector<std::string> const& vec,
+                                                   std::string const& separator = " ",
+                                                   std::string const& quotes = "")
+{
+    std::string res;
+    for (auto const& el : vec) {
+        if (!res.empty()) {
+            res += separator;
+        }
+        res += quotes + el + quotes;
+    }
+    return res;
+}
 } // details
 
 enum Action
@@ -566,14 +580,7 @@ public:
                 return m_metavar;
             }
             if (!m_choices.empty()) {
-                std::string res;
-                for (auto const& choice : m_choices) {
-                    if (!res.empty()) {
-                        res += ",";
-                    }
-                    res += choice;
-                }
-                return "{" + res + "}";
+                return "{" + detail::_vector_string_to_string(m_choices, ",") + "}";
             }
             return type() == Optional ? detail::_to_upper(m_name) : m_name;
         }
@@ -1025,13 +1032,15 @@ public:
         auto const positional = positional_arguments();
         auto const optional = optional_arguments();
         for (auto const& arg : positional) {
-            if (argument_help_size < arg.flags_to_string().size()) {
-                argument_help_size = arg.flags_to_string().size();
+            auto size = arg.flags_to_string().size();
+            if (argument_help_size < size) {
+                argument_help_size = size;
             }
         }
         for (auto const& arg : optional) {
-            if (argument_help_size < arg.flags_to_string().size()) {
-                argument_help_size = arg.flags_to_string().size();
+            auto size = arg.flags_to_string().size();
+            if (argument_help_size < size) {
+                argument_help_size = size;
             }
         }
         argument_help_size += 4;
@@ -1090,13 +1099,7 @@ private:
             if (!choices.empty()) {
                 auto str = detail::_remove_quotes(value);
                 if (std::find(std::begin(choices), std::end(choices), str) == std::end(choices)) {
-                    std::string values;
-                    for (auto const& choice : choices) {
-                        if (!values.empty()) {
-                            values += ", ";
-                        }
-                        values += "'" + choice + "'";
-                    }
+                    std::string values = detail::_vector_string_to_string(choices, ", ", "'");
                     handle_error("error: argument " + arg.flags().front() + ": invalid choice: '" + str + "' (choose from " + values + ")");
                 }
             }
@@ -1647,14 +1650,7 @@ private:
             if (arg.required()) {
                 for (auto const& flag : _get_argument_flags(arg)) {
                     if (result.at(flag).second.empty()) {
-                        std::string args;
-                        for (auto const& f : arg.flags()) {
-                            if (!args.empty()) {
-                                args += "/";
-                            }
-                            args += f;
-                        }
-                        required_arguments.emplace_back(args);
+                        required_arguments.emplace_back(detail::_vector_string_to_string(arg.flags(), "/"));
                         break;
                     }
                 }
@@ -1662,7 +1658,7 @@ private:
         }
         if (!required_arguments.empty() || position < positional.size()) {
             std::string args;
-            for (; position < positional.size(); ++position) {
+            for ( ; position < positional.size(); ++position) {
                 auto const& argument = positional.at(position);
                 if (args.empty()) {
                     if (_is_positional_argument_stored(argument)) {
@@ -1685,22 +1681,14 @@ private:
                 }
                 args += argument.flags().front();
             }
-            for (auto const& arg : required_arguments) {
-                if (!args.empty()) {
-                    args += ", ";
-                }
-                args += arg;
-            }
+            args += detail::_vector_string_to_string(required_arguments, ", ");
             if (!args.empty()) {
                 handle_error("error: the following arguments are required: " + args);
             }
         }
         if (!unrecognized_arguments.empty()) {
-            std::string args;
-            for (auto const& arg : unrecognized_arguments) {
-                args += " " + arg;
-            }
-            handle_error("error: unrecognized arguments:" + args);
+            std::string args = detail::_vector_string_to_string(unrecognized_arguments, " ");
+            handle_error("error: unrecognized arguments: " + args);
         }
         for (auto& arg : result) {
             if (arg.second.second.empty() && arg.second.first != Action::count) {
