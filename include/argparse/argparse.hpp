@@ -1385,7 +1385,60 @@ private:
                 }
             }
         };
-
+        auto _separate_argument_abbreviations = [=] (std::vector<std::string>& temp_arguments,
+                std::string const& arg, std::string const& name) -> void
+        {
+            if (name.size() + 1 == arg.size()) {
+                std::vector<std::string> flags;
+                for (size_t i = 0; i < name.size(); ++i) {
+                    if (name.at(i) == '=') {
+                        if (flags.empty()) {
+                            flags.push_back(name.substr(i));
+                        } else {
+                            flags.back() += name.substr(i);
+                        }
+                        break;
+                    }
+                    Argument const* argument = nullptr;
+                    for (auto const& opt : optional) {
+                        for (auto const& flag : opt.flags()) {
+                            if (flag.size() == 2 && flag.back() == name.at(i)) {
+                                flags.push_back(flag);
+                                argument = &opt;
+                                break;
+                            }
+                        }
+                    }
+                    if (flags.size() == i) {
+                        // not found
+                        if (flags.empty()) {
+                            flags.push_back(name.substr(i));
+                        } else {
+                            auto str = name.substr(i + 1);
+                            if (!detail::_starts_with(str, "=")) {
+                                flags.back() += "=";
+                            }
+                            flags.back() += str;
+                        }
+                        break;
+                    } else if (argument->action() == Action::store
+                               || argument->action() == Action::append
+                               || argument->action() == Action::extend) {
+                        auto str = name.substr(i + 1);
+                        if (!detail::_starts_with(str, "=")) {
+                            flags.back() += "=";
+                        }
+                        flags.back() += str;
+                        break;
+                    }
+                }
+                for (auto const& f : flags) {
+                    temp_arguments.push_back(f);
+                }
+            } else {
+                temp_arguments.push_back(arg);
+            }
+        };
         auto _check_abbreviations = [=] (std::vector<std::string>& arguments) -> void
         {
             std::vector<std::string> temp_arguments;
@@ -1393,13 +1446,13 @@ private:
                 if (!arg.empty() && result.count(arg) == 0
                         && detail::_is_optional_argument(arg, prefix_chars())) {
                     if (m_allow_abbrev) {
-                        bool add_flag = false;
+                        bool is_flag_added = false;
                         std::string args;
                         std::vector<std::string> keys;
                         for (auto const& opt : optional) {
                             for (auto const& flag : opt.flags()) {
                                 if (detail::_starts_with(flag, arg)) {
-                                    add_flag = true;
+                                    is_flag_added = true;
                                     keys.push_back(flag);
                                     if (!args.empty()) {
                                         args += ",";
@@ -1420,117 +1473,15 @@ private:
                         if (keys.size() > 1) {
                             throw std::invalid_argument("error: ambiguous option: '" + arg + "' could match" + args);
                         }
-                        if (add_flag) {
+                        if (is_flag_added) {
                             temp_arguments.push_back(keys.empty() ? arg : keys.front());
                         } else {
                             auto name = detail::_flag_name(keys.empty() ? arg : keys.front());
-                            if (name.size() + 1 == arg.size()) {
-                                std::vector<std::string> flags;
-                                for (size_t i = 0; i < name.size(); ++i) {
-                                    if (name.at(i) == '=') {
-                                        if (flags.empty()) {
-                                            flags.push_back(name.substr(i));
-                                        } else {
-                                            flags.back() += name.substr(i);
-                                        }
-                                        break;
-                                    }
-                                    Argument const* argument = nullptr;
-                                    for (auto const& opt : optional) {
-                                        for (auto const& flag : opt.flags()) {
-                                            if (flag.size() == 2 && flag.back() == name.at(i)) {
-                                                flags.push_back(flag);
-                                                argument = &opt;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    if (flags.size() == i) {
-                                        // not found
-                                        if (flags.empty()) {
-                                            flags.push_back(name.substr(i));
-                                        } else {
-                                            auto str = name.substr(i + 1);
-                                            if (detail::_starts_with(str, "=")) {
-                                                flags.back() += str;
-                                            } else {
-                                                flags.back() += "=" + str;
-                                            }
-                                        }
-                                        break;
-                                    } else if (argument->action() == Action::store
-                                               || argument->action() == Action::append
-                                               || argument->action() == Action::extend) {
-                                        auto str = name.substr(i + 1);
-                                        if (detail::_starts_with(str, "=")) {
-                                            flags.back() += str;
-                                        } else {
-                                            flags.back() += "=" + str;
-                                        }
-                                        break;
-                                    }
-                                }
-                                for (auto const& f : flags) {
-                                    temp_arguments.push_back(f);
-                                }
-                            } else {
-                                temp_arguments.push_back(arg);
-                            }
+                            _separate_argument_abbreviations(temp_arguments, arg, name);
                         }
                     } else {
                         auto name = detail::_flag_name(arg);
-                        if (name.size() + 1 == arg.size()) {
-                            std::vector<std::string> flags;
-                            for (size_t i = 0; i < name.size(); ++i) {
-                                if (name.at(i) == '=') {
-                                    if (flags.empty()) {
-                                        flags.push_back(name.substr(i));
-                                    } else {
-                                        flags.back() += name.substr(i);
-                                    }
-                                    break;
-                                }
-                                Argument const* argument = nullptr;
-                                for (auto const& opt : optional) {
-                                    for (auto const& flag : opt.flags()) {
-                                        if (flag.size() == 2 && flag.back() == name.at(i)) {
-                                            flags.push_back(flag);
-                                            argument = &opt;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (flags.size() == i) {
-                                    // not found
-                                    if (flags.empty()) {
-                                        flags.push_back(name.substr(i));
-                                    } else {
-                                        auto str = name.substr(i + 1);
-                                        if (detail::_starts_with(str, "=")) {
-                                            flags.back() += str;
-                                        } else {
-                                            flags.back() += "=" + str;
-                                        }
-                                    }
-                                    break;
-                                } else if (argument->action() == Action::store
-                                           || argument->action() == Action::append
-                                           || argument->action() == Action::extend) {
-                                    auto str = name.substr(i + 1);
-                                    if (detail::_starts_with(str, "=")) {
-                                        flags.back() += str;
-                                    } else {
-                                        flags.back() += "=" + str;
-                                    }
-                                    break;
-                                }
-                            }
-                            for (auto const& f : flags) {
-                                temp_arguments.push_back(f);
-                            }
-                        } else {
-                            temp_arguments.push_back(arg);
-                        }
+                        _separate_argument_abbreviations(temp_arguments, arg, name);
                     }
                 } else {
                     temp_arguments.push_back(arg);
