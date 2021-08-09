@@ -170,7 +170,7 @@ public:
               m_flags(flags),
               m_name(name),
               m_type(type),
-              m_action(store),
+              m_action(Action::store),
               m_nargs(),
               m_const(),
               m_default(),
@@ -346,7 +346,7 @@ public:
 
         Argument& const_value(std::string const& value)
         {
-            if (m_action == store_const || m_action == append_const) {
+            if (m_action == Action::store_const || m_action == Action::append_const) {
                 m_const = detail::_trim_copy(value);
             } else {
                 m_parent->handle_error("TypeError: got an unexpected keyword argument 'const'");
@@ -356,7 +356,7 @@ public:
 
         Argument& default_value(std::string const& value)
         {
-            if (m_action != store_true && m_action != store_false) {
+            if (m_action != Action::store_true && m_action != Action::store_false) {
                 m_default = detail::_trim_copy(value);
             }
             return *this;
@@ -485,7 +485,10 @@ public:
             std::string res;
             if (type() == Optional) {
                 res += m_flags.front();
-                if (m_action == store || m_action == append || m_action == extend || m_action == append_const) {
+                if (m_action == Action::store
+                        || m_action == Action::append
+                        || m_action == Action::extend
+                        || m_action == Action::append_const) {
                     res += get_nargs_suffix();
                 }
             } else {
@@ -503,7 +506,10 @@ public:
                         res += ", ";
                     }
                     res += flag;
-                    if (m_action == store || m_action == append || m_action == extend || m_action == append_const) {
+                    if (m_action == Action::store
+                            || m_action == Action::append
+                            || m_action == Action::extend
+                            || m_action == Action::append_const) {
                         res += get_nargs_suffix();
                     }
                 }
@@ -622,7 +628,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            if (args.first == count) {
+            if (args.first == Action::count) {
                 return T(args.second.size());
             }
             if (args.second.empty()) {
@@ -643,7 +649,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            if (args.first == count) {
+            if (args.first == Action::count) {
                 throw std::logic_error("error: invalid get type for argument '" + key + "'");
             }
             if (args.second.empty()) {
@@ -688,23 +694,23 @@ public:
         {
             auto const& args = data(key);
             switch (args.first) {
-                case argparse::store_const :
+                case Action::store_const :
                     if (args.second.size() != 1) {
                         throw std::logic_error("error: ambiguous option: trying to get data from array argument '" + key + "'");
                     }
                     return args.second.front();
-                case argparse::store_true :
-                case argparse::store_false :
+                case Action::store_true :
+                case Action::store_false :
                     if (args.second.size() != 1) {
                         throw std::logic_error("error: ambiguous option: trying to get data from array argument '" + key + "'");
                     }
                     return args.second.front() == "0" ? "false" : "true";
-                case argparse::count :
+                case Action::count :
                     return std::to_string(args.second.size());
-                case argparse::store :
-                case argparse::append :
-                case argparse::append_const :
-                case argparse::extend :
+                case Action::store :
+                case Action::append :
+                case Action::append_const :
+                case Action::extend :
                     {
                         std::string res;
                         for (auto const& str : args.second) {
@@ -783,7 +789,7 @@ public:
           m_exit_on_error(true),
           m_parsed_arguments(),
           m_arguments(),
-          m_help_argument(Argument(this, { "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(store_true))
+          m_help_argument(Argument(this, { "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(Action::store_true))
     { }
 
     ArgumentParser(int argc, char* argv[])
@@ -804,7 +810,7 @@ public:
           m_exit_on_error(true),
           m_parsed_arguments(),
           m_arguments(),
-          m_help_argument(Argument(this, { "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(store_true))
+          m_help_argument(Argument(this, { "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(Action::store_true))
     {
         m_parsed_arguments.reserve(argc - 1);
         for (int i = 1; i < argc; ++i) {
@@ -1073,7 +1079,7 @@ private:
         auto _validate_arguments = [=] (std::vector<Argument> const& arguments)
         {
             for (auto const& arg : arguments) {
-                if ((arg.action() == store_const || arg.action() == append_const) && arg.const_value().empty()) {
+                if ((arg.action() == Action::store_const || arg.action() == Action::append_const) && arg.const_value().empty()) {
                     handle_error("TypeError: missing 1 required positional argument: 'const'");
                 }
             }
@@ -1172,16 +1178,16 @@ private:
         };
         auto _is_positional_argument_stored = [&] (Argument const& argument) -> bool
         {
-            if (argument.action() == argparse::store_const
-                    || argument.action() == argparse::store_true
-                    || argument.action() == argparse::store_false) {
+            if (argument.action() == Action::store_const
+                    || argument.action() == Action::store_true
+                    || argument.action() == Action::store_false) {
                 for (auto const& flag : _get_argument_flags(argument)) {
                     if (result.at(flag).second.empty()) {
                         result.at(flag).second.push_back(argument.const_value());
                     }
                 }
                 return true;
-            } else if (argument.action() == argparse::append_const) {
+            } else if (argument.action() == Action::append_const) {
                 for (auto const& flag : _get_argument_flags(argument)) {
                     if (!argument.default_value().empty()) {
                         handle_error("error: argument " + argument.flags().front() + ": ignored default value '" + argument.default_value() + "'");
@@ -1189,7 +1195,7 @@ private:
                     result.at(flag).second.push_back(argument.const_value());
                 }
                 return true;
-            } else if (argument.action() == argparse::count) {
+            } else if (argument.action() == Action::count) {
                 for (auto const& flag : _get_argument_flags(argument)) {
                     result.at(flag).second.push_back("");
                 }
@@ -1225,11 +1231,11 @@ private:
             bool more_args = false;
             for ( ; finish < positional.size(); ++finish) {
                 auto const& argument = positional.at(finish);
-                if (argument.action() == argparse::store_const
-                        || argument.action() == argparse::store_true
-                        || argument.action() == argparse::store_false
-                        || argument.action() == argparse::append_const
-                        || argument.action() == argparse::count) {
+                if (argument.action() == Action::store_const
+                        || argument.action() == Action::store_true
+                        || argument.action() == Action::store_false
+                        || argument.action() == Action::append_const
+                        || argument.action() == Action::count) {
                     continue;
                 }
                 auto const& nargs = argument.nargs();
@@ -1268,7 +1274,7 @@ private:
                         _store_argument_value(argument, arguments.at(i));
                         ++i;
                     } else if (nargs == "?" || nargs == "*") {
-                        if (argument.action() == argparse::store) {
+                        if (argument.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(argument)) {
                                 if (result.at(flag).second.empty()) {
                                     result.at(flag).second.push_back(_default_argument_value(argument));
@@ -1303,7 +1309,7 @@ private:
                             --over_args;
                         }
                     } else if (nargs == "?") {
-                        if (argument.action() == argparse::store) {
+                        if (argument.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(argument)) {
                                 if (result.at(flag).second.empty()) {
                                     result.at(flag).second.push_back(_default_argument_value(argument));
@@ -1317,7 +1323,7 @@ private:
                                 ++i;
                                 --over_args;
                             }
-                        } else if (argument.action() == argparse::store) {
+                        } else if (argument.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(argument)) {
                                 if (result.at(flag).second.empty()) {
                                     result.at(flag).second.push_back(_default_argument_value(argument));
@@ -1348,7 +1354,7 @@ private:
                             _store_argument_value(argument, arguments.at(i));
                             ++i;
                             ++over_args;
-                        } else if (argument.action() == argparse::store) {
+                        } else if (argument.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(argument)) {
                                 if (result.at(flag).second.empty()) {
                                     result.at(flag).second.push_back(_default_argument_value(argument));
@@ -1507,12 +1513,12 @@ private:
             auto const* temp = _get_optional_argument_by_flag(arg);
             if (temp) {
                 switch (temp->action()) {
-                    case argparse::store :
+                    case Action::store :
                         for (auto const& flag : _get_argument_flags(*temp)) {
                             result.at(flag).second.clear();
                         }
-                    case argparse::append :
-                    case argparse::extend :
+                    case Action::append :
+                    case Action::extend :
                         if (splitted.size() == 2) {
                             auto const& nargs = temp->nargs();
                             if (!nargs.empty() && nargs != "?" && nargs != "*" && nargs != "+" && nargs != "1") {
@@ -1572,9 +1578,9 @@ private:
                             }
                         }
                         break;
-                    case argparse::store_const :
-                    case argparse::store_true :
-                    case argparse::store_false :
+                    case Action::store_const :
+                    case Action::store_true :
+                    case Action::store_false :
                         if (splitted.size() == 1) {
                             for (auto const& flag : _get_argument_flags(*temp)) {
                                 if (result.at(flag).second.empty()) {
@@ -1585,7 +1591,7 @@ private:
                             handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
-                    case argparse::append_const :
+                    case Action::append_const :
                         if (splitted.size() == 1) {
                             for (auto const& flag : _get_argument_flags(*temp)) {
                                 if (!temp->default_value().empty()) {
@@ -1597,7 +1603,7 @@ private:
                             handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
-                    case argparse::help :
+                    case Action::help :
                         if (splitted.size() == 1) {
                             print_help();
                             exit(0);
@@ -1605,7 +1611,7 @@ private:
                             handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
-                    case argparse::version :
+                    case Action::version :
                         if (splitted.size() == 1) {
                             if (temp->version().empty()) {
                                 handle_error("AttributeError: 'ArgumentParser' object has no attribute 'version'");
@@ -1616,7 +1622,7 @@ private:
                             handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
-                    case argparse::count :
+                    case Action::count :
                         if (splitted.size() == 1) {
                             for (auto const& flag : _get_argument_flags(*temp)) {
                                 result.at(flag).second.push_back("");
@@ -1664,7 +1670,7 @@ private:
                     }
                     auto const& nargs = argument.nargs();
                     if (nargs == "?" || nargs == "*") {
-                        if (argument.action() == argparse::store) {
+                        if (argument.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(argument)) {
                                 if (result.at(flag).second.empty()) {
                                     result.at(flag).second.push_back(_default_argument_value(argument));
@@ -1697,7 +1703,7 @@ private:
             handle_error("error: unrecognized arguments:" + args);
         }
         for (auto& arg : result) {
-            if (arg.second.second.empty() && arg.second.first != count) {
+            if (arg.second.second.empty() && arg.second.first != Action::count) {
                 auto const* argument = _get_optional_argument_by_dest(arg.first);
                 if (!argument) {
                     continue;
