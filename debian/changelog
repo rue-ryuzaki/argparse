@@ -1,3 +1,10 @@
+cpp-argparse-dev (0.2.1-0ppa0) focal; urgency=low
+
+  * Fixed checked actions in _check_abbreviations()
+  * Code refactored
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Mon, 09 Aug 2021 23:25:49 +0300
+
 cpp-argparse-dev (0.2.0-0ppa0) focal; urgency=low
 
   * Initial upload v0.2.0
