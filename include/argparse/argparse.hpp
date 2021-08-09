@@ -1458,7 +1458,9 @@ private:
                                             }
                                         }
                                         break;
-                                    } else if (argument->action() != Action::count) {
+                                    } else if (argument->action() == Action::store
+                                               || argument->action() == Action::append
+                                               || argument->action() == Action::extend) {
                                         auto str = name.substr(i + 1);
                                         if (detail::_starts_with(str, "=")) {
                                             flags.back() += str;
@@ -1511,7 +1513,9 @@ private:
                                         }
                                     }
                                     break;
-                                } else if (argument->action() != Action::count) {
+                                } else if (argument->action() == Action::store
+                                           || argument->action() == Action::append
+                                           || argument->action() == Action::extend) {
                                     auto str = name.substr(i + 1);
                                     if (detail::_starts_with(str, "=")) {
                                         flags.back() += str;
