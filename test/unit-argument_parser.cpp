@@ -988,31 +988,37 @@ TEST_CASE("abbreviations", "[argument]")
         parser.add_argument({ "-c" }).action(argparse::count);
         parser.add_argument({ "-d" }).action(argparse::count);
         parser.add_argument({ "-e" }).action(argparse::count);
+        parser.add_argument({ "-f" }).action(argparse::store_true);
 
         auto args1 = parser.parse_args({ });
         REQUIRE(args1.get<uint32_t>("-c") == 0);
         REQUIRE(args1.get<uint32_t>("-d") == 0);
         REQUIRE(args1.get<uint32_t>("-e") == 0);
+        REQUIRE(args1.get<bool>("-f") == false);
 
         auto args2 = parser.parse_args({ "-c" });
         REQUIRE(args2.get<uint32_t>("-c") == 1);
         REQUIRE(args2.get<uint32_t>("-d") == 0);
         REQUIRE(args2.get<uint32_t>("-e") == 0);
+        REQUIRE(args2.get<bool>("-f") == false);
 
         auto args3 = parser.parse_args({ "-cddec" });
         REQUIRE(args3.get<uint32_t>("-c") == 2);
         REQUIRE(args3.get<uint32_t>("-d") == 2);
         REQUIRE(args3.get<uint32_t>("-e") == 1);
+        REQUIRE(args3.get<bool>("-f") == false);
 
         auto args4 = parser.parse_args({ "-cccee" });
         REQUIRE(args4.get<uint32_t>("-c") == 3);
         REQUIRE(args4.get<uint32_t>("-d") == 0);
         REQUIRE(args4.get<uint32_t>("-e") == 2);
+        REQUIRE(args4.get<bool>("-f") == false);
 
-        auto args5 = parser.parse_args({ "-ccce", "-ddcc" });
+        auto args5 = parser.parse_args({ "-cfcce", "-ddcc" });
         REQUIRE(args5.get<uint32_t>("-c") == 5);
         REQUIRE(args5.get<uint32_t>("-d") == 2);
         REQUIRE(args5.get<uint32_t>("-e") == 1);
+        REQUIRE(args5.get<bool>("-f") == true);
     }
 
     SECTION("multiargument store test") {
