@@ -1044,6 +1044,26 @@ TEST_CASE("abbreviations", "[argument]")
         REQUIRE_THROWS(parser.parse_args({ "-cccd" }));
     }
 
+    SECTION("same prefix store test") {
+        parser.add_argument({ "-f" }).action(argparse::store);
+        parser.add_argument({ "-foo" }).action(argparse::store);
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("-f") == "");
+        REQUIRE(args1.get<std::string>("-foo") == "");
+
+        REQUIRE_THROWS(parser.parse_args({ "-f" }));
+        REQUIRE_THROWS(parser.parse_args({ "-foo" }));
+
+        auto args4 = parser.parse_args({ "-foo1" });
+        REQUIRE(args4.get<std::string>("-f") == "oo1");
+        REQUIRE(args4.get<std::string>("-foo") == "");
+
+        auto args5 = parser.parse_args({ "-foo=1" });
+        REQUIRE(args5.get<std::string>("-f") == "");
+        REQUIRE(args5.get<std::string>("-foo") == "1");
+    }
+
     SECTION("same name test (allow_abbrev=true)") {
         parser.add_argument({ "-c" }).action(argparse::count);
         parser.add_argument({ "-ccc" }).action(argparse::store_true);
