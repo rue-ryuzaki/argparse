@@ -1,3 +1,9 @@
+cpp-argparse-dev (0.2.2-0ppa0) focal; urgency=low
+
+  * Fixed parse arguments containings '='
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Tue, 10 Aug 2021 22:58:40 +0300
+
 cpp-argparse-dev (0.2.1-0ppa0) focal; urgency=low
 
   * Fixed checked actions in _check_abbreviations()
