@@ -1398,6 +1398,11 @@ private:
                 std::string const& arg, std::string const& name) -> void
         {
             if (name.size() + 1 == arg.size()) {
+                auto const splitted = detail::_split_equal(arg);
+                if (splitted.size() == 2 && _get_optional_argument_by_flag(splitted.front())) {
+                    temp_arguments.push_back(arg);
+                    return;
+                }
                 std::vector<std::string> flags;
                 for (size_t i = 0; i < name.size(); ++i) {
                     if (name.at(i) == '=') {
@@ -1423,7 +1428,7 @@ private:
                         if (flags.empty()) {
                             flags.push_back(name.substr(i));
                         } else {
-                            auto str = name.substr(i + 1);
+                            auto str = name.substr(i);
                             if (!detail::_starts_with(str, "=")) {
                                 flags.back() += "=";
                             }
