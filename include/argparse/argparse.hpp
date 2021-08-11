@@ -1567,6 +1567,7 @@ private:
                                         _store_argument_value(*temp, next);
                                         ++n;
                                     } else if (n == 0) {
+                                        --i;
                                         if (nargs.empty()) {
                                             handle_error("error: argument " + arg + ": expected one argument");
                                         } else if (nargs == "?") {
