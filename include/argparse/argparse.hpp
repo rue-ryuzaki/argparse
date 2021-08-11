@@ -1385,7 +1385,7 @@ private:
                         _store_argument_value(argument, arguments.at(i));
                         ++i;
                     } else {
-                        size_t num_args = size_t(std::stoull(nargs));
+                        size_t num_args = (nargs == "?" ? 1 : size_t(std::stoull(nargs)));
                         for (size_t n = 0; n < num_args; ++i, ++n) {
                             _store_argument_value(argument, arguments.at(i));
                         }
