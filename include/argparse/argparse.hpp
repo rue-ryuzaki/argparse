@@ -360,7 +360,9 @@ public:
 
         Argument& const_value(std::string const& value)
         {
-            if (m_action == Action::store_const || m_action == Action::append_const) {
+            if (m_action == Action::store_const || m_action == Action::append_const
+                    || (type() == Optional && m_nargs == "?"
+                        && (m_action == Action::store || m_action == Action::append || m_action == Action::extend))) {
                 m_const = detail::_trim_copy(value);
             } else {
                 m_parent->handle_error("TypeError: got an unexpected keyword argument 'const'");
@@ -1546,7 +1548,9 @@ private:
                                     if (n == 0) {
                                         if (nargs.empty()) {
                                             handle_error("error: argument " + arg + ": expected one argument");
-                                        } else if (nargs == "?" || nargs == "*") {
+                                        } else if (nargs == "?") {
+                                            _store_argument_value(*temp, temp->const_value());
+                                        } else if (nargs == "*") {
                                             // OK
                                         } else if (nargs == "+") {
                                             handle_error("error: argument " + arg + ": expected at least one argument");
@@ -1565,7 +1569,10 @@ private:
                                     } else if (n == 0) {
                                         if (nargs.empty()) {
                                             handle_error("error: argument " + arg + ": expected one argument");
-                                        } else if (nargs == "?" || nargs == "*") {
+                                        } else if (nargs == "?") {
+                                            _store_argument_value(*temp, temp->const_value());
+                                            break;
+                                        } else if (nargs == "*") {
                                             break;
                                         } else if (nargs == "+") {
                                             handle_error("error: argument " + arg + ": expected at least one argument");
