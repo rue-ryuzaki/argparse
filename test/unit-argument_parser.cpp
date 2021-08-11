@@ -440,6 +440,32 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE_THROWS(parser.add_argument({ "countN" }).action(argparse::count).nargs(2));
     }
 
+    SECTION("nargs ?") {
+        parser.add_argument({ "--foo" }).nargs("?").const_value("c").default_value("d");
+        parser.add_argument({ "bar" }).nargs("?").default_value("d");
+        parser.add_argument({ "--store" });
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("foo") == "d");
+        REQUIRE(args1.get<std::string>("bar") == "d");
+
+        auto args2 = parser.parse_args({ "XX", "--foo" });
+        REQUIRE(args2.get<std::string>("foo") == "c");
+        REQUIRE(args2.get<std::string>("bar") == "XX");
+
+        REQUIRE_THROWS(parser.parse_args({ "XX", "--foo", "--store" }));
+
+        auto args3 = parser.parse_args({ "XX", "--foo", "--store", "store" });
+        REQUIRE(args3.get<std::string>("foo") == "c");
+        REQUIRE(args3.get<std::string>("bar") == "XX");
+
+        REQUIRE_THROWS(parser.parse_args({ "XX", "YY" }));
+
+        auto args4 = parser.parse_args({ "XX", "--foo", "YY"});
+        REQUIRE(args4.get<std::string>("foo") == "YY");
+        REQUIRE(args4.get<std::string>("bar") == "XX");
+    }
+
     SECTION("nargs ? optional") {
         parser.add_argument({ "--store" }).action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument({ "--append" }).action(argparse::append).nargs("?"); // TODO: default value are invalid in python if flag used
