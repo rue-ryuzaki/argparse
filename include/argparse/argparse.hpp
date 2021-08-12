@@ -501,13 +501,11 @@ public:
             std::string res;
             if (type() == Optional) {
                 res += m_flags.front();
-                if (m_action == Action::store
-                        || m_action == Action::append
-                        || m_action == Action::extend
-                        || m_action == Action::append_const) {
-                    res += get_nargs_suffix();
-                }
-            } else {
+            }
+            if (m_action == Action::store
+                    || m_action == Action::append
+                    || m_action == Action::extend
+                    || m_action == Action::append_const) {
                 res += get_nargs_suffix();
             }
             return res;
@@ -530,7 +528,7 @@ public:
                     }
                 }
             } else {
-                res += get_nargs_suffix();
+                res += get_argument_name();
             }
             return res;
         }
