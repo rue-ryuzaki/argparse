@@ -37,6 +37,7 @@
 #include <deque>
 #include <forward_list>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <list>
 #include <map>
@@ -204,7 +205,8 @@ public:
               m_help(),
               m_metavar(),
               m_dest(),
-              m_version()
+              m_version(),
+              m_callback(nullptr)
         { }
 
         Argument(Argument const& orig)
@@ -221,7 +223,8 @@ public:
               m_help(orig.m_help),
               m_metavar(orig.m_metavar),
               m_dest(orig.m_dest),
-              m_version(orig.m_version)
+              m_version(orig.m_version),
+              m_callback(orig.m_callback)
         { }
 
         Argument& operator =(Argument const& rhs)
@@ -241,6 +244,7 @@ public:
                 this->m_metavar = rhs.m_metavar;
                 this->m_dest    = rhs.m_dest;
                 this->m_version = rhs.m_version;
+                this->m_callback= rhs.m_callback;
             }
             return *this;
         }
@@ -451,6 +455,16 @@ public:
             return *this;
         }
 
+        Argument& callback(std::function<void()> func)
+        {
+            if (m_action == Action::store_true) {
+                m_callback = func;
+            } else {
+                m_parent->handle_error("TypeError: got an unexpected keyword argument 'callback'");
+            }
+            return *this;
+        }
+
         std::vector<std::string> const& flags() const
         {
             return m_flags;
@@ -504,6 +518,13 @@ public:
         std::string const& version() const
         {
             return m_version;
+        }
+
+        void callback() const
+        {
+            if (m_callback) {
+                m_callback();
+            }
         }
 
         Type type() const
@@ -608,6 +629,7 @@ public:
         std::string m_metavar;
         std::string m_dest;
         std::string m_version;
+        std::function<void()> m_callback;
     };
 
     class Namespace
@@ -1651,6 +1673,9 @@ private:
                                 if (result.at(flag).second.empty()) {
                                     result.at(flag).second.push_back(temp->const_value());
                                 }
+                            }
+                            if (temp->action() == Action::store_true) {
+                                temp->callback();
                             }
                         } else {
                             handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
