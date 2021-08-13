@@ -610,7 +610,7 @@ public:
         std::string m_version;
     };
 
-    class Arguments
+    class Namespace
     {
         template <typename T>       struct is_stl_container:std::false_type{};
         template <typename... Args> struct is_stl_container<std::deque             <Args...> >:std::true_type{};
@@ -631,13 +631,13 @@ public:
         template <typename... Args> struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
 
     public:
-        Arguments(std::map<std::string, ArgumentValue> const& arguments,
+        Namespace(std::map<std::string, ArgumentValue> const& arguments,
                   std::string const& prefix_chars)
             : m_arguments(arguments),
               m_prefix_chars(prefix_chars)
         { }
 
-        Arguments& operator =(Arguments const&) = delete;
+        Namespace& operator =(Namespace const&) = delete;
 
         template <class T, typename std::enable_if<std::is_integral<T>::value
                                                    and not std::is_same<bool, T>::value>::type* = nullptr>
@@ -1005,12 +1005,12 @@ public:
         return m_arguments.back();
     }
 
-    Arguments parse_args() const
+    Namespace parse_args() const
     {
         return parse_args(m_parsed_arguments);
     }
 
-    Arguments parse_args(std::vector<std::string> parsed_arguments) const
+    Namespace parse_args(std::vector<std::string> parsed_arguments) const
     {
         if (m_exit_on_error) {
             try {
@@ -1074,7 +1074,7 @@ public:
     }
 
 private:
-    Arguments parse_known_args(std::vector<std::string> parsed_arguments) const
+    Namespace parse_known_args(std::vector<std::string> parsed_arguments) const
     {
         if (!m_fromfile_prefix_chars.empty()) {
             std::vector<std::string> temp;
@@ -1738,7 +1738,7 @@ private:
                 }
             }
         }
-        return Arguments(result, prefix_chars());
+        return Namespace(result, prefix_chars());
     }
 
     void handle_error(std::string const& error = "error: unknown") const
