@@ -1,3 +1,11 @@
+cpp-argparse-dev (0.2.4-0ppa0) focal; urgency=low
+
+  * Fixed usage and help generation
+  * Fixed store negative numbers
+  * Fixed call dest() for positional arguments
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Fri, 13 Aug 2021 20:39:29 +0300
+
 cpp-argparse-dev (0.2.3-0ppa0) focal; urgency=low
 
   * Fixed parse arguments with '?' nargs
