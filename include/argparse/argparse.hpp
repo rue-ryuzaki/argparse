@@ -1005,6 +1005,34 @@ public:
         return m_arguments.back();
     }
 
+    std::string get_default(std::string const& dest) const
+    {
+        auto const positional = positional_arguments();
+        auto const optional = optional_arguments();
+        for (auto const& arg : positional) {
+            for (auto const& flag : arg.flags()) {
+                if (flag == dest) {
+                    return !arg.default_value().empty() ? arg.default_value() : argument_default();
+                }
+            }
+        }
+        for (auto const& arg : optional) {
+            if (!arg.dest().empty()) {
+                if (arg.dest() == dest) {
+                    return !arg.default_value().empty() ? arg.default_value() : argument_default();
+                }
+            } else {
+                for (auto const& flag : arg.flags()) {
+                    auto name = detail::_flag_name(flag);
+                    if (flag == dest || name == dest) {
+                        return !arg.default_value().empty() ? arg.default_value() : argument_default();
+                    }
+                }
+            }
+        }
+        return std::string();
+    }
+
     Namespace parse_args() const
     {
         return parse_args(m_parsed_arguments);
