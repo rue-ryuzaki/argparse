@@ -181,6 +181,43 @@ TEST_CASE("optional arguments", "[argument_parser]")
     }
 }
 
+TEST_CASE("optional arguments containing -", "[argument_parser]")
+{
+    SECTION("no negative number options") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument({ "-x" });
+        parser.add_argument({ "foo" }).nargs("?");
+
+        // so -1 is a positional argument
+        auto args = parser.parse_args({ "-x", "-1" });
+        REQUIRE(args.get<std::string>("-x") == "-1");
+        REQUIRE(args.get<std::string>("foo") == "");
+
+        // so -1 and -5 are positional arguments
+        auto args2 = parser.parse_args({ "-x", "-1", "-5" });
+        REQUIRE(args2.get<std::string>("-x") == "-1");
+        REQUIRE(args2.get<std::string>("foo") == "-5");
+    }
+
+    SECTION("negative number options present") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument({ "-1" }).dest("one");
+        parser.add_argument({ "foo" }).nargs("?");
+
+        // so -1 is an option
+        auto args = parser.parse_args({ "-1", "x" });
+        REQUIRE(args.get<std::string>("one") == "x");
+        REQUIRE(args.get<std::string>("foo") == "");
+
+        // so -2 is an option
+        REQUIRE_THROWS(parser.parse_args({ "-2" }));
+        // so both -1s are options
+        REQUIRE_THROWS(parser.parse_args({ "-1", "-1" }));
+    }
+}
+
 TEST_CASE("positional arguments", "[argument_parser]")
 {
     std::string global_default = "global";
