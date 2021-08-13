@@ -149,16 +149,16 @@ static inline std::string _vector_string_to_string(std::vector<std::string> cons
 
 enum Action
 {
-    store,
-    store_const,
-    store_true,
-    store_false,
-    append,
-    append_const,
-    count,
-    help,
-    version,
-    extend,
+    store           = 0x00000001,
+    store_const     = 0x00000002,
+    store_true      = 0x00000004,
+    store_false     = 0x00000008,
+    append          = 0x00000010,
+    append_const    = 0x00000020,
+    count           = 0x00000040,
+    help            = 0x00000080,
+    version         = 0x00000100,
+    extend          = 0x00000200,
 };
 
 // ArgumentParser objects
@@ -298,8 +298,9 @@ public:
                     if (m_nargs == "0") {
                         m_nargs.clear();
                     }
-                default :
                     break;
+                default :
+                    throw std::invalid_argument("ValueError: unknown action");
             }
             return *this;
         }
@@ -327,7 +328,7 @@ public:
                     }
                     break;
                 default:
-                    break;
+                    throw std::invalid_argument("ValueError: unknown action");
             }
             m_nargs = std::to_string(value);
             return *this;
@@ -340,13 +341,13 @@ public:
 
         Argument& nargs(std::string const& value)
         {
-            if (m_action == Action::store_const
-                    || m_action == Action::store_true
-                    || m_action == Action::store_false
-                    || m_action == Action::append_const
-                    || m_action == Action::help
-                    || m_action == Action::version
-                    || m_action == Action::count) {
+            if (m_action & (Action::store_const
+                            | Action::store_true
+                            | Action::store_false
+                            | Action::append_const
+                            | Action::help
+                            | Action::version
+                            | Action::count)) {
                 throw std::logic_error("TypeError: got an unexpected keyword argument 'nargs'");
             }
             auto param = detail::_trim_copy(value);
@@ -360,9 +361,9 @@ public:
 
         Argument& const_value(std::string const& value)
         {
-            if (m_action == Action::store_const || m_action == Action::append_const
+            if (m_action & (Action::store_const | Action::append_const)
                     || (type() == Optional && m_nargs == "?"
-                        && (m_action == Action::store || m_action == Action::append || m_action == Action::extend))) {
+                        && (m_action & (Action::store | Action::append | Action::extend)))) {
                 m_const = detail::_trim_copy(value);
             } else {
                 m_parent->handle_error("TypeError: got an unexpected keyword argument 'const'");
@@ -372,7 +373,7 @@ public:
 
         Argument& default_value(std::string const& value)
         {
-            if (m_action != Action::store_true && m_action != Action::store_false) {
+            if (!(m_action & (Action::store_true | Action::store_false))) {
                 m_default = detail::_trim_copy(value);
             }
             return *this;
@@ -380,13 +381,13 @@ public:
 
         Argument& choices(std::vector<std::string> const& value)
         {
-            if (m_action == Action::store_const
-                    || m_action == Action::store_true
-                    || m_action == Action::store_false
-                    || m_action == Action::append_const
-                    || m_action == Action::help
-                    || m_action == Action::version
-                    || m_action == Action::count) {
+            if (m_action & (Action::store_const
+                            | Action::store_true
+                            | Action::store_false
+                            | Action::append_const
+                            | Action::help
+                            | Action::version
+                            | Action::count)) {
                 throw std::logic_error("TypeError: got an unexpected keyword argument 'choices'");
             }
             m_choices.clear();
@@ -502,10 +503,7 @@ public:
             if (type() == Optional) {
                 res += m_flags.front();
             }
-            if (m_action == Action::store
-                    || m_action == Action::append
-                    || m_action == Action::extend
-                    || m_action == Action::append_const) {
+            if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
                 res += get_nargs_suffix();
             }
             return res;
@@ -520,10 +518,7 @@ public:
                         res += ", ";
                     }
                     res += flag;
-                    if (m_action == Action::store
-                            || m_action == Action::append
-                            || m_action == Action::extend
-                            || m_action == Action::append_const) {
+                    if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
                         res += get_nargs_suffix();
                     }
                 }
@@ -1088,7 +1083,7 @@ private:
         auto _validate_arguments = [=] (std::vector<Argument> const& arguments)
         {
             for (auto const& arg : arguments) {
-                if ((arg.action() == Action::store_const || arg.action() == Action::append_const) && arg.const_value().empty()) {
+                if ((arg.action() & (Action::store_const | Action::append_const)) && arg.const_value().empty()) {
                     handle_error("TypeError: missing 1 required positional argument: 'const'");
                 }
             }
@@ -1181,9 +1176,7 @@ private:
         };
         auto _is_positional_argument_stored = [&] (Argument const& argument) -> bool
         {
-            if (argument.action() == Action::store_const
-                    || argument.action() == Action::store_true
-                    || argument.action() == Action::store_false) {
+            if (argument.action() & (Action::store_const | Action::store_true | Action::store_false)) {
                 for (auto const& flag : _get_argument_flags(argument)) {
                     if (result.at(flag).second.empty()) {
                         result.at(flag).second.push_back(argument.const_value());
@@ -1234,11 +1227,11 @@ private:
             bool more_args = false;
             for ( ; finish < positional.size(); ++finish) {
                 auto const& argument = positional.at(finish);
-                if (argument.action() == Action::store_const
-                        || argument.action() == Action::store_true
-                        || argument.action() == Action::store_false
-                        || argument.action() == Action::append_const
-                        || argument.action() == Action::count) {
+                if (argument.action() & (Action::store_const
+                                         | Action::store_true
+                                         | Action::store_false
+                                         | Action::append_const
+                                         | Action::count)) {
                     continue;
                 }
                 auto const& nargs = argument.nargs();
@@ -1435,9 +1428,7 @@ private:
                             flags.back() += str;
                         }
                         break;
-                    } else if (argument->action() == Action::store
-                               || argument->action() == Action::append
-                               || argument->action() == Action::extend) {
+                    } else if (argument->action() & (Action::store | Action::append | Action::extend)) {
                         auto str = name.substr(i + 1);
                         if (!detail::_starts_with(str, "=")) {
                             flags.back() += "=";
