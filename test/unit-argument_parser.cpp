@@ -326,23 +326,30 @@ TEST_CASE("argument dest", "[argument]")
     std::string dest_foobar = "foobar_dest";
 
     auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-    parser.add_argument({ "--foo" }).dest(dest_foo);
-    parser.add_argument({ "--bar" }).dest(dest_bar).default_value(local_default);
-    parser.add_argument({ "foobar" }).dest(dest_foobar);
 
-    auto args1 = parser.parse_args({ "foobar" });
-    REQUIRE_THROWS(args1.get<std::string>("--foo"));
-    REQUIRE_THROWS(args1.get<std::string>("--bar"));
-    REQUIRE_THROWS(args1.get<std::string>("foobar"));
+    SECTION("positional arguments") {
+        REQUIRE_THROWS(parser.add_argument({ "foobar" }).dest(dest_foobar));
+    }
 
-    REQUIRE(args1.get<std::string>(dest_foo) == global_default);
-    REQUIRE(args1.get<std::string>(dest_bar) == local_default);
-    REQUIRE(args1.get<std::string>(dest_foobar) == "foobar");
+    SECTION("optional arguments") {
+        parser.add_argument({ "--foo" }).dest(dest_foo);
+        parser.add_argument({ "--bar" }).dest(dest_bar).default_value(local_default);
+        parser.add_argument({ "foobar" });
 
-    auto args2 = parser.parse_args({ "--foo=foo", "foobar" });
-    REQUIRE(args2.get<std::string>(dest_foo) == "foo");
-    REQUIRE(args2.get<std::string>(dest_bar) == local_default);
-    REQUIRE(args2.get<std::string>(dest_foobar) == "foobar");
+        auto args1 = parser.parse_args({ "foobar" });
+        REQUIRE_THROWS(args1.get<std::string>("--foo"));
+        REQUIRE_THROWS(args1.get<std::string>("--bar"));
+        REQUIRE(args1.get<std::string>("foobar") == "foobar");
+
+        REQUIRE(args1.get<std::string>(dest_foo) == global_default);
+        REQUIRE(args1.get<std::string>(dest_bar) == local_default);
+        REQUIRE(args1.get<std::string>("foobar") == "foobar");
+
+        auto args2 = parser.parse_args({ "--foo=foo", "foobar" });
+        REQUIRE(args2.get<std::string>(dest_foo) == "foo");
+        REQUIRE(args2.get<std::string>(dest_bar) == local_default);
+        REQUIRE(args2.get<std::string>("foobar") == "foobar");
+    }
 }
 
 TEST_CASE("argument actions", "[argument]")
