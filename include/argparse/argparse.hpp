@@ -434,6 +434,9 @@ public:
 
         Argument& dest(std::string const& value)
         {
+            if (type() == Positional) {
+                throw std::logic_error("ValueError: dest supplied twice for positional argument");
+            }
             m_dest = detail::_trim_copy(value);
             return *this;
         }
