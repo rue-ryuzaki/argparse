@@ -1123,12 +1123,29 @@ private:
                 }
             }
         };
+        auto _is_negative_numbers_presented = [=] (std::vector<Argument> const& optionals) -> bool
+        {
+            if (std::find(std::begin(m_prefix_chars), std::end(m_prefix_chars), '-')
+                    == std::end(m_prefix_chars)) {
+                return false;
+            }
+            for (auto const& arg : optionals) {
+                for (auto const& flag : arg.flags()) {
+                    if (detail::_is_negative_number(flag)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
 
         auto const positional = positional_arguments();
         auto const optional = optional_arguments();
 
         _validate_arguments(positional);
         _validate_arguments(optional);
+
+        bool have_negative_number_options = _is_negative_numbers_presented(optional);
 
         std::map<std::string, ArgumentValue> result;
         _create_result(positional, result);
@@ -1145,7 +1162,6 @@ private:
             }
             return nullptr;
         };
-
         auto _get_optional_argument_by_dest = [=] (std::string const& key) -> Argument const*
         {
             for (auto const& arg : optional) {
@@ -1175,7 +1191,8 @@ private:
                     break;
                 } else {
                     auto const& next = parsed_arguments.at(i);
-                    if (!detail::_is_optional_argument(next, prefix_chars()) || detail::_is_negative_number(next)) {
+                    if (!detail::_is_optional_argument(next, prefix_chars())
+                            || (!have_negative_number_options && detail::_is_negative_number(next))) {
                         values.push_back(next);
                     } else {
                         --i;
@@ -1430,7 +1447,7 @@ private:
                     if (flags.size() == i) {
                         // not found
                         if (flags.empty()) {
-                            flags.push_back(name.substr(i));
+                            flags.push_back(arg);
                         } else {
                             auto str = name.substr(i);
                             if (!detail::_starts_with(str, "=")) {
@@ -1461,7 +1478,7 @@ private:
             for (auto const& arg : arguments) {
                 if (!arg.empty() && result.count(arg) == 0
                         && detail::_is_optional_argument(arg, prefix_chars())
-                        && !detail::_is_negative_number(arg)) {
+                        && (have_negative_number_options || !detail::_is_negative_number(arg))) {
                     if (m_allow_abbrev) {
                         bool is_flag_added = false;
                         std::string args;
@@ -1564,7 +1581,7 @@ private:
                                     break;
                                 } else {
                                     auto const& next = parsed_arguments.at(i);
-                                    if (!detail::_is_optional_argument(next, prefix_chars()) || detail::_is_negative_number(next)) {
+                                    if (!detail::_is_optional_argument(next, prefix_chars()) || (!have_negative_number_options && detail::_is_negative_number(next))) {
                                         _store_argument_value(*temp, next);
                                         ++n;
                                     } else if (n == 0) {
@@ -1652,6 +1669,8 @@ private:
                         handle_error("error: action not supported");
                         break;
                 }
+            } else if (have_negative_number_options && detail::_is_negative_number(arg)) {
+                unrecognized_arguments.push_back(arg);
             } else {
                 _store_positional_arguments(i);
             }
