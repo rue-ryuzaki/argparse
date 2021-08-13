@@ -132,6 +132,17 @@ static inline std::string _flag_name(std::string str)
     return str;
 }
 
+static inline bool _is_negative_number(std::string const& str)
+{
+    double value;
+    std::stringstream ss(str);
+    ss >> value;
+    if (ss.fail() || !ss.eof()) {
+        return false;
+    }
+    return value < 0;
+}
+
 static inline std::string _vector_string_to_string(std::vector<std::string> const& vec,
                                                    std::string const& separator = " ",
                                                    std::string const& quotes = "")
@@ -1164,7 +1175,7 @@ private:
                     break;
                 } else {
                     auto const& next = parsed_arguments.at(i);
-                    if (!detail::_is_optional_argument(next, prefix_chars())) {
+                    if (!detail::_is_optional_argument(next, prefix_chars()) || detail::_is_negative_number(next)) {
                         values.push_back(next);
                     } else {
                         --i;
@@ -1449,7 +1460,8 @@ private:
             std::vector<std::string> temp_arguments;
             for (auto const& arg : arguments) {
                 if (!arg.empty() && result.count(arg) == 0
-                        && detail::_is_optional_argument(arg, prefix_chars())) {
+                        && detail::_is_optional_argument(arg, prefix_chars())
+                        && !detail::_is_negative_number(arg)) {
                     if (m_allow_abbrev) {
                         bool is_flag_added = false;
                         std::string args;
@@ -1552,7 +1564,7 @@ private:
                                     break;
                                 } else {
                                     auto const& next = parsed_arguments.at(i);
-                                    if (!detail::_is_optional_argument(next, prefix_chars())) {
+                                    if (!detail::_is_optional_argument(next, prefix_chars()) || detail::_is_negative_number(next)) {
                                         _store_argument_value(*temp, next);
                                         ++n;
                                     } else if (n == 0) {
