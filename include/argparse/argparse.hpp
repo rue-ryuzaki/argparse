@@ -1308,11 +1308,7 @@ private:
             bool more_args = false;
             for ( ; finish < positional.size(); ++finish) {
                 auto const& argument = positional.at(finish);
-                if (argument.action() & (Action::store_const
-                                         | Action::store_true
-                                         | Action::store_false
-                                         | Action::append_const
-                                         | Action::count)) {
+                if (!(argument.action() & (Action::store | Action::append | Action::extend))) {
                     continue;
                 }
                 auto const& nargs = argument.nargs();
