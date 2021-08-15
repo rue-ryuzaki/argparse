@@ -612,7 +612,8 @@ public:
             if (!m_choices.empty()) {
                 return "{" + detail::_vector_string_to_string(m_choices, ",") + "}";
             }
-            return type() == Optional ? detail::_to_upper(m_name) : m_name;
+            auto res = m_dest.empty() ? m_name : m_dest;
+            return type() == Optional ? detail::_to_upper(res) : res;
         }
 
         ArgumentParser* m_parent;
