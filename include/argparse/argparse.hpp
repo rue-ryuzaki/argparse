@@ -179,6 +179,46 @@ enum Enum
     SUPPRESS,
 };
 
+class ArgumentError : public std::invalid_argument
+{
+public:
+    explicit ArgumentError(std::string const& error)
+        : std::invalid_argument("argparse.ArgumentError: " + error)
+    { }
+};
+
+class AttributeError : public std::invalid_argument
+{
+public:
+    explicit AttributeError(std::string const& error)
+        : std::invalid_argument("AttributeError: " + error)
+    { }
+};
+
+class ValueError : public std::invalid_argument
+{
+public:
+    explicit ValueError(std::string const& error)
+        : std::invalid_argument("ValueError: " + error)
+    { }
+};
+
+class IndexError : public std::logic_error
+{
+public:
+    explicit IndexError(std::string const& error)
+        : std::logic_error("IndexError: " + error)
+    { }
+};
+
+class TypeError : public std::logic_error
+{
+public:
+    explicit TypeError(std::string const& error)
+        : std::logic_error("TypeError: " + error)
+    { }
+};
+
 // ArgumentParser objects
 class ArgumentParser
 {
@@ -277,7 +317,7 @@ public:
             } else if (value == "extend") {
                 return action(Action::extend);
             }
-            throw std::invalid_argument("ValueError: unknown action '" + value + "'");
+            throw ValueError("unknown action '" + value + "'");
         }
 
         Argument& action(Action value)
@@ -304,7 +344,7 @@ public:
                 case Action::help :
                     if (type() == Positional) {
                         // TODO: version and help actions cannot be positional
-                        throw std::logic_error("TypeError: got an unexpected keyword argument 'required'");
+                        throw TypeError("got an unexpected keyword argument 'required'");
                     }
                 case Action::store_const :
                 case Action::append_const :
@@ -320,7 +360,7 @@ public:
                     }
                     break;
                 default :
-                    throw std::invalid_argument("ValueError: unknown action");
+                    throw ValueError("unknown action");
             }
             return *this;
         }
@@ -335,20 +375,20 @@ public:
                 case Action::help :
                 case Action::version :
                 case Action::count :
-                    throw std::logic_error("TypeError: got an unexpected keyword argument 'nargs'");
+                    throw TypeError("got an unexpected keyword argument 'nargs'");
                 case Action::store :
                     if (value == 0) {
-                        throw std::invalid_argument("ValueError: nargs for store actions must be != 0; if you have nothing to store, actions such as store true or store const may be more appropriate");
+                        throw ValueError("nargs for store actions must be != 0; if you have nothing to store, actions such as store true or store const may be more appropriate");
                     }
                     break;
                 case Action::append :
                 case Action::extend :
                     if (value == 0) {
-                        throw std::invalid_argument("ValueError: nargs for append actions must be != 0; if arg strings are not supplying the value to append, the append const action may be more appropriate");
+                        throw ValueError("nargs for append actions must be != 0; if arg strings are not supplying the value to append, the append const action may be more appropriate");
                     }
                     break;
                 default:
-                    throw std::invalid_argument("ValueError: unknown action");
+                    throw ValueError("unknown action");
             }
             m_nargs = std::to_string(value);
             return *this;
@@ -362,12 +402,12 @@ public:
         Argument& nargs(std::string const& value)
         {
             if (!(m_action & (Action::store | Action::append | Action::extend))) {
-                throw std::logic_error("TypeError: got an unexpected keyword argument 'nargs'");
+                throw TypeError("got an unexpected keyword argument 'nargs'");
             }
             auto param = detail::_trim_copy(value);
             auto const available_values = { "?", "*", "+" };
             if (std::find(std::begin(available_values), std::end(available_values), param) == std::end(available_values)) {
-                throw std::invalid_argument("ValueError: invalid nargs value '" + param + "'");
+                throw ValueError("invalid nargs value '" + param + "'");
             }
             m_nargs = param;
             return *this;
@@ -380,9 +420,9 @@ public:
                         && (m_action & (Action::store | Action::append | Action::extend)))) {
                 m_const = detail::_trim_copy(value);
             } else if (type() == Optional && (m_action & (Action::store | Action::append | Action::extend)) && m_nargs != "?") {
-                throw std::invalid_argument("ValueError: nargs must be '?' to supply const");
+                throw ValueError("nargs must be '?' to supply const");
             } else {
-                throw std::logic_error("TypeError: got an unexpected keyword argument 'const'");
+                throw TypeError("got an unexpected keyword argument 'const'");
             }
             return *this;
         }
@@ -398,7 +438,7 @@ public:
         Argument& choices(std::vector<std::string> const& value)
         {
             if (!(m_action & (Action::store | Action::append | Action::extend))) {
-                throw std::logic_error("TypeError: got an unexpected keyword argument 'choices'");
+                throw TypeError("got an unexpected keyword argument 'choices'");
             }
             m_choices.clear();
             for (auto const& str : value) {
@@ -413,7 +453,7 @@ public:
         Argument& required(bool value)
         {
             if (type() == Positional) {
-                throw std::logic_error("TypeError: 'required' is an invalid argument for positionals");
+                throw TypeError("'required' is an invalid argument for positionals");
             }
             m_required = value;
             return *this;
@@ -429,7 +469,7 @@ public:
         Argument& help(Enum value)
         {
             if (value != SUPPRESS) {
-                throw std::logic_error("TypeError: got an unexpected keyword argument 'help'");
+                throw TypeError("got an unexpected keyword argument 'help'");
             }
             m_help_type = value;
             return *this;
@@ -444,7 +484,7 @@ public:
         Argument& dest(std::string const& value)
         {
             if (type() == Positional) {
-                throw std::invalid_argument("ValueError: dest supplied twice for positional argument");
+                throw ValueError("dest supplied twice for positional argument");
             }
             m_dest = detail::_trim_copy(value);
             return *this;
@@ -455,7 +495,7 @@ public:
             if (m_action == Action::version) {
                 m_version = detail::_trim_copy(value);
             } else {
-                throw std::logic_error("TypeError: got an unexpected keyword argument 'version'");
+                throw TypeError("got an unexpected keyword argument 'version'");
             }
             return *this;
         }
@@ -465,7 +505,7 @@ public:
             if (m_action == Action::store_true) {
                 m_callback = func;
             } else {
-                throw std::logic_error("TypeError: got an unexpected keyword argument 'callback'");
+                throw TypeError("got an unexpected keyword argument 'callback'");
             }
             return *this;
         }
@@ -684,7 +724,7 @@ public:
                 return T();
             }
             if (args.second.size() != 1) {
-                throw std::logic_error("error: ambiguous option: trying to get data from array argument '" + key + "'");
+                throw TypeError("trying to get data from array argument '" + key + "'");
             }
             if (args.second.front().empty()) {
                 return T();
@@ -699,13 +739,13 @@ public:
         {
             auto const& args = data(key);
             if (args.first == Action::count) {
-                throw std::logic_error("error: invalid get type for argument '" + key + "'");
+                throw TypeError("invalid get type for argument '" + key + "'");
             }
             if (args.second.empty()) {
                 return T();
             }
             if (args.second.size() != 1) {
-                throw std::logic_error("error: ambiguous option: trying to get data from array argument '" + key + "'");
+                throw TypeError("trying to get data from array argument '" + key + "'");
             }
             if (args.second.front().empty()) {
                 return T();
@@ -745,13 +785,13 @@ public:
             switch (args.first) {
                 case Action::store_const :
                     if (args.second.size() != 1) {
-                        throw std::logic_error("error: ambiguous option: trying to get data from array argument '" + key + "'");
+                        throw TypeError("trying to get data from array argument '" + key + "'");
                     }
                     return args.second.front();
                 case Action::store_true :
                 case Action::store_false :
                     if (args.second.size() != 1) {
-                        throw std::logic_error("error: ambiguous option: trying to get data from array argument '" + key + "'");
+                        throw TypeError("trying to get data from array argument '" + key + "'");
                     }
                     return args.second.front() == "0" ? "false" : "true";
                 case Action::count :
@@ -771,7 +811,7 @@ public:
                         return "[" + res + "]";
                     }
                 default :
-                    throw std::logic_error("error: action not supported");
+                    throw ValueError("action not supported");
             }
         }
 
@@ -787,7 +827,7 @@ public:
                     return pair.second;
                 }
             }
-            throw std::invalid_argument("AttributeError: 'Namespace' object has no attribute '" + key + "'");
+            throw AttributeError("'Namespace' object has no attribute '" + key + "'");
         }
 
         template <class T>
@@ -814,7 +854,7 @@ public:
             std::stringstream ss(data);
             ss >> result;
             if (ss.fail() || !ss.eof()) {
-                throw std::invalid_argument("error: can't convert value '" + data + "'");
+                throw TypeError("can't convert value '" + data + "'");
             }
             return result;
         }
@@ -997,12 +1037,12 @@ public:
     Argument& add_argument(std::vector<std::string> flags)
     {
         if (flags.empty()) {
-            throw std::invalid_argument("ValueError: empty options");
+            throw ValueError("empty options");
         }
         flags.front() = detail::_trim_copy(flags.front());
         auto flag_name = flags.front();
         if (flag_name.empty()) {
-            throw std::logic_error("IndexError: string index out of range");
+            throw IndexError("string index out of range");
         }
 
         auto prefixes = 0ul;
@@ -1020,17 +1060,17 @@ public:
             _update_flag_name(flag_name);
         } else if (flags.size() > 1) {
             // no positional multiflag
-            throw std::invalid_argument("ValueError: invalid option string " + flags.front() + ": must starts with a character '" + m_prefix_chars + "'");
+            throw ValueError("invalid option string " + flags.front() + ": must starts with a character '" + m_prefix_chars + "'");
         }
         for (size_t i = 1; i < flags.size(); ++i) {
             // check arguments
             auto const& flag = flags.at(i);
             if (flag.empty()) {
-                throw std::logic_error("IndexError: string index out of range");
+                throw IndexError("string index out of range");
             }
             if (!detail::_is_optional_argument(flag, prefix_chars())) {
                 // no positional and optional args
-                throw std::invalid_argument("ValueError: invalid option string " + flag + ": must starts with a character '" + m_prefix_chars + "'");
+                throw ValueError("invalid option string " + flag + ": must starts with a character '" + m_prefix_chars + "'");
             }
             _update_flag_name(flag);
         }
@@ -1159,7 +1199,7 @@ private:
         {
             for (auto const& arg : arguments) {
                 if ((arg.action() & (Action::store_const | Action::append_const)) && arg.const_value().empty()) {
-                    handle_error("TypeError: missing 1 required positional argument: 'const'");
+                    throw TypeError("missing 1 required positional argument: 'const'");
                 }
             }
         };
@@ -1182,7 +1222,7 @@ private:
                     if (result.count(flag) == 0) {
                         result[flag] = std::make_pair(arg.action(), std::vector<std::string>());
                     } else {
-                        handle_error("ArgumentError: argument " + flag + ": conflicting option string: " + flag);
+                        throw ArgumentError("argument " + flag + ": conflicting option string: " + flag);
                     }
                 }
             }
@@ -1565,7 +1605,7 @@ private:
                             }
                         }
                         if (keys.size() > 1) {
-                            throw std::invalid_argument("error: ambiguous option: '" + arg + "' could match" + args);
+                            handle_error("error: ambiguous option: '" + arg + "' could match" + args);
                         }
                         if (is_flag_added) {
                             temp_arguments.push_back(keys.empty() ? arg : keys.front());
@@ -1711,7 +1751,7 @@ private:
                     case Action::version :
                         if (splitted.size() == 1) {
                             if (temp->version().empty()) {
-                                handle_error("AttributeError: 'ArgumentParser' object has no attribute 'version'");
+                                throw AttributeError("'ArgumentParser' object has no attribute 'version'");
                             }
                             std::cout << temp->version() << std::endl;
                             exit(0);
