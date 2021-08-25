@@ -227,6 +227,8 @@ class ArgumentParser
 public:
     class Argument
     {
+        friend class ArgumentParser;
+
     public:
         enum Type
         {
@@ -550,11 +552,6 @@ public:
             return m_help;
         }
 
-        Enum help_type() const
-        {
-            return m_help_type;
-        }
-
         std::string const& metavar() const
         {
             return m_metavar;
@@ -577,11 +574,6 @@ public:
             }
         }
 
-        Type type() const
-        {
-            return m_type;
-        }
-
         std::string operator()() const
         {
             std::string res;
@@ -592,6 +584,17 @@ public:
                 res += get_nargs_suffix();
             }
             return res;
+        }
+
+    private:
+        Type type() const
+        {
+            return m_type;
+        }
+
+        Enum help_type() const
+        {
+            return m_help_type;
         }
 
         std::string flags_to_string() const
@@ -626,7 +629,6 @@ public:
             return res;
         }
 
-    private:
         std::string get_nargs_suffix() const
         {
             auto const name = get_argument_name();
