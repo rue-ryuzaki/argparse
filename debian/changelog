@@ -1,3 +1,12 @@
+cpp-argparse-dev (0.2.5-0ppa0) focal; urgency=low
+
+  * Add ArgumentParser::get_default() function
+  * Add Argument::callback() function to 'store_true' arguments
+  * Fix help message generation
+  * Allow argparse::SUPPRESS value for argument help
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Wed, 25 Aug 2021 20:54:53 +0300
+
 cpp-argparse-dev (0.2.4-0ppa0) focal; urgency=low
 
   * Fixed usage and help generation
