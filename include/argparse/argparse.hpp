@@ -173,6 +173,12 @@ enum Action
     extend          = 0x00000200,
 };
 
+enum Enum
+{
+    NONE,
+    SUPPRESS,
+};
+
 // ArgumentParser objects
 class ArgumentParser
 {
@@ -203,6 +209,7 @@ public:
               m_choices(),
               m_required(false),
               m_help(),
+              m_help_type(NONE),
               m_metavar(),
               m_dest(),
               m_version(),
@@ -221,6 +228,7 @@ public:
               m_choices(orig.m_choices),
               m_required(orig.m_required),
               m_help(orig.m_help),
+              m_help_type(orig.m_help_type),
               m_metavar(orig.m_metavar),
               m_dest(orig.m_dest),
               m_version(orig.m_version),
@@ -241,6 +249,7 @@ public:
                 this->m_choices = rhs.m_choices;
                 this->m_required= rhs.m_required;
                 this->m_help    = rhs.m_help;
+                this->m_help_type= rhs.m_help_type;
                 this->m_metavar = rhs.m_metavar;
                 this->m_dest    = rhs.m_dest;
                 this->m_version = rhs.m_version;
@@ -430,6 +439,12 @@ public:
             return *this;
         }
 
+        Argument& help(Enum value)
+        {
+            m_help_type = value;
+            return *this;
+        }
+
         Argument& metavar(std::string const& value)
         {
             m_metavar = detail::_trim_copy(value);
@@ -503,6 +518,11 @@ public:
         std::string const& help() const
         {
             return m_help;
+        }
+
+        Enum help_type() const
+        {
+            return m_help_type;
         }
 
         std::string const& metavar() const
@@ -627,6 +647,7 @@ public:
         std::vector<std::string> m_choices;
         bool        m_required;
         std::string m_help;
+        Enum        m_help_type;
         std::string m_metavar;
         std::string m_dest;
         std::string m_version;
@@ -1089,8 +1110,8 @@ public:
             os << std::endl << m_description << std::endl;
         }
         size_t argument_help_size = 0;
-        auto const positional = positional_arguments();
-        auto const optional = optional_arguments();
+        auto const positional = positional_arguments(false);
+        auto const optional = optional_arguments(false);
         for (auto const& arg : positional) {
             auto size = arg.flags_to_string().size();
             if (argument_help_size < size) {
@@ -1812,33 +1833,35 @@ private:
         return res;
     }
 
-    std::vector<Argument> positional_arguments() const
+    std::vector<Argument> positional_arguments(bool add_suppress = true) const
     {
         std::vector<Argument> result;
         for (auto const& parent : m_parents) {
-            auto const args = parent.positional_arguments();
+            auto const args = parent.positional_arguments(add_suppress);
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_arguments) {
-            if (arg.type() == Argument::Type::Positional) {
+            if (arg.type() == Argument::Type::Positional
+                    && (add_suppress || arg.help_type() != SUPPRESS)) {
                 result.push_back(arg);
             }
         }
         return result;
     }
 
-    std::vector<Argument> optional_arguments() const
+    std::vector<Argument> optional_arguments(bool add_suppress = true) const
     {
         std::vector<Argument> result;
         if (m_add_help) {
             result.push_back(m_help_argument);
         }
         for (auto const& parent : m_parents) {
-            auto const args = parent.optional_arguments();
+            auto const args = parent.optional_arguments(add_suppress);
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_arguments) {
-            if (arg.type() == Argument::Type::Optional) {
+            if (arg.type() == Argument::Type::Optional
+                    && (add_suppress || arg.help_type() != SUPPRESS)) {
                 result.push_back(arg);
             }
         }
@@ -1850,8 +1873,8 @@ private:
         if (m_usage.empty()) {
             auto res = m_prog;
             size_t argument_usage_size = 0;
-            auto const positional = positional_arguments();
-            auto const optional = optional_arguments();
+            auto const positional = positional_arguments(false);
+            auto const optional = optional_arguments(false);
             for (auto const& arg : positional) {
                 if (argument_usage_size < arg().size()) {
                     argument_usage_size = arg().size();
