@@ -880,7 +880,8 @@ public:
           m_exit_on_error(true),
           m_parsed_arguments(),
           m_arguments(),
-          m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(Action::store_true))
+          m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Optional)
+                          .help("show this help message and exit").action(Action::store_true))
     { }
 
     ArgumentParser(int argc, char* argv[])
@@ -901,7 +902,8 @@ public:
           m_exit_on_error(true),
           m_parsed_arguments(),
           m_arguments(),
-          m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(Action::store_true))
+          m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Optional)
+                          .help("show this help message and exit").action(Action::store_true))
     {
         m_parsed_arguments.reserve(argc - 1);
         for (int i = 1; i < argc; ++i) {
@@ -1076,7 +1078,7 @@ public:
             }
             _update_flag_name(flag);
         }
-        m_arguments.emplace_back(Argument(flags, flag_name, is_optional ? Argument::Type::Optional : Argument::Type::Positional));
+        m_arguments.emplace_back(Argument(flags, flag_name, is_optional ? Argument::Optional : Argument::Positional));
         return m_arguments.back();
     }
 
@@ -1212,7 +1214,7 @@ private:
                 auto str = detail::_remove_quotes(value);
                 if (std::find(std::begin(choices), std::end(choices), str) == std::end(choices)) {
                     std::string values = detail::_vector_string_to_string(choices, ", ", "'");
-                    handle_error("error: argument " + arg.flags().front() + ": invalid choice: '" + str + "' (choose from " + values + ")");
+                    handle_error("argument " + arg.flags().front() + ": invalid choice: '" + str + "' (choose from " + values + ")");
                 }
             }
         };
@@ -1308,42 +1310,42 @@ private:
             }
             positional_values.emplace_back(std::move(values));
         };
-        auto _is_positional_argument_stored = [&] (Argument const& argument) -> bool
+        auto _is_positional_argument_stored = [&] (Argument const& arg) -> bool
         {
-            if (argument.action() & (Action::store_const | Action::store_true | Action::store_false)) {
-                for (auto const& flag : _get_argument_flags(argument)) {
+            if (arg.action() & (Action::store_const | Action::store_true | Action::store_false)) {
+                for (auto const& flag : _get_argument_flags(arg)) {
                     if (result.at(flag).second.empty()) {
-                        result.at(flag).second.push_back(argument.const_value());
+                        result.at(flag).second.push_back(arg.const_value());
                     }
                 }
                 return true;
-            } else if (argument.action() == Action::append_const) {
-                for (auto const& flag : _get_argument_flags(argument)) {
-                    if (!argument.default_value().empty()) {
-                        handle_error("error: argument " + argument.flags().front() + ": ignored default value '" + argument.default_value() + "'");
+            } else if (arg.action() == Action::append_const) {
+                for (auto const& flag : _get_argument_flags(arg)) {
+                    if (!arg.default_value().empty()) {
+                        handle_error("argument " + arg.flags().front() + ": ignored default value '" + arg.default_value() + "'");
                     }
-                    result.at(flag).second.push_back(argument.const_value());
+                    result.at(flag).second.push_back(arg.const_value());
                 }
                 return true;
-            } else if (argument.action() == Action::count) {
-                for (auto const& flag : _get_argument_flags(argument)) {
+            } else if (arg.action() == Action::count) {
+                for (auto const& flag : _get_argument_flags(arg)) {
                     result.at(flag).second.push_back("");
                 }
                 return true;
             }
             return false;
         };
-        auto _store_argument_value = [&] (Argument const& argument, std::string const& arg) -> void
+        auto _store_argument_value = [&] (Argument const& arg, std::string const& value) -> void
         {
-            _validate_argument_value(argument, arg);
-            for (auto const& flag : _get_argument_flags(argument)) {
-                result.at(flag).second.push_back(arg);
+            _validate_argument_value(arg, value);
+            for (auto const& flag : _get_argument_flags(arg)) {
+                result.at(flag).second.push_back(value);
             }
         };
-        auto _default_argument_value = [=] (Argument const& argument) -> std::string
+        auto _default_argument_value = [=] (Argument const& arg) -> std::string
         {
-            if (!argument.default_value().empty()) {
-                return argument.default_value();
+            if (!arg.default_value().empty()) {
+                return arg.default_value();
             }
             return m_argument_default;
         };
@@ -1360,11 +1362,11 @@ private:
             size_t one_args = 0;
             bool more_args = false;
             for ( ; finish < positional.size(); ++finish) {
-                auto const& argument = positional.at(finish);
-                if (!(argument.action() & (Action::store | Action::append | Action::extend))) {
+                auto const& arg = positional.at(finish);
+                if (!(arg.action() & (Action::store | Action::append | Action::extend))) {
                     continue;
                 }
-                auto const& nargs = argument.nargs();
+                auto const& nargs = arg.nargs();
                 size_t min_amount = 0;
                 if (nargs.empty()) {
                     ++min_amount;
@@ -1391,26 +1393,26 @@ private:
             } else if (min_args == arguments.size()) {
                 size_t i = 0;
                 for ( ; position < finish; ++position) {
-                    auto const& argument = positional.at(position);
-                    if (_is_positional_argument_stored(argument)) {
+                    auto const& arg = positional.at(position);
+                    if (_is_positional_argument_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = argument.nargs();
+                    auto const& nargs = arg.nargs();
                     if (nargs.empty() || nargs == "+") {
-                        _store_argument_value(argument, arguments.at(i));
+                        _store_argument_value(arg, arguments.at(i));
                         ++i;
                     } else if (nargs == "?" || nargs == "*") {
-                        if (argument.action() == Action::store) {
-                            for (auto const& flag : _get_argument_flags(argument)) {
+                        if (arg.action() == Action::store) {
+                            for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(argument));
+                                    result.at(flag).second.push_back(_default_argument_value(arg));
                                 }
                             }
                         }
                     } else {
                         size_t num_args = size_t(std::stoull(nargs));
                         for (size_t n = 0; n < num_args; ++i, ++n) {
-                            _store_argument_value(argument, arguments.at(i));
+                            _store_argument_value(arg, arguments.at(i));
                         }
                     }
                 }
@@ -1418,48 +1420,48 @@ private:
                 size_t over_args = arguments.size() - min_args;
                 size_t i = 0;
                 for ( ; position < finish; ++position) {
-                    auto const& argument = positional.at(position);
-                    if (_is_positional_argument_stored(argument)) {
+                    auto const& arg = positional.at(position);
+                    if (_is_positional_argument_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = argument.nargs();
+                    auto const& nargs = arg.nargs();
                     if (nargs.empty()) {
-                        _store_argument_value(argument, arguments.at(i));
+                        _store_argument_value(arg, arguments.at(i));
                         ++i;
                     } else if (nargs == "+") {
-                        _store_argument_value(argument, arguments.at(i));
+                        _store_argument_value(arg, arguments.at(i));
                         ++i;
                         while (over_args > 0) {
-                            _store_argument_value(argument, arguments.at(i));
+                            _store_argument_value(arg, arguments.at(i));
                             ++i;
                             --over_args;
                         }
                     } else if (nargs == "?") {
-                        if (argument.action() == Action::store) {
-                            for (auto const& flag : _get_argument_flags(argument)) {
+                        if (arg.action() == Action::store) {
+                            for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(argument));
+                                    result.at(flag).second.push_back(_default_argument_value(arg));
                                 }
                             }
                         }
                     } else if (nargs == "*") {
                         if (over_args > 0) {
                             while (over_args > 0) {
-                                _store_argument_value(argument, arguments.at(i));
+                                _store_argument_value(arg, arguments.at(i));
                                 ++i;
                                 --over_args;
                             }
-                        } else if (argument.action() == Action::store) {
-                            for (auto const& flag : _get_argument_flags(argument)) {
+                        } else if (arg.action() == Action::store) {
+                            for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(argument));
+                                    result.at(flag).second.push_back(_default_argument_value(arg));
                                 }
                             }
                         }
                     } else {
                         size_t num_args = size_t(std::stoull(nargs));
                         for (size_t n = 0; n < num_args; ++i, ++n) {
-                            _store_argument_value(argument, arguments.at(i));
+                            _store_argument_value(arg, arguments.at(i));
                         }
                     }
                 }
@@ -1467,48 +1469,48 @@ private:
                 size_t over_args = min_args + one_args - arguments.size();
                 size_t i = 0;
                 for ( ; position < finish; ++position) {
-                    auto const& argument = positional.at(position);
-                    if (_is_positional_argument_stored(argument)) {
+                    auto const& arg = positional.at(position);
+                    if (_is_positional_argument_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = argument.nargs();
+                    auto const& nargs = arg.nargs();
                     if (nargs.empty()) {
-                        _store_argument_value(argument, arguments.at(i));
+                        _store_argument_value(arg, arguments.at(i));
                         ++i;
                     } else if (nargs == "?") {
                         if (over_args < one_args) {
-                            _store_argument_value(argument, arguments.at(i));
+                            _store_argument_value(arg, arguments.at(i));
                             ++i;
                             ++over_args;
-                        } else if (argument.action() == Action::store) {
-                            for (auto const& flag : _get_argument_flags(argument)) {
+                        } else if (arg.action() == Action::store) {
+                            for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(argument));
+                                    result.at(flag).second.push_back(_default_argument_value(arg));
                                 }
                             }
                         }
                     } else {
                         size_t num_args = size_t(std::stoull(nargs));
                         for (size_t n = 0; n < num_args; ++i, ++n) {
-                            _store_argument_value(argument, arguments.at(i));
+                            _store_argument_value(arg, arguments.at(i));
                         }
                     }
                 }
             } else {
                 size_t i = 0;
                 for ( ; position < finish; ++position) {
-                    auto const& argument = positional.at(position);
-                    if (_is_positional_argument_stored(argument)) {
+                    auto const& arg = positional.at(position);
+                    if (_is_positional_argument_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = argument.nargs();
+                    auto const& nargs = arg.nargs();
                     if (nargs.empty()) {
-                        _store_argument_value(argument, arguments.at(i));
+                        _store_argument_value(arg, arguments.at(i));
                         ++i;
                     } else {
                         size_t num_args = (nargs == "?" ? 1 : size_t(std::stoull(nargs)));
                         for (size_t n = 0; n < num_args; ++i, ++n) {
-                            _store_argument_value(argument, arguments.at(i));
+                            _store_argument_value(arg, arguments.at(i));
                         }
                     }
                 }
@@ -1607,7 +1609,7 @@ private:
                             }
                         }
                         if (keys.size() > 1) {
-                            handle_error("error: ambiguous option: '" + arg + "' could match" + args);
+                            handle_error("ambiguous option: '" + arg + "' could match" + args);
                         }
                         if (is_flag_added) {
                             temp_arguments.push_back(keys.empty() ? arg : keys.front());
@@ -1652,10 +1654,10 @@ private:
                         if (splitted.size() == 2) {
                             auto const& nargs = temp->nargs();
                             if (!nargs.empty() && nargs != "?" && nargs != "*" && nargs != "+" && nargs != "1") {
-                                handle_error("error: argument " + arg + ": expected " + nargs + " arguments");
+                                handle_error("argument " + arg + ": expected " + nargs + " arguments");
                             }
                             if (splitted.back().empty()) {
-                                handle_error("error: argument " + arg + ": expected one argument");
+                                handle_error("argument " + arg + ": expected one argument");
                             }
                             _store_argument_value(*temp, splitted.back());
                         } else {
@@ -1667,42 +1669,43 @@ private:
                                 if (i == parsed_arguments.size()) {
                                     if (n == 0) {
                                         if (nargs.empty()) {
-                                            handle_error("error: argument " + arg + ": expected one argument");
+                                            handle_error("argument " + arg + ": expected one argument");
                                         } else if (nargs == "?") {
                                             _store_argument_value(*temp, temp->const_value());
                                         } else if (nargs == "*") {
                                             // OK
                                         } else if (nargs == "+") {
-                                            handle_error("error: argument " + arg + ": expected at least one argument");
+                                            handle_error("argument " + arg + ": expected at least one argument");
                                         } else {
-                                            handle_error("error: argument " + arg + ": expected " + nargs + " arguments");
+                                            handle_error("argument " + arg + ": expected " + nargs + " arguments");
                                         }
                                     } else if (num_args != 0 && n < num_args) {
-                                        handle_error("error: argument " + arg + ": expected " + nargs + " arguments");
+                                        handle_error("argument " + arg + ": expected " + nargs + " arguments");
                                     }
                                     break;
                                 } else {
                                     auto const& next = parsed_arguments.at(i);
-                                    if (!detail::_is_optional_argument(next, prefix_chars()) || (!have_negative_number_options && detail::_is_negative_number(next))) {
+                                    if (!detail::_is_optional_argument(next, prefix_chars())
+                                            || (!have_negative_number_options && detail::_is_negative_number(next))) {
                                         _store_argument_value(*temp, next);
                                         ++n;
                                     } else if (n == 0) {
                                         --i;
                                         if (nargs.empty()) {
-                                            handle_error("error: argument " + arg + ": expected one argument");
+                                            handle_error("argument " + arg + ": expected one argument");
                                         } else if (nargs == "?") {
                                             _store_argument_value(*temp, temp->const_value());
                                             break;
                                         } else if (nargs == "*") {
                                             break;
                                         } else if (nargs == "+") {
-                                            handle_error("error: argument " + arg + ": expected at least one argument");
+                                            handle_error("argument " + arg + ": expected at least one argument");
                                         } else {
-                                            handle_error("error: argument " + arg + ": expected " + nargs + " arguments");
+                                            handle_error("argument " + arg + ": expected " + nargs + " arguments");
                                         }
                                     } else {
                                         if (num_args != 0 && n < num_args) {
-                                            handle_error("error: argument " + arg + ": expected " + nargs + " arguments");
+                                            handle_error("argument " + arg + ": expected " + nargs + " arguments");
                                         }
                                         --i;
                                         break;
@@ -1727,19 +1730,19 @@ private:
                                 temp->callback();
                             }
                         } else {
-                            handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     case Action::append_const :
                         if (splitted.size() == 1) {
                             for (auto const& flag : _get_argument_flags(*temp)) {
                                 if (!temp->default_value().empty()) {
-                                    handle_error("error: argument " + arg + ": ignored default value '" + temp->default_value() + "'");
+                                    handle_error("argument " + arg + ": ignored default value '" + temp->default_value() + "'");
                                 }
                                 result.at(flag).second.push_back(temp->const_value());
                             }
                         } else {
-                            handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     case Action::help :
@@ -1747,7 +1750,7 @@ private:
                             print_help();
                             exit(0);
                         } else {
-                            handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     case Action::version :
@@ -1758,7 +1761,7 @@ private:
                             std::cout << temp->version() << std::endl;
                             exit(0);
                         } else {
-                            handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     case Action::count :
@@ -1767,11 +1770,11 @@ private:
                                 result.at(flag).second.push_back("");
                             }
                         } else {
-                            handle_error("error: argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     default :
-                        handle_error("error: action not supported");
+                        handle_error("action not supported");
                         break;
                 }
             } else if (have_negative_number_options && detail::_is_negative_number(arg)) {
@@ -1797,17 +1800,17 @@ private:
         if (!required_arguments.empty() || position < positional.size()) {
             std::string args;
             for ( ; position < positional.size(); ++position) {
-                auto const& argument = positional.at(position);
+                auto const& arg = positional.at(position);
                 if (args.empty()) {
-                    if (_is_positional_argument_stored(argument)) {
+                    if (_is_positional_argument_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = argument.nargs();
+                    auto const& nargs = arg.nargs();
                     if (nargs == "?" || nargs == "*") {
-                        if (argument.action() == Action::store) {
-                            for (auto const& flag : _get_argument_flags(argument)) {
+                        if (arg.action() == Action::store) {
+                            for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(argument));
+                                    result.at(flag).second.push_back(_default_argument_value(arg));
                                 }
                             }
                         }
@@ -1817,16 +1820,16 @@ private:
                 if (!args.empty()) {
                     args += ", ";
                 }
-                args += argument.flags().front();
+                args += arg.flags().front();
             }
             args += detail::_vector_string_to_string(required_arguments, ", ");
             if (!args.empty()) {
-                handle_error("error: the following arguments are required: " + args);
+                handle_error("the following arguments are required: " + args);
             }
         }
         if (!unrecognized_arguments.empty()) {
             std::string args = detail::_vector_string_to_string(unrecognized_arguments, " ");
-            handle_error("error: unrecognized arguments: " + args);
+            handle_error("unrecognized arguments: " + args);
         }
         for (auto& arg : result) {
             if (arg.second.second.empty() && arg.second.first != Action::count) {
@@ -1843,17 +1846,17 @@ private:
         return Namespace(result, prefix_chars());
     }
 
-    void handle_error(std::string const& error = "error: unknown") const
+    void handle_error(std::string const& error = "unknown") const
     {
         print_usage(std::cerr);
-        throw std::logic_error(m_prog + ": " + error);
+        throw std::logic_error(m_prog + ": error: " + error);
     }
 
     std::vector<std::string> convert_arg_line_to_args(std::string const& file) const
     {
         std::ifstream is(file);
         if (!is.is_open()) {
-            handle_error("error: [Errno 2] No such file or directory: '" + file + "'");
+            handle_error("[Errno 2] No such file or directory: '" + file + "'");
         }
         std::vector<std::string> res;
         std::string line;
@@ -1872,8 +1875,7 @@ private:
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_arguments) {
-            if (arg.type() == Argument::Type::Positional
-                    && (add_suppress || arg.help_type() != SUPPRESS)) {
+            if (arg.type() == Argument::Positional && (add_suppress || arg.help_type() != SUPPRESS)) {
                 result.push_back(arg);
             }
         }
@@ -1891,8 +1893,7 @@ private:
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_arguments) {
-            if (arg.type() == Argument::Type::Optional
-                    && (add_suppress || arg.help_type() != SUPPRESS)) {
+            if (arg.type() == Argument::Optional && (add_suppress || arg.help_type() != SUPPRESS)) {
                 result.push_back(arg);
             }
         }
