@@ -194,12 +194,10 @@ public:
             Optional
         };
 
-        Argument(ArgumentParser* parent,
-                 std::vector<std::string> const& flags,
+        Argument(std::vector<std::string> const& flags,
                  std::string const& name,
                  Type type)
-            : m_parent(parent),
-              m_flags(flags),
+            : m_flags(flags),
               m_name(name),
               m_type(type),
               m_action(Action::store),
@@ -217,8 +215,7 @@ public:
         { }
 
         Argument(Argument const& orig)
-            : m_parent(orig.m_parent),
-              m_flags(orig.m_flags),
+            : m_flags(orig.m_flags),
               m_name(orig.m_name),
               m_type(orig.m_type),
               m_action(orig.m_action),
@@ -238,7 +235,6 @@ public:
         Argument& operator =(Argument const& rhs)
         {
             if (this != &rhs) {
-                this->m_parent  = rhs.m_parent;
                 this->m_flags   = rhs.m_flags;
                 this->m_name    = rhs.m_name;
                 this->m_type    = rhs.m_type;
@@ -365,13 +361,7 @@ public:
 
         Argument& nargs(std::string const& value)
         {
-            if (m_action & (Action::store_const
-                            | Action::store_true
-                            | Action::store_false
-                            | Action::append_const
-                            | Action::help
-                            | Action::version
-                            | Action::count)) {
+            if (!(m_action & (Action::store | Action::append | Action::extend))) {
                 throw std::logic_error("TypeError: got an unexpected keyword argument 'nargs'");
             }
             auto param = detail::_trim_copy(value);
@@ -389,8 +379,10 @@ public:
                     || (type() == Optional && m_nargs == "?"
                         && (m_action & (Action::store | Action::append | Action::extend)))) {
                 m_const = detail::_trim_copy(value);
+            } else if (type() == Optional && (m_action & (Action::store | Action::append | Action::extend)) && m_nargs != "?") {
+                throw std::invalid_argument("ValueError: nargs must be '?' to supply const");
             } else {
-                m_parent->handle_error("TypeError: got an unexpected keyword argument 'const'");
+                throw std::logic_error("TypeError: got an unexpected keyword argument 'const'");
             }
             return *this;
         }
@@ -405,13 +397,7 @@ public:
 
         Argument& choices(std::vector<std::string> const& value)
         {
-            if (m_action & (Action::store_const
-                            | Action::store_true
-                            | Action::store_false
-                            | Action::append_const
-                            | Action::help
-                            | Action::version
-                            | Action::count)) {
+            if (!(m_action & (Action::store | Action::append | Action::extend))) {
                 throw std::logic_error("TypeError: got an unexpected keyword argument 'choices'");
             }
             m_choices.clear();
@@ -436,11 +422,15 @@ public:
         Argument& help(std::string const& value)
         {
             m_help = detail::_trim_copy(value);
+            m_help_type = NONE;
             return *this;
         }
 
         Argument& help(Enum value)
         {
+            if (value != SUPPRESS) {
+                throw std::logic_error("TypeError: got an unexpected keyword argument 'help'");
+            }
             m_help_type = value;
             return *this;
         }
@@ -454,7 +444,7 @@ public:
         Argument& dest(std::string const& value)
         {
             if (type() == Positional) {
-                throw std::logic_error("ValueError: dest supplied twice for positional argument");
+                throw std::invalid_argument("ValueError: dest supplied twice for positional argument");
             }
             m_dest = detail::_trim_copy(value);
             return *this;
@@ -465,7 +455,7 @@ public:
             if (m_action == Action::version) {
                 m_version = detail::_trim_copy(value);
             } else {
-                m_parent->handle_error("TypeError: got an unexpected keyword argument 'version'");
+                throw std::logic_error("TypeError: got an unexpected keyword argument 'version'");
             }
             return *this;
         }
@@ -475,7 +465,7 @@ public:
             if (m_action == Action::store_true) {
                 m_callback = func;
             } else {
-                m_parent->handle_error("TypeError: got an unexpected keyword argument 'callback'");
+                throw std::logic_error("TypeError: got an unexpected keyword argument 'callback'");
             }
             return *this;
         }
@@ -636,7 +626,6 @@ public:
             return type() == Optional ? detail::_to_upper(res) : res;
         }
 
-        ArgumentParser* m_parent;
         std::vector<std::string> m_flags;
         std::string m_name;
         Type        m_type;
@@ -849,7 +838,7 @@ public:
           m_exit_on_error(true),
           m_parsed_arguments(),
           m_arguments(),
-          m_help_argument(Argument(this, { "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(Action::store_true))
+          m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(Action::store_true))
     { }
 
     ArgumentParser(int argc, char* argv[])
@@ -870,7 +859,7 @@ public:
           m_exit_on_error(true),
           m_parsed_arguments(),
           m_arguments(),
-          m_help_argument(Argument(this, { "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(Action::store_true))
+          m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Type::Optional).help("show this help message and exit").action(Action::store_true))
     {
         m_parsed_arguments.reserve(argc - 1);
         for (int i = 1; i < argc; ++i) {
@@ -1045,7 +1034,7 @@ public:
             }
             _update_flag_name(flag);
         }
-        m_arguments.emplace_back(Argument(this, flags, flag_name, is_optional ? Argument::Type::Optional : Argument::Type::Positional));
+        m_arguments.emplace_back(Argument(flags, flag_name, is_optional ? Argument::Type::Optional : Argument::Type::Positional));
         return m_arguments.back();
     }
 
