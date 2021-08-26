@@ -1329,7 +1329,7 @@ private:
                 return true;
             } else if (arg.action() == Action::count) {
                 for (auto const& flag : _get_argument_flags(arg)) {
-                    result.at(flag).second.push_back("");
+                    result.at(flag).second.emplace_back(std::string());
                 }
                 return true;
             }
@@ -1405,7 +1405,7 @@ private:
                         if (arg.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(arg));
+                                    result.at(flag).second.emplace_back(_default_argument_value(arg));
                                 }
                             }
                         }
@@ -1440,7 +1440,7 @@ private:
                         if (arg.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(arg));
+                                    result.at(flag).second.emplace_back(_default_argument_value(arg));
                                 }
                             }
                         }
@@ -1454,7 +1454,7 @@ private:
                         } else if (arg.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(arg));
+                                    result.at(flag).second.emplace_back(_default_argument_value(arg));
                                 }
                             }
                         }
@@ -1485,7 +1485,7 @@ private:
                         } else if (arg.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(arg));
+                                    result.at(flag).second.emplace_back(_default_argument_value(arg));
                                 }
                             }
                         }
@@ -1767,7 +1767,7 @@ private:
                     case Action::count :
                         if (splitted.size() == 1) {
                             for (auto const& flag : _get_argument_flags(*temp)) {
-                                result.at(flag).second.push_back("");
+                                result.at(flag).second.emplace_back(std::string());
                             }
                         } else {
                             handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
@@ -1810,7 +1810,7 @@ private:
                         if (arg.action() == Action::store) {
                             for (auto const& flag : _get_argument_flags(arg)) {
                                 if (result.at(flag).second.empty()) {
-                                    result.at(flag).second.push_back(_default_argument_value(arg));
+                                    result.at(flag).second.emplace_back(_default_argument_value(arg));
                                 }
                             }
                         }
@@ -1839,7 +1839,7 @@ private:
                 }
                 auto value = _default_argument_value(*argument);
                 if (!value.empty()) {
-                    arg.second.second.push_back(value);
+                    arg.second.second.emplace_back(std::move(value));
                 }
             }
         }
