@@ -380,13 +380,17 @@ public:
                     throw TypeError("got an unexpected keyword argument 'nargs'");
                 case Action::store :
                     if (value == 0) {
-                        throw ValueError("nargs for store actions must be != 0; if you have nothing to store, actions such as store true or store const may be more appropriate");
+                        throw ValueError("nargs for store actions must be != 0; "
+                                         "if you have nothing to store, actions such as "
+                                         "store true or store const may be more appropriate");
                     }
                     break;
                 case Action::append :
                 case Action::extend :
                     if (value == 0) {
-                        throw ValueError("nargs for append actions must be != 0; if arg strings are not supplying the value to append, the append const action may be more appropriate");
+                        throw ValueError("nargs for append actions must be != 0; "
+                                         "if arg strings are not supplying the value to append, "
+                                         "the append const action may be more appropriate");
                     }
                     break;
                 default:
@@ -407,8 +411,8 @@ public:
                 throw TypeError("got an unexpected keyword argument 'nargs'");
             }
             auto param = detail::_trim_copy(value);
-            auto const available_values = { "?", "*", "+" };
-            if (std::find(std::begin(available_values), std::end(available_values), param) == std::end(available_values)) {
+            auto const values = { "?", "*", "+" };
+            if (std::find(std::begin(values), std::end(values), param) == std::end(values)) {
                 throw ValueError("invalid nargs value '" + param + "'");
             }
             m_nargs = param;
@@ -421,7 +425,8 @@ public:
                     || (type() == Optional && m_nargs == "?"
                         && (m_action & (Action::store | Action::append | Action::extend)))) {
                 m_const = detail::_trim_copy(value);
-            } else if (type() == Optional && (m_action & (Action::store | Action::append | Action::extend)) && m_nargs != "?") {
+            } else if (type() == Optional && m_nargs != "?"
+                       && (m_action & (Action::store | Action::append | Action::extend))) {
                 throw ValueError("nargs must be '?' to supply const");
             } else {
                 throw TypeError("got an unexpected keyword argument 'const'");
@@ -687,23 +692,23 @@ public:
 
     class Namespace
     {
-        template <typename T>       struct is_stl_container:std::false_type{};
-        template <typename... Args> struct is_stl_container<std::deque             <Args...> >:std::true_type{};
-        template <typename... Args> struct is_stl_container<std::forward_list      <Args...> >:std::true_type{};
-        template <typename... Args> struct is_stl_container<std::list              <Args...> >:std::true_type{};
-        template <typename... Args> struct is_stl_container<std::multiset          <Args...> >:std::true_type{};
-        template <typename... Args> struct is_stl_container<std::priority_queue    <Args...> >:std::true_type{};
-        template <typename... Args> struct is_stl_container<std::set               <Args...> >:std::true_type{};
-        template <typename... Args> struct is_stl_container<std::vector            <Args...> >:std::true_type{};
-        template <typename... Args> struct is_stl_container<std::unordered_multiset<Args...> >:std::true_type{};
-        template <typename... Args> struct is_stl_container<std::unordered_set     <Args...> >:std::true_type{};
+        template <class T>       struct is_stl_container:std::false_type{};
+        template <class... Args> struct is_stl_container<std::deque             <Args...> >:std::true_type{};
+        template <class... Args> struct is_stl_container<std::forward_list      <Args...> >:std::true_type{};
+        template <class... Args> struct is_stl_container<std::list              <Args...> >:std::true_type{};
+        template <class... Args> struct is_stl_container<std::multiset          <Args...> >:std::true_type{};
+        template <class... Args> struct is_stl_container<std::priority_queue    <Args...> >:std::true_type{};
+        template <class... Args> struct is_stl_container<std::set               <Args...> >:std::true_type{};
+        template <class... Args> struct is_stl_container<std::vector            <Args...> >:std::true_type{};
+        template <class... Args> struct is_stl_container<std::unordered_multiset<Args...> >:std::true_type{};
+        template <class... Args> struct is_stl_container<std::unordered_set     <Args...> >:std::true_type{};
 
-        template <typename T>       struct is_stl_array:std::false_type{};
-        template <typename T, std::size_t N> struct is_stl_array<std::array        <T, N> >   :std::true_type{};
+        template <class T>       struct is_stl_array:std::false_type{};
+        template <class T, std::size_t N> struct is_stl_array<std::array        <T, N> >   :std::true_type{};
 
-        template <typename T>       struct is_stl_queue:std::false_type{};
-        template <typename... Args> struct is_stl_queue<std::stack                 <Args...> >:std::true_type{};
-        template <typename... Args> struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
+        template <class T>       struct is_stl_queue:std::false_type{};
+        template <class... Args> struct is_stl_queue<std::stack                 <Args...> >:std::true_type{};
+        template <class... Args> struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
 
     public:
         Namespace(std::map<std::string, ArgumentValue> const& arguments,
@@ -755,26 +760,31 @@ public:
             return to_type<T>(args.second.front());
         }
 
-        template <class T, typename std::enable_if<is_stl_container<typename std::decay<T>::type>::value>::type* = nullptr>
+        template <class T,
+                  typename std::enable_if<is_stl_container<typename std::decay<T>::type>::value>::type*
+                                                                                                    = nullptr>
         T get(std::string const& key) const
         {
             auto vector = to_vector<typename T::value_type>(data(key).second);
             return T(std::begin(vector), std::end(vector));
         }
 
-        template <class T, typename std::enable_if<is_stl_array<typename std::decay<T>::type>::value>::type* = nullptr>
+        template <class T,
+                  typename std::enable_if<is_stl_array<typename std::decay<T>::type>::value>::type* = nullptr>
         T get(std::string const& key) const
         {
             auto vector = to_vector<typename T::value_type>(data(key).second);
             T res{};
             if (res.size() != vector.size()) {
-                std::cerr << "error: array size mismatch: " << res.size() << ", expected " << vector.size() << std::endl;
+                std::cerr << "error: array size mismatch: " << res.size()
+                          << ", expected " << vector.size() << std::endl;
             }
             std::copy_n(vector.begin(), std::min(res.size(), vector.size()), res.begin());
             return res;
         }
 
-        template <class T, typename std::enable_if<is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
+        template <class T,
+                  typename std::enable_if<is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
         T get(std::string const& key) const
         {
             auto vector = to_vector<typename T::value_type>(data(key).second);
@@ -843,13 +853,15 @@ public:
             return vec;
         }
 
-        template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+        template <class T,
+                  typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
         T to_type(std::string const& data) const
         {
             return detail::_remove_quotes(data);
         }
 
-        template <class T, typename std::enable_if<not std::is_constructible<std::string, T>::value>::type* = nullptr>
+        template <class T,
+                  typename std::enable_if<not std::is_constructible<std::string, T>::value>::type* = nullptr>
         T to_type(std::string const& data) const
         {
             T result = T();
@@ -1064,7 +1076,8 @@ public:
             _update_flag_name(flag_name);
         } else if (flags.size() > 1) {
             // no positional multiflag
-            throw ValueError("invalid option string " + flags.front() + ": must starts with a character '" + m_prefix_chars + "'");
+            throw ValueError("invalid option string " + flags.front()
+                             + ": must starts with a character '" + m_prefix_chars + "'");
         }
         for (size_t i = 1; i < flags.size(); ++i) {
             // check arguments
@@ -1074,11 +1087,13 @@ public:
             }
             if (!detail::_is_optional_argument(flag, prefix_chars())) {
                 // no positional and optional args
-                throw ValueError("invalid option string " + flag + ": must starts with a character '" + m_prefix_chars + "'");
+                throw ValueError("invalid option string " + flag
+                                 + ": must starts with a character '" + m_prefix_chars + "'");
             }
             _update_flag_name(flag);
         }
-        m_arguments.emplace_back(Argument(flags, flag_name, is_optional ? Argument::Optional : Argument::Positional));
+        m_arguments.emplace_back(Argument(flags, flag_name,
+                                          is_optional ? Argument::Optional : Argument::Positional));
         return m_arguments.back();
     }
 
@@ -1185,8 +1200,9 @@ private:
             std::vector<std::string> temp;
             temp.reserve(parsed_arguments.size());
             for (auto const& arg : parsed_arguments) {
-                if (std::find(std::begin(m_fromfile_prefix_chars), std::end(m_fromfile_prefix_chars), arg.front())
-                        != std::end(m_fromfile_prefix_chars)) {
+                if (std::find(std::begin(m_fromfile_prefix_chars),
+                              std::end(m_fromfile_prefix_chars),
+                              arg.front()) != std::end(m_fromfile_prefix_chars)) {
                     auto const load_args = convert_arg_line_to_args(arg.substr(1));
                     temp.insert(std::end(temp), std::begin(load_args), std::end(load_args));
                 } else {
@@ -1202,7 +1218,8 @@ private:
         auto _validate_arguments = [=] (std::vector<Argument> const& arguments)
         {
             for (auto const& arg : arguments) {
-                if ((arg.action() & (Action::store_const | Action::append_const)) && arg.const_value().empty()) {
+                if ((arg.action() & (Action::store_const | Action::append_const))
+                        && arg.const_value().empty()) {
                     throw TypeError("missing 1 required positional argument: 'const'");
                 }
             }
@@ -1214,7 +1231,8 @@ private:
                 auto str = detail::_remove_quotes(value);
                 if (std::find(std::begin(choices), std::end(choices), str) == std::end(choices)) {
                     std::string values = detail::_vector_string_to_string(choices, ", ", "'");
-                    handle_error("argument " + arg.flags().front() + ": invalid choice: '" + str + "' (choose from " + values + ")");
+                    handle_error("argument " + arg.flags().front()
+                                 + ": invalid choice: '" + str + "' (choose from " + values + ")");
                 }
             }
         };
@@ -1322,7 +1340,8 @@ private:
             } else if (arg.action() == Action::append_const) {
                 for (auto const& flag : _get_argument_flags(arg)) {
                     if (!arg.default_value().empty()) {
-                        handle_error("argument " + arg.flags().front() + ": ignored default value '" + arg.default_value() + "'");
+                        handle_error("argument " + arg.flags().front()
+                                     + ": ignored default value '" + arg.default_value() + "'");
                     }
                     result.at(flag).second.push_back(arg.const_value());
                 }
@@ -1653,7 +1672,8 @@ private:
                     case Action::extend :
                         if (splitted.size() == 2) {
                             auto const& nargs = temp->nargs();
-                            if (!nargs.empty() && nargs != "?" && nargs != "*" && nargs != "+" && nargs != "1") {
+                            if (!nargs.empty()
+                                    && nargs != "?" && nargs != "*" && nargs != "+" && nargs != "1") {
                                 handle_error("argument " + arg + ": expected " + nargs + " arguments");
                             }
                             if (splitted.back().empty()) {
@@ -1663,7 +1683,9 @@ private:
                         } else {
                             auto const& nargs = temp->nargs();
                             uint32_t n = 0;
-                            uint32_t num_args = (!nargs.empty() && nargs != "?" && nargs != "*" && nargs != "+") ? uint32_t(std::stoull(nargs)) : 0;
+                            uint32_t num_args
+                                    = (!nargs.empty() && nargs != "?"
+                                       && nargs != "*" && nargs != "+") ? uint32_t(std::stoull(nargs)) : 0;
                             while (true) {
                                 ++i;
                                 if (i == parsed_arguments.size()) {
@@ -1675,18 +1697,22 @@ private:
                                         } else if (nargs == "*") {
                                             // OK
                                         } else if (nargs == "+") {
-                                            handle_error("argument " + arg + ": expected at least one argument");
+                                            handle_error("argument " + arg
+                                                         + ": expected at least one argument");
                                         } else {
-                                            handle_error("argument " + arg + ": expected " + nargs + " arguments");
+                                            handle_error("argument " + arg
+                                                         + ": expected " + nargs + " arguments");
                                         }
                                     } else if (num_args != 0 && n < num_args) {
-                                        handle_error("argument " + arg + ": expected " + nargs + " arguments");
+                                        handle_error("argument " + arg
+                                                     + ": expected " + nargs + " arguments");
                                     }
                                     break;
                                 } else {
                                     auto const& next = parsed_arguments.at(i);
                                     if (!detail::_is_optional_argument(next, prefix_chars())
-                                            || (!have_negative_number_options && detail::_is_negative_number(next))) {
+                                            || (!have_negative_number_options
+                                                && detail::_is_negative_number(next))) {
                                         _store_argument_value(*temp, next);
                                         ++n;
                                     } else if (n == 0) {
@@ -1699,13 +1725,16 @@ private:
                                         } else if (nargs == "*") {
                                             break;
                                         } else if (nargs == "+") {
-                                            handle_error("argument " + arg + ": expected at least one argument");
+                                            handle_error("argument " + arg
+                                                         + ": expected at least one argument");
                                         } else {
-                                            handle_error("argument " + arg + ": expected " + nargs + " arguments");
+                                            handle_error("argument " + arg
+                                                         + ": expected " + nargs + " arguments");
                                         }
                                     } else {
                                         if (num_args != 0 && n < num_args) {
-                                            handle_error("argument " + arg + ": expected " + nargs + " arguments");
+                                            handle_error("argument " + arg
+                                                         + ": expected " + nargs + " arguments");
                                         }
                                         --i;
                                         break;
@@ -1730,19 +1759,22 @@ private:
                                 temp->callback();
                             }
                         } else {
-                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg
+                                         + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     case Action::append_const :
                         if (splitted.size() == 1) {
                             for (auto const& flag : _get_argument_flags(*temp)) {
                                 if (!temp->default_value().empty()) {
-                                    handle_error("argument " + arg + ": ignored default value '" + temp->default_value() + "'");
+                                    handle_error("argument " + arg
+                                                 + ": ignored default value '" + temp->default_value() + "'");
                                 }
                                 result.at(flag).second.push_back(temp->const_value());
                             }
                         } else {
-                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg
+                                         + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     case Action::help :
@@ -1750,7 +1782,8 @@ private:
                             print_help();
                             exit(0);
                         } else {
-                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg
+                                         + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     case Action::version :
@@ -1761,7 +1794,8 @@ private:
                             std::cout << temp->version() << std::endl;
                             exit(0);
                         } else {
-                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg
+                                         + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     case Action::count :
@@ -1770,7 +1804,8 @@ private:
                                 result.at(flag).second.emplace_back(std::string());
                             }
                         } else {
-                            handle_error("argument " + arg + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error("argument " + arg
+                                         + ": ignored explicit argument '" + splitted.back() + "'");
                         }
                         break;
                     default :
