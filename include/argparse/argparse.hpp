@@ -119,9 +119,14 @@ static inline bool _starts_with(std::string const& str, std::string const& patte
     return str.compare(0, pattern.size(), pattern) == 0;
 }
 
+static inline bool _is_string_contains_char(std::string const& str, char c)
+{
+    return std::find(std::begin(str), std::end(str), c) != std::end(str);
+}
+
 static inline bool _is_optional_argument(std::string const& arg, std::string const& prefix_chars)
 {
-    return std::find(std::begin(prefix_chars), std::end(prefix_chars), arg.front()) != std::end(prefix_chars);
+    return _is_string_contains_char(prefix_chars, arg.front());
 }
 
 static inline std::string _flag_name(std::string str)
@@ -585,7 +590,8 @@ public:
             if (type() == Optional) {
                 res += m_flags.front();
             }
-            if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
+            if (m_action & (Action::store | Action::append
+                            | Action::extend | Action::append_const)) {
                 res += get_nargs_suffix();
             }
             return res;
@@ -611,7 +617,8 @@ public:
                         res += ", ";
                     }
                     res += flag;
-                    if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
+                    if (m_action & (Action::store | Action::append
+                                    | Action::extend | Action::append_const)) {
                         res += get_nargs_suffix();
                     }
                 }
@@ -788,7 +795,8 @@ public:
         T get(std::string const& key) const
         {
             auto vector = to_vector<typename T::value_type>(data(key).second);
-            return T(std::deque<typename T::value_type>(std::begin(vector), std::end(vector)));
+            return T(std::deque<typename T::value_type>(std::begin(vector),
+                                                        std::end(vector)));
         }
 
         std::string to_string(std::string const& key) const
@@ -1062,7 +1070,7 @@ public:
         }
 
         auto prefixes = 0ul;
-        auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg) -> void
+        auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg)
         {
             auto name = detail::_flag_name(arg);
             auto count_prefixes = arg.size() - name.size();
@@ -1093,7 +1101,8 @@ public:
             _update_flag_name(flag);
         }
         m_arguments.emplace_back(Argument(flags, flag_name,
-                                          is_optional ? Argument::Optional : Argument::Positional));
+                                          is_optional ? Argument::Optional
+                                                      : Argument::Positional));
         return m_arguments.back();
     }
 
@@ -1104,20 +1113,23 @@ public:
         for (auto const& arg : positional) {
             for (auto const& flag : arg.flags()) {
                 if (flag == dest) {
-                    return !arg.default_value().empty() ? arg.default_value() : argument_default();
+                    return !arg.default_value().empty() ? arg.default_value()
+                                                        : argument_default();
                 }
             }
         }
         for (auto const& arg : optional) {
             if (!arg.dest().empty()) {
                 if (arg.dest() == dest) {
-                    return !arg.default_value().empty() ? arg.default_value() : argument_default();
+                    return !arg.default_value().empty() ? arg.default_value()
+                                                        : argument_default();
                 }
             } else {
                 for (auto const& flag : arg.flags()) {
                     auto name = detail::_flag_name(flag);
                     if (flag == dest || name == dest) {
-                        return !arg.default_value().empty() ? arg.default_value() : argument_default();
+                        return !arg.default_value().empty() ? arg.default_value()
+                                                            : argument_default();
                     }
                 }
             }
@@ -1213,7 +1225,8 @@ private:
         }
         auto _get_argument_flags = [] (Argument const& arg) -> std::vector<std::string>
         {
-            return arg.dest().empty() ? arg.flags() : std::vector<std::string>{ arg.dest() };
+            return arg.dest().empty() ? arg.flags()
+                                      : std::vector<std::string>{ arg.dest() };
         };
         auto _validate_arguments = [=] (std::vector<Argument> const& arguments)
         {
@@ -1230,7 +1243,7 @@ private:
             if (!choices.empty()) {
                 auto str = detail::_remove_quotes(value);
                 if (std::find(std::begin(choices), std::end(choices), str) == std::end(choices)) {
-                    std::string values = detail::_vector_string_to_string(choices, ", ", "'");
+                    auto values = detail::_vector_string_to_string(choices, ", ", "'");
                     handle_error("argument " + arg.flags().front()
                                  + ": invalid choice: '" + str + "' (choose from " + values + ")");
                 }
@@ -1242,7 +1255,7 @@ private:
             for (auto const& arg : arguments) {
                 for (auto const& flag : _get_argument_flags(arg)) {
                     if (result.count(flag) == 0) {
-                        result[flag] = std::make_pair(arg.action(), std::vector<std::string>());
+                        result[flag] = { arg.action(), std::vector<std::string>() };
                     } else {
                         throw ArgumentError("argument " + flag + ": conflicting option string: " + flag);
                     }
@@ -1251,8 +1264,7 @@ private:
         };
         auto _is_negative_numbers_presented = [=] (std::vector<Argument> const& optionals) -> bool
         {
-            if (std::find(std::begin(m_prefix_chars), std::end(m_prefix_chars), '-')
-                    == std::end(m_prefix_chars)) {
+            if (!detail::_is_string_contains_char(m_prefix_chars, '-')) {
                 return false;
             }
             for (auto const& arg : optionals) {
@@ -1307,7 +1319,7 @@ private:
         std::vector<std::string> unrecognized_arguments;
 
         size_t position = 0;
-        auto _store_positional_arguments = [&] (size_t& i) -> void
+        auto _store_positional_arguments = [&] (size_t& i)
         {
             std::vector<std::string> values;
             values.push_back(parsed_arguments.at(i));
@@ -1318,7 +1330,8 @@ private:
                 } else {
                     auto const& next = parsed_arguments.at(i);
                     if (!detail::_is_optional_argument(next, prefix_chars())
-                            || (!have_negative_number_options && detail::_is_negative_number(next))) {
+                            || (!have_negative_number_options
+                                && detail::_is_negative_number(next))) {
                         values.push_back(next);
                     } else {
                         --i;
@@ -1354,7 +1367,7 @@ private:
             }
             return false;
         };
-        auto _store_argument_value = [&] (Argument const& arg, std::string const& value) -> void
+        auto _store_argument_value = [&] ( Argument const& arg, std::string const& value)
         {
             _validate_argument_value(arg, value);
             for (auto const& flag : _get_argument_flags(arg)) {
@@ -1368,7 +1381,7 @@ private:
             }
             return m_argument_default;
         };
-        auto _match_arguments_partial = [&] (std::vector<std::string> const& arguments) -> void
+        auto _match_arguments_partial = [&] (std::vector<std::string> const& arguments)
         {
             if (position >= positional.size()) {
                 for (auto const& arg : arguments) {
@@ -1538,12 +1551,15 @@ private:
                 }
             }
         };
-        auto _separate_argument_abbreviations = [=] (std::vector<std::string>& temp_arguments,
-                std::string const& arg, std::string const& name) -> void
+        auto _separate_argument_abbreviations = [=] (
+                std::vector<std::string>& temp_arguments,
+                std::string const& arg,
+                std::string const& name)
         {
             if (name.size() + 1 == arg.size()) {
                 auto const splitted = detail::_split_equal(arg);
-                if (splitted.size() == 2 && _get_optional_argument_by_flag(splitted.front())) {
+                if (splitted.size() == 2
+                        && _get_optional_argument_by_flag(splitted.front())) {
                     temp_arguments.push_back(arg);
                     return;
                 }
@@ -1595,13 +1611,14 @@ private:
                 temp_arguments.push_back(arg);
             }
         };
-        auto _check_abbreviations = [=] (std::vector<std::string>& arguments) -> void
+        auto _check_abbreviations = [=] (std::vector<std::string>& arguments)
         {
             std::vector<std::string> temp_arguments;
             for (auto const& arg : arguments) {
                 if (!arg.empty() && result.count(arg) == 0
                         && detail::_is_optional_argument(arg, prefix_chars())
-                        && (have_negative_number_options || !detail::_is_negative_number(arg))) {
+                        && (have_negative_number_options
+                            || !detail::_is_negative_number(arg))) {
                     if (m_allow_abbrev) {
                         bool is_flag_added = false;
                         std::string args;
@@ -1617,7 +1634,8 @@ private:
                                     args += " " + flag;
                                     break;
                                 }
-                                if (flag.size() == 2 && detail::_starts_with(arg, flag)) {
+                                if (flag.size() == 2
+                                        && detail::_starts_with(arg, flag)) {
                                     keys.push_back(arg);
                                     if (!args.empty()) {
                                         args += ",";
@@ -1910,7 +1928,8 @@ private:
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_arguments) {
-            if (arg.type() == Argument::Positional && (add_suppress || arg.help_type() != SUPPRESS)) {
+            if (arg.type() == Argument::Positional
+                    && (add_suppress || arg.help_type() != SUPPRESS)) {
                 result.push_back(arg);
             }
         }
@@ -1928,7 +1947,8 @@ private:
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_arguments) {
-            if (arg.type() == Argument::Optional && (add_suppress || arg.help_type() != SUPPRESS)) {
+            if (arg.type() == Argument::Optional
+                    && (add_suppress || arg.help_type() != SUPPRESS)) {
                 result.push_back(arg);
             }
         }
@@ -1955,7 +1975,8 @@ private:
             size_t usage_length = std::string("usage: ").size();
             size_t pos = usage_length + m_prog.size();
             size_t offset = usage_length;
-            if (pos + (argument_usage_size > 0 ? (1 + argument_usage_size) : 0) <= detail::_usage_limit) {
+            if (pos + (argument_usage_size > 0 ? (1 + argument_usage_size) : 0)
+                    <= detail::_usage_limit) {
                 offset += m_prog.size() + (argument_usage_size > 0 ? 1 : 0);
             } else if (!(optional.empty() && positional.empty())) {
                 res += "\n" + std::string(offset - 1, ' ');
@@ -1963,7 +1984,8 @@ private:
             }
             for (auto const& arg : optional) {
                 auto str = arg();
-                if ((pos + 1 == offset) || (pos + 1 + str.size() <= detail::_usage_limit)) {
+                if ((pos + 1 == offset)
+                        || (pos + 1 + str.size() <= detail::_usage_limit)) {
                     res += " [" + str + "]";
                 } else {
                     res += "\n" + std::string(offset, ' ') + "[" + str + "]";
@@ -1973,7 +1995,8 @@ private:
             }
             for (auto const& arg : positional) {
                 auto str = arg();
-                if ((pos + 1 == offset) || (pos + 1 + str.size() <= detail::_usage_limit)) {
+                if ((pos + 1 == offset)
+                        || (pos + 1 + str.size() <= detail::_usage_limit)) {
                     res += " " + str + "";
                 } else {
                     res += "\n" + std::string(offset, ' ') + str;
