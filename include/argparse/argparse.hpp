@@ -886,8 +886,8 @@ public:
     };
 
 public:
-    ArgumentParser()
-        : m_prog("untitled"),
+    explicit ArgumentParser(std::string const& prog = "untitled")
+        : m_prog(prog),
           m_usage(),
           m_description(),
           m_epilog(),
@@ -909,21 +909,7 @@ public:
     { }
 
     ArgumentParser(int argc, char const* argv[])
-        : m_prog(detail::_file_name(argv[0])),
-          m_usage(),
-          m_description(),
-          m_epilog(),
-          m_parents(),
-          m_prefix_chars("-"),
-          m_fromfile_prefix_chars(),
-          m_argument_default(),
-          m_add_help(true),
-          m_allow_abbrev(true),
-          m_exit_on_error(true),
-          m_parsed_arguments(),
-          m_arguments(),
-          m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Optional)
-                          .help("show this help message and exit").action(Action::store_true))
+        : ArgumentParser(detail::_file_name(argv[0]))
     {
         m_parsed_arguments.reserve(argc - 1);
         for (int i = 1; i < argc; ++i) {
