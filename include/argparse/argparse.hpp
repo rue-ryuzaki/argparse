@@ -119,6 +119,12 @@ static inline bool _starts_with(std::string const& str, std::string const& patte
     return str.compare(0, pattern.size(), pattern) == 0;
 }
 
+template <class T>
+bool _is_value_exists(T const& value, std::vector<T> const& vec)
+{
+    return std::find(std::begin(vec), std::end(vec), value) != std::end(vec);
+}
+
 static inline bool _is_string_contains_char(std::string const& str, char c)
 {
     return std::find(std::begin(str), std::end(str), c) != std::end(str);
@@ -504,8 +510,8 @@ public:
                 throw TypeError("got an unexpected keyword argument 'nargs'");
             }
             auto param = detail::_trim_copy(value);
-            auto const values = { "?", "*", "+" };
-            if (std::find(std::begin(values), std::end(values), param) == std::end(values)) {
+            std::vector<std::string> const values = { "?", "*", "+" };
+            if (!detail::_is_value_exists(param, values)) {
                 throw ValueError("invalid nargs value '" + param + "'");
             }
             m_nargs = param;
@@ -1666,9 +1672,7 @@ private:
             std::vector<std::string> temp;
             temp.reserve(parsed_arguments.size());
             for (auto const& arg : parsed_arguments) {
-                if (std::find(std::begin(m_fromfile_prefix_chars),
-                              std::end(m_fromfile_prefix_chars),
-                              arg.front()) != std::end(m_fromfile_prefix_chars)) {
+                if (detail::_is_string_contains_char(m_fromfile_prefix_chars, arg.front())) {
                     auto const load_args = convert_arg_line_to_args(arg.substr(1));
                     temp.insert(std::end(temp), std::begin(load_args), std::end(load_args));
                 } else {
@@ -1696,7 +1700,7 @@ private:
             auto const& choices = arg.choices();
             if (!choices.empty()) {
                 auto str = detail::_remove_quotes(value);
-                if (std::find(std::begin(choices), std::end(choices), str) == std::end(choices)) {
+                if (!detail::_is_value_exists(str, choices)) {
                     auto values = detail::_vector_string_to_string(choices, ", ", "'");
                     handle_error("argument " + arg.flags().front()
                                  + ": invalid choice: '" + str + "' (choose from " + values + ")");
@@ -2123,9 +2127,7 @@ private:
         for (size_t i = 0; i < parsed_arguments.size(); ++i) {
             auto arg = parsed_arguments.at(i);
             if (m_add_help
-                    && std::find(std::begin(m_help_argument.flags()),
-                                 std::end(m_help_argument.flags()), arg)
-                    != std::end(m_help_argument.flags())) {
+                    && detail::_is_value_exists(arg, m_help_argument.flags())) {
                 print_help();
                 exit(0);
             }
