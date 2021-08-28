@@ -206,6 +206,13 @@ enum Enum
 class ArgumentError : public std::invalid_argument
 {
 public:
+    /*!
+     *  \brief Construct ArgumentError handler
+     *
+     *  \param error Error message
+     *
+     *  \return ArgumentError object
+     */
     explicit ArgumentError(std::string const& error)
         : std::invalid_argument("argparse.ArgumentError: " + error)
     { }
@@ -217,6 +224,13 @@ public:
 class AttributeError : public std::invalid_argument
 {
 public:
+    /*!
+     *  \brief Construct AttributeError handler
+     *
+     *  \param error Error message
+     *
+     *  \return AttributeError object
+     */
     explicit AttributeError(std::string const& error)
         : std::invalid_argument("AttributeError: " + error)
     { }
@@ -228,6 +242,13 @@ public:
 class ValueError : public std::invalid_argument
 {
 public:
+    /*!
+     *  \brief Construct ValueError handler
+     *
+     *  \param error Error message
+     *
+     *  \return ValueError object
+     */
     explicit ValueError(std::string const& error)
         : std::invalid_argument("ValueError: " + error)
     { }
@@ -239,6 +260,13 @@ public:
 class IndexError : public std::logic_error
 {
 public:
+    /*!
+     *  \brief Construct IndexError handler
+     *
+     *  \param error Error message
+     *
+     *  \return IndexError object
+     */
     explicit IndexError(std::string const& error)
         : std::logic_error("IndexError: " + error)
     { }
@@ -250,6 +278,13 @@ public:
 class TypeError : public std::logic_error
 {
 public:
+    /*!
+     *  \brief Construct TypeError handler
+     *
+     *  \param error Error message
+     *
+     *  \return TypeError object
+     */
     explicit TypeError(std::string const& error)
         : std::logic_error("TypeError: " + error)
     { }
@@ -339,11 +374,9 @@ public:
         { }
 
         /*!
-         *  \brief Construct Argument object with parsed arguments
+         *  \brief Copy argument object from another argument
          *
-         *  \param flags Argument flags
-         *  \param name Argument name
-         *  \param type Argument type
+         *  \param rhs Argument object to copy
          *
          *  \return Current argument reference
          */
