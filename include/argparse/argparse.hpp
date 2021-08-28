@@ -299,6 +299,7 @@ public:
               m_type(type),
               m_action(Action::store),
               m_nargs(),
+              m_num_args(),
               m_const(),
               m_default(),
               m_choices(),
@@ -324,6 +325,7 @@ public:
               m_type(orig.m_type),
               m_action(orig.m_action),
               m_nargs(orig.m_nargs),
+              m_num_args(orig.m_num_args),
               m_const(orig.m_const),
               m_default(orig.m_default),
               m_choices(orig.m_choices),
@@ -353,6 +355,7 @@ public:
                 this->m_type    = rhs.m_type;
                 this->m_action  = rhs.m_action;
                 this->m_nargs   = rhs.m_nargs;
+                this->m_num_args= rhs.m_num_args;
                 this->m_const   = rhs.m_const;
                 this->m_default = rhs.m_default;
                 this->m_choices = rhs.m_choices;
@@ -418,12 +421,14 @@ public:
                     m_default = "0";
                     m_const = "1";
                     m_nargs = "0";
+                    m_num_args = 0;
                     m_choices.clear();
                     break;
                 case Action::store_false :
                     m_default = "1";
                     m_const = "0";
                     m_nargs = "0";
+                    m_num_args = 0;
                     m_choices.clear();
                     break;
                 case Action::version :
@@ -437,6 +442,7 @@ public:
                 case Action::append_const :
                 case Action::count :
                     m_nargs = "0";
+                    m_num_args = 0;
                     m_choices.clear();
                     break;
                 case Action::store :
@@ -489,6 +495,7 @@ public:
                     throw ValueError("unknown action");
             }
             m_nargs = std::to_string(value);
+            m_num_args = value;
             return *this;
         }
 
@@ -515,6 +522,7 @@ public:
                 throw ValueError("invalid nargs value '" + param + "'");
             }
             m_nargs = param;
+            m_num_args = 0;
             return *this;
         }
 
@@ -835,6 +843,11 @@ public:
             return m_help_type;
         }
 
+        uint32_t num_args() const
+        {
+            return m_num_args;
+        }
+
         std::string flags_to_string() const
         {
             std::string res;
@@ -882,8 +895,7 @@ public:
             } else if (m_nargs == "+") {
                 res += name + " [" +  name + " ...]";
             } else if (!m_nargs.empty()) {
-                uint32_t num_args = uint32_t(std::stoull(m_nargs));
-                for (uint32_t i = 0; i < num_args; ++i) {
+                for (uint32_t i = 0; i < m_num_args; ++i) {
                     if (i != 0) {
                         res += " ";
                     }
@@ -912,6 +924,7 @@ public:
         Type        m_type;
         Action      m_action;
         std::string m_nargs;
+        uint32_t    m_num_args;
         std::string m_const;
         std::string m_default;
         std::vector<std::string> m_choices;
@@ -1868,7 +1881,7 @@ private:
                 } else if (nargs == "*") {
                     more_args = true;
                 } else {
-                    min_amount += uint32_t(std::stoull(nargs));
+                    min_amount += arg.num_args();
                 }
                 if (min_args + min_amount > arguments.size()) {
                     break;
@@ -1900,8 +1913,7 @@ private:
                             }
                         }
                     } else {
-                        size_t num_args = size_t(std::stoull(nargs));
-                        for (size_t n = 0; n < num_args; ++i, ++n) {
+                        for (size_t n = 0; n < arg.num_args(); ++i, ++n) {
                             _store_argument_value(arg, arguments.at(i));
                         }
                     }
@@ -1949,8 +1961,7 @@ private:
                             }
                         }
                     } else {
-                        size_t num_args = size_t(std::stoull(nargs));
-                        for (size_t n = 0; n < num_args; ++i, ++n) {
+                        for (size_t n = 0; n < arg.num_args(); ++i, ++n) {
                             _store_argument_value(arg, arguments.at(i));
                         }
                     }
@@ -1980,8 +1991,7 @@ private:
                             }
                         }
                     } else {
-                        size_t num_args = size_t(std::stoull(nargs));
-                        for (size_t n = 0; n < num_args; ++i, ++n) {
+                        for (size_t n = 0; n < arg.num_args(); ++i, ++n) {
                             _store_argument_value(arg, arguments.at(i));
                         }
                     }
@@ -1998,7 +2008,7 @@ private:
                         _store_argument_value(arg, arguments.at(i));
                         ++i;
                     } else {
-                        size_t num_args = (nargs == "?" ? 1 : size_t(std::stoull(nargs)));
+                        size_t num_args = (nargs == "?" ? 1 : arg.num_args());
                         for (size_t n = 0; n < num_args; ++i, ++n) {
                             _store_argument_value(arg, arguments.at(i));
                         }
@@ -2157,9 +2167,7 @@ private:
                         } else {
                             auto const& nargs = temp->nargs();
                             uint32_t n = 0;
-                            uint32_t num_args
-                                    = (!nargs.empty() && nargs != "?"
-                                       && nargs != "*" && nargs != "+") ? uint32_t(std::stoull(nargs)) : 0;
+                            uint32_t num_args = temp->num_args();
                             while (true) {
                                 ++i;
                                 if (i == parsed_arguments.size()) {
