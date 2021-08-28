@@ -164,6 +164,11 @@ static inline std::string _vector_string_to_string(std::vector<std::string> cons
 }
 } // details
 
+/*!
+ * \brief Action values
+ *
+ * \enum Action
+ */
 enum Action
 {
     store           = 0x00000001,
@@ -178,12 +183,20 @@ enum Action
     extend          = 0x00000200,
 };
 
+/*!
+ * \brief Unspecified values
+ *
+ * \enum Enum
+ */
 enum Enum
 {
     NONE,
     SUPPRESS,
 };
 
+/*!
+ * \brief ArgumentError handler
+ */
 class ArgumentError : public std::invalid_argument
 {
 public:
@@ -192,6 +205,9 @@ public:
     { }
 };
 
+/*!
+ * \brief AttributeError handler
+ */
 class AttributeError : public std::invalid_argument
 {
 public:
@@ -200,6 +216,9 @@ public:
     { }
 };
 
+/*!
+ * \brief ValueError handler
+ */
 class ValueError : public std::invalid_argument
 {
 public:
@@ -208,6 +227,9 @@ public:
     { }
 };
 
+/*!
+ * \brief IndexError handler
+ */
 class IndexError : public std::logic_error
 {
 public:
@@ -216,6 +238,9 @@ public:
     { }
 };
 
+/*!
+ * \brief TypeError handler
+ */
 class TypeError : public std::logic_error
 {
 public:
@@ -224,23 +249,42 @@ public:
     { }
 };
 
-// ArgumentParser objects
+/*!
+ * \brief ArgumentParser objects
+ */
 class ArgumentParser
 {
     typedef std::pair<Action, std::vector<std::string> > ArgumentValue;
 
 public:
+    /*!
+     * \brief Argument class
+     */
     class Argument
     {
         friend class ArgumentParser;
 
     public:
+        /*!
+         * \brief Argument type
+         *
+         * \enum Type
+         */
         enum Type
         {
             Positional,
             Optional
         };
 
+        /*!
+         *  \brief Construct argument object with parsed arguments
+         *
+         *  \param flags Argument flags
+         *  \param name Argument name
+         *  \param type Argument type
+         *
+         *  \return Argument object
+         */
         Argument(std::vector<std::string> const& flags,
                  std::string const& name,
                  Type type)
@@ -261,6 +305,13 @@ public:
               m_callback(nullptr)
         { }
 
+        /*!
+         *  \brief Construct argument object from another argument
+         *
+         *  \param orig Argument object to copy
+         *
+         *  \return Argument object
+         */
         Argument(Argument const& orig)
             : m_flags(orig.m_flags),
               m_name(orig.m_name),
@@ -279,6 +330,15 @@ public:
               m_callback(orig.m_callback)
         { }
 
+        /*!
+         *  \brief Construct Argument object with parsed arguments
+         *
+         *  \param flags Argument flags
+         *  \param name Argument name
+         *  \param type Argument type
+         *
+         *  \return Current argument reference
+         */
         Argument& operator =(Argument const& rhs)
         {
             if (this != &rhs) {
@@ -301,6 +361,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set argument 'action' value
+         *
+         *  \param value Action value
+         *
+         *  \return Current argument reference
+         */
         Argument& action(std::string const& value)
         {
             if (value == "store") {
@@ -327,6 +394,13 @@ public:
             throw ValueError("unknown action '" + value + "'");
         }
 
+        /*!
+         *  \brief Set argument 'action' value
+         *
+         *  \param value Action value
+         *
+         *  \return Current argument reference
+         */
         Argument& action(Action value)
         {
             if (m_action == Action::version) {
@@ -350,7 +424,7 @@ public:
                     m_help = "show program's version number and exit";
                 case Action::help :
                     if (type() == Positional) {
-                        // TODO: version and help actions cannot be positional
+                        // version and help actions cannot be positional
                         throw TypeError("got an unexpected keyword argument 'required'");
                     }
                 case Action::store_const :
@@ -372,6 +446,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set argument 'nargs' value
+         *
+         *  \param value Nargs value
+         *
+         *  \return Current argument reference
+         */
         Argument& nargs(uint32_t value)
         {
             switch (m_action) {
@@ -410,6 +491,13 @@ public:
 //            return nargs(std::string(1, value));
 //        }
 
+        /*!
+         *  \brief Set argument 'nargs' value
+         *
+         *  \param value Nargs value : "?", "*", "+"
+         *
+         *  \return Current argument reference
+         */
         Argument& nargs(std::string const& value)
         {
             if (!(m_action & (Action::store | Action::append | Action::extend))) {
@@ -424,6 +512,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set argument 'const' value
+         *
+         *  \param value Const value
+         *
+         *  \return Current argument reference
+         */
         Argument& const_value(std::string const& value)
         {
             if (m_action & (Action::store_const | Action::append_const)
@@ -439,6 +534,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set argument 'default' value
+         *
+         *  \param value Default value
+         *
+         *  \return Current argument reference
+         */
         Argument& default_value(std::string const& value)
         {
             if (!(m_action & (Action::store_true | Action::store_false))) {
@@ -447,6 +549,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set argument value 'choices'
+         *
+         *  \param value Choices value
+         *
+         *  \return Current argument reference
+         */
         Argument& choices(std::vector<std::string> const& value)
         {
             if (!(m_action & (Action::store | Action::append | Action::extend))) {
@@ -462,6 +571,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set 'required' value for optional arguments
+         *
+         *  \param value Required flag
+         *
+         *  \return Current argument reference
+         */
         Argument& required(bool value)
         {
             if (type() == Positional) {
@@ -471,6 +587,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set argument 'help' message
+         *
+         *  \param value Help message
+         *
+         *  \return Current argument reference
+         */
         Argument& help(std::string const& value)
         {
             m_help = detail::_trim_copy(value);
@@ -478,6 +601,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Suppress argument 'help' message
+         *
+         *  \param value argparse::SUPPRESS
+         *
+         *  \return Current argument reference
+         */
         Argument& help(Enum value)
         {
             if (value != SUPPRESS) {
@@ -487,12 +617,26 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set 'metavar' value
+         *
+         *  \param value Metavar value
+         *
+         *  \return Current argument reference
+         */
         Argument& metavar(std::string const& value)
         {
             m_metavar = detail::_trim_copy(value);
             return *this;
         }
 
+        /*!
+         *  \brief Set 'dest' value for optional arguments
+         *
+         *  \param value Destination value
+         *
+         *  \return Current argument reference
+         */
         Argument& dest(std::string const& value)
         {
             if (type() == Positional) {
@@ -502,6 +646,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set 'version' for arguments with 'version' action
+         *
+         *  \param value Version value
+         *
+         *  \return Current argument reference
+         */
         Argument& version(std::string const& value)
         {
             if (m_action == Action::version) {
@@ -512,6 +663,13 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Set 'callback' for arguments with 'store_true' action
+         *
+         *  \param func Callback function
+         *
+         *  \return Current argument reference
+         */
         Argument& callback(std::function<void()> func)
         {
             if (m_action == Action::store_true) {
@@ -522,61 +680,119 @@ public:
             return *this;
         }
 
+        /*!
+         *  \brief Get argument flags values
+         *
+         *  \return Argument flags values
+         */
         std::vector<std::string> const& flags() const
         {
             return m_flags;
         }
 
+        /*!
+         *  \brief Get argument 'action' value
+         *
+         *  \return Argument 'action' value
+         */
         Action action() const
         {
             return m_action;
         }
 
+        /*!
+         *  \brief Get argument 'nargs' value
+         *
+         *  \return Argument 'nargs' value
+         */
         std::string const& nargs() const
         {
             return m_nargs;
         }
 
+        /*!
+         *  \brief Get argument 'const' value
+         *
+         *  \return Argument 'const' value
+         */
         std::string const& const_value() const
         {
             return m_const;
         }
 
+        /*!
+         *  \brief Get argument 'default' value
+         *
+         *  \return Argument 'default' value
+         */
         std::string const& default_value() const
         {
             return m_default;
         }
 
+        /*!
+         *  \brief Get argument 'choices' value
+         *
+         *  \return Argument 'choices' value
+         */
         std::vector<std::string> const& choices() const
         {
             return m_choices;
         }
 
+        /*!
+         *  \brief Get argument 'required' value
+         *
+         *  \return Argument 'required' value
+         */
         bool required() const
         {
             return m_required;
         }
 
+        /*!
+         *  \brief Get argument 'help' value
+         *
+         *  \return Argument 'help' value
+         */
         std::string const& help() const
         {
             return m_help;
         }
 
+        /*!
+         *  \brief Get argument 'metavar' value
+         *
+         *  \return Argument 'metavar' value
+         */
         std::string const& metavar() const
         {
             return m_metavar;
         }
 
+        /*!
+         *  \brief Get argument 'dest' value
+         *
+         *  \return Argument 'dest' value
+         */
         std::string const& dest() const
         {
             return m_dest;
         }
 
+        /*!
+         *  \brief Get argument 'version' value
+         *
+         *  \return Argument 'version' value
+         */
         std::string const& version() const
         {
             return m_version;
         }
 
+        /*!
+         *  \brief Run argument callback function
+         */
         void callback() const
         {
             if (m_callback) {
@@ -584,6 +800,11 @@ public:
             }
         }
 
+        /*!
+         *  \brief Get argument usage value
+         *
+         *  \return Argument usage value
+         */
         std::string operator()() const
         {
             std::string res;
@@ -697,6 +918,9 @@ public:
         std::function<void()> m_callback;
     };
 
+    /*!
+     * \brief Object with parsed arguments
+     */
     class Namespace
     {
         template <class T>       struct is_stl_container:std::false_type{};
@@ -718,14 +942,27 @@ public:
         template <class... Args> struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
 
     public:
+        /*!
+         *  \brief Construct object with parsed arguments
+         *
+         *  \param arguments Parsed arguments
+         *  \param prefix_chars Parsers prefix chars
+         *
+         *  \return Object with parsed arguments
+         */
         Namespace(std::map<std::string, ArgumentValue> const& arguments,
                   std::string const& prefix_chars)
             : m_arguments(arguments),
               m_prefix_chars(prefix_chars)
         { }
 
-        Namespace& operator =(Namespace const&) = delete;
-
+        /*!
+         *  \brief Get parsed argument value for integer types
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value
+         */
         template <class T, typename std::enable_if<std::is_integral<T>::value
                                                    and not std::is_same<bool, T>::value>::type* = nullptr>
         T get(std::string const& key) const
@@ -746,6 +983,13 @@ public:
             return to_type<T>(args.second.front());
         }
 
+        /*!
+         *  \brief Get parsed argument value for boolean, floating point and string types
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value
+         */
         template <class T, typename std::enable_if<std::is_same<bool, T>::value
                                                    or std::is_floating_point<T>::value
                                                    or std::is_same<std::string, T>::value>::type* = nullptr>
@@ -767,6 +1011,13 @@ public:
             return to_type<T>(args.second.front());
         }
 
+        /*!
+         *  \brief Get parsed argument value for std containers types
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value
+         */
         template <class T,
                   typename std::enable_if<is_stl_container<typename std::decay<T>::type>::value>::type*
                                                                                                     = nullptr>
@@ -776,6 +1027,13 @@ public:
             return T(std::begin(vector), std::end(vector));
         }
 
+        /*!
+         *  \brief Get parsed argument value std array type
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value
+         */
         template <class T,
                   typename std::enable_if<is_stl_array<typename std::decay<T>::type>::value>::type* = nullptr>
         T get(std::string const& key) const
@@ -790,6 +1048,13 @@ public:
             return res;
         }
 
+        /*!
+         *  \brief Get parsed argument value for queue types
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value
+         */
         template <class T,
                   typename std::enable_if<is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
         T get(std::string const& key) const
@@ -799,6 +1064,13 @@ public:
                                                         std::end(vector)));
         }
 
+        /*!
+         *  \brief Get parsed argument value as string
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value as string
+         */
         std::string to_string(std::string const& key) const
         {
             auto const& args = data(key);
@@ -881,11 +1153,20 @@ public:
             return result;
         }
 
+        Namespace& operator =(Namespace const&) = delete;
+
         std::map<std::string, ArgumentValue> m_arguments;
         std::string m_prefix_chars;
     };
 
 public:
+    /*!
+     *  \brief Construct argument parser with concrete program name
+     *
+     *  \param prog Program value
+     *
+     *  \return Argument parser object
+     */
     explicit ArgumentParser(std::string const& prog = "untitled")
         : m_prog(prog),
           m_usage(),
@@ -904,10 +1185,26 @@ public:
                           .help("show this help message and exit").action(Action::store_true))
     { }
 
+    /*!
+     *  \brief Construct argument parser from command line arguments
+     *
+     *  \param argc Number of command line arguments
+     *  \param argv Command line arguments data
+     *
+     *  \return Argument parser object
+     */
     ArgumentParser(int argc, char* argv[])
         : ArgumentParser(argc, (char const**)(argv))
     { }
 
+    /*!
+     *  \brief Construct argument parser from command line arguments
+     *
+     *  \param argc Number of command line arguments
+     *  \param argv Command line arguments data
+     *
+     *  \return Argument parser object
+     */
     ArgumentParser(int argc, char const* argv[])
         : ArgumentParser(detail::_file_name(argv[0]))
     {
@@ -917,6 +1214,13 @@ public:
         }
     }
 
+    /*!
+     *  \brief Set argument parser 'prog' value
+     *
+     *  \param param Program value
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& prog(std::string const& param)
     {
         auto value = detail::_trim_copy(param);
@@ -926,30 +1230,65 @@ public:
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'usage' value
+     *
+     *  \param param Usage value
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& usage(std::string const& param)
     {
         m_usage = detail::_trim_copy(param);
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'description' value
+     *
+     *  \param param Description value
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& description(std::string const& param)
     {
         m_description = detail::_trim_copy(param);
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'epilog' value
+     *
+     *  \param param Epilog value
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& epilog(std::string const& param)
     {
         m_epilog = detail::_trim_copy(param);
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'parents' value
+     *
+     *  \param param Parents values
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& parents(std::vector<ArgumentParser> const& param)
     {
         m_parents = param;
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'prefix_chars' value
+     *
+     *  \param param Prefix chars values
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& prefix_chars(std::string const& param)
     {
         auto value = detail::_trim_copy(param);
@@ -959,91 +1298,190 @@ public:
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'fromfile_prefix_chars' value
+     *
+     *  \param param Fromfile prefix chars values
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& fromfile_prefix_chars(std::string const& param)
     {
         m_fromfile_prefix_chars = detail::_trim_copy(param);
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'argument_default' value
+     *
+     *  \param param Argument default value
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& argument_default(std::string const& param)
     {
         m_argument_default = detail::_trim_copy(param);
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'add_help' value
+     *
+     *  \param value Add help flag
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& add_help(bool value)
     {
         m_add_help = value;
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'allow_abbrev' value
+     *
+     *  \param value Allow abbrev flag
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& allow_abbrev(bool value)
     {
         m_allow_abbrev = value;
         return *this;
     }
 
+    /*!
+     *  \brief Set argument parser 'exit_on_error' value
+     *
+     *  \param value Exit on error flag
+     *
+     *  \return Current argument parser reference
+     */
     ArgumentParser& exit_on_error(bool value)
     {
         m_exit_on_error = value;
         return *this;
     }
 
+    /*!
+     *  \brief Get argument parser 'prog' value
+     *
+     *  \return Argument parser 'prog' value
+     */
     std::string const& prog() const
     {
         return m_prog;
     }
 
+    /*!
+     *  \brief Get argument parser 'usage' value
+     *
+     *  \return Argument parser 'usage' value
+     */
     std::string const& usage() const
     {
         return m_usage;
     }
 
+    /*!
+     *  \brief Get argument parser 'description' value
+     *
+     *  \return Argument parser 'description' value
+     */
     std::string const& description() const
     {
         return m_description;
     }
 
+    /*!
+     *  \brief Get argument parser 'epilog' value
+     *
+     *  \return Argument parser 'epilog' value
+     */
     std::string const& epilog() const
     {
         return m_epilog;
     }
 
+    /*!
+     *  \brief Get argument parser 'prefix_chars' value
+     *
+     *  \return Argument parser 'prefix_chars' value
+     */
     std::string const& prefix_chars() const
     {
         return m_prefix_chars;
     }
 
+    /*!
+     *  \brief Get argument parser 'fromfile_prefix_chars' value
+     *
+     *  \return Argument parser 'fromfile_prefix_chars' value
+     */
     std::string const& fromfile_prefix_chars() const
     {
         return m_fromfile_prefix_chars;
     }
 
+    /*!
+     *  \brief Get argument parser 'argument_default' value
+     *
+     *  \return Argument parser 'argument_default' value
+     */
     std::string const& argument_default() const
     {
         return m_argument_default;
     }
 
+    /*!
+     *  \brief Get argument parser 'add_help' value
+     *
+     *  \return Argument parser 'add_help' value
+     */
     bool add_help() const
     {
         return m_add_help;
     }
 
+    /*!
+     *  \brief Get argument parser 'allow_abbrev' value
+     *
+     *  \return Argument parser 'allow_abbrev' value
+     */
     bool allow_abbrev() const
     {
         return m_allow_abbrev;
     }
 
+    /*!
+     *  \brief Get argument parser 'exit_on_error' value
+     *
+     *  \return Argument parser 'exit_on_error' value
+     */
     bool exit_on_error() const
     {
         return m_exit_on_error;
     }
 
+    /*!
+     *  \brief Add argument with flag
+     *
+     *  \param flag Flag value
+     *
+     *  \return Current argument reference
+     */
     Argument& add_argument(char const* flag)
     {
         return add_argument({ std::string(flag) });
     }
 
+    /*!
+     *  \brief Add argument with flags
+     *
+     *  \param flags Flags values
+     *
+     *  \return Current argument reference
+     */
     Argument& add_argument(std::vector<std::string> flags)
     {
         if (flags.empty()) {
@@ -1092,6 +1530,14 @@ public:
         return m_arguments.back();
     }
 
+
+    /*!
+     *  \brief Get default value for certain argument
+     *
+     *  \param dest Argument destination name or flag
+     *
+     *  \return Default value for certain argument
+     */
     std::string get_default(std::string const& dest) const
     {
         auto const positional = positional_arguments();
@@ -1123,11 +1569,23 @@ public:
         return std::string();
     }
 
+    /*!
+     *  \brief Parse command line arguments
+     *
+     *  \return Object with parsed arguments
+     */
     Namespace parse_args() const
     {
         return parse_args(m_parsed_arguments);
     }
 
+    /*!
+     *  \brief Parse concrete arguments
+     *
+     *  \param parsed_arguments Arguments to parse
+     *
+     *  \return Object with parsed arguments
+     */
     Namespace parse_args(std::vector<std::string> parsed_arguments) const
     {
         if (m_exit_on_error) {
@@ -1144,11 +1602,21 @@ public:
         }
     }
 
+    /*!
+     *  \brief Print program usage
+     *
+     *  \param os Output stream
+     */
     void print_usage(std::ostream& os = std::cout) const
     {
         os << "usage: " << get_usage() << std::endl;
     }
 
+    /*!
+     *  \brief Print program help message
+     *
+     *  \param os Output stream
+     */
     void print_help(std::ostream& os = std::cout) const
     {
         print_usage(os);
