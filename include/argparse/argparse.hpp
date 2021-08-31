@@ -974,6 +974,205 @@ public:
     };
 
     /*!
+     * \brief Subparser class
+     */
+    class Subparser
+    {
+    public:
+        Subparser()
+            : m_title("subcommands"),
+              m_description(),
+              m_prog(),
+              m_action(Action::store),
+              m_dest(),
+              m_required(false),
+              m_help(),
+              m_metavar()
+        { }
+
+        /*!
+         *  \brief Set subparser 'title' value
+         *
+         *  \param value Title value
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& title(std::string const& value)
+        {
+            m_title = detail::_trim_copy(value);
+            return *this;
+        }
+
+        /*!
+         *  \brief Set subparser 'description' value
+         *
+         *  \param param Description value
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& description(std::string const& param)
+        {
+            m_description = detail::_trim_copy(param);
+            return *this;
+        }
+
+        /*!
+         *  \brief Set subparser 'prog' value
+         *
+         *  \param value Program value
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& prog(std::string const& value)
+        {
+            m_prog = detail::_trim_copy(value);
+            return *this;
+        }
+
+        /*!
+         *  \brief Set subparser 'dest' value
+         *
+         *  \param value Destination value
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& dest(std::string const& value)
+        {
+            m_dest = detail::_trim_copy(value);
+            return *this;
+        }
+
+        /*!
+         *  \brief Set subparser 'required' value
+         *
+         *  \param value Required flag
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& required(bool value)
+        {
+            m_required = value;
+            return *this;
+        }
+
+        /*!
+         *  \brief Set subparser 'help' message
+         *
+         *  \param value Help message
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& help(std::string const& value)
+        {
+            m_help = detail::_trim_copy(value);
+            return *this;
+        }
+
+        /*!
+         *  \brief Set subparser 'metavar' value
+         *
+         *  \param value Metavar value
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& metavar(std::string const& value)
+        {
+            m_metavar = detail::_trim_copy(value);
+            return *this;
+        }
+
+        /*!
+         *  \brief Get subparser 'title' value
+         *
+         *  \return Subparser 'title' value
+         */
+        std::string const& title() const
+        {
+            return m_title;
+        }
+
+        /*!
+         *  \brief Get subparser 'description' value
+         *
+         *  \return Subparser 'description' value
+         */
+        std::string const& description() const
+        {
+            return m_description;
+        }
+
+        /*!
+         *  \brief Get subparser 'prog' value
+         *
+         *  \return Subparser 'prog' value
+         */
+        std::string const& prog() const
+        {
+            return m_prog;
+        }
+
+        /*!
+         *  \brief Get subparser 'action' value
+         *
+         *  \return Subparser 'action' value
+         */
+        Action action() const
+        {
+            return m_action;
+        }
+
+        /*!
+         *  \brief Get subparser 'dest' value
+         *
+         *  \return Subparser 'dest' value
+         */
+        std::string const& dest() const
+        {
+            return m_dest;
+        }
+
+        /*!
+         *  \brief Get subparser 'required' value
+         *
+         *  \return Subparser 'required' value
+         */
+        bool required() const
+        {
+            return m_required;
+        }
+
+        /*!
+         *  \brief Get subparser 'help' value
+         *
+         *  \return Subparser 'help' value
+         */
+        std::string const& help() const
+        {
+            return m_help;
+        }
+
+        /*!
+         *  \brief Get subparser 'metavar' value
+         *
+         *  \return Subparser 'metavar' value
+         */
+        std::string const& metavar() const
+        {
+            return m_metavar;
+        }
+
+    private:
+        std::string m_title;
+        std::string m_description;
+        std::string m_prog;
+        Action      m_action;
+        std::string m_dest;
+        bool        m_required;
+        std::string m_help;
+        std::string m_metavar;
+    };
+
+    /*!
      * \brief Object with parsed arguments
      */
     class Namespace
@@ -1257,6 +1456,7 @@ public:
           m_exit_on_error(true),
           m_parsed_arguments(),
           m_arguments(),
+          m_subparsers(nullptr),
           m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Optional)
                           .help("show this help message and exit").action(Action::store_true))
     { }
@@ -1287,6 +1487,17 @@ public:
         m_parsed_arguments.reserve(argc - 1);
         for (int i = 1; i < argc; ++i) {
             m_parsed_arguments.emplace_back(std::string(argv[i]));
+        }
+    }
+
+    /*!
+     *  \brief Destroy argument parser
+     */
+    ~ArgumentParser()
+    {
+        if (m_subparsers) {
+            delete m_subparsers;
+            m_subparsers = nullptr;
         }
     }
 
@@ -1606,6 +1817,19 @@ public:
         return m_arguments.back();
     }
 
+    /*!
+     *  \brief Add subparsers
+     *
+     *  \return Current subparser reference
+     */
+    Subparser& add_subparsers()
+    {
+        if (m_subparsers) {
+            handle_error("cannot have multiple subparser arguments");
+        }
+        m_subparsers = new Subparser();
+        return *m_subparsers;
+    }
 
     /*!
      *  \brief Get default value for certain argument
@@ -2525,6 +2749,7 @@ private:
 
     std::vector<std::string> m_parsed_arguments;
     std::vector<Argument> m_arguments;
+    Subparser* m_subparsers;
     Argument m_help_argument;
 };
 } // argparse
