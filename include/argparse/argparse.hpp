@@ -1025,6 +1025,52 @@ public:
         }
 
         /*!
+         *  \brief Set subparser 'action' value
+         *
+         *  \param value Action value
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& action(std::string const& value)
+        {
+            if (value == "store") {
+                return action(Action::store);
+            } else if (value == "store_const") {
+                return action(Action::store_const);
+            } else if (value == "store_true") {
+                return action(Action::store_true);
+            } else if (value == "store_false") {
+                return action(Action::store_false);
+            } else if (value == "append") {
+                return action(Action::append);
+            } else if (value == "append_const") {
+                return action(Action::append_const);
+            } else if (value == "count") {
+                return action(Action::count);
+            } else if (value == "help") {
+                return action(Action::help);
+            } else if (value == "version") {
+                return action(Action::version);
+            } else if (value == "extend") {
+                return action(Action::extend);
+            }
+            throw ValueError("unknown action '" + value + "'");
+        }
+
+        /*!
+         *  \brief Set subparser 'action' value
+         *
+         *  \param value Action value
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& action(Action value)
+        {
+            m_action = value;
+            return *this;
+        }
+
+        /*!
          *  \brief Set subparser 'dest' value
          *
          *  \param value Destination value
