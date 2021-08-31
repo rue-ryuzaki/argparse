@@ -969,20 +969,129 @@ public:
     };
 
     /*!
+     * \brief Parser class
+     */
+    class Parser
+    {
+    public:
+        Parser(std::string const& prefix_chars)
+            : m_prefix_chars(prefix_chars),
+              m_help(),
+              m_arguments()
+        { }
+
+        /*!
+         *  \brief Set parser 'help' message
+         *
+         *  \param value Help message
+         *
+         *  \return Current parser reference
+         */
+        Parser& help(std::string const& value)
+        {
+            m_help = detail::_trim_copy(value);
+            return *this;
+        }
+
+        /*!
+         *  \brief Get parser 'help' message
+         *
+         *  \return Parser 'help' message
+         */
+        std::string const& help() const
+        {
+            return m_help;
+        }
+
+        /*!
+         *  \brief Add argument with flag
+         *
+         *  \param flag Flag value
+         *
+         *  \return Current argument reference
+         */
+        Argument& add_argument(char const* flag)
+        {
+            return add_argument({ std::string(flag) });
+        }
+
+        /*!
+         *  \brief Add argument with flags
+         *
+         *  \param flags Flags values
+         *
+         *  \return Current argument reference
+         */
+        Argument& add_argument(std::vector<std::string> flags)
+        {
+            if (flags.empty()) {
+                throw ValueError("empty options");
+            }
+            flags.front() = detail::_trim_copy(flags.front());
+            auto flag_name = flags.front();
+            if (flag_name.empty()) {
+                throw IndexError("string index out of range");
+            }
+
+            auto prefixes = 0ul;
+            auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg)
+            {
+                auto name = detail::_flag_name(arg);
+                auto count_prefixes = arg.size() - name.size();
+                if (prefixes < count_prefixes) {
+                    prefixes = count_prefixes;
+                    flag_name = name;
+                }
+            };
+            bool is_optional = detail::_is_optional_argument(flag_name, m_prefix_chars);
+            if (is_optional) {
+                _update_flag_name(flag_name);
+            } else if (flags.size() > 1) {
+                // no positional multiflag
+                throw ValueError("invalid option string " + flags.front()
+                                 + ": must starts with a character '" + m_prefix_chars + "'");
+            }
+            for (size_t i = 1; i < flags.size(); ++i) {
+                // check arguments
+                auto const& flag = flags.at(i);
+                if (flag.empty()) {
+                    throw IndexError("string index out of range");
+                }
+                if (!detail::_is_optional_argument(flag, m_prefix_chars)) {
+                    // no positional and optional args
+                    throw ValueError("invalid option string " + flag
+                                     + ": must starts with a character '" + m_prefix_chars + "'");
+                }
+                _update_flag_name(flag);
+            }
+            m_arguments.emplace_back(Argument(flags, flag_name,
+                                              is_optional ? Argument::Optional
+                                                          : Argument::Positional));
+            return m_arguments.back();
+        }
+
+    private:
+        std::string           m_prefix_chars;
+        std::string           m_help;
+        std::vector<Argument> m_arguments;
+    };
+
+    /*!
      * \brief Subparser class
      */
     class Subparser
     {
     public:
-        Subparser()
+        Subparser(std::string const& prefix_chars)
             : m_title("subcommands"),
               m_description(),
               m_prog(),
-              m_action(Action::store),
               m_dest(),
               m_required(false),
               m_help(),
-              m_metavar()
+              m_metavar(),
+              m_prefix_chars(prefix_chars),
+              m_parsers()
         { }
 
         /*!
@@ -1021,52 +1130,6 @@ public:
         Subparser& prog(std::string const& value)
         {
             m_prog = detail::_trim_copy(value);
-            return *this;
-        }
-
-        /*!
-         *  \brief Set subparser 'action' value
-         *
-         *  \param value Action value
-         *
-         *  \return Current subparser reference
-         */
-        Subparser& action(std::string const& value)
-        {
-            if (value == "store") {
-                return action(Action::store);
-            } else if (value == "store_const") {
-                return action(Action::store_const);
-            } else if (value == "store_true") {
-                return action(Action::store_true);
-            } else if (value == "store_false") {
-                return action(Action::store_false);
-            } else if (value == "append") {
-                return action(Action::append);
-            } else if (value == "append_const") {
-                return action(Action::append_const);
-            } else if (value == "count") {
-                return action(Action::count);
-            } else if (value == "help") {
-                return action(Action::help);
-            } else if (value == "version") {
-                return action(Action::version);
-            } else if (value == "extend") {
-                return action(Action::extend);
-            }
-            throw ValueError("unknown action '" + value + "'");
-        }
-
-        /*!
-         *  \brief Set subparser 'action' value
-         *
-         *  \param value Action value
-         *
-         *  \return Current subparser reference
-         */
-        Subparser& action(Action value)
-        {
-            m_action = value;
             return *this;
         }
 
@@ -1153,16 +1216,6 @@ public:
         }
 
         /*!
-         *  \brief Get subparser 'action' value
-         *
-         *  \return Subparser 'action' value
-         */
-        Action action() const
-        {
-            return m_action;
-        }
-
-        /*!
          *  \brief Get subparser 'dest' value
          *
          *  \return Subparser 'dest' value
@@ -1202,15 +1255,29 @@ public:
             return m_metavar;
         }
 
+        /*!
+         *  \brief Add parser with flag
+         *
+         *  \param flag Flag value
+         *
+         *  \return Current parser reference
+         */
+        Parser& add_parser(std::string const& /*flag*/)
+        {
+            m_parsers.emplace_back(Parser(m_prefix_chars));
+            return m_parsers.back();
+        }
+
     private:
         std::string m_title;
         std::string m_description;
         std::string m_prog;
-        Action      m_action;
         std::string m_dest;
         bool        m_required;
         std::string m_help;
         std::string m_metavar;
+        std::string m_prefix_chars;
+        std::vector<Parser> m_parsers;
     };
 
     /*!
@@ -1868,7 +1935,7 @@ public:
         if (m_subparsers) {
             handle_error("cannot have multiple subparser arguments");
         }
-        m_subparsers = new Subparser();
+        m_subparsers = new Subparser(m_prefix_chars);
         return *m_subparsers;
     }
 
