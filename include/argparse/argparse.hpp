@@ -595,7 +595,7 @@ public:
         }
 
         /*!
-         *  \brief Set argument value 'choices'
+         *  \brief Set argument 'choices' value
          *
          *  \param value Choices value
          *
@@ -663,7 +663,7 @@ public:
         }
 
         /*!
-         *  \brief Set 'metavar' value
+         *  \brief Set argument 'metavar' value
          *
          *  \param value Metavar value
          *
@@ -676,7 +676,7 @@ public:
         }
 
         /*!
-         *  \brief Set 'dest' value for optional arguments
+         *  \brief Set argument 'dest' value for optional arguments
          *
          *  \param value Destination value
          *
@@ -692,7 +692,7 @@ public:
         }
 
         /*!
-         *  \brief Set 'version' for arguments with 'version' action
+         *  \brief Set argument 'version' for arguments with 'version' action
          *
          *  \param value Version value
          *
@@ -709,7 +709,7 @@ public:
         }
 
         /*!
-         *  \brief Set 'callback' for arguments with 'store_true' action
+         *  \brief Set argument 'callback' for arguments with 'store_true' action
          *
          *  \param func Callback function
          *
@@ -796,9 +796,9 @@ public:
         }
 
         /*!
-         *  \brief Get argument 'help' value
+         *  \brief Get argument 'help' message
          *
-         *  \return Argument 'help' value
+         *  \return Argument 'help' message
          */
         std::string const& help() const
         {
@@ -1137,9 +1137,9 @@ public:
         }
 
         /*!
-         *  \brief Get subparser 'help' value
+         *  \brief Get subparser 'help' message
          *
-         *  \return Subparser 'help' value
+         *  \return Subparser 'help' message
          */
         std::string const& help() const
         {
