@@ -535,11 +535,6 @@ public:
             return *this;
         }
 
-//        Argument& nargs(char value)
-//        {
-//            return nargs(std::string(1, value));
-//        }
-
         /*!
          *  \brief Set argument 'nargs' value
          *
