@@ -974,8 +974,9 @@ public:
     class Parser
     {
     public:
-        Parser(std::string const& prefix_chars)
-            : m_prefix_chars(prefix_chars),
+        Parser(std::string const& name, std::string const& prefix_chars)
+            : m_name(name),
+              m_prefix_chars(prefix_chars),
               m_help(),
               m_arguments()
         { }
@@ -991,6 +992,11 @@ public:
         {
             m_help = detail::_trim_copy(value);
             return *this;
+        }
+
+        std::string const& name() const
+        {
+            return m_name;
         }
 
         /*!
@@ -1071,6 +1077,7 @@ public:
         }
 
     private:
+        std::string           m_name;
         std::string           m_prefix_chars;
         std::string           m_help;
         std::vector<Argument> m_arguments;
@@ -1081,9 +1088,11 @@ public:
      */
     class Subparser
     {
+        friend class ArgumentParser;
+
     public:
         Subparser(std::string const& prefix_chars)
-            : m_title("subcommands"),
+            : m_title(),
               m_description(),
               m_prog(),
               m_dest(),
@@ -1256,19 +1265,52 @@ public:
         }
 
         /*!
-         *  \brief Add parser with flag
+         *  \brief Add parser with name
          *
-         *  \param flag Flag value
+         *  \param name Parser name
          *
          *  \return Current parser reference
          */
-        Parser& add_parser(std::string const& /*flag*/)
+        Parser& add_parser(std::string const& name)
         {
-            m_parsers.emplace_back(Parser(m_prefix_chars));
+            m_parsers.emplace_back(Parser(name, m_prefix_chars));
             return m_parsers.back();
         }
 
     private:
+        std::string flags_to_string() const
+        {
+            return get_argument_name();
+        }
+
+        std::string print(size_t limit = detail::_argument_help_limit) const
+        {
+            std::string res = "  " + flags_to_string();
+            if (!help().empty()) {
+                if (res.size() + 2 > limit) {
+                    res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
+                } else {
+                    res += std::string(limit - res.size(), ' ') + help();
+                }
+            }
+            return res;
+        }
+
+        std::string get_argument_name() const
+        {
+            if (!m_metavar.empty()) {
+                return m_metavar;
+            }
+            std::string res;
+            for (auto const& parser : m_parsers) {
+                if (!res.empty()) {
+                    res += ",";
+                }
+                res += parser.name();//parser.name();
+            }
+            return "{" + res + "}";
+        }
+
         std::string m_title;
         std::string m_description;
         std::string m_prog;
@@ -2036,6 +2078,12 @@ public:
         size_t min_size = 0;
         auto const positional = positional_arguments(false);
         auto const optional = optional_arguments(false);
+        if (m_subparsers) {
+            auto size = m_subparsers->flags_to_string().size();
+            if (min_size < size) {
+                min_size = size;
+            }
+        }
         for (auto const& arg : positional) {
             auto size = arg.flags_to_string().size();
             if (min_size < size) {
@@ -2052,8 +2100,17 @@ public:
         if (min_size > detail::_argument_help_limit) {
             min_size = detail::_argument_help_limit;
         }
-        if (!positional.empty()) {
+        if (!positional.empty()
+                || (m_subparsers
+                    && m_subparsers->title().empty()
+                    && m_subparsers->description().empty())) {
             os << std::endl << "positional arguments:" << std::endl;
+            if (m_subparsers
+                    && m_subparsers->title().empty()
+                    && m_subparsers->description().empty()) {
+                // TODO : fix order
+                os << m_subparsers->print(min_size) << std::endl;
+            }
             for (auto const& arg : positional) {
                 os << arg.print(min_size) << std::endl;
             }
@@ -2063,6 +2120,18 @@ public:
             for (auto const& arg : optional) {
                 os << arg.print(min_size) << std::endl;
             }
+        }
+        if (m_subparsers &&
+                (!m_subparsers->title().empty() || !m_subparsers->description().empty())) {
+            if (m_subparsers->title().empty()) {
+                os << std::endl << "subcommands:" << std::endl;
+            } else {
+                os << std::endl << m_subparsers->title() << ":" << std::endl;
+            }
+            if (!m_subparsers->description().empty()) {
+                os << "  " << m_subparsers->description() << std::endl << std::endl;
+            }
+            os << m_subparsers->print(min_size) << std::endl;
         }
         if (!m_epilog.empty()) {
             os << std::endl << m_epilog << std::endl;
