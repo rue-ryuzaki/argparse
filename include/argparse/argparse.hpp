@@ -1012,6 +1012,27 @@ public:
         { }
 
         /*!
+         *  \brief Check if argument name exists in parsed arguments
+         *
+         *  \param key Argument name
+         *
+         *  \return true if argument name exists, otherwise false
+         */
+        bool exists(std::string const& key) const
+        {
+            if (m_arguments.count(key) != 0) {
+                return true;
+            }
+            for (auto const& pair : m_arguments) {
+                if (detail::_is_optional_argument(pair.first, m_prefix_chars)
+                        && detail::_flag_name(pair.first) == key) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /*!
          *  \brief Get parsed argument value for integer types
          *
          *  \param key Argument name
