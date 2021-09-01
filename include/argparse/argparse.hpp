@@ -601,6 +601,23 @@ public:
          *
          *  \return Current argument reference
          */
+        Argument& choices(std::string const& value)
+        {
+            std::vector<std::string> values;
+            values.reserve(value.size());
+            for (auto const& c : value) {
+                values.push_back(std::string(1, c));
+            }
+            return choices(values);
+        }
+
+        /*!
+         *  \brief Set argument 'choices' value
+         *
+         *  \param value Choices value
+         *
+         *  \return Current argument reference
+         */
         Argument& choices(std::vector<std::string> const& value)
         {
             if (!(m_action & (Action::store | Action::append | Action::extend))) {
