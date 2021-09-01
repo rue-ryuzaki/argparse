@@ -1184,3 +1184,30 @@ TEST_CASE("abbreviations", "[argument]")
         REQUIRE(args5.get<bool>("-ccc") == false);
     }
 }
+
+TEST_CASE("subparsers", "[argument_parser]")
+{
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("test") {
+        parser.add_argument("--foo").action("store_true").help("foo help");
+
+        auto& subparsers = parser.add_subparsers().help("sub-command help");
+
+        auto& parser_a = subparsers.add_parser("a").help("a help");
+        parser_a.add_argument("bar").help("bar help");
+
+        auto& parser_b = subparsers.add_parser("b").help("b help");
+        parser_b.add_argument("--baz").choices({ "X", "Y", "Z" }).help("baz help");
+
+        auto args1 = parser.parse_args({ "a", "12" });
+        REQUIRE(args1.get<uint32_t>("bar") == 12);
+        REQUIRE(args1.get<bool>("foo") == false);
+        REQUIRE(args1.get<std::string>("baz") == "");
+
+        auto args2 = parser.parse_args({ "--foo", "b", "--baz", "Z" });
+        REQUIRE(args2.get<uint32_t>("bar") == 0);
+        REQUIRE(args2.get<bool>("foo") == true);
+        REQUIRE(args2.get<std::string>("baz") == "Z");
+    }
+}
