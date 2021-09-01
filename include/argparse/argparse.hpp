@@ -2087,7 +2087,14 @@ public:
      */
     void print_usage(std::ostream& os = std::cout) const
     {
-        os << "usage: " << get_usage() << std::endl;
+        if (!usage().empty()) {
+            os << "usage: " << usage() << std::endl;
+        } else {
+            auto const positional = positional_arguments(false);
+            auto const optional = optional_arguments(false);
+            auto const subparser = subpurser_info(false);
+            print_custom_usage(positional, optional, subparser, prog(), os);
+        }
     }
 
     /*!
@@ -2097,71 +2104,10 @@ public:
      */
     void print_help(std::ostream& os = std::cout) const
     {
-        print_usage(os);
-        if (!m_description.empty()) {
-            os << std::endl << m_description << std::endl;
-        }
-        size_t min_size = 0;
         auto const positional = positional_arguments(false);
         auto const optional = optional_arguments(false);
-        auto subparser = subpurser_info(false);
-        bool subparser_positional = (subparser.first
-                                     && subparser.first->title().empty()
-                                     && subparser.first->description().empty());
-        if (subparser.first) {
-            auto size = subparser.first->flags_to_string().size();
-            if (min_size < size) {
-                min_size = size;
-            }
-        }
-        for (auto const& arg : positional) {
-            auto size = arg.flags_to_string().size();
-            if (min_size < size) {
-                min_size = size;
-            }
-        }
-        for (auto const& arg : optional) {
-            auto size = arg.flags_to_string().size();
-            if (min_size < size) {
-                min_size = size;
-            }
-        }
-        min_size += 4;
-        if (min_size > detail::_argument_help_limit) {
-            min_size = detail::_argument_help_limit;
-        }
-        if (!positional.empty() || subparser_positional) {
-            os << std::endl << "positional arguments:" << std::endl;
-            for (size_t i = 0; i < positional.size(); ++i) {
-                if (subparser_positional && subparser.second == i) {
-                    os << subparser.first->print(min_size) << std::endl;
-                }
-                os << positional.at(i).print(min_size) << std::endl;
-            }
-            if (subparser_positional && subparser.second == positional.size()) {
-                os << subparser.first->print(min_size) << std::endl;
-            }
-        }
-        if (!optional.empty()) {
-            os << std::endl << "optional arguments:" << std::endl;
-            for (auto const& arg : optional) {
-                os << arg.print(min_size) << std::endl;
-            }
-        }
-        if (subparser.first && !subparser_positional) {
-            if (subparser.first->title().empty()) {
-                os << std::endl << "subcommands:" << std::endl;
-            } else {
-                os << std::endl << subparser.first->title() << ":" << std::endl;
-            }
-            if (!subparser.first->description().empty()) {
-                os << "  " << subparser.first->description() << std::endl << std::endl;
-            }
-            os << subparser.first->print(min_size) << std::endl;
-        }
-        if (!m_epilog.empty()) {
-            os << std::endl << m_epilog << std::endl;
-        }
+        auto const subparser = subpurser_info(false);
+        print_custom_help(positional, optional, subparser, prog(), usage(), description(), epilog(), os);
     }
 
 private:
@@ -2895,90 +2841,6 @@ private:
         return result;
     }
 
-    std::string get_usage() const
-    {
-        if (m_usage.empty()) {
-            auto res = m_prog;
-            size_t min_size = 0;
-            size_t const limit = detail::_usage_limit;
-            auto const positional = positional_arguments(false);
-            auto const optional = optional_arguments(false);
-            auto subparser = subpurser_info(false);
-            if (subparser.first) {
-                auto str = subparser.first->usage();
-                if (min_size < str.size()) {
-                    min_size = str.size();
-                }
-            }
-            for (auto const& arg : positional) {
-                auto str = arg.usage();
-                if (min_size < str.size()) {
-                    min_size = str.size();
-                }
-            }
-            for (auto const& arg : optional) {
-                auto str = arg.usage();
-                if (min_size < str.size()) {
-                    min_size = str.size();
-                }
-            }
-            size_t const usage_length = std::string("usage: ").size();
-            size_t pos = usage_length + m_prog.size();
-            size_t offset = usage_length;
-            if (pos + (min_size > 0 ? (1 + min_size) : 0) <= limit) {
-                offset += m_prog.size() + (min_size > 0 ? 1 : 0);
-            } else if (!(optional.empty() && positional.empty() && !subparser.first)) {
-                res += "\n" + std::string(offset - 1, ' ');
-                pos = offset - 1;
-            }
-            for (auto const& arg : optional) {
-                auto str = arg.usage();
-                if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
-                    res += " [" + str + "]";
-                } else {
-                    res += "\n" + std::string(offset, ' ') + "[" + str + "]";
-                    pos = offset;
-                }
-                pos += 1 + str.size();
-            }
-            for (size_t i = 0; i < positional.size(); ++i) {
-                if (subparser.first && subparser.second == i) {
-                    auto str = subparser.first->usage();
-                    if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
-                        res += " " + str;
-                    } else {
-                        res += "\n" + std::string(offset, ' ') + str;
-                        pos = offset;
-                    }
-                    pos += 1 + str.size();
-                }
-                auto str = positional.at(i).usage();
-                if (str.empty()) {
-                    continue;
-                }
-                if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
-                    res += " " + str;
-                } else {
-                    res += "\n" + std::string(offset, ' ') + str;
-                    pos = offset;
-                }
-                pos += 1 + str.size();
-            }
-            if (subparser.first && subparser.second == positional.size()) {
-                auto str = subparser.first->usage();
-                if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
-                    res += " " + str;
-                } else {
-                    res += "\n" + std::string(offset, ' ') + str;
-                    pos = offset;
-                }
-                pos += 1 + str.size();
-            }
-            return res;
-        }
-        return m_usage;
-    }
-
     std::pair<Subparser*, size_t> subpurser_info(bool add_suppress = true) const
     {
         std::pair<Subparser*, size_t> res = { nullptr, 0 };
@@ -3018,6 +2880,173 @@ private:
             }
         }
         return res;
+    }
+
+    static std::string custom_usage(std::vector<Argument> const& positional,
+                                    std::vector<Argument> const& optional,
+                                    std::pair<Subparser*, size_t> const& subparser,
+                                    std::string const& program)
+    {
+        auto res = program;
+        size_t min_size = 0;
+        size_t const limit = detail::_usage_limit;
+        if (subparser.first) {
+            auto const str = subparser.first->usage();
+            if (min_size < str.size()) {
+                min_size = str.size();
+            }
+        }
+        for (auto const& arg : positional) {
+            auto const str = arg.usage();
+            if (min_size < str.size()) {
+                min_size = str.size();
+            }
+        }
+        for (auto const& arg : optional) {
+            auto const str = arg.usage();
+            if (min_size < str.size()) {
+                min_size = str.size();
+            }
+        }
+        size_t const usage_length = std::string("usage: ").size();
+        size_t pos = usage_length + program.size();
+        size_t offset = usage_length;
+        if (pos + (min_size > 0 ? (1 + min_size) : 0) <= limit) {
+            offset += program.size() + (min_size > 0 ? 1 : 0);
+        } else if (!(optional.empty() && positional.empty() && !subparser.first)) {
+            res += "\n" + std::string(offset - 1, ' ');
+            pos = offset - 1;
+        }
+        for (auto const& arg : optional) {
+            auto const str = arg.usage();
+            if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
+                res += " [" + str + "]";
+            } else {
+                res += "\n" + std::string(offset, ' ') + "[" + str + "]";
+                pos = offset;
+            }
+            pos += 1 + str.size();
+        }
+        for (size_t i = 0; i < positional.size(); ++i) {
+            if (subparser.first && subparser.second == i) {
+                auto const str = subparser.first->usage();
+                if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
+                    res += " " + str;
+                } else {
+                    res += "\n" + std::string(offset, ' ') + str;
+                    pos = offset;
+                }
+                pos += 1 + str.size();
+            }
+            auto const str = positional.at(i).usage();
+            if (str.empty()) {
+                continue;
+            }
+            if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
+                res += " " + str;
+            } else {
+                res += "\n" + std::string(offset, ' ') + str;
+                pos = offset;
+            }
+            pos += 1 + str.size();
+        }
+        if (subparser.first && subparser.second == positional.size()) {
+            auto const str = subparser.first->usage();
+            if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
+                res += " " + str;
+            } else {
+                res += "\n" + std::string(offset, ' ') + str;
+                pos = offset;
+            }
+            pos += 1 + str.size();
+        }
+        return res;
+    }
+
+    static void print_custom_usage(std::vector<Argument> const& positional,
+                                   std::vector<Argument> const& optional,
+                                   std::pair<Subparser*, size_t> const& subparser,
+                                   std::string const& program,
+                                   std::ostream& os = std::cout)
+    {
+        os << "usage: " << custom_usage(positional, optional, subparser, program) << std::endl;
+    }
+
+    static void print_custom_help(std::vector<Argument> const& positional,
+                                  std::vector<Argument> const& optional,
+                                  std::pair<Subparser*, size_t> const& subparser,
+                                  std::string const& program,
+                                  std::string const& usage,
+                                  std::string const& description,
+                                  std::string const& epilog,
+                                  std::ostream& os = std::cout)
+    {
+        if (!usage.empty()) {
+            os << "usage: " << usage << std::endl;
+        } else {
+            print_custom_usage(positional, optional, subparser, program, os);
+        }
+        if (!description.empty()) {
+            os << std::endl << description << std::endl;
+        }
+        size_t min_size = 0;
+        bool subparser_positional = (subparser.first
+                                     && subparser.first->title().empty()
+                                     && subparser.first->description().empty());
+        if (subparser.first) {
+            auto size = subparser.first->flags_to_string().size();
+            if (min_size < size) {
+                min_size = size;
+            }
+        }
+        for (auto const& arg : positional) {
+            auto size = arg.flags_to_string().size();
+            if (min_size < size) {
+                min_size = size;
+            }
+        }
+        for (auto const& arg : optional) {
+            auto size = arg.flags_to_string().size();
+            if (min_size < size) {
+                min_size = size;
+            }
+        }
+        min_size += 4;
+        if (min_size > detail::_argument_help_limit) {
+            min_size = detail::_argument_help_limit;
+        }
+        if (!positional.empty() || subparser_positional) {
+            os << std::endl << "positional arguments:" << std::endl;
+            for (size_t i = 0; i < positional.size(); ++i) {
+                if (subparser_positional && subparser.second == i) {
+                    os << subparser.first->print(min_size) << std::endl;
+                }
+                os << positional.at(i).print(min_size) << std::endl;
+            }
+            if (subparser_positional && subparser.second == positional.size()) {
+                os << subparser.first->print(min_size) << std::endl;
+            }
+        }
+        if (!optional.empty()) {
+            os << std::endl << "optional arguments:" << std::endl;
+            for (auto const& arg : optional) {
+                os << arg.print(min_size) << std::endl;
+            }
+        }
+        if (subparser.first && !subparser_positional) {
+            if (subparser.first->title().empty()) {
+                os << std::endl << "subcommands:" << std::endl;
+            } else {
+                os << std::endl << subparser.first->title() << ":" << std::endl;
+            }
+            if (!subparser.first->description().empty()) {
+                os << "  " << subparser.first->description() << std::endl << std::endl;
+            }
+            os << subparser.first->print(min_size) << std::endl;
+        }
+        if (!epilog.empty()) {
+            os << std::endl << epilog << std::endl;
+        }
     }
 
     std::string m_prog;
