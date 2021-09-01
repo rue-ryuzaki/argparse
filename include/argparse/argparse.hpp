@@ -2203,6 +2203,19 @@ private:
             }
         }
 
+        auto _get_subparser_optional_arg_by_flag = [=] (Parser const& parser, std::string const& key) -> Argument const*
+        {
+            for (auto const& arg : parser.m_arguments) {
+                if (arg.type() == Argument::Optional) {
+                    for (auto const& flag : arg.flags()) {
+                        if (flag == key) {
+                            return &arg;
+                        }
+                    }
+                }
+            }
+            return nullptr;
+        };
         auto _get_optional_arg_by_flag = [=] (std::string const& key) -> Argument const*
         {
             for (auto const& arg : optional) {
@@ -2574,18 +2587,45 @@ private:
         };
         _check_abbreviations(parsed_arguments);
 
+        Parser const* capture_parser = nullptr;
         for (size_t i = 0; i < parsed_arguments.size(); ++i) {
             auto arg = parsed_arguments.at(i);
             if (m_add_help
                     && detail::_is_value_exists(arg, m_help_argument.flags())) {
-                print_help();
+                if (capture_parser) {
+                    std::vector<Argument> pos;
+                    std::vector<Argument> opt;
+                    opt.push_back(m_help_argument);
+                    for (auto const& arg : capture_parser->m_arguments) {
+                        if (arg.type() == Argument::Optional) {
+                            opt.push_back(arg);
+                        } else {
+                            pos.push_back(arg);
+                        }
+                    }
+                    print_custom_help(pos, opt, { nullptr, 0 }, prog() + " " + capture_parser->name(), "", "", "");
+                } else {
+                    print_help();
+                }
                 exit(0);
             }
             auto const splitted = detail::_split_equal(arg);
             if (splitted.size() == 2) {
                 arg = splitted.front();
             }
-            auto const* temp = _get_optional_arg_by_flag(arg);
+            auto const* temp = capture_parser ? _get_subparser_optional_arg_by_flag(*capture_parser, arg)
+                                              : _get_optional_arg_by_flag(arg);
+            if (!temp && splitted.size() == 1 && subparser.first && !capture_parser) {
+                for (auto const& parser : subparser.first->m_parsers) {
+                    if (parser.name() == arg) {
+                        capture_parser = &parser;
+                        break;
+                    }
+                }
+                if (capture_parser) {
+                    continue;
+                }
+            }
             if (temp) {
                 switch (temp->action()) {
                     case Action::store :
@@ -2690,7 +2730,23 @@ private:
                         break;
                     case Action::help :
                         if (splitted.size() == 1) {
-                            print_help();
+                            if (capture_parser) {
+                                std::vector<Argument> pos;
+                                std::vector<Argument> opt;
+                                if (m_add_help) {
+                                    opt.push_back(m_help_argument);
+                                }
+                                for (auto const& arg : capture_parser->m_arguments) {
+                                    if (arg.type() == Argument::Optional) {
+                                        opt.push_back(arg);
+                                    } else {
+                                        pos.push_back(arg);
+                                    }
+                                }
+                                print_custom_help(pos, opt, { nullptr, 0 }, prog() + " " + capture_parser->name(), "", "", "");
+                            } else {
+                                print_help();
+                            }
                             exit(0);
                         } else {
                             handle_error("argument " + arg
