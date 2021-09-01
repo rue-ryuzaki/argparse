@@ -1209,5 +1209,7 @@ TEST_CASE("subparsers", "[argument_parser]")
         REQUIRE(args2.get<uint32_t>("bar") == 0);
         REQUIRE(args2.get<bool>("foo") == true);
         REQUIRE(args2.get<std::string>("baz") == "Z");
+
+        REQUIRE_THROWS(parser.parse_args({ "b", "--foo" }));
     }
 }
