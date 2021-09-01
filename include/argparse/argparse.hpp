@@ -2923,6 +2923,9 @@ private:
                     pos += 1 + str.size();
                 }
                 auto str = positional.at(i).usage();
+                if (str.empty()) {
+                    continue;
+                }
                 if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
                     res += " " + str;
                 } else {
