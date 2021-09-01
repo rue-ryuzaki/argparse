@@ -985,6 +985,8 @@ public:
      */
     class Parser
     {
+        friend class ArgumentParser;
+
     public:
         Parser(std::string const& name, std::string const& prefix_chars)
             : m_name(name),
@@ -2234,15 +2236,26 @@ private:
 
         auto const positional = positional_arguments();
         auto const optional = optional_arguments();
+        auto const subparser = subpurser_info();
 
         _validate_arguments(positional);
         _validate_arguments(optional);
+        if (subparser.first) {
+            for (auto const& parser : subparser.first->m_parsers) {
+                _validate_arguments(parser.m_arguments);
+            }
+        }
 
         bool have_negative_options = _is_negative_numbers_presented(optional);
 
         std::map<std::string, ArgumentValue> result;
         _create_result(positional, result);
         _create_result(optional, result);
+        if (subparser.first) {
+            for (auto const& parser : subparser.first->m_parsers) {
+                _create_result(parser.m_arguments, result);
+            }
+        }
 
         auto _get_optional_arg_by_flag = [=] (std::string const& key) -> Argument const*
         {
