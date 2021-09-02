@@ -2180,7 +2180,7 @@ private:
             return false;
         };
 
-        auto const positional = positional_arguments();
+        auto positional = positional_arguments();
         auto const optional = optional_arguments();
         auto const subparser = subpurser_info();
 
@@ -2592,17 +2592,6 @@ private:
             }
             auto const* temp = capture_parser ? _get_subparser_optional_arg_by_flag(*capture_parser, arg)
                                               : _get_optional_arg_by_flag(arg);
-            if (!temp && splitted.size() == 1 && subparser.first && !capture_parser) {
-                for (auto const& parser : subparser.first->m_parsers) {
-                    if (parser.name() == arg) {
-                        capture_parser = &parser;
-                        break;
-                    }
-                }
-                if (capture_parser) {
-                    continue;
-                }
-            }
             if (temp) {
                 switch (temp->action()) {
                     case Action::store :
@@ -2759,6 +2748,33 @@ private:
                            && !detail::_is_negative_number(arg))) {
                 unrecognized_args.push_back(arg);
             } else {
+                if (subparser.first && !capture_parser && pos == subparser.second) {
+                    auto const name = parsed_arguments.at(i);
+                    std::string choices;
+                    for (auto const& parser : subparser.first->m_parsers) {
+                        if (!choices.empty()) {
+                            choices += ", ";
+                        }
+                        choices += "'" + parser.name() + "'";
+                        if (parser.name() == name) {
+                            capture_parser = &parser;
+                            break;
+                        }
+                    }
+                    if (capture_parser) {
+                        std::vector<Argument> pos;
+                        for (auto const& arg : capture_parser->m_arguments) {
+                            if (arg.type() == Argument::Positional) {
+                                pos.push_back(arg);
+                            }
+                        }
+                        positional.insert(std::begin(positional) + subparser.second,
+                                          std::begin(pos), std::end(pos));
+                        continue;
+                    } else {
+                        handle_error("invalid choice: '" + name + "' (choose from " + choices + ")");
+                    }
+                }
                 std::vector<std::string> values;
                 values.push_back(parsed_arguments.at(i));
                 while (true) {
