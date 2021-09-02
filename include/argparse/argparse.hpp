@@ -2242,32 +2242,9 @@ private:
             return nullptr;
         };
 
-        std::vector<std::vector<std::string> > positional_values;
         std::vector<std::string> unrecognized_args;
 
         size_t pos = 0;
-        auto _store_positional_arguments = [&] (size_t& i)
-        {
-            std::vector<std::string> values;
-            values.push_back(parsed_arguments.at(i));
-            while (true) {
-                ++i;
-                if (i == parsed_arguments.size()) {
-                    break;
-                } else {
-                    auto const& next = parsed_arguments.at(i);
-                    if (!detail::_is_optional_argument(next, prefix_chars())
-                            || (!have_negative_options
-                                && detail::_is_negative_number(next))) {
-                        values.push_back(next);
-                    } else {
-                        --i;
-                        break;
-                    }
-                }
-            }
-            positional_values.emplace_back(std::move(values));
-        };
         auto _store_value = [&] (Argument const& arg, std::string const& value)
         {
             _validate_argument_value(arg, value);
@@ -2782,11 +2759,26 @@ private:
                            && !detail::_is_negative_number(arg))) {
                 unrecognized_args.push_back(arg);
             } else {
-                _store_positional_arguments(i);
+                std::vector<std::string> values;
+                values.push_back(parsed_arguments.at(i));
+                while (true) {
+                    ++i;
+                    if (i == parsed_arguments.size()) {
+                        break;
+                    } else {
+                        auto const& next = parsed_arguments.at(i);
+                        if (!detail::_is_optional_argument(next, prefix_chars())
+                                || (!have_negative_options
+                                    && detail::_is_negative_number(next))) {
+                            values.push_back(next);
+                        } else {
+                            --i;
+                            break;
+                        }
+                    }
+                }
+                _match_args_partial(values);
             }
-        }
-        for (auto const& values : positional_values) {
-            _match_args_partial(values);
         }
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
