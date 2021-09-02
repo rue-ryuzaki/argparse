@@ -1189,7 +1189,7 @@ TEST_CASE("subparsers", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("test") {
+    SECTION("main parser without positional arguments") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
         auto& subparsers = parser.add_subparsers().help("sub-command help");
@@ -1199,6 +1199,11 @@ TEST_CASE("subparsers", "[argument_parser]")
 
         auto& parser_b = subparsers.add_parser("b").help("b help");
         parser_b.add_argument("--baz").choices({ "X", "Y", "Z" }).help("baz help");
+
+        auto args0 = parser.parse_args({ "--foo" });
+        REQUIRE(args0.get<uint32_t>("bar") == 0);
+        REQUIRE(args0.get<bool>("foo") == true);
+        REQUIRE(args0.get<std::string>("baz") == "");
 
         auto args1 = parser.parse_args({ "a", "12" });
         REQUIRE(args1.get<uint32_t>("bar") == 12);
@@ -1210,6 +1215,59 @@ TEST_CASE("subparsers", "[argument_parser]")
         REQUIRE(args2.get<bool>("foo") == true);
         REQUIRE(args2.get<std::string>("baz") == "Z");
 
+        REQUIRE_THROWS(parser.parse_args({ "a", "12", "--foo" }));
         REQUIRE_THROWS(parser.parse_args({ "b", "--foo" }));
+        REQUIRE_THROWS(parser.parse_args({ "--foo", "a", "12", "b", "--baz", "Z" }));
+    }
+
+    SECTION("main parser with positional arguments") {
+        parser.add_argument("--foo").action("store_true").help("foo help");
+        parser.add_argument("boo").action("store").help("boo help");
+
+        auto& subparsers = parser.add_subparsers().help("sub-command help");
+
+        auto& parser_a = subparsers.add_parser("a").help("a help");
+        parser_a.add_argument("bar").help("bar help");
+
+        auto& parser_b = subparsers.add_parser("b").help("b help");
+        parser_b.add_argument("--baz").choices({ "X", "Y", "Z" }).help("baz help");
+
+        REQUIRE_THROWS(parser.parse_args({ }));
+
+        auto args0 = parser.parse_args({ "boo", "--foo" });
+        REQUIRE(args0.get<std::string>("boo") == "boo");
+        REQUIRE(args0.get<uint32_t>("bar") == 0);
+        REQUIRE(args0.get<bool>("foo") == true);
+        REQUIRE(args0.get<std::string>("baz") == "");
+
+        auto args1 = parser.parse_args({ "boo", "--foo", "a", "12" });
+        REQUIRE(args1.get<std::string>("boo") == "boo");
+        REQUIRE(args1.get<uint32_t>("bar") == 12);
+        REQUIRE(args1.get<bool>("foo") == true);
+        REQUIRE(args1.get<std::string>("baz") == "");
+
+        auto args2 = parser.parse_args({ "boo", "--foo", "b", "--baz", "Z" });
+        REQUIRE(args2.get<std::string>("boo") == "boo");
+        REQUIRE(args2.get<uint32_t>("bar") == 0);
+        REQUIRE(args2.get<bool>("foo") == true);
+        REQUIRE(args2.get<std::string>("baz") == "Z");
+
+        auto args3 = parser.parse_args({ "boo", "a", "12" });
+        REQUIRE(args3.get<std::string>("boo") == "boo");
+        REQUIRE(args3.get<uint32_t>("bar") == 12);
+        REQUIRE(args3.get<bool>("foo") == false);
+        REQUIRE(args3.get<std::string>("baz") == "");
+
+        auto args4 = parser.parse_args({ "--foo", "boo", "a", "12" });
+        REQUIRE(args4.get<std::string>("boo") == "boo");
+        REQUIRE(args4.get<uint32_t>("bar") == 12);
+        REQUIRE(args4.get<bool>("foo") == true);
+        REQUIRE(args4.get<std::string>("baz") == "");
+
+        auto args5 = parser.parse_args({ "--foo", "boo", "b", "--baz", "Z" });
+        REQUIRE(args5.get<std::string>("boo") == "boo");
+        REQUIRE(args5.get<uint32_t>("bar") == 0);
+        REQUIRE(args5.get<bool>("foo") == true);
+        REQUIRE(args5.get<std::string>("baz") == "Z");
     }
 }
