@@ -2777,7 +2777,9 @@ private:
                         handle_error("action not supported");
                         break;
                 }
-            } else if (have_negative_options && detail::_is_negative_number(arg)) {
+            } else if ((have_negative_options && detail::_is_negative_number(arg))
+                       || (detail::_is_optional_argument(arg, prefix_chars())
+                           && !detail::_is_negative_number(arg))) {
                 unrecognized_args.push_back(arg);
             } else {
                 _store_positional_arguments(i);
