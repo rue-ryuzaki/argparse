@@ -445,7 +445,7 @@ public:
          */
         Argument& action(Action value)
         {
-            if (m_action != Action::store_true) {
+            if (!(m_action & (Action::store_true | Action::store_false))) {
                 m_callback = nullptr;
             }
             if (m_action == Action::version) {
@@ -726,7 +726,7 @@ public:
         }
 
         /*!
-         *  \brief Set argument 'callback' for arguments with 'store_true' action
+         *  \brief Set argument 'callback' for arguments with 'store_true' or 'store_false' action
          *
          *  \param func Callback function
          *
@@ -734,7 +734,7 @@ public:
          */
         Argument& callback(std::function<void()> func)
         {
-            if (m_action == Action::store_true) {
+            if (m_action & (Action::store_true | Action::store_false)) {
                 m_callback = func;
             } else {
                 throw TypeError("got an unexpected keyword argument 'callback'");
@@ -2295,6 +2295,9 @@ private:
         {
             if (arg.action() & (Action::store_const | Action::store_true | Action::store_false)) {
                 _store_const_value(arg);
+                if (arg.action() & (Action::store_true | Action::store_false)) {
+                    arg.callback();
+                }
                 return true;
             } else if (arg.action() == Action::append_const) {
                 _append_const_value(arg);
@@ -2678,7 +2681,7 @@ private:
                     case Action::store_false :
                         if (splitted.size() == 1) {
                             _store_const_value(*temp);
-                            if (temp->action() == Action::store_true) {
+                            if (temp->action() & (Action::store_true | Action::store_false)) {
                                 temp->callback();
                             }
                         } else {
