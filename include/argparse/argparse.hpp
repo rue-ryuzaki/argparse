@@ -2308,6 +2308,182 @@ private:
             }
             return false;
         };
+        auto _try_capture_parser = [&] (Parser const*& capture_parser,
+                std::vector<std::string>& arguments)
+        {
+            size_t finish = pos;
+            size_t min_args = 0;
+            size_t one_args = 0;
+            bool more_args = false;
+            bool capture_need = false;
+            for ( ; finish < positional.size(); ++finish) {
+                if (subparser.first && !capture_parser && finish == subparser.second) {
+                    if (min_args + 1 > arguments.size()) {
+                        break;
+                    }
+                    capture_need = true;
+                    ++min_args;
+                    break;
+                }
+                auto const& arg = positional.at(finish);
+                if (!(arg.action() & (Action::store | Action::append | Action::extend))) {
+                    continue;
+                }
+                auto const& nargs = arg.nargs();
+                size_t min_amount = 0;
+                if (nargs.empty()) {
+                    ++min_amount;
+                } else if (nargs == "+") {
+                    ++min_amount;
+                    more_args = true;
+                } else if (nargs == "?") {
+                    ++one_args;
+                } else if (nargs == "*") {
+                    more_args = true;
+                } else {
+                    min_amount += arg.num_args();
+                }
+                if (min_args + min_amount > arguments.size()) {
+                    break;
+                }
+                min_args += min_amount;
+            }
+            if (subparser.first && !capture_parser
+                    && finish == positional.size() && min_args < arguments.size()) {
+                capture_need = true;
+                ++min_args;
+            }
+            if (!capture_need) {
+                return;
+            }
+            if (min_args == arguments.size()) {
+                for ( ; pos < finish; ++pos) {
+                    auto const& arg = positional.at(pos);
+                    if (_is_positional_arg_stored(arg)) {
+                        continue;
+                    }
+                    auto const& nargs = arg.nargs();
+                    if (nargs.empty() || nargs == "+") {
+                        _store_value(arg, arguments.front());
+                        arguments.erase(std::begin(arguments));
+                    } else if (nargs == "?" || nargs == "*") {
+                        _store_default_value(arg);
+                    } else {
+                        for (size_t n = 0; n < arg.num_args(); ++n) {
+                            _store_value(arg, arguments.front());
+                            arguments.erase(std::begin(arguments));
+                        }
+                    }
+                }
+            } else if (more_args) {
+                size_t over_args = arguments.size() - min_args;
+                for ( ; pos < finish; ++pos) {
+                    auto const& arg = positional.at(pos);
+                    if (_is_positional_arg_stored(arg)) {
+                        continue;
+                    }
+                    auto const& nargs = arg.nargs();
+                    if (nargs.empty()) {
+                        _store_value(arg, arguments.front());
+                        arguments.erase(std::begin(arguments));
+                    } else if (nargs == "+") {
+                        _store_value(arg, arguments.front());
+                        arguments.erase(std::begin(arguments));
+                        while (over_args > 0) {
+                            _store_value(arg, arguments.front());
+                            arguments.erase(std::begin(arguments));
+                            --over_args;
+                        }
+                    } else if (nargs == "?") {
+                        _store_default_value(arg);
+                    } else if (nargs == "*") {
+                        if (over_args > 0) {
+                            while (over_args > 0) {
+                                _store_value(arg, arguments.front());
+                                arguments.erase(std::begin(arguments));
+                                --over_args;
+                            }
+                        } else {
+                            _store_default_value(arg);
+                        }
+                    } else {
+                        for (size_t n = 0; n < arg.num_args(); ++n) {
+                            _store_value(arg, arguments.front());
+                            arguments.erase(std::begin(arguments));
+                        }
+                    }
+                }
+            } else if (min_args + one_args >= arguments.size()) {
+                size_t over_args = min_args + one_args - arguments.size();
+                for ( ; pos < finish; ++pos) {
+                    auto const& arg = positional.at(pos);
+                    if (_is_positional_arg_stored(arg)) {
+                        continue;
+                    }
+                    auto const& nargs = arg.nargs();
+                    if (nargs.empty()) {
+                        _store_value(arg, arguments.front());
+                        arguments.erase(std::begin(arguments));
+                    } else if (nargs == "?") {
+                        if (over_args < one_args) {
+                            _store_value(arg, arguments.front());
+                            arguments.erase(std::begin(arguments));
+                            ++over_args;
+                        } else {
+                            _store_default_value(arg);
+                        }
+                    } else {
+                        for (size_t n = 0; n < arg.num_args(); ++n) {
+                            _store_value(arg, arguments.front());
+                            arguments.erase(std::begin(arguments));
+                        }
+                    }
+                }
+            } else {
+                for ( ; pos < finish; ++pos) {
+                    auto const& arg = positional.at(pos);
+                    if (_is_positional_arg_stored(arg)) {
+                        continue;
+                    }
+                    auto const& nargs = arg.nargs();
+                    if (nargs.empty()) {
+                        _store_value(arg, arguments.front());
+                        arguments.erase(std::begin(arguments));
+                    } else {
+                        size_t num_args = (nargs == "?" ? 1 : arg.num_args());
+                        for (size_t n = 0; n < num_args; ++n) {
+                            _store_value(arg, arguments.front());
+                            arguments.erase(std::begin(arguments));
+                        }
+                    }
+                }
+            }
+            auto const name = arguments.front();
+            std::string choices;
+            for (auto const& parser : subparser.first->m_parsers) {
+                if (!choices.empty()) {
+                    choices += ", ";
+                }
+                choices += "'" + parser.name() + "'";
+                if (parser.name() == name) {
+                    capture_parser = &parser;
+                    break;
+                }
+            }
+            if (capture_parser) {
+                std::vector<Argument> pos;
+                for (auto const& arg : capture_parser->m_arguments) {
+                    if (arg.type() == Argument::Positional) {
+                        pos.push_back(arg);
+                    }
+                }
+                positional.insert(std::begin(positional) + subparser.second,
+                                  std::begin(pos), std::end(pos));
+                arguments.erase(std::begin(arguments));
+            } else {
+                handle_error("invalid choice: '" + name + "' (choose from " + choices + ")");
+            }
+        };
         auto _match_args_partial = [&] (std::vector<std::string> const& arguments)
         {
             if (pos >= positional.size()) {
@@ -2751,42 +2927,6 @@ private:
                            && !detail::_is_negative_number(arg))) {
                 unrecognized_args.push_back(arg);
             } else {
-                while (pos < positional.size()) {
-                    if (subparser.first && !capture_parser && pos == subparser.second) {
-                        break;
-                    }
-                    if (!_is_positional_arg_stored(positional.at(pos))) {
-                        break;
-                    }
-                    ++pos;
-                }
-                if (subparser.first && !capture_parser && pos == subparser.second) {
-                    auto const name = parsed_arguments.at(i);
-                    std::string choices;
-                    for (auto const& parser : subparser.first->m_parsers) {
-                        if (!choices.empty()) {
-                            choices += ", ";
-                        }
-                        choices += "'" + parser.name() + "'";
-                        if (parser.name() == name) {
-                            capture_parser = &parser;
-                            break;
-                        }
-                    }
-                    if (capture_parser) {
-                        std::vector<Argument> pos;
-                        for (auto const& arg : capture_parser->m_arguments) {
-                            if (arg.type() == Argument::Positional) {
-                                pos.push_back(arg);
-                            }
-                        }
-                        positional.insert(std::begin(positional) + subparser.second,
-                                          std::begin(pos), std::end(pos));
-                        continue;
-                    } else {
-                        handle_error("invalid choice: '" + name + "' (choose from " + choices + ")");
-                    }
-                }
                 std::vector<std::string> values;
                 values.push_back(parsed_arguments.at(i));
                 while (true) {
@@ -2804,6 +2944,9 @@ private:
                             break;
                         }
                     }
+                }
+                if (subparser.first && !capture_parser) {
+                    _try_capture_parser(capture_parser, values);
                 }
                 _match_args_partial(values);
             }
