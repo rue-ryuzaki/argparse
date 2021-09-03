@@ -2751,6 +2751,21 @@ private:
                            && !detail::_is_negative_number(arg))) {
                 unrecognized_args.push_back(arg);
             } else {
+                while (pos < positional.size()) {
+                    if (subparser.first && !capture_parser && pos == subparser.second) {
+                        break;
+                    }
+                    auto const& argument = positional.at(pos);
+                    if (argument.action() & (Action::store_const | Action::store_true | Action::store_false)) {
+                        _store_const_value(argument);
+                        if (argument.action() & (Action::store_true | Action::store_false)) {
+                            argument.callback();
+                        }
+                        ++pos;
+                    } else {
+                        break;
+                    }
+                }
                 if (subparser.first && !capture_parser && pos == subparser.second) {
                     auto const name = parsed_arguments.at(i);
                     std::string choices;
