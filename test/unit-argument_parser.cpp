@@ -1288,8 +1288,6 @@ TEST_CASE("subparsers", "[argument_parser]")
 
         parser.add_argument("coo").action("store_const").const_value(const_value).help("coo help");
 
-        REQUIRE_THROWS(parser.parse_args({ }));
-
         auto args0 = parser.parse_args({ "--foo" });
         REQUIRE(args0.get<bool>("boo") == true);
         REQUIRE(args0.get<bool>("doo") == false);
