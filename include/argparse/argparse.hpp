@@ -2759,7 +2759,12 @@ private:
                             pos.push_back(arg);
                         }
                     }
-                    print_custom_help(pos, opt, { nullptr, 0 }, prog() + " " + capture_parser->name(), "", "", "");
+                    auto program = subparser.first->prog();
+                    if (program.empty()) {
+                        program = prog();
+                    }
+                    program += " " + capture_parser->name();
+                    print_custom_help(pos, opt, { nullptr, 0 }, program, "", "", "");
                 } else {
                     print_help();
                 }
@@ -2888,7 +2893,12 @@ private:
                                         pos.push_back(arg);
                                     }
                                 }
-                                print_custom_help(pos, opt, { nullptr, 0 }, prog() + " " + capture_parser->name(), "", "", "");
+                                auto program = subparser.first->prog();
+                                if (program.empty()) {
+                                    program = prog();
+                                }
+                                program += " " + capture_parser->name();
+                                print_custom_help(pos, opt, { nullptr, 0 }, program, "", "", "");
                             } else {
                                 print_help();
                             }
