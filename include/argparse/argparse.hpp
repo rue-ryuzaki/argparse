@@ -2755,16 +2755,10 @@ private:
                     if (subparser.first && !capture_parser && pos == subparser.second) {
                         break;
                     }
-                    auto const& argument = positional.at(pos);
-                    if (argument.action() & (Action::store_const | Action::store_true | Action::store_false)) {
-                        _store_const_value(argument);
-                        if (argument.action() & (Action::store_true | Action::store_false)) {
-                            argument.callback();
-                        }
-                        ++pos;
-                    } else {
+                    if (!_is_positional_arg_stored(positional.at(pos))) {
                         break;
                     }
+                    ++pos;
                 }
                 if (subparser.first && !capture_parser && pos == subparser.second) {
                     auto const name = parsed_arguments.at(i);
