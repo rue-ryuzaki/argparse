@@ -2985,16 +2985,20 @@ private:
                 }
             }
         }
-        if (subparser.first && !capture_parser && subparser.first->required()) {
-            auto const& dest = subparser.first->dest();
-            if (dest.empty()) {
-                throw TypeError("sequence item 0: expected str instance, NoneType found");
-            }
-            required_args.push_back(dest);
-        }
-        if (!required_args.empty() || pos < positional.size()) {
+        bool subparser_required = subparser.first && !capture_parser && subparser.first->required();
+        if (!required_args.empty() || pos < positional.size() || subparser_required) {
             std::string args;
             for ( ; pos < positional.size(); ++pos) {
+                if (subparser_required && pos == subparser.second) {
+                    auto const& dest = subparser.first->dest();
+                    if (dest.empty()) {
+                        throw TypeError("sequence item 0: expected str instance, NoneType found");
+                    }
+                    if (!args.empty()) {
+                        args += ", ";
+                    }
+                    args += dest;
+                }
                 auto const& arg = positional.at(pos);
                 if (args.empty()) {
                     if (_is_positional_arg_stored(arg)) {
@@ -3010,6 +3014,19 @@ private:
                     args += ", ";
                 }
                 args += arg.flags().front();
+            }
+            if (subparser_required && pos == subparser.second) {
+                auto const& dest = subparser.first->dest();
+                if (dest.empty()) {
+                    throw TypeError("sequence item 0: expected str instance, NoneType found");
+                }
+                if (!args.empty()) {
+                    args += ", ";
+                }
+                args += dest;
+            }
+            if (!required_args.empty()) {
+                args += ", ";
             }
             args += detail::_vector_string_to_string(required_args, ", ");
             if (!args.empty()) {
