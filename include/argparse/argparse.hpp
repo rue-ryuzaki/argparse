@@ -2985,6 +2985,13 @@ private:
                 }
             }
         }
+        if (subparser.first && !capture_parser && subparser.first->required()) {
+            auto const& dest = subparser.first->dest();
+            if (dest.empty()) {
+                throw TypeError("sequence item 0: expected str instance, NoneType found");
+            }
+            required_args.push_back(dest);
+        }
         if (!required_args.empty() || pos < positional.size()) {
             std::string args;
             for ( ; pos < positional.size(); ++pos) {
