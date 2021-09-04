@@ -2198,6 +2198,14 @@ private:
         _create_result(positional, result);
         _create_result(optional, result);
         if (subparser.first) {
+            auto const& dest = subparser.first->dest();
+            if (!dest.empty()) {
+                if (result.count(dest) == 0) {
+                    result[dest] = { Action::store, std::vector<std::string>() };
+                } else {
+                    throw ArgumentError("argument " + dest + ": conflicting option string: " + dest);
+                }
+            }
             for (auto const& parser : subparser.first->m_parsers) {
                 _create_result(parser.m_arguments, result);
             }
@@ -2467,6 +2475,10 @@ private:
                 choices += "'" + parser.name() + "'";
                 if (parser.name() == name) {
                     capture_parser = &parser;
+                    auto const& dest = subparser.first->dest();
+                    if (!dest.empty()) {
+                        result.at(dest).second.push_back(name);
+                    }
                     break;
                 }
             }
