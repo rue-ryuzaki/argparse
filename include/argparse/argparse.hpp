@@ -988,6 +988,14 @@ public:
         friend class ArgumentParser;
 
     public:
+        /*!
+         *  \brief Construct parser with parents prefix chars
+         *
+         *  \param name Parser name
+         *  \param prefix_chars Parents prefix chars
+         *
+         *  \return Parser object
+         */
         Parser(std::string const& name, std::string const& prefix_chars)
             : m_name(name),
               m_prefix_chars(prefix_chars),
@@ -1006,11 +1014,6 @@ public:
         {
             m_help = detail::_trim_copy(value);
             return *this;
-        }
-
-        std::string const& name() const
-        {
-            return m_name;
         }
 
         /*!
@@ -1105,6 +1108,13 @@ public:
         friend class ArgumentParser;
 
     public:
+        /*!
+         *  \brief Construct subparser with parents prefix chars
+         *
+         *  \param prefix_chars Parents prefix chars
+         *
+         *  \return Subparser object
+         */
         Subparser(std::string const& prefix_chars)
             : m_title(),
               m_description(),
@@ -1307,7 +1317,7 @@ public:
                 if (!res.empty()) {
                     res += ",";
                 }
-                res += parser.name();
+                res += parser.m_name;
             }
             return "{" + res + "}";
         }
@@ -2472,8 +2482,8 @@ private:
                 if (!choices.empty()) {
                     choices += ", ";
                 }
-                choices += "'" + parser.name() + "'";
-                if (parser.name() == name) {
+                choices += "'" + parser.m_name + "'";
+                if (parser.m_name == name) {
                     capture_parser = &parser;
                     auto const& dest = subparser.first->dest();
                     if (!dest.empty()) {
@@ -2775,7 +2785,7 @@ private:
                     if (program.empty()) {
                         program = prog();
                     }
-                    program += " " + capture_parser->name();
+                    program += " " + capture_parser->m_name;
                     print_custom_help(pos, opt, { nullptr, 0 }, program, "", "", "");
                 } else {
                     print_help();
@@ -2909,7 +2919,7 @@ private:
                                 if (program.empty()) {
                                     program = prog();
                                 }
-                                program += " " + capture_parser->name();
+                                program += " " + capture_parser->m_name;
                                 print_custom_help(pos, opt, { nullptr, 0 }, program, "", "", "");
                             } else {
                                 print_help();
