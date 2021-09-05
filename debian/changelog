@@ -1,3 +1,14 @@
+cpp-argparse-dev (0.4.0-0ppa0) focal; urgency=low
+
+  * Add subparsers support
+  * Add Namespace::exists() check function
+  * Add setting argument choices from string
+  * Fix main help and usage generation
+  * Fix parse unrecognized optional arguments
+  * Use Argument::callback() function to 'store_false' actions and positional arguments
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 05 Sep 2021 20:20:00 +0300
+
 cpp-argparse-dev (0.3.0-0ppa0) focal; urgency=low
 
   * Add documentation for doxygen
