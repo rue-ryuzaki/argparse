@@ -40,6 +40,34 @@ bar
 foo: foobar
 bar: 101
 ```
+## Subparsers example
+```
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv);
+    parser.add_argument("--foo").action("store_true").help("foo help");
+
+    auto& subparsers = parser.add_subparsers().help("sub-command help");
+
+    auto& parser_a = subparsers.add_parser("a").help("a help");
+    parser_a.add_argument("bar").help("bar help");
+
+    auto& parser_b = subparsers.add_parser("b").help("b help");
+    parser_b.add_argument("--baz").choices("XYZ").help("baz help");
+
+    auto const args = parser.parse_args();
+
+    std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
+    std::cout << "foo: " << args.get<bool>("foo") << std::endl;
+    std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
+
+    return 0;
+}
+```
 ## ArgumentParser objects support
 - [x] prog - The name of the program (default: argv[0] or "untitled")
 - [x] usage - The string describing the program usage (default: generated from arguments added to parser)
