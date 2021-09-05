@@ -3194,48 +3194,42 @@ private:
             res += "\n" + std::string(offset - 1, ' ');
             pos = offset - 1;
         }
-        for (auto const& arg : optional) {
-            auto const str = arg.usage();
+        auto _write_arg_usage = [&pos, &offset, &res, limit] (std::string const& str, bool bkt)
+        {
             if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
-                res += " [" + str + "]";
+                if (bkt) {
+                    res += " [" + str + "]";
+                } else {
+                    res += " " + str;
+                }
             } else {
-                res += "\n" + std::string(offset, ' ') + "[" + str + "]";
+                if (bkt) {
+                    res += "\n" + std::string(offset, ' ') + "[" + str + "]";
+                } else {
+                    res += "\n" + std::string(offset, ' ') + str;
+                }
                 pos = offset;
             }
             pos += 1 + str.size();
+        };
+        for (auto const& arg : optional) {
+            auto const str = arg.usage();
+            _write_arg_usage(str, true);
         }
         for (size_t i = 0; i < positional.size(); ++i) {
             if (subparser.first && subparser.second == i) {
                 auto const str = subparser.first->usage();
-                if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
-                    res += " " + str;
-                } else {
-                    res += "\n" + std::string(offset, ' ') + str;
-                    pos = offset;
-                }
-                pos += 1 + str.size();
+                _write_arg_usage(str, false);
             }
             auto const str = positional.at(i).usage();
             if (str.empty()) {
                 continue;
             }
-            if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
-                res += " " + str;
-            } else {
-                res += "\n" + std::string(offset, ' ') + str;
-                pos = offset;
-            }
-            pos += 1 + str.size();
+            _write_arg_usage(str, false);
         }
         if (subparser.first && subparser.second == positional.size()) {
             auto const str = subparser.first->usage();
-            if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
-                res += " " + str;
-            } else {
-                res += "\n" + std::string(offset, ' ') + str;
-                pos = offset;
-            }
-            pos += 1 + str.size();
+            _write_arg_usage(str, false);
         }
         return res;
     }
