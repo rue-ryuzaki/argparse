@@ -1029,9 +1029,51 @@ public:
         Parser(std::string const& name, std::string const& prefix_chars)
             : m_name(name),
               m_prefix_chars(prefix_chars),
+              m_usage(),
+              m_description(),
+              m_epilog(),
               m_help(),
               m_arguments()
         { }
+
+        /*!
+         *  \brief Set parser 'usage' value
+         *
+         *  \param param Usage value
+         *
+         *  \return Current parser reference
+         */
+        Parser& usage(std::string const& param)
+        {
+            m_usage = detail::_trim_copy(param);
+            return *this;
+        }
+
+        /*!
+         *  \brief Set parser 'description' value
+         *
+         *  \param param Description value
+         *
+         *  \return Current parser reference
+         */
+        Parser& description(std::string const& param)
+        {
+            m_description = detail::_trim_copy(param);
+            return *this;
+        }
+
+        /*!
+         *  \brief Set parser 'epilog' value
+         *
+         *  \param param Epilog value
+         *
+         *  \return Current parser reference
+         */
+        Parser& epilog(std::string const& param)
+        {
+            m_epilog = detail::_trim_copy(param);
+            return *this;
+        }
 
         /*!
          *  \brief Set parser 'help' message
@@ -1044,6 +1086,36 @@ public:
         {
             m_help = detail::_trim_copy(value);
             return *this;
+        }
+
+        /*!
+         *  \brief Get parser 'usage' value
+         *
+         *  \return Parser 'usage' value
+         */
+        std::string const& usage() const
+        {
+            return m_usage;
+        }
+
+        /*!
+         *  \brief Get parser 'description' value
+         *
+         *  \return Parser 'description' value
+         */
+        std::string const& description() const
+        {
+            return m_description;
+        }
+
+        /*!
+         *  \brief Get parser 'epilog' value
+         *
+         *  \return Parser 'epilog' value
+         */
+        std::string const& epilog() const
+        {
+            return m_epilog;
         }
 
         /*!
@@ -1139,6 +1211,9 @@ public:
 
         std::string           m_name;
         std::string           m_prefix_chars;
+        std::string           m_usage;
+        std::string           m_description;
+        std::string           m_epilog;
         std::string           m_help;
         std::vector<Argument> m_arguments;
     };
@@ -2869,7 +2944,8 @@ private:
                         program = prog();
                     }
                     program += " " + capture_parser->m_name;
-                    print_custom_help(pos, opt, { nullptr, 0 }, program, "", "", "");
+                    print_custom_help(pos, opt, { nullptr, 0 }, program, capture_parser->usage(),
+                                      capture_parser->description(), capture_parser->epilog());
                 } else {
                     print_help();
                 }
@@ -3000,7 +3076,8 @@ private:
                                     program = prog();
                                 }
                                 program += " " + capture_parser->m_name;
-                                print_custom_help(pos, opt, { nullptr, 0 }, program, "", "", "");
+                                print_custom_help(pos, opt, { nullptr, 0 }, program, capture_parser->usage(),
+                                                  capture_parser->description(), capture_parser->epilog());
                             } else {
                                 print_help();
                             }
