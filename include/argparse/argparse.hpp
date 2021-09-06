@@ -852,9 +852,7 @@ public:
             return m_version;
         }
 
-        /*!
-         *  \brief Run argument callback function
-         */
+    private:
         void callback() const
         {
             if (m_callback) {
@@ -862,7 +860,6 @@ public:
             }
         }
 
-    private:
         Type type() const
         {
             return m_type;
