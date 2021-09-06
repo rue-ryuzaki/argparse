@@ -1124,6 +1124,19 @@ public:
         }
 
     private:
+        std::string print(size_t limit = detail::_argument_help_limit) const
+        {
+            std::string res = "  " + m_name;
+            if (!help().empty()) {
+                if (res.size() + 2 > limit) {
+                    res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
+                } else {
+                    res += std::string(limit - res.size(), ' ') + help();
+                }
+            }
+            return res;
+        }
+
         std::string           m_name;
         std::string           m_prefix_chars;
         std::string           m_help;
@@ -3336,6 +3349,12 @@ private:
             if (min_size < size) {
                 min_size = size;
             }
+            for (auto const& arg : subparser.first->m_parsers) {
+                auto size = arg.m_name.size();
+                if (min_size < size) {
+                    min_size = size;
+                }
+            }
         }
         for (auto const& arg : positional) {
             auto size = arg.flags_to_string().size();
@@ -3363,6 +3382,9 @@ private:
             }
             if (subparser_positional && subparser.second == positional.size()) {
                 os << subparser.first->print(min_size) << std::endl;
+                for (auto const& arg : subparser.first->m_parsers) {
+                    os << arg.print(min_size) << std::endl;
+                }
             }
         }
         if (!optional.empty()) {
@@ -3381,6 +3403,9 @@ private:
                 os << "  " << subparser.first->description() << std::endl << std::endl;
             }
             os << subparser.first->print(min_size) << std::endl;
+            for (auto const& arg : subparser.first->m_parsers) {
+                os << arg.print(min_size) << std::endl;
+            }
         }
         if (!epilog.empty()) {
             os << std::endl << epilog << std::endl;
