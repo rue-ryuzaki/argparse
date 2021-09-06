@@ -1,3 +1,14 @@
+cpp-argparse-dev (0.4.1-0ppa0) focal; urgency=low
+
+  * Update subparsers support
+  * Add Namespace::to_args() function
+  * Add Argument::handle() function
+  * Use Argument::callback() function to 'count' actions
+  * Refactor parser classes
+  * Update cpack generation info
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Mon, 06 Sep 2021 20:54:10 +0300
+
 cpp-argparse-dev (0.4.0-0ppa0) focal; urgency=low
 
   * Add subparsers support
