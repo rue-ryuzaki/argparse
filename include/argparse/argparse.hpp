@@ -344,6 +344,7 @@ public:
               m_metavar(),
               m_dest(),
               m_version(),
+              m_handle(nullptr),
               m_callback(nullptr)
         { }
 
@@ -370,6 +371,7 @@ public:
               m_metavar(orig.m_metavar),
               m_dest(orig.m_dest),
               m_version(orig.m_version),
+              m_handle(orig.m_handle),
               m_callback(orig.m_callback)
         { }
 
@@ -398,6 +400,7 @@ public:
                 this->m_metavar = rhs.m_metavar;
                 this->m_dest    = rhs.m_dest;
                 this->m_version = rhs.m_version;
+                this->m_handle  = rhs.m_handle;
                 this->m_callback= rhs.m_callback;
             }
             return *this;
@@ -445,7 +448,11 @@ public:
          */
         Argument& action(Action value)
         {
-            if (!(m_action & (Action::store_true | Action::store_false))) {
+            if (!(value & (Action::store | Action::store_const | Action::append
+                           | Action::append_const | Action::extend))) {
+                m_handle = nullptr;
+            }
+            if (!(value & (Action::store_true | Action::store_false))) {
                 m_callback = nullptr;
             }
             if (m_action == Action::version) {
@@ -726,6 +733,24 @@ public:
         }
 
         /*!
+         *  \brief Set argument 'handle' for arguments with 'store/_const' or 'append/_const/extend' action
+         *
+         *  \param func Handle function
+         *
+         *  \return Current argument reference
+         */
+        Argument& handle(std::function<void(std::string)> func)
+        {
+            if (m_action & (Action::store | Action::store_const | Action::append
+                            | Action::append_const | Action::extend )) {
+                m_handle = func;
+            } else {
+                throw TypeError("got an unexpected keyword argument 'handle'");
+            }
+            return *this;
+        }
+
+        /*!
          *  \brief Set argument 'callback' for arguments with 'store_true' or 'store_false' action
          *
          *  \param func Callback function
@@ -853,6 +878,13 @@ public:
         }
 
     private:
+        void handle(std::string const& str) const
+        {
+            if (m_handle) {
+                m_handle(str);
+            }
+        }
+
         void callback() const
         {
             if (m_callback) {
@@ -974,6 +1006,7 @@ public:
         std::string m_metavar;
         std::string m_dest;
         std::string m_version;
+        std::function<void(std::string)> m_handle;
         std::function<void()> m_callback;
     };
 
@@ -2300,6 +2333,7 @@ private:
             for (auto const& flag : _get_argument_flags(arg)) {
                 result.at(flag).second.push_back(value);
             }
+            arg.handle(value);
         };
         auto _default_arg_value = [=] (Argument const& arg) -> std::string
         {
@@ -2323,6 +2357,12 @@ private:
                     result.at(flag).second.push_back(arg.const_value());
                 }
             }
+            if (arg.action() & (Action::store_const)) {
+                arg.handle(arg.const_value());
+            }
+            if (arg.action() & (Action::store_true | Action::store_false)) {
+                arg.callback();
+            }
         };
         auto _append_const_value = [&] (Argument const& arg)
         {
@@ -2333,6 +2373,7 @@ private:
                 }
                 result.at(flag).second.push_back(arg.const_value());
             }
+            arg.handle(arg.const_value());
         };
         auto _store_count_value = [&] (Argument const& arg)
         {
@@ -2344,9 +2385,6 @@ private:
         {
             if (arg.action() & (Action::store_const | Action::store_true | Action::store_false)) {
                 _store_const_value(arg);
-                if (arg.action() & (Action::store_true | Action::store_false)) {
-                    arg.callback();
-                }
                 return true;
             } else if (arg.action() == Action::append_const) {
                 _append_const_value(arg);
@@ -2915,9 +2953,6 @@ private:
                     case Action::store_false :
                         if (splitted.size() == 1) {
                             _store_const_value(*temp);
-                            if (temp->action() & (Action::store_true | Action::store_false)) {
-                                temp->callback();
-                            }
                         } else {
                             handle_error("argument " + arg
                                          + ": ignored explicit argument '" + splitted.back() + "'");
