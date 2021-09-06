@@ -291,6 +291,718 @@ public:
 };
 
 /*!
+ * \brief Argument class
+ */
+class Argument
+{
+    friend class ArgumentParser;
+
+public:
+    /*!
+     * \brief Argument type
+     *
+     * \enum Type
+     */
+    enum Type
+    {
+        Positional,
+        Optional
+    };
+
+    /*!
+     *  \brief Construct argument object with parsed arguments
+     *
+     *  \param flags Argument flags
+     *  \param name Argument name
+     *  \param type Argument type
+     *
+     *  \return Argument object
+     */
+    Argument(std::vector<std::string> const& flags,
+             std::string const& name,
+             Type type)
+        : m_flags(flags),
+          m_name(name),
+          m_type(type),
+          m_action(Action::store),
+          m_nargs(),
+          m_num_args(),
+          m_const(),
+          m_default(),
+          m_choices(),
+          m_required(false),
+          m_help(),
+          m_help_type(NONE),
+          m_metavar(),
+          m_dest(),
+          m_version(),
+          m_handle(nullptr),
+          m_callback(nullptr)
+    { }
+
+    /*!
+     *  \brief Construct argument object from another argument
+     *
+     *  \param orig Argument object to copy
+     *
+     *  \return Argument object
+     */
+    Argument(Argument const& orig)
+        : m_flags(orig.m_flags),
+          m_name(orig.m_name),
+          m_type(orig.m_type),
+          m_action(orig.m_action),
+          m_nargs(orig.m_nargs),
+          m_num_args(orig.m_num_args),
+          m_const(orig.m_const),
+          m_default(orig.m_default),
+          m_choices(orig.m_choices),
+          m_required(orig.m_required),
+          m_help(orig.m_help),
+          m_help_type(orig.m_help_type),
+          m_metavar(orig.m_metavar),
+          m_dest(orig.m_dest),
+          m_version(orig.m_version),
+          m_handle(orig.m_handle),
+          m_callback(orig.m_callback)
+    { }
+
+    /*!
+     *  \brief Copy argument object from another argument
+     *
+     *  \param rhs Argument object to copy
+     *
+     *  \return Current argument reference
+     */
+    Argument& operator =(Argument const& rhs)
+    {
+        if (this != &rhs) {
+            this->m_flags   = rhs.m_flags;
+            this->m_name    = rhs.m_name;
+            this->m_type    = rhs.m_type;
+            this->m_action  = rhs.m_action;
+            this->m_nargs   = rhs.m_nargs;
+            this->m_num_args= rhs.m_num_args;
+            this->m_const   = rhs.m_const;
+            this->m_default = rhs.m_default;
+            this->m_choices = rhs.m_choices;
+            this->m_required= rhs.m_required;
+            this->m_help    = rhs.m_help;
+            this->m_help_type= rhs.m_help_type;
+            this->m_metavar = rhs.m_metavar;
+            this->m_dest    = rhs.m_dest;
+            this->m_version = rhs.m_version;
+            this->m_handle  = rhs.m_handle;
+            this->m_callback= rhs.m_callback;
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'action' value
+     *
+     *  \param value Action value
+     *
+     *  \return Current argument reference
+     */
+    Argument& action(std::string const& value)
+    {
+        if (value == "store") {
+            return action(Action::store);
+        } else if (value == "store_const") {
+            return action(Action::store_const);
+        } else if (value == "store_true") {
+            return action(Action::store_true);
+        } else if (value == "store_false") {
+            return action(Action::store_false);
+        } else if (value == "append") {
+            return action(Action::append);
+        } else if (value == "append_const") {
+            return action(Action::append_const);
+        } else if (value == "count") {
+            return action(Action::count);
+        } else if (value == "help") {
+            return action(Action::help);
+        } else if (value == "version") {
+            return action(Action::version);
+        } else if (value == "extend") {
+            return action(Action::extend);
+        }
+        throw ValueError("unknown action '" + value + "'");
+    }
+
+    /*!
+     *  \brief Set argument 'action' value
+     *
+     *  \param value Action value
+     *
+     *  \return Current argument reference
+     */
+    Argument& action(Action value)
+    {
+        if (!(value & (Action::store | Action::store_const | Action::append
+                       | Action::append_const | Action::extend))) {
+            m_handle = nullptr;
+        }
+        if (!(value & (Action::store_true | Action::store_false | Action::count))) {
+            m_callback = nullptr;
+        }
+        if (m_action == Action::version) {
+            m_help.clear();
+        }
+        switch (value) {
+            case Action::store_true :
+                m_default = "0";
+                m_const = "1";
+                m_nargs = "0";
+                m_num_args = 0;
+                m_choices.clear();
+                break;
+            case Action::store_false :
+                m_default = "1";
+                m_const = "0";
+                m_nargs = "0";
+                m_num_args = 0;
+                m_choices.clear();
+                break;
+            case Action::version :
+                m_help = "show program's version number and exit";
+            case Action::help :
+                if (type() == Positional) {
+                    // version and help actions cannot be positional
+                    throw TypeError("got an unexpected keyword argument 'required'");
+                }
+            case Action::store_const :
+            case Action::append_const :
+            case Action::count :
+                m_nargs = "0";
+                m_num_args = 0;
+                m_choices.clear();
+                break;
+            case Action::store :
+            case Action::append :
+            case Action::extend :
+                if (m_nargs == "0") {
+                    m_nargs.clear();
+                }
+                break;
+            default :
+                throw ValueError("unknown action");
+        }
+        m_action = value;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'nargs' value
+     *
+     *  \param value Nargs value
+     *
+     *  \return Current argument reference
+     */
+    Argument& nargs(uint32_t value)
+    {
+        switch (m_action) {
+            case Action::store_const :
+            case Action::store_true :
+            case Action::store_false :
+            case Action::append_const :
+            case Action::help :
+            case Action::version :
+            case Action::count :
+                throw TypeError("got an unexpected keyword argument 'nargs'");
+            case Action::store :
+                if (value == 0) {
+                    throw ValueError("nargs for store actions must be != 0; "
+                                     "if you have nothing to store, actions such as "
+                                     "store true or store const may be more appropriate");
+                }
+                break;
+            case Action::append :
+            case Action::extend :
+                if (value == 0) {
+                    throw ValueError("nargs for append actions must be != 0; "
+                                     "if arg strings are not supplying the value to append, "
+                                     "the append const action may be more appropriate");
+                }
+                break;
+            default:
+                throw ValueError("unknown action");
+        }
+        m_nargs = std::to_string(value);
+        m_num_args = value;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'nargs' value
+     *
+     *  \param value Nargs value : "?", "*", "+"
+     *
+     *  \return Current argument reference
+     */
+    Argument& nargs(std::string const& value)
+    {
+        if (!(m_action & (Action::store | Action::append | Action::extend))) {
+            throw TypeError("got an unexpected keyword argument 'nargs'");
+        }
+        auto param = detail::_trim_copy(value);
+        std::vector<std::string> const values = { "?", "*", "+" };
+        if (!detail::_is_value_exists(param, values)) {
+            throw ValueError("invalid nargs value '" + param + "'");
+        }
+        m_nargs = param;
+        m_num_args = 0;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'const' value
+     *
+     *  \param value Const value
+     *
+     *  \return Current argument reference
+     */
+    Argument& const_value(std::string const& value)
+    {
+        if (m_action & (Action::store_const | Action::append_const)
+                || (type() == Optional && m_nargs == "?"
+                    && (m_action & (Action::store | Action::append | Action::extend)))) {
+            m_const = detail::_trim_copy(value);
+        } else if (type() == Optional && m_nargs != "?"
+                   && (m_action & (Action::store | Action::append | Action::extend))) {
+            throw ValueError("nargs must be '?' to supply const");
+        } else {
+            throw TypeError("got an unexpected keyword argument 'const'");
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'default' value
+     *
+     *  \param value Default value
+     *
+     *  \return Current argument reference
+     */
+    Argument& default_value(std::string const& value)
+    {
+        if (!(m_action & (Action::store_true | Action::store_false))) {
+            m_default = detail::_trim_copy(value);
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'choices' value
+     *
+     *  \param value Choices value
+     *
+     *  \return Current argument reference
+     */
+    Argument& choices(std::string const& value)
+    {
+        std::vector<std::string> values;
+        values.reserve(value.size());
+        for (auto const& c : value) {
+            values.push_back(std::string(1, c));
+        }
+        return choices(values);
+    }
+
+    /*!
+     *  \brief Set argument 'choices' value
+     *
+     *  \param value Choices value
+     *
+     *  \return Current argument reference
+     */
+    Argument& choices(std::vector<std::string> const& value)
+    {
+        if (!(m_action & (Action::store | Action::append | Action::extend))) {
+            throw TypeError("got an unexpected keyword argument 'choices'");
+        }
+        m_choices.clear();
+        for (auto const& str : value) {
+            auto param = detail::_trim_copy(str);
+            if (!param.empty()) {
+                m_choices.emplace_back(param);
+            }
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set 'required' value for optional arguments
+     *
+     *  \param value Required flag
+     *
+     *  \return Current argument reference
+     */
+    Argument& required(bool value)
+    {
+        if (type() == Positional) {
+            throw TypeError("'required' is an invalid argument for positionals");
+        }
+        m_required = value;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'help' message
+     *
+     *  \param value Help message
+     *
+     *  \return Current argument reference
+     */
+    Argument& help(std::string const& value)
+    {
+        m_help = detail::_trim_copy(value);
+        m_help_type = NONE;
+        return *this;
+    }
+
+    /*!
+     *  \brief Suppress argument 'help' message
+     *
+     *  \param value argparse::SUPPRESS
+     *
+     *  \return Current argument reference
+     */
+    Argument& help(Enum value)
+    {
+        if (value != SUPPRESS) {
+            throw TypeError("got an unexpected keyword argument 'help'");
+        }
+        m_help_type = value;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'metavar' value
+     *
+     *  \param value Metavar value
+     *
+     *  \return Current argument reference
+     */
+    Argument& metavar(std::string const& value)
+    {
+        m_metavar = detail::_trim_copy(value);
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'dest' value for optional arguments
+     *
+     *  \param value Destination value
+     *
+     *  \return Current argument reference
+     */
+    Argument& dest(std::string const& value)
+    {
+        if (type() == Positional) {
+            throw ValueError("dest supplied twice for positional argument");
+        }
+        m_dest = detail::_trim_copy(value);
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'version' for arguments with 'version' action
+     *
+     *  \param value Version value
+     *
+     *  \return Current argument reference
+     */
+    Argument& version(std::string const& value)
+    {
+        if (m_action == Action::version) {
+            m_version = detail::_trim_copy(value);
+        } else {
+            throw TypeError("got an unexpected keyword argument 'version'");
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'handle' for arguments with 'store/_const' or 'append/_const/extend' action
+     *
+     *  \param func Handle function
+     *
+     *  \return Current argument reference
+     */
+    Argument& handle(std::function<void(std::string)> func)
+    {
+        if (m_action & (Action::store | Action::store_const | Action::append
+                        | Action::append_const | Action::extend )) {
+            m_handle = func;
+        } else {
+            throw TypeError("got an unexpected keyword argument 'handle'");
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'callback' for arguments with 'store_true/_false' or 'count' action
+     *
+     *  \param func Callback function
+     *
+     *  \return Current argument reference
+     */
+    Argument& callback(std::function<void()> func)
+    {
+        if (m_action & (Action::store_true | Action::store_false | Action::count)) {
+            m_callback = func;
+        } else {
+            throw TypeError("got an unexpected keyword argument 'callback'");
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Get argument flags values
+     *
+     *  \return Argument flags values
+     */
+    std::vector<std::string> const& flags() const
+    {
+        return m_flags;
+    }
+
+    /*!
+     *  \brief Get argument 'action' value
+     *
+     *  \return Argument 'action' value
+     */
+    Action action() const
+    {
+        return m_action;
+    }
+
+    /*!
+     *  \brief Get argument 'nargs' value
+     *
+     *  \return Argument 'nargs' value
+     */
+    std::string const& nargs() const
+    {
+        return m_nargs;
+    }
+
+    /*!
+     *  \brief Get argument 'const' value
+     *
+     *  \return Argument 'const' value
+     */
+    std::string const& const_value() const
+    {
+        return m_const;
+    }
+
+    /*!
+     *  \brief Get argument 'default' value
+     *
+     *  \return Argument 'default' value
+     */
+    std::string const& default_value() const
+    {
+        return m_default;
+    }
+
+    /*!
+     *  \brief Get argument 'choices' value
+     *
+     *  \return Argument 'choices' value
+     */
+    std::vector<std::string> const& choices() const
+    {
+        return m_choices;
+    }
+
+    /*!
+     *  \brief Get argument 'required' value
+     *
+     *  \return Argument 'required' value
+     */
+    bool required() const
+    {
+        return m_required;
+    }
+
+    /*!
+     *  \brief Get argument 'help' message
+     *
+     *  \return Argument 'help' message
+     */
+    std::string const& help() const
+    {
+        return m_help;
+    }
+
+    /*!
+     *  \brief Get argument 'metavar' value
+     *
+     *  \return Argument 'metavar' value
+     */
+    std::string const& metavar() const
+    {
+        return m_metavar;
+    }
+
+    /*!
+     *  \brief Get argument 'dest' value
+     *
+     *  \return Argument 'dest' value
+     */
+    std::string const& dest() const
+    {
+        return m_dest;
+    }
+
+    /*!
+     *  \brief Get argument 'version' value
+     *
+     *  \return Argument 'version' value
+     */
+    std::string const& version() const
+    {
+        return m_version;
+    }
+
+private:
+    void handle(std::string const& str) const
+    {
+        if (m_handle) {
+            m_handle(str);
+        }
+    }
+
+    void callback() const
+    {
+        if (m_callback) {
+            m_callback();
+        }
+    }
+
+    Type type() const
+    {
+        return m_type;
+    }
+
+    Enum help_type() const
+    {
+        return m_help_type;
+    }
+
+    uint32_t num_args() const
+    {
+        return m_num_args;
+    }
+
+    std::string usage() const
+    {
+        std::string res;
+        if (type() == Optional) {
+            res += m_flags.front();
+        }
+        if (m_action & (Action::store | Action::append
+                        | Action::extend | Action::append_const)) {
+            res += get_nargs_suffix();
+        }
+        return res;
+    }
+
+    std::string flags_to_string() const
+    {
+        std::string res;
+        if (type() == Optional) {
+            for (auto const& flag : m_flags) {
+                if (!res.empty()) {
+                    res += ", ";
+                }
+                res += flag;
+                if (m_action & (Action::store | Action::append
+                                | Action::extend | Action::append_const)) {
+                    res += get_nargs_suffix();
+                }
+            }
+        } else {
+            res += get_argument_name();
+        }
+        return res;
+    }
+
+    std::string print(std::size_t limit = detail::_argument_help_limit) const
+    {
+        std::string res = "  " + flags_to_string();
+        if (!help().empty()) {
+            if (res.size() + 2 > limit) {
+                res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
+            } else {
+                res += std::string(limit - res.size(), ' ') + help();
+            }
+        }
+        return res;
+    }
+
+    std::string get_nargs_suffix() const
+    {
+        auto const name = get_argument_name();
+        std::string res;
+        if (type() == Optional) {
+            res += " ";
+        }
+        if (m_nargs == "?") {
+            res += "[" +  name + "]";
+        } else if (m_nargs == "*") {
+            res += "[" +  name + " ...]";
+        } else if (m_nargs == "+") {
+            res += name + " [" +  name + " ...]";
+        } else if (!m_nargs.empty()) {
+            for (uint32_t i = 0; i < m_num_args; ++i) {
+                if (i != 0) {
+                    res += " ";
+                }
+                res += name;
+            }
+        } else {
+            res += name;
+        }
+        return res;
+    }
+
+    std::string get_argument_name() const
+    {
+        if (!m_metavar.empty()) {
+            return m_metavar;
+        }
+        if (!m_choices.empty()) {
+            return "{" + detail::_vector_string_to_string(m_choices, ",") + "}";
+        }
+        auto res = m_dest.empty() ? m_name : m_dest;
+        return type() == Optional ? detail::_to_upper(res) : res;
+    }
+
+    std::vector<std::string> m_flags;
+    std::string m_name;
+    Type        m_type;
+    Action      m_action;
+    std::string m_nargs;
+    uint32_t    m_num_args;
+    std::string m_const;
+    std::string m_default;
+    std::vector<std::string> m_choices;
+    bool        m_required;
+    std::string m_help;
+    Enum        m_help_type;
+    std::string m_metavar;
+    std::string m_dest;
+    std::string m_version;
+    std::function<void(std::string)> m_handle;
+    std::function<void()> m_callback;
+};
+
+/*!
  * \brief ArgumentParser objects
  */
 class ArgumentParser
@@ -298,718 +1010,6 @@ class ArgumentParser
     typedef std::pair<Action, std::vector<std::string> > ArgumentValue;
 
 public:
-    /*!
-     * \brief Argument class
-     */
-    class Argument
-    {
-        friend class ArgumentParser;
-
-    public:
-        /*!
-         * \brief Argument type
-         *
-         * \enum Type
-         */
-        enum Type
-        {
-            Positional,
-            Optional
-        };
-
-        /*!
-         *  \brief Construct argument object with parsed arguments
-         *
-         *  \param flags Argument flags
-         *  \param name Argument name
-         *  \param type Argument type
-         *
-         *  \return Argument object
-         */
-        Argument(std::vector<std::string> const& flags,
-                 std::string const& name,
-                 Type type)
-            : m_flags(flags),
-              m_name(name),
-              m_type(type),
-              m_action(Action::store),
-              m_nargs(),
-              m_num_args(),
-              m_const(),
-              m_default(),
-              m_choices(),
-              m_required(false),
-              m_help(),
-              m_help_type(NONE),
-              m_metavar(),
-              m_dest(),
-              m_version(),
-              m_handle(nullptr),
-              m_callback(nullptr)
-        { }
-
-        /*!
-         *  \brief Construct argument object from another argument
-         *
-         *  \param orig Argument object to copy
-         *
-         *  \return Argument object
-         */
-        Argument(Argument const& orig)
-            : m_flags(orig.m_flags),
-              m_name(orig.m_name),
-              m_type(orig.m_type),
-              m_action(orig.m_action),
-              m_nargs(orig.m_nargs),
-              m_num_args(orig.m_num_args),
-              m_const(orig.m_const),
-              m_default(orig.m_default),
-              m_choices(orig.m_choices),
-              m_required(orig.m_required),
-              m_help(orig.m_help),
-              m_help_type(orig.m_help_type),
-              m_metavar(orig.m_metavar),
-              m_dest(orig.m_dest),
-              m_version(orig.m_version),
-              m_handle(orig.m_handle),
-              m_callback(orig.m_callback)
-        { }
-
-        /*!
-         *  \brief Copy argument object from another argument
-         *
-         *  \param rhs Argument object to copy
-         *
-         *  \return Current argument reference
-         */
-        Argument& operator =(Argument const& rhs)
-        {
-            if (this != &rhs) {
-                this->m_flags   = rhs.m_flags;
-                this->m_name    = rhs.m_name;
-                this->m_type    = rhs.m_type;
-                this->m_action  = rhs.m_action;
-                this->m_nargs   = rhs.m_nargs;
-                this->m_num_args= rhs.m_num_args;
-                this->m_const   = rhs.m_const;
-                this->m_default = rhs.m_default;
-                this->m_choices = rhs.m_choices;
-                this->m_required= rhs.m_required;
-                this->m_help    = rhs.m_help;
-                this->m_help_type= rhs.m_help_type;
-                this->m_metavar = rhs.m_metavar;
-                this->m_dest    = rhs.m_dest;
-                this->m_version = rhs.m_version;
-                this->m_handle  = rhs.m_handle;
-                this->m_callback= rhs.m_callback;
-            }
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'action' value
-         *
-         *  \param value Action value
-         *
-         *  \return Current argument reference
-         */
-        Argument& action(std::string const& value)
-        {
-            if (value == "store") {
-                return action(Action::store);
-            } else if (value == "store_const") {
-                return action(Action::store_const);
-            } else if (value == "store_true") {
-                return action(Action::store_true);
-            } else if (value == "store_false") {
-                return action(Action::store_false);
-            } else if (value == "append") {
-                return action(Action::append);
-            } else if (value == "append_const") {
-                return action(Action::append_const);
-            } else if (value == "count") {
-                return action(Action::count);
-            } else if (value == "help") {
-                return action(Action::help);
-            } else if (value == "version") {
-                return action(Action::version);
-            } else if (value == "extend") {
-                return action(Action::extend);
-            }
-            throw ValueError("unknown action '" + value + "'");
-        }
-
-        /*!
-         *  \brief Set argument 'action' value
-         *
-         *  \param value Action value
-         *
-         *  \return Current argument reference
-         */
-        Argument& action(Action value)
-        {
-            if (!(value & (Action::store | Action::store_const | Action::append
-                           | Action::append_const | Action::extend))) {
-                m_handle = nullptr;
-            }
-            if (!(value & (Action::store_true | Action::store_false | Action::count))) {
-                m_callback = nullptr;
-            }
-            if (m_action == Action::version) {
-                m_help.clear();
-            }
-            switch (value) {
-                case Action::store_true :
-                    m_default = "0";
-                    m_const = "1";
-                    m_nargs = "0";
-                    m_num_args = 0;
-                    m_choices.clear();
-                    break;
-                case Action::store_false :
-                    m_default = "1";
-                    m_const = "0";
-                    m_nargs = "0";
-                    m_num_args = 0;
-                    m_choices.clear();
-                    break;
-                case Action::version :
-                    m_help = "show program's version number and exit";
-                case Action::help :
-                    if (type() == Positional) {
-                        // version and help actions cannot be positional
-                        throw TypeError("got an unexpected keyword argument 'required'");
-                    }
-                case Action::store_const :
-                case Action::append_const :
-                case Action::count :
-                    m_nargs = "0";
-                    m_num_args = 0;
-                    m_choices.clear();
-                    break;
-                case Action::store :
-                case Action::append :
-                case Action::extend :
-                    if (m_nargs == "0") {
-                        m_nargs.clear();
-                    }
-                    break;
-                default :
-                    throw ValueError("unknown action");
-            }
-            m_action = value;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'nargs' value
-         *
-         *  \param value Nargs value
-         *
-         *  \return Current argument reference
-         */
-        Argument& nargs(uint32_t value)
-        {
-            switch (m_action) {
-                case Action::store_const :
-                case Action::store_true :
-                case Action::store_false :
-                case Action::append_const :
-                case Action::help :
-                case Action::version :
-                case Action::count :
-                    throw TypeError("got an unexpected keyword argument 'nargs'");
-                case Action::store :
-                    if (value == 0) {
-                        throw ValueError("nargs for store actions must be != 0; "
-                                         "if you have nothing to store, actions such as "
-                                         "store true or store const may be more appropriate");
-                    }
-                    break;
-                case Action::append :
-                case Action::extend :
-                    if (value == 0) {
-                        throw ValueError("nargs for append actions must be != 0; "
-                                         "if arg strings are not supplying the value to append, "
-                                         "the append const action may be more appropriate");
-                    }
-                    break;
-                default:
-                    throw ValueError("unknown action");
-            }
-            m_nargs = std::to_string(value);
-            m_num_args = value;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'nargs' value
-         *
-         *  \param value Nargs value : "?", "*", "+"
-         *
-         *  \return Current argument reference
-         */
-        Argument& nargs(std::string const& value)
-        {
-            if (!(m_action & (Action::store | Action::append | Action::extend))) {
-                throw TypeError("got an unexpected keyword argument 'nargs'");
-            }
-            auto param = detail::_trim_copy(value);
-            std::vector<std::string> const values = { "?", "*", "+" };
-            if (!detail::_is_value_exists(param, values)) {
-                throw ValueError("invalid nargs value '" + param + "'");
-            }
-            m_nargs = param;
-            m_num_args = 0;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'const' value
-         *
-         *  \param value Const value
-         *
-         *  \return Current argument reference
-         */
-        Argument& const_value(std::string const& value)
-        {
-            if (m_action & (Action::store_const | Action::append_const)
-                    || (type() == Optional && m_nargs == "?"
-                        && (m_action & (Action::store | Action::append | Action::extend)))) {
-                m_const = detail::_trim_copy(value);
-            } else if (type() == Optional && m_nargs != "?"
-                       && (m_action & (Action::store | Action::append | Action::extend))) {
-                throw ValueError("nargs must be '?' to supply const");
-            } else {
-                throw TypeError("got an unexpected keyword argument 'const'");
-            }
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'default' value
-         *
-         *  \param value Default value
-         *
-         *  \return Current argument reference
-         */
-        Argument& default_value(std::string const& value)
-        {
-            if (!(m_action & (Action::store_true | Action::store_false))) {
-                m_default = detail::_trim_copy(value);
-            }
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'choices' value
-         *
-         *  \param value Choices value
-         *
-         *  \return Current argument reference
-         */
-        Argument& choices(std::string const& value)
-        {
-            std::vector<std::string> values;
-            values.reserve(value.size());
-            for (auto const& c : value) {
-                values.push_back(std::string(1, c));
-            }
-            return choices(values);
-        }
-
-        /*!
-         *  \brief Set argument 'choices' value
-         *
-         *  \param value Choices value
-         *
-         *  \return Current argument reference
-         */
-        Argument& choices(std::vector<std::string> const& value)
-        {
-            if (!(m_action & (Action::store | Action::append | Action::extend))) {
-                throw TypeError("got an unexpected keyword argument 'choices'");
-            }
-            m_choices.clear();
-            for (auto const& str : value) {
-                auto param = detail::_trim_copy(str);
-                if (!param.empty()) {
-                    m_choices.emplace_back(param);
-                }
-            }
-            return *this;
-        }
-
-        /*!
-         *  \brief Set 'required' value for optional arguments
-         *
-         *  \param value Required flag
-         *
-         *  \return Current argument reference
-         */
-        Argument& required(bool value)
-        {
-            if (type() == Positional) {
-                throw TypeError("'required' is an invalid argument for positionals");
-            }
-            m_required = value;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'help' message
-         *
-         *  \param value Help message
-         *
-         *  \return Current argument reference
-         */
-        Argument& help(std::string const& value)
-        {
-            m_help = detail::_trim_copy(value);
-            m_help_type = NONE;
-            return *this;
-        }
-
-        /*!
-         *  \brief Suppress argument 'help' message
-         *
-         *  \param value argparse::SUPPRESS
-         *
-         *  \return Current argument reference
-         */
-        Argument& help(Enum value)
-        {
-            if (value != SUPPRESS) {
-                throw TypeError("got an unexpected keyword argument 'help'");
-            }
-            m_help_type = value;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'metavar' value
-         *
-         *  \param value Metavar value
-         *
-         *  \return Current argument reference
-         */
-        Argument& metavar(std::string const& value)
-        {
-            m_metavar = detail::_trim_copy(value);
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'dest' value for optional arguments
-         *
-         *  \param value Destination value
-         *
-         *  \return Current argument reference
-         */
-        Argument& dest(std::string const& value)
-        {
-            if (type() == Positional) {
-                throw ValueError("dest supplied twice for positional argument");
-            }
-            m_dest = detail::_trim_copy(value);
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'version' for arguments with 'version' action
-         *
-         *  \param value Version value
-         *
-         *  \return Current argument reference
-         */
-        Argument& version(std::string const& value)
-        {
-            if (m_action == Action::version) {
-                m_version = detail::_trim_copy(value);
-            } else {
-                throw TypeError("got an unexpected keyword argument 'version'");
-            }
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'handle' for arguments with 'store/_const' or 'append/_const/extend' action
-         *
-         *  \param func Handle function
-         *
-         *  \return Current argument reference
-         */
-        Argument& handle(std::function<void(std::string)> func)
-        {
-            if (m_action & (Action::store | Action::store_const | Action::append
-                            | Action::append_const | Action::extend )) {
-                m_handle = func;
-            } else {
-                throw TypeError("got an unexpected keyword argument 'handle'");
-            }
-            return *this;
-        }
-
-        /*!
-         *  \brief Set argument 'callback' for arguments with 'store_true/_false' or 'count' action
-         *
-         *  \param func Callback function
-         *
-         *  \return Current argument reference
-         */
-        Argument& callback(std::function<void()> func)
-        {
-            if (m_action & (Action::store_true | Action::store_false | Action::count)) {
-                m_callback = func;
-            } else {
-                throw TypeError("got an unexpected keyword argument 'callback'");
-            }
-            return *this;
-        }
-
-        /*!
-         *  \brief Get argument flags values
-         *
-         *  \return Argument flags values
-         */
-        std::vector<std::string> const& flags() const
-        {
-            return m_flags;
-        }
-
-        /*!
-         *  \brief Get argument 'action' value
-         *
-         *  \return Argument 'action' value
-         */
-        Action action() const
-        {
-            return m_action;
-        }
-
-        /*!
-         *  \brief Get argument 'nargs' value
-         *
-         *  \return Argument 'nargs' value
-         */
-        std::string const& nargs() const
-        {
-            return m_nargs;
-        }
-
-        /*!
-         *  \brief Get argument 'const' value
-         *
-         *  \return Argument 'const' value
-         */
-        std::string const& const_value() const
-        {
-            return m_const;
-        }
-
-        /*!
-         *  \brief Get argument 'default' value
-         *
-         *  \return Argument 'default' value
-         */
-        std::string const& default_value() const
-        {
-            return m_default;
-        }
-
-        /*!
-         *  \brief Get argument 'choices' value
-         *
-         *  \return Argument 'choices' value
-         */
-        std::vector<std::string> const& choices() const
-        {
-            return m_choices;
-        }
-
-        /*!
-         *  \brief Get argument 'required' value
-         *
-         *  \return Argument 'required' value
-         */
-        bool required() const
-        {
-            return m_required;
-        }
-
-        /*!
-         *  \brief Get argument 'help' message
-         *
-         *  \return Argument 'help' message
-         */
-        std::string const& help() const
-        {
-            return m_help;
-        }
-
-        /*!
-         *  \brief Get argument 'metavar' value
-         *
-         *  \return Argument 'metavar' value
-         */
-        std::string const& metavar() const
-        {
-            return m_metavar;
-        }
-
-        /*!
-         *  \brief Get argument 'dest' value
-         *
-         *  \return Argument 'dest' value
-         */
-        std::string const& dest() const
-        {
-            return m_dest;
-        }
-
-        /*!
-         *  \brief Get argument 'version' value
-         *
-         *  \return Argument 'version' value
-         */
-        std::string const& version() const
-        {
-            return m_version;
-        }
-
-    private:
-        void handle(std::string const& str) const
-        {
-            if (m_handle) {
-                m_handle(str);
-            }
-        }
-
-        void callback() const
-        {
-            if (m_callback) {
-                m_callback();
-            }
-        }
-
-        Type type() const
-        {
-            return m_type;
-        }
-
-        Enum help_type() const
-        {
-            return m_help_type;
-        }
-
-        uint32_t num_args() const
-        {
-            return m_num_args;
-        }
-
-        std::string usage() const
-        {
-            std::string res;
-            if (type() == Optional) {
-                res += m_flags.front();
-            }
-            if (m_action & (Action::store | Action::append
-                            | Action::extend | Action::append_const)) {
-                res += get_nargs_suffix();
-            }
-            return res;
-        }
-
-        std::string flags_to_string() const
-        {
-            std::string res;
-            if (type() == Optional) {
-                for (auto const& flag : m_flags) {
-                    if (!res.empty()) {
-                        res += ", ";
-                    }
-                    res += flag;
-                    if (m_action & (Action::store | Action::append
-                                    | Action::extend | Action::append_const)) {
-                        res += get_nargs_suffix();
-                    }
-                }
-            } else {
-                res += get_argument_name();
-            }
-            return res;
-        }
-
-        std::string print(std::size_t limit = detail::_argument_help_limit) const
-        {
-            std::string res = "  " + flags_to_string();
-            if (!help().empty()) {
-                if (res.size() + 2 > limit) {
-                    res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
-                } else {
-                    res += std::string(limit - res.size(), ' ') + help();
-                }
-            }
-            return res;
-        }
-
-        std::string get_nargs_suffix() const
-        {
-            auto const name = get_argument_name();
-            std::string res;
-            if (type() == Optional) {
-                res += " ";
-            }
-            if (m_nargs == "?") {
-                res += "[" +  name + "]";
-            } else if (m_nargs == "*") {
-                res += "[" +  name + " ...]";
-            } else if (m_nargs == "+") {
-                res += name + " [" +  name + " ...]";
-            } else if (!m_nargs.empty()) {
-                for (uint32_t i = 0; i < m_num_args; ++i) {
-                    if (i != 0) {
-                        res += " ";
-                    }
-                    res += name;
-                }
-            } else {
-                res += name;
-            }
-            return res;
-        }
-
-        std::string get_argument_name() const
-        {
-            if (!m_metavar.empty()) {
-                return m_metavar;
-            }
-            if (!m_choices.empty()) {
-                return "{" + detail::_vector_string_to_string(m_choices, ",") + "}";
-            }
-            auto res = m_dest.empty() ? m_name : m_dest;
-            return type() == Optional ? detail::_to_upper(res) : res;
-        }
-
-        std::vector<std::string> m_flags;
-        std::string m_name;
-        Type        m_type;
-        Action      m_action;
-        std::string m_nargs;
-        uint32_t    m_num_args;
-        std::string m_const;
-        std::string m_default;
-        std::vector<std::string> m_choices;
-        bool        m_required;
-        std::string m_help;
-        Enum        m_help_type;
-        std::string m_metavar;
-        std::string m_dest;
-        std::string m_version;
-        std::function<void(std::string)> m_handle;
-        std::function<void()> m_callback;
-    };
-
     /*!
      * \brief Parser class
      */
