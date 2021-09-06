@@ -2,11 +2,11 @@
 
 #include <argparse/argparse.hpp>
 
-TEST_CASE("initization check", "[argument_parser]")
+TEST_CASE("1. initization check", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser();
 
-    SECTION("default values") {
+    SECTION("1.1. default values") {
         REQUIRE(parser.prog() == "untitled");
         REQUIRE(parser.usage() == "");
         REQUIRE(parser.description() == "");
@@ -19,7 +19,7 @@ TEST_CASE("initization check", "[argument_parser]")
         REQUIRE(parser.exit_on_error() == true);
     }
 
-    SECTION("change values") {
+    SECTION("1.2. change values") {
         std::string prog = "prog";
         std::string usage = "prog usage";
         std::string description = "description";
@@ -74,7 +74,7 @@ TEST_CASE("initization check", "[argument_parser]")
     }
 }
 
-TEST_CASE("optional arguments", "[argument_parser]")
+TEST_CASE("2. optional arguments", "[argument_parser]")
 {
     std::string global_default = "global";
     std::string local_default = "local";
@@ -86,7 +86,7 @@ TEST_CASE("optional arguments", "[argument_parser]")
     std::string foo = "foo";
     std::string bar = "bar";
 
-    SECTION("no arguments") {
+    SECTION("2.1. no arguments") {
         auto args = parser.parse_args({ });
         REQUIRE(args.get<std::string>("-f") == global_default);
         REQUIRE(args.get<std::string>("-b") == local_default);
@@ -98,7 +98,7 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("bar") == local_default);
     }
 
-    SECTION("one argument") {
+    SECTION("2.2. one argument") {
         auto args1 = parser.parse_args({ "-f", foo });
         REQUIRE(args1.get<std::string>("-f") == foo);
         REQUIRE(args1.get<std::string>("-b") == local_default);
@@ -120,7 +120,7 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args2.get<std::string>("bar") == bar);
     }
 
-    SECTION("both arguments") {
+    SECTION("2.3. both arguments") {
         auto args = parser.parse_args({ "-f", foo, "--bar", bar });
         REQUIRE(args.get<std::string>("-f") == foo);
         REQUIRE(args.get<std::string>("-b") == bar);
@@ -132,7 +132,7 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("bar") == bar);
     }
 
-    SECTION("use equal '='") {
+    SECTION("2.4. use equal '='") {
         auto args = parser.parse_args({ "-f=" + foo, "--bar=" + bar });
         REQUIRE(args.get<std::string>("-f") == foo);
         REQUIRE(args.get<std::string>("-b") == bar);
@@ -144,7 +144,7 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("bar") == bar);
     }
 
-    SECTION("arguments override") {
+    SECTION("2.5. arguments override") {
         auto args = parser.parse_args({ "-f", foo, "--bar", bar, "--foo", bar, "-b", foo });
         REQUIRE(args.get<std::string>("-f") == bar);
         REQUIRE(args.get<std::string>("-b") == foo);
@@ -156,7 +156,7 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("bar") == foo);
     }
 
-    SECTION("allow_abbrev=true") {
+    SECTION("2.6. allow_abbrev=true") {
         parser.allow_abbrev(true);
 
         auto args = parser.parse_args({ "--f", foo, "--ba", bar });
@@ -170,7 +170,7 @@ TEST_CASE("optional arguments", "[argument_parser]")
         REQUIRE(args.get<std::string>("bar") == bar);
     }
 
-    SECTION("allow_abbrev=false") {
+    SECTION("2.7. allow_abbrev=false") {
         parser.allow_abbrev(false);
 
         REQUIRE_THROWS(parser.parse_args({ "--", foo }));
@@ -181,9 +181,9 @@ TEST_CASE("optional arguments", "[argument_parser]")
     }
 }
 
-TEST_CASE("optional arguments containing -", "[argument_parser]")
+TEST_CASE("3. optional arguments containing -", "[argument_parser]")
 {
-    SECTION("no negative number options") {
+    SECTION("3.1. no negative number options") {
         auto parser = argparse::ArgumentParser().exit_on_error(false);
 
         parser.add_argument({ "-x" });
@@ -200,7 +200,7 @@ TEST_CASE("optional arguments containing -", "[argument_parser]")
         REQUIRE(args2.get<std::string>("foo") == "-5");
     }
 
-    SECTION("negative number options present") {
+    SECTION("3.2. negative number options present") {
         auto parser = argparse::ArgumentParser().exit_on_error(false);
 
         parser.add_argument({ "-1" }).dest("one");
@@ -218,7 +218,7 @@ TEST_CASE("optional arguments containing -", "[argument_parser]")
     }
 }
 
-TEST_CASE("positional arguments", "[argument_parser]")
+TEST_CASE("4. positional arguments", "[argument_parser]")
 {
     std::string global_default = "global";
     std::string local_default = "local";
@@ -230,16 +230,16 @@ TEST_CASE("positional arguments", "[argument_parser]")
     std::string foo = "foo";
     std::string bar = "bar";
 
-    SECTION("no arguments") {
+    SECTION("4.1. no arguments") {
         REQUIRE_THROWS(parser.parse_args({ }));
     }
 
-    SECTION("one argument") {
+    SECTION("4.2. one argument") {
         REQUIRE_THROWS(parser.parse_args({ foo }));
         REQUIRE_THROWS(parser.parse_args({ bar }));
     }
 
-    SECTION("both arguments") {
+    SECTION("4.3. both arguments") {
         auto args1 = parser.parse_args({ foo, bar });
         REQUIRE(args1.get<std::string>("foo") == foo);
         REQUIRE(args1.get<std::string>("bar") == bar);
@@ -249,13 +249,13 @@ TEST_CASE("positional arguments", "[argument_parser]")
         REQUIRE(args2.get<std::string>("bar") == foo);
     }
 
-    SECTION("excess arguments") {
+    SECTION("4.4. excess arguments") {
         REQUIRE_THROWS(parser.parse_args({ foo, bar, foo + bar }));
         REQUIRE_THROWS(parser.parse_args({ foo, bar, foo, bar }));
     }
 }
 
-TEST_CASE("optional and positional arguments", "[argument_parser]")
+TEST_CASE("5. optional and positional arguments", "[argument_parser]")
 {
     std::string global_default = "global";
     std::string local_default = "local";
@@ -269,13 +269,13 @@ TEST_CASE("optional and positional arguments", "[argument_parser]")
     std::string foo = "foo";
     std::string bar = "bar";
 
-    SECTION("no positional arguments") {
+    SECTION("5.1. no positional arguments") {
         REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ "-f", foo }));
         REQUIRE_THROWS(parser.parse_args({ "-b", bar, "-f", foo }));
     }
 
-    SECTION("with positional arguments") {
+    SECTION("5.2. with positional arguments") {
         auto args1 = parser.parse_args({ foo, bar });
         REQUIRE(args1.get<std::string>("-f") == global_default);
         REQUIRE(args1.get<std::string>("-b") == local_default);
@@ -290,7 +290,7 @@ TEST_CASE("optional and positional arguments", "[argument_parser]")
     }
 }
 
-TEST_CASE("argument choices", "[argument]")
+TEST_CASE("6. argument choices", "[argument]")
 {
     std::string global_default = "global";
     std::string local_default = "local";
@@ -316,7 +316,7 @@ TEST_CASE("argument choices", "[argument]")
     REQUIRE(args2.get<std::string>("foobar") == "foobar3");
 }
 
-TEST_CASE("argument dest", "[argument]")
+TEST_CASE("7. argument dest", "[argument]")
 {
     std::string global_default = "global";
     std::string local_default = "local";
@@ -327,11 +327,11 @@ TEST_CASE("argument dest", "[argument]")
 
     auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
 
-    SECTION("positional arguments") {
+    SECTION("7.1. positional arguments") {
         REQUIRE_THROWS(parser.add_argument({ "foobar" }).dest(dest_foobar));
     }
 
-    SECTION("optional arguments") {
+    SECTION("7.2. optional arguments") {
         parser.add_argument({ "--foo" }).dest(dest_foo);
         parser.add_argument({ "--bar" }).dest(dest_bar).default_value(local_default);
         parser.add_argument({ "foobar" });
@@ -352,7 +352,7 @@ TEST_CASE("argument dest", "[argument]")
     }
 }
 
-TEST_CASE("argument actions", "[argument]")
+TEST_CASE("8. argument actions", "[argument]")
 {
     // TODO : with argument_default (store_true, store_false, count) actions are invalid in python
     std::string const_value = "const";
@@ -360,7 +360,7 @@ TEST_CASE("argument actions", "[argument]")
 
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("optional arguments") {
+    SECTION("8.1. optional arguments") {
         parser.add_argument({ "--store" }).action(argparse::store);
         parser.add_argument({ "--store_const" }).action(argparse::store_const).const_value(const_value);
         parser.add_argument({ "--store_true" }).action(argparse::store_true);
@@ -401,7 +401,7 @@ TEST_CASE("argument actions", "[argument]")
         REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 1);
     }
 
-    SECTION("positional arguments") {
+    SECTION("8.2. positional arguments") {
         parser.add_argument({ "store" }).action(argparse::store);
         parser.add_argument({ "store_const" }).action(argparse::store_const).const_value(const_value);
         parser.add_argument({ "store_true" }).action(argparse::store_true);
@@ -431,7 +431,7 @@ TEST_CASE("argument actions", "[argument]")
     }
 }
 
-TEST_CASE("argument nargs", "[argument]")
+TEST_CASE("9. argument nargs", "[argument]")
 {
     // TODO : with argument_default (store_true, store_false, count) actions are invalid in python
     std::string default_value = "local";
@@ -440,7 +440,7 @@ TEST_CASE("argument nargs", "[argument]")
 
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("nargs break actions") {
+    SECTION("9.1. nargs break actions") {
         REQUIRE_THROWS(parser.add_argument({ "--store_const?" }).action(argparse::store_const).const_value(const_value).nargs("?"));
         REQUIRE_THROWS(parser.add_argument({ "--store_const*" }).action(argparse::store_const).const_value(const_value).nargs("*"));
         REQUIRE_THROWS(parser.add_argument({ "--store_const+" }).action(argparse::store_const).const_value(const_value).nargs("+"));
@@ -484,7 +484,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE_THROWS(parser.add_argument({ "countN" }).action(argparse::count).nargs(2));
     }
 
-    SECTION("nargs ?") {
+    SECTION("9.2. nargs ?") {
         parser.add_argument({ "--foo" }).nargs("?").const_value("c").default_value("d");
         parser.add_argument({ "bar" }).nargs("?").default_value("d");
         parser.add_argument({ "--store" });
@@ -510,7 +510,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args4.get<std::string>("bar") == "XX");
     }
 
-    SECTION("nargs ? optional") {
+    SECTION("9.3. nargs ? optional") {
         parser.add_argument({ "--store" }).action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument({ "--append" }).action(argparse::append).nargs("?"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "--extend" }).action(argparse::extend).nargs("?"); // TODO: default value are invalid in python if flag used
@@ -541,7 +541,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
     }
 
-    SECTION("nargs ? positional") {
+    SECTION("9.4. nargs ? positional") {
         parser.add_argument({ "store" }).action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument({ "append" }).action(argparse::append).nargs("?");
 //        parser.add_argument({ "extend" }).action(argparse::extend).nargs("?"); // TODO : invalid in python without arguments
@@ -567,7 +567,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value }));
     }
 
-    SECTION("nargs * optional") {
+    SECTION("9.5. nargs * optional") {
         parser.add_argument({ "--store" }).action(argparse::store).nargs("*").default_value(default_value);
         parser.add_argument({ "--append" }).action(argparse::append).nargs("*"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "--extend" }).action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
@@ -598,7 +598,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
     }
 
-    SECTION("nargs * positional") {
+    SECTION("9.6. nargs * positional") {
         parser.add_argument({ "store" }).action(argparse::store).nargs("*").default_value(default_value);
         parser.add_argument({ "append" }).action(argparse::append).nargs("*"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "extend" }).action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
@@ -622,7 +622,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("extend").size() == 0);
     }
 
-    SECTION("nargs * positional [2]") {
+    SECTION("9.7. nargs * positional [2]") {
         parser.add_argument({ "append" }).action(argparse::append).nargs("*"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "extend" }).action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "store" }).action(argparse::store).nargs("*").default_value(default_value);
@@ -648,7 +648,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("extend").size() == 0);
     }
 
-    SECTION("nargs + optional") {
+    SECTION("9.8. nargs + optional") {
         parser.add_argument({ "--store" }).action(argparse::store).nargs("+").default_value(default_value);
         parser.add_argument({ "--append" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "--extend" }).action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
@@ -679,7 +679,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
     }
 
-    SECTION("nargs + positional") {
+    SECTION("9.9. nargs + positional") {
         parser.add_argument({ "store" }).action(argparse::store).nargs("+").default_value(default_value);
         parser.add_argument({ "append" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "extend" }).action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
@@ -707,7 +707,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("extend").size() == 1);
     }
 
-    SECTION("nargs + positional [2]") {
+    SECTION("9.10. nargs + positional [2]") {
         parser.add_argument({ "append" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "extend" }).action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "store" }).action(argparse::store).nargs("+").default_value(default_value);
@@ -735,7 +735,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("store").size() == 1);
     }
 
-    SECTION("nargs mixed positional") {
+    SECTION("9.11. nargs mixed positional") {
         parser.add_argument({ "append" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "extend" }).action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "store" }).action(argparse::store).nargs("+").default_value(default_value);
@@ -762,7 +762,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("store").size() == 1);
     }
 
-    SECTION("nargs mixed positional [2]") {
+    SECTION("9.12. nargs mixed positional [2]") {
         parser.add_argument({ "append1" }).action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "append2" }).action(argparse::append).nargs("?"); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "store" }).action(argparse::store).nargs("+").default_value(default_value);
@@ -789,7 +789,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("store").size() == 1);
     }
 
-    SECTION("nargs mixed positional [3]") {
+    SECTION("9.13. nargs mixed positional [3]") {
         parser.add_argument({ "store1" }).action(argparse::store).nargs("*").default_value(default_value);
         parser.add_argument({ "store2" }).action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument({ "store3" }).action(argparse::store).nargs("+").default_value(default_value);
@@ -830,7 +830,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("store6").size() == 1);
     }
 
-    SECTION("nargs mixed positional [4]") {
+    SECTION("9.14. nargs mixed positional [4]") {
         parser.add_argument({ "store1" }).action(argparse::store).nargs("+").default_value(default_value);
         parser.add_argument({ "store2" }).action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument({ "store3" }).action(argparse::store).nargs("*").default_value(default_value);
@@ -868,7 +868,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("store4").size() == 1);
     }
 
-    SECTION("nargs mixed positional [5]") {
+    SECTION("9.15. nargs mixed positional [5]") {
         parser.add_argument({ "store1" }).action(argparse::store).nargs("+").default_value(default_value);
         parser.add_argument({ "store2" }).action(argparse::store).nargs(2).default_value(default_value);
         parser.add_argument({ "store3" }).action(argparse::store).nargs("*").default_value(default_value);
@@ -912,7 +912,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("store5").size() == 2);
     }
 
-    SECTION("nargs mixed positional [6]") {
+    SECTION("9.16. nargs mixed positional [6]") {
         parser.add_argument({ "store1" }).action(argparse::store).nargs("*").default_value(default_value);
         parser.add_argument({ "store2" }).action(argparse::store).nargs(2).default_value(default_value);
         parser.add_argument({ "store3" }).action(argparse::store).nargs("+").default_value(default_value);
@@ -959,7 +959,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("store6").size() == 1);
     }
 
-    SECTION("nargs N optional") {
+    SECTION("9.17. nargs N optional") {
         parser.add_argument({ "--store" }).action(argparse::store).nargs(1).default_value(default_value);
         parser.add_argument({ "--append" }).action(argparse::append).nargs(2); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "--extend" }).action(argparse::extend).nargs(3); // TODO: default value are invalid in python if flag used
@@ -989,7 +989,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 6);
     }
 
-    SECTION("nargs N positional") {
+    SECTION("9.18. nargs N positional") {
         parser.add_argument({ "store" }).action(argparse::store).nargs(1).default_value(default_value);
         parser.add_argument({ "append" }).action(argparse::append).nargs(2); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "extend" }).action(argparse::extend).nargs(3); // TODO: default value are invalid in python if flag used
@@ -1009,7 +1009,7 @@ TEST_CASE("argument nargs", "[argument]")
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value, new_value, new_value, new_value, new_value }));
     }
 
-    SECTION("nargs N optional + positional") {
+    SECTION("9.19. nargs N optional + positional") {
         parser.add_argument({ "--store" }).action(argparse::store).nargs(1).default_value(default_value);
         parser.add_argument({ "store" }).action(argparse::store).nargs(2); // TODO: default value are invalid in python if flag used
         parser.add_argument({ "extend" }).action(argparse::extend).nargs(2); // TODO: default value are invalid in python if flag used
@@ -1031,11 +1031,11 @@ TEST_CASE("argument nargs", "[argument]")
     }
 }
 
-TEST_CASE("abbreviations", "[argument]")
+TEST_CASE("10. abbreviations", "[argument]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("simple count test") {
+    SECTION("10.1. simple count test") {
         parser.add_argument({ "-c" }).action(argparse::count);
 
         auto args1 = parser.parse_args({ });
@@ -1054,7 +1054,7 @@ TEST_CASE("abbreviations", "[argument]")
         REQUIRE(args5.get<uint32_t>("-c") == 5);
     }
 
-    SECTION("multiargument test") {
+    SECTION("10.2. multiargument test") {
         parser.add_argument({ "-c" }).action(argparse::count);
         parser.add_argument({ "-d" }).action(argparse::count);
         parser.add_argument({ "-e" }).action(argparse::count);
@@ -1091,7 +1091,7 @@ TEST_CASE("abbreviations", "[argument]")
         REQUIRE(args5.get<bool>("-f") == true);
     }
 
-    SECTION("multiargument store test") {
+    SECTION("10.3. multiargument store test") {
         parser.add_argument({ "-c" }).action(argparse::count);
         parser.add_argument({ "-d" }).action(argparse::store);
 
@@ -1114,7 +1114,7 @@ TEST_CASE("abbreviations", "[argument]")
         REQUIRE_THROWS(parser.parse_args({ "-cccd" }));
     }
 
-    SECTION("same prefix store test") {
+    SECTION("10.4. same prefix store test") {
         parser.add_argument({ "-f" }).action(argparse::store);
         parser.add_argument({ "-foo" }).action(argparse::store);
 
@@ -1134,7 +1134,7 @@ TEST_CASE("abbreviations", "[argument]")
         REQUIRE(args5.get<std::string>("-foo") == "1");
     }
 
-    SECTION("same name test (allow_abbrev=true)") {
+    SECTION("10.5. same name test (allow_abbrev=true)") {
         parser.add_argument({ "-c" }).action(argparse::count);
         parser.add_argument({ "-ccc" }).action(argparse::store_true);
 
@@ -1157,7 +1157,7 @@ TEST_CASE("abbreviations", "[argument]")
         REQUIRE(args5.get<bool>("-ccc") == false);
     }
 
-    SECTION("same name test (allow_abbrev=false)") {
+    SECTION("10.6. same name test (allow_abbrev=false)") {
         parser.allow_abbrev(false);
 
         parser.add_argument({ "-c" }).action(argparse::count);
@@ -1185,11 +1185,11 @@ TEST_CASE("abbreviations", "[argument]")
     }
 }
 
-TEST_CASE("subparsers", "[argument_parser]")
+TEST_CASE("11. subparsers", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("main parser without positional arguments") {
+    SECTION("11.1. main parser without positional arguments") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
         auto& subparsers = parser.add_subparsers().help("sub-command help");
@@ -1220,7 +1220,7 @@ TEST_CASE("subparsers", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ "--foo", "a", "12", "b", "--baz", "Z" }));
     }
 
-    SECTION("main parser with store positional arguments") {
+    SECTION("11.2. main parser with store positional arguments") {
         parser.add_argument("--foo").action("store_true").help("foo help");
         parser.add_argument("boo").action("store").help("boo help");
 
@@ -1271,7 +1271,7 @@ TEST_CASE("subparsers", "[argument_parser]")
         REQUIRE(args5.get<std::string>("baz") == "Z");
     }
 
-    SECTION("main parser with store_const positional arguments") {
+    SECTION("11.3. main parser with store_const positional arguments") {
         std::string const_value = "const";
 
         parser.add_argument("--foo").action("store_true").help("foo help");
