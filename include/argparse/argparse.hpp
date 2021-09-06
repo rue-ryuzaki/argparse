@@ -3277,17 +3277,9 @@ private:
         auto _write_arg_usage = [&pos, &offset, &res, limit] (std::string const& str, bool bkt)
         {
             if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
-                if (bkt) {
-                    res += " [" + str + "]";
-                } else {
-                    res += " " + str;
-                }
+                res += " " + (bkt ? "[" + str + "]" : str);
             } else {
-                if (bkt) {
-                    res += "\n" + std::string(offset, ' ') + "[" + str + "]";
-                } else {
-                    res += "\n" + std::string(offset, ' ') + str;
-                }
+                res += "\n" + std::string(offset, ' ') + (bkt ? "[" + str + "]" : str);
                 pos = offset;
             }
             pos += 1 + str.size();
