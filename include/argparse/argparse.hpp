@@ -1514,6 +1514,40 @@ public:
         }
 
         /*!
+         *  \brief Get parsed argument value as args string
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value as args string
+         */
+        std::string to_args(std::string const& key) const
+        {
+            auto const& args = data(key);
+            switch (args.first) {
+                case Action::store_const :
+                    if (args.second.size() != 1) {
+                        throw TypeError("trying to get data from array argument '" + key + "'");
+                    }
+                    return args.second.front();
+                case Action::store_true :
+                case Action::store_false :
+                    if (args.second.size() != 1) {
+                        throw TypeError("trying to get data from array argument '" + key + "'");
+                    }
+                    return args.second.front() == "0" ? "false" : "true";
+                case Action::count :
+                    return std::to_string(args.second.size());
+                case Action::store :
+                case Action::append :
+                case Action::append_const :
+                case Action::extend :
+                    return detail::_vector_string_to_string(args.second, " ");
+                default :
+                    throw ValueError("action not supported");
+            }
+        }
+
+        /*!
          *  \brief Get parsed argument value as string
          *
          *  \param key Argument name
