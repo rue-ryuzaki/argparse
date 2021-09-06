@@ -55,6 +55,7 @@ namespace argparse {
 namespace detail {
 std::size_t const _usage_limit = 80;
 std::size_t const _argument_help_limit = 24;
+std::string const _default_prefix_chars = "-";
 
 static inline void _ltrim(std::string& s)
 {
@@ -1003,37 +1004,176 @@ private:
 };
 
 /*!
+ * \brief BaseParser class
+ */
+class BaseParser
+{
+public:
+    /*!
+     *  \brief Construct base parser
+     *
+     *  \return BaseParser object
+     */
+    BaseParser()
+        : m_usage(),
+          m_description(),
+          m_epilog(),
+          m_prefix_chars(detail::_default_prefix_chars),
+          m_arguments()
+    { }
+
+    /*!
+     *  \brief Get base parser 'usage' value
+     *
+     *  \return Base parser 'usage' value
+     */
+    std::string const& usage() const
+    {
+        return m_usage;
+    }
+
+    /*!
+     *  \brief Get base parser 'description' value
+     *
+     *  \return Base parser 'description' value
+     */
+    std::string const& description() const
+    {
+        return m_description;
+    }
+
+    /*!
+     *  \brief Get base parser 'epilog' value
+     *
+     *  \return Base parser 'epilog' value
+     */
+    std::string const& epilog() const
+    {
+        return m_epilog;
+    }
+
+    /*!
+     *  \brief Get base parser 'prefix_chars' value
+     *
+     *  \return Base parser 'prefix_chars' value
+     */
+    std::string const& prefix_chars() const
+    {
+        return m_prefix_chars;
+    }
+
+    /*!
+     *  \brief Add argument with flag
+     *
+     *  \param flag Flag value
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(char const* flag)
+    {
+        return add_argument({ std::string(flag) });
+    }
+
+    /*!
+     *  \brief Add argument with flags
+     *
+     *  \param flags Flags values
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(std::vector<std::string> flags)
+    {
+        if (flags.empty()) {
+            throw ValueError("empty options");
+        }
+        flags.front() = detail::_trim_copy(flags.front());
+        auto flag_name = flags.front();
+        if (flag_name.empty()) {
+            throw IndexError("string index out of range");
+        }
+
+        auto prefixes = 0ul;
+        auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg)
+        {
+            auto name = detail::_flag_name(arg);
+            auto count_prefixes = arg.size() - name.size();
+            if (prefixes < count_prefixes) {
+                prefixes = count_prefixes;
+                flag_name = name;
+            }
+        };
+        bool is_optional = detail::_is_optional_argument(flag_name, m_prefix_chars);
+        if (is_optional) {
+            _update_flag_name(flag_name);
+        } else if (flags.size() > 1) {
+            // no positional multiflag
+            throw ValueError("invalid option string " + flags.front()
+                             + ": must starts with a character '" + m_prefix_chars + "'");
+        }
+        for (std::size_t i = 1; i < flags.size(); ++i) {
+            // check arguments
+            flags.at(i) = detail::_trim_copy(flags.at(i));
+            auto const& flag = flags.at(i);
+            if (flag.empty()) {
+                throw IndexError("string index out of range");
+            }
+            if (!detail::_is_optional_argument(flag, m_prefix_chars)) {
+                // no positional and optional args
+                throw ValueError("invalid option string " + flag
+                                 + ": must starts with a character '" + m_prefix_chars + "'");
+            }
+            _update_flag_name(flag);
+        }
+        m_arguments.emplace_back(Argument(flags, flag_name,
+                                          is_optional ? Argument::Optional
+                                                      : Argument::Positional));
+        return m_arguments.back();
+    }
+
+protected:
+    std::string           m_usage;
+    std::string           m_description;
+    std::string           m_epilog;
+    std::string           m_prefix_chars;
+    std::vector<Argument> m_arguments;
+};
+
+/*!
  * \brief ArgumentParser objects
  */
-class ArgumentParser
+class ArgumentParser : public BaseParser
 {
     typedef std::pair<Action, std::vector<std::string> > ArgumentValue;
 
 public:
+    using BaseParser::usage;
+    using BaseParser::description;
+    using BaseParser::epilog;
+    using BaseParser::prefix_chars;
+
     /*!
      * \brief Parser class
      */
-    class Parser
+    class Parser : public BaseParser
     {
         friend class ArgumentParser;
 
     public:
+        using BaseParser::usage;
+        using BaseParser::description;
+        using BaseParser::epilog;
+        using BaseParser::prefix_chars;
+
         /*!
-         *  \brief Construct parser with parents prefix chars
+         *  \brief Construct parser with name
          *
          *  \param name Parser name
-         *  \param prefix_chars Parents prefix chars
          *
          *  \return Parser object
          */
-        Parser(std::string const& name, std::string const& prefix_chars)
+        Parser(std::string const& name)
             : m_name(name),
-              m_prefix_chars(prefix_chars),
-              m_usage(),
-              m_description(),
-              m_epilog(),
-              m_help(),
-              m_arguments()
+              m_help()
         { }
 
         /*!
@@ -1076,6 +1216,22 @@ public:
         }
 
         /*!
+         *  \brief Set parser 'prefix_chars' value
+         *
+         *  \param param Prefix chars values
+         *
+         *  \return Current parser reference
+         */
+        Parser& prefix_chars(std::string const& param)
+        {
+            auto value = detail::_trim_copy(param);
+            if (!value.empty()) {
+                m_prefix_chars = value;
+            }
+            return *this;
+        }
+
+        /*!
          *  \brief Set parser 'help' message
          *
          *  \param value Help message
@@ -1089,36 +1245,6 @@ public:
         }
 
         /*!
-         *  \brief Get parser 'usage' value
-         *
-         *  \return Parser 'usage' value
-         */
-        std::string const& usage() const
-        {
-            return m_usage;
-        }
-
-        /*!
-         *  \brief Get parser 'description' value
-         *
-         *  \return Parser 'description' value
-         */
-        std::string const& description() const
-        {
-            return m_description;
-        }
-
-        /*!
-         *  \brief Get parser 'epilog' value
-         *
-         *  \return Parser 'epilog' value
-         */
-        std::string const& epilog() const
-        {
-            return m_epilog;
-        }
-
-        /*!
          *  \brief Get parser 'help' message
          *
          *  \return Parser 'help' message
@@ -1126,73 +1252,6 @@ public:
         std::string const& help() const
         {
             return m_help;
-        }
-
-        /*!
-         *  \brief Add argument with flag
-         *
-         *  \param flag Flag value
-         *
-         *  \return Current argument reference
-         */
-        Argument& add_argument(char const* flag)
-        {
-            return add_argument({ std::string(flag) });
-        }
-
-        /*!
-         *  \brief Add argument with flags
-         *
-         *  \param flags Flags values
-         *
-         *  \return Current argument reference
-         */
-        Argument& add_argument(std::vector<std::string> flags)
-        {
-            if (flags.empty()) {
-                throw ValueError("empty options");
-            }
-            flags.front() = detail::_trim_copy(flags.front());
-            auto flag_name = flags.front();
-            if (flag_name.empty()) {
-                throw IndexError("string index out of range");
-            }
-
-            auto prefixes = 0ul;
-            auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg)
-            {
-                auto name = detail::_flag_name(arg);
-                auto count_prefixes = arg.size() - name.size();
-                if (prefixes < count_prefixes) {
-                    prefixes = count_prefixes;
-                    flag_name = name;
-                }
-            };
-            bool is_optional = detail::_is_optional_argument(flag_name, m_prefix_chars);
-            if (is_optional) {
-                _update_flag_name(flag_name);
-            } else if (flags.size() > 1) {
-                // no positional multiflag
-                throw ValueError("invalid option string " + flags.front()
-                                 + ": must starts with a character '" + m_prefix_chars + "'");
-            }
-            for (std::size_t i = 1; i < flags.size(); ++i) {
-                // check arguments
-                auto const& flag = flags.at(i);
-                if (flag.empty()) {
-                    throw IndexError("string index out of range");
-                }
-                if (!detail::_is_optional_argument(flag, m_prefix_chars)) {
-                    // no positional and optional args
-                    throw ValueError("invalid option string " + flag
-                                     + ": must starts with a character '" + m_prefix_chars + "'");
-                }
-                _update_flag_name(flag);
-            }
-            m_arguments.emplace_back(Argument(flags, flag_name,
-                                              is_optional ? Argument::Optional
-                                                          : Argument::Positional));
-            return m_arguments.back();
         }
 
     private:
@@ -1209,13 +1268,8 @@ public:
             return res;
         }
 
-        std::string           m_name;
-        std::string           m_prefix_chars;
-        std::string           m_usage;
-        std::string           m_description;
-        std::string           m_epilog;
-        std::string           m_help;
-        std::vector<Argument> m_arguments;
+        std::string m_name;
+        std::string m_help;
     };
 
     /*!
@@ -1233,7 +1287,7 @@ public:
          *
          *  \return Subparser object
          */
-        Subparser(std::string const& prefix_chars)
+        Subparser()
             : m_title(),
               m_description(),
               m_prog(),
@@ -1241,7 +1295,6 @@ public:
               m_required(false),
               m_help(),
               m_metavar(),
-              m_prefix_chars(prefix_chars),
               m_parsers()
         { }
 
@@ -1415,7 +1468,7 @@ public:
          */
         Parser& add_parser(std::string const& name)
         {
-            m_parsers.emplace_back(Parser(name, m_prefix_chars));
+            m_parsers.emplace_back(Parser(name));
             return m_parsers.back();
         }
 
@@ -1460,7 +1513,6 @@ public:
         bool        m_required;
         std::string m_help;
         std::string m_metavar;
-        std::string m_prefix_chars;
         std::vector<Parser> m_parsers;
     };
 
@@ -1769,19 +1821,15 @@ public:
      *  \return Argument parser object
      */
     explicit ArgumentParser(std::string const& prog = "untitled")
-        : m_prog(prog),
-          m_usage(),
-          m_description(),
-          m_epilog(),
+        : BaseParser(),
+          m_prog(prog),
           m_parents(),
-          m_prefix_chars("-"),
           m_fromfile_prefix_chars(),
           m_argument_default(),
           m_add_help(true),
           m_allow_abbrev(true),
           m_exit_on_error(true),
           m_parsed_arguments(),
-          m_arguments(),
           m_subparsers(nullptr),
           m_subparser_pos(),
           m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Optional)
@@ -1988,46 +2036,6 @@ public:
     }
 
     /*!
-     *  \brief Get argument parser 'usage' value
-     *
-     *  \return Argument parser 'usage' value
-     */
-    std::string const& usage() const
-    {
-        return m_usage;
-    }
-
-    /*!
-     *  \brief Get argument parser 'description' value
-     *
-     *  \return Argument parser 'description' value
-     */
-    std::string const& description() const
-    {
-        return m_description;
-    }
-
-    /*!
-     *  \brief Get argument parser 'epilog' value
-     *
-     *  \return Argument parser 'epilog' value
-     */
-    std::string const& epilog() const
-    {
-        return m_epilog;
-    }
-
-    /*!
-     *  \brief Get argument parser 'prefix_chars' value
-     *
-     *  \return Argument parser 'prefix_chars' value
-     */
-    std::string const& prefix_chars() const
-    {
-        return m_prefix_chars;
-    }
-
-    /*!
      *  \brief Get argument parser 'fromfile_prefix_chars' value
      *
      *  \return Argument parser 'fromfile_prefix_chars' value
@@ -2078,73 +2086,6 @@ public:
     }
 
     /*!
-     *  \brief Add argument with flag
-     *
-     *  \param flag Flag value
-     *
-     *  \return Current argument reference
-     */
-    Argument& add_argument(char const* flag)
-    {
-        return add_argument({ std::string(flag) });
-    }
-
-    /*!
-     *  \brief Add argument with flags
-     *
-     *  \param flags Flags values
-     *
-     *  \return Current argument reference
-     */
-    Argument& add_argument(std::vector<std::string> flags)
-    {
-        if (flags.empty()) {
-            throw ValueError("empty options");
-        }
-        flags.front() = detail::_trim_copy(flags.front());
-        auto flag_name = flags.front();
-        if (flag_name.empty()) {
-            throw IndexError("string index out of range");
-        }
-
-        auto prefixes = 0ul;
-        auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg)
-        {
-            auto name = detail::_flag_name(arg);
-            auto count_prefixes = arg.size() - name.size();
-            if (prefixes < count_prefixes) {
-                prefixes = count_prefixes;
-                flag_name = name;
-            }
-        };
-        bool is_optional = detail::_is_optional_argument(flag_name, prefix_chars());
-        if (is_optional) {
-            _update_flag_name(flag_name);
-        } else if (flags.size() > 1) {
-            // no positional multiflag
-            throw ValueError("invalid option string " + flags.front()
-                             + ": must starts with a character '" + m_prefix_chars + "'");
-        }
-        for (std::size_t i = 1; i < flags.size(); ++i) {
-            // check arguments
-            auto const& flag = flags.at(i);
-            if (flag.empty()) {
-                throw IndexError("string index out of range");
-            }
-            if (!detail::_is_optional_argument(flag, prefix_chars())) {
-                // no positional and optional args
-                throw ValueError("invalid option string " + flag
-                                 + ": must starts with a character '" + m_prefix_chars + "'");
-            }
-            _update_flag_name(flag);
-        }
-        m_arguments.emplace_back(Argument(flags, flag_name,
-                                          is_optional ? Argument::Optional
-                                                      : Argument::Positional));
-        return m_arguments.back();
-    }
-
-    /*!
      *  \brief Add subparsers
      *
      *  \return Current subparser reference
@@ -2165,7 +2106,7 @@ public:
                 ++m_subparser_pos;
             }
         }
-        m_subparsers = new Subparser(m_prefix_chars);
+        m_subparsers = new Subparser();
         return *m_subparsers;
     }
 
@@ -3482,11 +3423,7 @@ private:
     }
 
     std::string m_prog;
-    std::string m_usage;
-    std::string m_description;
-    std::string m_epilog;
     std::vector<ArgumentParser> m_parents;
-    std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
     std::string m_argument_default;
     bool m_add_help;
@@ -3494,7 +3431,6 @@ private:
     bool m_exit_on_error;
 
     std::vector<std::string> m_parsed_arguments;
-    std::vector<Argument> m_arguments;
     Subparser*  m_subparsers;
     std::size_t m_subparser_pos;
     Argument    m_help_argument;
