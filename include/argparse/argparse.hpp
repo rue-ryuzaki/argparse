@@ -452,7 +452,7 @@ public:
                            | Action::append_const | Action::extend))) {
                 m_handle = nullptr;
             }
-            if (!(value & (Action::store_true | Action::store_false))) {
+            if (!(value & (Action::store_true | Action::store_false | Action::count))) {
                 m_callback = nullptr;
             }
             if (m_action == Action::version) {
@@ -751,7 +751,7 @@ public:
         }
 
         /*!
-         *  \brief Set argument 'callback' for arguments with 'store_true' or 'store_false' action
+         *  \brief Set argument 'callback' for arguments with 'store_true/_false' or 'count' action
          *
          *  \param func Callback function
          *
@@ -759,7 +759,7 @@ public:
          */
         Argument& callback(std::function<void()> func)
         {
-            if (m_action & (Action::store_true | Action::store_false)) {
+            if (m_action & (Action::store_true | Action::store_false | Action::count)) {
                 m_callback = func;
             } else {
                 throw TypeError("got an unexpected keyword argument 'callback'");
@@ -2380,6 +2380,7 @@ private:
             for (auto const& flag : _get_argument_flags(arg)) {
                 result.at(flag).second.emplace_back(std::string());
             }
+            arg.callback();
         };
         auto _is_positional_arg_stored = [&] (Argument const& arg) -> bool
         {
