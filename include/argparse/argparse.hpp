@@ -984,6 +984,29 @@ private:
         return type() == Optional ? detail::_to_upper(res) : res;
     }
 
+    bool operator ==(Argument const& rhs) const
+    {
+        return m_flags == rhs.m_flags
+                && m_name == rhs.m_name
+                && m_type == rhs.m_type
+                && m_action == rhs.m_action
+                && m_const == rhs.m_const
+                && m_dest == rhs.m_dest;
+    }
+
+    bool operator ==(std::string const& rhs) const
+    {
+        if (!dest().empty()) {
+            return dest() == rhs;
+        }
+        for (auto const& flag : flags()) {
+            if (flag == rhs) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     std::vector<std::string> m_flags;
     std::string m_name;
     Type        m_type;
@@ -1143,7 +1166,124 @@ protected:
  */
 class ArgumentParser : public BaseParser
 {
-    typedef std::pair<Action, std::vector<std::string> > ArgumentValue;
+    typedef std::vector<std::string> ArgumentValue;
+    typedef std::pair<Argument, ArgumentValue> ArgumentData;
+
+    class Storage
+    {
+    public:
+        Storage()
+            : m_data()
+        { }
+
+        void create(Argument const& key)
+        {
+            auto flag = conflict_arg(key);
+            if (flag.empty()) {
+                m_data.push_back({ key, std::vector<std::string>() });
+            } else {
+                throw ArgumentError("argument " + flag + ": conflicting option string: " + flag);
+            }
+        }
+
+        bool exists(std::string const& key) const
+        {
+            return std::find_if(std::begin(m_data), std::end(m_data),
+                                [key] (ArgumentData const& pair) -> bool
+            { return pair.first == key; }) != std::end(m_data);
+        }
+
+        bool exists(Argument const& key) const
+        {
+            return std::find_if(std::begin(m_data), std::end(m_data),
+                                [key] (ArgumentData const& pair) -> bool
+            { return pair.first == key; }) != std::end(m_data);
+        }
+
+        ArgumentData& at(std::string const& key)
+        {
+            auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                   [key] (ArgumentData const& pair) -> bool
+            { return pair.first == key; });
+            if (it == std::end(m_data)) {
+                throw std::logic_error("key not found");
+            }
+            return *it;
+        }
+
+        ArgumentData const& at(std::string const& key) const
+        {
+            auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                   [key] (ArgumentData const& pair) -> bool
+            { return pair.first == key; });
+            if (it == std::end(m_data)) {
+                throw std::logic_error("key not found");
+            }
+            return *it;
+        }
+
+        ArgumentValue& at(Argument const& key)
+        {
+            auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                   [key] (ArgumentData const& pair) -> bool
+            { return pair.first == key; });
+            if (it == std::end(m_data)) {
+                throw std::logic_error("key not found");
+            }
+            return it->second;
+        }
+
+        ArgumentValue const& at(Argument const& key) const
+        {
+            auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                   [key] (ArgumentData const& pair) -> bool
+            { return pair.first == key; });
+            if (it == std::end(m_data)) {
+                throw std::logic_error("key not found");
+            }
+            return it->second;
+        }
+
+        ArgumentValue& operator [](Argument const& key)
+        {
+            auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                   [key] (ArgumentData const& pair) -> bool
+            { return pair.first == key; });
+            if (it == std::end(m_data)) {
+                m_data.push_back({ key, std::vector<std::string>() });
+                return m_data.back().second;
+            }
+            return it->second;
+        }
+
+        inline std::vector<ArgumentData>::iterator       begin()        { return std::begin(m_data); }
+        inline std::vector<ArgumentData>::iterator       end()          { return std::end(m_data); }
+        inline std::vector<ArgumentData>::const_iterator begin()  const { return std::begin(m_data); }
+        inline std::vector<ArgumentData>::const_iterator end()    const { return std::end(m_data); }
+        inline std::vector<ArgumentData>::const_iterator cbegin() const { return m_data.cbegin(); }
+        inline std::vector<ArgumentData>::const_iterator cend()   const { return m_data.cend(); }
+
+    private:
+        std::string conflict_arg(Argument const& arg) const
+        {
+            auto _get_argument_flags = [] (Argument const& arg) -> std::vector<std::string>
+            {
+                return arg.dest().empty() ? arg.flags()
+                                          : std::vector<std::string>{ arg.dest() };
+            };
+            auto arg_flags = _get_argument_flags(arg);
+            for (auto const& pair : m_data) {
+                for (auto const& flag : _get_argument_flags(pair.first)) {
+                    if (std::find(std::begin(arg_flags), std::end(arg_flags), flag) != std::end(arg_flags)) {
+                        return flag;
+                    }
+                }
+            }
+            return "";
+        }
+
+        std::vector<ArgumentData> m_data;
+    };
 
 public:
     using BaseParser::usage;
@@ -1548,10 +1688,8 @@ public:
          *
          *  \return Object with parsed arguments
          */
-        Namespace(std::map<std::string, ArgumentValue> const& arguments,
-                  std::string const& prefix_chars)
-            : m_arguments(arguments),
-              m_prefix_chars(prefix_chars)
+        Namespace(Storage const& arguments)
+            : m_arguments(arguments)
         { }
 
         /*!
@@ -1563,13 +1701,16 @@ public:
          */
         bool exists(std::string const& key) const
         {
-            if (m_arguments.count(key) != 0) {
+            if (m_arguments.exists(key)) {
                 return true;
             }
             for (auto const& pair : m_arguments) {
-                if (detail::_is_optional_argument(pair.first, m_prefix_chars)
-                        && detail::_flag_name(pair.first) == key) {
-                    return true;
+                if (pair.first.type() == Argument::Optional && pair.first.dest().empty()) {
+                    for (auto const& flag : pair.first.flags()) {
+                        if (detail::_flag_name(flag) == key) {
+                            return true;
+                        }
+                    }
                 }
             }
             return false;
@@ -1587,7 +1728,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            if (args.first == Action::count) {
+            if (args.first.action() == Action::count) {
                 return T(args.second.size());
             }
             if (args.second.empty()) {
@@ -1615,7 +1756,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            if (args.first == Action::count) {
+            if (args.first.action() == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
             if (args.second.empty()) {
@@ -1693,7 +1834,7 @@ public:
         std::string to_args(std::string const& key) const
         {
             auto const& args = data(key);
-            switch (args.first) {
+            switch (args.first.action()) {
                 case Action::store_const :
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
@@ -1727,7 +1868,7 @@ public:
         std::string to_string(std::string const& key) const
         {
             auto const& args = data(key);
-            switch (args.first) {
+            switch (args.first.action()) {
                 case Action::store_const :
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
@@ -1761,15 +1902,18 @@ public:
         }
 
     private:
-        ArgumentValue const& data(std::string const& key) const
+        ArgumentData const& data(std::string const& key) const
         {
-            if (m_arguments.count(key) != 0) {
+            if (m_arguments.exists(key)) {
                 return m_arguments.at(key);
             }
             for (auto const& pair : m_arguments) {
-                if (detail::_is_optional_argument(pair.first, m_prefix_chars)
-                        && detail::_flag_name(pair.first) == key) {
-                    return pair.second;
+                if (pair.first.type() == Argument::Optional && pair.first.dest().empty()) {
+                    for (auto const& flag : pair.first.flags()) {
+                        if (detail::_flag_name(flag) == key) {
+                            return pair;
+                        }
+                    }
                 }
             }
             throw AttributeError("'Namespace' object has no attribute '" + key + "'");
@@ -1808,8 +1952,7 @@ public:
 
         Namespace& operator =(Namespace const&) = delete;
 
-        std::map<std::string, ArgumentValue> m_arguments;
-        std::string m_prefix_chars;
+        Storage m_arguments;
     };
 
 public:
@@ -2229,11 +2372,6 @@ private:
             }
             parsed_arguments = std::move(temp);
         }
-        auto _get_argument_flags = [] (Argument const& arg) -> std::vector<std::string>
-        {
-            return arg.dest().empty() ? arg.flags()
-                                      : std::vector<std::string>{ arg.dest() };
-        };
         auto _validate_arguments = [=] (std::vector<Argument> const& arguments)
         {
             for (auto const& arg : arguments) {
@@ -2255,17 +2393,10 @@ private:
                 }
             }
         };
-        auto _create_result = [=] (std::vector<Argument> const& arguments,
-                std::map<std::string, ArgumentValue>& result)
+        auto _create_result = [=] (std::vector<Argument> const& arguments, Storage& result)
         {
             for (auto const& arg : arguments) {
-                for (auto const& flag : _get_argument_flags(arg)) {
-                    if (result.count(flag) == 0) {
-                        result[flag] = { arg.action(), std::vector<std::string>() };
-                    } else {
-                        throw ArgumentError("argument " + flag + ": conflicting option string: " + flag);
-                    }
-                }
+                result.create(arg);
             }
         };
         auto _is_negative_numbers_presented = [=] (std::vector<Argument> const& optionals) -> bool
@@ -2297,17 +2428,15 @@ private:
 
         bool have_negative_options = _is_negative_numbers_presented(optional);
 
-        std::map<std::string, ArgumentValue> result;
+        Argument subparser_arg({}, subparser.first && !subparser.first->dest().empty() ? subparser.first->dest() : "", Argument::Positional);
+
+        Storage result;
         _create_result(positional, result);
         _create_result(optional, result);
         if (subparser.first) {
             auto const& dest = subparser.first->dest();
             if (!dest.empty()) {
-                if (result.count(dest) == 0) {
-                    result[dest] = { Action::store, std::vector<std::string>() };
-                } else {
-                    throw ArgumentError("argument " + dest + ": conflicting option string: " + dest);
-                }
+                result.create(subparser_arg);
             }
             for (auto const& parser : subparser.first->m_parsers) {
                 _create_result(parser.m_arguments, result);
@@ -2338,20 +2467,6 @@ private:
             }
             return nullptr;
         };
-        auto _get_optional_arg_by_dest = [=] (std::string const& key) -> Argument const*
-        {
-            for (auto const& arg : optional) {
-                if (!arg.dest().empty() && arg.dest() == key) {
-                    return &arg;
-                }
-                for (auto const& flag : arg.flags()) {
-                    if (flag == key) {
-                        return &arg;
-                    }
-                }
-            }
-            return nullptr;
-        };
 
         std::vector<std::string> unrecognized_args;
 
@@ -2359,9 +2474,7 @@ private:
         auto _store_value = [&] (Argument const& arg, std::string const& value)
         {
             _validate_argument_value(arg, value);
-            for (auto const& flag : _get_argument_flags(arg)) {
-                result.at(flag).second.push_back(value);
-            }
+            result.at(arg).push_back(value);
             arg.handle(value);
         };
         auto _default_arg_value = [=] (Argument const& arg) -> std::string
@@ -2371,20 +2484,14 @@ private:
         };
         auto _store_default_value = [&] (Argument const& arg)
         {
-            if (arg.action() == Action::store) {
-                for (auto const& flag : _get_argument_flags(arg)) {
-                    if (result.at(flag).second.empty()) {
-                        result.at(flag).second.emplace_back(_default_arg_value(arg));
-                    }
-                }
+            if (arg.action() == Action::store && result.at(arg).empty()) {
+                result.at(arg).emplace_back(_default_arg_value(arg));
             }
         };
         auto _store_const_value = [&] (Argument const& arg)
         {
-            for (auto const& flag : _get_argument_flags(arg)) {
-                if (result.at(flag).second.empty()) {
-                    result.at(flag).second.push_back(arg.const_value());
-                }
+            if (result.at(arg).empty()) {
+                result.at(arg).push_back(arg.const_value());
             }
             if (arg.action() & (Action::store_const)) {
                 arg.handle(arg.const_value());
@@ -2395,20 +2502,16 @@ private:
         };
         auto _append_const_value = [&] (Argument const& arg)
         {
-            for (auto const& flag : _get_argument_flags(arg)) {
-                if (!arg.default_value().empty()) {
-                    handle_error("argument " + arg.flags().front()
-                                 + ": ignored default value '" + arg.default_value() + "'");
-                }
-                result.at(flag).second.push_back(arg.const_value());
+            if (!arg.default_value().empty()) {
+                handle_error("argument " + arg.flags().front()
+                             + ": ignored default value '" + arg.default_value() + "'");
             }
+            result.at(arg).push_back(arg.const_value());
             arg.handle(arg.const_value());
         };
         auto _store_count_value = [&] (Argument const& arg)
         {
-            for (auto const& flag : _get_argument_flags(arg)) {
-                result.at(flag).second.emplace_back(std::string());
-            }
+            result.at(arg).emplace_back(std::string());
             arg.callback();
         };
         auto _is_positional_arg_stored = [&] (Argument const& arg) -> bool
@@ -2584,9 +2687,8 @@ private:
                 choices += "'" + parser.m_name + "'";
                 if (parser.m_name == name) {
                     capture_parser = &parser;
-                    auto const& dest = subparser.first->dest();
-                    if (!dest.empty()) {
-                        result.at(dest).second.push_back(name);
+                    if (!subparser.first->dest().empty()) {
+                        result.at(subparser_arg).push_back(name);
                     }
                     break;
                 }
@@ -2814,7 +2916,7 @@ private:
         {
             std::vector<std::string> temp;
             for (auto const& arg : arguments) {
-                if (!arg.empty() && result.count(arg) == 0
+                if (!arg.empty() && !result.exists(arg)
                         && detail::_is_optional_argument(arg, prefix_chars())
                         && (have_negative_options || !detail::_is_negative_number(arg))) {
                     if (m_allow_abbrev) {
@@ -2901,9 +3003,7 @@ private:
             if (temp) {
                 switch (temp->action()) {
                     case Action::store :
-                        for (auto const& flag : _get_argument_flags(*temp)) {
-                            result.at(flag).second.clear();
-                        }
+                        result.at(*temp).clear();
                     case Action::append :
                     case Action::extend :
                         if (splitted.size() == 2) {
@@ -3083,14 +3183,9 @@ private:
         }
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
-            if (arg.required()) {
-                for (auto const& flag : _get_argument_flags(arg)) {
-                    if (result.at(flag).second.empty()) {
-                        auto args = detail::_vector_string_to_string(arg.flags(), "/");
-                        required_args.emplace_back(args);
-                        break;
-                    }
-                }
+            if (arg.required() && result.at(arg).empty()) {
+                auto args = detail::_vector_string_to_string(arg.flags(), "/");
+                required_args.emplace_back(args);
             }
         }
         bool subparser_required = subparser.first && !capture_parser && subparser.first->required();
@@ -3146,18 +3241,15 @@ private:
             handle_error("unrecognized arguments: " + args);
         }
         for (auto& arg : result) {
-            if (arg.second.second.empty() && arg.second.first != Action::count) {
-                auto const* argument = _get_optional_arg_by_dest(arg.first);
-                if (!argument) {
-                    continue;
-                }
-                auto value = _default_arg_value(*argument);
+            if (arg.second.empty() && arg.first.action() != Action::count
+                    && arg.first.type() == Argument::Optional) {
+                auto value = _default_arg_value(arg.first);
                 if (!value.empty()) {
-                    arg.second.second.emplace_back(std::move(value));
+                    arg.second.emplace_back(std::move(value));
                 }
             }
         }
-        return Namespace(result, prefix_chars());
+        return Namespace(result);
     }
 
     void handle_error(std::string const& error = "unknown") const
