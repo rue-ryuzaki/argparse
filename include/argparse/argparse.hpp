@@ -1193,6 +1193,45 @@ class ArgumentParser : public BaseParser
             }
         }
 
+        void store_value(Argument const& arg, std::string const& value)
+        {
+            at(arg).push_back(value);
+            arg.handle(value);
+        }
+
+        void store_default_value(Argument const& arg, std::string const& value)
+        {
+            if (arg.action() == Action::store && at(arg).empty()) {
+                at(arg).emplace_back(value);
+            }
+        }
+
+        bool self_value_stored(Argument const& arg)
+        {
+            if (arg.action() == Action::store_const) {
+                if (at(arg).empty()) {
+                    at(arg).push_back(arg.const_value());
+                }
+                arg.handle(arg.const_value());
+                return true;
+            } else if (arg.action() & (Action::store_true | Action::store_false)) {
+                if (at(arg).empty()) {
+                    at(arg).push_back(arg.const_value());
+                }
+                arg.callback();
+                return true;
+            } else if (arg.action() == Action::append_const) {
+                at(arg).push_back(arg.const_value());
+                arg.handle(arg.const_value());
+                return true;
+            } else if (arg.action() == Action::count) {
+                at(arg).emplace_back(std::string());
+                arg.callback();
+                return true;
+            }
+            return false;
+        }
+
         bool exists(std::string const& key) const
         {
             return std::find_if(std::begin(m_data), std::end(m_data),
@@ -2471,54 +2510,19 @@ private:
         auto _store_value = [&] (Argument const& arg, std::string const& value)
         {
             _validate_argument_value(arg, value);
-            result.at(arg).push_back(value);
-            arg.handle(value);
+            result.store_value(arg, value);
         };
         auto _store_default_value = [&] (Argument const& arg)
         {
-            if (arg.action() == Action::store && result.at(arg).empty()) {
-                result.at(arg).emplace_back(default_argument_value(arg));
-            }
-        };
-        auto _store_const_value = [&result] (Argument const& arg)
-        {
-            if (result.at(arg).empty()) {
-                result.at(arg).push_back(arg.const_value());
-            }
-            if (arg.action() & (Action::store_const)) {
-                arg.handle(arg.const_value());
-            }
-            if (arg.action() & (Action::store_true | Action::store_false)) {
-                arg.callback();
-            }
-        };
-        auto _append_const_value = [&result, this] (Argument const& arg)
-        {
-            if (!arg.default_value().empty()) {
-                handle_error("argument " + arg.flags().front()
-                             + ": ignored default value '" + arg.default_value() + "'");
-            }
-            result.at(arg).push_back(arg.const_value());
-            arg.handle(arg.const_value());
-        };
-        auto _store_count_value = [&result] (Argument const& arg)
-        {
-            result.at(arg).emplace_back(std::string());
-            arg.callback();
+            result.store_default_value(arg, default_argument_value(arg));
         };
         auto _is_positional_arg_stored = [&] (Argument const& arg) -> bool
         {
-            if (arg.action() & (Action::store_const | Action::store_true | Action::store_false)) {
-                _store_const_value(arg);
-                return true;
-            } else if (arg.action() == Action::append_const) {
-                _append_const_value(arg);
-                return true;
-            } else if (arg.action() == Action::count) {
-                _store_count_value(arg);
-                return true;
+            if (arg.action() == Action::append_const && !arg.default_value().empty()) {
+                handle_error("argument " + arg.flags().front()
+                             + ": ignored default value '" + arg.default_value() + "'");
             }
-            return false;
+            return result.self_value_stored(arg);
         };
         auto _try_capture_parser = [&] (Parser const*& capture_parser,
                 std::vector<std::string>& arguments)
@@ -3080,16 +3084,14 @@ private:
                     case Action::store_const :
                     case Action::store_true :
                     case Action::store_false :
-                        if (splitted.size() == 1) {
-                            _store_const_value(*temp);
-                        } else {
-                            handle_error("argument " + arg
-                                         + ": ignored explicit argument '" + splitted.back() + "'");
-                        }
-                        break;
                     case Action::append_const :
+                    case Action::count :
                         if (splitted.size() == 1) {
-                            _append_const_value(*temp);
+                            if (temp->action() == Action::append_const && !temp->default_value().empty()) {
+                                handle_error("argument " + temp->flags().front()
+                                             + ": ignored default value '" + temp->default_value() + "'");
+                            }
+                            result.self_value_stored(*temp);
                         } else {
                             handle_error("argument " + arg
                                          + ": ignored explicit argument '" + splitted.back() + "'");
@@ -3110,14 +3112,6 @@ private:
                             }
                             std::cout << temp->version() << std::endl;
                             exit(0);
-                        } else {
-                            handle_error("argument " + arg
-                                         + ": ignored explicit argument '" + splitted.back() + "'");
-                        }
-                        break;
-                    case Action::count :
-                        if (splitted.size() == 1) {
-                            _store_count_value(*temp);
                         } else {
                             handle_error("argument " + arg
                                          + ": ignored explicit argument '" + splitted.back() + "'");
