@@ -1186,6 +1186,13 @@ class ArgumentParser : public BaseParser
             }
         }
 
+        void create(std::vector<Argument> const& arguments)
+        {
+            for (auto const& arg : arguments) {
+                create(arg);
+            }
+        }
+
         bool exists(std::string const& key) const
         {
             return std::find_if(std::begin(m_data), std::end(m_data),
@@ -1206,7 +1213,7 @@ class ArgumentParser : public BaseParser
                                    [key] (ArgumentData const& pair) -> bool
             { return pair.first == key; });
             if (it == std::end(m_data)) {
-                throw std::logic_error("key not found");
+                throw std::logic_error("key '" + key + "' not found");
             }
             return *it;
         }
@@ -1217,7 +1224,7 @@ class ArgumentParser : public BaseParser
                                    [key] (ArgumentData const& pair) -> bool
             { return pair.first == key; });
             if (it == std::end(m_data)) {
-                throw std::logic_error("key not found");
+                throw std::logic_error("key '" + key + "' not found");
             }
             return *it;
         }
@@ -1228,7 +1235,7 @@ class ArgumentParser : public BaseParser
                                    [key] (ArgumentData const& pair) -> bool
             { return pair.first == key; });
             if (it == std::end(m_data)) {
-                throw std::logic_error("key not found");
+                throw std::logic_error("argument '" + key.m_name + "' not found");
             }
             return it->second;
         }
@@ -1239,7 +1246,7 @@ class ArgumentParser : public BaseParser
                                    [key] (ArgumentData const& pair) -> bool
             { return pair.first == key; });
             if (it == std::end(m_data)) {
-                throw std::logic_error("key not found");
+                throw std::logic_error("argument '" + key.m_name + "' not found");
             }
             return it->second;
         }
@@ -1274,7 +1281,7 @@ class ArgumentParser : public BaseParser
             auto arg_flags = _get_argument_flags(arg);
             for (auto const& pair : m_data) {
                 for (auto const& flag : _get_argument_flags(pair.first)) {
-                    if (std::find(std::begin(arg_flags), std::end(arg_flags), flag) != std::end(arg_flags)) {
+                    if (detail::_is_value_exists(flag, arg_flags)) {
                         return flag;
                     }
                 }
@@ -2262,30 +2269,25 @@ public:
      */
     std::string get_default(std::string const& dest) const
     {
-        auto _default_arg_value = [=] (Argument const& arg) -> std::string
-        {
-            return !arg.default_value().empty() ? arg.default_value()
-                                                : m_argument_default;
-        };
         auto const positional = positional_arguments();
         auto const optional = optional_arguments();
         for (auto const& arg : positional) {
             for (auto const& flag : arg.flags()) {
                 if (flag == dest) {
-                    return _default_arg_value(arg);
+                    return default_argument_value(arg);
                 }
             }
         }
         for (auto const& arg : optional) {
             if (!arg.dest().empty()) {
                 if (arg.dest() == dest) {
-                    return _default_arg_value(arg);
+                    return default_argument_value(arg);
                 }
             } else {
                 for (auto const& flag : arg.flags()) {
                     auto name = detail::_flag_name(flag);
                     if (flag == dest || name == dest) {
-                        return _default_arg_value(arg);
+                        return default_argument_value(arg);
                     }
                 }
             }
@@ -2372,7 +2374,7 @@ private:
             }
             parsed_arguments = std::move(temp);
         }
-        auto _validate_arguments = [=] (std::vector<Argument> const& arguments)
+        auto _validate_arguments = [] (std::vector<Argument> const& arguments)
         {
             for (auto const& arg : arguments) {
                 if ((arg.action() & (Action::store_const | Action::append_const))
@@ -2381,7 +2383,7 @@ private:
                 }
             }
         };
-        auto _validate_argument_value = [=] (Argument const& arg, std::string const& value)
+        auto _validate_argument_value = [this] (Argument const& arg, std::string const& value)
         {
             auto const& choices = arg.choices();
             if (!choices.empty()) {
@@ -2393,13 +2395,7 @@ private:
                 }
             }
         };
-        auto _create_result = [=] (std::vector<Argument> const& arguments, Storage& result)
-        {
-            for (auto const& arg : arguments) {
-                result.create(arg);
-            }
-        };
-        auto _is_negative_numbers_presented = [=] (std::vector<Argument> const& optionals) -> bool
+        auto _is_negative_numbers_presented = [this] (std::vector<Argument> const& optionals) -> bool
         {
             if (!detail::_is_string_contains_char(m_prefix_chars, '-')) {
                 return false;
@@ -2428,22 +2424,23 @@ private:
 
         bool have_negative_options = _is_negative_numbers_presented(optional);
 
-        Argument subparser_arg({}, subparser.first && !subparser.first->dest().empty() ? subparser.first->dest() : "", Argument::Positional);
+        Argument subparser_arg({}, subparser.first && !subparser.first->dest().empty() ?
+                                   subparser.first->dest() : "", Argument::Positional);
 
         Storage result;
-        _create_result(positional, result);
-        _create_result(optional, result);
+        result.create(positional);
+        result.create(optional);
         if (subparser.first) {
             auto const& dest = subparser.first->dest();
             if (!dest.empty()) {
                 result.create(subparser_arg);
             }
             for (auto const& parser : subparser.first->m_parsers) {
-                _create_result(parser.m_arguments, result);
+                result.create(parser.m_arguments);
             }
         }
 
-        auto _get_subparser_optional_arg_by_flag = [=] (Parser const& parser, std::string const& key) -> Argument const*
+        auto _get_subparser_optional_arg_by_flag = [] (Parser const& parser, std::string const& key) -> Argument const*
         {
             for (auto const& arg : parser.m_arguments) {
                 if (arg.type() == Argument::Optional) {
@@ -2456,7 +2453,7 @@ private:
             }
             return nullptr;
         };
-        auto _get_optional_arg_by_flag = [=] (std::string const& key) -> Argument const*
+        auto _get_optional_arg_by_flag = [optional] (std::string const& key) -> Argument const*
         {
             for (auto const& arg : optional) {
                 for (auto const& flag : arg.flags()) {
@@ -2477,18 +2474,13 @@ private:
             result.at(arg).push_back(value);
             arg.handle(value);
         };
-        auto _default_arg_value = [=] (Argument const& arg) -> std::string
-        {
-            return !arg.default_value().empty() ? arg.default_value()
-                                                : m_argument_default;
-        };
         auto _store_default_value = [&] (Argument const& arg)
         {
             if (arg.action() == Action::store && result.at(arg).empty()) {
-                result.at(arg).emplace_back(_default_arg_value(arg));
+                result.at(arg).emplace_back(default_argument_value(arg));
             }
         };
-        auto _store_const_value = [&] (Argument const& arg)
+        auto _store_const_value = [&result] (Argument const& arg)
         {
             if (result.at(arg).empty()) {
                 result.at(arg).push_back(arg.const_value());
@@ -2500,7 +2492,7 @@ private:
                 arg.callback();
             }
         };
-        auto _append_const_value = [&] (Argument const& arg)
+        auto _append_const_value = [&result, this] (Argument const& arg)
         {
             if (!arg.default_value().empty()) {
                 handle_error("argument " + arg.flags().front()
@@ -2509,7 +2501,7 @@ private:
             result.at(arg).push_back(arg.const_value());
             arg.handle(arg.const_value());
         };
-        auto _store_count_value = [&] (Argument const& arg)
+        auto _store_count_value = [&result] (Argument const& arg)
         {
             result.at(arg).emplace_back(std::string());
             arg.callback();
@@ -3243,7 +3235,7 @@ private:
         for (auto& arg : result) {
             if (arg.second.empty() && arg.first.action() != Action::count
                     && arg.first.type() == Argument::Optional) {
-                auto value = _default_arg_value(arg.first);
+                auto value = default_argument_value(arg.first);
                 if (!value.empty()) {
                     arg.second.emplace_back(std::move(value));
                 }
@@ -3256,6 +3248,12 @@ private:
     {
         print_usage(std::cerr);
         throw std::logic_error(m_prog + ": error: " + error);
+    }
+
+    std::string default_argument_value(Argument const& arg) const
+    {
+        return !arg.default_value().empty() ? arg.default_value()
+                                            : m_argument_default;
     }
 
     std::vector<std::string> convert_arg_line_to_args(std::string const& file) const
