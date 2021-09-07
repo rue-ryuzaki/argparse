@@ -2959,32 +2959,38 @@ private:
         _check_abbreviations(parsed_arguments);
 
         Parser const* capture_parser = nullptr;
+        auto _print_help_and_exit = [this, subparser, &capture_parser] ()
+        {
+            if (capture_parser) {
+                std::vector<Argument> pos;
+                std::vector<Argument> opt;
+                if (m_add_help) {
+                    opt.push_back(m_help_argument);
+                }
+                for (auto const& arg : capture_parser->m_arguments) {
+                    if (arg.type() == Argument::Optional) {
+                        opt.push_back(arg);
+                    } else {
+                        pos.push_back(arg);
+                    }
+                }
+                auto program = subparser.first->prog();
+                if (program.empty()) {
+                    program = prog();
+                }
+                program += " " + capture_parser->m_name;
+                print_custom_help(pos, opt, { nullptr, 0 }, program, capture_parser->usage(),
+                                  capture_parser->description(), capture_parser->epilog());
+            } else {
+                print_help();
+            }
+            exit(0);
+        };
         for (std::size_t i = 0; i < parsed_arguments.size(); ++i) {
             auto arg = parsed_arguments.at(i);
             if (m_add_help
                     && detail::_is_value_exists(arg, m_help_argument.flags())) {
-                if (capture_parser) {
-                    std::vector<Argument> pos;
-                    std::vector<Argument> opt;
-                    opt.push_back(m_help_argument);
-                    for (auto const& arg : capture_parser->m_arguments) {
-                        if (arg.type() == Argument::Optional) {
-                            opt.push_back(arg);
-                        } else {
-                            pos.push_back(arg);
-                        }
-                    }
-                    auto program = subparser.first->prog();
-                    if (program.empty()) {
-                        program = prog();
-                    }
-                    program += " " + capture_parser->m_name;
-                    print_custom_help(pos, opt, { nullptr, 0 }, program, capture_parser->usage(),
-                                      capture_parser->description(), capture_parser->epilog());
-                } else {
-                    print_help();
-                }
-                exit(0);
+                _print_help_and_exit();
             }
             auto const splitted = detail::_split_equal(arg);
             if (splitted.size() == 2) {
@@ -3091,30 +3097,7 @@ private:
                         break;
                     case Action::help :
                         if (splitted.size() == 1) {
-                            if (capture_parser) {
-                                std::vector<Argument> pos;
-                                std::vector<Argument> opt;
-                                if (m_add_help) {
-                                    opt.push_back(m_help_argument);
-                                }
-                                for (auto const& arg : capture_parser->m_arguments) {
-                                    if (arg.type() == Argument::Optional) {
-                                        opt.push_back(arg);
-                                    } else {
-                                        pos.push_back(arg);
-                                    }
-                                }
-                                auto program = subparser.first->prog();
-                                if (program.empty()) {
-                                    program = prog();
-                                }
-                                program += " " + capture_parser->m_name;
-                                print_custom_help(pos, opt, { nullptr, 0 }, program, capture_parser->usage(),
-                                                  capture_parser->description(), capture_parser->epilog());
-                            } else {
-                                print_help();
-                            }
-                            exit(0);
+                            _print_help_and_exit();
                         } else {
                             handle_error("argument " + arg
                                          + ": ignored explicit argument '" + splitted.back() + "'");
