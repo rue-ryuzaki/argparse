@@ -2018,6 +2018,7 @@ public:
           m_add_help(true),
           m_allow_abbrev(true),
           m_exit_on_error(true),
+          m_default_values(),
           m_parsed_arguments(),
           m_subparsers(nullptr),
           m_subparser_pos(),
@@ -2332,6 +2333,72 @@ public:
             }
         }
         return std::string();
+    }
+
+
+    /*!
+     *  \brief Set default values for certain arguments
+     *
+     *  \param values Vector of pairs: argument flag - default value
+     */
+    void set_defaults(std::vector<std::pair<std::string, std::string> > const& values)
+    {
+        auto _set_value = [] (Argument& arg, std::string const& dest, std::string const& value) -> bool
+        {
+            if (arg.type() == Argument::Positional) {
+                for (auto const& flag : arg.flags()) {
+                    if (flag == dest) {
+                        arg.default_value(value);
+                        return true;
+                    }
+                }
+            } else if (!arg.dest().empty()) {
+                if (arg.dest() == dest) {
+                    arg.default_value(value);
+                    return true;
+                }
+            } else {
+                for (auto const& flag : arg.flags()) {
+                    auto name = detail::_flag_name(flag);
+                    if (flag == dest || name == dest) {
+                        arg.default_value(value);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+        for (auto const& pair : values) {
+            auto dest = detail::_trim_copy(pair.first);
+            if (dest.empty()) {
+                continue;
+            }
+            auto value = detail::_trim_copy(pair.second);
+            bool found = false;
+            for (auto& parent : m_parents) {
+                for (auto& arg : parent.m_arguments) {
+                    if (_set_value(arg, dest, value)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    break;
+                }
+            }
+            if (found) {
+                continue;
+            }
+            for (auto& arg : m_arguments) {
+                if (_set_value(arg, dest, value)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                m_default_values.push_back({ dest, value });
+            }
+        }
     }
 
     /*!
@@ -3218,6 +3285,16 @@ private:
                 }
             }
         }
+        for (auto const& pair : m_default_values) {
+            if (!result.exists(pair.first)) {
+                bool is_optional = detail::_is_optional_argument(pair.first, m_prefix_chars);
+                auto flag_name = is_optional ? detail::_flag_name(pair.first) : pair.first;
+                auto arg = Argument({ pair.first }, flag_name,
+                                    is_optional ? Argument::Optional : Argument::Positional);
+                arg.default_value(pair.second);
+                result[arg].push_back(pair.second);
+            }
+        }
         return Namespace(result);
     }
 
@@ -3497,6 +3574,7 @@ private:
     bool m_allow_abbrev;
     bool m_exit_on_error;
 
+    std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
     Subparser*  m_subparsers;
     std::size_t m_subparser_pos;
