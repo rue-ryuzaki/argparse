@@ -192,6 +192,13 @@ public:
         return *this;
     }
 
+    Value& operator =(T const& rhs)
+    {
+        this->m_status = true;
+        this->m_value  = rhs;
+        return *this;
+    }
+
     void reset()
     {
         m_status = false;
@@ -857,7 +864,7 @@ public:
      */
     std::string const& default_value() const
     {
-        return m_default;
+        return m_default();
     }
 
     /*!
@@ -1064,7 +1071,7 @@ private:
     std::string m_nargs;
     uint32_t    m_num_args;
     std::string m_const;
-    std::string m_default;
+    detail::Value<std::string> m_default;
     detail::Value<std::vector<std::string> > m_choices;
     bool        m_required;
     std::string m_help;
@@ -2292,7 +2299,7 @@ public:
      */
     std::string const& argument_default() const
     {
-        return m_argument_default;
+        return m_argument_default();
     }
 
     /*!
@@ -2364,20 +2371,20 @@ public:
         for (auto const& arg : positional) {
             for (auto const& flag : arg.flags()) {
                 if (flag == dest) {
-                    return default_argument_value(arg);
+                    return default_argument_value(arg)();
                 }
             }
         }
         for (auto const& arg : optional) {
             if (!arg.dest().empty()) {
                 if (arg.dest() == dest) {
-                    return default_argument_value(arg);
+                    return default_argument_value(arg)();
                 }
             } else {
                 for (auto const& flag : arg.flags()) {
                     auto name = detail::_flag_name(flag);
                     if (flag == dest || name == dest) {
-                        return default_argument_value(arg);
+                        return default_argument_value(arg)();
                     }
                 }
             }
@@ -2632,7 +2639,10 @@ private:
         };
         auto _store_default_value = [&] (Argument const& arg)
         {
-            result.store_default_value(arg, default_argument_value(arg));
+            auto value = default_argument_value(arg);
+            if (value.status()) {
+                result.store_default_value(arg, value());
+            }
         };
         auto _is_positional_arg_stored = [&] (Argument const& arg) -> bool
         {
@@ -3332,8 +3342,8 @@ private:
             if (arg.second.empty() && arg.first.action() != Action::count
                     && arg.first.type() == Argument::Optional) {
                 auto value = default_argument_value(arg.first);
-                if (!value.empty()) {
-                    arg.second.emplace_back(std::move(value));
+                if (value.status()) {
+                    arg.second.emplace_back(value());
                 }
             }
         }
@@ -3356,10 +3366,9 @@ private:
         throw std::logic_error(m_prog + ": error: " + error);
     }
 
-    std::string default_argument_value(Argument const& arg) const
+    detail::Value<std::string> default_argument_value(Argument const& arg) const
     {
-        return !arg.default_value().empty() ? arg.default_value()
-                                            : m_argument_default;
+        return arg.m_default.status() ? arg.m_default : m_argument_default;
     }
 
     std::vector<std::string> convert_arg_line_to_args(std::string const& file) const
@@ -3621,7 +3630,7 @@ private:
     std::string m_prog;
     std::vector<ArgumentParser> m_parents;
     std::string m_fromfile_prefix_chars;
-    std::string m_argument_default;
+    detail::Value<std::string> m_argument_default;
     bool m_add_help;
     bool m_allow_abbrev;
     bool m_exit_on_error;
