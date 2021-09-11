@@ -169,6 +169,55 @@ static inline std::string _vector_string_to_string(std::vector<std::string> cons
     }
     return res;
 }
+
+template <class T>
+class Value
+{
+public:
+    Value()
+        : m_status(false),
+          m_value()
+    { }
+    Value(Value const& orig)
+        : m_status(orig.m_status),
+          m_value(orig.m_value)
+    { }
+
+    Value& operator =(Value const& rhs)
+    {
+        if (this != &rhs) {
+            this->m_status = rhs.m_status;
+            this->m_value  = rhs.m_value;
+        }
+        return *this;
+    }
+
+    void reset()
+    {
+        m_status = false;
+        m_value = T();
+    }
+
+    bool        status() const { return m_status; }
+    T const&    value()  const { return m_value; }
+    T const& operator()()const { return m_value; }
+
+    void set(T const& value)
+    {
+        m_status = true;
+        m_value = value;
+    }
+
+    void set(T&& value)
+    {
+        m_status = true;
+        m_value = value;
+    }
+
+private:
+    bool    m_status;
+    T       m_value;
+};
 } // details
 
 /*!
