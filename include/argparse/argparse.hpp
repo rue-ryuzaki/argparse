@@ -199,6 +199,11 @@ public:
         return *this;
     }
 
+    bool operator ==(Value const& rhs) const
+    {
+        return this->m_status == rhs.m_status && this->m_value == rhs.m_value;
+    }
+
     void reset()
     {
         m_status = false;
@@ -854,7 +859,7 @@ public:
      */
     std::string const& const_value() const
     {
-        return m_const;
+        return m_const();
     }
 
     /*!
@@ -1070,7 +1075,7 @@ private:
     Action      m_action;
     std::string m_nargs;
     uint32_t    m_num_args;
-    std::string m_const;
+    detail::Value<std::string> m_const;
     detail::Value<std::string> m_default;
     detail::Value<std::vector<std::string> > m_choices;
     bool        m_required;
@@ -2541,7 +2546,7 @@ private:
         {
             for (auto const& arg : arguments) {
                 if ((arg.action() & (Action::store_const | Action::append_const))
-                        && arg.const_value().empty()) {
+                        && !arg.m_const.status()) {
                     throw TypeError("missing 1 required positional argument: 'const'");
                 }
             }
