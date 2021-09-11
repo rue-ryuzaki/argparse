@@ -924,7 +924,7 @@ public:
      */
     std::string const& version() const
     {
-        return m_version;
+        return m_version();
     }
 
 private:
@@ -1078,7 +1078,7 @@ private:
     Enum        m_help_type;
     std::string m_metavar;
     std::string m_dest;
-    std::string m_version;
+    detail::Value<std::string> m_version;
     std::function<void(std::string)> m_handle;
     std::function<void()> m_callback;
 };
@@ -3236,7 +3236,7 @@ private:
                         break;
                     case Action::version :
                         if (splitted.size() == 1) {
-                            if (temp->version().empty()) {
+                            if (!temp->m_version.status()) {
                                 throw AttributeError("'ArgumentParser' object has no attribute 'version'");
                             }
                             std::cout << temp->version() << std::endl;
