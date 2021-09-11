@@ -2953,18 +2953,22 @@ private:
                             flags.push_back(arg);
                         } else {
                             auto str = name.substr(i);
+                            if (!str.empty()) {
+                                if (!detail::_starts_with(str, "=")) {
+                                    flags.back() += "=";
+                                }
+                                flags.back() += str;
+                            }
+                        }
+                        break;
+                    } else if (argument->action() & (Action::store | Action::append | Action::extend)) {
+                        auto str = name.substr(i + 1);
+                        if (!str.empty()) {
                             if (!detail::_starts_with(str, "=")) {
                                 flags.back() += "=";
                             }
                             flags.back() += str;
                         }
-                        break;
-                    } else if (argument->action() & (Action::store | Action::append | Action::extend)) {
-                        auto str = name.substr(i + 1);
-                        if (!detail::_starts_with(str, "=")) {
-                            flags.back() += "=";
-                        }
-                        flags.back() += str;
                         break;
                     }
                 }
@@ -3079,9 +3083,6 @@ private:
                             auto const& nargs = temp->nargs();
                             if (!nargs.empty() && temp->num_args() > 1) {
                                 handle_error("argument " + arg + ": expected " + nargs + " arguments");
-                            }
-                            if (splitted.back().empty()) {
-                                handle_error("argument " + arg + ": expected one argument");
                             }
                             _store_value(*temp, splitted.back());
                         } else {
