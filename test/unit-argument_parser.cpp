@@ -296,24 +296,43 @@ TEST_CASE("6. argument choices", "[argument]")
     std::string local_default = "local";
 
     auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-    parser.add_argument({ "--foo" }).choices({ "foo1", "foo2", "foo3" });
-    parser.add_argument({ "--bar" }).choices({ "bar1", "bar2", "bar3" }).default_value(local_default);
-    parser.add_argument({ "foobar" }).choices({ "foobar1", "foobar2", "foobar3" });
 
-    REQUIRE_THROWS(parser.parse_args({ "foo" }));
-    REQUIRE_THROWS(parser.parse_args({ "foobar" }));
-    REQUIRE_THROWS(parser.parse_args({ "foobar1", "--foo", "bar1" }));
-    REQUIRE_THROWS(parser.parse_args({ "foobar2", "--foo", "bar1", "--bar=bar1" }));
+    SECTION("6.1. simple usage") {
+        parser.add_argument({ "--foo" }).choices({ "foo1", "foo2", "foo3" });
+        parser.add_argument({ "--bar" }).choices({ "bar1", "bar2", "bar3" }).default_value(local_default);
+        parser.add_argument({ "foobar" }).choices({ "foobar1", "foobar2", "foobar3" });
 
-    auto args1 = parser.parse_args({ "foobar1" });
-    REQUIRE(args1.get<std::string>("--foo") == global_default);
-    REQUIRE(args1.get<std::string>("--bar") == local_default);
-    REQUIRE(args1.get<std::string>("foobar") == "foobar1");
+        REQUIRE_THROWS(parser.parse_args({ "foo" }));
+        REQUIRE_THROWS(parser.parse_args({ "foobar" }));
+        REQUIRE_THROWS(parser.parse_args({ "foobar1", "--foo", "bar1" }));
+        REQUIRE_THROWS(parser.parse_args({ "foobar2", "--foo", "bar1", "--bar=bar1" }));
 
-    auto args2 = parser.parse_args({ "--foo=foo3", "foobar3" });
-    REQUIRE(args2.get<std::string>("--foo") == "foo3");
-    REQUIRE(args2.get<std::string>("--bar") == local_default);
-    REQUIRE(args2.get<std::string>("foobar") == "foobar3");
+        auto args1 = parser.parse_args({ "foobar1" });
+        REQUIRE(args1.get<std::string>("--foo") == global_default);
+        REQUIRE(args1.get<std::string>("--bar") == local_default);
+        REQUIRE(args1.get<std::string>("foobar") == "foobar1");
+
+        auto args2 = parser.parse_args({ "--foo=foo3", "foobar3" });
+        REQUIRE(args2.get<std::string>("--foo") == "foo3");
+        REQUIRE(args2.get<std::string>("--bar") == local_default);
+        REQUIRE(args2.get<std::string>("foobar") == "foobar3");
+    }
+
+    SECTION("6.2. choices as string") {
+        parser.add_argument({ "--foo" }).choices("FO");
+        parser.add_argument({ "--bar" }).choices("BAR").default_value(local_default);
+
+        REQUIRE_THROWS(parser.parse_args({ "--foo", "bar" }));
+        REQUIRE_THROWS(parser.parse_args({  "--foo", "bar", "--bar=bar" }));
+
+        auto args1 = parser.parse_args({ });
+        REQUIRE(args1.get<std::string>("--foo") == global_default);
+        REQUIRE(args1.get<std::string>("--bar") == local_default);
+
+        auto args2 = parser.parse_args({ "--foo=F", "--bar", "R" });
+        REQUIRE(args2.get<std::string>("--foo") == "F");
+        REQUIRE(args2.get<std::string>("--bar") == "R");
+    }
 }
 
 TEST_CASE("7. argument dest", "[argument]")
