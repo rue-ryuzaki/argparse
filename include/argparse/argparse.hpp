@@ -506,14 +506,14 @@ public:
                 m_const = "1";
                 m_nargs = "0";
                 m_num_args = 0;
-                m_choices.clear();
+                m_choices.reset();
                 break;
             case Action::store_false :
                 m_default = "1";
                 m_const = "0";
                 m_nargs = "0";
                 m_num_args = 0;
-                m_choices.clear();
+                m_choices.reset();
                 break;
             case Action::version :
                 m_help = "show program's version number and exit";
@@ -527,7 +527,7 @@ public:
             case Action::count :
                 m_nargs = "0";
                 m_num_args = 0;
-                m_choices.clear();
+                m_choices.reset();
                 break;
             case Action::store :
             case Action::append :
@@ -672,13 +672,14 @@ public:
         if (!(m_action & (Action::store | Action::append | Action::extend))) {
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
-        m_choices.clear();
+        std::vector<std::string> values;
         for (auto const& str : value) {
             auto param = detail::_trim_copy(str);
             if (!param.empty()) {
-                m_choices.emplace_back(param);
+                values.emplace_back(std::move(param));
             }
         }
+        m_choices.set(std::move(values));
         return *this;
     }
 
@@ -866,7 +867,7 @@ public:
      */
     std::vector<std::string> const& choices() const
     {
-        return m_choices;
+        return m_choices();
     }
 
     /*!
@@ -1026,8 +1027,8 @@ private:
         if (!m_metavar.empty()) {
             return m_metavar;
         }
-        if (!m_choices.empty()) {
-            return "{" + detail::_vector_string_to_string(m_choices, ",") + "}";
+        if (m_choices.status()) {
+            return "{" + detail::_vector_string_to_string(m_choices(), ",") + "}";
         }
         auto res = m_dest.empty() ? m_name : m_dest;
         return type() == Optional ? detail::_to_upper(res) : res;
@@ -1064,7 +1065,7 @@ private:
     uint32_t    m_num_args;
     std::string m_const;
     std::string m_default;
-    std::vector<std::string> m_choices;
+    detail::Value<std::vector<std::string> > m_choices;
     bool        m_required;
     std::string m_help;
     Enum        m_help_type;
@@ -2540,11 +2541,12 @@ private:
         };
         auto _validate_argument_value = [this] (Argument const& arg, std::string const& value)
         {
-            auto const& choices = arg.choices();
-            if (!choices.empty()) {
+            auto const& choices = arg.m_choices;
+            if (choices.status()) {
                 auto str = detail::_remove_quotes(value);
-                if (!detail::_is_value_exists(str, choices)) {
-                    auto values = detail::_vector_string_to_string(choices, ", ", "'");
+                if (!(str.empty() && choices().empty())
+                        && !detail::_is_value_exists(str, choices())) {
+                    auto values = detail::_vector_string_to_string(choices(), ", ", "'");
                     handle_error("argument " + arg.flags().front()
                                  + ": invalid choice: '" + str + "' (choose from " + values + ")");
                 }
