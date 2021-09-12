@@ -345,7 +345,7 @@ TEST_CASE("6. argument choices", "[argument]")
         REQUIRE(args1.get<std::string>("--foo") == global_default);
         REQUIRE(args1.get<std::string>("--bar") == local_default);
 
-       REQUIRE_THROWS(parser.parse_args({ "--foo=F", "--bar", "R" }));
+        REQUIRE_THROWS(parser.parse_args({ "--foo=F", "--bar", "R" }));
 
         auto args2 = parser.parse_args({ "--bar", "R" });
         REQUIRE(args2.get<std::string>("--foo") == global_default);

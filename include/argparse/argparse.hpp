@@ -1045,7 +1045,7 @@ private:
             return metavar();
         }
         if (m_choices.status()) {
-            return "{" + detail::_vector_string_to_string(m_choices(), ",") + "}";
+            return "{" + detail::_vector_string_to_string(choices(), ",") + "}";
         }
         auto res = m_dest.empty() ? m_name : m_dest;
         return type() == Optional ? detail::_to_upper(res) : res;
@@ -1269,7 +1269,7 @@ class ArgumentParser : public BaseParser
         void store_default_value(Argument const& arg, std::string const& value)
         {
             if (arg.action() == Action::store && at(arg).empty()) {
-                at(arg).emplace_back(value);
+                at(arg).push_back(value);
             }
         }
 
@@ -2090,7 +2090,7 @@ public:
           m_subparsers(nullptr),
           m_subparser_pos(),
           m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Optional)
-                          .help("show this help message and exit").action(Action::store_true))
+                          .help("show this help message and exit").action(Action::help))
     { }
 
     /*!
@@ -2410,7 +2410,7 @@ public:
      */
     void set_defaults(std::vector<std::pair<std::string, std::string> > const& values)
     {
-        auto _set_value = [] (Argument& arg, std::string const& dest, std::string const& value) -> bool
+        auto _set_value = [] (Argument& arg, std::string const& dest, std::string const& value)
         {
             if (arg.type() == Argument::Positional) {
                 for (auto const& flag : arg.flags()) {
@@ -2569,7 +2569,7 @@ private:
                 }
             }
         };
-        auto _is_negative_numbers_presented = [this] (std::vector<Argument> const& optionals) -> bool
+        auto _is_negative_numbers_presented = [this] (std::vector<Argument> const& optionals)
         {
             if (!detail::_is_string_contains_char(m_prefix_chars, '-')) {
                 return false;
@@ -2988,8 +2988,8 @@ private:
                 }
             }
         };
-        auto _separate_arg_abbrev = [=] (std::vector<std::string>& temp,
-                std::string const& arg, std::string const& name)
+        auto _separate_arg_abbrev = [this, _get_optional_arg_by_flag, optional]
+                (std::vector<std::string>& temp, std::string const& arg, std::string const& name)
         {
             if (name.size() + 1 == arg.size()) {
                 auto const splitted = detail::_split_equal(arg);
@@ -3050,7 +3050,8 @@ private:
                 temp.push_back(arg);
             }
         };
-        auto _check_abbreviations = [=] (std::vector<std::string>& arguments)
+        auto _check_abbreviations = [this, _separate_arg_abbrev, result, optional,
+                have_negative_options] (std::vector<std::string>& arguments)
         {
             std::vector<std::string> temp;
             for (auto const& arg : arguments) {
