@@ -96,13 +96,27 @@ static inline std::string _file_name(std::string const& s)
     return s.substr(s.find_last_of("/\\") + 1);
 }
 
+static inline bool _have_quotes(std::string const& s)
+{
+    return (s.size() > 1 && s.front() == s.back()
+            && (s.front() == '\'' || s.front() == '\"'));
+}
+
 static inline std::string _remove_quotes(std::string const& s)
 {
-    if (s.size() > 1 && s.front() == s.back()
-            && (s.front() == '\'' || s.front() == '\"')) {
-        return s.substr(1, s.size() - 2);
+    return _have_quotes(s) ? s.substr(1, s.size() - 2) : s;
+}
+
+static inline std::string _replace(std::string const& str, char old,
+                                   std::string const& value)
+{
+    auto res = str;
+    size_t pos = res.find(old);
+    while (pos != std::string::npos) {
+        res.replace(pos, 1, value);
+        pos = res.find(old, pos + value.size());
     }
-    return s;
+    return res;
 }
 
 static inline std::vector<std::string> _split_equal(std::string const& s)
@@ -158,14 +172,20 @@ static inline bool _is_negative_number(std::string const& str)
 
 static inline std::string _vector_string_to_string(std::vector<std::string> const& vec,
                                                    std::string const& separator = " ",
-                                                   std::string const& quotes = "")
+                                                   std::string const& quotes = "",
+                                                   bool replace_space = false,
+                                                   std::string const& none = "")
 {
     std::string res;
     for (auto const& el : vec) {
         if (!res.empty()) {
             res += separator;
         }
-        res += quotes + el + quotes;
+        auto val = (!el.empty() ? el : none);
+        if (quotes.empty() && replace_space && !_have_quotes(val)) {
+            val = _replace(val, ' ', "\\ ");
+        }
+        res += quotes + val + quotes;
     }
     return res;
 }
@@ -1949,12 +1969,20 @@ public:
             auto const& args = data(key);
             switch (args.first.action()) {
                 case Action::store_const :
+                    if (args.second.empty()) {
+                        return std::string();
+                    }
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
                     }
-                    return args.second.front();
+                    return detail::_have_quotes(args.second.front())
+                            ? args.second.front()
+                            : detail::_replace(args.second.front(), ' ', "\\ ");
                 case Action::store_true :
                 case Action::store_false :
+                    if (args.second.empty()) {
+                        return args.first.default_value() == "0" ? "false" : "true";
+                    }
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
                     }
@@ -1965,7 +1993,7 @@ public:
                 case Action::append :
                 case Action::append_const :
                 case Action::extend :
-                    return detail::_vector_string_to_string(args.second, " ");
+                    return detail::_vector_string_to_string(args.second, " ", "", true);
                 default :
                     throw ValueError("action not supported");
             }
@@ -1983,12 +2011,18 @@ public:
             auto const& args = data(key);
             switch (args.first.action()) {
                 case Action::store_const :
+                    if (args.second.empty()) {
+                        return std::string();
+                    }
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
                     }
                     return args.second.front();
                 case Action::store_true :
                 case Action::store_false :
+                    if (args.second.empty()) {
+                        return args.first.default_value() == "0" ? "false" : "true";
+                    }
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
                     }
@@ -1999,16 +2033,7 @@ public:
                 case Action::append :
                 case Action::append_const :
                 case Action::extend :
-                    {
-                        std::string res;
-                        for (auto const& str : args.second) {
-                            if (!res.empty()) {
-                                res += ", ";
-                            }
-                            res += !str.empty() ? str : "None";
-                        }
-                        return "[" + res + "]";
-                    }
+                    return "[" + detail::_vector_string_to_string(args.second, " ", "", false, "None") + "]";
                 default :
                     throw ValueError("action not supported");
             }
