@@ -509,6 +509,10 @@ public:
         if (!(value & (Action::store_true | Action::store_false | Action::count))) {
             m_callback = nullptr;
         }
+        if (!(value & (Action::store | Action::store_const | Action::append
+                       | Action::append_const | Action::extend))) {
+            m_metavar.clear();
+        }
         if (m_action == Action::version) {
             m_help.clear();
         }
@@ -750,6 +754,10 @@ public:
      */
     Argument& metavar(std::string const& value)
     {
+        if (!(m_action & (Action::store | Action::store_const | Action::append
+                          | Action::append_const | Action::extend))) {
+            throw TypeError("got an unexpected keyword argument 'metavar'");
+        }
         m_metavar = detail::_trim_copy(value);
         return *this;
     }
