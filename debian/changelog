@@ -1,3 +1,12 @@
+cpp-argparse-dev (0.4.2-0ppa0) focal; urgency=low
+
+  * Add ArgumentParser::set_defaults() function
+  * Valid "" value for Argument::const_value/version/choices/metavar/default_value
+  * Fix equal "" processing
+  * Code refactoring
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 12 Sep 2021 21:03:00 +0300
+
 cpp-argparse-dev (0.4.1-0ppa0) focal; urgency=low
 
   * Update subparsers support
