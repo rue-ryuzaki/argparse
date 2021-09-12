@@ -513,9 +513,6 @@ public:
                        | Action::append_const | Action::extend))) {
             m_metavar.clear();
         }
-        if (m_action == Action::version) {
-            m_help.clear();
-        }
         switch (value) {
             case Action::store_true :
                 m_default = "0";
@@ -532,7 +529,7 @@ public:
                 m_choices.reset();
                 break;
             case Action::version :
-                m_help = "show program's version number and exit";
+                help("show program's version number and exit");
             case Action::help :
                 if (type() == Positional) {
                     // version and help actions cannot be positional
