@@ -204,7 +204,7 @@ public:
         return this->m_status == rhs.m_status && this->m_value == rhs.m_value;
     }
 
-    void reset()
+    void clear()
     {
         m_status = false;
         m_value = T();
@@ -519,14 +519,14 @@ public:
                 m_const = "1";
                 m_nargs = "0";
                 m_num_args = 0;
-                m_choices.reset();
+                m_choices.clear();
                 break;
             case Action::store_false :
                 m_default = "1";
                 m_const = "0";
                 m_nargs = "0";
                 m_num_args = 0;
-                m_choices.reset();
+                m_choices.clear();
                 break;
             case Action::version :
                 help("show program's version number and exit");
@@ -540,7 +540,7 @@ public:
             case Action::count :
                 m_nargs = "0";
                 m_num_args = 0;
-                m_choices.reset();
+                m_choices.clear();
                 break;
             case Action::store :
             case Action::append :
@@ -914,7 +914,7 @@ public:
      */
     std::string const& metavar() const
     {
-        return m_metavar;
+        return m_metavar();
     }
 
     /*!
@@ -1017,7 +1017,7 @@ private:
     {
         auto const name = get_argument_name();
         std::string res;
-        if (type() == Optional) {
+        if (type() == Optional && !name.empty()) {
             res += " ";
         }
         if (m_nargs == "?") {
@@ -1041,8 +1041,8 @@ private:
 
     std::string get_argument_name() const
     {
-        if (!m_metavar.empty()) {
-            return m_metavar;
+        if (m_metavar.status()) {
+            return metavar();
         }
         if (m_choices.status()) {
             return "{" + detail::_vector_string_to_string(m_choices(), ",") + "}";
@@ -1086,7 +1086,7 @@ private:
     bool        m_required;
     std::string m_help;
     Enum        m_help_type;
-    std::string m_metavar;
+    detail::Value<std::string> m_metavar;
     std::string m_dest;
     detail::Value<std::string> m_version;
     std::function<void(std::string)> m_handle;
@@ -1709,7 +1709,7 @@ public:
          */
         std::string const& metavar() const
         {
-            return m_metavar;
+            return m_metavar();
         }
 
         /*!
@@ -1733,8 +1733,8 @@ public:
 
         std::string flags_to_string() const
         {
-            if (!m_metavar.empty()) {
-                return m_metavar;
+            if (m_metavar.status()) {
+                return metavar();
             }
             std::string res;
             for (auto const& parser : m_parsers) {
@@ -1765,7 +1765,7 @@ public:
         std::string m_dest;
         bool        m_required;
         std::string m_help;
-        std::string m_metavar;
+        detail::Value<std::string> m_metavar;
         std::vector<Parser> m_parsers;
     };
 
