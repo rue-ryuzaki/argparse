@@ -182,13 +182,13 @@ static inline std::string _vector_to_string(std::vector<std::string> const& vec,
         if (!res.empty()) {
             res += separator;
         }
-        auto val = (!el.empty() ? el : none);
+        auto val = el;
         if (quotes.empty() && replace_space && !_have_quotes(val)) {
             val = _replace(val, ' ', "\\ ");
         }
         res += quotes + val + quotes;
     }
-    return res;
+    return res.empty() ? none : res;
 }
 
 template <class T>
@@ -2031,7 +2031,7 @@ public:
                 case Action::append :
                 case Action::append_const :
                 case Action::extend :
-                    return "[" + detail::_vector_to_string(args.second, " ", "", false, "None") + "]";
+                    return "[" + detail::_vector_to_string(args.second, ", ", "'", false, "None") + "]";
                 default :
                     throw ValueError("action not supported");
             }
