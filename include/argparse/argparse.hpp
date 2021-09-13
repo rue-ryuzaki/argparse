@@ -1113,6 +1113,11 @@ private:
     std::function<void()> m_callback;
 };
 
+inline bool operator <(Argument const& lhs, Argument const& rhs)
+{
+    return lhs.flags() < rhs.flags();
+}
+
 /*!
  * \brief BaseParser class
  */
@@ -1254,7 +1259,7 @@ protected:
 class ArgumentParser : public BaseParser
 {
     typedef std::vector<std::string> ArgumentValue;
-    typedef std::pair<Argument, ArgumentValue> ArgumentData;
+    typedef std::pair<const Argument, ArgumentValue> ArgumentData;
 
     class Storage
     {
@@ -1263,11 +1268,12 @@ class ArgumentParser : public BaseParser
             : m_data()
         { }
 
-        void create(Argument const& key)
+        void create(Argument const& key,
+                    std::vector<std::string> const& value = std::vector<std::string>())
         {
             auto flag = conflict_arg(key);
             if (flag.empty()) {
-                m_data.push_back({ key, std::vector<std::string>() });
+                m_data.insert({ key, value });
             } else {
                 throw ArgumentError("argument " + flag + ": conflicting option string: " + flag);
             }
@@ -1288,22 +1294,27 @@ class ArgumentParser : public BaseParser
 
         void store_default_value(Argument const& arg, std::string const& value)
         {
-            if (arg.action() == Action::store && at(arg).empty()) {
-                at(arg).push_back(value);
+            if (arg.action() == Action::store) {
+                auto& storage = at(arg);
+                if (storage.empty()) {
+                    storage.push_back(value);
+                }
             }
         }
 
         bool self_value_stored(Argument const& arg)
         {
             if (arg.action() == Action::store_const) {
-                if (at(arg).empty()) {
-                    at(arg).push_back(arg.const_value());
+                auto& storage = at(arg);
+                if (storage.empty()) {
+                    storage.push_back(arg.const_value());
                 }
                 arg.handle(arg.const_value());
                 return true;
             } else if (arg.action() & (Action::store_true | Action::store_false)) {
-                if (at(arg).empty()) {
-                    at(arg).push_back(arg.const_value());
+                auto& storage = at(arg);
+                if (storage.empty()) {
+                    storage.push_back(arg.const_value());
                 }
                 arg.callback();
                 return true;
@@ -1328,20 +1339,7 @@ class ArgumentParser : public BaseParser
 
         bool exists(Argument const& key) const
         {
-            return std::find_if(std::begin(m_data), std::end(m_data),
-                                [key] (ArgumentData const& pair) -> bool
-            { return pair.first == key; }) != std::end(m_data);
-        }
-
-        ArgumentData& at(std::string const& key)
-        {
-            auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                   [key] (ArgumentData const& pair) -> bool
-            { return pair.first == key; });
-            if (it == std::end(m_data)) {
-                throw std::logic_error("key '" + key + "' not found");
-            }
-            return *it;
+            return m_data.find(key) != std::end(m_data);
         }
 
         ArgumentData const& at(std::string const& key) const
@@ -1357,44 +1355,18 @@ class ArgumentParser : public BaseParser
 
         ArgumentValue& at(Argument const& key)
         {
-            auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                   [key] (ArgumentData const& pair) -> bool
-            { return pair.first == key; });
-            if (it == std::end(m_data)) {
-                throw std::logic_error("argument '" + key.m_name + "' not found");
-            }
-            return it->second;
+            return m_data.at(key);
         }
 
         ArgumentValue const& at(Argument const& key) const
         {
-            auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                   [key] (ArgumentData const& pair) -> bool
-            { return pair.first == key; });
-            if (it == std::end(m_data)) {
-                throw std::logic_error("argument '" + key.m_name + "' not found");
-            }
-            return it->second;
+            return m_data.at(key);
         }
 
-        ArgumentValue& operator [](Argument const& key)
-        {
-            auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                   [key] (ArgumentData const& pair) -> bool
-            { return pair.first == key; });
-            if (it == std::end(m_data)) {
-                m_data.push_back({ key, std::vector<std::string>() });
-                return m_data.back().second;
-            }
-            return it->second;
-        }
-
-        inline std::vector<ArgumentData>::iterator       begin()        { return std::begin(m_data); }
-        inline std::vector<ArgumentData>::iterator       end()          { return std::end(m_data); }
-        inline std::vector<ArgumentData>::const_iterator begin()  const { return std::begin(m_data); }
-        inline std::vector<ArgumentData>::const_iterator end()    const { return std::end(m_data); }
-        inline std::vector<ArgumentData>::const_iterator cbegin() const { return m_data.cbegin(); }
-        inline std::vector<ArgumentData>::const_iterator cend()   const { return m_data.cend(); }
+        inline std::map<Argument, ArgumentValue>::iterator       begin()        { return std::begin(m_data); }
+        inline std::map<Argument, ArgumentValue>::iterator       end()          { return std::end(m_data); }
+        inline std::map<Argument, ArgumentValue>::const_iterator begin()  const { return std::begin(m_data); }
+        inline std::map<Argument, ArgumentValue>::const_iterator end()    const { return std::end(m_data); }
 
     private:
         std::string conflict_arg(Argument const& arg) const
@@ -1415,7 +1387,7 @@ class ArgumentParser : public BaseParser
             return "";
         }
 
-        std::vector<ArgumentData> m_data;
+        std::map<Argument, ArgumentValue> m_data;
     };
 
 public:
@@ -3387,7 +3359,7 @@ private:
                 auto arg = Argument({ pair.first }, flag_name,
                                     is_optional ? Argument::Optional : Argument::Positional);
                 arg.default_value(pair.second);
-                result[arg].push_back(pair.second);
+                result.create(arg, { pair.second });
             }
         }
         return Namespace(result);
