@@ -141,6 +141,44 @@ int main(int argc, char* argv[])
     return 0;
 }
 ```
+## Features
+### Callback
+Only available for value-independent arguments (Action: "store_true", "store_false" or "count")
+```
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv);
+    parser.add_argument("--foo").action("store_true").help("foo help")
+            .callback([] () { std::cout << "Foo callback" << std::endl; });
+
+    parser.parse_args();
+
+    return 0;
+}
+```
+### Handle
+Only available for value-dependent arguments (Action: "store", "store_const", "append", "append_const" or "extend")
+```
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv);
+    parser.add_argument("--foo").action("store").help("foo help")
+            .handle([] (std::string const& value)
+    { std::cout << "Handle value '" << value << "'" << std::endl; });
+
+    parser.parse_args();
+
+    return 0;
+}
+```
 ## ArgumentParser objects support
 - [x] prog - The name of the program (default: argv[0] or "untitled")
 - [x] usage - The string describing the program usage (default: generated from arguments added to parser)
