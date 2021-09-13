@@ -59,12 +59,14 @@ std::string const _default_prefix_chars = "-";
 
 static inline void _ltrim(std::string& s)
 {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), not1(std::ptr_fun<int, int>(isspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                                    not1(std::ptr_fun<int, int>(isspace))));
 }
 
 static inline void _rtrim(std::string& s)
 {
-    s.erase(std::find_if(s.rbegin(), s.rend(), not1(std::ptr_fun<int, int>(isspace))).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         not1(std::ptr_fun<int, int>(isspace))).base(), s.end());
 }
 
 static inline void _trim(std::string& s)
@@ -107,16 +109,14 @@ static inline std::string _remove_quotes(std::string const& s)
     return _have_quotes(s) ? s.substr(1, s.size() - 2) : s;
 }
 
-static inline std::string _replace(std::string const& str, char old,
-                                   std::string const& value)
+static inline std::string _replace(std::string s, char c, std::string const& val)
 {
-    auto res = str;
-    size_t pos = res.find(old);
+    size_t pos = s.find(c);
     while (pos != std::string::npos) {
-        res.replace(pos, 1, value);
-        pos = res.find(old, pos + value.size());
+        s.replace(pos, 1, val);
+        pos = s.find(c, pos + val.size());
     }
-    return res;
+    return s;
 }
 
 static inline std::vector<std::string> _split_equal(std::string const& s)
@@ -129,9 +129,9 @@ static inline std::vector<std::string> _split_equal(std::string const& s)
     }
 }
 
-static inline bool _starts_with(std::string const& str, std::string const& pattern)
+static inline bool _starts_with(std::string const& s, std::string const& pattern)
 {
-    return str.compare(0, pattern.size(), pattern) == 0;
+    return s.compare(0, pattern.size(), pattern) == 0;
 }
 
 template <class T>
@@ -145,7 +145,8 @@ static inline bool _is_string_contains_char(std::string const& str, char c)
     return std::find(std::begin(str), std::end(str), c) != std::end(str);
 }
 
-static inline bool _is_optional_argument(std::string const& arg, std::string const& prefix_chars)
+static inline bool _is_optional_argument(std::string const& arg,
+                                         std::string const& prefix_chars)
 {
     return _is_string_contains_char(prefix_chars, arg.front());
 }
@@ -170,11 +171,11 @@ static inline bool _is_negative_number(std::string const& str)
     return value < 0;
 }
 
-static inline std::string _vector_string_to_string(std::vector<std::string> const& vec,
-                                                   std::string const& separator = " ",
-                                                   std::string const& quotes = "",
-                                                   bool replace_space = false,
-                                                   std::string const& none = "")
+static inline std::string _vector_to_string(std::vector<std::string> const& vec,
+                                            std::string const& separator = " ",
+                                            std::string const& quotes = "",
+                                            bool replace_space = false,
+                                            std::string const& none = "")
 {
     std::string res;
     for (auto const& el : vec) {
@@ -822,7 +823,7 @@ public:
     Argument& handle(std::function<void(std::string)> func)
     {
         if (m_action & (Action::store | Action::store_const | Action::append
-                        | Action::append_const | Action::extend )) {
+                        | Action::append_const | Action::extend)) {
             m_handle = func;
         } else {
             throw TypeError("got an unexpected keyword argument 'handle'");
@@ -1065,7 +1066,7 @@ private:
             return metavar();
         }
         if (m_choices.status()) {
-            return "{" + detail::_vector_string_to_string(choices(), ",") + "}";
+            return "{" + detail::_vector_to_string(choices(), ",") + "}";
         }
         auto res = m_dest.empty() ? m_name : m_dest;
         return type() == Optional ? detail::_to_upper(res) : res;
@@ -1554,9 +1555,7 @@ public:
 
     public:
         /*!
-         *  \brief Construct subparser with parents prefix chars
-         *
-         *  \param prefix_chars Parents prefix chars
+         *  \brief Construct subparser
          *
          *  \return Subparser object
          */
@@ -1817,7 +1816,6 @@ public:
          *  \brief Construct object with parsed arguments
          *
          *  \param arguments Parsed arguments
-         *  \param prefix_chars Parsers prefix chars
          *
          *  \return Object with parsed arguments
          */
@@ -1993,7 +1991,7 @@ public:
                 case Action::append :
                 case Action::append_const :
                 case Action::extend :
-                    return detail::_vector_string_to_string(args.second, " ", "", true);
+                    return detail::_vector_to_string(args.second, " ", "", true);
                 default :
                     throw ValueError("action not supported");
             }
@@ -2033,7 +2031,7 @@ public:
                 case Action::append :
                 case Action::append_const :
                 case Action::extend :
-                    return "[" + detail::_vector_string_to_string(args.second, " ", "", false, "None") + "]";
+                    return "[" + detail::_vector_to_string(args.second, " ", "", false, "None") + "]";
                 default :
                     throw ValueError("action not supported");
             }
@@ -2593,7 +2591,7 @@ private:
                 auto str = detail::_remove_quotes(value);
                 if (!(str.empty() && choices().empty())
                         && !detail::_is_value_exists(str, choices())) {
-                    auto values = detail::_vector_string_to_string(choices(), ", ", "'");
+                    auto values = detail::_vector_to_string(choices(), ", ", "'");
                     handle_error("argument " + arg.flags().front()
                                  + ": invalid choice: '" + str + "' (choose from " + values + ")");
                 }
@@ -3323,7 +3321,7 @@ private:
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
             if (arg.required() && result.at(arg).empty()) {
-                auto args = detail::_vector_string_to_string(arg.flags(), "/");
+                auto args = detail::_vector_to_string(arg.flags(), "/");
                 required_args.emplace_back(args);
             }
         }
@@ -3370,13 +3368,13 @@ private:
             if (!required_args.empty()) {
                 args += ", ";
             }
-            args += detail::_vector_string_to_string(required_args, ", ");
+            args += detail::_vector_to_string(required_args, ", ");
             if (!args.empty()) {
                 handle_error("the following arguments are required: " + args);
             }
         }
         if (!unrecognized_args.empty()) {
-            auto args = detail::_vector_string_to_string(unrecognized_args);
+            auto args = detail::_vector_to_string(unrecognized_args);
             handle_error("unrecognized arguments: " + args);
         }
         for (auto& arg : result) {
