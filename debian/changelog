@@ -1,3 +1,13 @@
+cpp-argparse-dev (0.4.3-0ppa0) focal; urgency=low
+
+  * Fix get argument values with spaces
+  * Fix ArgumentParser::get_default() custom value
+  * Fix parse optional arg with nargs='?'
+  * Fix Namespace::to_args() and Namespace::to_string() functions
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Mon, 13 Sep 2021 19:19:30 +0300
+
 cpp-argparse-dev (0.4.2-0ppa0) focal; urgency=low
 
   * Add ArgumentParser::set_defaults() function
