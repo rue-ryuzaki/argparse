@@ -40,6 +40,68 @@ bar
 foo: foobar
 bar: 101
 ```
+## Actions example
+```
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv).add_help(false);
+
+    parser.add_argument("store").action("store");
+    parser.add_argument("--store_const").action("store_const").const_value("const_value");
+    parser.add_argument("--store_true").action("store_true");
+    parser.add_argument("--store_false").action("store_false");
+    parser.add_argument("--append").action("append");
+    parser.add_argument("--append_const").action("append_const").const_value("const_value");
+    parser.add_argument("--count").action("count");
+    parser.add_argument("--extend").action("extend");
+    parser.add_argument("--version").action("version").version("1.0");
+    parser.add_argument("--help").action("help").help("show help and exit");
+
+    auto args = parser.parse_args();
+
+    std::cout << args.get<std::string>("store") << std::endl;
+    std::cout << args.get<std::string>("store_const") << std::endl;
+    std::cout << args.get<std::string>("store_true") << std::endl;
+    std::cout << args.get<std::string>("store_false") << std::endl;
+    std::cout << args.get<std::string>("append") << std::endl;
+    std::cout << args.get<std::string>("append_const") << std::endl;
+    std::cout << args.get<std::string>("count") << std::endl;
+    std::cout << args.get<std::string>("extend") << std::endl;
+
+    return 0;
+}
+```
+## Nargs example
+```
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv);
+
+    parser.add_argument("--nargs?").action("store").nargs("?");
+    parser.add_argument("--nargs*").action("store").nargs("*");
+    parser.add_argument("--nargs+").action("store").nargs("+");
+    parser.add_argument("--nargs2").action("store").nargs(2);
+    parser.add_argument("--nargs3").action("store").nargs(3);
+
+    auto args = parser.parse_args();
+
+    std::cout << args.get<std::string>("nargs?") << std::endl;
+    std::cout << args.get<std::string>("nargs*") << std::endl;
+    std::cout << args.get<std::string>("nargs+") << std::endl;
+    std::cout << args.get<std::string>("nargs2") << std::endl;
+    std::cout << args.get<std::string>("nargs3") << std::endl;
+
+    return 0;
+}
+```
 ## Subparsers example
 ```
 #include <iostream>
