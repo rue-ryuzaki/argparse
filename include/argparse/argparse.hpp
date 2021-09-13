@@ -2430,11 +2430,10 @@ public:
         return std::string();
     }
 
-
     /*!
      *  \brief Set default values for certain arguments
      *
-     *  \param values Vector of pairs: argument flag - default value
+     *  \param values Vector of pairs: { 'argument flag', 'default value' }
      */
     void set_defaults(std::vector<std::pair<std::string, std::string> > const& values)
     {
