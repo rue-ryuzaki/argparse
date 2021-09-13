@@ -1,7 +1,7 @@
 # ArgumentParser v0.4.2
 Python-like argument parser for C++11+ projects
 ## Code example
-```
+```cpp
 #include <iostream>
 
 #include <argparse/argparse.hpp>
@@ -52,7 +52,7 @@ bar: 101
 baz: baaz
 ```
 ## Actions example
-```
+```cpp
 #include <iostream>
 
 #include <argparse/argparse.hpp>
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 }
 ```
 ## Nargs example
-```
+```cpp
 #include <iostream>
 
 #include <argparse/argparse.hpp>
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 }
 ```
 ## Subparsers example
-```
+```cpp
 #include <iostream>
 
 #include <argparse/argparse.hpp>
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 ## Features
 ### Callback
 Only available for value-independent arguments (Action: "store_true", "store_false" or "count")
-```
+```cpp
 #include <iostream>
 
 #include <argparse/argparse.hpp>
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
 ```
 ### Handle
 Only available for value-dependent arguments (Action: "store", "store_const", "append", "append_const" or "extend")
-```
+```cpp
 #include <iostream>
 
 #include <argparse/argparse.hpp>
