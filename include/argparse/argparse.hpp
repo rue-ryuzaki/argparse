@@ -2424,6 +2424,11 @@ public:
                 }
             }
         }
+        for (auto const& pair : m_default_values) {
+            if (pair.first == dest) {
+                return pair.second;
+            }
+        }
         return std::string();
     }
 
