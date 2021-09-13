@@ -3245,7 +3245,7 @@ private:
                                         break;
                                     }
                                 }
-                                if (nargs.empty() || (num_args != 0 && n == num_args)) {
+                                if (nargs.empty() || nargs == "?" || (num_args != 0 && n == num_args)) {
                                     break;
                                 }
                             }
