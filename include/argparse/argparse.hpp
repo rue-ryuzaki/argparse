@@ -1826,22 +1826,22 @@ public:
         { }
 
         /*!
-         *  \brief Check if argument name exists in parsed arguments
+         *  \brief Check if argument name exists and specified in parsed arguments
          *
          *  \param key Argument name
          *
-         *  \return true if argument name exists, otherwise false
+         *  \return true if argument name exists and specified, otherwise false
          */
         bool exists(std::string const& key) const
         {
             if (m_arguments.exists(key)) {
-                return true;
+                return !m_arguments.at(key).second.empty();
             }
             for (auto const& pair : m_arguments) {
                 if (pair.first.type() == Argument::Optional && pair.first.dest().empty()) {
                     for (auto const& flag : pair.first.flags()) {
                         if (detail::_flag_name(flag) == key) {
-                            return true;
+                            return !pair.second.empty();
                         }
                     }
                 }
