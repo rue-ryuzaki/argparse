@@ -10,35 +10,46 @@ int main(int argc, char* argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv)
             .prog("FooBar")
-            .description("foo")
-            .epilog("bar");
+            .description("foo description")
+            .epilog("bar epilog");
     parser.add_argument({ "-f", "--foo" }).help("FOO help").default_value("foo");
     parser.add_argument({ "-b", "--bar" }).help("BAR help").default_value("42");
+    parser.add_argument("baz").help("BAZ help");
     parser.print_help();
+
     auto const args = parser.parse_args();
+
+    std::cout << std::endl << "Parse data:" << std::endl;
     std::cout << "foo: " << args.get<std::string>("-f") << std::endl;
     std::cout << "bar: " << args.get<int>("--bar") << std::endl;
+    std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
     return 0;
 }
 ```
 ## Usage example
 ```
-./a.out -f=foobar -b 101
+./a.out -f=foobar -b 101 baaz
 ```
 ## Output
 ```
-usage: FooBar [-h] [-f FOO] [-b BAR]
+usage: FooBar [-h] [-f FOO] [-b BAR] baz
 
-foo
+foo description
+
+positional arguments:
+  baz                BAZ help
 
 optional arguments:
   -h, --help         show this help message and exit
   -f FOO, --foo FOO  FOO help
   -b BAR, --bar BAR  BAR help
 
-bar
+bar epilog
+
+Parse data:
 foo: foobar
 bar: 101
+baz: baaz
 ```
 ## Actions example
 ```
