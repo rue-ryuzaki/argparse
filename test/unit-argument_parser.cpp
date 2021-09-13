@@ -573,6 +573,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args1.get<std::vector<std::string> >("--append").size() == 0);
         REQUIRE(args1.get<std::vector<std::string> >("--extend").size() == 0);
 
+        REQUIRE_THROWS(parser.parse_args({ "--store", new_value, new_value }));
+
         // all args
         auto args2 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value });
         REQUIRE(args2.get<std::string>("--store") == new_value);
@@ -584,10 +586,10 @@ TEST_CASE("9. argument nargs", "[argument]")
 
         // override args
         auto args3 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value,
-                                         "--store", new_value, new_value, "--append", new_value, new_value, "--extend", new_value, new_value });
-        REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 2);
-        REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 3);
-        REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
+                                         "--store", new_value, "--append", new_value, "--extend", new_value });
+        REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 2);
+        REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 2);
     }
 
     SECTION("9.4. nargs ? positional") {
