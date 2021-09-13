@@ -111,7 +111,7 @@ static inline std::string _remove_quotes(std::string const& s)
 
 static inline std::string _replace(std::string s, char c, std::string const& val)
 {
-    size_t pos = s.find(c);
+    std::size_t pos = s.find(c);
     while (pos != std::string::npos) {
         s.replace(pos, 1, val);
         pos = s.find(c, pos + val.size());
@@ -3142,11 +3142,7 @@ private:
                     opt.push_back(m_help_argument);
                 }
                 for (auto const& arg : capture_parser->m_arguments) {
-                    if (arg.type() == Argument::Optional) {
-                        opt.push_back(arg);
-                    } else {
-                        pos.push_back(arg);
-                    }
+                    (arg.type() == Argument::Optional ? opt : pos).push_back(arg);
                 }
                 auto program = subparser.first->prog();
                 if (program.empty()) {
@@ -3647,11 +3643,10 @@ private:
             }
         }
         if (subparser.first && !subparser_positional) {
-            if (subparser.first->title().empty()) {
-                os << std::endl << "subcommands:" << std::endl;
-            } else {
-                os << std::endl << subparser.first->title() << ":" << std::endl;
-            }
+            os << std::endl
+               << (subparser.first->title().empty() ? "subcommands"
+                                                    : subparser.first->title())
+               << ":" << std::endl;
             if (!subparser.first->description().empty()) {
                 os << "  " << subparser.first->description() << std::endl << std::endl;
             }
