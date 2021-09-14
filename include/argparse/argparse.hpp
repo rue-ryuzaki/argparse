@@ -1091,7 +1091,7 @@ private:
                 return true;
             }
         }
-        return false;
+        return m_name == rhs;
     }
 
     std::vector<std::string> m_flags;
