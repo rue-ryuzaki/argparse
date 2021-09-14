@@ -1091,7 +1091,7 @@ private:
                 return true;
             }
         }
-        return m_name == rhs;
+        return false;
     }
 
     std::vector<std::string> m_flags;
@@ -2596,8 +2596,12 @@ private:
 
         bool have_negative_options = _is_negative_numbers_presented(optional);
 
-        Argument subparser_arg({}, subparser.first && !subparser.first->dest().empty() ?
-                                   subparser.first->dest() : "", Argument::Positional);
+        std::vector<std::string> subparser_flags;
+        if (subparser.first && !subparser.first->dest().empty()) {
+            subparser_flags.push_back(subparser.first->dest());
+        }
+        Argument subparser_arg(subparser_flags, subparser.first ? subparser.first->dest()
+                                                                : "", Argument::Positional);
 
         Storage result;
         result.create(positional);
