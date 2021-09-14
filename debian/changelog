@@ -1,3 +1,10 @@
+cpp-argparse-dev (0.4.4-0ppa0) focal; urgency=low
+
+  * Fix found data in Namespace if Subparser::dest() set
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Tue, 14 Sep 2021 20:49:35 +0300
+
 cpp-argparse-dev (0.4.3-0ppa0) focal; urgency=low
 
   * Fix get argument values with spaces
