@@ -142,7 +142,8 @@ int main(int argc, char* argv[])
 }
 ```
 ## Features
-### Callback
+### Handle
+Argument::handle(std::function<void()> func)
 Only available for value-independent arguments (Action: "store_true", "store_false" or "count")
 ```cpp
 #include <iostream>
@@ -153,14 +154,14 @@ int main(int argc, char* argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
     parser.add_argument("--foo").action("store_true").help("foo help")
-            .callback([] () { std::cout << "Foo callback" << std::endl; });
+            .handle([] () { std::cout << "Foo handle" << std::endl; });
 
     parser.parse_args();
 
     return 0;
 }
 ```
-### Handle
+Argument::handle(std::function<void(std::string)> func)
 Only available for value-dependent arguments (Action: "store", "store_const", "append", "append_const" or "extend")
 ```cpp
 #include <iostream>
