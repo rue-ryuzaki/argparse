@@ -190,6 +190,16 @@ static inline std::string _vector_to_string(std::vector<std::string> const& vec,
     return res.empty() ? none : res;
 }
 
+static inline std::string _ignore_default(std::string const& arg, std::string const& value)
+{
+    return "argument " + arg + ": ignored default value '" + value + "'";
+}
+
+static inline std::string _ignore_explicit(std::string const& arg, std::string const& value)
+{
+    return "argument " + arg + ": ignored explicit argument '" + value + "'";
+}
+
 template <class T>
 class Value
 {
@@ -379,6 +389,15 @@ class Argument
 {
     friend class ArgumentParser;
 
+    enum Nargs
+    {
+        NARGS_DEF,      // ""
+        NARGS_INT,      // "N"
+        ONE_OR_MORE,    // "+"
+        OPTIONAL,       // "*"
+        ZERO_OR_MORE,   // "?"
+    };
+
 public:
     /*!
      * \brief Argument type
@@ -407,7 +426,8 @@ public:
           m_name(name),
           m_type(type),
           m_action(Action::store),
-          m_nargs(),
+          m_nargs(NARGS_DEF),
+          m_nargs_str(),
           m_num_args(),
           m_const(),
           m_default(),
@@ -435,6 +455,7 @@ public:
           m_type(orig.m_type),
           m_action(orig.m_action),
           m_nargs(orig.m_nargs),
+          m_nargs_str(orig.m_nargs_str),
           m_num_args(orig.m_num_args),
           m_const(orig.m_const),
           m_default(orig.m_default),
@@ -464,6 +485,7 @@ public:
             this->m_type    = rhs.m_type;
             this->m_action  = rhs.m_action;
             this->m_nargs   = rhs.m_nargs;
+            this->m_nargs_str= rhs.m_nargs_str;
             this->m_num_args= rhs.m_num_args;
             this->m_const   = rhs.m_const;
             this->m_default = rhs.m_default;
@@ -537,14 +559,16 @@ public:
             case Action::store_true :
                 m_default = "0";
                 m_const = "1";
-                m_nargs = "0";
+                m_nargs = NARGS_INT;
+                m_nargs_str = "0";
                 m_num_args = 0;
                 m_choices.clear();
                 break;
             case Action::store_false :
                 m_default = "1";
                 m_const = "0";
-                m_nargs = "0";
+                m_nargs = NARGS_INT;
+                m_nargs_str = "0";
                 m_num_args = 0;
                 m_choices.clear();
                 break;
@@ -558,15 +582,17 @@ public:
             case Action::store_const :
             case Action::append_const :
             case Action::count :
-                m_nargs = "0";
+                m_nargs = NARGS_INT;
+                m_nargs_str = "0";
                 m_num_args = 0;
                 m_choices.clear();
                 break;
             case Action::store :
             case Action::append :
             case Action::extend :
-                if (m_nargs == "0") {
-                    m_nargs.clear();
+                if (m_nargs_str == "0") {
+                    m_nargs = NARGS_DEF;
+                    m_nargs_str.clear();
                 }
                 break;
             default :
@@ -612,7 +638,8 @@ public:
             default:
                 throw ValueError("unknown action");
         }
-        m_nargs = std::to_string(value);
+        m_nargs = NARGS_INT;
+        m_nargs_str = std::to_string(value);
         m_num_args = value;
         return *this;
     }
@@ -630,11 +657,16 @@ public:
             throw TypeError("got an unexpected keyword argument 'nargs'");
         }
         auto param = detail::_trim_copy(value);
-        std::vector<std::string> const values = { "?", "*", "+" };
-        if (!detail::_is_value_exists(param, values)) {
+        if (param == "?") {
+            m_nargs = OPTIONAL;
+        } else if (param == "*") {
+            m_nargs = ZERO_OR_MORE;
+        } else if (param == "+") {
+            m_nargs = ONE_OR_MORE;
+        } else {
             throw ValueError("invalid nargs value '" + param + "'");
         }
-        m_nargs = param;
+        m_nargs_str = param;
         m_num_args = 0;
         return *this;
     }
@@ -649,10 +681,10 @@ public:
     Argument& const_value(std::string const& value)
     {
         if (m_action & (Action::store_const | Action::append_const)
-                || (type() == Optional && m_nargs == "?"
+                || (type() == Optional && m_nargs == OPTIONAL
                     && (m_action & (Action::store | Action::append | Action::extend)))) {
             m_const = detail::_trim_copy(value);
-        } else if (type() == Optional && m_nargs != "?"
+        } else if (type() == Optional && m_nargs != OPTIONAL
                    && (m_action & (Action::store | Action::append | Action::extend))) {
             throw ValueError("nargs must be '?' to supply const");
         } else {
@@ -874,7 +906,7 @@ public:
      */
     std::string const& nargs() const
     {
-        return m_nargs;
+        return m_nargs_str;
     }
 
     /*!
@@ -1040,21 +1072,27 @@ private:
         if (type() == Optional && !name.empty()) {
             res += " ";
         }
-        if (m_nargs == "?") {
-            res += "[" +  name + "]";
-        } else if (m_nargs == "*") {
-            res += "[" +  name + " ...]";
-        } else if (m_nargs == "+") {
-            res += name + " [" +  name + " ...]";
-        } else if (!m_nargs.empty()) {
-            for (uint32_t i = 0; i < m_num_args; ++i) {
-                if (i != 0) {
-                    res += " ";
+        switch (m_nargs) {
+            case OPTIONAL :
+                res += "[" +  name + "]";
+                break;
+            case ZERO_OR_MORE :
+                res += "[" +  name + " ...]";
+                break;
+            case ONE_OR_MORE :
+                res += name + " [" +  name + " ...]";
+                break;
+            case NARGS_INT :
+                for (uint32_t i = 0; i < m_num_args; ++i) {
+                    if (i != 0) {
+                        res += " ";
+                    }
+                    res += name;
                 }
+                break;
+            default :
                 res += name;
-            }
-        } else {
-            res += name;
+                break;
         }
         return res;
     }
@@ -1069,6 +1107,20 @@ private:
         }
         auto res = m_dest.empty() ? m_name : m_dest;
         return type() == Optional ? detail::_to_upper(res) : res;
+    }
+
+    std::string error_nargs(std::string const& arg) const
+    {
+        switch (m_nargs) {
+            case NARGS_DEF :
+                return "argument " + arg + ": expected one argument";
+            case ONE_OR_MORE :
+                return "argument " + arg + ": expected at least one argument";
+            case NARGS_INT :
+                return "argument " + arg + ": expected " + nargs() + " arguments";
+            default :
+                return "";
+        }
     }
 
     bool operator ==(Argument const& rhs) const
@@ -1098,7 +1150,8 @@ private:
     std::string m_name;
     Type        m_type;
     Action      m_action;
-    std::string m_nargs;
+    Nargs       m_nargs;
+    std::string m_nargs_str;
     uint32_t    m_num_args;
     detail::Value<std::string> m_const;
     detail::Value<std::string> m_default;
@@ -2654,8 +2707,7 @@ private:
         auto _is_positional_arg_stored = [&] (Argument const& arg) -> bool
         {
             if (arg.action() == Action::append_const && arg.m_default.status()) {
-                handle_error("argument " + arg.flags().front()
-                             + ": ignored default value '" + arg.default_value() + "'");
+                handle_error(detail::_ignore_default(arg.flags().front(), arg.default_value()));
             }
             return result.self_value_stored(arg);
         };
@@ -2680,19 +2732,24 @@ private:
                 if (!(arg.action() & (Action::store | Action::append | Action::extend))) {
                     continue;
                 }
-                auto const& nargs = arg.nargs();
                 std::size_t min_amount = 0;
-                if (nargs.empty()) {
-                    ++min_amount;
-                } else if (nargs == "+") {
-                    ++min_amount;
-                    more_args = true;
-                } else if (nargs == "?") {
-                    ++one_args;
-                } else if (nargs == "*") {
-                    more_args = true;
-                } else {
-                    min_amount += arg.num_args();
+                switch (arg.m_nargs) {
+                    case Argument::OPTIONAL :
+                        ++one_args;
+                        break;
+                    case Argument::ONE_OR_MORE :
+                        ++min_amount;
+                        more_args = true;
+                        break;
+                    case Argument::ZERO_OR_MORE :
+                        more_args = true;
+                        break;
+                    case Argument::NARGS_INT :
+                        min_amount += arg.num_args();
+                        break;
+                    default :
+                        ++min_amount;
+                        break;
                 }
                 if (min_args + min_amount > arguments.size()) {
                     break;
@@ -2713,17 +2770,22 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = arg.nargs();
-                    if (nargs.empty() || nargs == "+") {
-                        _store_value(arg, arguments.front());
-                        arguments.pop_front();
-                    } else if (nargs == "?" || nargs == "*") {
-                        _store_default_value(arg);
-                    } else {
-                        for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                    switch (arg.m_nargs) {
+                        case Argument::NARGS_DEF :
+                        case Argument::ONE_OR_MORE :
                             _store_value(arg, arguments.front());
                             arguments.pop_front();
-                        }
+                            break;
+                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_MORE :
+                            _store_default_value(arg);
+                            break;
+                        default :
+                            for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                                _store_value(arg, arguments.front());
+                                arguments.pop_front();
+                            }
+                            break;
                     }
                 }
             } else if (more_args) {
@@ -2733,35 +2795,40 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = arg.nargs();
-                    if (nargs.empty()) {
-                        _store_value(arg, arguments.front());
-                        arguments.pop_front();
-                    } else if (nargs == "+") {
-                        _store_value(arg, arguments.front());
-                        arguments.pop_front();
-                        while (over_args > 0) {
+                    switch (arg.m_nargs) {
+                        case Argument::NARGS_DEF :
                             _store_value(arg, arguments.front());
                             arguments.pop_front();
-                            --over_args;
-                        }
-                    } else if (nargs == "?") {
-                        _store_default_value(arg);
-                    } else if (nargs == "*") {
-                        if (over_args > 0) {
+                            break;
+                        case Argument::ONE_OR_MORE :
+                            _store_value(arg, arguments.front());
+                            arguments.pop_front();
                             while (over_args > 0) {
                                 _store_value(arg, arguments.front());
                                 arguments.pop_front();
                                 --over_args;
                             }
-                        } else {
+                            break;
+                        case Argument::OPTIONAL :
                             _store_default_value(arg);
-                        }
-                    } else {
-                        for (std::size_t n = 0; n < arg.num_args(); ++n) {
-                            _store_value(arg, arguments.front());
-                            arguments.pop_front();
-                        }
+                            break;
+                        case Argument::ZERO_OR_MORE :
+                            if (over_args > 0) {
+                                while (over_args > 0) {
+                                    _store_value(arg, arguments.front());
+                                    arguments.pop_front();
+                                    --over_args;
+                                }
+                            } else {
+                                _store_default_value(arg);
+                            }
+                            break;
+                        default :
+                            for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                                _store_value(arg, arguments.front());
+                                arguments.pop_front();
+                            }
+                            break;
                     }
                 }
             } else if (min_args + one_args >= arguments.size()) {
@@ -2771,23 +2838,26 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = arg.nargs();
-                    if (nargs.empty()) {
-                        _store_value(arg, arguments.front());
-                        arguments.pop_front();
-                    } else if (nargs == "?") {
-                        if (over_args < one_args) {
+                    switch (arg.m_nargs) {
+                        case Argument::NARGS_DEF :
                             _store_value(arg, arguments.front());
                             arguments.pop_front();
-                            ++over_args;
-                        } else {
-                            _store_default_value(arg);
-                        }
-                    } else {
-                        for (std::size_t n = 0; n < arg.num_args(); ++n) {
-                            _store_value(arg, arguments.front());
-                            arguments.pop_front();
-                        }
+                            break;
+                        case Argument::OPTIONAL :
+                            if (over_args < one_args) {
+                                _store_value(arg, arguments.front());
+                                arguments.pop_front();
+                                ++over_args;
+                            } else {
+                                _store_default_value(arg);
+                            }
+                            break;
+                        default :
+                            for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                                _store_value(arg, arguments.front());
+                                arguments.pop_front();
+                            }
+                            break;
                     }
                 }
             } else {
@@ -2796,12 +2866,11 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = arg.nargs();
-                    if (nargs.empty()) {
+                    if (arg.m_nargs == Argument::NARGS_DEF) {
                         _store_value(arg, arguments.front());
                         arguments.pop_front();
                     } else {
-                        std::size_t num_args = (nargs == "?" ? 1 : arg.num_args());
+                        std::size_t num_args = (arg.m_nargs == Argument::OPTIONAL ? 1 : arg.num_args());
                         for (std::size_t n = 0; n < num_args; ++n) {
                             _store_value(arg, arguments.front());
                             arguments.pop_front();
@@ -2809,7 +2878,7 @@ private:
                     }
                 }
             }
-            auto const name = arguments.front();
+            auto const& name = arguments.front();
             std::string choices;
             for (auto const& parser : subparser.first->m_parsers) {
                 if (!choices.empty()) {
@@ -2854,19 +2923,24 @@ private:
                 if (!(arg.action() & (Action::store | Action::append | Action::extend))) {
                     continue;
                 }
-                auto const& nargs = arg.nargs();
                 std::size_t min_amount = 0;
-                if (nargs.empty()) {
-                    ++min_amount;
-                } else if (nargs == "+") {
-                    ++min_amount;
-                    more_args = true;
-                } else if (nargs == "?") {
-                    ++one_args;
-                } else if (nargs == "*") {
-                    more_args = true;
-                } else {
-                    min_amount += arg.num_args();
+                switch (arg.m_nargs) {
+                    case Argument::OPTIONAL :
+                        ++one_args;
+                        break;
+                    case Argument::ONE_OR_MORE :
+                        ++min_amount;
+                        more_args = true;
+                        break;
+                    case Argument::ZERO_OR_MORE :
+                        more_args = true;
+                        break;
+                    case Argument::NARGS_INT :
+                        min_amount += arg.num_args();
+                        break;
+                    default :
+                        ++min_amount;
+                        break;
                 }
                 if (min_args + min_amount > arguments.size()) {
                     break;
@@ -2884,15 +2958,20 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = arg.nargs();
-                    if (nargs.empty() || nargs == "+") {
-                        _store_value(arg, arguments.at(i++));
-                    } else if (nargs == "?" || nargs == "*") {
-                        _store_default_value(arg);
-                    } else {
-                        for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                    switch (arg.m_nargs) {
+                        case Argument::NARGS_DEF :
+                        case Argument::ONE_OR_MORE :
                             _store_value(arg, arguments.at(i++));
-                        }
+                            break;
+                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_MORE :
+                            _store_default_value(arg);
+                            break;
+                        default :
+                            for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                                _store_value(arg, arguments.at(i++));
+                            }
+                            break;
                     }
                 }
             } else if (more_args) {
@@ -2903,30 +2982,35 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = arg.nargs();
-                    if (nargs.empty()) {
-                        _store_value(arg, arguments.at(i++));
-                    } else if (nargs == "+") {
-                        _store_value(arg, arguments.at(i++));
-                        while (over_args > 0) {
+                    switch (arg.m_nargs) {
+                        case Argument::NARGS_DEF :
                             _store_value(arg, arguments.at(i++));
-                            --over_args;
-                        }
-                    } else if (nargs == "?") {
-                        _store_default_value(arg);
-                    } else if (nargs == "*") {
-                        if (over_args > 0) {
+                            break;
+                        case Argument::ONE_OR_MORE :
+                            _store_value(arg, arguments.at(i++));
                             while (over_args > 0) {
                                 _store_value(arg, arguments.at(i++));
                                 --over_args;
                             }
-                        } else {
+                            break;
+                        case Argument::OPTIONAL :
                             _store_default_value(arg);
-                        }
-                    } else {
-                        for (std::size_t n = 0; n < arg.num_args(); ++n) {
-                            _store_value(arg, arguments.at(i++));
-                        }
+                            break;
+                        case Argument::ZERO_OR_MORE :
+                            if (over_args > 0) {
+                                while (over_args > 0) {
+                                    _store_value(arg, arguments.at(i++));
+                                    --over_args;
+                                }
+                            } else {
+                                _store_default_value(arg);
+                            }
+                            break;
+                        default :
+                            for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                                _store_value(arg, arguments.at(i++));
+                            }
+                            break;
                     }
                 }
             } else if (min_args + one_args >= arguments.size()) {
@@ -2937,20 +3021,23 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = arg.nargs();
-                    if (nargs.empty()) {
-                        _store_value(arg, arguments.at(i++));
-                    } else if (nargs == "?") {
-                        if (over_args < one_args) {
+                    switch (arg.m_nargs) {
+                        case Argument::NARGS_DEF :
                             _store_value(arg, arguments.at(i++));
-                            ++over_args;
-                        } else {
-                            _store_default_value(arg);
-                        }
-                    } else {
-                        for (std::size_t n = 0; n < arg.num_args(); ++n) {
-                            _store_value(arg, arguments.at(i++));
-                        }
+                            break;
+                        case Argument::OPTIONAL :
+                            if (over_args < one_args) {
+                                _store_value(arg, arguments.at(i++));
+                                ++over_args;
+                            } else {
+                                _store_default_value(arg);
+                            }
+                            break;
+                        default :
+                            for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                                _store_value(arg, arguments.at(i++));
+                            }
+                            break;
                     }
                 }
             } else {
@@ -2960,11 +3047,10 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = arg.nargs();
-                    if (nargs.empty()) {
+                    if (arg.m_nargs == Argument::NARGS_DEF) {
                         _store_value(arg, arguments.at(i++));
                     } else {
-                        std::size_t num_args = (nargs == "?" ? 1 : arg.num_args());
+                        std::size_t num_args = (arg.m_nargs == Argument::OPTIONAL ? 1 : arg.num_args());
                         for (std::size_t n = 0; n < num_args; ++n) {
                             _store_value(arg, arguments.at(i++));
                         }
@@ -3129,35 +3215,32 @@ private:
                     case Action::append :
                     case Action::extend :
                         if (splitted.size() == 2) {
-                            auto const& nargs = temp->nargs();
-                            if (!nargs.empty() && temp->num_args() > 1) {
-                                handle_error("argument " + arg + ": expected " + nargs + " arguments");
+                            if (temp->m_nargs != Argument::NARGS_DEF && temp->num_args() > 1) {
+                                handle_error(temp->error_nargs(arg));
                             }
                             _store_value(*temp, splitted.back());
                         } else {
-                            auto const& nargs = temp->nargs();
+                            auto const& nargs = temp->m_nargs;
                             uint32_t n = 0;
                             uint32_t num_args = temp->num_args();
                             while (true) {
                                 ++i;
                                 if (i == parsed_arguments.size()) {
                                     if (n == 0) {
-                                        if (nargs.empty()) {
-                                            handle_error("argument " + arg + ": expected one argument");
-                                        } else if (nargs == "?") {
-                                            _store_value(*temp, temp->const_value());
-                                        } else if (nargs == "*") {
-                                            // OK
-                                        } else if (nargs == "+") {
-                                            handle_error("argument " + arg
-                                                         + ": expected at least one argument");
-                                        } else {
-                                            handle_error("argument " + arg
-                                                         + ": expected " + nargs + " arguments");
+                                        switch (temp->m_nargs) {
+                                            case Argument::NARGS_DEF :
+                                            case Argument::NARGS_INT :
+                                            case Argument::ONE_OR_MORE :
+                                                handle_error(temp->error_nargs(arg));
+                                                break;
+                                            case Argument::OPTIONAL :
+                                                _store_value(*temp, temp->const_value());
+                                                break;
+                                            default :
+                                                break;
                                         }
                                     } else if (num_args != 0 && n < num_args) {
-                                        handle_error("argument " + arg
-                                                     + ": expected " + nargs + " arguments");
+                                        handle_error(temp->error_nargs(arg));
                                     }
                                     break;
                                 } else {
@@ -3169,30 +3252,30 @@ private:
                                         ++n;
                                     } else if (n == 0) {
                                         --i;
-                                        if (nargs.empty()) {
-                                            handle_error("argument " + arg + ": expected one argument");
-                                        } else if (nargs == "?") {
-                                            _store_value(*temp, temp->const_value());
-                                            break;
-                                        } else if (nargs == "*") {
-                                            break;
-                                        } else if (nargs == "+") {
-                                            handle_error("argument " + arg
-                                                         + ": expected at least one argument");
-                                        } else {
-                                            handle_error("argument " + arg
-                                                         + ": expected " + nargs + " arguments");
+                                        switch (temp->m_nargs) {
+                                            case Argument::NARGS_DEF :
+                                            case Argument::NARGS_INT :
+                                            case Argument::ONE_OR_MORE :
+                                                handle_error(temp->error_nargs(arg));
+                                                break;
+                                            case Argument::OPTIONAL :
+                                                _store_value(*temp, temp->const_value());
+                                                break;
+                                            default :
+                                                break;
                                         }
+                                        break;
                                     } else {
                                         if (num_args != 0 && n < num_args) {
-                                            handle_error("argument " + arg
-                                                         + ": expected " + nargs + " arguments");
+                                            handle_error(temp->error_nargs(arg));
                                         }
                                         --i;
                                         break;
                                     }
                                 }
-                                if (nargs.empty() || nargs == "?" || (num_args != 0 && n == num_args)) {
+                                if (temp->m_nargs == Argument::NARGS_DEF
+                                        || temp->m_nargs == Argument::OPTIONAL
+                                        || (num_args != 0 && n == num_args)) {
                                     break;
                                 }
                             }
@@ -3205,21 +3288,18 @@ private:
                     case Action::count :
                         if (splitted.size() == 1) {
                             if (temp->action() == Action::append_const && !temp->default_value().empty()) {
-                                handle_error("argument " + temp->flags().front()
-                                             + ": ignored default value '" + temp->default_value() + "'");
+                                handle_error(detail::_ignore_default(temp->flags().front(), temp->default_value()));
                             }
                             result.self_value_stored(*temp);
                         } else {
-                            handle_error("argument " + arg
-                                         + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error(detail::_ignore_explicit(arg, splitted.back()));
                         }
                         break;
                     case Action::help :
                         if (splitted.size() == 1) {
                             _print_help_and_exit();
                         } else {
-                            handle_error("argument " + arg
-                                         + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error(detail::_ignore_explicit(arg, splitted.back()));
                         }
                         break;
                     case Action::version :
@@ -3230,8 +3310,7 @@ private:
                             std::cout << temp->version() << std::endl;
                             exit(0);
                         } else {
-                            handle_error("argument " + arg
-                                         + ": ignored explicit argument '" + splitted.back() + "'");
+                            handle_error(detail::_ignore_explicit(arg, splitted.back()));
                         }
                         break;
                     default :
@@ -3293,8 +3372,7 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    auto const& nargs = arg.nargs();
-                    if (nargs == "?" || nargs == "*") {
+                    if (arg.m_nargs == Argument::OPTIONAL || arg.m_nargs == Argument::ZERO_OR_MORE) {
                         _store_default_value(arg);
                         continue;
                     }
@@ -3496,8 +3574,7 @@ private:
             pos += 1 + str.size();
         };
         for (auto const& arg : optional) {
-            auto const str = arg.usage();
-            _write_arg_usage(str, true);
+            _write_arg_usage(arg.usage(), true);
         }
         for (std::size_t i = 0; i < positional.size(); ++i) {
             if (subparser.first && subparser.second == i) {
