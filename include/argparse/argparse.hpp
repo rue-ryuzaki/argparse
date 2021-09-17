@@ -675,6 +675,36 @@ public:
     }
 
     /*!
+     *  \brief Set argument 'nargs' optional ("?") value
+     *
+     *  \return Current argument reference
+     */
+    Argument& optional()
+    {
+        return nargs("?");
+    }
+
+    /*!
+     *  \brief Set argument 'nargs' zero_or_more ("*") value
+     *
+     *  \return Current argument reference
+     */
+    Argument& zero_or_more()
+    {
+        return nargs("*");
+    }
+
+    /*!
+     *  \brief Set argument 'nargs' one_or_more ("+") value
+     *
+     *  \return Current argument reference
+     */
+    Argument& one_or_more()
+    {
+        return nargs("+");
+    }
+
+    /*!
      *  \brief Set argument 'const' value
      *
      *  \param value Const value
