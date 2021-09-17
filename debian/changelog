@@ -1,3 +1,11 @@
+cpp-argparse-dev (0.5.0-0ppa0) focal; urgency=low
+
+  * Rename Argument::callback to Argument::handle
+  * Add custom nargs functions: optional, zero_or_more, one_or_more
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Fri, 17 Sep 2021 22:44:59 +0300
+
 cpp-argparse-dev (0.4.4-0ppa0) focal; urgency=low
 
   * Fix found data in Namespace if Subparser::dest() set
