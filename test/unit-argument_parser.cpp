@@ -1393,6 +1393,83 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         REQUIRE(args4.get<std::string>("baz") == "Z");
         REQUIRE(args4.get<std::string>("cmd") == "b");
     }
+
+    SECTION("11.4. main parser with negative number options present") {
+        parser.add_argument("-1").dest("one").help("one help");
+        parser.add_argument("--foo").action("store_true").help("foo help");
+
+        auto& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+
+        auto& parser_a = subparsers.add_parser("a").help("a help");
+        parser_a.add_argument("bar").help("bar help");
+
+        auto& parser_b = subparsers.add_parser("b").help("b help");
+        parser_b.add_argument("--baz").choices("XYZ").help("baz help");
+
+        // so -1 is an option in main
+        auto args0 = parser.parse_args({ "-1", "x" });
+        REQUIRE(args0.get<std::string>("one") == "x");
+        REQUIRE(args0.get<uint32_t>("bar") == 0);
+        REQUIRE(args0.get<bool>("foo") == false);
+        REQUIRE(args0.get<std::string>("baz") == "");
+        REQUIRE(args0.get<std::string>("cmd") == "");
+
+        auto args1 = parser.parse_args({ "a", "-1" });
+        REQUIRE(args1.get<std::string>("one") == "");
+        REQUIRE(args1.get<int32_t>("bar") == -1);
+        REQUIRE(args1.get<bool>("foo") == false);
+        REQUIRE(args1.get<std::string>("baz") == "");
+        REQUIRE(args1.get<std::string>("cmd") == "a");
+
+        // so -2 is an option in main
+        REQUIRE_THROWS(parser.parse_args({ "-2" }));
+
+        auto args2 = parser.parse_args({ "--foo", "a", "-2" });
+        REQUIRE(args2.get<std::string>("one") == "");
+        REQUIRE(args2.get<int32_t>("bar") == -2);
+        REQUIRE(args2.get<bool>("foo") == true);
+        REQUIRE(args2.get<std::string>("baz") == "");
+        REQUIRE(args2.get<std::string>("cmd") == "a");
+
+        // so both -1s are options in main
+        REQUIRE_THROWS(parser.parse_args({ "-1", "-1" }));
+    }
+
+    SECTION("11.5. subparser with negative number options present") {
+        parser.add_argument("--foo").action("store_true").help("foo help");
+        parser.add_argument("--boo").action("store").help("boo help");
+
+        auto& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+
+        auto& parser_a = subparsers.add_parser("a").help("a help");
+        parser_a.add_argument("bar").help("bar help");
+        parser_a.add_argument("-1").dest("one").help("one help");
+
+        auto& parser_b = subparsers.add_parser("b").help("b help");
+        parser_b.add_argument("--baz").choices("XYZ").help("baz help");
+
+        // so -1 is an option in subparser
+        auto args0 = parser.parse_args({ "--boo", "-1", "a", "-1", "x", "1" });
+        REQUIRE(args0.get<std::string>("one") == "x");
+        REQUIRE(args0.get<std::string>("boo") == "-1");
+        REQUIRE(args0.get<int32_t>("bar") == 1);
+        REQUIRE(args0.get<bool>("foo") == false);
+        REQUIRE(args0.get<std::string>("baz") == "");
+        REQUIRE(args0.get<std::string>("cmd") == "a");
+
+        auto args1 = parser.parse_args({ "a", "-1", "x", "1" });
+        REQUIRE(args1.get<std::string>("one") == "x");
+        REQUIRE(args1.get<std::string>("boo") == "");
+        REQUIRE(args1.get<int32_t>("bar") == 1);
+        REQUIRE(args1.get<bool>("foo") == false);
+        REQUIRE(args1.get<std::string>("baz") == "");
+        REQUIRE(args1.get<std::string>("cmd") == "a");
+
+        // so -2 is an option in subparser
+        REQUIRE_THROWS(parser.parse_args({ "a", "-1", "x", "-2" }));
+        // so both -1s are options in subparser
+        REQUIRE_THROWS(parser.parse_args({ "a", "-1", "-1" }));
+    }
 }
 
 TEST_CASE("12. default values", "[argument_parser]")
