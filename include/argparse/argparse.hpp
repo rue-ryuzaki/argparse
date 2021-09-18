@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Argument parser for C++11 (ArgumentParser v0.5.0)
+ * Argument parser for C++11 (ArgumentParser v0.5.1)
  *
  * Copyright (c) 2021 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  *
@@ -29,7 +29,7 @@
 
 #define ARGPARSE_VERSION_MAJOR 0
 #define ARGPARSE_VERSION_MINOR 5
-#define ARGPARSE_VERSION_PATCH 0
+#define ARGPARSE_VERSION_PATCH 1
 
 #include <algorithm>
 #include <array>
