@@ -179,6 +179,11 @@ TEST_CASE("2. optional arguments", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ "--b", bar }));
         REQUIRE_THROWS(parser.parse_args({ "--ba", bar }));
     }
+
+    SECTION("2.8. conflicting option string") {
+        REQUIRE_THROWS(parser.add_argument({ "-f", "--foo" }));
+        REQUIRE_THROWS(parser.add_argument({ "--foo" }).dest("foo"));
+    }
 }
 
 TEST_CASE("3. optional arguments containing -", "[argument_parser]")
