@@ -1592,3 +1592,43 @@ TEST_CASE("13. value exists check", "[argument_parser]")
         REQUIRE(args1.get<std::string>("bar") == new_value);
     }
 }
+
+TEST_CASE("14. pseudo-argument '--'", "[argument_parser]")
+{
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("14.1. options like '--' [fail]") {
+        parser.add_argument("--").action("store").help("-- help");
+
+        // dest= is required for options like '--'
+        REQUIRE_THROWS(parser.parse_args({ }));
+        REQUIRE_THROWS(parser.parse_args({ "--=1" }));
+    }
+
+    SECTION("14.2. options like '--' [ ok ]") {
+        // better don't use dest='--'
+        parser.add_argument("--").action("store").dest("--").help("-- help");
+        REQUIRE_THROWS(parser.add_argument("--").action("store").dest("foo").help("foo help"));
+
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.get<std::string>("--") == "");
+
+        auto args1 = parser.parse_args({ "--=1" });
+        REQUIRE(args1.get<std::string>("--") == "1");
+    }
+
+    SECTION("14.3. store arguments like optional") {
+        parser.add_argument("store1").action("store").help("store1 help");
+        parser.add_argument("--store2").action("store").help("store2 help");
+
+        auto args0 = parser.parse_args({ "--", "--store2" });
+        REQUIRE(args0.get<std::string>("store1") == "--store2");
+        REQUIRE(args0.get<std::string>("store2") == "");
+
+        REQUIRE_THROWS(parser.parse_args({  "--", "--store2", "--store2=--store2" }));
+
+        auto args1 = parser.parse_args({ "--store2=--store2", "--", "--store2" });
+        REQUIRE(args1.get<std::string>("store1") == "--store2");
+        REQUIRE(args1.get<std::string>("store2") == "--store2");
+    }
+}

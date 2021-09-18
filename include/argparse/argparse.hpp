@@ -55,6 +55,7 @@ namespace detail {
 std::size_t const _usage_limit = 80;
 std::size_t const _argument_help_limit = 24;
 std::string const _default_prefix_chars = "-";
+std::string const _pseudo_argument = "--";
 
 static inline void _ltrim(std::string& s)
 {
@@ -2658,6 +2659,11 @@ private:
                         && !arg.m_const.status()) {
                     throw TypeError("missing 1 required positional argument: 'const'");
                 }
+                for (auto const& flag : arg.flags()) {
+                    if (flag == detail::_pseudo_argument && arg.dest().empty()) {
+                        throw ValueError("dest= is required for options like '--'");
+                    }
+                }
             }
         };
         auto _validate_argument_value = [this] (Argument const& arg, std::string const& value)
@@ -2703,6 +2709,7 @@ private:
         }
 
         bool have_negative_options = _is_negative_numbers_presented(optional, m_prefix_chars);
+        bool was_pseudo_argument = false;
 
         std::vector<std::string> subparser_flags;
         if (subparser.first && !subparser.first->dest().empty()) {
@@ -3184,11 +3191,11 @@ private:
             }
         };
         auto _check_abbreviations = [this, _separate_arg_abbrev, result,
-                _prefix_chars, have_negative_options]
+                _prefix_chars, have_negative_options, was_pseudo_argument]
                 (std::vector<std::string>& arguments, size_t i, std::vector<Argument> const& optionals)
         {
             auto& arg = arguments.at(i);
-            if (!arg.empty() && !result.exists(arg)
+            if (!arg.empty() && !result.exists(arg) && !was_pseudo_argument
                     && detail::_is_optional_argument(arg, _prefix_chars())
                     && (have_negative_options || !detail::_is_negative_number(arg))) {
                 std::vector<std::string> temp;
@@ -3260,6 +3267,11 @@ private:
             exit(0);
         };
         for (std::size_t i = 0; i < parsed_arguments.size(); ++i) {
+            if (!was_pseudo_argument
+                    && parsed_arguments.at(i) == detail::_pseudo_argument) {
+                was_pseudo_argument = true;
+                continue;
+            }
             _check_abbreviations(parsed_arguments, i, capture_parser ? capture_parser->m_optional : optional);
             auto arg = parsed_arguments.at(i);
             auto const splitted = detail::_split_equal(arg);
@@ -3268,6 +3280,9 @@ private:
             }
             auto const* temp = capture_parser ? _get_subparser_optional_arg_by_flag(*capture_parser, arg)
                                               : _get_optional_arg_by_flag(arg);
+            if (was_pseudo_argument) {
+                temp = nullptr;
+            }
             if (temp) {
                 switch (temp->action()) {
                     case Action::store :
@@ -3376,9 +3391,10 @@ private:
                         handle_error("action not supported");
                         break;
                 }
-            } else if ((have_negative_options && detail::_is_negative_number(arg))
-                       || (detail::_is_optional_argument(arg, _prefix_chars())
-                           && !detail::_is_negative_number(arg))) {
+            } else if (!was_pseudo_argument &&
+                       ((have_negative_options && detail::_is_negative_number(arg))
+                        || (detail::_is_optional_argument(arg, _prefix_chars())
+                            && !detail::_is_negative_number(arg)))) {
                 unrecognized_args.push_back(arg);
             } else {
                 std::deque<std::string> values;
@@ -3389,7 +3405,8 @@ private:
                         break;
                     } else {
                         auto const& next = parsed_arguments.at(i);
-                        if (!detail::_is_optional_argument(next, _prefix_chars())
+                        if (was_pseudo_argument
+                                || !detail::_is_optional_argument(next, _prefix_chars())
                                 || (!have_negative_options
                                     && detail::_is_negative_number(next))) {
                             values.push_back(next);
