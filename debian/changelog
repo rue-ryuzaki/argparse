@@ -1,3 +1,12 @@
+cpp-argparse-dev (0.5.1-0ppa0) focal; urgency=low
+
+  * Allow subparser with negative number options present
+  * Add conflicting option string check
+  * Fix Argument::dest set
+  * Add initial pseudo-argument '--' support
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 18 Sep 2021 21:44:40 +0300
+
 cpp-argparse-dev (0.5.0-0ppa0) focal; urgency=low
 
   * Rename Argument::callback to Argument::handle
