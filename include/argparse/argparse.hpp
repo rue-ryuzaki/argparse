@@ -1335,9 +1335,20 @@ public:
             }
             _update_flag_name(flag);
         }
-        m_arguments.emplace_back(Argument(flags, flag_name,
-                                          is_optional ? Argument::Optional
-                                                      : Argument::Positional));
+        Argument arg(flags, flag_name, is_optional ? Argument::Optional : Argument::Positional);
+        if (is_optional) {
+            for (auto const& arg_flag : flags) {
+                for (auto const& opt : m_optional) {
+                    for (auto const& flag : opt.flags()) {
+                        if (flag == arg_flag) {
+                            throw ArgumentError("argument " + detail::_vector_to_string(flags, "/")
+                                                + ": conflicting option string: " + flag);
+                        }
+                    }
+                }
+            }
+        }
+        m_arguments.emplace_back(std::move(arg));
         (is_optional ? m_optional : m_positional).push_back(m_arguments.back());
         return m_arguments.back();
     }
