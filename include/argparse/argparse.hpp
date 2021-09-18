@@ -857,7 +857,7 @@ public:
             throw ValueError("dest supplied twice for positional argument");
         }
         m_dest_str = detail::_trim_copy(value);
-        if (m_dest.empty()) {
+        if (m_dest_str.empty()) {
             m_dest.clear();
         } else if (m_dest.empty()) {
             m_dest.push_back(m_dest_str);
@@ -1385,7 +1385,8 @@ class ArgumentParser : public BaseParser
             if (flag.empty()) {
                 m_data.insert({ key, value });
             } else {
-                throw ArgumentError("argument " + flag + ": conflicting option string: " + flag);
+                throw ArgumentError("argument " + detail::_vector_to_string(key.flags(), "/")
+                                    + ": conflicting dest string: " + flag);
             }
         }
 
