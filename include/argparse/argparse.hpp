@@ -2038,6 +2038,30 @@ public:
         }
 
         /*!
+         *  \brief Get parsed argument value for custom types
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value
+         */
+        template <class T,
+                  typename std::enable_if<not std::is_integral<T>::value
+                                          and not std::is_same<bool, T>::value
+                                          and not std::is_floating_point<T>::value
+                                          and not std::is_same<std::string, T>::value
+                                          and not is_stl_container<typename std::decay<T>::type>::value
+                                          and not is_stl_array<typename std::decay<T>::type>::value
+                                          and not is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
+        T get(std::string const& key) const
+        {
+            auto const& args = data(key);
+            if (args.second.empty()) {
+                return T();
+            }
+            return to_type<T>(detail::_vector_to_string(args.second));
+        }
+
+        /*!
          *  \brief Get parsed argument value as args string
          *
          *  \param key Argument name

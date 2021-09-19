@@ -141,6 +141,45 @@ int main(int argc, char* argv[])
     return 0;
 }
 ```
+## Custom get type example
+Required std::istream& operator >>(std::istream& is, Type& t).
+```cpp
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+struct Coord
+{
+    int x;
+    int y;
+    int z;
+
+    void print()
+    {
+        std::cout << "x=" << x << ";y=" << y << ";z=" << z << std::endl;
+    }
+};
+std::istream& operator >>(std::istream& is, Coord& c)
+{
+    is >> c.x;
+    is >> c.y;
+    is >> c.z;
+    return is;
+}
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv);
+    parser.add_argument("--coord").nargs(3).help("coord help");
+
+    auto const args = parser.parse_args({ "--coord", "1", "2", "3" });
+
+    auto c = args.get<Coord>("coord");
+    c.print();
+
+    return 0;
+}
+```
 ## Features
 ### Handle
 Argument::handle(std::function<void()> func)
