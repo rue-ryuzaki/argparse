@@ -1631,4 +1631,21 @@ TEST_CASE("14. pseudo-argument '--'", "[argument_parser]")
         REQUIRE(args1.get<std::string>("store1") == "--store2");
         REQUIRE(args1.get<std::string>("store2") == "--store2");
     }
+
+    SECTION("14.4. prefix chars '+'") {
+        parser.prefix_chars("+");
+
+        parser.add_argument("store1").action("store").help("store1 help");
+        parser.add_argument("++store2").action("store").help("store2 help");
+
+        auto args0 = parser.parse_args({ "--", "++store2" });
+        REQUIRE(args0.get<std::string>("store1") == "++store2");
+        REQUIRE(args0.get<std::string>("store2") == "");
+
+        REQUIRE_THROWS(parser.parse_args({  "--", "++store2", "++store2=++store2" }));
+
+        auto args1 = parser.parse_args({ "++store2=++store2", "--", "++store2" });
+        REQUIRE(args1.get<std::string>("store1") == "++store2");
+        REQUIRE(args1.get<std::string>("store2") == "++store2");
+    }
 }
