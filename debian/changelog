@@ -1,3 +1,12 @@
+cpp-argparse-dev (0.5.2-0ppa0) focal; urgency=low
+
+  * Add custom type to Namespace::get<>()
+  * Fix default help flags generation
+  * Fix subparser usage generation
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Mon, 20 Sep 2021 22:52:19 +0300
+
 cpp-argparse-dev (0.5.1-0ppa0) focal; urgency=low
 
   * Allow subparser with negative number options present
