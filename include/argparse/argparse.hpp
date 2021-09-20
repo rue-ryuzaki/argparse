@@ -160,6 +160,14 @@ static inline std::string _flag_name(std::string str)
     return str;
 }
 
+static inline std::vector<std::string> _help_flags(std::string const& prefix_chars)
+{
+    auto const& prefix
+            = _is_string_contains_char(prefix_chars, _default_prefix_chars.front())
+            ? _default_prefix_chars.front() : prefix_chars.front();
+    return { std::string(1, prefix) + "h", std::string(2, prefix) + "help" };
+}
+
 static inline bool _is_negative_number(std::string const& str)
 {
     double value;
@@ -2218,9 +2226,7 @@ public:
           m_default_values(),
           m_parsed_arguments(),
           m_subparsers(nullptr),
-          m_subparser_pos(),
-          m_help_argument(Argument({ "-h", "--help" }, "help", Argument::Optional)
-                          .help("show this help message and exit").action(Action::help))
+          m_subparser_pos()
     { }
 
     /*!
@@ -2719,6 +2725,7 @@ private:
         auto const optional = optional_arguments();
         auto const subparser = subpurser_info();
         Parser const* capture_parser = nullptr;
+        std::vector<Argument> subparser_optional;
 
         _validate_arguments(positional);
         _validate_arguments(optional);
@@ -2751,15 +2758,10 @@ private:
             }
         }
 
-        auto _get_subparser_optional_arg_by_flag = [this] (Parser const& parser, std::string const& key) -> Argument const*
+        auto _get_subparser_optional_arg_by_flag = [&subparser_optional] (std::string const& key) -> Argument const*
         {
-            if (m_add_help
-                    && detail::_is_value_exists(key, m_help_argument.flags())) {
-                return &m_help_argument;
-            }
-            for (auto const& arg : parser.m_arguments) {
-                if (arg.type() == Argument::Optional
-                        && detail::_is_value_exists(key, arg.flags())) {
+            for (auto const& arg : subparser_optional) {
+                if (detail::_is_value_exists(key, arg.flags())) {
                     return &arg;
                 }
             }
@@ -2984,11 +2986,13 @@ private:
                 }
             }
             if (capture_parser) {
+                if (m_add_help) {
+                    subparser_optional.emplace_back(Argument(detail::_help_flags(capture_parser->m_prefix_chars), "help", Argument::Optional)
+                                                    .help("show this help message and exit").action(Action::help));
+                }
                 std::vector<Argument> pos;
                 for (auto const& arg : capture_parser->m_arguments) {
-                    if (arg.type() == Argument::Positional) {
-                        pos.push_back(arg);
-                    }
+                    (arg.type() == Argument::Positional ? pos : subparser_optional).push_back(arg);
                 }
                 positional.insert(std::begin(positional) + subparser.second,
                                   std::begin(pos), std::end(pos));
@@ -3272,7 +3276,8 @@ private:
                 std::vector<Argument> pos;
                 std::vector<Argument> opt;
                 if (m_add_help) {
-                    opt.push_back(m_help_argument);
+                    opt.emplace_back(Argument(detail::_help_flags(capture_parser->m_prefix_chars), "help", Argument::Optional)
+                                     .help("show this help message and exit").action(Action::help));
                 }
                 for (auto const& arg : capture_parser->m_arguments) {
                     (arg.type() == Argument::Optional ? opt : pos).push_back(arg);
@@ -3295,13 +3300,13 @@ private:
                 was_pseudo_argument = true;
                 continue;
             }
-            _check_abbreviations(parsed_arguments, i, capture_parser ? capture_parser->m_optional : optional);
+            _check_abbreviations(parsed_arguments, i, capture_parser ? subparser_optional : optional);
             auto arg = parsed_arguments.at(i);
             auto const splitted = detail::_split_equal(arg);
             if (splitted.size() == 2) {
                 arg = splitted.front();
             }
-            auto const* temp = capture_parser ? _get_subparser_optional_arg_by_flag(*capture_parser, arg)
+            auto const* temp = capture_parser ? _get_subparser_optional_arg_by_flag(arg)
                                               : _get_optional_arg_by_flag(arg);
             if (was_pseudo_argument) {
                 temp = nullptr;
@@ -3577,7 +3582,8 @@ private:
     {
         std::vector<Argument> result;
         if (m_add_help) {
-            result.push_back(m_help_argument);
+            result.emplace_back(Argument(detail::_help_flags(m_prefix_chars), "help", Argument::Optional)
+                                .help("show this help message and exit").action(Action::help));
         }
         for (auto const& parent : m_parents) {
             auto const args = parent.optional_arguments(add_suppress);
@@ -3803,7 +3809,6 @@ private:
     std::vector<std::string> m_parsed_arguments;
     Subparser*  m_subparsers;
     std::size_t m_subparser_pos;
-    Argument    m_help_argument;
 };
 } // argparse
 
