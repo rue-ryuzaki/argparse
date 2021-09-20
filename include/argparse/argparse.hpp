@@ -3286,6 +3286,17 @@ private:
                 if (program.empty()) {
                     program = prog();
                 }
+                auto const positional_args = positional_arguments(false);
+                for (std::size_t i = 0; i < positional_args.size(); ++i) {
+                    if (subparser.first && subparser.second == i) {
+                        break;
+                    }
+                    auto const str = positional_args.at(i).usage();
+                    if (str.empty()) {
+                        continue;
+                    }
+                    program += " " + str;
+                }
                 program += " " + capture_parser->m_name;
                 print_custom_help(pos, opt, { nullptr, 0 }, program, capture_parser->usage(),
                                   capture_parser->description(), capture_parser->epilog());
