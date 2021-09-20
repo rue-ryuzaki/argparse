@@ -428,8 +428,8 @@ public:
           m_type(type),
           m_action(Action::store),
           m_nargs(NARGS_DEF),
-          m_nargs_str(),
-          m_num_args(),
+          m_nargs_str("1"),
+          m_num_args(1),
           m_const(),
           m_default(),
           m_choices(),
@@ -594,9 +594,10 @@ public:
             case Action::store :
             case Action::append :
             case Action::extend :
-                if (m_nargs_str == "0") {
+                if (m_num_args == 0) {
                     m_nargs = NARGS_DEF;
-                    m_nargs_str.clear();
+                    m_nargs_str = "1";
+                    m_num_args = 1;
                 }
                 break;
             default :
@@ -671,7 +672,7 @@ public:
             throw ValueError("invalid nargs value '" + param + "'");
         }
         m_nargs_str = param;
-        m_num_args = 0;
+        m_num_args = 1;
         return *this;
     }
 
@@ -2486,12 +2487,7 @@ public:
                 handle_error("cannot have multiple subparser arguments");
             }
         }
-        m_subparser_pos = 0;
-        for (auto const& arg : m_arguments) {
-            if (arg.type() == Argument::Positional) {
-                ++m_subparser_pos;
-            }
-        }
+        m_subparser_pos = m_positional.size();
         m_subparsers = new Subparser();
         return *m_subparsers;
     }
@@ -2703,7 +2699,7 @@ private:
                 }
             }
         };
-        auto _is_negative_numbers_presented = [this] (std::vector<Argument> const& optionals,
+        auto _is_negative_numbers_presented = [] (std::vector<Argument> const& optionals,
                 std::string const& prefix_chars)
         {
             if (!detail::_is_string_contains_char(prefix_chars, '-')) {
@@ -2832,16 +2828,11 @@ private:
                         break;
                     case Argument::ONE_OR_MORE :
                         ++min_amount;
-                        more_args = true;
-                        break;
                     case Argument::ZERO_OR_MORE :
                         more_args = true;
                         break;
-                    case Argument::NARGS_INT :
-                        min_amount += arg.num_args();
-                        break;
                     default :
-                        ++min_amount;
+                        min_amount += arg.num_args();
                         break;
                 }
                 if (min_args + min_amount > arguments.size()) {
@@ -2873,11 +2864,13 @@ private:
                         case Argument::ZERO_OR_MORE :
                             _store_default_value(arg);
                             break;
-                        default :
+                        case Argument::NARGS_INT :
                             for (std::size_t n = 0; n < arg.num_args(); ++n) {
                                 _store_value(arg, arguments.front());
                                 arguments.pop_front();
                             }
+                            break;
+                        default :
                             break;
                     }
                 }
@@ -2916,11 +2909,13 @@ private:
                                 _store_default_value(arg);
                             }
                             break;
-                        default :
+                        case Argument::NARGS_INT :
                             for (std::size_t n = 0; n < arg.num_args(); ++n) {
                                 _store_value(arg, arguments.front());
                                 arguments.pop_front();
                             }
+                            break;
+                        default :
                             break;
                     }
                 }
@@ -2945,11 +2940,13 @@ private:
                                 _store_default_value(arg);
                             }
                             break;
-                        default :
+                        case Argument::NARGS_INT :
                             for (std::size_t n = 0; n < arg.num_args(); ++n) {
                                 _store_value(arg, arguments.front());
                                 arguments.pop_front();
                             }
+                            break;
+                        default :
                             break;
                     }
                 }
@@ -2988,14 +2985,17 @@ private:
             }
             if (capture_parser) {
                 std::vector<Argument> pos;
-                std::vector<Argument> opt;
                 for (auto const& arg : capture_parser->m_arguments) {
-                    (arg.type() == Argument::Optional ? opt : pos).push_back(arg);
+                    if (arg.type() == Argument::Positional) {
+                        pos.push_back(arg);
+                    }
                 }
                 positional.insert(std::begin(positional) + subparser.second,
                                   std::begin(pos), std::end(pos));
                 arguments.pop_front();
-                have_negative_options = _is_negative_numbers_presented(opt, capture_parser->m_prefix_chars);
+                have_negative_options
+                        = _is_negative_numbers_presented(capture_parser->m_optional,
+                                                         capture_parser->m_prefix_chars);
             } else {
                 handle_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }
@@ -3023,16 +3023,11 @@ private:
                         break;
                     case Argument::ONE_OR_MORE :
                         ++min_amount;
-                        more_args = true;
-                        break;
                     case Argument::ZERO_OR_MORE :
                         more_args = true;
                         break;
-                    case Argument::NARGS_INT :
-                        min_amount += arg.num_args();
-                        break;
                     default :
-                        ++min_amount;
+                        min_amount += arg.num_args();
                         break;
                 }
                 if (min_args + min_amount > arguments.size()) {
@@ -3060,10 +3055,12 @@ private:
                         case Argument::ZERO_OR_MORE :
                             _store_default_value(arg);
                             break;
-                        default :
+                        case Argument::NARGS_INT :
                             for (std::size_t n = 0; n < arg.num_args(); ++n) {
                                 _store_value(arg, arguments.at(i++));
                             }
+                            break;
+                        default :
                             break;
                     }
                 }
@@ -3126,10 +3123,12 @@ private:
                                 _store_default_value(arg);
                             }
                             break;
-                        default :
+                        case Argument::NARGS_INT :
                             for (std::size_t n = 0; n < arg.num_args(); ++n) {
                                 _store_value(arg, arguments.at(i++));
                             }
+                            break;
+                        default :
                             break;
                     }
                 }
@@ -3154,7 +3153,7 @@ private:
                 }
             }
         };
-        auto _separate_arg_abbrev = [this, _get_optional_arg_by_flag, optional]
+        auto _separate_arg_abbrev = [_get_optional_arg_by_flag, optional]
                 (std::vector<std::string>& temp, std::string const& arg, std::string const& name)
         {
             if (name.size() + 1 == arg.size()) {
@@ -3337,7 +3336,7 @@ private:
                                             default :
                                                 break;
                                         }
-                                    } else if (num_args != 0 && n < num_args) {
+                                    } else if (temp->m_nargs == Argument::NARGS_INT && n < num_args) {
                                         handle_error(temp->error_nargs(arg));
                                     }
                                     break;
@@ -3364,7 +3363,7 @@ private:
                                         }
                                         break;
                                     } else {
-                                        if (num_args != 0 && n < num_args) {
+                                        if (temp->m_nargs == Argument::NARGS_INT && n < num_args) {
                                             handle_error(temp->error_nargs(arg));
                                         }
                                         --i;
@@ -3373,7 +3372,7 @@ private:
                                 }
                                 if (temp->m_nargs == Argument::NARGS_DEF
                                         || temp->m_nargs == Argument::OPTIONAL
-                                        || (num_args != 0 && n == num_args)) {
+                                        || (temp->m_nargs == Argument::NARGS_INT && n == num_args)) {
                                     break;
                                 }
                             }
@@ -3637,7 +3636,6 @@ private:
     {
         auto res = program;
         std::size_t min_size = 0;
-        std::size_t const limit = detail::_usage_limit;
         if (subparser.first) {
             auto const str = subparser.first->usage();
             if (min_size < str.size()) {
@@ -3659,15 +3657,15 @@ private:
         std::size_t const usage_length = std::string("usage: ").size();
         std::size_t pos = usage_length + program.size();
         std::size_t offset = usage_length;
-        if (pos + (min_size > 0 ? (1 + min_size) : 0) <= limit) {
+        if (pos + (min_size > 0 ? (1 + min_size) : 0) <= detail::_usage_limit) {
             offset += program.size() + (min_size > 0);
         } else if (!(optional.empty() && positional.empty() && !subparser.first)) {
             res += "\n" + std::string(offset - 1, ' ');
             pos = offset - 1;
         }
-        auto _write_arg_usage = [&pos, &offset, &res, limit] (std::string const& str, bool bkt)
+        auto _write_arg_usage = [&pos, &offset, &res] (std::string const& str, bool bkt)
         {
-            if ((pos + 1 == offset) || (pos + 1 + str.size() <= limit)) {
+            if ((pos + 1 == offset) || (pos + 1 + str.size() <= detail::_usage_limit)) {
                 res += " " + (bkt ? "[" + str + "]" : str);
             } else {
                 res += "\n" + std::string(offset, ' ') + (bkt ? "[" + str + "]" : str);
