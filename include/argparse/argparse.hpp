@@ -59,8 +59,8 @@ std::string const _pseudo_argument = "--";
 
 static inline void _ltrim(std::string& s)
 {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-                                    not1(std::ptr_fun<int, int>(isspace))));
+    s.erase(std::begin(s), std::find_if(std::begin(s), std::end(s),
+                                        not1(std::ptr_fun<int, int>(isspace))));
 }
 
 static inline void _rtrim(std::string& s)
@@ -83,13 +83,13 @@ static inline std::string _trim_copy(std::string s)
 
 static inline std::string _to_lower(std::string s)
 {
-    std::transform(s.begin(), s.end(), s.begin(), tolower);
+    std::transform(std::begin(s), std::end(s), std::begin(s), tolower);
     return s;
 }
 
 static inline std::string _to_upper(std::string s)
 {
-    std::transform(s.begin(), s.end(), s.begin(), toupper);
+    std::transform(std::begin(s), std::end(s), std::begin(s), toupper);
     return s;
 }
 
@@ -1391,7 +1391,7 @@ class ArgumentParser : public BaseParser
         void create(Argument const& key,
                     std::vector<std::string> const& value = std::vector<std::string>())
         {
-            auto flag = conflict_arg(key);
+            auto const& flag = conflict_arg(key);
             if (flag.empty()) {
                 m_data.insert({ key, value });
             } else {
@@ -1490,7 +1490,7 @@ class ArgumentParser : public BaseParser
         inline std::map<Argument, ArgumentValue>::const_iterator end()    const { return std::end(m_data); }
 
     private:
-        std::string conflict_arg(Argument const& arg) const
+        std::string const& conflict_arg(Argument const& arg) const
         {
             auto _get_argument_flags = [] (Argument const& arg) -> std::vector<std::string> const&
             {
@@ -1504,7 +1504,8 @@ class ArgumentParser : public BaseParser
                     }
                 }
             }
-            return "";
+            static std::string res;
+            return res;
         }
 
         std::map<Argument, ArgumentValue> m_data;
@@ -1537,7 +1538,8 @@ public:
          *  \return Parser object
          */
         Parser(std::string const& name)
-            : m_name(name),
+            : BaseParser(),
+              m_name(name),
               m_help()
         { }
 
@@ -2026,7 +2028,7 @@ public:
                 std::cerr << "error: array size mismatch: " << res.size()
                           << ", expected " << vector.size() << std::endl;
             }
-            std::copy_n(vector.begin(), std::min(res.size(), vector.size()), res.begin());
+            std::copy_n(std::begin(vector), std::min(res.size(), vector.size()), std::begin(res));
             return res;
         }
 
@@ -2767,7 +2769,7 @@ private:
             }
             return nullptr;
         };
-        auto _get_optional_arg_by_flag = [optional] (std::string const& key) -> Argument const*
+        auto _get_optional_arg_by_flag = [&optional] (std::string const& key) -> Argument const*
         {
             for (auto const& arg : optional) {
                 if (detail::_is_value_exists(key, arg.flags())) {
@@ -2776,7 +2778,7 @@ private:
             }
             return nullptr;
         };
-        auto _prefix_chars = [this, capture_parser] ()
+        auto _prefix_chars = [this, capture_parser] () -> std::string const&
         {
             return capture_parser ? capture_parser->m_prefix_chars : m_prefix_chars;
         };
@@ -3157,7 +3159,7 @@ private:
                 }
             }
         };
-        auto _separate_arg_abbrev = [_get_optional_arg_by_flag, optional]
+        auto _separate_arg_abbrev = [_get_optional_arg_by_flag, &optional]
                 (std::vector<std::string>& temp, std::string const& arg, std::string const& name)
         {
             if (name.size() + 1 == arg.size()) {
@@ -3217,13 +3219,13 @@ private:
                 temp.push_back(arg);
             }
         };
-        auto _check_abbreviations = [this, _separate_arg_abbrev, result,
-                _prefix_chars, have_negative_options, was_pseudo_argument]
+        auto _check_abbreviations = [this, _separate_arg_abbrev, &result,
+                _prefix_chars, &have_negative_options, &was_pseudo_argument]
                 (std::vector<std::string>& arguments, size_t i, std::vector<Argument> const& optionals)
         {
             auto& arg = arguments.at(i);
-            if (!arg.empty() && !result.exists(arg) && !was_pseudo_argument
-                    && detail::_is_optional_argument(arg, _prefix_chars())
+            if (!arg.empty() && detail::_is_optional_argument(arg, _prefix_chars())
+                    && !result.exists(arg) && !was_pseudo_argument
                     && (have_negative_options || !detail::_is_negative_number(arg))) {
                 std::vector<std::string> temp;
                 if (m_allow_abbrev) {
@@ -3306,8 +3308,7 @@ private:
             exit(0);
         };
         for (std::size_t i = 0; i < parsed_arguments.size(); ++i) {
-            if (!was_pseudo_argument
-                    && parsed_arguments.at(i) == detail::_pseudo_argument) {
+            if (parsed_arguments.at(i) == detail::_pseudo_argument && !was_pseudo_argument) {
                 was_pseudo_argument = true;
                 continue;
             }
@@ -3444,8 +3445,8 @@ private:
                         break;
                     } else {
                         auto const& next = parsed_arguments.at(i);
-                        if (was_pseudo_argument
-                                || !detail::_is_optional_argument(next, _prefix_chars())
+                        if (!detail::_is_optional_argument(next, _prefix_chars())
+                                || was_pseudo_argument
                                 || (!have_negative_options
                                     && detail::_is_negative_number(next))) {
                             values.push_back(next);
