@@ -2240,7 +2240,7 @@ public:
      *  \return Argument parser object
      */
     ArgumentParser(int argc, char* argv[])
-        : ArgumentParser(argc, (char const**)(argv))
+        : ArgumentParser(argc, const_cast<char const**>(argv))
     { }
 
     /*!
