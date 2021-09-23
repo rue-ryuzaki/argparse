@@ -40,6 +40,7 @@
 #include <iostream>
 #include <list>
 #include <map>
+#include <memory>
 #include <queue>
 #include <set>
 #include <sstream>
@@ -2263,13 +2264,7 @@ public:
     /*!
      *  \brief Destroy argument parser
      */
-    ~ArgumentParser()
-    {
-        if (m_subparsers) {
-            delete m_subparsers;
-            m_subparsers = nullptr;
-        }
-    }
+    ~ArgumentParser() = default;
 
     /*!
      *  \brief Set argument parser 'prog' value
@@ -2496,7 +2491,7 @@ public:
             }
         }
         m_subparser_pos = m_positional.size();
-        m_subparsers = new Subparser();
+        m_subparsers = std::make_shared<Subparser>();
         return *m_subparsers;
     }
 
@@ -3614,7 +3609,7 @@ private:
     {
         std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
         if (m_subparsers) {
-            res.first = m_subparsers;
+            res.first = m_subparsers.get();
             for (auto const& parent : m_parents) {
                 res.second += parent.positional_arguments(add_suppress).size();
             }
@@ -3629,7 +3624,7 @@ private:
             for (std::size_t i = 0; i < m_parents.size(); ++i) {
                 auto const& parent = m_parents.at(i);
                 if (parent.m_subparsers) {
-                    res.first = m_subparsers;
+                    res.first = m_subparsers.get();
                     for (std::size_t j = 0; j < i; ++j) {
                         res.second += m_parents.at(j).positional_arguments(add_suppress).size();
                     }
@@ -3819,7 +3814,7 @@ private:
 
     std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
-    Subparser*  m_subparsers;
+    std::shared_ptr<Subparser> m_subparsers;
     std::size_t m_subparser_pos;
 };
 } // argparse
