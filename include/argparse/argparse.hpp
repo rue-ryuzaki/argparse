@@ -57,6 +57,7 @@ std::size_t const _usage_limit = 80;
 std::size_t const _argument_help_limit = 24;
 std::string const _default_prefix_chars = "-";
 std::string const _pseudo_argument = "--";
+char const _equal = '=';
 
 static inline void _ltrim(std::string& s)
 {
@@ -120,16 +121,6 @@ static inline std::string _replace(std::string s, char c, std::string const& val
     return s;
 }
 
-static inline std::vector<std::string> _split_equal(std::string const& s)
-{
-    std::size_t pos = s.find('=');
-    if (pos != std::string::npos) {
-        return { s.substr(0, pos), s.substr(pos + 1) };
-    } else {
-        return { s };
-    }
-}
-
 static inline bool _starts_with(std::string const& s, std::string const& pattern)
 {
     return s.compare(0, pattern.size(), pattern) == 0;
@@ -178,6 +169,19 @@ static inline bool _is_negative_number(std::string const& str)
         return false;
     }
     return value < 0;
+}
+
+static inline std::vector<std::string> _split_equal(std::string const& s,
+                                                    std::string const& prefix)
+{
+    std::size_t pos = _is_string_contains_char(prefix, _equal)
+            ? s.find(_equal, std::distance(std::begin(s), std::find_if(std::begin(s), std::end(s),
+              [] (char c) -> bool { return c != _equal; }))) : s.find(_equal);
+    if (pos != std::string::npos) {
+        return { s.substr(0, pos), s.substr(pos + 1) };
+    } else {
+        return { s };
+    }
 }
 
 static inline std::string _vector_to_string(std::vector<std::string> const& vec,
@@ -3097,11 +3101,12 @@ private:
             unrecognized_args.insert(std::end(unrecognized_args),
                                      std::begin(arguments), std::end(arguments));
         };
-        auto _separate_arg_abbrev = [_optional_arg_by_flag]
-                (std::vector<std::string>& temp, std::string const& arg, std::string const& name, std::vector<Argument> const& optionals)
+        auto _separate_arg_abbrev = [_optional_arg_by_flag, _prefix_chars]
+                (std::vector<std::string>& temp, std::string const& arg,
+                std::string const& name, std::vector<Argument> const& optionals)
         {
             if (name.size() + 1 == arg.size()) {
-                auto const splitted = detail::_split_equal(arg);
+                auto const splitted = detail::_split_equal(arg, _prefix_chars());
                 if (splitted.size() == 2 && !splitted.front().empty()
                         && _optional_arg_by_flag(splitted.front())) {
                     temp.push_back(arg);
@@ -3109,7 +3114,7 @@ private:
                 }
                 std::vector<std::string> flags;
                 for (std::size_t i = 0; i < name.size(); ++i) {
-                    if (name.at(i) == '=') {
+                    if (name.at(i) == detail::_equal) {
                         if (flags.empty()) {
                             flags.push_back(name.substr(i));
                         } else {
@@ -3263,7 +3268,7 @@ private:
             _check_load_args(parsed_arguments, i);
             _check_abbreviations(parsed_arguments, i, capture_parser ? subparser_optional : optional);
             auto arg = parsed_arguments.at(i);
-            auto splitted = detail::_split_equal(arg);
+            auto splitted = detail::_split_equal(arg, _prefix_chars());
             if (splitted.size() == 2 && !splitted.front().empty()) {
                 arg = splitted.front();
             } else {
