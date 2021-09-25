@@ -1649,3 +1649,38 @@ TEST_CASE("14. pseudo-argument '--'", "[argument_parser]")
         REQUIRE(args1.get<std::string>("store2") == "++store2");
     }
 }
+
+TEST_CASE("15. prefix chars '='", "[argument_parser]")
+{
+    auto parser = argparse::ArgumentParser().prefix_chars("=").exit_on_error(false);
+
+    SECTION("15.1. without store actions") {
+        parser.add_argument({ "=f", "==foo" }).action("store_true").help("foo help");
+        parser.add_argument("==bar").action("store_false").help("bar help");
+
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.get<bool>("f") == false);
+        REQUIRE(args0.get<bool>("foo") == false);
+        REQUIRE(args0.get<bool>("bar") == true);
+
+        auto args1 = parser.parse_args({ "=f", "==bar" });
+        REQUIRE(args1.get<bool>("f") == true);
+        REQUIRE(args1.get<bool>("foo") == true);
+        REQUIRE(args1.get<bool>("bar") == false);
+    }
+
+    SECTION("15.2. with store actions") {
+        parser.add_argument({ "=f", "==foo" }).action("store").help("foo help");
+        parser.add_argument("==bar").action("store").help("bar help");
+
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.get<std::string>("f") == "");
+        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE(args0.get<std::string>("bar") == "");
+
+        auto args1 = parser.parse_args({ "=f", "foo", "==bar=bar" });
+        REQUIRE(args1.get<std::string>("f") == "foo");
+        REQUIRE(args1.get<std::string>("foo") == "foo");
+        REQUIRE(args1.get<std::string>("bar") == "bar");
+    }
+}
