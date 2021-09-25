@@ -15,4 +15,5 @@ foreach(file ${files})
     string(REGEX REPLACE "unit-([^$]+)" "test-\\1" testcase ${file_basename})
 
     add_executable(${testcase} $<TARGET_OBJECTS:catch_main> ${file})
+    add_test(${testcase} ${testcase})
 endforeach()
