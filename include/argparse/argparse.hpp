@@ -1664,7 +1664,7 @@ public:
     private:
         std::string print(std::size_t limit = detail::_argument_help_limit) const
         {
-            std::string res = "  " + m_name;
+            std::string res = "    " + m_name;
             if (!help().empty()) {
                 if (res.size() + 2 > limit) {
                     res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
@@ -3691,7 +3691,7 @@ private:
                 min_size = size;
             }
             for (auto const& arg : subparser.first->m_parsers) {
-                auto size = arg.m_name.size();
+                auto size = arg.m_name.size() + 2;
                 if (min_size < size) {
                     min_size = size;
                 }
