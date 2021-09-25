@@ -2810,9 +2810,15 @@ private:
             }
             return nullptr;
         };
-        auto _prefix_chars = [this, capture_parser] () -> std::string const&
+        auto _prefix_chars = [this, &capture_parser] () -> std::string const&
         {
             return capture_parser ? capture_parser->m_prefix_chars : m_prefix_chars;
+        };
+        auto _optional_arg_by_flag = [_get_subparser_optional_arg_by_flag,
+                _get_optional_arg_by_flag, &capture_parser] (std::string const& arg) -> Argument const*
+        {
+            return capture_parser ? _get_subparser_optional_arg_by_flag(arg)
+                                  : _get_optional_arg_by_flag(arg);
         };
 
         std::vector<std::string> unrecognized_args;
@@ -3091,13 +3097,13 @@ private:
             unrecognized_args.insert(std::end(unrecognized_args),
                                      std::begin(arguments), std::end(arguments));
         };
-        auto _separate_arg_abbrev = [_get_optional_arg_by_flag, &optional]
-                (std::vector<std::string>& temp, std::string const& arg, std::string const& name)
+        auto _separate_arg_abbrev = [_optional_arg_by_flag]
+                (std::vector<std::string>& temp, std::string const& arg, std::string const& name, std::vector<Argument> const& optionals)
         {
             if (name.size() + 1 == arg.size()) {
                 auto const splitted = detail::_split_equal(arg);
                 if (splitted.size() == 2 && !splitted.front().empty()
-                        && _get_optional_arg_by_flag(splitted.front())) {
+                        && _optional_arg_by_flag(splitted.front())) {
                     temp.push_back(arg);
                     return;
                 }
@@ -3112,7 +3118,7 @@ private:
                         break;
                     }
                     Argument const* argument = nullptr;
-                    for (auto const& opt : optional) {
+                    for (auto const& opt : optionals) {
                         for (auto const& flag : opt.flags()) {
                             if (flag.size() == 2 && flag.back() == name.at(i)) {
                                 flags.push_back(flag);
@@ -3203,11 +3209,11 @@ private:
                         temp.push_back(keys.empty() ? arg : keys.front());
                     } else {
                         auto name = detail::_flag_name(keys.empty() ? arg : keys.front());
-                        _separate_arg_abbrev(temp, arg, name);
+                        _separate_arg_abbrev(temp, arg, name, optionals);
                     }
                 } else {
                     auto name = detail::_flag_name(arg);
-                    _separate_arg_abbrev(temp, arg, name);
+                    _separate_arg_abbrev(temp, arg, name, optionals);
                 }
                 arguments.erase(std::begin(arguments) + i);
                 arguments.insert(std::begin(arguments) + i, std::begin(temp), std::end(temp));
@@ -3263,8 +3269,7 @@ private:
             } else {
                 splitted.resize(1);
             }
-            auto const* temp = capture_parser ? _get_subparser_optional_arg_by_flag(arg)
-                                              : _get_optional_arg_by_flag(arg);
+            auto const* temp = _optional_arg_by_flag(arg);
             if (was_pseudo_argument) {
                 temp = nullptr;
             }
