@@ -553,6 +553,18 @@ public:
     }
 
     /*!
+     *  \brief Compare current argument with another one
+     *
+     *  \param rhs Argument to compare
+     *
+     *  \return true if current argument lesser, otherwise false
+     */
+    bool operator <(Argument const& rhs) const
+    {
+        return flags() < rhs.flags();
+    }
+
+    /*!
      *  \brief Set argument 'action' value
      *
      *  \param value Action value
@@ -1254,11 +1266,6 @@ private:
     std::function<void(std::string)> m_handle_str;
     std::function<void()> m_handle;
 };
-
-inline bool operator <(Argument const& lhs, Argument const& rhs)
-{
-    return lhs.flags() < rhs.flags();
-}
 
 /*!
  * \brief BaseParser class
@@ -2796,18 +2803,10 @@ private:
             }
         }
 
-        auto _get_subparser_optional_arg_by_flag = [&subparser_optional] (std::string const& key) -> Argument const*
+        auto _optional_arg_by_flag = [&optional, &subparser_optional, &capture_parser]
+                (std::string const& key) -> Argument const*
         {
-            for (auto const& arg : subparser_optional) {
-                if (detail::_is_value_exists(key, arg.flags())) {
-                    return &arg;
-                }
-            }
-            return nullptr;
-        };
-        auto _get_optional_arg_by_flag = [&optional] (std::string const& key) -> Argument const*
-        {
-            for (auto const& arg : optional) {
+            for (auto const& arg : (capture_parser ? subparser_optional : optional)) {
                 if (detail::_is_value_exists(key, arg.flags())) {
                     return &arg;
                 }
@@ -2817,12 +2816,6 @@ private:
         auto _prefix_chars = [this, &capture_parser] () -> std::string const&
         {
             return capture_parser ? capture_parser->m_prefix_chars : m_prefix_chars;
-        };
-        auto _optional_arg_by_flag = [_get_subparser_optional_arg_by_flag,
-                _get_optional_arg_by_flag, &capture_parser] (std::string const& arg) -> Argument const*
-        {
-            return capture_parser ? _get_subparser_optional_arg_by_flag(arg)
-                                  : _get_optional_arg_by_flag(arg);
         };
 
         std::vector<std::string> unrecognized_args;
