@@ -3157,10 +3157,9 @@ private:
         };
         auto _check_load_args = [this] (std::vector<std::string>& arguments, size_t i)
         {
-            auto& arg = arguments.at(i);
-            if (!m_fromfile_prefix_chars.empty() && !arg.empty()
-                    && detail::_is_string_contains_char(m_fromfile_prefix_chars, arg.front())) {
-                auto const load_args = convert_arg_line_to_args(arg.substr(1));
+            while (!m_fromfile_prefix_chars.empty() && !arguments.at(i).empty()
+                    && detail::_is_string_contains_char(m_fromfile_prefix_chars, arguments.at(i).front())) {
+                auto const load_args = convert_arg_line_to_args(arguments.at(i).substr(1));
                 arguments.erase(std::begin(arguments) + i);
                 arguments.insert(std::begin(arguments) + i, std::begin(load_args), std::end(load_args));
             }
