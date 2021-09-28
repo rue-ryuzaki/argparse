@@ -2023,9 +2023,6 @@ public:
             if (args.second.size() != 1) {
                 throw TypeError("trying to get data from array argument '" + key + "'");
             }
-            if (args.second.front().empty()) {
-                return T();
-            }
             return to_type<T>(args.second.front());
         }
 
@@ -2050,9 +2047,6 @@ public:
             }
             if (args.second.size() != 1) {
                 throw TypeError("trying to get data from array argument '" + key + "'");
-            }
-            if (args.second.front().empty()) {
-                return T();
             }
             return to_type<T>(args.second.front());
         }
@@ -2128,9 +2122,6 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            if (args.second.empty()) {
-                return T();
-            }
             return to_type<T>(detail::_vector_to_string(args.second));
         }
 
@@ -2257,6 +2248,9 @@ public:
         T to_type(std::string const& data) const
         {
             T result = T();
+            if (data.empty()) {
+                result;
+            }
             std::stringstream ss(data);
             ss >> result;
             if (ss.fail() || !ss.eof()) {
@@ -3125,7 +3119,7 @@ private:
                             }
                         }
                     }
-                    if (flags.size() == i) {
+                    if (!argument) {
                         // not found
                         if (flags.empty()) {
                             flags.push_back(arg);
