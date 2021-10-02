@@ -171,6 +171,24 @@ static inline bool _is_negative_number(std::string const& str)
     return value < 0;
 }
 
+static inline bool _is_optional(std::string const& arg,
+                                std::string const& prefix_chars,
+                                bool have_negative_options,
+                                bool was_pseudo_argument)
+{
+    return _is_optional_argument(arg, prefix_chars) && !was_pseudo_argument
+            && (have_negative_options || !_is_negative_number(arg));
+}
+
+static inline bool _not_optional(std::string const& arg,
+                                 std::string const& prefix_chars,
+                                 bool have_negative_options,
+                                 bool was_pseudo_argument)
+{
+    return !_is_optional_argument(arg, prefix_chars) || was_pseudo_argument
+            || (!have_negative_options && _is_negative_number(arg));
+}
+
 static inline std::vector<std::string> _split_equal(std::string const& s,
                                                     std::string const& prefix)
 {
@@ -2782,7 +2800,8 @@ private:
             subparser_flags.push_back(subparser.first->dest());
         }
         Argument subparser_arg(std::move(subparser_flags),
-                               subparser.first ? subparser.first->dest() : "", Argument::Positional);
+                               subparser.first ? subparser.first->dest()
+                                               : "", Argument::Positional);
 
         Storage result;
         result.create(positional);
@@ -2854,7 +2873,7 @@ private:
                             _store_default_value(arg);
                             break;
                         case Argument::NARGS_INT :
-                            for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                            for (std::size_t n = 0; n < arg.m_num_args; ++n) {
                                 _store_value(arg, arguments.front());
                                 arguments.pop_front();
                             }
@@ -2899,7 +2918,7 @@ private:
                             }
                             break;
                         case Argument::NARGS_INT :
-                            for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                            for (std::size_t n = 0; n < arg.m_num_args; ++n) {
                                 _store_value(arg, arguments.front());
                                 arguments.pop_front();
                             }
@@ -2930,7 +2949,7 @@ private:
                             }
                             break;
                         case Argument::NARGS_INT :
-                            for (std::size_t n = 0; n < arg.num_args(); ++n) {
+                            for (std::size_t n = 0; n < arg.m_num_args; ++n) {
                                 _store_value(arg, arguments.front());
                                 arguments.pop_front();
                             }
@@ -2949,8 +2968,7 @@ private:
                         _store_value(arg, arguments.front());
                         arguments.pop_front();
                     } else {
-                        std::size_t num_args = (arg.m_nargs == Argument::OPTIONAL ? 1 : arg.num_args());
-                        for (std::size_t n = 0; n < num_args; ++n) {
+                        for (std::size_t n = 0; n < arg.m_num_args; ++n) {
                             _store_value(arg, arguments.front());
                             arguments.pop_front();
                         }
@@ -3119,22 +3137,12 @@ private:
                             }
                         }
                     }
-                    if (!argument) {
-                        // not found
-                        if (flags.empty()) {
-                            flags.push_back(arg);
-                        } else {
-                            auto str = name.substr(i);
-                            if (!str.empty()) {
-                                if (!detail::_starts_with(str, "=")) {
-                                    flags.back() += "=";
-                                }
-                                flags.back() += str;
-                            }
-                        }
+                    if (!argument && flags.empty()) {
+                        flags.push_back(arg);
                         break;
-                    } else if (argument->action() & (Action::store | Action::append | Action::extend)) {
-                        auto str = name.substr(i + 1);
+                    } else if ((!argument && !flags.empty())
+                               || (argument && (argument->action() & (Action::store | Action::append | Action::extend)))) {
+                        auto str = name.substr(i + bool(argument));
                         if (!str.empty()) {
                             if (!detail::_starts_with(str, "=")) {
                                 flags.back() += "=";
@@ -3151,8 +3159,7 @@ private:
         };
         auto _check_load_args = [this] (std::vector<std::string>& arguments, size_t i)
         {
-            while (!m_fromfile_prefix_chars.empty() && !arguments.at(i).empty()
-                    && detail::_is_string_contains_char(m_fromfile_prefix_chars, arguments.at(i).front())) {
+            while (!arguments.at(i).empty() && detail::_is_string_contains_char(m_fromfile_prefix_chars, arguments.at(i).front())) {
                 auto const load_args = convert_arg_line_to_args(arguments.at(i).substr(1));
                 arguments.erase(std::begin(arguments) + i);
                 arguments.insert(std::begin(arguments) + i, std::begin(load_args), std::end(load_args));
@@ -3163,9 +3170,8 @@ private:
                 (std::vector<std::string>& arguments, size_t i, std::vector<Argument> const& optionals)
         {
             auto& arg = arguments.at(i);
-            if (!arg.empty() && detail::_is_optional_argument(arg, _prefix_chars())
-                    && !result.exists(arg) && !was_pseudo_argument
-                    && (have_negative_options || !detail::_is_negative_number(arg))) {
+            if (!arg.empty() && !result.exists(arg)
+                    && detail::_is_optional(arg, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
                 std::vector<std::string> temp;
                 if (m_allow_abbrev) {
                     bool is_flag_added = false;
@@ -3251,7 +3257,9 @@ private:
                 was_pseudo_argument = true;
                 continue;
             }
-            _check_load_args(parsed_arguments, i);
+            if (!m_fromfile_prefix_chars.empty() && !was_pseudo_argument) {
+                _check_load_args(parsed_arguments, i);
+            }
             _check_abbreviations(parsed_arguments, i, capture_parser ? subparser_optional : optional);
             auto arg = parsed_arguments.at(i);
             auto splitted = detail::_split_equal(arg, _prefix_chars());
@@ -3295,9 +3303,7 @@ private:
                                     break;
                                 } else {
                                     auto const& next = parsed_arguments.at(i);
-                                    if (!detail::_is_optional_argument(next, _prefix_chars())
-                                            || (!have_negative_options
-                                                && detail::_is_negative_number(next))) {
+                                    if (detail::_not_optional(next, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
                                         _store_value(*temp, next);
                                         ++n;
                                     } else if (n == 0) {
@@ -3372,10 +3378,7 @@ private:
                         handle_error("action not supported");
                         break;
                 }
-            } else if (!was_pseudo_argument &&
-                       ((have_negative_options && detail::_is_negative_number(arg))
-                        || (detail::_is_optional_argument(arg, _prefix_chars())
-                            && !detail::_is_negative_number(arg)))) {
+            } else if (detail::_is_optional(arg, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
                 unrecognized_args.push_back(arg);
             } else {
                 std::deque<std::string> values;
@@ -3386,10 +3389,7 @@ private:
                         break;
                     } else {
                         auto const& next = parsed_arguments.at(i);
-                        if (!detail::_is_optional_argument(next, _prefix_chars())
-                                || was_pseudo_argument
-                                || (!have_negative_options
-                                    && detail::_is_negative_number(next))) {
+                        if (detail::_not_optional(next, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
                             values.push_back(next);
                         } else {
                             --i;
@@ -3465,8 +3465,7 @@ private:
             }
         }
         if (!unrecognized_args.empty()) {
-            auto args = detail::_vector_to_string(unrecognized_args);
-            handle_error("unrecognized arguments: " + args);
+            handle_error("unrecognized arguments: " + detail::_vector_to_string(unrecognized_args));
         }
         for (auto& arg : result) {
             if (arg.second.empty() && arg.first.action() != Action::count
@@ -3635,8 +3634,7 @@ private:
         }
         for (std::size_t i = 0; i < positional.size(); ++i) {
             if (subparser.first && subparser.second == i) {
-                auto const str = subparser.first->usage();
-                _write_arg_usage(str, false);
+                _write_arg_usage(subparser.first->usage(), false);
             }
             auto const str = positional.at(i).usage();
             if (str.empty()) {
@@ -3645,8 +3643,7 @@ private:
             _write_arg_usage(str, false);
         }
         if (subparser.first && subparser.second == positional.size()) {
-            auto const str = subparser.first->usage();
-            _write_arg_usage(str, false);
+            _write_arg_usage(subparser.first->usage(), false);
         }
         return res;
     }
