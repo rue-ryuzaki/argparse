@@ -175,22 +175,18 @@ static inline bool _is_negative_number(std::string const& str)
     return value < 0;
 }
 
-static inline bool _is_optional(std::string const& arg,
-                                std::string const& prefix_chars,
-                                bool have_negative_options,
-                                bool was_pseudo_argument)
+static inline bool _is_optional(std::string const& arg, std::string const& prefix_chars,
+                                bool have_negative_args, bool was_pseudo_arg)
 {
-    return _is_value_exists(arg.front(), prefix_chars) && !was_pseudo_argument
-            && (have_negative_options || !_is_negative_number(arg));
+    return _is_value_exists(arg.front(), prefix_chars) && !was_pseudo_arg
+            && (have_negative_args || !_is_negative_number(arg));
 }
 
-static inline bool _not_optional(std::string const& arg,
-                                 std::string const& prefix_chars,
-                                 bool have_negative_options,
-                                 bool was_pseudo_argument)
+static inline bool _not_optional(std::string const& arg, std::string const& prefix_chars,
+                                 bool have_negative_args, bool was_pseudo_arg)
 {
-    return !_is_value_exists(arg.front(), prefix_chars) || was_pseudo_argument
-            || (!have_negative_options && _is_negative_number(arg));
+    return !_is_value_exists(arg.front(), prefix_chars) || was_pseudo_arg
+            || (!have_negative_args && _is_negative_number(arg));
 }
 
 static inline std::vector<std::string> _split_equal(std::string const& s,
@@ -2135,7 +2131,8 @@ public:
                                           and not std::is_same<std::string, T>::value
                                           and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
-                                          and not is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
+                                          and not is_stl_queue<typename std::decay<T>::type>::value>
+                  ::type* = nullptr>
         T get(std::string const& key) const
         {
             auto const& args = data(key);
@@ -2753,15 +2750,14 @@ private:
             auto const& choices = arg.m_choices;
             if (choices.status()) {
                 auto str = detail::_remove_quotes(value);
-                if (!(str.empty() && choices().empty())
-                        && !detail::_is_value_exists(str, choices())) {
+                if (!(str.empty() && choices().empty()) && !detail::_is_value_exists(str, choices())) {
                     auto values = detail::_vector_to_string(choices(), ", ", "'");
                     handle_error("argument " + arg.flags().front()
                                  + ": invalid choice: '" + str + "' (choose from " + values + ")");
                 }
             }
         };
-        auto _is_negative_numbers_presented = [] (std::vector<Argument> const& optionals,
+        auto _negative_numbers_presented = [] (std::vector<Argument> const& optionals,
                 std::string const& prefix_chars)
         {
             if (!detail::_is_value_exists('-', prefix_chars)) {
@@ -2781,7 +2777,7 @@ private:
         auto const optional = optional_arguments();
         auto const subparser = subpurser_info();
         Parser const* capture_parser = nullptr;
-        std::vector<Argument> subparser_optional;
+        std::vector<Argument> sub_optional;
 
         _validate_arguments(positional);
         _validate_arguments(optional);
@@ -2791,8 +2787,8 @@ private:
             }
         }
 
-        bool have_negative_options = _is_negative_numbers_presented(optional, m_prefix_chars);
-        bool was_pseudo_argument = false;
+        bool have_negative_args = _negative_numbers_presented(optional, m_prefix_chars);
+        bool was_pseudo_arg = false;
 
         std::vector<std::string> subparser_flags;
         if (subparser.first && !subparser.first->dest().empty()) {
@@ -2815,10 +2811,10 @@ private:
             }
         }
 
-        auto _optional_arg_by_flag = [&optional, &subparser_optional, &capture_parser]
+        auto _optional_arg_by_flag = [&optional, &sub_optional, &capture_parser]
                 (std::string const& key) -> Argument const*
         {
-            for (auto const& arg : (capture_parser ? subparser_optional : optional)) {
+            for (auto const& arg : (capture_parser ? sub_optional : optional)) {
                 if (detail::_is_value_exists(key, arg.flags())) {
                     return &arg;
                 }
@@ -3044,19 +3040,19 @@ private:
             }
             if (capture_parser) {
                 if (m_add_help) {
-                    subparser_optional.emplace_back(Argument(detail::_help_flags(capture_parser->m_prefix_chars), "help", Argument::Optional)
-                                                    .help("show this help message and exit").action(Action::help));
+                    sub_optional.emplace_back(Argument(detail::_help_flags(capture_parser->m_prefix_chars),
+                                                       "help", Argument::Optional)
+                                              .help("show this help message and exit").action(Action::help));
                 }
                 std::vector<Argument> pos;
                 for (auto const& arg : capture_parser->m_arguments) {
-                    (arg.type() == Argument::Positional ? pos : subparser_optional).push_back(arg);
+                    (arg.type() == Argument::Positional ? pos : sub_optional).push_back(arg);
                 }
                 positional.insert(std::begin(positional) + subparser.second,
                                   std::begin(pos), std::end(pos));
                 arguments.pop_front();
-                have_negative_options
-                        = _is_negative_numbers_presented(capture_parser->m_optional,
-                                                         capture_parser->m_prefix_chars);
+                have_negative_args = _negative_numbers_presented(capture_parser->m_optional,
+                                                                 capture_parser->m_prefix_chars);
             } else {
                 handle_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }
@@ -3140,7 +3136,8 @@ private:
                         flags.push_back(arg);
                         break;
                     } else if ((!argument && !flags.empty())
-                               || (argument && (argument->action() & (Action::store | Action::append | Action::extend)))) {
+                               || (argument && (argument->action()
+                                                & (Action::store | Action::append | Action::extend)))) {
                         auto str = name.substr(i + bool(argument));
                         if (!str.empty()) {
                             if (!detail::_starts_with(str, "=")) {
@@ -3158,19 +3155,20 @@ private:
         };
         auto _check_load_args = [this] (std::vector<std::string>& arguments, size_t i)
         {
-            while (!arguments.at(i).empty() && detail::_is_value_exists(arguments.at(i).front(), m_fromfile_prefix_chars)) {
+            while (!arguments.at(i).empty()
+                   && detail::_is_value_exists(arguments.at(i).front(), m_fromfile_prefix_chars)) {
                 auto const load_args = convert_arg_line_to_args(arguments.at(i).substr(1));
                 arguments.erase(std::begin(arguments) + i);
                 arguments.insert(std::begin(arguments) + i, std::begin(load_args), std::end(load_args));
             }
         };
         auto _check_abbreviations = [this, _separate_arg_abbrev, &result,
-                _prefix_chars, &have_negative_options, &was_pseudo_argument]
+                _prefix_chars, &have_negative_args, &was_pseudo_arg]
                 (std::vector<std::string>& arguments, size_t i, std::vector<Argument> const& optionals)
         {
             auto& arg = arguments.at(i);
             if (!arg.empty() && !result.exists(arg)
-                    && detail::_is_optional(arg, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
+                    && detail::_is_optional(arg, _prefix_chars(), have_negative_args, was_pseudo_arg)) {
                 std::vector<std::string> temp;
                 if (m_allow_abbrev) {
                     bool is_flag_added = false;
@@ -3187,8 +3185,7 @@ private:
                                 args += " " + flag;
                                 break;
                             }
-                            if (flag.size() == 2
-                                    && detail::_starts_with(arg, flag)) {
+                            if (flag.size() == 2 && detail::_starts_with(arg, flag)) {
                                 keys.push_back(arg);
                                 if (!args.empty()) {
                                     args += ",";
@@ -3208,8 +3205,7 @@ private:
                         _separate_arg_abbrev(temp, arg, name, optionals);
                     }
                 } else {
-                    auto name = detail::_flag_name(arg);
-                    _separate_arg_abbrev(temp, arg, name, optionals);
+                    _separate_arg_abbrev(temp, arg, detail::_flag_name(arg), optionals);
                 }
                 arguments.erase(std::begin(arguments) + i);
                 arguments.insert(std::begin(arguments) + i, std::begin(temp), std::end(temp));
@@ -3222,7 +3218,8 @@ private:
                 std::vector<Argument> pos;
                 std::vector<Argument> opt;
                 if (m_add_help) {
-                    opt.emplace_back(Argument(detail::_help_flags(capture_parser->m_prefix_chars), "help", Argument::Optional)
+                    opt.emplace_back(Argument(detail::_help_flags(capture_parser->m_prefix_chars),
+                                              "help", Argument::Optional)
                                      .help("show this help message and exit").action(Action::help));
                 }
                 for (auto const& arg : capture_parser->m_arguments) {
@@ -3252,14 +3249,14 @@ private:
             exit(0);
         };
         for (std::size_t i = 0; i < parsed_arguments.size(); ++i) {
-            if (parsed_arguments.at(i) == detail::_pseudo_argument && !was_pseudo_argument) {
-                was_pseudo_argument = true;
+            if (parsed_arguments.at(i) == detail::_pseudo_argument && !was_pseudo_arg) {
+                was_pseudo_arg = true;
                 continue;
             }
-            if (!m_fromfile_prefix_chars.empty() && !was_pseudo_argument) {
+            if (!m_fromfile_prefix_chars.empty() && !was_pseudo_arg) {
                 _check_load_args(parsed_arguments, i);
             }
-            _check_abbreviations(parsed_arguments, i, capture_parser ? subparser_optional : optional);
+            _check_abbreviations(parsed_arguments, i, capture_parser ? sub_optional : optional);
             auto arg = parsed_arguments.at(i);
             auto splitted = detail::_split_equal(arg, _prefix_chars());
             if (splitted.size() == 2 && !splitted.front().empty()) {
@@ -3267,78 +3264,77 @@ private:
             } else {
                 splitted.resize(1);
             }
-            auto const* temp = _optional_arg_by_flag(arg);
-            if (was_pseudo_argument) {
-                temp = nullptr;
-            }
-            if (temp) {
-                switch (temp->action()) {
+            auto const* tmp = (was_pseudo_arg ? nullptr : _optional_arg_by_flag(arg));
+            if (tmp) {
+                switch (tmp->action()) {
                     case Action::store :
-                        result.at(*temp).clear();
+                        result.at(*tmp).clear();
                     case Action::append :
                     case Action::extend :
                         if (splitted.size() == 1) {
                             uint32_t n = 0;
-                            uint32_t num_args = temp->num_args();
+                            uint32_t num_args = tmp->m_num_args;
                             while (true) {
                                 ++i;
                                 if (i == parsed_arguments.size()) {
                                     if (n == 0) {
-                                        switch (temp->m_nargs) {
+                                        switch (tmp->m_nargs) {
                                             case Argument::NARGS_DEF :
                                             case Argument::NARGS_INT :
                                             case Argument::ONE_OR_MORE :
-                                                handle_error(temp->error_nargs(arg));
+                                                handle_error(tmp->error_nargs(arg));
                                                 break;
                                             case Argument::OPTIONAL :
-                                                _store_value(*temp, temp->const_value());
+                                                _store_value(*tmp, tmp->const_value());
                                                 break;
                                             default :
                                                 break;
                                         }
-                                    } else if (temp->m_nargs == Argument::NARGS_INT && n < num_args) {
-                                        handle_error(temp->error_nargs(arg));
+                                    } else if (tmp->m_nargs == Argument::NARGS_INT && n < num_args) {
+                                        handle_error(tmp->error_nargs(arg));
                                     }
                                     break;
                                 } else {
                                     auto const& next = parsed_arguments.at(i);
-                                    if (next.empty() || detail::_not_optional(next, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
-                                        _store_value(*temp, next);
+                                    if (next.empty()
+                                            || detail::_not_optional(next, _prefix_chars(),
+                                                                     have_negative_args, was_pseudo_arg)) {
+                                        _store_value(*tmp, next);
                                         ++n;
                                     } else if (n == 0) {
                                         --i;
-                                        switch (temp->m_nargs) {
+                                        switch (tmp->m_nargs) {
                                             case Argument::NARGS_DEF :
                                             case Argument::NARGS_INT :
                                             case Argument::ONE_OR_MORE :
-                                                handle_error(temp->error_nargs(arg));
+                                                handle_error(tmp->error_nargs(arg));
                                                 break;
                                             case Argument::OPTIONAL :
-                                                _store_value(*temp, temp->const_value());
+                                                _store_value(*tmp, tmp->const_value());
                                                 break;
                                             default :
                                                 break;
                                         }
                                         break;
                                     } else {
-                                        if (temp->m_nargs == Argument::NARGS_INT && n < num_args) {
-                                            handle_error(temp->error_nargs(arg));
+                                        if (tmp->m_nargs == Argument::NARGS_INT && n < num_args) {
+                                            handle_error(tmp->error_nargs(arg));
                                         }
                                         --i;
                                         break;
                                     }
                                 }
-                                if (temp->m_nargs == Argument::NARGS_DEF
-                                        || temp->m_nargs == Argument::OPTIONAL
-                                        || (temp->m_nargs == Argument::NARGS_INT && n == num_args)) {
+                                if (tmp->m_nargs == Argument::NARGS_DEF
+                                        || tmp->m_nargs == Argument::OPTIONAL
+                                        || (tmp->m_nargs == Argument::NARGS_INT && n == num_args)) {
                                     break;
                                 }
                             }
                         } else {
-                            if (temp->m_nargs != Argument::NARGS_DEF && temp->num_args() > 1) {
-                                handle_error(temp->error_nargs(arg));
+                            if (tmp->m_nargs != Argument::NARGS_DEF && tmp->m_num_args > 1) {
+                                handle_error(tmp->error_nargs(arg));
                             }
-                            _store_value(*temp, splitted.back());
+                            _store_value(*tmp, splitted.back());
                         }
                         break;
                     case Action::store_const :
@@ -3347,10 +3343,11 @@ private:
                     case Action::append_const :
                     case Action::count :
                         if (splitted.size() == 1) {
-                            if (temp->action() == Action::append_const && !temp->default_value().empty()) {
-                                handle_error(detail::_ignore_default(temp->flags().front(), temp->default_value()));
+                            if (tmp->action() == Action::append_const && !tmp->default_value().empty()) {
+                                handle_error(detail::_ignore_default(tmp->flags().front(),
+                                                                     tmp->default_value()));
                             }
-                            result.self_value_stored(*temp);
+                            result.self_value_stored(*tmp);
                         } else {
                             handle_error(detail::_ignore_explicit(arg, splitted.back()));
                         }
@@ -3364,10 +3361,10 @@ private:
                         break;
                     case Action::version :
                         if (splitted.size() == 1) {
-                            if (!temp->m_version.status()) {
+                            if (!tmp->m_version.status()) {
                                 throw AttributeError("'ArgumentParser' object has no attribute 'version'");
                             }
-                            std::cout << temp->version() << std::endl;
+                            std::cout << tmp->version() << std::endl;
                             exit(0);
                         } else {
                             handle_error(detail::_ignore_explicit(arg, splitted.back()));
@@ -3377,7 +3374,8 @@ private:
                         handle_error("action not supported");
                         break;
                 }
-            } else if (!arg.empty() && detail::_is_optional(arg, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
+            } else if (!arg.empty() && detail::_is_optional(arg, _prefix_chars(),
+                                                            have_negative_args, was_pseudo_arg)) {
                 unrecognized_args.push_back(arg);
             } else {
                 std::deque<std::string> values;
@@ -3388,7 +3386,8 @@ private:
                         break;
                     } else {
                         auto const& next = parsed_arguments.at(i);
-                        if (next.empty() || detail::_not_optional(next, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
+                        if (next.empty() || detail::_not_optional(next, _prefix_chars(),
+                                                                  have_negative_args, was_pseudo_arg)) {
                             values.push_back(next);
                         } else {
                             --i;
@@ -3549,19 +3548,24 @@ private:
 
     std::pair<Subparser*, std::size_t> subpurser_info(bool add_suppress = true) const
     {
+        auto _func = [] (ArgumentParser const& parser,
+                std::pair<Subparser*, std::size_t>& res, bool add_suppress)
+        {
+            for (std::size_t p = 0, a = 0; p < parser.m_subparser_pos && a < parser.m_arguments.size(); ++a) {
+                auto const& arg = parser.m_arguments.at(a);
+                if (arg.type() == Argument::Positional) {
+                    ++p;
+                    res.second += (add_suppress || arg.help_type() != SUPPRESS);
+                }
+            }
+        };
         std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
         if (m_subparsers) {
             res.first = m_subparsers.get();
             for (auto const& parent : m_parents) {
                 res.second += parent.positional_arguments(add_suppress).size();
             }
-            for (std::size_t p = 0, a = 0; p < m_subparser_pos && a < m_arguments.size(); ++a) {
-                auto const& arg = m_arguments.at(a);
-                if (arg.type() == Argument::Positional) {
-                    ++p;
-                    res.second += (add_suppress || arg.help_type() != SUPPRESS);
-                }
-            }
+            _func(*this, res, add_suppress);
         } else {
             for (std::size_t i = 0; i < m_parents.size(); ++i) {
                 auto const& parent = m_parents.at(i);
@@ -3570,13 +3574,7 @@ private:
                     for (std::size_t j = 0; j < i; ++j) {
                         res.second += m_parents.at(j).positional_arguments(add_suppress).size();
                     }
-                    for (std::size_t p = 0, a = 0; p < parent.m_subparser_pos && a < parent.m_arguments.size(); ++a) {
-                        auto const& arg = parent.m_arguments.at(a);
-                        if (arg.type() == Argument::Positional) {
-                            ++p;
-                            res.second += (add_suppress || arg.help_type() != SUPPRESS);
-                        }
-                    }
+                    _func(parent, res, add_suppress);
                     break;
                 }
             }
