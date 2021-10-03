@@ -129,18 +129,22 @@ static inline bool _starts_with(std::string const& s, std::string const& pattern
 template <class T>
 bool _is_value_exists(T const& value, std::vector<T> const& vec)
 {
-    return std::find(std::begin(vec), std::end(vec), value) != std::end(vec);
+    for (auto const& el : vec) {
+        if (el == value) {
+            return true;
+        }
+    }
+    return false;
 }
 
-static inline bool _is_string_contains_char(std::string const& str, char c)
+static inline bool _is_value_exists(char value, std::string const& str)
 {
-    return std::find(std::begin(str), std::end(str), c) != std::end(str);
-}
-
-static inline bool _is_optional_argument(std::string const& arg,
-                                         std::string const& prefix_chars)
-{
-    return _is_string_contains_char(prefix_chars, arg.front());
+    for (auto const& el : str) {
+        if (el == value) {
+            return true;
+        }
+    }
+    return false;
 }
 
 static inline std::string _flag_name(std::string str)
@@ -155,7 +159,7 @@ static inline std::string _flag_name(std::string str)
 static inline std::vector<std::string> _help_flags(std::string const& prefix_chars)
 {
     auto const& prefix
-            = _is_string_contains_char(prefix_chars, _default_prefix_chars.front())
+            = _is_value_exists(_default_prefix_chars.front(), prefix_chars)
             ? _default_prefix_chars.front() : prefix_chars.front();
     return { std::string(1, prefix) + "h", std::string(2, prefix) + "help" };
 }
@@ -176,7 +180,7 @@ static inline bool _is_optional(std::string const& arg,
                                 bool have_negative_options,
                                 bool was_pseudo_argument)
 {
-    return _is_optional_argument(arg, prefix_chars) && !was_pseudo_argument
+    return _is_value_exists(arg.front(), prefix_chars) && !was_pseudo_argument
             && (have_negative_options || !_is_negative_number(arg));
 }
 
@@ -185,14 +189,14 @@ static inline bool _not_optional(std::string const& arg,
                                  bool have_negative_options,
                                  bool was_pseudo_argument)
 {
-    return !_is_optional_argument(arg, prefix_chars) || was_pseudo_argument
+    return !_is_value_exists(arg.front(), prefix_chars) || was_pseudo_argument
             || (!have_negative_options && _is_negative_number(arg));
 }
 
 static inline std::vector<std::string> _split_equal(std::string const& s,
                                                     std::string const& prefix)
 {
-    std::size_t pos = _is_string_contains_char(prefix, _equal)
+    std::size_t pos = _is_value_exists(_equal, prefix)
             ? s.find(_equal, std::distance(std::begin(s), std::find_if(std::begin(s), std::end(s),
               [] (char c) -> bool { return c != _equal; }))) : s.find(_equal);
     if (pos != std::string::npos) {
@@ -1256,12 +1260,7 @@ private:
         if (!dest().empty()) {
             return dest() == rhs;
         }
-        for (auto const& flag : flags()) {
-            if (flag == rhs) {
-                return true;
-            }
-        }
-        return false;
+        return detail::_is_value_exists(rhs, m_flags);
     }
 
     std::vector<std::string> m_flags;
@@ -1390,7 +1389,7 @@ public:
                 flag_name = name;
             }
         };
-        bool is_optional = detail::_is_optional_argument(flag_name, m_prefix_chars);
+        bool is_optional = detail::_is_value_exists(flag_name.front(), m_prefix_chars);
         if (is_optional) {
             _update_flag_name(flag_name);
         } else if (flags.size() > 1) {
@@ -1405,7 +1404,7 @@ public:
             if (flag.empty()) {
                 throw IndexError("string index out of range");
             }
-            if (!detail::_is_optional_argument(flag, m_prefix_chars)) {
+            if (!detail::_is_value_exists(flag.front(), m_prefix_chars)) {
                 // no positional and optional args
                 throw ValueError("invalid option string " + flag
                                  + ": must starts with a character '" + m_prefix_chars + "'");
@@ -2765,7 +2764,7 @@ private:
         auto _is_negative_numbers_presented = [] (std::vector<Argument> const& optionals,
                 std::string const& prefix_chars)
         {
-            if (!detail::_is_string_contains_char(prefix_chars, '-')) {
+            if (!detail::_is_value_exists('-', prefix_chars)) {
                 return false;
             }
             for (auto const& arg : optionals) {
@@ -3159,7 +3158,7 @@ private:
         };
         auto _check_load_args = [this] (std::vector<std::string>& arguments, size_t i)
         {
-            while (!arguments.at(i).empty() && detail::_is_string_contains_char(m_fromfile_prefix_chars, arguments.at(i).front())) {
+            while (!arguments.at(i).empty() && detail::_is_value_exists(arguments.at(i).front(), m_fromfile_prefix_chars)) {
                 auto const load_args = convert_arg_line_to_args(arguments.at(i).substr(1));
                 arguments.erase(std::begin(arguments) + i);
                 arguments.insert(std::begin(arguments) + i, std::begin(load_args), std::end(load_args));
@@ -3303,7 +3302,7 @@ private:
                                     break;
                                 } else {
                                     auto const& next = parsed_arguments.at(i);
-                                    if (detail::_not_optional(next, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
+                                    if (next.empty() || detail::_not_optional(next, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
                                         _store_value(*temp, next);
                                         ++n;
                                     } else if (n == 0) {
@@ -3378,7 +3377,7 @@ private:
                         handle_error("action not supported");
                         break;
                 }
-            } else if (detail::_is_optional(arg, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
+            } else if (!arg.empty() && detail::_is_optional(arg, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
                 unrecognized_args.push_back(arg);
             } else {
                 std::deque<std::string> values;
@@ -3389,7 +3388,7 @@ private:
                         break;
                     } else {
                         auto const& next = parsed_arguments.at(i);
-                        if (detail::_not_optional(next, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
+                        if (next.empty() || detail::_not_optional(next, _prefix_chars(), have_negative_options, was_pseudo_argument)) {
                             values.push_back(next);
                         } else {
                             --i;
