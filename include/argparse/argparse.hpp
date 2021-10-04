@@ -665,7 +665,7 @@ public:
             case Action::version :
                 help("show program's version number and exit");
             case Action::help :
-                if (type() == Positional) {
+                if (m_type == Positional) {
                     // version and help actions cannot be positional
                     throw TypeError("got an unexpected keyword argument 'required'");
                 }
@@ -1130,16 +1130,6 @@ private:
         if (m_handle) {
             m_handle();
         }
-    }
-
-    Type type() const
-    {
-        return m_type;
-    }
-
-    uint32_t num_args() const
-    {
-        return m_num_args;
     }
 
     std::string usage() const
@@ -3161,7 +3151,7 @@ private:
                         more_args = true;
                         break;
                     default :
-                        min_amount += arg->num_args();
+                        min_amount += arg->m_num_args;
                         break;
                 }
                 if (min_args + min_amount > arguments.size()) {
