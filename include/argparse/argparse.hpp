@@ -1281,6 +1281,8 @@ private:
     std::function<void()> m_handle;
 };
 
+typedef std::shared_ptr<Argument> pArgument;
+
 /*!
  * \brief BaseParser class
  */
@@ -1408,13 +1410,14 @@ public:
             }
             _update_flag_name(flag);
         }
-        Argument arg(std::move(flags), flag_name, is_optional ? Argument::Optional : Argument::Positional);
+        auto arg = std::make_shared<Argument>(std::move(flags), flag_name,
+                                              is_optional ? Argument::Optional : Argument::Positional);
         if (is_optional) {
-            for (auto const& arg_flag : arg.m_flags) {
+            for (auto const& arg_flag : arg->m_flags) {
                 for (auto const& opt : m_optional) {
-                    for (auto const& flag : opt.m_flags) {
+                    for (auto const& flag : opt->m_flags) {
                         if (flag == arg_flag) {
-                            throw ArgumentError("argument " + detail::_vector_to_string(arg.flags(), "/")
+                            throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
                                                 + ": conflicting option string: " + flag);
                         }
                     }
@@ -1423,7 +1426,7 @@ public:
         }
         m_arguments.emplace_back(std::move(arg));
         (is_optional ? m_optional : m_positional).push_back(m_arguments.back());
-        return m_arguments.back();
+        return *m_arguments.back();
     }
 
 protected:
@@ -1431,9 +1434,9 @@ protected:
     std::string           m_description;
     std::string           m_epilog;
     std::string           m_prefix_chars;
-    std::vector<Argument> m_arguments;
-    std::vector<Argument> m_optional;
-    std::vector<Argument> m_positional;
+    std::vector<pArgument> m_arguments;
+    std::vector<pArgument> m_optional;
+    std::vector<pArgument> m_positional;
 };
 
 /*!
@@ -1444,7 +1447,7 @@ class ArgumentParser : public BaseParser
     class Storage
     {
     public:
-        typedef Argument                                        key_type;
+        typedef pArgument                                       key_type;
         typedef std::vector<std::string>                        mapped_type;
         typedef std::pair<const key_type, mapped_type>          value_type;
         typedef std::map<key_type, mapped_type>::iterator       iterator;
@@ -1460,7 +1463,7 @@ class ArgumentParser : public BaseParser
             if (flag.empty()) {
                 m_data.insert({ key, value });
             } else {
-                throw ArgumentError("argument " + detail::_vector_to_string(key.m_flags, "/")
+                throw ArgumentError("argument " + detail::_vector_to_string(key->m_flags, "/")
                                     + ": conflicting dest string: " + flag);
             }
         }
@@ -1475,12 +1478,12 @@ class ArgumentParser : public BaseParser
         void store_value(key_type const& arg, std::string const& value)
         {
             at(arg).push_back(value);
-            arg.handle(value);
+            arg->handle(value);
         }
 
         void store_default_value(key_type const& arg, std::string const& value)
         {
-            if (arg.m_action == Action::store) {
+            if (arg->m_action == Action::store) {
                 auto& storage = at(arg);
                 if (storage.empty()) {
                     storage.push_back(value);
@@ -1490,27 +1493,27 @@ class ArgumentParser : public BaseParser
 
         bool self_value_stored(key_type const& arg)
         {
-            if (arg.m_action == Action::store_const) {
+            if (arg->m_action == Action::store_const) {
                 auto& storage = at(arg);
                 if (storage.empty()) {
-                    storage.push_back(arg.m_const());
+                    storage.push_back(arg->m_const());
                 }
-                arg.handle(arg.m_const());
+                arg->handle(arg->m_const());
                 return true;
-            } else if (arg.m_action & (Action::store_true | Action::store_false)) {
+            } else if (arg->m_action & (Action::store_true | Action::store_false)) {
                 auto& storage = at(arg);
                 if (storage.empty()) {
-                    storage.push_back(arg.m_const());
+                    storage.push_back(arg->m_const());
                 }
-                arg.handle();
+                arg->handle();
                 return true;
-            } else if (arg.m_action == Action::append_const) {
-                at(arg).push_back(arg.m_const());
-                arg.handle(arg.m_const());
+            } else if (arg->m_action == Action::append_const) {
+                at(arg).push_back(arg->m_const());
+                arg->handle(arg->m_const());
                 return true;
-            } else if (arg.m_action == Action::count) {
+            } else if (arg->m_action == Action::count) {
                 at(arg).emplace_back(std::string());
-                arg.handle();
+                arg->handle();
                 return true;
             }
             return false;
@@ -1520,7 +1523,7 @@ class ArgumentParser : public BaseParser
         {
             return std::find_if(std::begin(m_data), std::end(m_data),
                                 [key] (value_type const& pair) -> bool
-            { return pair.first == key; }) != std::end(m_data);
+            { return *(pair.first) == key; }) != std::end(m_data);
         }
 
         bool exists(key_type const& key) const
@@ -1532,7 +1535,7 @@ class ArgumentParser : public BaseParser
         {
             auto it = std::find_if(std::begin(m_data), std::end(m_data),
                                    [key] (value_type const& pair) -> bool
-            { return pair.first == key; });
+            { return *(pair.first) == key; });
             if (it == std::end(m_data)) {
                 throw std::logic_error("key '" + key + "' not found");
             }
@@ -1559,7 +1562,7 @@ class ArgumentParser : public BaseParser
         {
             auto _get_argument_flags = [] (key_type const& arg) -> std::vector<std::string> const&
             {
-                return arg.m_dest_str.empty() ? arg.m_flags : arg.m_dest;
+                return arg->m_dest_str.empty() ? arg->m_flags : arg->m_dest;
             };
             auto const& arg_flags = _get_argument_flags(arg);
             for (auto const& pair : m_data) {
@@ -2005,8 +2008,8 @@ public:
                 return !m_arguments.at(key).second.empty();
             }
             for (auto const& pair : m_arguments) {
-                if (pair.first.m_type == Argument::Optional && pair.first.m_dest_str.empty()) {
-                    for (auto const& flag : pair.first.m_flags) {
+                if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
+                    for (auto const& flag : pair.first->m_flags) {
                         if (detail::_flag_name(flag) == key) {
                             return !pair.second.empty();
                         }
@@ -2028,7 +2031,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            if (args.first.m_action == Action::count) {
+            if (args.first->m_action == Action::count) {
                 return T(args.second.size());
             }
             if (args.second.empty()) {
@@ -2053,7 +2056,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            if (args.first.m_action == Action::count) {
+            if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
             if (args.second.empty()) {
@@ -2150,7 +2153,7 @@ public:
         std::string to_args(std::string const& key) const
         {
             auto const& args = data(key);
-            switch (args.first.m_action) {
+            switch (args.first->m_action) {
                 case Action::store_const :
                     if (args.second.empty()) {
                         return std::string();
@@ -2164,7 +2167,7 @@ public:
                 case Action::store_true :
                 case Action::store_false :
                     if (args.second.empty()) {
-                        return args.first.m_default() == "0" ? "false" : "true";
+                        return args.first->m_default() == "0" ? "false" : "true";
                     }
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
@@ -2192,7 +2195,7 @@ public:
         std::string to_string(std::string const& key) const
         {
             auto const& args = data(key);
-            switch (args.first.m_action) {
+            switch (args.first->m_action) {
                 case Action::store_const :
                     if (args.second.empty()) {
                         return std::string();
@@ -2204,7 +2207,7 @@ public:
                 case Action::store_true :
                 case Action::store_false :
                     if (args.second.empty()) {
-                        return args.first.m_default() == "0" ? "false" : "true";
+                        return args.first->m_default() == "0" ? "false" : "true";
                     }
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
@@ -2229,8 +2232,8 @@ public:
                 return m_arguments.at(key);
             }
             for (auto const& pair : m_arguments) {
-                if (pair.first.m_type == Argument::Optional && pair.first.m_dest_str.empty()) {
-                    for (auto const& flag : pair.first.m_flags) {
+                if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
+                    for (auto const& flag : pair.first->m_flags) {
                         if (detail::_flag_name(flag) == key) {
                             return pair;
                         }
@@ -2577,20 +2580,20 @@ public:
         auto const positional = positional_arguments();
         auto const optional = optional_arguments();
         for (auto const& arg : positional) {
-            if (detail::_is_value_exists(dest, arg.m_flags)) {
-                return default_argument_value(arg)();
+            if (detail::_is_value_exists(dest, arg->m_flags)) {
+                return default_argument_value(*arg)();
             }
         }
         for (auto const& arg : optional) {
-            if (!arg.m_dest_str.empty()) {
-                if (arg.dest() == dest) {
-                    return default_argument_value(arg)();
+            if (!arg->m_dest_str.empty()) {
+                if (arg->dest() == dest) {
+                    return default_argument_value(*arg)();
                 }
             } else {
-                for (auto const& flag : arg.m_flags) {
+                for (auto const& flag : arg->m_flags) {
                     auto name = detail::_flag_name(flag);
                     if (flag == dest || name == dest) {
-                        return default_argument_value(arg)();
+                        return default_argument_value(*arg)();
                     }
                 }
             }
@@ -2642,7 +2645,7 @@ public:
             bool found = false;
             for (auto& parent : m_parents) {
                 for (auto& arg : parent.m_arguments) {
-                    if (_set_value(arg, dest, value)) {
+                    if (_set_value(*arg, dest, value)) {
                         found = true;
                         break;
                     }
@@ -2655,7 +2658,7 @@ public:
                 continue;
             }
             for (auto& arg : m_arguments) {
-                if (_set_value(arg, dest, value)) {
+                if (_set_value(*arg, dest, value)) {
                     found = true;
                     break;
                 }
@@ -2732,15 +2735,15 @@ public:
 private:
     Namespace parse_known_args(std::vector<std::string> parsed_arguments) const
     {
-        auto _validate_arguments = [] (std::vector<Argument> const& arguments)
+        auto _validate_arguments = [] (std::vector<pArgument> const& arguments)
         {
             for (auto const& arg : arguments) {
-                if ((arg.m_action & (Action::store_const | Action::append_const))
-                        && !arg.m_const.status()) {
+                if ((arg->m_action & (Action::store_const | Action::append_const))
+                        && !arg->m_const.status()) {
                     throw TypeError("missing 1 required positional argument: 'const'");
                 }
-                for (auto const& flag : arg.m_flags) {
-                    if (flag == detail::_pseudo_argument && arg.m_dest_str.empty()) {
+                for (auto const& flag : arg->m_flags) {
+                    if (flag == detail::_pseudo_argument && arg->m_dest_str.empty()) {
                         throw ValueError("dest= is required for options like '--'");
                     }
                 }
@@ -2758,14 +2761,14 @@ private:
                 }
             }
         };
-        auto _negative_numbers_presented = [] (std::vector<Argument> const& optionals,
+        auto _negative_numbers_presented = [] (std::vector<pArgument> const& optionals,
                 std::string const& prefix_chars)
         {
             if (!detail::_is_value_exists('-', prefix_chars)) {
                 return false;
             }
             for (auto const& arg : optionals) {
-                for (auto const& flag : arg.m_flags) {
+                for (auto const& flag : arg->m_flags) {
                     if (detail::_is_negative_number(flag)) {
                         return true;
                     }
@@ -2777,8 +2780,8 @@ private:
         auto positional = positional_arguments();
         auto const optional = optional_arguments();
         auto const subparser = subpurser_info();
-        Parser const* capture_parser = nullptr;
-        std::vector<Argument> sub_optional;
+        Parser const* captured = nullptr;
+        std::vector<pArgument> sub_optional;
 
         _validate_arguments(positional);
         _validate_arguments(optional);
@@ -2795,10 +2798,10 @@ private:
         if (subparser.first && !subparser.first->m_dest.empty()) {
             subparser_flags.push_back(subparser.first->m_dest);
         }
-        Argument subparser_arg(std::move(subparser_flags),
-                               subparser.first ? subparser.first->m_dest
-                                               : "", Argument::Positional);
-
+        pArgument subparser_arg
+                = std::make_shared<Argument>(std::move(subparser_flags),
+                                             subparser.first ? subparser.first->m_dest
+                                                             : "", Argument::Positional);
         Storage result;
         result.create(positional);
         result.create(optional);
@@ -2812,48 +2815,48 @@ private:
             }
         }
 
-        auto _optional_arg_by_flag = [&optional, &sub_optional, &capture_parser]
-                (std::string const& key) -> Argument const*
+        auto _optional_arg_by_flag = [&optional, &sub_optional, &captured]
+                (std::string const& key) -> pArgument const
         {
-            for (auto const& arg : (capture_parser ? sub_optional : optional)) {
-                if (detail::_is_value_exists(key, arg.m_flags)) {
-                    return &arg;
+            for (auto const& arg : (captured ? sub_optional : optional)) {
+                if (detail::_is_value_exists(key, arg->m_flags)) {
+                    return arg;
                 }
             }
             return nullptr;
         };
-        auto _prefix_chars = [this, &capture_parser] () -> std::string const&
+        auto _prefix_chars = [this, &captured] () -> std::string const&
         {
-            return capture_parser ? capture_parser->m_prefix_chars : m_prefix_chars;
+            return captured ? captured->m_prefix_chars : m_prefix_chars;
         };
 
         std::vector<std::string> unrecognized_args;
 
         std::size_t pos = 0;
-        auto _store_value = [_validate_argument_value, &result] (Argument const& arg, std::string const& val)
+        auto _store_value = [_validate_argument_value, &result] (pArgument const& arg, std::string const& val)
         {
-            _validate_argument_value(arg, val);
+            _validate_argument_value(*arg, val);
             result.store_value(arg, val);
         };
-        auto _store_default_value = [this, &result] (Argument const& arg)
+        auto _store_default_value = [this, &result] (pArgument const& arg)
         {
-            auto const& value = default_argument_value(arg);
+            auto const& value = default_argument_value(*arg);
             if (value.status()) {
                 result.store_default_value(arg, value());
             }
         };
-        auto _is_positional_arg_stored = [this, &result] (Argument const& arg) -> bool
+        auto _is_positional_arg_stored = [this, &result] (pArgument const& arg) -> bool
         {
-            if (arg.m_action == Action::append_const && arg.m_default.status()) {
-                handle_error(detail::_ignore_default(arg.m_flags.front(), arg.m_default()));
+            if (arg->m_action == Action::append_const && arg->m_default.status()) {
+                handle_error(detail::_ignore_default(arg->m_flags.front(), arg->m_default()));
             }
             return result.self_value_stored(arg);
         };
         auto _match_positionals = [_is_positional_arg_stored, _store_value, _store_default_value, &pos]
-                (std::vector<Argument> const& positional, std::deque<std::string>& arguments,
+                (std::vector<pArgument> const& positional, std::deque<std::string>& arguments,
                 std::size_t finish, std::size_t min_args, std::size_t one_args, bool more_args)
         {
-            auto _store_first_value = [_store_value] (Argument const& arg, std::deque<std::string>& values)
+            auto _store_first_value = [_store_value] (pArgument const& arg, std::deque<std::string>& values)
             {
                 _store_value(arg, values.front());
                 values.pop_front();
@@ -2864,7 +2867,7 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    switch (arg.m_nargs) {
+                    switch (arg->m_nargs) {
                         case Argument::NARGS_DEF :
                         case Argument::ONE_OR_MORE :
                             _store_first_value(arg, arguments);
@@ -2874,7 +2877,7 @@ private:
                             _store_default_value(arg);
                             break;
                         case Argument::NARGS_INT :
-                            for (std::size_t n = 0; n < arg.m_num_args; ++n) {
+                            for (std::size_t n = 0; n < arg->m_num_args; ++n) {
                                 _store_first_value(arg, arguments);
                             }
                             break;
@@ -2889,7 +2892,7 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    switch (arg.m_nargs) {
+                    switch (arg->m_nargs) {
                         case Argument::NARGS_DEF :
                             _store_first_value(arg, arguments);
                             break;
@@ -2914,7 +2917,7 @@ private:
                             }
                             break;
                         case Argument::NARGS_INT :
-                            for (std::size_t n = 0; n < arg.m_num_args; ++n) {
+                            for (std::size_t n = 0; n < arg->m_num_args; ++n) {
                                 _store_first_value(arg, arguments);
                             }
                             break;
@@ -2929,7 +2932,7 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    switch (arg.m_nargs) {
+                    switch (arg->m_nargs) {
                         case Argument::NARGS_DEF :
                             _store_first_value(arg, arguments);
                             break;
@@ -2942,7 +2945,7 @@ private:
                             }
                             break;
                         case Argument::NARGS_INT :
-                            for (std::size_t n = 0; n < arg.m_num_args; ++n) {
+                            for (std::size_t n = 0; n < arg->m_num_args; ++n) {
                                 _store_first_value(arg, arguments);
                             }
                             break;
@@ -2956,10 +2959,10 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    if (arg.m_nargs == Argument::NARGS_DEF) {
+                    if (arg->m_nargs == Argument::NARGS_DEF) {
                         _store_first_value(arg, arguments);
                     } else {
-                        for (std::size_t n = 0; n < arg.m_num_args; ++n) {
+                        for (std::size_t n = 0; n < arg->m_num_args; ++n) {
                             _store_first_value(arg, arguments);
                         }
                     }
@@ -2974,7 +2977,7 @@ private:
             bool more_args = false;
             bool capture_need = false;
             for ( ; finish < positional.size(); ++finish) {
-                if (subparser.first && !capture_parser && finish == subparser.second) {
+                if (subparser.first && !captured && finish == subparser.second) {
                     if (min_args + 1 > arguments.size()) {
                         break;
                     }
@@ -2982,11 +2985,11 @@ private:
                     break;
                 }
                 auto const& arg = positional.at(finish);
-                if (!(arg.m_action & (Action::store | Action::append | Action::extend))) {
+                if (!(arg->m_action & (Action::store | Action::append | Action::extend))) {
                     continue;
                 }
                 std::size_t min_amount = 0;
-                switch (arg.m_nargs) {
+                switch (arg->m_nargs) {
                     case Argument::OPTIONAL :
                         ++one_args;
                         break;
@@ -2996,7 +2999,7 @@ private:
                         more_args = true;
                         break;
                     default :
-                        min_amount += arg.m_num_args;
+                        min_amount += arg->m_num_args;
                         break;
                 }
                 if (min_args + min_amount > arguments.size()) {
@@ -3004,8 +3007,7 @@ private:
                 }
                 min_args += min_amount;
             }
-            if (subparser.first && !capture_parser && finish == positional.size()
-                    && min_args < arguments.size()) {
+            if (subparser.first && !captured && finish == positional.size() && min_args < arguments.size()) {
                 capture_need = true;
             }
             if (!capture_need) {
@@ -3026,28 +3028,26 @@ private:
                 }
                 choices += "'" + parser.m_name + "'";
                 if (parser.m_name == name) {
-                    capture_parser = &parser;
+                    captured = &parser;
                     if (!subparser.first->m_dest.empty()) {
                         result.at(subparser_arg).push_back(name);
                     }
                     break;
                 }
             }
-            if (capture_parser) {
+            if (captured) {
+                sub_optional = captured->m_optional;
                 if (m_add_help) {
-                    sub_optional.emplace_back(Argument(detail::_help_flags(capture_parser->m_prefix_chars),
-                                                       "help", Argument::Optional)
-                                              .help("show this help message and exit").action(Action::help));
-                }
-                std::vector<Argument> pos;
-                for (auto const& arg : capture_parser->m_arguments) {
-                    (arg.m_type == Argument::Positional ? pos : sub_optional).push_back(arg);
+                    auto help = std::make_shared<Argument>(detail::_help_flags(captured->m_prefix_chars),
+                                                           "help", Argument::Optional);
+                    help->help("show this help message and exit").action(Action::help);
+                    sub_optional.insert(std::begin(sub_optional), help);
                 }
                 positional.insert(std::begin(positional) + subparser.second,
-                                  std::begin(pos), std::end(pos));
+                                  std::begin(captured->m_positional), std::end(captured->m_positional));
                 arguments.pop_front();
-                have_negative_args = _negative_numbers_presented(capture_parser->m_optional,
-                                                                 capture_parser->m_prefix_chars);
+                have_negative_args = _negative_numbers_presented(captured->m_optional,
+                                                                 captured->m_prefix_chars);
             } else {
                 handle_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }
@@ -3065,11 +3065,11 @@ private:
             bool more_args = false;
             for ( ; finish < positional.size(); ++finish) {
                 auto const& arg = positional.at(finish);
-                if (!(arg.m_action & (Action::store | Action::append | Action::extend))) {
+                if (!(arg->m_action & (Action::store | Action::append | Action::extend))) {
                     continue;
                 }
                 std::size_t min_amount = 0;
-                switch (arg.m_nargs) {
+                switch (arg->m_nargs) {
                     case Argument::OPTIONAL :
                         ++one_args;
                         break;
@@ -3079,7 +3079,7 @@ private:
                         more_args = true;
                         break;
                     default :
-                        min_amount += arg.num_args();
+                        min_amount += arg->num_args();
                         break;
                 }
                 if (min_args + min_amount > arguments.size()) {
@@ -3098,7 +3098,7 @@ private:
         };
         auto _separate_arg_abbrev = [_optional_arg_by_flag, _prefix_chars]
                 (std::vector<std::string>& temp, std::string const& arg,
-                std::string const& name, std::vector<Argument> const& optionals)
+                std::string const& name, std::vector<pArgument> const& optionals)
         {
             if (name.size() + 1 == arg.size()) {
                 auto const splitted = detail::_split_equal(arg, _prefix_chars());
@@ -3119,10 +3119,10 @@ private:
                     }
                     Argument const* argument = nullptr;
                     for (auto const& opt : optionals) {
-                        for (auto const& flag : opt.m_flags) {
+                        for (auto const& flag : opt->m_flags) {
                             if (flag.size() == 2 && flag.back() == name.at(i)) {
                                 flags.push_back(flag);
-                                argument = &opt;
+                                argument = opt.get();
                                 break;
                             }
                         }
@@ -3159,7 +3159,7 @@ private:
         };
         auto _check_abbreviations = [this, _separate_arg_abbrev, &result,
                 _prefix_chars, &have_negative_args, &was_pseudo_arg]
-                (std::vector<std::string>& arguments, size_t i, std::vector<Argument> const& optionals)
+                (std::vector<std::string>& arguments, size_t i, std::vector<pArgument> const& optionals)
         {
             auto& arg = arguments.at(i);
             if (!arg.empty() && !result.exists(arg)
@@ -3170,7 +3170,7 @@ private:
                     std::string args;
                     std::vector<std::string> keys;
                     for (auto const& opt : optionals) {
-                        for (auto const& flag : opt.m_flags) {
+                        for (auto const& flag : opt->m_flags) {
                             if (detail::_starts_with(flag, arg)) {
                                 is_flag_added = true;
                                 keys.push_back(flag);
@@ -3207,18 +3207,15 @@ private:
             }
         };
 
-        auto _print_help_and_exit = [this, subparser, &capture_parser] ()
+        auto _print_help_and_exit = [this, subparser, &captured] ()
         {
-            if (capture_parser) {
-                std::vector<Argument> pos;
-                std::vector<Argument> opt;
+            if (captured) {
+                std::vector<pArgument> opt = captured->m_optional;
                 if (m_add_help) {
-                    opt.emplace_back(Argument(detail::_help_flags(capture_parser->m_prefix_chars),
-                                              "help", Argument::Optional)
-                                     .help("show this help message and exit").action(Action::help));
-                }
-                for (auto const& arg : capture_parser->m_arguments) {
-                    (arg.m_type == Argument::Optional ? opt : pos).push_back(arg);
+                    auto help = std::make_shared<Argument>(detail::_help_flags(captured->m_prefix_chars),
+                                                           "help", Argument::Optional);
+                    help->help("show this help message and exit").action(Action::help);
+                    opt.insert(std::begin(opt), help);
                 }
                 auto program = subparser.first->prog();
                 if (program.empty()) {
@@ -3229,15 +3226,15 @@ private:
                     if (subparser.first && subparser.second == i) {
                         break;
                     }
-                    auto const str = positional_args.at(i).usage();
+                    auto const str = positional_args.at(i)->usage();
                     if (str.empty()) {
                         continue;
                     }
                     program += " " + str;
                 }
-                program += " " + capture_parser->m_name;
-                print_custom_help(pos, opt, { nullptr, 0 }, program, capture_parser->usage(),
-                                  capture_parser->description(), capture_parser->epilog());
+                program += " " + captured->m_name;
+                print_custom_help(captured->m_positional, opt, { nullptr, 0 }, program, captured->usage(),
+                                  captured->description(), captured->epilog());
             } else {
                 print_help();
             }
@@ -3251,7 +3248,7 @@ private:
             if (!m_fromfile_prefix_chars.empty() && !was_pseudo_arg) {
                 _check_load_args(parsed_arguments, i);
             }
-            _check_abbreviations(parsed_arguments, i, capture_parser ? sub_optional : optional);
+            _check_abbreviations(parsed_arguments, i, captured ? sub_optional : optional);
             auto arg = parsed_arguments.at(i);
             auto splitted = detail::_split_equal(arg, _prefix_chars());
             if (splitted.size() == 2 && !splitted.front().empty()) {
@@ -3259,11 +3256,11 @@ private:
             } else {
                 splitted.resize(1);
             }
-            auto const* tmp = (was_pseudo_arg ? nullptr : _optional_arg_by_flag(arg));
+            auto const tmp = (was_pseudo_arg ? nullptr : _optional_arg_by_flag(arg));
             if (tmp) {
                 switch (tmp->m_action) {
                     case Action::store :
-                        result.at(*tmp).clear();
+                        result.at(tmp).clear();
                     case Action::append :
                     case Action::extend :
                         if (splitted.size() == 1) {
@@ -3280,7 +3277,7 @@ private:
                                                 handle_error(tmp->error_nargs(arg));
                                                 break;
                                             case Argument::OPTIONAL :
-                                                _store_value(*tmp, tmp->const_value());
+                                                _store_value(tmp, tmp->const_value());
                                                 break;
                                             default :
                                                 break;
@@ -3294,7 +3291,7 @@ private:
                                     if (next.empty()
                                             || detail::_not_optional(next, _prefix_chars(),
                                                                      have_negative_args, was_pseudo_arg)) {
-                                        _store_value(*tmp, next);
+                                        _store_value(tmp, next);
                                         ++n;
                                     } else if (n == 0) {
                                         --i;
@@ -3305,7 +3302,7 @@ private:
                                                 handle_error(tmp->error_nargs(arg));
                                                 break;
                                             case Argument::OPTIONAL :
-                                                _store_value(*tmp, tmp->m_const());
+                                                _store_value(tmp, tmp->m_const());
                                                 break;
                                             default :
                                                 break;
@@ -3329,7 +3326,7 @@ private:
                             if (tmp->m_nargs != Argument::NARGS_DEF && tmp->m_num_args > 1) {
                                 handle_error(tmp->error_nargs(arg));
                             }
-                            _store_value(*tmp, splitted.back());
+                            _store_value(tmp, splitted.back());
                         }
                         break;
                     case Action::store_const :
@@ -3342,7 +3339,7 @@ private:
                                 handle_error(detail::_ignore_default(tmp->m_flags.front(),
                                                                      tmp->m_default()));
                             }
-                            result.self_value_stored(*tmp);
+                            result.self_value_stored(tmp);
                         } else {
                             handle_error(detail::_ignore_explicit(arg, splitted.back()));
                         }
@@ -3390,9 +3387,9 @@ private:
                         }
                     }
                 }
-                if (subparser.first && !capture_parser) {
+                if (subparser.first && !captured) {
                     _try_capture_parser(values);
-                    if (capture_parser) {
+                    if (captured) {
                         i -= (i == parsed_arguments.size());
                         i -= values.size();
                     }
@@ -3403,12 +3400,12 @@ private:
         }
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
-            if (arg.required() && result.at(arg).empty()) {
-                auto args = detail::_vector_to_string(arg.m_flags, "/");
+            if (arg->required() && result.at(arg).empty()) {
+                auto args = detail::_vector_to_string(arg->m_flags, "/");
                 required_args.emplace_back(args);
             }
         }
-        bool subparser_required = subparser.first && !capture_parser && subparser.first->required();
+        bool subparser_required = subparser.first && !captured && subparser.first->required();
         if (!required_args.empty() || pos < positional.size() || subparser_required) {
             std::string args;
             for ( ; pos < positional.size(); ++pos) {
@@ -3427,7 +3424,7 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    if (arg.m_nargs == Argument::OPTIONAL || arg.m_nargs == Argument::ZERO_OR_MORE) {
+                    if (arg->m_nargs == Argument::OPTIONAL || arg->m_nargs == Argument::ZERO_OR_MORE) {
                         _store_default_value(arg);
                         continue;
                     }
@@ -3435,7 +3432,7 @@ private:
                 if (!args.empty()) {
                     args += ", ";
                 }
-                args += arg.m_flags.front();
+                args += arg->m_flags.front();
             }
             if (subparser_required && pos == subparser.second) {
                 auto const& dest = subparser.first->dest();
@@ -3459,9 +3456,9 @@ private:
             handle_error("unrecognized arguments: " + detail::_vector_to_string(unrecognized_args));
         }
         for (auto& arg : result) {
-            if (arg.second.empty() && arg.first.action() != Action::count
-                    && arg.first.m_type == Argument::Optional) {
-                auto const& value = default_argument_value(arg.first);
+            if (arg.second.empty() && arg.first->action() != Action::count
+                    && arg.first->m_type == Argument::Optional) {
+                auto const& value = default_argument_value(*arg.first);
                 if (value.status()) {
                     arg.second.push_back(value());
                 }
@@ -3469,8 +3466,9 @@ private:
         }
         for (auto const& pair : m_default_values) {
             if (!result.exists(pair.first)) {
-                auto arg = Argument({ pair.first }, pair.first, Argument::Positional);
-                arg.default_value(pair.second);
+                pArgument arg = std::make_shared<Argument>(std::vector<std::string>{ pair.first },
+                                                           pair.first, Argument::Positional);
+                arg->default_value(pair.second);
                 result.create(arg, { pair.second });
             }
         }
@@ -3503,36 +3501,36 @@ private:
         return res;
     }
 
-    std::vector<Argument> positional_arguments(bool add_suppress = true) const
+    std::vector<pArgument> positional_arguments(bool add_suppress = true) const
     {
-        std::vector<Argument> result;
+        std::vector<pArgument> result;
         for (auto const& parent : m_parents) {
             auto const args = parent.positional_arguments(add_suppress);
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
-        for (auto const& arg : m_arguments) {
-            if (arg.m_type == Argument::Positional
-                    && (add_suppress || arg.m_help_type != SUPPRESS)) {
+        for (auto const& arg : m_positional) {
+            if (add_suppress || arg->m_help_type != SUPPRESS) {
                 result.push_back(arg);
             }
         }
         return result;
     }
 
-    std::vector<Argument> optional_arguments(bool add_suppress = true) const
+    std::vector<pArgument> optional_arguments(bool add_suppress = true) const
     {
-        std::vector<Argument> result;
+        std::vector<pArgument> result;
         if (m_add_help) {
-            result.emplace_back(Argument(detail::_help_flags(m_prefix_chars), "help", Argument::Optional)
-                                .help("show this help message and exit").action(Action::help));
+            auto help = std::make_shared<Argument>(detail::_help_flags(m_prefix_chars),
+                                                   "help", Argument::Optional);
+            help->help("show this help message and exit").action(Action::help);
+            result.emplace_back(help);
         }
         for (auto const& parent : m_parents) {
             auto const args = parent.optional_arguments(add_suppress);
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
-        for (auto const& arg : m_arguments) {
-            if (arg.m_type == Argument::Optional
-                    && (add_suppress || arg.m_help_type != SUPPRESS)) {
+        for (auto const& arg : m_optional) {
+            if (add_suppress || arg->m_help_type != SUPPRESS) {
                 result.push_back(arg);
             }
         }
@@ -3544,12 +3542,10 @@ private:
         auto _func = [] (ArgumentParser const& parser,
                 std::pair<Subparser*, std::size_t>& res, bool add_suppress)
         {
-            for (std::size_t p = 0, a = 0; p < parser.m_subparser_pos && a < parser.m_arguments.size(); ++a) {
-                auto const& arg = parser.m_arguments.at(a);
-                if (arg.m_type == Argument::Positional) {
-                    ++p;
-                    res.second += (add_suppress || arg.help_type() != SUPPRESS);
-                }
+            for (std::size_t p = 0, a = 0;
+                 p < parser.m_subparser_pos && a < parser.m_positional.size(); ++a, ++p) {
+                auto const& arg = parser.m_positional.at(a);
+                res.second += (add_suppress || arg->help_type() != SUPPRESS);
             }
         };
         std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
@@ -3575,8 +3571,8 @@ private:
         return res;
     }
 
-    static std::string custom_usage(std::vector<Argument> const& positional,
-                                    std::vector<Argument> const& optional,
+    static std::string custom_usage(std::vector<pArgument> const& positional,
+                                    std::vector<pArgument> const& optional,
                                     std::pair<Subparser*, std::size_t> const& subparser,
                                     std::string const& program)
     {
@@ -3589,13 +3585,13 @@ private:
             }
         }
         for (auto const& arg : positional) {
-            auto const str = arg.usage();
+            auto const str = arg->usage();
             if (min_size < str.size()) {
                 min_size = str.size();
             }
         }
         for (auto const& arg : optional) {
-            auto const str = arg.usage();
+            auto const str = arg->usage();
             if (min_size < str.size()) {
                 min_size = str.size();
             }
@@ -3620,13 +3616,13 @@ private:
             pos += 1 + str.size();
         };
         for (auto const& arg : optional) {
-            _arg_usage(arg.usage(), true);
+            _arg_usage(arg->usage(), true);
         }
         for (std::size_t i = 0; i < positional.size(); ++i) {
             if (subparser.first && subparser.second == i) {
                 _arg_usage(subparser.first->usage(), false);
             }
-            auto const str = positional.at(i).usage();
+            auto const str = positional.at(i)->usage();
             if (str.empty()) {
                 continue;
             }
@@ -3638,8 +3634,8 @@ private:
         return res;
     }
 
-    static void print_custom_usage(std::vector<Argument> const& positional,
-                                   std::vector<Argument> const& optional,
+    static void print_custom_usage(std::vector<pArgument> const& positional,
+                                   std::vector<pArgument> const& optional,
                                    std::pair<Subparser*, std::size_t> const& subparser,
                                    std::string const& program,
                                    std::ostream& os = std::cout)
@@ -3647,8 +3643,8 @@ private:
         os << "usage: " << custom_usage(positional, optional, subparser, program) << std::endl;
     }
 
-    static void print_custom_help(std::vector<Argument> const& positional,
-                                  std::vector<Argument> const& optional,
+    static void print_custom_help(std::vector<pArgument> const& positional,
+                                  std::vector<pArgument> const& optional,
                                   std::pair<Subparser*, std::size_t> const& subparser,
                                   std::string const& program,
                                   std::string const& usage,
@@ -3681,13 +3677,13 @@ private:
             }
         }
         for (auto const& arg : positional) {
-            auto size = arg.flags_to_string().size();
+            auto size = arg->flags_to_string().size();
             if (min_size < size) {
                 min_size = size;
             }
         }
         for (auto const& arg : optional) {
-            auto size = arg.flags_to_string().size();
+            auto size = arg->flags_to_string().size();
             if (min_size < size) {
                 min_size = size;
             }
@@ -3702,7 +3698,7 @@ private:
                 if (subparser_positional && subparser.second == i) {
                     os << subparser.first->print(min_size) << std::endl;
                 }
-                os << positional.at(i).print(min_size) << std::endl;
+                os << positional.at(i)->print(min_size) << std::endl;
             }
             if (subparser_positional && subparser.second == positional.size()) {
                 os << subparser.first->print(min_size) << std::endl;
@@ -3714,7 +3710,7 @@ private:
         if (!optional.empty()) {
             os << std::endl << "optional arguments:" << std::endl;
             for (auto const& arg : optional) {
-                os << arg.print(min_size) << std::endl;
+                os << arg->print(min_size) << std::endl;
             }
         }
         if (subparser.first && !subparser_positional) {
