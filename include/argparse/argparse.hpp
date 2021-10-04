@@ -2267,7 +2267,7 @@ public:
         {
             T result = T();
             if (data.empty()) {
-                result;
+                return result;
             }
             std::stringstream ss(data);
             ss >> result;
