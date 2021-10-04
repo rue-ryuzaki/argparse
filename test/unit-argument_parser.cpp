@@ -1684,3 +1684,31 @@ TEST_CASE("15. prefix chars '='", "[argument_parser]")
         REQUIRE(args1.get<std::string>("bar") == "bar");
     }
 }
+
+TEST_CASE("16. parse known arguments", "[argument_parser]")
+{
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    parser.add_argument("--foo").action("store_true");
+    parser.add_argument("bar");
+
+    SECTION("16.1. all known arguments") {
+        auto args0 = parser.parse_args({ "--foo", "bar" });
+        REQUIRE(args0.get<bool>("foo") == true);
+        REQUIRE(args0.get<std::string>("bar") == "bar");
+
+        auto args1 = parser.parse_known_args({ "--foo", "bar" });
+        REQUIRE(args1.get<bool>("foo") == true);
+        REQUIRE(args1.get<std::string>("bar") == "bar");
+    }
+
+    SECTION("16.2. have unknown arguments") {
+        REQUIRE_THROWS(parser.parse_args({ "--foo", "--boo", "bar", "baz" }));
+
+        auto args = parser.parse_known_args({ "--foo", "--boo", "bar", "baz" });
+        REQUIRE(args.get<bool>("foo") == true);
+        REQUIRE(args.get<std::string>("bar") == "bar");
+        REQUIRE(args.unrecognized_args().size() == 2);
+        REQUIRE(args.unrecognized_args_to_args() == "--boo baz");
+    }
+}
