@@ -325,11 +325,11 @@ enum Enum
 };
 
 /*!
- * \brief Formatter values
+ * \brief Help formatter values
  *
- * \enum Formatter
+ * \enum HelpFormatter
  */
-enum Formatter
+enum HelpFormatter
 {
     ArgumentDefaultsHelpFormatter,
 };
@@ -2456,7 +2456,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& formatter_class(Formatter param)
+    ArgumentParser& formatter_class(HelpFormatter param)
     {
         m_formatter_class = param;
         return *this;
@@ -3824,7 +3824,7 @@ private:
 
     std::string m_prog;
     std::vector<ArgumentParser> m_parents;
-    detail::Value<Formatter> m_formatter_class;
+    detail::Value<HelpFormatter> m_formatter_class;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
     bool m_add_help;
