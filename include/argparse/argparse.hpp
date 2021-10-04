@@ -320,7 +320,6 @@ enum Action
  */
 enum Enum
 {
-    NONE,
     SUPPRESS,
 };
 
@@ -477,7 +476,7 @@ public:
           m_choices(),
           m_required(false),
           m_help(),
-          m_help_type(NONE),
+          m_help_type(),
           m_metavar(),
           m_dest_str(),
           m_dest(),
@@ -510,7 +509,7 @@ public:
           m_choices(),
           m_required(false),
           m_help(),
-          m_help_type(NONE),
+          m_help_type(),
           m_metavar(),
           m_dest_str(),
           m_dest(),
@@ -896,7 +895,7 @@ public:
     Argument& help(std::string const& value)
     {
         m_help = detail::_trim_copy(value);
-        m_help_type = NONE;
+        m_help_type.clear();
         return *this;
     }
 
@@ -1138,11 +1137,6 @@ private:
         return m_type;
     }
 
-    Enum help_type() const
-    {
-        return m_help_type;
-    }
-
     uint32_t num_args() const
     {
         return m_num_args;
@@ -1287,7 +1281,7 @@ private:
     detail::Value<std::vector<std::string> > m_choices;
     bool        m_required;
     std::string m_help;
-    Enum        m_help_type;
+    detail::Value<Enum> m_help_type;
     detail::Value<std::string> m_metavar;
     std::string m_dest_str;
     std::vector<std::string> m_dest;
@@ -3597,7 +3591,7 @@ private:
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_positional) {
-            if (add_suppress || arg->m_help_type != SUPPRESS) {
+            if (add_suppress || !arg->m_help_type.status()) {
                 result.push_back(arg);
             }
         }
@@ -3618,7 +3612,7 @@ private:
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_optional) {
-            if (add_suppress || arg->m_help_type != SUPPRESS) {
+            if (add_suppress || !arg->m_help_type.status()) {
                 result.push_back(arg);
             }
         }
@@ -3633,7 +3627,7 @@ private:
             for (std::size_t p = 0, a = 0;
                  p < parser.m_subparser_pos && a < parser.m_positional.size(); ++a, ++p) {
                 auto const& arg = parser.m_positional.at(a);
-                res.second += (add_suppress || arg->help_type() != SUPPRESS);
+                res.second += (add_suppress || !arg->m_help_type.status());
             }
         };
         std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
