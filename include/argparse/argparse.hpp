@@ -1977,22 +1977,27 @@ public:
          *  \brief Construct object with parsed arguments
          *
          *  \param arguments Parsed arguments
+         *  \param unrecognized_args Unrecognized arguments
          *
          *  \return Object with parsed arguments
          */
-        Namespace(Storage const& arguments)
-            : m_arguments(arguments)
+        Namespace(Storage const& arguments,
+                  std::vector<std::string> const& unrecognized_args = std::vector<std::string>())
+            : m_arguments(arguments),
+              m_unrecognized_args(unrecognized_args)
         { }
 
         /*!
          *  \brief Construct object with parsed arguments
          *
          *  \param arguments Parsed arguments
+         *  \param unrecognized_args Unrecognized arguments
          *
          *  \return Object with parsed arguments
          */
-        Namespace(Storage&& arguments)
-            : m_arguments(std::move(arguments))
+        Namespace(Storage&& arguments, std::vector<std::string>&& unrecognized_args)
+            : m_arguments(std::move(arguments)),
+              m_unrecognized_args(std::move(unrecognized_args))
         { }
 
         /*!
@@ -2225,6 +2230,26 @@ public:
             }
         }
 
+        /*!
+         *  \brief Get unrecognized arguments
+         *
+         *  \return Unrecognized arguments
+         */
+        std::vector<std::string> const& unrecognized_args() const
+        {
+            return m_unrecognized_args;
+        }
+
+        /*!
+         *  \brief Get unrecognized arguments as args string
+         *
+         *  \return Unrecognized arguments as args string
+         */
+        std::string unrecognized_args_to_args() const
+        {
+            return detail::_vector_to_string(m_unrecognized_args, " ", "", true);
+        }
+
     private:
         Storage::value_type const& data(std::string const& key) const
         {
@@ -2280,6 +2305,7 @@ public:
         Namespace& operator =(Namespace const&) = delete;
 
         Storage m_arguments;
+        std::vector<std::string> m_unrecognized_args;
     };
 
 public:
@@ -2682,15 +2708,15 @@ public:
     /*!
      *  \brief Parse concrete arguments
      *
-     *  \param parsed_arguments Arguments to parse
+     *  \param args Arguments to parse
      *
      *  \return Object with parsed arguments
      */
-    Namespace parse_args(std::vector<std::string> parsed_arguments) const
+    Namespace parse_args(std::vector<std::string> args) const
     {
         if (m_exit_on_error) {
             try {
-                return parse_known_args(parsed_arguments);
+                return parse_arguments(args);
             } catch (std::exception& e) {
                 std::cerr << e.what() << std::endl;
             } catch (...) {
@@ -2698,7 +2724,40 @@ public:
             }
             exit(1);
         } else {
-            return parse_known_args(parsed_arguments);
+            return parse_arguments(args);
+        }
+    }
+
+    /*!
+     *  \brief Parse known command line arguments
+     *
+     *  \return Object with parsed arguments
+     */
+    Namespace parse_known_args() const
+    {
+        return parse_known_args(m_parsed_arguments);
+    }
+
+    /*!
+     *  \brief Parse known concrete arguments
+     *
+     *  \param args Arguments to parse
+     *
+     *  \return Object with parsed arguments
+     */
+    Namespace parse_known_args(std::vector<std::string> args) const
+    {
+        if (m_exit_on_error) {
+            try {
+                return parse_arguments(args, true);
+            } catch (std::exception& e) {
+                std::cerr << e.what() << std::endl;
+            } catch (...) {
+                std::cerr << "error: unexpected error" << std::endl;
+            }
+            exit(1);
+        } else {
+            return parse_arguments(args, true);
         }
     }
 
@@ -2733,7 +2792,7 @@ public:
     }
 
 private:
-    Namespace parse_known_args(std::vector<std::string> parsed_arguments) const
+    Namespace parse_arguments(std::vector<std::string> parsed_arguments, bool only_known = false) const
     {
         auto _validate_arguments = [] (std::vector<pArgument> const& arguments)
         {
@@ -3452,7 +3511,7 @@ private:
                 handle_error("the following arguments are required: " + args);
             }
         }
-        if (!unrecognized_args.empty()) {
+        if (!only_known && !unrecognized_args.empty()) {
             handle_error("unrecognized arguments: " + detail::_vector_to_string(unrecognized_args));
         }
         for (auto& arg : result) {
@@ -3472,7 +3531,7 @@ private:
                 result.create(arg, { pair.second });
             }
         }
-        return Namespace(std::move(result));
+        return Namespace(std::move(result), std::move(unrecognized_args));
     }
 
     void handle_error(std::string const& error = "unknown") const
