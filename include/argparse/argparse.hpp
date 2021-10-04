@@ -325,6 +325,16 @@ enum Enum
 };
 
 /*!
+ * \brief Formatter values
+ *
+ * \enum Formatter
+ */
+enum Formatter
+{
+    ArgumentDefaultsHelpFormatter,
+};
+
+/*!
  * \brief ArgumentError handler
  */
 class ArgumentError : public std::invalid_argument
@@ -1171,7 +1181,8 @@ private:
         return res;
     }
 
-    std::string print(std::size_t limit = detail::_argument_help_limit) const
+    std::string print(bool show_default, detail::Value<std::string> const& argument_default,
+                      std::size_t limit = detail::_argument_help_limit) const
     {
         std::string res = "  " + flags_to_string();
         if (!help().empty()) {
@@ -1179,6 +1190,10 @@ private:
                 res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
             } else {
                 res += std::string(limit - res.size(), ' ') + help();
+            }
+            if (show_default && m_type == Optional) {
+                auto const& def = m_default.status() ? m_default : argument_default;
+                res += " (default: " + (def.status() ? def() : "None") + ")";
             }
         }
         return res;
@@ -2320,6 +2335,7 @@ public:
         : BaseParser(),
           m_prog(prog),
           m_parents(),
+          m_formatter_class(),
           m_fromfile_prefix_chars(),
           m_argument_default(),
           m_add_help(true),
@@ -2430,6 +2446,19 @@ public:
     ArgumentParser& parents(std::vector<ArgumentParser> const& param)
     {
         m_parents = param;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument parser 'formatter_class' value
+     *
+     *  \param param Formatter value
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser& formatter_class(Formatter param)
+    {
+        m_formatter_class = param;
         return *this;
     }
 
@@ -3693,23 +3722,23 @@ private:
         return res;
     }
 
-    static void print_custom_usage(std::vector<pArgument> const& positional,
-                                   std::vector<pArgument> const& optional,
-                                   std::pair<Subparser*, std::size_t> const& subparser,
-                                   std::string const& program,
-                                   std::ostream& os = std::cout)
+    void print_custom_usage(std::vector<pArgument> const& positional,
+                            std::vector<pArgument> const& optional,
+                            std::pair<Subparser*, std::size_t> const& subparser,
+                            std::string const& program,
+                            std::ostream& os = std::cout) const
     {
         os << "usage: " << custom_usage(positional, optional, subparser, program) << std::endl;
     }
 
-    static void print_custom_help(std::vector<pArgument> const& positional,
-                                  std::vector<pArgument> const& optional,
-                                  std::pair<Subparser*, std::size_t> const& subparser,
-                                  std::string const& program,
-                                  std::string const& usage,
-                                  std::string const& description,
-                                  std::string const& epilog,
-                                  std::ostream& os = std::cout)
+    void print_custom_help(std::vector<pArgument> const& positional,
+                           std::vector<pArgument> const& optional,
+                           std::pair<Subparser*, std::size_t> const& subparser,
+                           std::string const& program,
+                           std::string const& usage,
+                           std::string const& description,
+                           std::string const& epilog,
+                           std::ostream& os = std::cout) const
     {
         if (!usage.empty()) {
             os << "usage: " << usage << std::endl;
@@ -3720,6 +3749,8 @@ private:
             os << std::endl << description << std::endl;
         }
         std::size_t min_size = 0;
+        bool show_default = m_formatter_class.status()
+                && m_formatter_class() == ArgumentDefaultsHelpFormatter;
         bool subparser_positional = (subparser.first
                                      && subparser.first->title().empty()
                                      && subparser.first->description().empty());
@@ -3757,7 +3788,7 @@ private:
                 if (subparser_positional && subparser.second == i) {
                     os << subparser.first->print(min_size) << std::endl;
                 }
-                os << positional.at(i)->print(min_size) << std::endl;
+                os << positional.at(i)->print(false, m_argument_default, min_size) << std::endl;
             }
             if (subparser_positional && subparser.second == positional.size()) {
                 os << subparser.first->print(min_size) << std::endl;
@@ -3769,7 +3800,7 @@ private:
         if (!optional.empty()) {
             os << std::endl << "optional arguments:" << std::endl;
             for (auto const& arg : optional) {
-                os << arg->print(min_size) << std::endl;
+                os << arg->print(show_default, m_argument_default, min_size) << std::endl;
             }
         }
         if (subparser.first && !subparser_positional) {
@@ -3792,6 +3823,7 @@ private:
 
     std::string m_prog;
     std::vector<ArgumentParser> m_parents;
+    detail::Value<Formatter> m_formatter_class;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
     bool m_add_help;
