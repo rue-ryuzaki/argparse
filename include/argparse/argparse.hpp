@@ -3799,8 +3799,9 @@ private:
         }
         if (!optional.empty()) {
             os << std::endl << "optional arguments:" << std::endl;
-            for (auto const& arg : optional) {
-                os << arg->print(show_default, m_argument_default, min_size) << std::endl;
+            for (auto it = std::begin(optional); it != std::end(optional); ++it) {
+                os << (*it)->print(show_default && !(m_add_help && it == std::begin(optional)),
+                                   m_argument_default, min_size) << std::endl;
             }
         }
         if (subparser.first && !subparser_positional) {
