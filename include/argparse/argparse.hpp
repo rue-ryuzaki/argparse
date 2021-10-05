@@ -204,7 +204,7 @@ static inline std::vector<std::string> _split_equal(std::string const& s,
 
 static inline bool _string_to_bool(std::string const& str)
 {
-    return str != "0";
+    return !str.empty();
 }
 
 static inline std::string _bool_to_string(std::string const& str)
@@ -657,7 +657,7 @@ public:
         }
         switch (value) {
             case Action::store_true :
-                m_default = "0";
+                m_default.clear("");
                 m_const = "1";
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
@@ -665,8 +665,8 @@ public:
                 m_choices.clear();
                 break;
             case Action::store_false :
-                m_default = "1";
-                m_const = "0";
+                m_default.clear("1");
+                m_const = "";
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
                 m_num_args = 0;
@@ -1173,7 +1173,7 @@ private:
         return res;
     }
 
-    std::string print(bool show_default, detail::Value<std::string> const& argument_default,
+    std::string print(bool show_default_value, detail::Value<std::string> const& argument_default,
                       std::size_t limit = detail::_argument_help_limit) const
     {
         std::string res = "  " + flags_to_string();
@@ -1183,7 +1183,7 @@ private:
             } else {
                 res += std::string(limit - res.size(), ' ') + help();
             }
-            if (show_default && m_type == Optional) {
+            if (show_default_value && m_type == Optional) {
                 auto const& def = (m_default.status() || !argument_default.status()) ? m_default
                                                                                      : argument_default;
                 if (!def.status() && m_action & (Action::store_true | Action::store_false)) {
@@ -3551,7 +3551,7 @@ private:
             if (arg.second.empty() && arg.first->action() != Action::count
                     && arg.first->m_type == Argument::Optional) {
                 auto const& value = default_argument_value(*arg.first);
-                if (value.status()) {
+                if (value.status() || arg.first->action() & (Action::store_true | Action::store_false)) {
                     arg.second.push_back(value());
                 }
             }
