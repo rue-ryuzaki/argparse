@@ -202,6 +202,16 @@ static inline std::vector<std::string> _split_equal(std::string const& s,
     }
 }
 
+static inline bool _string_to_bool(std::string const& str)
+{
+    return str != "0";
+}
+
+static inline std::string _bool_to_string(std::string const& str)
+{
+    return _string_to_bool(str) ? "true" : "false";
+}
+
 static inline std::string _vector_to_string(std::vector<std::string> const& vec,
                                             std::string const& separator = " ",
                                             std::string const& quotes = "",
@@ -266,10 +276,10 @@ public:
         return this->m_status == rhs.m_status && this->m_value == rhs.m_value;
     }
 
-    void clear()
+    void clear(T const& value = T())
     {
         m_status = false;
-        m_value = T();
+        m_value = value;
     }
 
     bool        status() const { return m_status; }
@@ -823,9 +833,7 @@ public:
      */
     Argument& default_value(std::string const& value)
     {
-        if (!(m_action & (Action::store_true | Action::store_false))) {
-            m_default = detail::_trim_copy(value);
-        }
+        m_default = detail::_trim_copy(value);
         return *this;
     }
 
@@ -1176,8 +1184,13 @@ private:
                 res += std::string(limit - res.size(), ' ') + help();
             }
             if (show_default && m_type == Optional) {
-                auto const& def = m_default.status() ? m_default : argument_default;
-                res += " (default: " + (def.status() ? def() : "None") + ")";
+                auto const& def = (m_default.status() || !argument_default.status()) ? m_default
+                                                                                     : argument_default;
+                if (!def.status() && m_action & (Action::store_true | Action::store_false)) {
+                    res += " (default: " + detail::_bool_to_string(def()) + ")";
+                } else {
+                    res += " (default: " + ((def.status() || !def().empty()) ? def() : "None") + ")";
+                }
             }
         }
         return res;
@@ -2171,12 +2184,12 @@ public:
                 case Action::store_true :
                 case Action::store_false :
                     if (args.second.empty()) {
-                        return args.first->m_default() == "0" ? "false" : "true";
+                        return detail::_bool_to_string(args.first->m_default());
                     }
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
                     }
-                    return args.second.front() == "0" ? "false" : "true";
+                    return detail::_bool_to_string(args.second.front());
                 case Action::count :
                     return std::to_string(args.second.size());
                 case Action::store :
@@ -2211,12 +2224,12 @@ public:
                 case Action::store_true :
                 case Action::store_false :
                     if (args.second.empty()) {
-                        return args.first->m_default() == "0" ? "false" : "true";
+                        return detail::_bool_to_string(args.first->m_default());
                     }
                     if (args.second.size() != 1) {
                         throw TypeError("trying to get data from array argument '" + key + "'");
                     }
-                    return args.second.front() == "0" ? "false" : "true";
+                    return detail::_bool_to_string(args.second.front());
                 case Action::count :
                     return std::to_string(args.second.size());
                 case Action::store :
@@ -2278,6 +2291,12 @@ public:
             return vec;
         }
 
+        template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
+        T to_type(std::string const& data) const
+        {
+            return detail::_string_to_bool(data);
+        }
+
         template <class T,
                   typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
         T to_type(std::string const& data) const
@@ -2286,7 +2305,8 @@ public:
         }
 
         template <class T,
-                  typename std::enable_if<not std::is_constructible<std::string, T>::value>::type* = nullptr>
+                  typename std::enable_if<not std::is_constructible<std::string, T>::value
+                                          and not std::is_same<bool, T>::value>::type* = nullptr>
         T to_type(std::string const& data) const
         {
             T result = T();
@@ -3555,7 +3575,7 @@ private:
 
     detail::Value<std::string> const& default_argument_value(Argument const& arg) const
     {
-        return arg.m_default.status() ? arg.m_default : m_argument_default;
+        return (arg.m_default.status() || !m_argument_default.status()) ? arg.m_default : m_argument_default;
     }
 
     std::vector<std::string> convert_arg_line_to_args(std::string const& file) const
