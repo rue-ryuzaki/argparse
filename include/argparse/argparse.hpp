@@ -681,6 +681,7 @@ public:
                 }
             case Action::store_const :
             case Action::append_const :
+                m_const = "";
             case Action::count :
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
