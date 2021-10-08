@@ -438,8 +438,9 @@ public:
  */
 class Argument
 {
-    friend class BaseParser;
+    friend class ArgumentGroup;
     friend class ArgumentParser;
+    friend class BaseParser;
 
     enum Nargs
     {
@@ -1295,6 +1296,62 @@ private:
 };
 
 typedef std::shared_ptr<Argument> pArgument;
+/*!
+ * \brief Group class
+ */
+class Group
+{
+    friend class ArgumentParser;
+
+public:
+    /*!
+     *  \brief Construct group
+     *
+     *  \return Group object
+     */
+    Group()
+        : m_title(),
+          m_description(),
+          m_position()
+    { }
+
+    /*!
+     *  \brief Destroy group
+     */
+    virtual ~Group() = default;
+
+    /*!
+     *  \brief Get group 'title' value
+     *
+     *  \return Group 'title' value
+     */
+    std::string const& title() const
+    {
+        return m_title;
+    }
+
+    /*!
+     *  \brief Get group 'description' value
+     *
+     *  \return Group 'description' value
+     */
+    std::string const& description() const
+    {
+        return m_description;
+    }
+
+protected:
+    virtual void limit_usage(std::size_t& limit) const = 0;
+    virtual void limit_help_flags(std::size_t& limit) const = 0;
+    virtual void print_help(std::ostream& os, bool show_default_value,
+                            detail::Value<std::string> const& argument_default, std::size_t limit) const = 0;
+
+    std::string m_title;
+    std::string m_description;
+    std::size_t m_position;
+};
+
+typedef std::shared_ptr<Group> pGroup;
 
 /*!
  * \brief BaseParser class
@@ -1314,7 +1371,8 @@ public:
           m_prefix_chars(detail::_default_prefix_chars),
           m_arguments(),
           m_optional(),
-          m_positional()
+          m_positional(),
+          m_groups()
     { }
 
     /*!
@@ -1450,6 +1508,7 @@ protected:
     std::vector<pArgument> m_arguments;
     std::vector<pArgument> m_optional;
     std::vector<pArgument> m_positional;
+    std::vector<pGroup>   m_groups;
 };
 
 /*!
@@ -1723,11 +1782,14 @@ public:
     /*!
      * \brief Subparser class
      */
-    class Subparser
+    class Subparser : public Group
     {
         friend class ArgumentParser;
 
     public:
+        using Group::title;
+        using Group::description;
+
         /*!
          *  \brief Construct subparser
          *
@@ -1919,6 +1981,43 @@ public:
         }
 
     private:
+        void limit_usage(std::size_t& limit) const override
+        {
+            auto const str = usage();
+            if (limit < str.size()) {
+                limit = str.size();
+            }
+        }
+
+        void limit_help_flags(std::size_t& limit) const override
+        {
+            auto size = flags_to_string().size();
+            if (limit < size) {
+                limit = size;
+            }
+            for (auto const& arg : m_parsers) {
+                auto size = arg.m_name.size() + 2;
+                if (limit < size) {
+                    limit = size;
+                }
+            }
+        }
+
+        void print_help(std::ostream& os, bool, detail::Value<std::string> const&,
+                        std::size_t limit) const override
+        {
+            os << std::endl
+               << (title().empty() ? "subcommands" : title())
+               << ":" << std::endl;
+            if (!description().empty()) {
+                os << "  " << description() << std::endl << std::endl;
+            }
+            os << print(limit) << std::endl;
+            for (auto const& arg : m_parsers) {
+                os << arg.print(limit) << std::endl;
+            }
+        }
+
         std::string usage() const
         {
             return flags_to_string() + " ...";
@@ -2348,8 +2447,7 @@ public:
           m_exit_on_error(true),
           m_default_values(),
           m_parsed_arguments(),
-          m_subparsers(nullptr),
-          m_subparser_pos()
+          m_subparsers(nullptr)
     { }
 
     /*!
@@ -2623,8 +2721,8 @@ public:
                 handle_error("cannot have multiple subparser arguments");
             }
         }
-        m_subparser_pos = m_positional.size();
         m_subparsers = std::make_shared<Subparser>();
+        m_subparsers->m_position = m_positional.size();
         return *m_subparsers;
     }
 
@@ -2808,7 +2906,7 @@ public:
             auto const positional = positional_arguments(false);
             auto const optional = optional_arguments(false);
             auto const subparser = subpurser_info(false);
-            print_custom_usage(positional, optional, subparser, prog(), os);
+            print_custom_usage(positional, optional, m_groups, subparser, prog(), os);
         }
     }
 
@@ -2822,7 +2920,8 @@ public:
         auto const positional = positional_arguments(false);
         auto const optional = optional_arguments(false);
         auto const subparser = subpurser_info(false);
-        print_custom_help(positional, optional, subparser, prog(), usage(), description(), epilog(), os);
+        print_custom_help(positional, optional, m_groups, subparser, prog(),
+                          usage(), description(), epilog(), os);
     }
 
 private:
@@ -3326,8 +3425,8 @@ private:
                     program += " " + str;
                 }
                 program += " " + captured->m_name;
-                print_custom_help(captured->m_positional, opt, { nullptr, 0 }, program, captured->usage(),
-                                  captured->description(), captured->epilog());
+                print_custom_help(captured->m_positional, opt, captured->m_groups, { nullptr, 0 }, program,
+                                  captured->usage(), captured->description(), captured->epilog());
             } else {
                 print_help();
             }
@@ -3636,7 +3735,7 @@ private:
                 std::pair<Subparser*, std::size_t>& res, bool add_suppress)
         {
             for (std::size_t p = 0, a = 0;
-                 p < parser.m_subparser_pos && a < parser.m_positional.size(); ++a, ++p) {
+                 p < parser.m_subparsers->m_position && a < parser.m_positional.size(); ++a, ++p) {
                 auto const& arg = parser.m_positional.at(a);
                 res.second += (add_suppress || !arg->m_help_type.status());
             }
@@ -3666,17 +3765,12 @@ private:
 
     static std::string custom_usage(std::vector<pArgument> const& positional,
                                     std::vector<pArgument> const& optional,
+                                    std::vector<pGroup> const& groups,
                                     std::pair<Subparser*, std::size_t> const& subparser,
                                     std::string const& program)
     {
         auto res = program;
         std::size_t min_size = 0;
-        if (subparser.first) {
-            auto const str = subparser.first->usage();
-            if (min_size < str.size()) {
-                min_size = str.size();
-            }
-        }
         for (auto const& arg : positional) {
             auto const str = arg->usage();
             if (min_size < str.size()) {
@@ -3688,6 +3782,9 @@ private:
             if (min_size < str.size()) {
                 min_size = str.size();
             }
+        }
+        for (auto const& group : groups) {
+            group->limit_usage(min_size);
         }
         std::size_t const usage_length = std::string("usage: ").size();
         std::size_t pos = usage_length + program.size();
@@ -3724,20 +3821,23 @@ private:
         if (subparser.first && subparser.second == positional.size()) {
             _arg_usage(subparser.first->usage(), false);
         }
+        // TODO Groups
         return res;
     }
 
     void print_custom_usage(std::vector<pArgument> const& positional,
                             std::vector<pArgument> const& optional,
+                            std::vector<pGroup> const& groups,
                             std::pair<Subparser*, std::size_t> const& subparser,
                             std::string const& program,
                             std::ostream& os = std::cout) const
     {
-        os << "usage: " << custom_usage(positional, optional, subparser, program) << std::endl;
+        os << "usage: " << custom_usage(positional, optional, groups, subparser, program) << std::endl;
     }
 
     void print_custom_help(std::vector<pArgument> const& positional,
                            std::vector<pArgument> const& optional,
+                           std::vector<pGroup> const& groups,
                            std::pair<Subparser*, std::size_t> const& subparser,
                            std::string const& program,
                            std::string const& usage,
@@ -3748,7 +3848,7 @@ private:
         if (!usage.empty()) {
             os << "usage: " << usage << std::endl;
         } else {
-            print_custom_usage(positional, optional, subparser, program, os);
+            print_custom_usage(positional, optional, groups, subparser, program, os);
         }
         if (!description.empty()) {
             os << std::endl << description << std::endl;
@@ -3759,18 +3859,6 @@ private:
         bool subparser_positional = (subparser.first
                                      && subparser.first->title().empty()
                                      && subparser.first->description().empty());
-        if (subparser.first) {
-            auto size = subparser.first->flags_to_string().size();
-            if (min_size < size) {
-                min_size = size;
-            }
-            for (auto const& arg : subparser.first->m_parsers) {
-                auto size = arg.m_name.size() + 2;
-                if (min_size < size) {
-                    min_size = size;
-                }
-            }
-        }
         for (auto const& arg : positional) {
             auto size = arg->flags_to_string().size();
             if (min_size < size) {
@@ -3782,6 +3870,9 @@ private:
             if (min_size < size) {
                 min_size = size;
             }
+        }
+        for (auto const& group : groups) {
+            group->limit_help_flags(min_size);
         }
         min_size += 4;
         if (min_size > detail::_argument_help_limit) {
@@ -3809,17 +3900,13 @@ private:
                                    m_argument_default, min_size) << std::endl;
             }
         }
-        if (subparser.first && !subparser_positional) {
-            os << std::endl
-               << (subparser.first->title().empty() ? "subcommands"
-                                                    : subparser.first->title())
-               << ":" << std::endl;
-            if (!subparser.first->description().empty()) {
-                os << "  " << subparser.first->description() << std::endl << std::endl;
-            }
-            os << subparser.first->print(min_size) << std::endl;
-            for (auto const& arg : subparser.first->m_parsers) {
-                os << arg.print(min_size) << std::endl;
+        for (auto const& group : groups) {
+            if (subparser.first) {
+                if (group.get() != subparser.first || !subparser_positional) {
+                    group->print_help(os, show_default, m_argument_default, min_size);
+                }
+            } else if (group.get() != subparser.first) {
+                group->print_help(os, show_default, m_argument_default, min_size);
             }
         }
         if (!epilog.empty()) {
@@ -3839,7 +3926,6 @@ private:
     std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
     std::shared_ptr<Subparser> m_subparsers;
-    std::size_t m_subparser_pos;
 };
 } // argparse
 
