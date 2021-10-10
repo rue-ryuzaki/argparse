@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv).add_help(false);
 
-    parser.add_argument("store").action("store");
+    parser.add_argument("--store").action("store");
     parser.add_argument("--store_const").action("store_const").const_value("const_value");
     parser.add_argument("--store_true").action("store_true");
     parser.add_argument("--store_false").action("store_false");
@@ -137,6 +137,28 @@ int main(int argc, char* argv[])
     std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
     std::cout << "foo: " << args.get<bool>("foo") << std::endl;
     std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
+
+    return 0;
+}
+```
+## Argument groups example
+```cpp
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv).add_help(false);
+
+    auto& group1 = parser.add_argument_group("group 1", "group1 description");
+    group1.add_argument("--foo").action("store").help("foo help");
+
+    auto& group2 = parser.add_argument_group("group 2", "group2 description");
+    group2.add_argument("bar").action("store").help("bar help");
+    group2.add_argument("--baz").action("store").help("baz help");
+
+    parser.print_help();
 
     return 0;
 }
@@ -225,10 +247,10 @@ int main(int argc, char* argv[])
 - [x] description - Text to display before the argument help (default: "")
 - [x] epilog - Text to display after the argument help (default: "")
 - [x] parents - A list of ArgumentParser objects whose arguments should also be included
-- [ ] formatter_class - A class for customizing the help output
+- [x] formatter_class - A class for customizing the help output
 - [x] prefix_chars - The set of characters that prefix optional arguments (default: "-")
 - [x] fromfile_prefix_chars - The set of characters that prefix files from which additional arguments should be read (default: "")
-- [x] argument_default - The global default value for arguments (default: "")
+- [x] argument_default - The global default value for arguments (default: none)
 - [ ] conflict_handler - The strategy for resolving conflicting optionals (usually unnecessary)
 - [x] add_help - Add a -h/--help option to the parser (default: true)
 - [x] allow_abbrev - Allows long options to be abbreviated if the abbreviation is unambiguous. (default: true)
