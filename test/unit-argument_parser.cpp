@@ -1712,3 +1712,29 @@ TEST_CASE("16. parse known arguments", "[argument_parser]")
         REQUIRE(args.unrecognized_args_to_args() == "--boo baz");
     }
 }
+
+TEST_CASE("17. argument groups", "[argument_parser]")
+{
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    parser.add_argument("--foo").action("store_true");
+    parser.add_argument("bar");
+
+    auto& group1 = parser.add_argument_group("group 1", "desc");
+    group1.add_argument("--group1").action("store");
+
+    auto& group2 = parser.add_argument_group("group 2", "desc");
+    group2.add_argument("--group2").action("store");
+
+    auto args0 = parser.parse_args({ "--foo", "bar" });
+    REQUIRE(args0.get<bool>("foo") == true);
+    REQUIRE(args0.get<std::string>("bar") == "bar");
+    REQUIRE(args0.get<std::string>("group1") == "");
+    REQUIRE(args0.get<std::string>("group2") == "");
+
+    auto args1 = parser.parse_known_args({ "--foo", "bar", "--group2=2", "--group1=1" });
+    REQUIRE(args1.get<bool>("foo") == true);
+    REQUIRE(args1.get<std::string>("bar") == "bar");
+    REQUIRE(args1.get<std::string>("group1") == "1");
+    REQUIRE(args1.get<std::string>("group2") == "2");
+}
