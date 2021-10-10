@@ -1,3 +1,13 @@
+cpp-argparse-dev (0.6.0-0ppa0) focal; urgency=low
+
+  * Fix load args from file
+  * Add ArgumentDefaultsHelpFormatter support
+  * Add ArgumentParser::parse_known_args() function
+  * Add argument groups
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 10 Oct 2021 18:31:30 +0300
+
 cpp-argparse-dev (0.5.3-0ppa0) focal; urgency=low
 
   * Fix parse arguments with '=' prefix_chars
