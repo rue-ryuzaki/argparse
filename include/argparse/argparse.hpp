@@ -1435,6 +1435,27 @@ public:
     }
 
     /*!
+     *  \brief Create argument group object from another argument group
+     *
+     *  \param rhs Argument group object to copy
+     *
+     *  \return Argument group object
+     */
+    ArgumentGroup(ArgumentGroup const& rhs)
+        : ArgumentData(),
+          Group(),
+          m_prefix_chars(rhs.m_prefix_chars),
+          m_parent_data(rhs.m_parent_data)
+    {
+        m_title         = rhs.m_title;
+        m_description   = rhs.m_description;
+        m_position      = rhs.m_position;
+        m_arguments     = rhs.m_arguments;
+        m_optional      = rhs.m_optional;
+        m_positional    = rhs.m_positional;
+    }
+
+    /*!
      *  \brief Copy argument group object from another argument group
      *
      *  \param rhs Argument group object to copy
