@@ -1744,7 +1744,7 @@ protected:
     std::string m_description;
     std::string m_epilog;
     std::string m_prefix_chars;
-    std::vector<pGroup> m_groups;
+    std::deque<pGroup> m_groups;
 };
 
 /*!
@@ -2271,7 +2271,7 @@ public:
         bool        m_required;
         std::string m_help;
         detail::Value<std::string> m_metavar;
-        std::vector<Parser> m_parsers;
+        std::deque<Parser> m_parsers;
     };
 
     /*!
@@ -3984,7 +3984,7 @@ private:
 
     static std::string custom_usage(std::vector<pArgument> const& positional,
                                     std::vector<pArgument> const& optional,
-                                    std::vector<pGroup> const& groups,
+                                    std::deque<pGroup> const& groups,
                                     std::pair<Subparser*, std::size_t> const& subparser,
                                     std::string const& program)
     {
@@ -4045,7 +4045,7 @@ private:
 
     void print_custom_usage(std::vector<pArgument> const& positional,
                             std::vector<pArgument> const& optional,
-                            std::vector<pGroup> const& groups,
+                            std::deque<pGroup> const& groups,
                             std::pair<Subparser*, std::size_t> const& subparser,
                             std::string const& program,
                             std::ostream& os = std::cout) const
@@ -4057,7 +4057,7 @@ private:
                            std::vector<pArgument> const& optional_all,
                            std::vector<pArgument> const& positional,
                            std::vector<pArgument> const& optional,
-                           std::vector<pGroup> const& groups,
+                           std::deque<pGroup> const& groups,
                            std::pair<Subparser*, std::size_t> const& subparser,
                            std::string const& program,
                            std::string const& usage,
