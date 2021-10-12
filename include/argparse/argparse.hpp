@@ -3898,8 +3898,8 @@ private:
         }
         for (auto const& pair : m_default_values) {
             if (!result.exists(pair.first)) {
-                pArgument arg = std::make_shared<Argument>(std::vector<std::string>{ pair.first },
-                                                           pair.first, Argument::Positional);
+                auto arg = std::make_shared<Argument>(std::vector<std::string>{ pair.first },
+                                                      pair.first, Argument::Positional);
                 arg->default_value(pair.second);
                 result.create(arg, { pair.second });
             }
@@ -3976,8 +3976,7 @@ private:
         {
             for (std::size_t p = 0, a = 0;
                  p < parser.m_subparsers->m_position && a < parser.m_positional.size(); ++a, ++p) {
-                auto const& arg = parser.m_positional.at(a);
-                res.second += (add_suppress || !arg.first->m_help_type.status());
+                res.second += (add_suppress || !parser.m_positional.at(a).first->m_help_type.status());
             }
         };
         std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
