@@ -51,6 +51,9 @@
 #include <unordered_set>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough="
+
 namespace argparse {
 namespace detail {
 std::size_t const _usage_limit = 80;
@@ -4168,5 +4171,7 @@ private:
     std::shared_ptr<Subparser> m_subparsers;
 };
 } // argparse
+
+#pragma GCC diagnostic pop
 
 #endif // _ARGPARSE_ARGUMENT_PARSER_HPP_
