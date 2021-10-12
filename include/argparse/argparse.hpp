@@ -441,6 +441,7 @@ public:
  */
 class Argument
 {
+    friend class ArgumentData;
     friend class ArgumentGroup;
     friend class ArgumentParser;
     friend class BaseParser;
@@ -1404,6 +1405,65 @@ protected:
         return result;
     }
 
+    void create_argument(std::vector<std::string> flags, std::string const& prefix_chars)
+    {
+        if (flags.empty()) {
+            throw ValueError("empty options");
+        }
+        detail::_trim(flags.front());
+        auto flag_name = flags.front();
+        if (flag_name.empty()) {
+            throw IndexError("string index out of range");
+        }
+        auto prefixes = 0ul;
+        auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg)
+        {
+            auto name = detail::_flag_name(arg);
+            auto count_prefixes = arg.size() - name.size();
+            if (prefixes < count_prefixes) {
+                prefixes = count_prefixes;
+                flag_name = name;
+            }
+        };
+        bool is_optional = detail::_is_value_exists(flag_name.front(), prefix_chars);
+        if (is_optional) {
+            _update_flag_name(flag_name);
+        } else if (flags.size() > 1) {
+            // no positional multiflag
+            throw ValueError("invalid option string " + flags.front()
+                             + ": must starts with a character '" + prefix_chars + "'");
+        }
+        for (std::size_t i = 1; i < flags.size(); ++i) {
+            // check arguments
+            flags.at(i) = detail::_trim_copy(flags.at(i));
+            auto const& flag = flags.at(i);
+            if (flag.empty()) {
+                throw IndexError("string index out of range");
+            }
+            if (!detail::_is_value_exists(flag.front(), prefix_chars)) {
+                // no positional and optional args
+                throw ValueError("invalid option string " + flag
+                                 + ": must starts with a character '" + prefix_chars + "'");
+            }
+            _update_flag_name(flag);
+        }
+        auto arg = std::make_shared<Argument>(std::move(flags), flag_name,
+                                              is_optional ? Argument::Optional : Argument::Positional);
+        if (is_optional) {
+            for (auto const& arg_flag : arg->m_flags) {
+                for (auto const& opt : m_optional) {
+                    for (auto const& flag : opt.first->m_flags) {
+                        if (flag == arg_flag) {
+                            throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
+                                                + ": conflicting option string: " + flag);
+                        }
+                    }
+                }
+            }
+        }
+        m_arguments.emplace_back(std::move(arg));
+    }
+
     std::vector<pArgument> m_arguments;
     std::vector<std::pair<pArgument, bool> > m_optional;
     std::vector<std::pair<pArgument, bool> > m_positional;
@@ -1499,63 +1559,10 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::vector<std::string> flags)
+    Argument& add_argument(std::vector<std::string> const& flags)
     {
-        if (flags.empty()) {
-            throw ValueError("empty options");
-        }
-        detail::_trim(flags.front());
-        auto flag_name = flags.front();
-        if (flag_name.empty()) {
-            throw IndexError("string index out of range");
-        }
-        auto prefixes = 0ul;
-        auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg)
-        {
-            auto name = detail::_flag_name(arg);
-            auto count_prefixes = arg.size() - name.size();
-            if (prefixes < count_prefixes) {
-                prefixes = count_prefixes;
-                flag_name = name;
-            }
-        };
-        bool is_optional = detail::_is_value_exists(flag_name.front(), m_prefix_chars);
-        if (is_optional) {
-            _update_flag_name(flag_name);
-        } else if (flags.size() > 1) {
-            // no positional multiflag
-            throw ValueError("invalid option string " + flags.front()
-                             + ": must starts with a character '" + m_prefix_chars + "'");
-        }
-        for (std::size_t i = 1; i < flags.size(); ++i) {
-            // check arguments
-            flags.at(i) = detail::_trim_copy(flags.at(i));
-            auto const& flag = flags.at(i);
-            if (flag.empty()) {
-                throw IndexError("string index out of range");
-            }
-            if (!detail::_is_value_exists(flag.front(), m_prefix_chars)) {
-                // no positional and optional args
-                throw ValueError("invalid option string " + flag
-                                 + ": must starts with a character '" + m_prefix_chars + "'");
-            }
-            _update_flag_name(flag);
-        }
-        auto arg = std::make_shared<Argument>(std::move(flags), flag_name,
-                                              is_optional ? Argument::Optional : Argument::Positional);
-        if (is_optional) {
-            for (auto const& arg_flag : arg->m_flags) {
-                for (auto const& opt : m_optional) {
-                    for (auto const& flag : opt.first->m_flags) {
-                        if (flag == arg_flag) {
-                            throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
-                                                + ": conflicting option string: " + flag);
-                        }
-                    }
-                }
-            }
-        }
-        m_arguments.emplace_back(std::move(arg));
+        create_argument(flags, m_prefix_chars);
+        bool is_optional = m_arguments.back()->m_type == Argument::Optional;
         m_parent_data->m_arguments.push_back(m_arguments.back());
         (is_optional ? m_optional : m_positional).push_back(std::make_pair(m_arguments.back(), true));
         (is_optional ? m_parent_data->m_optional
@@ -1689,63 +1696,10 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::vector<std::string> flags)
+    Argument& add_argument(std::vector<std::string> const& flags)
     {
-        if (flags.empty()) {
-            throw ValueError("empty options");
-        }
-        detail::_trim(flags.front());
-        auto flag_name = flags.front();
-        if (flag_name.empty()) {
-            throw IndexError("string index out of range");
-        }
-        auto prefixes = 0ul;
-        auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg)
-        {
-            auto name = detail::_flag_name(arg);
-            auto count_prefixes = arg.size() - name.size();
-            if (prefixes < count_prefixes) {
-                prefixes = count_prefixes;
-                flag_name = name;
-            }
-        };
-        bool is_optional = detail::_is_value_exists(flag_name.front(), m_prefix_chars);
-        if (is_optional) {
-            _update_flag_name(flag_name);
-        } else if (flags.size() > 1) {
-            // no positional multiflag
-            throw ValueError("invalid option string " + flags.front()
-                             + ": must starts with a character '" + m_prefix_chars + "'");
-        }
-        for (std::size_t i = 1; i < flags.size(); ++i) {
-            // check arguments
-            flags.at(i) = detail::_trim_copy(flags.at(i));
-            auto const& flag = flags.at(i);
-            if (flag.empty()) {
-                throw IndexError("string index out of range");
-            }
-            if (!detail::_is_value_exists(flag.front(), m_prefix_chars)) {
-                // no positional and optional args
-                throw ValueError("invalid option string " + flag
-                                 + ": must starts with a character '" + m_prefix_chars + "'");
-            }
-            _update_flag_name(flag);
-        }
-        auto arg = std::make_shared<Argument>(std::move(flags), flag_name,
-                                              is_optional ? Argument::Optional : Argument::Positional);
-        if (is_optional) {
-            for (auto const& arg_flag : arg->m_flags) {
-                for (auto const& opt : m_optional) {
-                    for (auto const& flag : opt.first->m_flags) {
-                        if (flag == arg_flag) {
-                            throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
-                                                + ": conflicting option string: " + flag);
-                        }
-                    }
-                }
-            }
-        }
-        m_arguments.emplace_back(std::move(arg));
+        create_argument(flags, m_prefix_chars);
+        bool is_optional = m_arguments.back()->m_type == Argument::Optional;
         (is_optional ? m_optional : m_positional).push_back(std::make_pair(m_arguments.back(), false));
         return *m_arguments.back();
     }
