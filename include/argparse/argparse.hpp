@@ -671,6 +671,8 @@ public:
                 break;
             case Action::store_false :
                 m_default.clear("1");
+            case Action::store_const :
+            case Action::append_const :
                 m_const = "";
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
@@ -684,9 +686,6 @@ public:
                     // version and help actions cannot be positional
                     throw TypeError("got an unexpected keyword argument 'required'");
                 }
-            case Action::store_const :
-            case Action::append_const :
-                m_const = "";
             case Action::count :
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
@@ -1386,6 +1385,7 @@ protected:
     std::vector<pArgument> get_optional(bool add_group) const
     {
         std::vector<pArgument> result;
+        result.reserve(m_optional.size());
         for (auto const& pair : m_optional) {
             if (add_group || !pair.second) {
                 result.push_back(pair.first);
@@ -1397,6 +1397,7 @@ protected:
     std::vector<pArgument> get_positional(bool add_group) const
     {
         std::vector<pArgument> result;
+        result.reserve(m_positional.size());
         for (auto const& pair : m_positional) {
             if (add_group || !pair.second) {
                 result.push_back(pair.first);
@@ -1422,7 +1423,7 @@ protected:
             auto count_prefixes = arg.size() - name.size();
             if (prefixes < count_prefixes) {
                 prefixes = count_prefixes;
-                flag_name = name;
+                flag_name = std::move(name);
             }
         };
         bool is_optional = detail::_is_value_exists(flag_name.front(), prefix_chars);
@@ -1435,8 +1436,8 @@ protected:
         }
         for (std::size_t i = 1; i < flags.size(); ++i) {
             // check arguments
-            flags.at(i) = detail::_trim_copy(flags.at(i));
-            auto const& flag = flags.at(i);
+            auto& flag = flags.at(i);
+            detail::_trim(flag);
             if (flag.empty()) {
                 throw IndexError("string index out of range");
             }
@@ -1452,11 +1453,9 @@ protected:
         if (is_optional) {
             for (auto const& arg_flag : arg->m_flags) {
                 for (auto const& opt : m_optional) {
-                    for (auto const& flag : opt.first->m_flags) {
-                        if (flag == arg_flag) {
-                            throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
-                                                + ": conflicting option string: " + flag);
-                        }
+                    if (detail::_is_value_exists(arg_flag, opt.first->m_flags)) {
+                        throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
+                                            + ": conflicting option string: " + arg_flag);
                     }
                 }
             }
@@ -2199,9 +2198,7 @@ public:
         void print_help(std::ostream& os, bool, detail::Value<std::string> const&,
                         std::size_t limit) const override
         {
-            os << std::endl
-               << (title().empty() ? "subcommands" : title())
-               << ":" << std::endl;
+            os << std::endl << (title().empty() ? "subcommands" : title()) << ":" << std::endl;
             if (!description().empty()) {
                 os << "  " << description() << std::endl << std::endl;
             }
@@ -3184,10 +3181,9 @@ private:
         if (subparser.first && !subparser.first->m_dest.empty()) {
             subparser_flags.push_back(subparser.first->m_dest);
         }
-        pArgument subparser_arg
-                = std::make_shared<Argument>(std::move(subparser_flags),
-                                             subparser.first ? subparser.first->m_dest
-                                                             : "", Argument::Positional);
+        auto subparser_arg = std::make_shared<Argument>(std::move(subparser_flags),
+                                                        subparser.first ? subparser.first->m_dest
+                                                                        : "", Argument::Positional);
         Storage result;
         result.create(positional);
         result.create(optional);
@@ -3363,7 +3359,7 @@ private:
             bool more_args = false;
             bool capture_need = false;
             for ( ; finish < positional.size(); ++finish) {
-                if (subparser.first && !captured && finish == subparser.second) {
+                if (finish == subparser.second) {
                     if (min_args + 1 > arguments.size()) {
                         break;
                     }
@@ -3393,10 +3389,7 @@ private:
                 }
                 min_args += min_amount;
             }
-            if (subparser.first && !captured && finish == positional.size() && min_args < arguments.size()) {
-                capture_need = true;
-            }
-            if (!capture_need) {
+            if (!capture_need && (finish != positional.size() || min_args >= arguments.size())) {
                 if (finish != pos) {
                     _match_positionals(positional, arguments, finish, min_args, one_args, more_args);
                 }
@@ -3404,8 +3397,7 @@ private:
                                          std::begin(arguments), std::end(arguments));
                 return;
             }
-            ++min_args;
-            _match_positionals(positional, arguments, finish, min_args, one_args, more_args);
+            _match_positionals(positional, arguments, finish, ++min_args, one_args, more_args);
             auto const& name = arguments.front();
             std::string choices;
             for (auto const& parser : subparser.first->m_parsers) {
@@ -3656,8 +3648,7 @@ private:
                             uint32_t n = 0;
                             uint32_t num_args = tmp->m_num_args;
                             while (true) {
-                                ++i;
-                                if (i == parsed_arguments.size()) {
+                                if (++i == parsed_arguments.size()) {
                                     if (n == 0) {
                                         switch (tmp->m_nargs) {
                                             case Argument::NARGS_DEF :
@@ -3762,8 +3753,7 @@ private:
                 std::deque<std::string> values;
                 values.push_back(parsed_arguments.at(i));
                 while (true) {
-                    ++i;
-                    if (i == parsed_arguments.size()) {
+                    if (++i == parsed_arguments.size()) {
                         break;
                     } else {
                         auto const& next = parsed_arguments.at(i);
@@ -3994,11 +3984,12 @@ private:
         auto _arg_usage = [&pos, offset, &res] (std::string const& str, bool bkt)
         {
             if ((pos + 1 == offset) || (pos + 1 + str.size() <= detail::_usage_limit)) {
-                res += " " + (bkt ? "[" + str + "]" : str);
+                res += " ";
             } else {
-                res += "\n" + std::string(offset, ' ') + (bkt ? "[" + str + "]" : str);
+                res += "\n" + std::string(offset, ' ');
                 pos = offset;
             }
+            res += (bkt ? "[" + str + "]" : str);
             pos += 1 + str.size();
         };
         for (auto const& arg : optional) {
@@ -4053,9 +4044,8 @@ private:
         std::size_t min_size = 0;
         bool show_default = m_formatter_class.status()
                 && m_formatter_class() == ArgumentDefaultsHelpFormatter;
-        bool subparser_positional = (subparser.first
-                                     && subparser.first->title().empty()
-                                     && subparser.first->description().empty());
+        bool sub_positional = subparser.first && subparser.first->title().empty()
+                && subparser.first->description().empty();
         for (auto const& arg : positional) {
             auto size = arg->flags_to_string().size();
             if (min_size < size) {
@@ -4071,19 +4061,16 @@ private:
         for (auto const& group : groups) {
             group->limit_help_flags(min_size);
         }
-        min_size += 4;
-        if (min_size > detail::_argument_help_limit) {
-            min_size = detail::_argument_help_limit;
-        }
-        if (!positional.empty() || subparser_positional) {
+        min_size = std::min(min_size + 4, detail::_argument_help_limit);
+        if (!positional.empty() || sub_positional) {
             os << std::endl << "positional arguments:" << std::endl;
             for (std::size_t i = 0; i < positional.size(); ++i) {
-                if (subparser_positional && subparser.second == i) {
+                if (sub_positional && subparser.second == i) {
                     os << subparser.first->print(min_size) << std::endl;
                 }
                 os << positional.at(i)->print(false, m_argument_default, min_size) << std::endl;
             }
-            if (subparser_positional && subparser.second == positional.size()) {
+            if (sub_positional && subparser.second == positional.size()) {
                 os << subparser.first->print(min_size) << std::endl;
                 for (auto const& arg : subparser.first->m_parsers) {
                     os << arg.print(min_size) << std::endl;
@@ -4099,7 +4086,7 @@ private:
         }
         for (auto const& group : groups) {
             if (subparser.first) {
-                if (group.get() != subparser.first || !subparser_positional) {
+                if (group.get() != subparser.first || !sub_positional) {
                     group->print_help(os, show_default, m_argument_default, min_size);
                 }
             } else if (group.get() != subparser.first) {
