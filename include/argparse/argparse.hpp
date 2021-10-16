@@ -447,6 +447,7 @@ class Argument
     friend class ArgumentGroup;
     friend class ArgumentParser;
     friend class BaseParser;
+    friend class ExclusiveGroup;
 
     enum Nargs
     {
@@ -1364,6 +1365,7 @@ typedef std::shared_ptr<Group> pGroup;
 class ArgumentData
 {
     friend class ArgumentGroup;
+    friend class ExclusiveGroup;
 
 public:
     /*!
@@ -1632,6 +1634,139 @@ private:
     ArgumentData* m_parent_data;
 };
 
+class ExclusiveGroup : public ArgumentData
+{
+public:
+    friend class ArgumentParser;
+
+public:
+    /*!
+     *  \brief Construct exclusive group
+     *
+     *  \param prefix_chars Parent prefix chars
+     *  \param parent_data Parent argument data
+     *
+     *  \return Exclusive group object
+     */
+    ExclusiveGroup(std::string& prefix_chars, ArgumentData* parent_data)
+        : ArgumentData(),
+          m_prefix_chars(prefix_chars),
+          m_parent_data(parent_data),
+          m_required(false)
+    {
+    }
+
+    /*!
+     *  \brief Create exclusive group object from another exclusive group
+     *
+     *  \param rhs Exclusive group object to copy
+     *
+     *  \return Exclusive group object
+     */
+    ExclusiveGroup(ExclusiveGroup const& rhs)
+        : ArgumentData(),
+          m_prefix_chars(rhs.m_prefix_chars),
+          m_parent_data(rhs.m_parent_data),
+          m_required(rhs.m_required)
+    {
+        m_arguments     = rhs.m_arguments;
+        m_optional      = rhs.m_optional;
+        m_positional    = rhs.m_positional;
+    }
+
+    /*!
+     *  \brief Copy exclusive group object from another argument group
+     *
+     *  \param rhs Exclusive group object to copy
+     *
+     *  \return Current exclusive group reference
+     */
+    ExclusiveGroup& operator =(ExclusiveGroup const& rhs)
+    {
+        if (this != &rhs) {
+            m_arguments     = rhs.m_arguments;
+            m_optional      = rhs.m_optional;
+            m_positional    = rhs.m_positional;
+            m_prefix_chars  = rhs.m_prefix_chars;
+            m_parent_data   = rhs.m_parent_data;
+            m_required      = rhs.m_required;
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set exclusive group 'required' value
+     *
+     *  \param value Required flag
+     *
+     *  \return Current exclusive group reference
+     */
+    ExclusiveGroup& required(bool value)
+    {
+        m_required = value;
+        return *this;
+    }
+
+    /*!
+     *  \brief Get exclusive group 'required' value
+     *
+     *  \return Exclusive group 'required' value
+     */
+    bool required() const
+    {
+        return m_required;
+    }
+
+    /*!
+     *  \brief Add argument with flag
+     *
+     *  \param flag Flag value
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(char const* flag)
+    {
+        return add_argument({ std::string(flag) });
+    }
+
+    /*!
+     *  \brief Add argument with flags
+     *
+     *  \param flags Flags values
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(std::vector<std::string> const& flags)
+    {
+        create_argument(flags, m_prefix_chars);
+        if (m_arguments.back()->m_type != Argument::Optional) {
+            m_arguments.pop_back();
+            throw ValueError("mutually exclusive arguments must be optional");
+        }
+        m_parent_data->m_arguments.push_back(m_arguments.back());
+        m_optional.push_back(std::make_pair(m_arguments.back(), false));
+        m_parent_data->m_optional.push_back(std::make_pair(m_arguments.back(), false));
+        return *m_arguments.back();
+    }
+
+private:
+    std::string usage() const
+    {
+        std::string res;
+        for (auto const& arg : m_arguments) {
+            if (!res.empty()) {
+                res += " | ";
+            }
+            res += arg->usage();
+        }
+        return res.empty() ? res : "(" + res + ")";
+    }
+
+    std::string& m_prefix_chars;
+    ArgumentData* m_parent_data;
+    bool m_required;
+};
+
 /*!
  * \brief BaseParser class
  */
@@ -1649,7 +1784,8 @@ public:
           m_description(),
           m_epilog(),
           m_prefix_chars(detail::_default_prefix_chars),
-          m_groups()
+          m_groups(),
+          m_exclusive()
     { }
 
     /*!
@@ -1737,12 +1873,24 @@ public:
         return *group;
     }
 
+    /*!
+     *  \brief Add mutually exclusive group
+     *
+     *  \return Current mutually exclusive group reference
+     */
+    ExclusiveGroup& add_mutually_exclusive_group()
+    {
+        m_exclusive.emplace_back(ExclusiveGroup(m_prefix_chars, this));
+        return m_exclusive.back();
+    }
+
 protected:
     std::string m_usage;
     std::string m_description;
     std::string m_epilog;
     std::string m_prefix_chars;
     std::deque<pGroup> m_groups;
+    std::deque<ExclusiveGroup> m_exclusive;
 };
 
 /*!
@@ -3119,7 +3267,7 @@ public:
             auto const positional = positional_arguments(false, true);
             auto const optional = optional_arguments(false, true);
             auto const subparser = subpurser_info(false);
-            print_custom_usage(positional, optional, m_groups, subparser, prog(), os);
+            print_custom_usage(positional, optional, m_groups, m_exclusive, subparser, prog(), os);
         }
     }
 
@@ -3135,8 +3283,8 @@ public:
         auto const positional = positional_arguments(false, false);
         auto const optional = optional_arguments(false, false);
         auto const subparser = subpurser_info(false);
-        print_custom_help(positional_all, optional_all, positional, optional, m_groups, subparser, prog(),
-                          usage(), description(), epilog(), os);
+        print_custom_help(positional_all, optional_all, positional, optional, m_groups, m_exclusive,
+                          subparser, prog(), usage(), description(), epilog(), os);
     }
 
 private:
@@ -3631,7 +3779,7 @@ private:
                 }
                 program += " " + captured->m_name;
                 print_custom_help(captured->get_positional(true), opt_all, captured->get_positional(false),
-                                  opt, captured->m_groups, { nullptr, 0 }, program,
+                                  opt, captured->m_groups, captured->m_exclusive, { nullptr, 0 }, program,
                                   captured->usage(), captured->description(), captured->epilog());
             } else {
                 print_help();
@@ -3791,6 +3939,48 @@ private:
                     }
                 } else {
                     _match_args_partial(pos, values);
+                }
+            }
+        }
+        for (auto const& ex : m_exclusive) {
+            std::string args;
+            std::string found;
+            for (auto const& arg : ex.m_arguments) {
+                args += " " + arg->m_flags.front();
+                if (!result.at(arg).empty()) {
+                    if (!found.empty()) {
+                        handle_error("argument " + arg->m_flags.front()
+                                     + ": not allowed with argument " + found);
+                    }
+                    found = arg->m_flags.front();
+                }
+            }
+            if (ex.required() && found.empty()) {
+                if (ex.m_arguments.empty()) {
+                    throw IndexError("list index out of range");
+                }
+                handle_error("one of the arguments" + args + " is required");
+            }
+        }
+        if (captured) {
+            for (auto const& ex : captured->m_exclusive) {
+                std::string args;
+                std::string found;
+                for (auto const& arg : ex.m_arguments) {
+                    args += " " + arg->m_flags.front();
+                    if (!result.at(arg).empty()) {
+                        if (!found.empty()) {
+                            handle_error("argument " + arg->m_flags.front()
+                                         + ": not allowed with argument " + found);
+                        }
+                        found = arg->m_flags.front();
+                    }
+                }
+                if (ex.required() && found.empty()) {
+                    if (ex.m_arguments.empty()) {
+                        throw IndexError("list index out of range");
+                    }
+                    handle_error("one of the arguments" + args + " is required");
                 }
             }
         }
@@ -3971,6 +4161,7 @@ private:
     static std::string custom_usage(std::vector<pArgument> const& positional,
                                     std::vector<pArgument> const& optional,
                                     std::deque<pGroup> const& groups,
+                                    std::deque<ExclusiveGroup> const& exclusive,
                                     std::pair<Subparser*, std::size_t> const& subparser,
                                     std::string const& program)
     {
@@ -3982,7 +4173,17 @@ private:
                 min_size = str.size();
             }
         }
-        for (auto const& arg : optional) {
+        auto ex_opt = optional;
+        for (auto const& ex : exclusive) {
+            for (auto arg : ex.m_arguments) {
+                ex_opt.erase(std::remove(ex_opt.begin(), ex_opt.end(), arg), ex_opt.end());
+            }
+            auto const str = ex.usage();
+            if (min_size < str.size()) {
+                min_size = str.size();
+            }
+        }
+        for (auto const& arg : ex_opt) {
             auto const str = arg->usage();
             if (min_size < str.size()) {
                 min_size = str.size();
@@ -3996,7 +4197,7 @@ private:
         std::size_t offset = usage_length;
         if (pos + (min_size > 0 ? (1 + min_size) : 0) <= detail::_usage_limit) {
             offset += program.size() + (min_size > 0);
-        } else if (!(optional.empty() && positional.empty() && !subparser.first)) {
+        } else if (!(ex_opt.empty() && positional.empty() && !subparser.first)) {
             res += "\n" + std::string(offset - 1, ' ');
             pos = offset - 1;
         }
@@ -4011,8 +4212,11 @@ private:
             res += (bkt ? "[" + str + "]" : str);
             pos += 1 + str.size();
         };
-        for (auto const& arg : optional) {
+        for (auto const& arg : ex_opt) {
             _arg_usage(arg->usage(), true);
+        }
+        for (auto const& ex : exclusive) {
+            _arg_usage(ex.usage(), false);
         }
         for (std::size_t i = 0; i < positional.size(); ++i) {
             if (subparser.first && subparser.second == i) {
@@ -4033,11 +4237,13 @@ private:
     void print_custom_usage(std::vector<pArgument> const& positional,
                             std::vector<pArgument> const& optional,
                             std::deque<pGroup> const& groups,
+                            std::deque<ExclusiveGroup> const& exclusive,
                             std::pair<Subparser*, std::size_t> const& subparser,
                             std::string const& program,
                             std::ostream& os = std::cout) const
     {
-        os << "usage: " << custom_usage(positional, optional, groups, subparser, program) << std::endl;
+        os << "usage: " << custom_usage(positional, optional, groups, exclusive,
+                                        subparser, program) << std::endl;
     }
 
     void print_custom_help(std::vector<pArgument> const& positional_all,
@@ -4045,6 +4251,7 @@ private:
                            std::vector<pArgument> const& positional,
                            std::vector<pArgument> const& optional,
                            std::deque<pGroup> const& groups,
+                           std::deque<ExclusiveGroup> const& exclusive,
                            std::pair<Subparser*, std::size_t> const& subparser,
                            std::string const& program,
                            std::string const& usage,
@@ -4055,7 +4262,7 @@ private:
         if (!usage.empty()) {
             os << "usage: " << usage << std::endl;
         } else {
-            print_custom_usage(positional_all, optional_all, groups, subparser, program, os);
+            print_custom_usage(positional_all, optional_all, groups, exclusive, subparser, program, os);
         }
         if (!description.empty()) {
             os << std::endl << description << std::endl;
