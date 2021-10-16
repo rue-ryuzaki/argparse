@@ -58,9 +58,11 @@ namespace argparse {
 namespace detail {
 std::size_t const _usage_limit = 80;
 std::size_t const _argument_help_limit = 24;
+char const _default_prefix_char = '-';
 std::string const _default_prefix_chars = "-";
 std::string const _pseudo_argument = "--";
 char const _equal = '=';
+std::string const _equals = "=";
 
 static inline void _ltrim(std::string& s)
 {
@@ -105,8 +107,8 @@ static inline std::string _file_name(std::string const& s)
 
 static inline bool _have_quotes(std::string const& s)
 {
-    return (s.size() > 1 && s.front() == s.back()
-            && (s.front() == '\'' || s.front() == '\"'));
+    return s.size() > 1 && s.front() == s.back()
+            && (s.front() == '\'' || s.front() == '\"');
 }
 
 static inline std::string _remove_quotes(std::string const& s)
@@ -152,7 +154,7 @@ static inline bool _is_value_exists(char value, std::string const& str)
 
 static inline std::string _flag_name(std::string str)
 {
-    char prefix = str.front();
+    auto prefix = str.front();
     str.erase(std::begin(str),
               std::find_if(std::begin(str), std::end(str),
                            [prefix] (char c) -> bool { return c != prefix; }));
@@ -162,8 +164,8 @@ static inline std::string _flag_name(std::string str)
 static inline std::vector<std::string> _help_flags(std::string const& prefix_chars)
 {
     auto const& prefix
-            = _is_value_exists(_default_prefix_chars.front(), prefix_chars)
-            ? _default_prefix_chars.front() : prefix_chars.front();
+            = _is_value_exists(_default_prefix_char, prefix_chars)
+            ? _default_prefix_char : prefix_chars.front();
     return { std::string(1, prefix) + "h", std::string(2, prefix) + "help" };
 }
 
@@ -217,9 +219,9 @@ static inline std::string _bool_to_string(std::string const& str)
 
 static inline std::string _vector_to_string(std::vector<std::string> const& vec,
                                             std::string const& separator = " ",
-                                            std::string const& quotes = "",
+                                            std::string const& quotes = std::string(),
                                             bool replace_space = false,
-                                            std::string const& none = "")
+                                            std::string const& none = std::string())
 {
     std::string res;
     for (auto const& el : vec) {
@@ -510,10 +512,10 @@ public:
      *  \return Argument object
      */
     Argument(std::vector<std::string>&& flags,
-             std::string const& name,
+             std::string&& name,
              Type type)
         : m_flags(std::move(flags)),
-          m_name(name),
+          m_name(std::move(name)),
           m_type(type),
           m_action(Action::store),
           m_nargs(NARGS_DEF),
@@ -662,7 +664,7 @@ public:
         }
         switch (value) {
             case Action::store_true :
-                m_default.clear("");
+                m_default.clear();
                 m_const = "1";
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
@@ -673,7 +675,7 @@ public:
                 m_default.clear("1");
             case Action::store_const :
             case Action::append_const :
-                m_const = "";
+                m_const = std::string();
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
                 m_num_args = 0;
@@ -772,7 +774,7 @@ public:
         } else {
             throw ValueError("invalid nargs value '" + param + "'");
         }
-        m_nargs_str = param;
+        m_nargs_str = std::move(param);
         m_num_args = 1;
         return *this;
     }
@@ -1212,11 +1214,10 @@ private:
             case OPTIONAL :
                 res += "[" +  name + "]";
                 break;
+            case ONE_OR_MORE :
+                res += name + " ";
             case ZERO_OR_MORE :
                 res += "[" +  name + " ...]";
-                break;
-            case ONE_OR_MORE :
-                res += name + " [" +  name + " ...]";
                 break;
             case NARGS_INT :
                 for (uint32_t i = 0; i < m_num_args; ++i) {
@@ -1255,7 +1256,7 @@ private:
             case NARGS_INT :
                 return "argument " + arg + ": expected " + nargs() + " arguments";
             default :
-                return "";
+                return std::string();
         }
     }
 
@@ -1394,6 +1395,25 @@ protected:
         return result;
     }
 
+    std::vector<pArgument> get_optional_with_help(bool add_group, bool add_help,
+                                                  std::string const& prefix_chars) const
+    {
+        std::vector<pArgument> result;
+        result.reserve(m_optional.size() + add_help);
+        if (add_help) {
+            auto help = std::make_shared<Argument>(detail::_help_flags(prefix_chars),
+                                                   "help", Argument::Optional);
+            help->help("show this help message and exit").action(Action::help);
+            result.emplace_back(std::move(help));
+        }
+        for (auto const& pair : m_optional) {
+            if (add_group || !pair.second) {
+                result.push_back(pair.first);
+            }
+        }
+        return result;
+    }
+
     std::vector<pArgument> get_positional(bool add_group) const
     {
         std::vector<pArgument> result;
@@ -1416,11 +1436,11 @@ protected:
         if (flag_name.empty()) {
             throw IndexError("string index out of range");
         }
-        auto prefixes = 0ul;
-        auto _update_flag_name = [&flag_name, &prefixes] (std::string const& arg)
+        std::size_t prefixes = 0;
+        auto _update_flag_name = [] (std::string const& arg, std::string& flag_name, std::size_t& prefixes)
         {
             auto name = detail::_flag_name(arg);
-            auto count_prefixes = arg.size() - name.size();
+            std::size_t count_prefixes = arg.size() - name.size();
             if (prefixes < count_prefixes) {
                 prefixes = count_prefixes;
                 flag_name = std::move(name);
@@ -1428,7 +1448,7 @@ protected:
         };
         bool is_optional = detail::_is_value_exists(flag_name.front(), prefix_chars);
         if (is_optional) {
-            _update_flag_name(flag_name);
+            _update_flag_name(flag_name, flag_name, prefixes);
         } else if (flags.size() > 1) {
             // no positional multiflag
             throw ValueError("invalid option string " + flags.front()
@@ -1446,9 +1466,9 @@ protected:
                 throw ValueError("invalid option string " + flag
                                  + ": must starts with a character '" + prefix_chars + "'");
             }
-            _update_flag_name(flag);
+            _update_flag_name(flag, flag_name, prefixes);
         }
-        auto arg = std::make_shared<Argument>(std::move(flags), flag_name,
+        auto arg = std::make_shared<Argument>(std::move(flags), std::move(flag_name),
                                               is_optional ? Argument::Optional : Argument::Positional);
         if (is_optional) {
             for (auto const& arg_flag : arg->m_flags) {
@@ -3033,7 +3053,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    Namespace parse_args(std::vector<std::string> args) const
+    Namespace parse_args(std::vector<std::string> const& args) const
     {
         if (m_exit_on_error) {
             try {
@@ -3066,7 +3086,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    Namespace parse_known_args(std::vector<std::string> args) const
+    Namespace parse_known_args(std::vector<std::string> const& args) const
     {
         if (m_exit_on_error) {
             try {
@@ -3137,7 +3157,7 @@ private:
             auto const& choices = arg.m_choices;
             if (choices.status()) {
                 auto str = detail::_remove_quotes(value);
-                if (!(str.empty() && choices().empty()) && !detail::_is_value_exists(str, choices())) {
+                if (!str.empty() && !detail::_is_value_exists(str, choices())) {
                     auto values = detail::_vector_to_string(choices(), ", ", "'");
                     handle_error("argument " + arg.m_flags.front()
                                  + ": invalid choice: '" + str + "' (choose from " + values + ")");
@@ -3147,13 +3167,12 @@ private:
         auto _negative_numbers_presented = [] (std::vector<pArgument> const& optionals,
                 std::string const& prefix_chars)
         {
-            if (!detail::_is_value_exists('-', prefix_chars)) {
-                return false;
-            }
-            for (auto const& arg : optionals) {
-                for (auto const& flag : arg->m_flags) {
-                    if (detail::_is_negative_number(flag)) {
-                        return true;
+            if (detail::_is_value_exists(detail::_default_prefix_char, prefix_chars)) {
+                for (auto const& arg : optionals) {
+                    for (auto const& flag : arg->m_flags) {
+                        if (detail::_is_negative_number(flag)) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -3181,9 +3200,9 @@ private:
         if (subparser.first && !subparser.first->m_dest.empty()) {
             subparser_flags.push_back(subparser.first->m_dest);
         }
+        auto subparser_name = subparser.first ? subparser.first->m_dest : std::string();
         auto subparser_arg = std::make_shared<Argument>(std::move(subparser_flags),
-                                                        subparser.first ? subparser.first->m_dest
-                                                                        : "", Argument::Positional);
+                                                        std::move(subparser_name), Argument::Positional);
         Storage result;
         result.create(positional);
         result.create(optional);
@@ -3414,13 +3433,7 @@ private:
                 }
             }
             if (captured) {
-                sub_optional = captured->get_optional(true);
-                if (m_add_help) {
-                    auto help = std::make_shared<Argument>(detail::_help_flags(captured->m_prefix_chars),
-                                                           "help", Argument::Optional);
-                    help->help("show this help message and exit").action(Action::help);
-                    sub_optional.insert(std::begin(sub_optional), help);
-                }
+                sub_optional = captured->get_optional_with_help(true, m_add_help, captured->m_prefix_chars);
                 auto sub_positional = captured->get_positional(true);
                 positional.insert(std::begin(positional) + subparser.second,
                                   std::begin(sub_positional), std::end(sub_positional));
@@ -3513,8 +3526,8 @@ private:
                                                 & (Action::store | Action::append | Action::extend)))) {
                         auto str = name.substr(i + bool(argument));
                         if (!str.empty()) {
-                            if (!detail::_starts_with(str, "=")) {
-                                flags.back() += "=";
+                            if (!detail::_starts_with(str, detail::_equals)) {
+                                flags.back() += detail::_equals;
                             }
                             flags.back() += str;
                         }
@@ -3781,7 +3794,7 @@ private:
         for (auto const& arg : optional) {
             if (arg->required() && result.at(arg).empty()) {
                 auto args = detail::_vector_to_string(arg->m_flags, "/");
-                required_args.emplace_back(args);
+                required_args.emplace_back(std::move(args));
             }
         }
         bool subparser_required = subparser.first && !captured && subparser.first->required();
@@ -3883,6 +3896,7 @@ private:
     std::vector<pArgument> positional_arguments(bool add_suppress = true, bool add_groups = true) const
     {
         std::vector<pArgument> result;
+        result.reserve(m_positional.size());
         for (auto const& parent : m_parents) {
             auto const args = parent.positional_arguments(add_suppress, add_groups);
             result.insert(std::end(result), std::begin(args), std::end(args));
@@ -3898,11 +3912,12 @@ private:
     std::vector<pArgument> optional_arguments(bool add_suppress = true, bool add_groups = true) const
     {
         std::vector<pArgument> result;
+        result.reserve(m_optional.size() + 1);
         if (m_add_help) {
             auto help = std::make_shared<Argument>(detail::_help_flags(m_prefix_chars),
                                                    "help", Argument::Optional);
             help->help("show this help message and exit").action(Action::help);
-            result.emplace_back(help);
+            result.emplace_back(std::move(help));
         }
         for (auto const& parent : m_parents) {
             auto const args = parent.optional_arguments(add_suppress, add_groups);
