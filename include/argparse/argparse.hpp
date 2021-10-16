@@ -1764,6 +1764,9 @@ class ArgumentParser : public BaseParser
 
         void create(key_type const& key, mapped_type const& value = mapped_type())
         {
+            if (key->m_action & (Action::version | Action::help)) {
+                return;
+            }
             auto const& flag = conflict_arg(key);
             if (flag.empty()) {
                 m_data.insert({ key, value });
