@@ -1,3 +1,10 @@
+cpp-argparse-dev (0.6.1-0ppa0) focal; urgency=low
+
+  * Add BaseParser::add_mutually_exclusive_group() function
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 16 Oct 2021 22:45:56 +0300
+
 cpp-argparse-dev (0.6.0-0ppa0) focal; urgency=low
 
   * Fix load args from file
