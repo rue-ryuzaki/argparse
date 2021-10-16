@@ -1738,3 +1738,44 @@ TEST_CASE("17. argument groups", "[argument_parser]")
     REQUIRE(args1.get<std::string>("group1") == "1");
     REQUIRE(args1.get<std::string>("group2") == "2");
 }
+
+TEST_CASE("18. mutual exclusion", "[argument_parser]")
+{
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("18.1. required=false") {
+        auto& group = parser.add_mutually_exclusive_group();
+        group.add_argument("--foo").action("store_true");
+        group.add_argument("--bar").action("store_false");
+
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.get<bool>("foo") == false);
+        REQUIRE(args0.get<bool>("bar") == true);
+
+        auto args1 = parser.parse_args({ "--foo" });
+        REQUIRE(args1.get<bool>("foo") == true);
+        REQUIRE(args1.get<bool>("bar") == true);
+
+        auto args2 = parser.parse_args({ "--bar" });
+        REQUIRE(args2.get<bool>("foo") == false);
+        REQUIRE(args2.get<bool>("bar") == false);
+
+        REQUIRE_THROWS(parser.parse_args({ "--foo", "--bar" }));
+    }
+
+    SECTION("18.2. required=true") {
+        auto& group = parser.add_mutually_exclusive_group().required(true);
+        group.add_argument("--foo").action("store_true");
+        group.add_argument("--bar").action("store_false");
+
+        REQUIRE_THROWS(parser.parse_args({ }));
+
+        auto args0 = parser.parse_args({ "--foo" });
+        REQUIRE(args0.get<bool>("foo") == true);
+        REQUIRE(args0.get<bool>("bar") == true);
+
+        auto args1 = parser.parse_args({ "--bar" });
+        REQUIRE(args1.get<bool>("foo") == false);
+        REQUIRE(args1.get<bool>("bar") == false);
+    }
+}
