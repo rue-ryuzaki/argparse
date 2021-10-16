@@ -1502,6 +1502,7 @@ public:
      *  \param title Group title
      *  \param description Group description
      *  \param prefix_chars Parent prefix chars
+     *  \param parent_data Parent argument data
      *
      *  \return Argument group object
      */
