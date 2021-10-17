@@ -4274,7 +4274,7 @@ private:
             for (std::size_t i = 0; i < m_parents.size(); ++i) {
                 auto const& parent = m_parents.at(i);
                 if (parent.m_subparsers) {
-                    res.first = m_subparsers.get();
+                    res.first = parent.m_subparsers.get();
                     for (std::size_t j = 0; j < i; ++j) {
                         res.second += m_parents.at(j).positional_arguments(add_suppress, true).size();
                     }
