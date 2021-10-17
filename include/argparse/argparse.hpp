@@ -3336,7 +3336,7 @@ public:
             auto const positional = positional_arguments(false, true);
             auto const optional = optional_arguments(false, true);
             auto const subparser = subpurser_info(false);
-            print_custom_usage(positional, optional, m_groups, m_exclusive, subparser, prog(), os);
+            print_custom_usage(positional, optional, m_groups, m_exclusive, subparser, m_prog, os);
         }
     }
 
@@ -3353,7 +3353,7 @@ public:
         auto const optional = optional_arguments(false, false);
         auto const subparser = subpurser_info(false);
         print_custom_help(positional_all, optional_all, positional, optional, m_groups, m_exclusive,
-                          subparser, prog(), usage(), description(), epilog(), os);
+                          subparser, m_prog, m_usage, m_description, m_epilog, os);
     }
 
     /*!
@@ -3446,7 +3446,7 @@ private:
             return false;
         };
         auto const subparser = subpurser_info();
-        if (subparser.first && intermixed) {
+        if (intermixed && subparser.first) {
             throw TypeError("parse_intermixed_args: positional arg with nargs=A...");
         }
         auto positional = positional_arguments(true, true);
@@ -3641,6 +3641,7 @@ private:
         };
         auto _try_capture_parser = [&] (std::deque<std::string>& arguments)
         {
+            auto size = arguments.size();
             std::size_t finish = pos;
             std::size_t min_args = 0;
             std::size_t one_args = 0;
@@ -3648,7 +3649,7 @@ private:
             bool capture_need = false;
             for ( ; finish < positional.size(); ++finish) {
                 if (finish == subparser.second) {
-                    if (min_args + 1 > arguments.size()) {
+                    if (min_args + 1 > size) {
                         break;
                     }
                     capture_need = true;
@@ -3672,12 +3673,12 @@ private:
                         min_amount += arg->m_num_args;
                         break;
                 }
-                if (min_args + min_amount > arguments.size()) {
+                if (min_args + min_amount > size) {
                     break;
                 }
                 min_args += min_amount;
             }
-            if (!capture_need && (finish != positional.size() || min_args >= arguments.size())) {
+            if (!capture_need && (finish != positional.size() || min_args >= size)) {
                 if (finish != pos) {
                     _match_positionals(positional, arguments, finish, min_args, one_args, more_args);
                 }
@@ -4257,8 +4258,8 @@ private:
         auto _func = [] (ArgumentParser const& parser,
                 std::pair<Subparser*, std::size_t>& res, bool add_suppress)
         {
-            for (std::size_t p = 0, a = 0;
-                 p < parser.m_subparsers->m_position && a < parser.m_positional.size(); ++a, ++p) {
+            for (std::size_t p = 0, a = 0, pos = parser.m_subparsers->m_position,
+                 size = parser.m_positional.size(); p < pos && a < size; ++a, ++p) {
                 res.second += (add_suppress || !parser.m_positional.at(a).first->m_help_type.status());
             }
         };
@@ -4303,7 +4304,7 @@ private:
         auto ex_opt = optional;
         for (auto const& ex : exclusive) {
             for (auto arg : ex.m_arguments) {
-                ex_opt.erase(std::remove(ex_opt.begin(), ex_opt.end(), arg), ex_opt.end());
+                ex_opt.erase(std::remove(std::begin(ex_opt), std::end(ex_opt), arg), std::end(ex_opt));
             }
             auto const str = ex.usage();
             if (min_size < str.size()) {
