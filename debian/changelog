@@ -1,3 +1,16 @@
+cpp-argparse-dev (1.0.0-0ppa0) focal; urgency=low
+
+  * Add ArgumentParser::parse_intermixed_args() function
+  * Add ArgumentParser::parse_known_intermixed_args() function
+  * Add exiting methods
+  * Add custom type to Argument::default_value<>()
+  * Add custom type to Argument::const_value<>()
+  * Fix parent subparser detection
+  * Fix prog name in generated usage
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 17 Oct 2021 19:11:11 +0300
+
 cpp-argparse-dev (0.6.1-0ppa0) focal; urgency=low
 
   * Add BaseParser::add_mutually_exclusive_group() function
