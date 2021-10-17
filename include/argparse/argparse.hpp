@@ -3076,11 +3076,11 @@ public:
     Subparser& add_subparsers()
     {
         if (m_subparsers) {
-            handle_error("cannot have multiple subparser arguments");
+            throw_error("cannot have multiple subparser arguments");
         }
         for (auto const& parent : m_parents) {
             if (parent.m_subparsers) {
-                handle_error("cannot have multiple subparser arguments");
+                throw_error("cannot have multiple subparser arguments");
             }
         }
         m_subparsers = std::make_shared<Subparser>();
@@ -3217,7 +3217,7 @@ public:
             } catch (...) {
                 std::cerr << "error: unexpected error" << std::endl;
             }
-            exit(1);
+            ::exit(1);
         } else {
             return parse_arguments(args);
         }
@@ -3250,7 +3250,7 @@ public:
             } catch (...) {
                 std::cerr << "error: unexpected error" << std::endl;
             }
-            exit(1);
+            ::exit(1);
         } else {
             return parse_arguments(args, true);
         }
@@ -3289,11 +3289,39 @@ public:
                           subparser, prog(), usage(), description(), epilog(), os);
     }
 
+    /*!
+     *  \brief This method terminates the program, exiting with the specified
+     *  status and, if given, it prints a message before that
+     *
+     *  \param status Status code
+     *  \param message Error message
+     */
+    void exit(int status = 0, std::string const& message = std::string()) const
+    {
+        if (status) {
+            throw std::logic_error("Exiting because of an error: " + message);
+        }
+        ::exit(status);
+    }
+
+    /*!
+     *  \brief This method prints a usage message including the message to the
+     *  standard error and terminates the program with a status code of 2
+     *
+     *  \param message Error message
+     */
+    void error(std::string const& message) const
+    {
+        print_usage(std::cerr);
+        std::cerr << m_prog << ": error: " << message << std::endl;
+        ::exit(2);
+    }
+
 private:
     Namespace parse_arguments(std::vector<std::string> parsed_arguments, bool only_known = false) const
     {
         Parser const* parser = nullptr;
-        auto _handle_error = [this, &parser] (std::string const& error, std::ostream& os = std::cerr)
+        auto _throw_error = [this, &parser] (std::string const& error, std::ostream& os = std::cerr)
         {
             if (parser) {
                 if (!parser->m_usage.empty()) {
@@ -3306,7 +3334,7 @@ private:
                 }
                 throw std::logic_error(parser->m_prefix + ": error: " + error);
             } else {
-                handle_error(error, os);
+                throw_error(error, os);
             }
         };
         auto _validate_arguments = [] (std::vector<pArgument> const& arguments)
@@ -3323,14 +3351,14 @@ private:
                 }
             }
         };
-        auto _validate_argument_value = [_handle_error] (Argument const& arg, std::string const& value)
+        auto _validate_argument_value = [_throw_error] (Argument const& arg, std::string const& value)
         {
             auto const& choices = arg.m_choices;
             if (choices.status()) {
                 auto str = detail::_remove_quotes(value);
                 if (!str.empty() && !detail::_is_value_exists(str, choices())) {
                     auto values = detail::_vector_to_string(choices(), ", ", "'");
-                    _handle_error("argument " + arg.m_flags.front()
+                    _throw_error("argument " + arg.m_flags.front()
                                   + ": invalid choice: '" + str + "' (choose from " + values + ")");
                 }
             }
@@ -3416,10 +3444,10 @@ private:
                 result.store_default_value(arg, value());
             }
         };
-        auto _is_positional_arg_stored = [_handle_error, &result] (pArgument const& arg) -> bool
+        auto _is_positional_arg_stored = [_throw_error, &result] (pArgument const& arg) -> bool
         {
             if (arg->m_action == Action::append_const && arg->m_default.status()) {
-                _handle_error(detail::_ignore_default(arg->m_flags.front(), arg->m_default()));
+                _throw_error(detail::_ignore_default(arg->m_flags.front(), arg->m_default()));
             }
             return result.self_value_stored(arg);
         };
@@ -3629,7 +3657,7 @@ private:
                 }
                 const_cast<std::string&>(parser->m_prefix) = program + " " + parser->m_name;
             } else {
-                handle_error("invalid choice: '" + name + "' (choose from " + choices + ")");
+                throw_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }
         };
         auto _match_args_partial = [&] (std::size_t pos, std::deque<std::string>& arguments)
@@ -3738,7 +3766,7 @@ private:
             }
         };
         auto _check_abbreviations = [this, _separate_arg_abbrev, &result,
-                _handle_error, _prefix_chars, &have_negative_args, &was_pseudo_arg]
+                _throw_error, _prefix_chars, &have_negative_args, &was_pseudo_arg]
                 (std::vector<std::string>& arguments, size_t i, std::vector<pArgument> const& optionals)
         {
             auto& arg = arguments.at(i);
@@ -3771,7 +3799,7 @@ private:
                         }
                     }
                     if (keys.size() > 1) {
-                        _handle_error("ambiguous option: '" + arg + "' could match" + args);
+                        _throw_error("ambiguous option: '" + arg + "' could match" + args);
                     }
                     if (is_flag_added) {
                         temp.push_back(keys.empty() ? arg : keys.front());
@@ -3805,7 +3833,7 @@ private:
             } else {
                 print_help();
             }
-            exit(0);
+            ::exit(0);
         };
         for (std::size_t i = 0; i < parsed_arguments.size(); ++i) {
             if (parsed_arguments.at(i) == detail::_pseudo_argument && !was_pseudo_arg) {
@@ -3840,7 +3868,7 @@ private:
                                             case Argument::NARGS_DEF :
                                             case Argument::NARGS_INT :
                                             case Argument::ONE_OR_MORE :
-                                                _handle_error(tmp->error_nargs(arg));
+                                                _throw_error(tmp->error_nargs(arg));
                                                 break;
                                             case Argument::OPTIONAL :
                                                 _store_value(tmp, tmp->const_value());
@@ -3849,7 +3877,7 @@ private:
                                                 break;
                                         }
                                     } else if (tmp->m_nargs == Argument::NARGS_INT && n < num_args) {
-                                        _handle_error(tmp->error_nargs(arg));
+                                        _throw_error(tmp->error_nargs(arg));
                                     }
                                     break;
                                 } else {
@@ -3865,7 +3893,7 @@ private:
                                             case Argument::NARGS_DEF :
                                             case Argument::NARGS_INT :
                                             case Argument::ONE_OR_MORE :
-                                                _handle_error(tmp->error_nargs(arg));
+                                                _throw_error(tmp->error_nargs(arg));
                                                 break;
                                             case Argument::OPTIONAL :
                                                 _store_value(tmp, tmp->m_const());
@@ -3876,7 +3904,7 @@ private:
                                         break;
                                     } else {
                                         if (tmp->m_nargs == Argument::NARGS_INT && n < num_args) {
-                                            _handle_error(tmp->error_nargs(arg));
+                                            _throw_error(tmp->error_nargs(arg));
                                         }
                                         --i;
                                         break;
@@ -3890,7 +3918,7 @@ private:
                             }
                         } else {
                             if (tmp->m_nargs != Argument::NARGS_DEF && tmp->m_num_args > 1) {
-                                _handle_error(tmp->error_nargs(arg));
+                                _throw_error(tmp->error_nargs(arg));
                             }
                             _store_value(tmp, splitted.back());
                         }
@@ -3902,19 +3930,19 @@ private:
                     case Action::count :
                         if (splitted.size() == 1) {
                             if (tmp->m_action == Action::append_const && !tmp->m_default().empty()) {
-                                _handle_error(detail::_ignore_default(tmp->m_flags.front(),
+                                _throw_error(detail::_ignore_default(tmp->m_flags.front(),
                                                                      tmp->m_default()));
                             }
                             result.self_value_stored(tmp);
                         } else {
-                            _handle_error(detail::_ignore_explicit(arg, splitted.back()));
+                            _throw_error(detail::_ignore_explicit(arg, splitted.back()));
                         }
                         break;
                     case Action::help :
                         if (splitted.size() == 1) {
                             _print_help_and_exit();
                         } else {
-                            _handle_error(detail::_ignore_explicit(arg, splitted.back()));
+                            _throw_error(detail::_ignore_explicit(arg, splitted.back()));
                         }
                         break;
                     case Action::version :
@@ -3923,13 +3951,13 @@ private:
                                 throw AttributeError("'ArgumentParser' object has no attribute 'version'");
                             }
                             std::cout << tmp->version() << std::endl;
-                            exit(0);
+                            ::exit(0);
                         } else {
-                            _handle_error(detail::_ignore_explicit(arg, splitted.back()));
+                            _throw_error(detail::_ignore_explicit(arg, splitted.back()));
                         }
                         break;
                     default :
-                        _handle_error("action not supported");
+                        _throw_error("action not supported");
                         break;
                 }
             } else if (!arg.empty() && detail::_is_optional(arg, _prefix_chars(),
@@ -3970,7 +3998,7 @@ private:
                 args += " " + arg->m_flags.front();
                 if (!result.at(arg).empty()) {
                     if (!found.empty()) {
-                        handle_error("argument " + arg->m_flags.front()
+                        throw_error("argument " + arg->m_flags.front()
                                      + ": not allowed with argument " + found);
                     }
                     found = arg->m_flags.front();
@@ -3980,7 +4008,7 @@ private:
                 if (ex.m_arguments.empty()) {
                     throw IndexError("list index out of range");
                 }
-                handle_error("one of the arguments" + args + " is required");
+                throw_error("one of the arguments" + args + " is required");
             }
         }
         if (parser) {
@@ -3991,7 +4019,7 @@ private:
                     args += " " + arg->m_flags.front();
                     if (!result.at(arg).empty()) {
                         if (!found.empty()) {
-                            _handle_error("argument " + arg->m_flags.front()
+                            _throw_error("argument " + arg->m_flags.front()
                                          + ": not allowed with argument " + found);
                         }
                         found = arg->m_flags.front();
@@ -4001,7 +4029,7 @@ private:
                     if (ex.m_arguments.empty()) {
                         throw IndexError("list index out of range");
                     }
-                    _handle_error("one of the arguments" + args + " is required");
+                    _throw_error("one of the arguments" + args + " is required");
                 }
             }
         }
@@ -4056,11 +4084,11 @@ private:
             }
             args += detail::_vector_to_string(required_args, ", ");
             if (!args.empty()) {
-                handle_error("the following arguments are required: " + args);
+                throw_error("the following arguments are required: " + args);
             }
         }
         if (!only_known && !unrecognized_args.empty()) {
-            handle_error("unrecognized arguments: " + detail::_vector_to_string(unrecognized_args));
+            throw_error("unrecognized arguments: " + detail::_vector_to_string(unrecognized_args));
         }
         for (auto& arg : result) {
             if (arg.second.empty() && arg.first->action() != Action::count
@@ -4082,10 +4110,10 @@ private:
         return Namespace(std::move(result), std::move(unrecognized_args));
     }
 
-    void handle_error(std::string const& error = "unknown", std::ostream& os = std::cerr) const
+    void throw_error(std::string const& message, std::ostream& os = std::cerr) const
     {
         print_usage(os);
-        throw std::logic_error(m_prog + ": error: " + error);
+        throw std::logic_error(m_prog + ": error: " + message);
     }
 
     detail::Value<std::string> const& default_argument_value(Argument const& arg) const
@@ -4097,7 +4125,7 @@ private:
     {
         std::ifstream is(file);
         if (!is.is_open()) {
-            handle_error("[Errno 2] No such file or directory: '" + file + "'");
+            throw_error("[Errno 2] No such file or directory: '" + file + "'");
         }
         std::vector<std::string> res;
         std::string line;
