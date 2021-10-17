@@ -2184,7 +2184,6 @@ public:
          */
         Subparser()
             : Group(),
-              m_prefix(),
               m_prog(),
               m_dest(),
               m_required(false),
@@ -2344,7 +2343,6 @@ public:
         Parser& add_parser(std::string const& name)
         {
             m_parsers.emplace_back(Parser(name));
-            m_parsers.back().m_prefix = m_prefix + " " + name;
             return m_parsers.back();
         }
 
@@ -2417,7 +2415,6 @@ public:
             return res;
         }
 
-        std::string m_prefix;
         std::string m_prog;
         std::string m_dest;
         bool        m_required;
@@ -3089,36 +3086,6 @@ public:
         m_subparsers = std::make_shared<Subparser>();
         m_subparsers->m_position = m_positional.size();
         m_groups.push_back(m_subparsers);
-
-        bool add_suppress = false;
-        auto _func = [] (ArgumentParser const& parser, std::size_t& pos, bool add_suppress)
-        {
-            for (std::size_t p = 0, a = 0;
-                 p < parser.m_subparsers->m_position && a < parser.m_positional.size(); ++a, ++p) {
-                pos += (add_suppress || !parser.m_positional.at(a).first->m_help_type.status());
-            }
-        };
-        std::size_t pos = 0;
-        for (auto const& parent : m_parents) {
-            pos += parent.positional_arguments(add_suppress, true).size();
-        }
-        _func(*this, pos, add_suppress);
-        auto program = m_subparsers->prog();
-        if (program.empty()) {
-            program = prog();
-        }
-        auto const positional_args = positional_arguments(false, true);
-        for (std::size_t i = 0; i < positional_args.size(); ++i) {
-            if (pos == i) {
-                break;
-            }
-            auto const str = positional_args.at(i)->usage();
-            if (str.empty()) {
-                continue;
-            }
-            program += " " + str;
-        }
-        m_subparsers->m_prefix = program;
         return *m_subparsers;
     }
 
@@ -3642,6 +3609,36 @@ private:
                                   std::begin(sub_positional), std::end(sub_positional));
                 arguments.pop_front();
                 have_negative_args = _negative_numbers_presented(sub_optional, parser->m_prefix_chars);
+
+                bool add_suppress = false;
+                auto _func = [] (ArgumentParser const& parser, std::size_t& pos, bool add_suppress)
+                {
+                    for (std::size_t p = 0, a = 0;
+                         p < parser.m_subparsers->m_position && a < parser.m_positional.size(); ++a, ++p) {
+                        pos += (add_suppress || !parser.m_positional.at(a).first->m_help_type.status());
+                    }
+                };
+                std::size_t pos = 0;
+                for (auto const& parent : m_parents) {
+                    pos += parent.positional_arguments(add_suppress, true).size();
+                }
+                _func(*this, pos, add_suppress);
+                auto program = m_subparsers->prog();
+                if (program.empty()) {
+                    program = prog();
+                }
+                auto const positional_args = positional_arguments(add_suppress, true);
+                for (std::size_t i = 0; i < positional_args.size(); ++i) {
+                    if (pos == i) {
+                        break;
+                    }
+                    auto const str = positional_args.at(i)->usage();
+                    if (str.empty()) {
+                        continue;
+                    }
+                    program += " " + str;
+                }
+                const_cast<std::string&>(parser->m_prefix) = program + " " + parser->m_name;
             } else {
                 handle_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }
