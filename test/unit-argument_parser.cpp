@@ -1747,6 +1747,7 @@ TEST_CASE("18. mutual exclusion", "[argument_parser]")
         auto& group = parser.add_mutually_exclusive_group();
         group.add_argument("--foo").action("store_true");
         group.add_argument("--bar").action("store_false");
+        REQUIRE_THROWS(group.add_argument("baz").action("store_true"));
 
         auto args0 = parser.parse_args({ });
         REQUIRE(args0.get<bool>("foo") == false);
@@ -1767,6 +1768,7 @@ TEST_CASE("18. mutual exclusion", "[argument_parser]")
         auto& group = parser.add_mutually_exclusive_group().required(true);
         group.add_argument("--foo").action("store_true");
         group.add_argument("--bar").action("store_false");
+        REQUIRE_THROWS(group.add_argument("baz").action("store_true"));
 
         REQUIRE_THROWS(parser.parse_args({ }));
 
