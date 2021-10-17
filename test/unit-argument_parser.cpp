@@ -1779,3 +1779,42 @@ TEST_CASE("18. mutual exclusion", "[argument_parser]")
         REQUIRE(args1.get<bool>("bar") == false);
     }
 }
+
+TEST_CASE("19. intermixed parsing", "[argument_parser]")
+{
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("19.1. simple example") {
+        parser.add_argument("--foo");
+        parser.add_argument("cmd");
+        parser.add_argument("rest").nargs("*");
+
+        auto args0 = parser.parse_known_args({ "doit", "1", "--foo", "bar", "2", "3" });
+        REQUIRE(args0.get<std::string>("cmd") == "doit");
+        REQUIRE(args0.get<std::string>("foo") == "bar");
+        REQUIRE(args0.get<int>("rest") == 1);
+        REQUIRE(args0.get<std::vector<int> >("rest").size() == 1);
+
+        auto args1 = parser.parse_intermixed_args({ "doit", "1", "--foo", "bar", "2", "3" });
+        REQUIRE(args1.get<std::string>("cmd") == "doit");
+        REQUIRE(args1.get<std::string>("foo") == "bar");
+        REQUIRE(args1.get<std::vector<int> >("rest").size() == 3);
+        REQUIRE(args1.to_string("rest") == "[1, 2, 3]");
+    }
+
+    SECTION("19.2. subparsers") {
+        parser.add_argument("--foo").action("store_true").help("foo help");
+
+        auto& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+
+        auto& parser_a = subparsers.add_parser("a").help("a help");
+        parser_a.add_argument("bar").help("bar help");
+
+        auto& parser_b = subparsers.add_parser("b").help("b help");
+        parser_b.add_argument("--baz").choices({ "X", "Y", "Z" }).help("baz help");
+
+        REQUIRE_THROWS(parser.parse_intermixed_args({ }));
+        REQUIRE_THROWS(parser.parse_intermixed_args({ "a", "11" }));
+        REQUIRE_THROWS(parser.parse_intermixed_args({ "b", "--baz" }));
+    }
+}
