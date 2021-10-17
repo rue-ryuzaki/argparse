@@ -3611,25 +3611,14 @@ private:
                 have_negative_args = _negative_numbers_presented(sub_optional, parser->m_prefix_chars);
 
                 bool add_suppress = false;
-                auto _func = [] (ArgumentParser const& parser, std::size_t& pos, bool add_suppress)
-                {
-                    for (std::size_t p = 0, a = 0;
-                         p < parser.m_subparsers->m_position && a < parser.m_positional.size(); ++a, ++p) {
-                        pos += (add_suppress || !parser.m_positional.at(a).first->m_help_type.status());
-                    }
-                };
-                std::size_t pos = 0;
-                for (auto const& parent : m_parents) {
-                    pos += parent.positional_arguments(add_suppress, true).size();
-                }
-                _func(*this, pos, add_suppress);
-                auto program = m_subparsers->prog();
+                auto info = subpurser_info(add_suppress);
+                auto program = m_subparsers->m_prog;
                 if (program.empty()) {
-                    program = prog();
+                    program = m_prog;
                 }
                 auto const positional_args = positional_arguments(add_suppress, true);
                 for (std::size_t i = 0; i < positional_args.size(); ++i) {
-                    if (pos == i) {
+                    if (info.second == i) {
                         break;
                     }
                     auto const str = positional_args.at(i)->usage();
