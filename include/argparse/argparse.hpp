@@ -2668,10 +2668,11 @@ public:
          *  \brief Get parsed argument value as string
          *
          *  \param key Argument name
+         *  \param quotes Value quotes
          *
          *  \return Parsed argument value as string
          */
-        std::string to_string(std::string const& key) const
+        std::string to_string(std::string const& key, std::string const& quotes = std::string()) const
         {
             auto const& args = data(key);
             switch (args.first->m_action) {
@@ -2698,7 +2699,7 @@ public:
                 case Action::append :
                 case Action::append_const :
                 case Action::extend :
-                    return "[" + detail::_vector_to_string(args.second, ", ", "'", false, "None") + "]";
+                    return "[" + detail::_vector_to_string(args.second, ", ", quotes, false, "None") + "]";
                 default :
                     throw ValueError("action not supported");
             }
@@ -3257,6 +3258,72 @@ public:
     }
 
     /*!
+     *  \brief Parse intermixed command line arguments
+     *
+     *  \return Object with parsed arguments
+     */
+    Namespace parse_intermixed_args() const
+    {
+        return parse_intermixed_args(m_parsed_arguments);
+    }
+
+    /*!
+     *  \brief Parse intermixed concrete arguments
+     *
+     *  \param args Arguments to parse
+     *
+     *  \return Object with parsed arguments
+     */
+    Namespace parse_intermixed_args(std::vector<std::string> const& args) const
+    {
+        if (m_exit_on_error) {
+            try {
+                return parse_arguments(args, false, true);
+            } catch (std::exception& e) {
+                std::cerr << e.what() << std::endl;
+            } catch (...) {
+                std::cerr << "error: unexpected error" << std::endl;
+            }
+            ::exit(1);
+        } else {
+            return parse_arguments(args, false, true);
+        }
+    }
+
+    /*!
+     *  \brief Parse known intermixed command line arguments
+     *
+     *  \return Object with parsed arguments
+     */
+    Namespace parse_known_intermixed_args() const
+    {
+        return parse_known_intermixed_args(m_parsed_arguments);
+    }
+
+    /*!
+     *  \brief Parse known intermixed concrete arguments
+     *
+     *  \param args Arguments to parse
+     *
+     *  \return Object with parsed arguments
+     */
+    Namespace parse_known_intermixed_args(std::vector<std::string> const& args) const
+    {
+        if (m_exit_on_error) {
+            try {
+                return parse_arguments(args, true, true);
+            } catch (std::exception& e) {
+                std::cerr << e.what() << std::endl;
+            } catch (...) {
+                std::cerr << "error: unexpected error" << std::endl;
+            }
+            ::exit(1);
+        } else {
+            return parse_arguments(args, true, true);
+        }
+    }
+
+    /*!
      *  \brief Print program usage
      *
      *  \param os Output stream
@@ -3318,7 +3385,8 @@ public:
     }
 
 private:
-    Namespace parse_arguments(std::vector<std::string> parsed_arguments, bool only_known = false) const
+    Namespace parse_arguments(std::vector<std::string> parsed_arguments,
+                              bool only_known = false, bool intermixed = false) const
     {
         Parser const* parser = nullptr;
         auto _throw_error = [this, &parser] (std::string const& error, std::ostream& os = std::cerr)
@@ -3377,10 +3445,12 @@ private:
             }
             return false;
         };
-
+        auto const subparser = subpurser_info();
+        if (subparser.first && intermixed) {
+            throw TypeError("parse_intermixed_args: positional arg with nargs=A...");
+        }
         auto positional = positional_arguments(true, true);
         auto const optional = optional_arguments(true, true);
-        auto const subparser = subpurser_info();
         std::vector<pArgument> sub_optional;
 
         _validate_arguments(positional);
@@ -3430,6 +3500,7 @@ private:
         };
 
         std::vector<std::string> unrecognized_args;
+        std::deque<std::string> intermixed_args;
 
         std::size_t pos = 0;
         auto _store_value = [_validate_argument_value, &result] (pArgument const& arg, std::string const& val)
@@ -3980,16 +4051,23 @@ private:
                         }
                     }
                 }
-                if (subparser.first && !parser) {
-                    _try_capture_parser(values);
-                    if (parser) {
-                        i -= (i == parsed_arguments.size());
-                        i -= values.size();
-                    }
+                if (intermixed) {
+                    intermixed_args.insert(std::end(intermixed_args), std::begin(values), std::end(values));
                 } else {
-                    _match_args_partial(pos, values);
+                    if (subparser.first && !parser) {
+                        _try_capture_parser(values);
+                        if (parser) {
+                            i -= (i == parsed_arguments.size());
+                            i -= values.size();
+                        }
+                    } else {
+                        _match_args_partial(pos, values);
+                    }
                 }
             }
+        }
+        if (!intermixed_args.empty()) {
+            _match_args_partial(pos, intermixed_args);
         }
         for (auto const& ex : m_exclusive) {
             std::string args;
