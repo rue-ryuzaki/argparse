@@ -163,8 +163,11 @@ int main(int argc, char* argv[])
     return 0;
 }
 ```
-## Custom get type example
+## Custom type example
+### Namespace::get<>
 Required std::istream& operator >>(std::istream& is, Type& t).
+### Argument::default_value<> and Argument::const_value<>
+Required std::ostream& operator <<(std::ostream& os, Type const& t).
 ```cpp
 #include <iostream>
 
@@ -183,21 +186,28 @@ struct Coord
 };
 std::istream& operator >>(std::istream& is, Coord& c)
 {
-    is >> c.x;
-    is >> c.y;
-    is >> c.z;
+    is >> c.x >> c.y >> c.z;
     return is;
+}
+std::ostream& operator <<(std::ostream& os, Coord const& c)
+{
+    os << c.x << " " << c.y << " " << c.z;
+    return os;
 }
 
 int main(int argc, char* argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
     parser.add_argument("--coord").nargs(3).help("coord help");
+    parser.add_argument("--const_coord").action("store_const").default_value(Coord{0, 0, 0})
+            .const_value(Coord{1, 1, 1}).help("const coord help");
 
     auto const args = parser.parse_args({ "--coord", "1", "2", "3" });
 
     auto c = args.get<Coord>("coord");
     c.print();
+    auto c2 = args.get<Coord>("const_coord");
+    c2.print();
 
     return 0;
 }

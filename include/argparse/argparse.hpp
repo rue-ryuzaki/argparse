@@ -833,6 +833,22 @@ public:
     }
 
     /*!
+     *  \brief Set custom argument 'const' value
+     *
+     *  \param value Const value
+     *
+     *  \return Current argument reference
+     */
+    template <class T,
+              typename std::enable_if<not std::is_constructible<std::string, T>::value>::type* = nullptr>
+    Argument& const_value(T const& value)
+    {
+        std::stringstream ss;
+        ss << value;
+        return const_value(ss.str());
+    }
+
+    /*!
      *  \brief Set argument 'default' value
      *
      *  \param value Default value
@@ -842,6 +858,23 @@ public:
     Argument& default_value(std::string const& value)
     {
         m_default = detail::_trim_copy(value);
+        return *this;
+    }
+
+    /*!
+     *  \brief Set custom argument 'default' value
+     *
+     *  \param value Default value
+     *
+     *  \return Current argument reference
+     */
+    template <class T,
+              typename std::enable_if<not std::is_constructible<std::string, T>::value>::type* = nullptr>
+    Argument& default_value(T const& value)
+    {
+        std::stringstream ss;
+        ss << value;
+        m_default = ss.str();
         return *this;
     }
 
