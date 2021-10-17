@@ -197,7 +197,7 @@ static inline bool _not_optional(std::string const& arg, std::string const& pref
 static inline std::vector<std::string> _split_equal(std::string const& s,
                                                     std::string const& prefix)
 {
-    std::size_t pos = _is_value_exists(_equal, prefix)
+    auto pos = _is_value_exists(_equal, prefix)
             ? s.find(_equal, std::distance(std::begin(s), std::find_if(std::begin(s), std::end(s),
               [] (char c) -> bool { return c != _equal; }))) : s.find(_equal);
     if (pos != std::string::npos) {
@@ -1653,8 +1653,7 @@ public:
           m_prefix_chars(prefix_chars),
           m_parent_data(parent_data),
           m_required(false)
-    {
-    }
+    { }
 
     /*!
      *  \brief Create exclusive group object from another exclusive group
@@ -2658,7 +2657,7 @@ public:
                 case Action::append :
                 case Action::append_const :
                 case Action::extend :
-                    return detail::_vector_to_string(args.second, " ", "", true);
+                    return detail::_vector_to_string(args.second, " ", std::string(), true);
                 default :
                     throw ValueError("action not supported");
             }
@@ -2722,7 +2721,7 @@ public:
          */
         std::string unrecognized_args_to_args() const
         {
-            return detail::_vector_to_string(m_unrecognized_args, " ", "", true);
+            return detail::_vector_to_string(m_unrecognized_args, " ", std::string(), true);
         }
 
     private:
@@ -3388,6 +3387,10 @@ private:
     Namespace parse_arguments(std::vector<std::string> parsed_arguments,
                               bool only_known = false, bool intermixed = false) const
     {
+        auto const subparser = subpurser_info();
+        if (intermixed && subparser.first) {
+            throw TypeError("parse_intermixed_args: positional arg with nargs=A...");
+        }
         Parser const* parser = nullptr;
         auto _throw_error = [this, &parser] (std::string const& error, std::ostream& os = std::cerr)
         {
@@ -3445,13 +3448,11 @@ private:
             }
             return false;
         };
-        auto const subparser = subpurser_info();
-        if (intermixed && subparser.first) {
-            throw TypeError("parse_intermixed_args: positional arg with nargs=A...");
-        }
         auto positional = positional_arguments(true, true);
         auto const optional = optional_arguments(true, true);
         std::vector<pArgument> sub_optional;
+        std::string subparser_dest;
+        std::vector<std::string> subparser_flags;
 
         _validate_arguments(positional);
         _validate_arguments(optional);
@@ -3459,24 +3460,23 @@ private:
             for (auto const& parser : subparser.first->m_parsers) {
                 _validate_arguments(parser.m_arguments);
             }
+            subparser_dest = subparser.first->m_dest;
+            if (!subparser_dest.empty()) {
+                subparser_flags.push_back(subparser_dest);
+            }
         }
 
         bool have_negative_args = _negative_numbers_presented(optional, m_prefix_chars);
         bool was_pseudo_arg = false;
 
-        std::vector<std::string> subparser_flags;
-        if (subparser.first && !subparser.first->m_dest.empty()) {
-            subparser_flags.push_back(subparser.first->m_dest);
-        }
-        auto subparser_name = subparser.first ? subparser.first->m_dest : std::string();
+        auto subparser_name = subparser_dest;
         auto subparser_arg = std::make_shared<Argument>(std::move(subparser_flags),
                                                         std::move(subparser_name), Argument::Positional);
         Storage result;
         result.create(positional);
         result.create(optional);
         if (subparser.first) {
-            auto const& dest = subparser.first->m_dest;
-            if (!dest.empty()) {
+            if (!subparser_dest.empty()) {
                 result.create(subparser_arg);
             }
             for (auto const& parser : subparser.first->m_parsers) {
@@ -3696,7 +3696,7 @@ private:
                 choices += "'" + p.m_name + "'";
                 if (p.m_name == name) {
                     parser = &p;
-                    if (!subparser.first->m_dest.empty()) {
+                    if (!subparser_dest.empty()) {
                         result.at(subparser_arg).push_back(name);
                     }
                     break;
@@ -3732,7 +3732,8 @@ private:
                 throw_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }
         };
-        auto _match_args_partial = [&] (std::size_t pos, std::deque<std::string>& arguments)
+        auto _match_args_partial = [_match_positionals, &pos, &positional, &unrecognized_args]
+                (std::deque<std::string>& arguments)
         {
             if (pos >= positional.size()) {
                 unrecognized_args.insert(std::end(unrecognized_args),
@@ -3886,7 +3887,6 @@ private:
                 arguments.insert(std::begin(arguments) + i, std::begin(temp), std::end(temp));
             }
         };
-
         auto _print_help_and_exit = [this, &parser] ()
         {
             if (parser) {
@@ -4062,13 +4062,13 @@ private:
                             i -= values.size();
                         }
                     } else {
-                        _match_args_partial(pos, values);
+                        _match_args_partial(values);
                     }
                 }
             }
         }
         if (!intermixed_args.empty()) {
-            _match_args_partial(pos, intermixed_args);
+            _match_args_partial(intermixed_args);
         }
         for (auto const& ex : m_exclusive) {
             std::string args;
@@ -4083,7 +4083,7 @@ private:
                     found = arg->m_flags.front();
                 }
             }
-            if (ex.required() && found.empty()) {
+            if (ex.m_required && found.empty()) {
                 if (ex.m_arguments.empty()) {
                     throw IndexError("list index out of range");
                 }
@@ -4104,7 +4104,7 @@ private:
                         found = arg->m_flags.front();
                     }
                 }
-                if (ex.required() && found.empty()) {
+                if (ex.m_required && found.empty()) {
                     if (ex.m_arguments.empty()) {
                         throw IndexError("list index out of range");
                     }
@@ -4114,7 +4114,7 @@ private:
         }
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
-            if (arg->required() && result.at(arg).empty()) {
+            if (arg->m_required && result.at(arg).empty()) {
                 auto args = detail::_vector_to_string(arg->m_flags, "/");
                 required_args.emplace_back(std::move(args));
             }
@@ -4124,14 +4124,13 @@ private:
             std::string args;
             for ( ; pos < positional.size(); ++pos) {
                 if (subparser_required && pos == subparser.second) {
-                    auto const& dest = subparser.first->m_dest;
-                    if (dest.empty()) {
+                    if (subparser_dest.empty()) {
                         throw TypeError("sequence item 0: expected str instance, NoneType found");
                     }
                     if (!args.empty()) {
                         args += ", ";
                     }
-                    args += dest;
+                    args += subparser_dest;
                 }
                 auto const& arg = positional.at(pos);
                 if (args.empty()) {
@@ -4149,14 +4148,13 @@ private:
                 args += arg->m_flags.front();
             }
             if (subparser_required && pos == subparser.second) {
-                auto const& dest = subparser.first->dest();
-                if (dest.empty()) {
+                if (subparser_dest.empty()) {
                     throw TypeError("sequence item 0: expected str instance, NoneType found");
                 }
                 if (!args.empty()) {
                     args += ", ";
                 }
-                args += dest;
+                args += subparser_dest;
             }
             if (!required_args.empty()) {
                 args += ", ";
@@ -4170,7 +4168,7 @@ private:
             throw_error("unrecognized arguments: " + detail::_vector_to_string(unrecognized_args));
         }
         for (auto& arg : result) {
-            if (arg.second.empty() && arg.first->action() != Action::count
+            if (arg.second.empty() && arg.first->m_action != Action::count
                     && arg.first->m_type == Argument::Optional) {
                 auto const& value = default_argument_value(*arg.first);
                 if (value.status() || arg.first->action() & (Action::store_true | Action::store_false)) {
