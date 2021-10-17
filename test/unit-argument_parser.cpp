@@ -1811,7 +1811,7 @@ TEST_CASE("19. intermixed parsing", "[argument_parser]")
         parser_a.add_argument("bar").help("bar help");
 
         auto& parser_b = subparsers.add_parser("b").help("b help");
-        parser_b.add_argument("--baz").choices({ "X", "Y", "Z" }).help("baz help");
+        parser_b.add_argument("--baz").choices("XYZ").help("baz help");
 
         REQUIRE_THROWS(parser.parse_intermixed_args({ }));
         REQUIRE_THROWS(parser.parse_intermixed_args({ "a", "11" }));
