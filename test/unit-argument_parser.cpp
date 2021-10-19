@@ -1245,7 +1245,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("11.1. main parser without positional arguments") {
+    SECTION("11.1. main parser without positional arguments (required=false)") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
         auto& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
@@ -1254,7 +1254,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         parser_a.add_argument("bar").help("bar help");
 
         auto& parser_b = subparsers.add_parser("b").help("b help");
-        parser_b.add_argument("--baz").choices({ "X", "Y", "Z" }).help("baz help");
+        parser_b.add_argument("--baz").choices("XYZ").help("baz help");
 
         auto args0 = parser.parse_args({ "--foo" });
         REQUIRE(args0.get<uint32_t>("bar") == 0);
@@ -1474,6 +1474,21 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ "a", "-1", "x", "-2" }));
         // so both -1s are options in subparser
         REQUIRE_THROWS(parser.parse_args({ "a", "-1", "-1" }));
+    }
+
+    SECTION("11.6. subparser required=true") {
+        parser.add_argument("--foo").action("store_true").help("foo help");
+
+        auto& subparsers = parser.add_subparsers().required(true).dest("cmd").help("sub-command help");
+
+        auto& parser_a = subparsers.add_parser("a").help("a help");
+        parser_a.add_argument("bar").help("bar help");
+
+        auto& parser_b = subparsers.add_parser("b").help("b help");
+        parser_b.add_argument("--baz").choices("XYZ").help("baz help");
+
+        REQUIRE_THROWS(parser.parse_args({ }));
+        REQUIRE_THROWS(parser.parse_args({ "--foo" }));
     }
 }
 
