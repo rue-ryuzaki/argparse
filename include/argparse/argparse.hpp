@@ -276,6 +276,13 @@ public:
         return *this;
     }
 
+    Value& operator =(T&& rhs)
+    {
+        this->m_status = true;
+        this->m_value  = std::move(rhs);
+        return *this;
+    }
+
     bool operator ==(Value const& rhs) const
     {
         return this->m_status == rhs.m_status && this->m_value == rhs.m_value;
@@ -290,18 +297,6 @@ public:
     bool        status() const { return m_status; }
     T const&    value()  const { return m_value; }
     T const& operator()()const { return m_value; }
-
-    void set(T const& value)
-    {
-        m_status = true;
-        m_value = value;
-    }
-
-    void set(T&& value)
-    {
-        m_status = true;
-        m_value = value;
-    }
 
 private:
     bool    m_status;
@@ -914,7 +909,7 @@ public:
                 values.emplace_back(std::move(param));
             }
         }
-        m_choices.set(std::move(values));
+        m_choices = std::move(values);
         return *this;
     }
 
@@ -2472,7 +2467,8 @@ public:
         template <class... Args> struct is_stl_container<std::unordered_set     <Args...> >:std::true_type{};
 
         template <class T>       struct is_stl_array:std::false_type{};
-        template <class T, std::size_t N> struct is_stl_array<std::array        <T, N> >   :std::true_type{};
+        template <class T,
+                  std::size_t N> struct is_stl_array<std::array                 <T, N> >   :std::true_type{};
 
         template <class T>       struct is_stl_queue:std::false_type{};
         template <class... Args> struct is_stl_queue<std::stack                 <Args...> >:std::true_type{};
@@ -2804,10 +2800,10 @@ public:
                                           and not std::is_same<bool, T>::value>::type* = nullptr>
         T to_type(std::string const& data) const
         {
-            T result = T();
             if (data.empty()) {
-                return result;
+                return T();
             }
+            T result;
             std::stringstream ss(data);
             ss >> result;
             if (ss.fail() || !ss.eof()) {
@@ -4157,13 +4153,10 @@ private:
             std::string args;
             for ( ; pos < positional.size(); ++pos) {
                 if (subparser_required && pos == subparser.second) {
-                    if (subparser_dest.empty()) {
-                        throw TypeError("sequence item 0: expected str instance, NoneType found");
-                    }
                     if (!args.empty()) {
                         args += ", ";
                     }
-                    args += subparser_dest;
+                    args += subparser.first->flags_to_string();
                 }
                 auto const& arg = positional.at(pos);
                 if (args.empty()) {
@@ -4181,13 +4174,10 @@ private:
                 args += arg->m_flags.front();
             }
             if (subparser_required && pos == subparser.second) {
-                if (subparser_dest.empty()) {
-                    throw TypeError("sequence item 0: expected str instance, NoneType found");
-                }
                 if (!args.empty()) {
                     args += ", ";
                 }
-                args += subparser_dest;
+                args += subparser.first->flags_to_string();
             }
             if (!required_args.empty()) {
                 args += ", ";
