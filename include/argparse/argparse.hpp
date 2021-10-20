@@ -61,6 +61,7 @@ std::size_t const _argument_help_limit = 24;
 char const _default_prefix_char = '-';
 std::string const _default_prefix_chars = "-";
 std::string const _pseudo_argument = "--";
+char const _space = ' ';
 char const _equal = '=';
 std::string const _equals = "=";
 
@@ -192,6 +193,53 @@ static inline bool _not_optional(std::string const& arg, std::string const& pref
 {
     return !_is_value_exists(arg.front(), prefix_chars) || was_pseudo_arg
             || (!have_negative_args && _is_negative_number(arg));
+}
+
+static std::vector<std::string> _split_to_args(std::string const& str)
+{
+    std::vector<std::string> result;
+    auto _store_value = [&result] (std::string& value)
+    {
+        if (!value.empty()) {
+            result.push_back(value);
+            value.clear();
+        }
+    };
+    std::string value;
+    std::deque<char> quotes;
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        bool skip = false;
+        auto c = str.at(i);
+        if (c == '\\') {
+            skip = true;
+            if (++i == str.size()) {
+                value += c;
+                break;
+            } else {
+                if (str.at(i) != _space) {
+                    value += c;
+                }
+                c = str.at(i);
+            }
+        }
+        if (((c == _space && !skip) || c == '\t' || c == '\n') && quotes.empty()) {
+            _store_value(value);
+        } else {
+            if (c == '\"' || c == '\'') {
+                if (!quotes.empty() && quotes.back() == c) {
+                    quotes.pop_back();
+                } else if (value.empty()) {
+                    quotes.push_back(c);
+                }
+            }
+            value += c;
+        }
+    }
+    _store_value(value);
+    if (!quotes.empty()) {
+        std::cerr << "incorrect string: '" << str << "'" << std::endl;
+    }
+    return result;
 }
 
 static inline std::vector<std::string> _split_equal(std::string const& s,
@@ -3236,6 +3284,20 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    template<class T,
+             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    Namespace parse_args(T const& args) const
+    {
+        return parse_args(detail::_split_to_args(args));
+    }
+
+    /*!
+     *  \brief Parse concrete arguments
+     *
+     *  \param args Arguments to parse
+     *
+     *  \return Object with parsed arguments
+     */
     Namespace parse_args(std::vector<std::string> const& args) const
     {
         if (m_exit_on_error) {
@@ -3260,6 +3322,20 @@ public:
     Namespace parse_known_args() const
     {
         return parse_known_args(m_parsed_arguments);
+    }
+
+    /*!
+     *  \brief Parse known concrete arguments
+     *
+     *  \param args Arguments to parse
+     *
+     *  \return Object with parsed arguments
+     */
+    template<class T,
+             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    Namespace parse_known_args(T const& args) const
+    {
+        return parse_known_args(detail::_split_to_args(args));
     }
 
     /*!
@@ -3302,6 +3378,20 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    template<class T,
+             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    Namespace parse_intermixed_args(T const& args) const
+    {
+        return parse_intermixed_args(detail::_split_to_args(args));
+    }
+
+    /*!
+     *  \brief Parse intermixed concrete arguments
+     *
+     *  \param args Arguments to parse
+     *
+     *  \return Object with parsed arguments
+     */
     Namespace parse_intermixed_args(std::vector<std::string> const& args) const
     {
         if (m_exit_on_error) {
@@ -3326,6 +3416,20 @@ public:
     Namespace parse_known_intermixed_args() const
     {
         return parse_known_intermixed_args(m_parsed_arguments);
+    }
+
+    /*!
+     *  \brief Parse known intermixed concrete arguments
+     *
+     *  \param args Arguments to parse
+     *
+     *  \return Object with parsed arguments
+     */
+    template<class T,
+             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    Namespace parse_known_intermixed_args(T const& args) const
+    {
+        return parse_known_intermixed_args(detail::_split_to_args(args));
     }
 
     /*!
