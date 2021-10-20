@@ -1645,9 +1645,11 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(char const* flag)
+    template<class T,
+             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    Argument& add_argument(T const& flag)
     {
-        return add_argument({ std::string(flag) });
+        return add_argument({ flag });
     }
 
     /*!
@@ -1799,9 +1801,11 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(char const* flag)
+    template<class T,
+             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    Argument& add_argument(T const& flag)
     {
-        return add_argument({ std::string(flag) });
+        return add_argument({ flag });
     }
 
     /*!
@@ -1915,9 +1919,11 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(char const* flag)
+    template<class T,
+             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    Argument& add_argument(T const& flag)
     {
-        return add_argument({ std::string(flag) });
+        return add_argument({ flag });
     }
 
     /*!
