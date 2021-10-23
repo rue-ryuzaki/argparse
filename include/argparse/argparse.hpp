@@ -1213,7 +1213,7 @@ private:
     void handle(std::string const& str) const
     {
         if (m_handle_str) {
-            m_handle_str(str);
+            m_handle_str(detail::_remove_quotes(str));
         }
     }
 
