@@ -2147,7 +2147,8 @@ public:
             : BaseParser(),
               m_name(name),
               m_help(),
-              m_prefix()
+              m_prefix(),
+              m_handle()
         { }
 
         /*!
@@ -2219,6 +2220,19 @@ public:
         }
 
         /*!
+         *  \brief Set parser 'handle' function
+         *
+         *  \param func Handle function
+         *
+         *  \return Current parser reference
+         */
+        Parser& handle(std::function<void()> func)
+        {
+            m_handle = func;
+            return *this;
+        }
+
+        /*!
          *  \brief Get parser 'help' message
          *
          *  \return Parser 'help' message
@@ -2229,6 +2243,13 @@ public:
         }
 
     private:
+        void handle() const
+        {
+            if (m_handle) {
+                m_handle();
+            }
+        }
+
         std::string print(std::size_t limit = detail::_argument_help_limit) const
         {
             std::string res = "    " + m_name;
@@ -2245,6 +2266,7 @@ public:
         std::string m_name;
         std::string m_help;
         std::string m_prefix;
+        std::function<void()> m_handle;
     };
 
     /*!
@@ -3867,6 +3889,7 @@ private:
                     program += " " + str;
                 }
                 const_cast<std::string&>(parser->m_prefix) = program + " " + parser->m_name;
+                parser->handle();
             } else {
                 throw_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }
