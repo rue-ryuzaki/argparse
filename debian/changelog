@@ -1,3 +1,12 @@
+cpp-argparse-dev (1.0.1-0ppa0) focal; urgency=low
+
+  * Fix subparser required parse error
+  * Add string args parse support
+  * Remove quotes in Argument::handle() call
+  * Add Parser::handle() function
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 24 Oct 2021 17:32:50 +0300
+
 cpp-argparse-dev (1.0.0-0ppa0) focal; urgency=low
 
   * Add ArgumentParser::parse_intermixed_args() function
