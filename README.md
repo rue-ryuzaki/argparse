@@ -214,6 +214,36 @@ int main(int argc, char* argv[])
 ```
 ## Features
 ### Handle
+Parser::handle(std::function<void()> func)
+```cpp
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv);
+    parser.add_argument("--foo").action("store_true").help("foo help");
+
+    auto& subparsers = parser.add_subparsers().help("sub-command help");
+
+    auto& parser_a = subparsers.add_parser("a").help("a help")
+            .handle([] () { std::cout << "Parser A handle" << std::endl; });
+    parser_a.add_argument("bar").help("bar help");
+
+    auto& parser_b = subparsers.add_parser("b").help("b help")
+            .handle([] () { std::cout << "Parser B handle" << std::endl; });
+    parser_b.add_argument("--baz").choices("XYZ").help("baz help");
+
+    auto const args = parser.parse_args();
+
+    std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
+    std::cout << "foo: " << args.get<bool>("foo") << std::endl;
+    std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
+
+    return 0;
+}
+```
 Argument::handle(std::function<void()> func)
 Only available for value-independent arguments (Action: "store_true", "store_false" or "count")
 ```cpp
