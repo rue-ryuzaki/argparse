@@ -3484,7 +3484,7 @@ public:
     }
 
     /*!
-     *  \brief Print program usage
+     *  \brief Print a brief description of how the ArgumentParser should be invoked on the command line
      *
      *  \param os Output stream
      */
@@ -3501,7 +3501,8 @@ public:
     }
 
     /*!
-     *  \brief Print program help message
+     *  \brief Print a help message, including the program usage and information
+     *  about the arguments registered with the ArgumentParser
      *
      *  \param os Output stream
      */
@@ -3514,6 +3515,32 @@ public:
         auto const subparser = subpurser_info(false);
         print_custom_help(positional_all, optional_all, positional, optional, m_groups, m_exclusive,
                           subparser, m_prog, m_usage, m_description, m_epilog, os);
+    }
+
+    /*!
+     *  \brief Return a string containing a brief description of how
+     *  the ArgumentParser should be invoked on the command line
+     *
+     *  \return Usage format
+     */
+    std::string format_usage() const
+    {
+        std::stringstream ss;
+        print_usage(ss);
+        return ss.str();
+    }
+
+    /*!
+     *  \brief Return a string containing a help message, including the program
+     *  usage and information about the arguments registered with the ArgumentParse
+     *
+     *  \return Help format
+     */
+    std::string format_help() const
+    {
+        std::stringstream ss;
+        print_help(ss);
+        return ss.str();
     }
 
     /*!
