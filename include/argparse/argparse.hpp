@@ -695,11 +695,8 @@ public:
      */
     Argument& action(Action value)
     {
-        if (!(value & (Action::store | Action::store_const | Action::append
-                       | Action::append_const | Action::extend))) {
+        if (m_action & (Action::version | Action::help)) {
             m_handle_str = nullptr;
-        }
-        if (!(value & (Action::store_true | Action::store_false | Action::count))) {
             m_handle = nullptr;
         }
         if (!(value & (Action::store | Action::store_const | Action::append
@@ -1065,7 +1062,7 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'handle' for arguments with 'store/_const' or 'append/_const/extend' action
+     *  \brief Set argument 'handle' value
      *
      *  \param func Handle function
      *
@@ -1073,17 +1070,15 @@ public:
      */
     Argument& handle(std::function<void(std::string)> func)
     {
-        if (m_action & (Action::store | Action::store_const | Action::append
-                        | Action::append_const | Action::extend)) {
-            m_handle_str = func;
-        } else {
+        if (m_action & (Action::version | Action::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
+        m_handle_str = func;
         return *this;
     }
 
     /*!
-     *  \brief Set argument 'handle' for arguments with 'store_true/_false' or 'count' action
+     *  \brief Set argument 'handle' value
      *
      *  \param func Handle function
      *
@@ -1091,11 +1086,13 @@ public:
      */
     Argument& handle(std::function<void()> func)
     {
-        if (m_action & (Action::store_true | Action::store_false | Action::count)) {
-            m_handle = func;
-        } else {
+        if (m_action & (Action::version | Action::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
+        if (!(m_action & (Action::store_true | Action::store_false | Action::count))) {
+            std::cerr << "better to use Argument::handle(std::function<void(std::string)> func)" << std::endl;
+        }
+        m_handle = func;
         return *this;
     }
 
@@ -1215,10 +1212,6 @@ private:
         if (m_handle_str) {
             m_handle_str(detail::_remove_quotes(str));
         }
-    }
-
-    void handle() const
-    {
         if (m_handle) {
             m_handle();
         }
@@ -2031,19 +2024,12 @@ class ArgumentParser : public BaseParser
 
         bool self_value_stored(key_type const& arg)
         {
-            if (arg->m_action == Action::store_const) {
+            if (arg->m_action & (Action::store_const | Action::store_true | Action::store_false)) {
                 auto& storage = at(arg);
                 if (storage.empty()) {
                     storage.push_back(arg->m_const());
                 }
                 arg->handle(arg->m_const());
-                return true;
-            } else if (arg->m_action & (Action::store_true | Action::store_false)) {
-                auto& storage = at(arg);
-                if (storage.empty()) {
-                    storage.push_back(arg->m_const());
-                }
-                arg->handle();
                 return true;
             } else if (arg->m_action == Action::append_const) {
                 at(arg).push_back(arg->m_const());
@@ -2051,7 +2037,7 @@ class ArgumentParser : public BaseParser
                 return true;
             } else if (arg->m_action == Action::count) {
                 at(arg).emplace_back(std::string());
-                arg->handle();
+                arg->handle(std::string());
                 return true;
             }
             return false;
@@ -2148,6 +2134,7 @@ public:
               m_name(name),
               m_help(),
               m_prefix(),
+              m_handle_str(),
               m_handle()
         { }
 
@@ -2226,6 +2213,19 @@ public:
          *
          *  \return Current parser reference
          */
+        Parser& handle(std::function<void(std::string)> func)
+        {
+            m_handle_str = func;
+            return *this;
+        }
+
+        /*!
+         *  \brief Set parser 'handle' function
+         *
+         *  \param func Handle function
+         *
+         *  \return Current parser reference
+         */
         Parser& handle(std::function<void()> func)
         {
             m_handle = func;
@@ -2243,8 +2243,11 @@ public:
         }
 
     private:
-        void handle() const
+        void handle(std::string const& str) const
         {
+            if (m_handle_str) {
+                m_handle_str(str);
+            }
             if (m_handle) {
                 m_handle();
             }
@@ -2266,6 +2269,7 @@ public:
         std::string m_name;
         std::string m_help;
         std::string m_prefix;
+        std::function<void(std::string)> m_handle_str;
         std::function<void()> m_handle;
     };
 
@@ -3916,7 +3920,7 @@ private:
                     program += " " + str;
                 }
                 const_cast<std::string&>(parser->m_prefix) = program + " " + parser->m_name;
-                parser->handle();
+                parser->handle(parser->m_name);
             } else {
                 throw_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }

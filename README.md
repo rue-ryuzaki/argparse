@@ -215,6 +215,7 @@ int main(int argc, char* argv[])
 ## Features
 ### Handle
 Parser::handle(std::function<void()> func)
+Parser::handle(std::function<void(std::string)> func) // gets parser name
 ```cpp
 #include <iostream>
 
@@ -232,7 +233,7 @@ int main(int argc, char* argv[])
     parser_a.add_argument("bar").help("bar help");
 
     auto& parser_b = subparsers.add_parser("b").help("b help")
-            .handle([] () { std::cout << "Parser B handle" << std::endl; });
+            .handle([] (std::string const& value) { std::cout << "Parser B handle " << value << std::endl; });
     parser_b.add_argument("--baz").choices("XYZ").help("baz help");
 
     auto const args = parser.parse_args();
@@ -245,7 +246,7 @@ int main(int argc, char* argv[])
 }
 ```
 Argument::handle(std::function<void()> func)
-Only available for value-independent arguments (Action: "store_true", "store_false" or "count")
+Preferably for value-independent arguments (Action: "store_true", "store_false" or "count")
 ```cpp
 #include <iostream>
 
@@ -263,7 +264,8 @@ int main(int argc, char* argv[])
 }
 ```
 Argument::handle(std::function<void(std::string)> func)
-Only available for value-dependent arguments (Action: "store", "store_const", "append", "append_const" or "extend")
+Preferably for value-dependent arguments (Action: "store", "store_const", "append", "append_const" or "extend")
+For value-independent arguments gets const value (Action: "store_true", "store_false") or empty string (Action: "count")
 ```cpp
 #include <iostream>
 
