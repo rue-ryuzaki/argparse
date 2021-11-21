@@ -1,3 +1,12 @@
+cpp-argparse-dev (1.1.0-0ppa0) focal; urgency=low
+
+  * Update ArgumentParser help printing functions
+  * Update handle() realization
+  * Allow to use Namespace in parse_args()
+  * Customizing file parsing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 21 Nov 2021 17:36:22 +0300
+
 cpp-argparse-dev (1.0.1-0ppa0) focal; urgency=low
 
   * Fix subparser required parse error
