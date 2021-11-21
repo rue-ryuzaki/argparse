@@ -1974,6 +1974,8 @@ class ArgumentParser : public BaseParser
 {
     class Storage
     {
+        friend class ArgumentParser;
+
     public:
         typedef pArgument                                       key_type;
         typedef std::vector<std::string>                        mapped_type;
@@ -1984,6 +1986,24 @@ class ArgumentParser : public BaseParser
         Storage()
             : m_data()
         { }
+
+        void try_add(key_type const& key, mapped_type const& value = mapped_type())
+        {
+            if (key->m_action & (Action::version | Action::help)) {
+                return;
+            }
+            auto const& flag = conflict_arg(key);
+            if (flag.empty()) {
+                m_data.insert({ key, value });
+            }
+        }
+
+        void try_add(std::vector<key_type> const& arguments)
+        {
+            for (auto const& arg : arguments) {
+                try_add(arg);
+            }
+        }
 
         void create(key_type const& key, mapped_type const& value = mapped_type())
         {
@@ -2535,6 +2555,8 @@ public:
      */
     class Namespace
     {
+        friend class ArgumentParser;
+
         template <class T>       struct is_stl_container:std::false_type{};
         template <class... Args> struct is_stl_container<std::deque             <Args...> >:std::true_type{};
         template <class... Args> struct is_stl_container<std::forward_list      <Args...> >:std::true_type{};
@@ -2563,7 +2585,7 @@ public:
          *
          *  \return Object with parsed arguments
          */
-        Namespace(Storage const& arguments,
+        Namespace(Storage const& arguments = Storage(),
                   std::vector<std::string> const& unrecognized_args = std::vector<std::string>())
             : m_arguments(arguments),
               m_unrecognized_args(unrecognized_args)
@@ -2834,6 +2856,11 @@ public:
         }
 
     private:
+        Storage const& storage() const
+        {
+            return m_arguments;
+        }
+
         Storage::value_type const& data(std::string const& key) const
         {
             if (m_arguments.exists(key)) {
@@ -3302,39 +3329,45 @@ public:
     /*!
      *  \brief Parse command line arguments
      *
+     *  \param space Parsed arguments namespace
+     *
      *  \return Object with parsed arguments
      */
-    Namespace parse_args() const
+    template<typename = void>
+    Namespace parse_args(Namespace const& space = Namespace()) const
     {
-        return parse_args(m_parsed_arguments);
+        return parse_args(m_parsed_arguments, space);
     }
 
     /*!
      *  \brief Parse concrete arguments
      *
      *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
      *
      *  \return Object with parsed arguments
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Namespace parse_args(T const& args) const
+    Namespace parse_args(T const& args, Namespace const& space = Namespace()) const
     {
-        return parse_args(detail::_split_to_args(args));
+        return parse_args(detail::_split_to_args(args), space);
     }
 
     /*!
      *  \brief Parse concrete arguments
      *
      *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
      *
      *  \return Object with parsed arguments
      */
-    Namespace parse_args(std::vector<std::string> const& args) const
+    Namespace parse_args(std::vector<std::string> const& args,
+                         Namespace const& space = Namespace()) const
     {
         if (m_exit_on_error) {
             try {
-                return parse_arguments(args);
+                return parse_arguments(args, false, false, space);
             } catch (std::exception& e) {
                 std::cerr << e.what() << std::endl;
             } catch (...) {
@@ -3342,46 +3375,52 @@ public:
             }
             ::exit(1);
         } else {
-            return parse_arguments(args);
+            return parse_arguments(args, false, false, space);
         }
     }
 
     /*!
      *  \brief Parse known command line arguments
      *
+     *  \param space Parsed arguments namespace
+     *
      *  \return Object with parsed arguments
      */
-    Namespace parse_known_args() const
+    template<typename = void>
+    Namespace parse_known_args(Namespace const& space = Namespace()) const
     {
-        return parse_known_args(m_parsed_arguments);
+        return parse_known_args(m_parsed_arguments, space);
     }
 
     /*!
      *  \brief Parse known concrete arguments
      *
      *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
      *
      *  \return Object with parsed arguments
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Namespace parse_known_args(T const& args) const
+    Namespace parse_known_args(T const& args, Namespace const& space = Namespace()) const
     {
-        return parse_known_args(detail::_split_to_args(args));
+        return parse_known_args(detail::_split_to_args(args), space);
     }
 
     /*!
      *  \brief Parse known concrete arguments
      *
      *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
      *
      *  \return Object with parsed arguments
      */
-    Namespace parse_known_args(std::vector<std::string> const& args) const
+    Namespace parse_known_args(std::vector<std::string> const& args,
+                               Namespace const& space = Namespace()) const
     {
         if (m_exit_on_error) {
             try {
-                return parse_arguments(args, true);
+                return parse_arguments(args, true, false, space);
             } catch (std::exception& e) {
                 std::cerr << e.what() << std::endl;
             } catch (...) {
@@ -3389,46 +3428,52 @@ public:
             }
             ::exit(1);
         } else {
-            return parse_arguments(args, true);
+            return parse_arguments(args, true, false, space);
         }
     }
 
     /*!
      *  \brief Parse intermixed command line arguments
      *
+     *  \param space Parsed arguments namespace
+     *
      *  \return Object with parsed arguments
      */
-    Namespace parse_intermixed_args() const
+    template<typename = void>
+    Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
     {
-        return parse_intermixed_args(m_parsed_arguments);
+        return parse_intermixed_args(m_parsed_arguments, space);
     }
 
     /*!
      *  \brief Parse intermixed concrete arguments
      *
      *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
      *
      *  \return Object with parsed arguments
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Namespace parse_intermixed_args(T const& args) const
+    Namespace parse_intermixed_args(T const& args, Namespace const& space = Namespace()) const
     {
-        return parse_intermixed_args(detail::_split_to_args(args));
+        return parse_intermixed_args(detail::_split_to_args(args), space);
     }
 
     /*!
      *  \brief Parse intermixed concrete arguments
      *
      *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
      *
      *  \return Object with parsed arguments
      */
-    Namespace parse_intermixed_args(std::vector<std::string> const& args) const
+    Namespace parse_intermixed_args(std::vector<std::string> const& args,
+                                    Namespace const& space = Namespace()) const
     {
         if (m_exit_on_error) {
             try {
-                return parse_arguments(args, false, true);
+                return parse_arguments(args, false, true, space);
             } catch (std::exception& e) {
                 std::cerr << e.what() << std::endl;
             } catch (...) {
@@ -3436,46 +3481,52 @@ public:
             }
             ::exit(1);
         } else {
-            return parse_arguments(args, false, true);
+            return parse_arguments(args, false, true, space);
         }
     }
 
     /*!
      *  \brief Parse known intermixed command line arguments
      *
+     *  \param space Parsed arguments namespace
+     *
      *  \return Object with parsed arguments
      */
-    Namespace parse_known_intermixed_args() const
+    template<typename = void>
+    Namespace parse_known_intermixed_args(Namespace const& space = Namespace()) const
     {
-        return parse_known_intermixed_args(m_parsed_arguments);
+        return parse_known_intermixed_args(m_parsed_arguments, space);
     }
 
     /*!
      *  \brief Parse known intermixed concrete arguments
      *
      *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
      *
      *  \return Object with parsed arguments
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Namespace parse_known_intermixed_args(T const& args) const
+    Namespace parse_known_intermixed_args(T const& args, Namespace const& space = Namespace()) const
     {
-        return parse_known_intermixed_args(detail::_split_to_args(args));
+        return parse_known_intermixed_args(detail::_split_to_args(args), space);
     }
 
     /*!
      *  \brief Parse known intermixed concrete arguments
      *
      *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
      *
      *  \return Object with parsed arguments
      */
-    Namespace parse_known_intermixed_args(std::vector<std::string> const& args) const
+    Namespace parse_known_intermixed_args(std::vector<std::string> const& args,
+                                          Namespace const& space = Namespace()) const
     {
         if (m_exit_on_error) {
             try {
-                return parse_arguments(args, true, true);
+                return parse_arguments(args, true, true, space);
             } catch (std::exception& e) {
                 std::cerr << e.what() << std::endl;
             } catch (...) {
@@ -3483,7 +3534,7 @@ public:
             }
             ::exit(1);
         } else {
-            return parse_arguments(args, true, true);
+            return parse_arguments(args, true, true, space);
         }
     }
 
@@ -3577,8 +3628,11 @@ public:
 
 private:
     Namespace parse_arguments(std::vector<std::string> parsed_arguments,
-                              bool only_known = false, bool intermixed = false) const
+                              bool only_known = false, bool intermixed = false,
+                              Namespace const& space = Namespace()) const
     {
+        parsed_arguments.insert(std::end(parsed_arguments),
+                                std::begin(space.unrecognized_args()), std::end(space.unrecognized_args()));
         auto const subparser = subpurser_info();
         if (intermixed && subparser.first) {
             throw TypeError("parse_intermixed_args: positional arg with nargs=A...");
@@ -3664,15 +3718,28 @@ private:
         auto subparser_name = subparser_dest;
         auto subparser_arg = std::make_shared<Argument>(std::move(subparser_flags),
                                                         std::move(subparser_name), Argument::Positional);
-        Storage result;
-        result.create(positional);
-        result.create(optional);
-        if (subparser.first) {
-            if (!subparser_dest.empty()) {
-                result.create(subparser_arg);
+        Storage result = space.storage();
+        if (space.m_arguments.m_data.empty()) {
+            result.create(positional);
+            result.create(optional);
+            if (subparser.first) {
+                if (!subparser_dest.empty()) {
+                    result.create(subparser_arg);
+                }
+                for (auto const& parser : subparser.first->m_parsers) {
+                    result.create(parser.m_arguments);
+                }
             }
-            for (auto const& parser : subparser.first->m_parsers) {
-                result.create(parser.m_arguments);
+        } else {
+            result.try_add(positional);
+            result.try_add(optional);
+            if (subparser.first) {
+                if (!subparser_dest.empty()) {
+                    result.try_add(subparser_arg);
+                }
+                for (auto const& parser : subparser.first->m_parsers) {
+                    result.try_add(parser.m_arguments);
+                }
             }
         }
 
