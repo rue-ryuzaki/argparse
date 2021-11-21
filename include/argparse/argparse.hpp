@@ -3626,6 +3626,30 @@ public:
         ::exit(2);
     }
 
+    /*!
+     *  \brief Arguments that are read from a file
+     *  (see the fromfile_prefix_chars keyword argument to the ArgumentParser constructor)
+     *  are read one argument per line. convert_arg_line_to_args() can be overridden for fancier reading
+     *
+     *  \param file File name
+     *
+     *  \return Arguments to parse
+     */
+    virtual std::vector<std::string> convert_arg_line_to_args(std::string const& file) const
+    {
+        std::ifstream is(file);
+        if (!is.is_open()) {
+            throw_error("[Errno 2] No such file or directory: '" + file + "'");
+        }
+        std::vector<std::string> res;
+        std::string line;
+        while (std::getline(is, line)) {
+            res.push_back(line);
+        }
+        is.close();
+        return res;
+    }
+
 private:
     Namespace parse_arguments(std::vector<std::string> parsed_arguments,
                               bool only_known = false, bool intermixed = false,
@@ -4450,21 +4474,6 @@ private:
     detail::Value<std::string> const& default_argument_value(Argument const& arg) const
     {
         return (arg.m_default.status() || !m_argument_default.status()) ? arg.m_default : m_argument_default;
-    }
-
-    std::vector<std::string> convert_arg_line_to_args(std::string const& file) const
-    {
-        std::ifstream is(file);
-        if (!is.is_open()) {
-            throw_error("[Errno 2] No such file or directory: '" + file + "'");
-        }
-        std::vector<std::string> res;
-        std::string line;
-        while (std::getline(is, line)) {
-            res.push_back(line);
-        }
-        is.close();
-        return res;
     }
 
     std::vector<pArgument> positional_arguments(bool add_suppress = true, bool add_groups = true) const
