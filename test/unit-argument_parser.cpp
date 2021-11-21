@@ -740,7 +740,7 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("append").action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
         parser.add_argument("extend").action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
 
-        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
 
@@ -768,7 +768,7 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("extend").action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
 
-        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
 
@@ -796,7 +796,7 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("extend").action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
 
-        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
 
         auto args1 = parser.parse_args({ new_value, new_value });
@@ -823,7 +823,7 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("append2").action(argparse::append).nargs("?"); // TODO: default value are invalid in python if flag used
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
 
-        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
 
         auto args1 = parser.parse_args({ new_value, new_value });
@@ -853,7 +853,7 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("store5").action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument("store6").action(argparse::store).nargs("+").default_value(default_value);
 
-        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
 
         auto args1 = parser.parse_args({ new_value, new_value });
@@ -894,7 +894,7 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("store5").action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument("store6").action(argparse::store).nargs("*").default_value(default_value);
 
-        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
 
         auto args1 = parser.parse_args({ new_value, new_value });
@@ -932,7 +932,7 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("store5").action(argparse::store).nargs(2).default_value(default_value);
         parser.add_argument("store6").action(argparse::store).nargs("*").default_value(default_value);
 
-        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value }));
@@ -976,7 +976,7 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("store5").action(argparse::store).nargs(2).default_value(default_value);
         parser.add_argument("store6").action(argparse::store).nargs("+").default_value(default_value);
 
-        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value }));
@@ -1050,7 +1050,7 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("append").action(argparse::append).nargs(2); // TODO: default value are invalid in python if flag used
         parser.add_argument("extend").action(argparse::extend).nargs(3); // TODO: default value are invalid in python if flag used
 
-        REQUIRE_THROWS(parser.parse_args({  }));
+        REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value }));
         REQUIRE_THROWS(parser.parse_args({ new_value, new_value, new_value }));
@@ -1833,5 +1833,89 @@ TEST_CASE("19. intermixed parsing", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_intermixed_args({ }));
         REQUIRE_THROWS(parser.parse_intermixed_args({ "a", "11" }));
         REQUIRE_THROWS(parser.parse_intermixed_args({ "b", "--baz" }));
+    }
+}
+
+TEST_CASE("20. namespace", "[argument_parser]")
+{
+    std::string global_default = "global";
+    std::string local_default = "local";
+
+    auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+    parser.add_argument({ "-f", "--foo" });
+    parser.add_argument({ "-b", "--bar" }).default_value(local_default);
+
+    std::string foo = "foo";
+    std::string bar = "bar";
+
+    SECTION("20.1. simple example") {
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.get<std::string>("-f") == global_default);
+        REQUIRE(args0.get<std::string>("-b") == local_default);
+        REQUIRE(args0.get<std::string>("--foo") == global_default);
+        REQUIRE(args0.get<std::string>("--bar") == local_default);
+        REQUIRE(args0.get<std::string>("f") == global_default);
+        REQUIRE(args0.get<std::string>("b") == local_default);
+        REQUIRE(args0.get<std::string>("foo") == global_default);
+        REQUIRE(args0.get<std::string>("bar") == local_default);
+
+        auto args1 = parser.parse_args({ "-f", foo });
+        REQUIRE(args1.get<std::string>("-f") == foo);
+        REQUIRE(args1.get<std::string>("-b") == local_default);
+        REQUIRE(args1.get<std::string>("--foo") == foo);
+        REQUIRE(args1.get<std::string>("--bar") == local_default);
+        REQUIRE(args1.get<std::string>("f") == foo);
+        REQUIRE(args1.get<std::string>("b") == local_default);
+        REQUIRE(args1.get<std::string>("foo") == foo);
+        REQUIRE(args1.get<std::string>("bar") == local_default);
+
+        auto args2 = parser.parse_args({ "--bar", bar }, args1);
+        REQUIRE(args2.get<std::string>("-f") == foo);
+        REQUIRE(args2.get<std::string>("-b") == bar);
+        REQUIRE(args2.get<std::string>("--foo") == foo);
+        REQUIRE(args2.get<std::string>("--bar") == bar);
+        REQUIRE(args2.get<std::string>("f") == foo);
+        REQUIRE(args2.get<std::string>("b") == bar);
+        REQUIRE(args2.get<std::string>("foo") == foo);
+        REQUIRE(args2.get<std::string>("bar") == bar);
+    }
+
+    SECTION("20.2. intermixed parsing") {
+        auto args1 = parser.parse_args({ "-f", foo, "--bar", bar });
+        REQUIRE(args1.get<std::string>("-f") == foo);
+        REQUIRE(args1.get<std::string>("-b") == bar);
+        REQUIRE(args1.get<std::string>("--foo") == foo);
+        REQUIRE(args1.get<std::string>("--bar") == bar);
+        REQUIRE(args1.get<std::string>("f") == foo);
+        REQUIRE(args1.get<std::string>("b") == bar);
+        REQUIRE(args1.get<std::string>("foo") == foo);
+        REQUIRE(args1.get<std::string>("bar") == bar);
+
+        std::string baz = "baz";
+
+        auto args2 = parser.parse_known_args({ "-f", foo, "--bar", bar, "--baz", baz });
+        REQUIRE(args2.get<std::string>("-f") == foo);
+        REQUIRE(args2.get<std::string>("-b") == bar);
+        REQUIRE(args2.get<std::string>("--foo") == foo);
+        REQUIRE(args2.get<std::string>("--bar") == bar);
+        REQUIRE(args2.get<std::string>("f") == foo);
+        REQUIRE(args2.get<std::string>("b") == bar);
+        REQUIRE(args2.get<std::string>("foo") == foo);
+        REQUIRE(args2.get<std::string>("bar") == bar);
+
+        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        parser2.add_argument({ "--baz" });
+
+        auto args3 = parser2.parse_args(args2);
+        REQUIRE(args3.get<std::string>("-f") == foo);
+        REQUIRE(args3.get<std::string>("-b") == bar);
+        REQUIRE(args3.get<std::string>("--foo") == foo);
+        REQUIRE(args3.get<std::string>("--bar") == bar);
+        REQUIRE(args3.get<std::string>("--baz") == baz);
+        REQUIRE(args3.get<std::string>("f") == foo);
+        REQUIRE(args3.get<std::string>("b") == bar);
+        REQUIRE(args3.get<std::string>("foo") == foo);
+        REQUIRE(args3.get<std::string>("bar") == bar);
+        REQUIRE(args3.get<std::string>("baz") == baz);
     }
 }
