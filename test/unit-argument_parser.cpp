@@ -184,6 +184,41 @@ TEST_CASE("2. optional arguments", "[argument_parser]")
         REQUIRE_THROWS(parser.add_argument({ "-f", "--foo" }));
         REQUIRE_THROWS(parser.add_argument("--foo").dest("foo"));
     }
+
+    SECTION("2.9. non-existent arguments") {
+        auto p = argparse::ArgumentParser().exit_on_error(false);
+        p.add_argument({ "-f", "--foo" });
+        p.add_argument({ "-b", "--bar" });
+
+        auto args = p.parse_args({ "-b", bar });
+
+        REQUIRE(args.get<std::string>("-f") == "");
+        REQUIRE(args.get<std::string>("-b") == bar);
+        REQUIRE(args.get<std::string>("--foo") == "");
+        REQUIRE(args.get<std::string>("--bar") == bar);
+        REQUIRE(args.get<std::string>("f") == "");
+        REQUIRE(args.get<std::string>("b") == bar);
+        REQUIRE(args.get<std::string>("foo") == "");
+        REQUIRE(args.get<std::string>("bar") == bar);
+        REQUIRE(args.exists("f") == false);
+        REQUIRE(args.exists("-f") == false);
+        REQUIRE(args.exists("foo") == false);
+        REQUIRE(args.exists("--foo") == false);
+        REQUIRE(args.exists("b") == true);
+        REQUIRE(args.exists("-b") == true);
+        REQUIRE(args.exists("bar") == true);
+        REQUIRE(args.exists("--bar") == true);
+
+        std::string non_exist = "baz";
+        REQUIRE(args.exists(non_exist) == false);
+        REQUIRE_THROWS(args.get<std::string>(non_exist));
+#if __cplusplus >= 201402L // C++14+
+        REQUIRE(args.try_get<std::string>("foo").operator bool() == false);
+        REQUIRE(args.try_get<std::string>("bar").operator bool() == true);
+        REQUIRE(args.try_get<std::string>("bar").value() == bar);
+        REQUIRE(args.try_get<std::vector<std::string> >(non_exist).operator bool() == false);
+#endif // C++14+
+    }
 }
 
 TEST_CASE("3. optional arguments containing -", "[argument_parser]")
