@@ -51,6 +51,15 @@
 #include <unordered_set>
 #include <vector>
 
+#if __cplusplus >= 201703L // C++17+
+#include <optional>
+#elif __cplusplus >= 201402L // C++14
+#include <experimental/optional>
+namespace std {
+using experimental::optional;
+} // std
+#endif // C++14+
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough="
 
@@ -300,18 +309,18 @@ class Value
 {
 public:
     Value()
-        : m_status(false),
+        : m_has_value(false),
           m_value()
     { }
     Value(Value const& orig)
-        : m_status(orig.m_status),
+        : m_has_value(orig.m_has_value),
           m_value(orig.m_value)
     { }
 
     Value& operator =(Value const& rhs)
     {
         if (this != &rhs) {
-            this->m_status = rhs.m_status;
+            this->m_has_value = rhs.m_has_value;
             this->m_value  = rhs.m_value;
         }
         return *this;
@@ -319,35 +328,35 @@ public:
 
     Value& operator =(T const& rhs)
     {
-        this->m_status = true;
+        this->m_has_value = true;
         this->m_value  = rhs;
         return *this;
     }
 
     Value& operator =(T&& rhs)
     {
-        this->m_status = true;
+        this->m_has_value = true;
         this->m_value  = std::move(rhs);
         return *this;
     }
 
     bool operator ==(Value const& rhs) const
     {
-        return this->m_status == rhs.m_status && this->m_value == rhs.m_value;
+        return this->m_has_value == rhs.m_has_value && this->m_value == rhs.m_value;
     }
 
     void clear(T const& value = T())
     {
-        m_status = false;
+        m_has_value = false;
         m_value = value;
     }
 
-    bool        status() const { return m_status; }
-    T const&    value()  const { return m_value; }
-    T const& operator()()const { return m_value; }
+    bool        has_value() const { return m_has_value; }
+    T const&    value()     const { return m_value; }
+    T const& operator()()   const { return m_value; }
 
 private:
-    bool    m_status;
+    bool    m_has_value;
     T       m_value;
 };
 } // details
@@ -1261,12 +1270,12 @@ private:
                 res += std::string(limit - res.size(), ' ') + help();
             }
             if (show_default_value && m_type == Optional) {
-                auto const& def = (m_default.status() || !argument_default.status()) ? m_default
-                                                                                     : argument_default;
-                if (!def.status() && m_action & (Action::store_true | Action::store_false)) {
+                auto const& def = (m_default.has_value() || !argument_default.has_value()) ? m_default
+                                                                                           : argument_default;
+                if (!def.has_value() && m_action & (Action::store_true | Action::store_false)) {
                     res += " (default: " + detail::_bool_to_string(def()) + ")";
                 } else {
-                    res += " (default: " + ((def.status() || !def().empty()) ? def() : "None") + ")";
+                    res += " (default: " + ((def.has_value() || !def().empty()) ? def() : "None") + ")";
                 }
             }
         }
@@ -1306,10 +1315,10 @@ private:
 
     std::string get_argument_name() const
     {
-        if (m_metavar.status()) {
+        if (m_metavar.has_value()) {
             return metavar();
         }
-        if (m_choices.status()) {
+        if (m_choices.has_value()) {
             return "{" + detail::_vector_to_string(choices(), ",") + "}";
         }
         auto const& res = m_dest_str.empty() ? m_name : m_dest_str;
@@ -2516,7 +2525,7 @@ public:
 
         std::string flags_to_string() const
         {
-            if (m_metavar.status()) {
+            if (m_metavar.has_value()) {
                 return metavar();
             }
             std::string res;
@@ -2629,8 +2638,162 @@ public:
             return false;
         }
 
+#if __cplusplus >= 201402L
         /*!
-         *  \brief Get parsed argument value for integer types
+         *  \brief Try get parsed argument value for integer types.
+         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value or std::nullopt
+         */
+        template <class T, typename std::enable_if<std::is_integral<T>::value
+                                                   and not std::is_same<bool, T>::value>::type* = nullptr>
+        std::optional<T> try_get(std::string const& key) const
+        {
+            auto args = try_get_data(key);
+            if (!args.operator bool()) {
+                return {};
+            }
+            if (args->first->m_action == Action::count) {
+                return T(args->second.size());
+            }
+            if (args->second.empty() || args->second.size() != 1) {
+                return {};
+            }
+            return try_to_type<T>(args->second.front());
+        }
+
+        /*!
+         *  \brief Try get parsed argument value for boolean, floating point and string types.
+         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value or std::nullopt
+         */
+        template <class T, typename std::enable_if<std::is_same<bool, T>::value
+                                                   or std::is_floating_point<T>::value
+                                                   or std::is_same<std::string, T>::value>::type* = nullptr>
+        std::optional<T> try_get(std::string const& key) const
+        {
+            auto args = try_get_data(key);
+            if (!args.operator bool()
+                    || args->first->m_action == Action::count
+                    || args->second.empty()
+                    || args->second.size() != 1) {
+                return {};
+            }
+            return try_to_type<T>(args->second.front());
+        }
+
+        /*!
+         *  \brief Try get parsed argument value for std containers types.
+         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value or std::nullopt
+         */
+        template <class T,
+                  typename std::enable_if<is_stl_container<typename std::decay<T>::type>::value>::type*
+                                                                                                    = nullptr>
+        std::optional<T> try_get(std::string const& key) const
+        {
+            auto args = try_get_data(key);
+            if (!args.operator bool() || args->first->m_action == Action::count) {
+                return {};
+            }
+            auto vector = try_to_vector<typename T::value_type>(args->second);
+            if (!vector.operator bool()) {
+                return {};
+            }
+            return T(std::begin(vector.value()), std::end(vector.value()));
+        }
+
+        /*!
+         *  \brief Try get parsed argument value std array type.
+         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value or std::nullopt
+         */
+        template <class T,
+                  typename std::enable_if<is_stl_array<typename std::decay<T>::type>::value>::type* = nullptr>
+        std::optional<T> try_get(std::string const& key) const
+        {
+            auto args = try_get_data(key);
+            if (!args.operator bool() || args->first->m_action == Action::count) {
+                return {};
+            }
+            auto vector = try_to_vector<typename T::value_type>(args->second);
+            if (!vector.operator bool()) {
+                return {};
+            }
+            T res{};
+            if (res.size() != vector->size()) {
+                std::cerr << "error: array size mismatch: " << res.size()
+                          << ", expected " << vector.size() << std::endl;
+            }
+            std::copy_n(std::begin(vector.value()), std::min(res.size(), vector->size()), std::begin(res));
+            return res;
+        }
+
+        /*!
+         *  \brief Try get parsed argument value for queue types.
+         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value or std::nullopt
+         */
+        template <class T,
+                  typename std::enable_if<is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
+        std::optional<T> try_get(std::string const& key) const
+        {
+            auto args = try_get_data(key);
+            if (!args.operator bool() || args->first->m_action == Action::count) {
+                return {};
+            }
+            auto vector = try_to_vector<typename T::value_type>(args->second);
+            if (!vector.operator bool()) {
+                return {};
+            }
+            return T(std::deque<typename T::value_type>(std::begin(vector.value()),
+                                                        std::end(vector.value())));
+        }
+
+        /*!
+         *  \brief Try get parsed argument value for custom types.
+         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value or std::nullopt
+         */
+        template <class T,
+                  typename std::enable_if<not std::is_integral<T>::value
+                                          and not std::is_same<bool, T>::value
+                                          and not std::is_floating_point<T>::value
+                                          and not std::is_same<std::string, T>::value
+                                          and not is_stl_container<typename std::decay<T>::type>::value
+                                          and not is_stl_array<typename std::decay<T>::type>::value
+                                          and not is_stl_queue<typename std::decay<T>::type>::value>
+                  ::type* = nullptr>
+        std::optional<T> try_get(std::string const& key) const
+        {
+            auto args = try_get_data(key);
+            if (!args.operator bool() || args->first->m_action == Action::count) {
+                return {};
+            }
+            return try_to_type<T>(detail::_vector_to_string(args->second));
+        }
+#endif // C++14+
+
+        /*!
+         *  \brief Get parsed argument value for integer types.
+         *  If argument not parsed, returns default value.
          *
          *  \param key Argument name
          *
@@ -2654,7 +2817,8 @@ public:
         }
 
         /*!
-         *  \brief Get parsed argument value for boolean, floating point and string types
+         *  \brief Get parsed argument value for boolean, floating point and string types.
+         *  If argument not parsed, returns default value.
          *
          *  \param key Argument name
          *
@@ -2876,6 +3040,71 @@ public:
         {
             return m_arguments;
         }
+
+#if __cplusplus >= 201402L // C++14+
+        std::optional<Storage::value_type> try_get_data(std::string const& key) const
+        {
+            if (m_arguments.exists(key)) {
+                return m_arguments.at(key);
+            }
+            for (auto const& pair : m_arguments) {
+                if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
+                    for (auto const& flag : pair.first->m_flags) {
+                        if (detail::_flag_name(flag) == key) {
+                            return pair;
+                        }
+                    }
+                }
+            }
+            return {};
+        }
+
+        template <class T>
+        std::optional<std::vector<T> > try_to_vector(std::vector<std::string> const& args) const
+        {
+            std::vector<T> vec;
+            vec.reserve(args.size());
+            for (auto const& arg : args) {
+                auto el = try_to_type<T>(arg);
+                if (el.operator bool()) {
+                    vec.emplace_back(el.value());
+                } else {
+                    return {};
+                }
+            }
+            return vec;
+        }
+
+        template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
+        std::optional<T> try_to_type(std::string const& data) const
+        {
+            return detail::_string_to_bool(data);
+        }
+
+        template <class T,
+                  typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+        std::optional<T> try_to_type(std::string const& data) const
+        {
+            return detail::_remove_quotes(data);
+        }
+
+        template <class T,
+                  typename std::enable_if<not std::is_constructible<std::string, T>::value
+                                          and not std::is_same<bool, T>::value>::type* = nullptr>
+        std::optional<T> try_to_type(std::string const& data) const
+        {
+            if (data.empty()) {
+                return T();
+            }
+            T result;
+            std::stringstream ss(data);
+            ss >> result;
+            if (ss.fail() || !ss.eof()) {
+                return {};
+            }
+            return result;
+        }
+#endif // C++14+
 
         Storage::value_type const& data(std::string const& key) const
         {
@@ -3698,7 +3927,7 @@ private:
         {
             for (auto const& arg : arguments) {
                 if ((arg->m_action & (Action::store_const | Action::append_const))
-                        && !arg->m_const.status()) {
+                        && !arg->m_const.has_value()) {
                     throw TypeError("missing 1 required positional argument: 'const'");
                 }
                 for (auto const& flag : arg->m_flags) {
@@ -3711,7 +3940,7 @@ private:
         auto _validate_argument_value = [_throw_error] (Argument const& arg, std::string const& value)
         {
             auto const& choices = arg.m_choices;
-            if (choices.status()) {
+            if (choices.has_value()) {
                 auto str = detail::_remove_quotes(value);
                 if (!str.empty() && !detail::_is_value_exists(str, choices())) {
                     auto values = detail::_vector_to_string(choices(), ", ", "'");
@@ -3810,13 +4039,13 @@ private:
         auto _store_default_value = [this, &result] (pArgument const& arg)
         {
             auto const& value = default_argument_value(*arg);
-            if (value.status()) {
+            if (value.has_value()) {
                 result.store_default_value(arg, value());
             }
         };
         auto _is_positional_arg_stored = [_throw_error, &result] (pArgument const& arg) -> bool
         {
-            if (arg->m_action == Action::append_const && arg->m_default.status()) {
+            if (arg->m_action == Action::append_const && arg->m_default.has_value()) {
                 _throw_error(detail::_ignore_default(arg->m_flags.front(), arg->m_default()));
             }
             return result.self_value_stored(arg);
@@ -4319,7 +4548,7 @@ private:
                         break;
                     case Action::version :
                         if (splitted.size() == 1) {
-                            if (!tmp->m_version.status()) {
+                            if (!tmp->m_version.has_value()) {
                                 throw AttributeError("'ArgumentParser' object has no attribute 'version'");
                             }
                             std::cout << tmp->version() << std::endl;
@@ -4465,7 +4694,7 @@ private:
             if (arg.second.empty() && arg.first->m_action != Action::count
                     && arg.first->m_type == Argument::Optional) {
                 auto const& value = default_argument_value(*arg.first);
-                if (value.status() || arg.first->action() & (Action::store_true | Action::store_false)) {
+                if (value.has_value() || arg.first->action() & (Action::store_true | Action::store_false)) {
                     arg.second.push_back(value());
                 }
             }
@@ -4489,7 +4718,8 @@ private:
 
     detail::Value<std::string> const& default_argument_value(Argument const& arg) const
     {
-        return (arg.m_default.status() || !m_argument_default.status()) ? arg.m_default : m_argument_default;
+        return (arg.m_default.has_value() || !m_argument_default.has_value()) ? arg.m_default
+                                                                              : m_argument_default;
     }
 
     std::vector<pArgument> positional_arguments(bool add_suppress = true, bool add_groups = true) const
@@ -4501,7 +4731,7 @@ private:
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_positional) {
-            if ((add_suppress || !arg.first->m_help_type.status()) && (add_groups || !arg.second)) {
+            if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)) {
                 result.push_back(arg.first);
             }
         }
@@ -4523,7 +4753,7 @@ private:
             result.insert(std::end(result), std::begin(args), std::end(args));
         }
         for (auto const& arg : m_optional) {
-            if ((add_suppress || !arg.first->m_help_type.status()) && (add_groups || !arg.second)) {
+            if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)) {
                 result.push_back(arg.first);
             }
         }
@@ -4537,7 +4767,7 @@ private:
         {
             for (std::size_t p = 0, a = 0, pos = parser.m_subparsers->m_position,
                  size = parser.m_positional.size(); p < pos && a < size; ++a, ++p) {
-                res.second += (add_suppress || !parser.m_positional.at(a).first->m_help_type.status());
+                res.second += (add_suppress || !parser.m_positional.at(a).first->m_help_type.has_value());
             }
         };
         std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
@@ -4673,7 +4903,7 @@ private:
             os << std::endl << description << std::endl;
         }
         std::size_t min_size = 0;
-        bool show_default = m_formatter_class.status()
+        bool show_default = m_formatter_class.has_value()
                 && m_formatter_class() == ArgumentDefaultsHelpFormatter;
         bool sub_positional = subparser.first && subparser.first->title().empty()
                 && subparser.first->description().empty();
