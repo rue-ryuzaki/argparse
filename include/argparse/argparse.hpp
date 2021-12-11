@@ -2614,13 +2614,14 @@ public:
         bool exists(std::string const& key) const
         {
             if (m_arguments.exists(key)) {
-                return !m_arguments.at(key).second.empty();
+                return !m_arguments.at(key).second.empty()
+                        || m_arguments.at(key).first->m_action == Action::count;
             }
             for (auto const& pair : m_arguments) {
                 if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
                     for (auto const& flag : pair.first->m_flags) {
                         if (detail::_flag_name(flag) == key) {
-                            return !pair.second.empty();
+                            return !pair.second.empty() || pair.first->m_action == Action::count;
                         }
                     }
                 }
@@ -2689,7 +2690,11 @@ public:
                                                                                                     = nullptr>
         T get(std::string const& key) const
         {
-            auto vector = to_vector<typename T::value_type>(data(key).second);
+            auto const& args = data(key);
+            if (args.first->m_action == Action::count) {
+                throw TypeError("invalid get type for argument '" + key + "'");
+            }
+            auto vector = to_vector<typename T::value_type>(args.second);
             return T(std::begin(vector), std::end(vector));
         }
 
@@ -2704,7 +2709,11 @@ public:
                   typename std::enable_if<is_stl_array<typename std::decay<T>::type>::value>::type* = nullptr>
         T get(std::string const& key) const
         {
-            auto vector = to_vector<typename T::value_type>(data(key).second);
+            auto const& args = data(key);
+            if (args.first->m_action == Action::count) {
+                throw TypeError("invalid get type for argument '" + key + "'");
+            }
+            auto vector = to_vector<typename T::value_type>(args.second);
             T res{};
             if (res.size() != vector.size()) {
                 std::cerr << "error: array size mismatch: " << res.size()
@@ -2725,7 +2734,11 @@ public:
                   typename std::enable_if<is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
         T get(std::string const& key) const
         {
-            auto vector = to_vector<typename T::value_type>(data(key).second);
+            auto const& args = data(key);
+            if (args.first->m_action == Action::count) {
+                throw TypeError("invalid get type for argument '" + key + "'");
+            }
+            auto vector = to_vector<typename T::value_type>(args.second);
             return T(std::deque<typename T::value_type>(std::begin(vector),
                                                         std::end(vector)));
         }
@@ -2749,6 +2762,9 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
+            if (args.first->m_action == Action::count) {
+                throw TypeError("invalid get type for argument '" + key + "'");
+            }
             return to_type<T>(detail::_vector_to_string(args.second));
         }
 
