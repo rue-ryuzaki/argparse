@@ -1,3 +1,11 @@
+cpp-argparse-dev (1.1.1-0ppa0) focal; urgency=low
+
+  * Fix exists() and get() for 'count' actions
+  * Add Namespace::try_get() with std::optional
+  * Code optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 12 Dec 2021 18:32:40 +0300
+
 cpp-argparse-dev (1.1.0-0ppa0) focal; urgency=low
 
   * Update ArgumentParser help printing functions
