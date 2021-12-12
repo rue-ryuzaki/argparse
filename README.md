@@ -1,4 +1,4 @@
-# ArgumentParser v1.1.0
+# ArgumentParser v1.1.1
 Python-like argument parser for C++11+ projects
 ## Code example
 ```cpp
