@@ -308,52 +308,52 @@ template <class T>
 class Value
 {
 public:
-    explicit Value()
+    explicit Value() noexcept
         : m_has_value(false),
           m_value()
     { }
-    explicit Value(Value const& orig)
+    explicit Value(Value const& orig) noexcept
         : m_has_value(orig.m_has_value),
           m_value(orig.m_value)
     { }
 
-    Value& operator =(Value const& rhs) noexcept
+    inline Value& operator =(Value const& rhs) noexcept
     {
         if (this != &rhs) {
             this->m_has_value = rhs.m_has_value;
-            this->m_value  = rhs.m_value;
+            this->m_value     = rhs.m_value;
         }
         return *this;
     }
 
-    Value& operator =(T const& rhs) noexcept
+    inline Value& operator =(T const& rhs) noexcept
     {
         this->m_has_value = true;
-        this->m_value  = rhs;
+        this->m_value     = rhs;
         return *this;
     }
 
-    Value& operator =(T&& rhs) noexcept
+    inline Value& operator =(T&& rhs) noexcept
     {
         this->m_has_value = true;
-        this->m_value  = std::move(rhs);
+        this->m_value     = std::move(rhs);
         return *this;
     }
 
-    bool operator ==(Value const& rhs) const noexcept
+    inline bool operator ==(Value const& rhs) const noexcept
     {
         return this->m_has_value == rhs.m_has_value && this->m_value == rhs.m_value;
     }
 
-    void clear(T const& value = T()) noexcept
+    inline void clear(T const& value = T()) noexcept
     {
         m_has_value = false;
-        m_value = value;
+        m_value     = value;
     }
 
-    bool        has_value() const noexcept { return m_has_value; }
-    T const&    value()     const noexcept { return m_value; }
-    T const& operator()()   const noexcept { return m_value; }
+    inline bool        has_value() const noexcept { return m_has_value; }
+    inline T const&    value()     const noexcept { return m_value; }
+    inline T const& operator()()   const noexcept { return m_value; }
 
 private:
     bool    m_has_value;
@@ -413,7 +413,7 @@ public:
      *
      *  \return ArgumentError object
      */
-    explicit ArgumentError(std::string const& error)
+    explicit ArgumentError(std::string const& error) noexcept
         : std::invalid_argument("argparse.ArgumentError: " + error)
     { }
 };
@@ -431,7 +431,7 @@ public:
      *
      *  \return AttributeError object
      */
-    explicit AttributeError(std::string const& error)
+    explicit AttributeError(std::string const& error) noexcept
         : std::invalid_argument("AttributeError: " + error)
     { }
 };
@@ -449,7 +449,7 @@ public:
      *
      *  \return ValueError object
      */
-    explicit ValueError(std::string const& error)
+    explicit ValueError(std::string const& error) noexcept
         : std::invalid_argument("ValueError: " + error)
     { }
 };
@@ -467,7 +467,7 @@ public:
      *
      *  \return IndexError object
      */
-    explicit IndexError(std::string const& error)
+    explicit IndexError(std::string const& error) noexcept
         : std::logic_error("IndexError: " + error)
     { }
 };
@@ -485,7 +485,7 @@ public:
      *
      *  \return TypeError object
      */
-    explicit TypeError(std::string const& error)
+    explicit TypeError(std::string const& error) noexcept
         : std::logic_error("TypeError: " + error)
     { }
 };
@@ -531,7 +531,7 @@ public:
      *
      *  \return Argument object
      */
-    explicit Argument(std::vector<std::string> const& flags, std::string const& name, Type type)
+    explicit Argument(std::vector<std::string> const& flags, std::string const& name, Type type) noexcept
         : m_flags(flags),
           m_name(name),
           m_type(type),
@@ -562,7 +562,7 @@ public:
      *
      *  \return Argument object
      */
-    explicit Argument(std::vector<std::string>&& flags, std::string&& name, Type type)
+    explicit Argument(std::vector<std::string>&& flags, std::string&& name, Type type) noexcept
         : m_flags(std::move(flags)),
           m_name(std::move(name)),
           m_type(type),
@@ -591,7 +591,7 @@ public:
      *
      *  \return Argument object
      */
-    explicit Argument(Argument const& orig)
+    explicit Argument(Argument const& orig) noexcept
         : m_flags(orig.m_flags),
           m_name(orig.m_name),
           m_type(orig.m_type),
@@ -653,7 +653,7 @@ public:
      *
      *  \return true if current argument lesser, otherwise false
      */
-    bool operator <(Argument const& rhs) const noexcept
+    inline bool operator <(Argument const& rhs) const noexcept
     {
         return m_flags < rhs.m_flags;
     }
@@ -830,7 +830,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& optional()
+    inline Argument& optional()
     {
         return nargs("?");
     }
@@ -840,7 +840,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& zero_or_more()
+    inline Argument& zero_or_more()
     {
         return nargs("*");
     }
@@ -850,7 +850,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& one_or_more()
+    inline Argument& one_or_more()
     {
         return nargs("+");
     }
@@ -886,7 +886,7 @@ public:
      */
     template <class T,
               typename std::enable_if<not std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Argument& const_value(T const& value)
+    inline Argument& const_value(T const& value)
     {
         std::stringstream ss;
         ss << value;
@@ -900,7 +900,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& default_value(std::string const& value) noexcept
+    inline Argument& default_value(std::string const& value) noexcept
     {
         m_default = detail::_trim_copy(value);
         return *this;
@@ -915,7 +915,7 @@ public:
      */
     template <class T,
               typename std::enable_if<not std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Argument& default_value(T const& value) noexcept
+    inline Argument& default_value(T const& value) noexcept
     {
         std::stringstream ss;
         ss << value;
@@ -970,7 +970,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& required(bool value)
+    inline Argument& required(bool value)
     {
         if (m_type == Positional) {
             throw TypeError("'required' is an invalid argument for positionals");
@@ -986,7 +986,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& help(std::string const& value) noexcept
+    inline Argument& help(std::string const& value) noexcept
     {
         m_help = detail::_trim_copy(value);
         m_help_type.clear();
@@ -1000,7 +1000,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& help(Enum value)
+    inline Argument& help(Enum value)
     {
         if (value != SUPPRESS) {
             throw TypeError("got an unexpected keyword argument 'help'");
@@ -1016,7 +1016,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& metavar(std::string const& value)
+    inline Argument& metavar(std::string const& value)
     {
         if (!(m_action & (Action::store | Action::store_const | Action::append
                           | Action::append_const | Action::extend))) {
@@ -1056,7 +1056,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& version(std::string const& value)
+    inline Argument& version(std::string const& value)
     {
         if (m_action == Action::version) {
             m_version = detail::_trim_copy(value);
@@ -1073,7 +1073,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& handle(std::function<void(std::string)> func)
+    inline Argument& handle(std::function<void(std::string)> func)
     {
         if (m_action & (Action::version | Action::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
@@ -1106,7 +1106,7 @@ public:
      *
      *  \return Argument flags values
      */
-    std::vector<std::string> const& flags() const noexcept
+    inline std::vector<std::string> const& flags() const noexcept
     {
         return m_flags;
     }
@@ -1116,7 +1116,7 @@ public:
      *
      *  \return Argument 'action' value
      */
-    Action action() const noexcept
+    inline Action action() const noexcept
     {
         return m_action;
     }
@@ -1126,7 +1126,7 @@ public:
      *
      *  \return Argument 'nargs' value
      */
-    std::string const& nargs() const noexcept
+    inline std::string const& nargs() const noexcept
     {
         return m_nargs_str;
     }
@@ -1136,7 +1136,7 @@ public:
      *
      *  \return Argument 'const' value
      */
-    std::string const& const_value() const noexcept
+    inline std::string const& const_value() const noexcept
     {
         return m_const();
     }
@@ -1146,7 +1146,7 @@ public:
      *
      *  \return Argument 'default' value
      */
-    std::string const& default_value() const noexcept
+    inline std::string const& default_value() const noexcept
     {
         return m_default();
     }
@@ -1156,7 +1156,7 @@ public:
      *
      *  \return Argument 'choices' value
      */
-    std::vector<std::string> const& choices() const noexcept
+    inline std::vector<std::string> const& choices() const noexcept
     {
         return m_choices();
     }
@@ -1166,7 +1166,7 @@ public:
      *
      *  \return Argument 'required' value
      */
-    bool required() const noexcept
+    inline bool required() const noexcept
     {
         return m_required;
     }
@@ -1176,7 +1176,7 @@ public:
      *
      *  \return Argument 'help' message
      */
-    std::string const& help() const noexcept
+    inline std::string const& help() const noexcept
     {
         return m_help;
     }
@@ -1186,7 +1186,7 @@ public:
      *
      *  \return Argument 'metavar' value
      */
-    std::string const& metavar() const noexcept
+    inline std::string const& metavar() const noexcept
     {
         return m_metavar();
     }
@@ -1196,7 +1196,7 @@ public:
      *
      *  \return Argument 'dest' value
      */
-    std::string const& dest() const noexcept
+    inline std::string const& dest() const noexcept
     {
         return m_dest_str;
     }
@@ -1206,13 +1206,13 @@ public:
      *
      *  \return Argument 'version' value
      */
-    std::string const& version() const noexcept
+    inline std::string const& version() const noexcept
     {
         return m_version();
     }
 
 private:
-    void handle(std::string const& str) const
+    inline void handle(std::string const& str) const
     {
         if (m_handle_str) {
             m_handle_str(detail::_remove_quotes(str));
@@ -1335,7 +1335,7 @@ private:
         }
     }
 
-    bool operator ==(Argument const& rhs) const noexcept
+    inline bool operator ==(Argument const& rhs) const noexcept
     {
         return m_flags == rhs.m_flags
                 && m_name == rhs.m_name
@@ -1345,7 +1345,7 @@ private:
                 && m_dest_str == rhs.m_dest_str;
     }
 
-    bool operator ==(std::string const& rhs) const noexcept
+    inline bool operator ==(std::string const& rhs) const noexcept
     {
         if (!m_dest_str.empty()) {
             return m_dest_str == rhs;
@@ -1389,7 +1389,7 @@ public:
      *
      *  \return Group object
      */
-    explicit Group()
+    explicit Group() noexcept
         : m_title(),
           m_description(),
           m_position()
@@ -1405,7 +1405,7 @@ public:
      *
      *  \return Group 'title' value
      */
-    std::string const& title() const noexcept
+    inline std::string const& title() const noexcept
     {
         return m_title;
     }
@@ -1415,7 +1415,7 @@ public:
      *
      *  \return Group 'description' value
      */
-    std::string const& description() const noexcept
+    inline std::string const& description() const noexcept
     {
         return m_description;
     }
@@ -1447,7 +1447,7 @@ public:
      *
      *  \return Argument data object
      */
-    explicit ArgumentData()
+    explicit ArgumentData() noexcept
         : m_arguments(),
           m_optional(),
           m_positional()
@@ -1583,7 +1583,7 @@ public:
      *  \return Argument group object
      */
     explicit ArgumentGroup(std::string const& title, std::string const& description,
-                           std::string& prefix_chars, ArgumentData* parent_data)
+                           std::string& prefix_chars, ArgumentData* parent_data) noexcept
         : ArgumentData(),
           Group(),
           m_prefix_chars(prefix_chars),
@@ -1600,7 +1600,7 @@ public:
      *
      *  \return Argument group object
      */
-    explicit ArgumentGroup(ArgumentGroup const& rhs)
+    explicit ArgumentGroup(ArgumentGroup const& rhs) noexcept
         : ArgumentData(),
           Group(),
           m_prefix_chars(rhs.m_prefix_chars),
@@ -1645,7 +1645,7 @@ public:
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Argument& add_argument(T const& flag)
+    inline Argument& add_argument(T const& flag)
     {
         return add_argument({ flag });
     }
@@ -1669,7 +1669,7 @@ public:
     }
 
 private:
-    void limit_usage(std::size_t& limit) const noexcept override
+    inline void limit_usage(std::size_t& limit) const noexcept override
     {
         for (auto const& arg : m_arguments) {
             auto const str = arg->usage();
@@ -1679,7 +1679,7 @@ private:
         }
     }
 
-    void limit_help_flags(std::size_t& limit) const noexcept override
+    inline void limit_help_flags(std::size_t& limit) const noexcept override
     {
         for (auto const& arg : m_arguments) {
             auto size = arg->flags_to_string().size();
@@ -1725,7 +1725,7 @@ public:
      *
      *  \return Exclusive group object
      */
-    explicit ExclusiveGroup(std::string& prefix_chars, ArgumentData* parent_data)
+    explicit ExclusiveGroup(std::string& prefix_chars, ArgumentData* parent_data) noexcept
         : ArgumentData(),
           m_prefix_chars(prefix_chars),
           m_parent_data(parent_data),
@@ -1739,7 +1739,7 @@ public:
      *
      *  \return Exclusive group object
      */
-    explicit ExclusiveGroup(ExclusiveGroup const& rhs)
+    explicit ExclusiveGroup(ExclusiveGroup const& rhs) noexcept
         : ArgumentData(),
           m_prefix_chars(rhs.m_prefix_chars),
           m_parent_data(rhs.m_parent_data),
@@ -1777,7 +1777,7 @@ public:
      *
      *  \return Current exclusive group reference
      */
-    ExclusiveGroup& required(bool value) noexcept
+    inline ExclusiveGroup& required(bool value) noexcept
     {
         m_required = value;
         return *this;
@@ -1788,7 +1788,7 @@ public:
      *
      *  \return Exclusive group 'required' value
      */
-    bool required() const noexcept
+    inline bool required() const noexcept
     {
         return m_required;
     }
@@ -1802,7 +1802,7 @@ public:
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Argument& add_argument(T const& flag)
+    inline Argument& add_argument(T const& flag)
     {
         return add_argument({ flag });
     }
@@ -1856,7 +1856,7 @@ public:
      *
      *  \return BaseParser object
      */
-    explicit BaseParser()
+    explicit BaseParser() noexcept
         : ArgumentData(),
           m_usage(),
           m_description(),
@@ -1876,7 +1876,7 @@ public:
      *
      *  \return Base parser 'usage' value
      */
-    std::string const& usage() const noexcept
+    inline std::string const& usage() const noexcept
     {
         return m_usage;
     }
@@ -1886,7 +1886,7 @@ public:
      *
      *  \return Base parser 'description' value
      */
-    std::string const& description() const noexcept
+    inline std::string const& description() const noexcept
     {
         return m_description;
     }
@@ -1896,7 +1896,7 @@ public:
      *
      *  \return Base parser 'epilog' value
      */
-    std::string const& epilog() const noexcept
+    inline std::string const& epilog() const noexcept
     {
         return m_epilog;
     }
@@ -1906,7 +1906,7 @@ public:
      *
      *  \return Base parser 'prefix_chars' value
      */
-    std::string const& prefix_chars() const noexcept
+    inline std::string const& prefix_chars() const noexcept
     {
         return m_prefix_chars;
     }
@@ -1920,7 +1920,7 @@ public:
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Argument& add_argument(T const& flag)
+    inline Argument& add_argument(T const& flag)
     {
         return add_argument({ flag });
     }
@@ -1932,7 +1932,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::vector<std::string> const& flags)
+    inline Argument& add_argument(std::vector<std::string> const& flags)
     {
         create_argument(flags, m_prefix_chars);
         bool is_optional = m_arguments.back()->m_type == Argument::Optional;
@@ -1945,8 +1945,8 @@ public:
      *
      *  \return Current argument group reference
      */
-    ArgumentGroup& add_argument_group(std::string const& title = std::string(),
-                                      std::string const& description = std::string()) noexcept
+    inline ArgumentGroup& add_argument_group(std::string const& title = std::string(),
+                                             std::string const& description = std::string()) noexcept
     {
         auto group = std::make_shared<ArgumentGroup>(title, description, m_prefix_chars, this);
         m_groups.push_back(group);
@@ -1958,7 +1958,7 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
-    ExclusiveGroup& add_mutually_exclusive_group() noexcept
+    inline ExclusiveGroup& add_mutually_exclusive_group() noexcept
     {
         m_exclusive.emplace_back(ExclusiveGroup(m_prefix_chars, this));
         return m_exclusive.back();
@@ -1989,7 +1989,7 @@ class ArgumentParser : public BaseParser
         typedef std::map<key_type, mapped_type>::iterator       iterator;
         typedef std::map<key_type, mapped_type>::const_iterator const_iterator;
 
-        explicit Storage()
+        explicit Storage() noexcept
             : m_data()
         { }
 
@@ -2004,7 +2004,7 @@ class ArgumentParser : public BaseParser
             }
         }
 
-        void try_add(std::vector<key_type> const& arguments) noexcept
+        inline void try_add(std::vector<key_type> const& arguments) noexcept
         {
             for (auto const& arg : arguments) {
                 try_add(arg);
@@ -2025,14 +2025,14 @@ class ArgumentParser : public BaseParser
             }
         }
 
-        void create(std::vector<key_type> const& arguments)
+        inline void create(std::vector<key_type> const& arguments)
         {
             for (auto const& arg : arguments) {
                 create(arg);
             }
         }
 
-        void store_value(key_type const& arg, std::string const& value)
+        inline void store_value(key_type const& arg, std::string const& value)
         {
             at(arg).push_back(value);
             arg->handle(value);
@@ -2069,14 +2069,14 @@ class ArgumentParser : public BaseParser
             return false;
         }
 
-        bool exists(std::string const& key) const noexcept
+        inline bool exists(std::string const& key) const noexcept
         {
             return std::find_if(std::begin(m_data), std::end(m_data),
                                 [key] (value_type const& pair) -> bool
             { return *(pair.first) == key; }) != std::end(m_data);
         }
 
-        bool exists(key_type const& key) const noexcept
+        inline bool exists(key_type const& key) const noexcept
         {
             return m_data.count(key) != 0;
         }
@@ -2092,12 +2092,12 @@ class ArgumentParser : public BaseParser
             return *it;
         }
 
-        mapped_type& at(key_type const& key)
+        inline mapped_type& at(key_type const& key)
         {
             return m_data.at(key);
         }
 
-        mapped_type const& at(key_type const& key) const
+        inline mapped_type const& at(key_type const& key) const
         {
             return m_data.at(key);
         }
@@ -2155,7 +2155,7 @@ public:
          *
          *  \return Parser object
          */
-        explicit Parser(std::string const& name)
+        explicit Parser(std::string const& name) noexcept
             : BaseParser(),
               m_name(name),
               m_help(),
@@ -2171,7 +2171,7 @@ public:
          *
          *  \return Current parser reference
          */
-        Parser& usage(std::string const& param) noexcept
+        inline Parser& usage(std::string const& param) noexcept
         {
             m_usage = detail::_trim_copy(param);
             return *this;
@@ -2184,7 +2184,7 @@ public:
          *
          *  \return Current parser reference
          */
-        Parser& description(std::string const& param) noexcept
+        inline Parser& description(std::string const& param) noexcept
         {
             m_description = detail::_trim_copy(param);
             return *this;
@@ -2197,7 +2197,7 @@ public:
          *
          *  \return Current parser reference
          */
-        Parser& epilog(std::string const& param) noexcept
+        inline Parser& epilog(std::string const& param) noexcept
         {
             m_epilog = detail::_trim_copy(param);
             return *this;
@@ -2210,7 +2210,7 @@ public:
          *
          *  \return Current parser reference
          */
-        Parser& prefix_chars(std::string const& param) noexcept
+        inline Parser& prefix_chars(std::string const& param) noexcept
         {
             auto value = detail::_trim_copy(param);
             if (!value.empty()) {
@@ -2226,7 +2226,7 @@ public:
          *
          *  \return Current parser reference
          */
-        Parser& help(std::string const& value) noexcept
+        inline Parser& help(std::string const& value) noexcept
         {
             m_help = detail::_trim_copy(value);
             return *this;
@@ -2239,7 +2239,7 @@ public:
          *
          *  \return Current parser reference
          */
-        Parser& handle(std::function<void(std::string)> func) noexcept
+        inline Parser& handle(std::function<void(std::string)> func) noexcept
         {
             m_handle_str = func;
             return *this;
@@ -2252,7 +2252,7 @@ public:
          *
          *  \return Current parser reference
          */
-        Parser& handle(std::function<void()> func) noexcept
+        inline Parser& handle(std::function<void()> func) noexcept
         {
             m_handle = func;
             return *this;
@@ -2263,13 +2263,13 @@ public:
          *
          *  \return Parser 'help' message
          */
-        std::string const& help() const noexcept
+        inline std::string const& help() const noexcept
         {
             return m_help;
         }
 
     private:
-        void handle(std::string const& str) const
+        inline void handle(std::string const& str) const
         {
             if (m_handle_str) {
                 m_handle_str(str);
@@ -2315,7 +2315,7 @@ public:
          *
          *  \return Subparser object
          */
-        explicit Subparser()
+        explicit Subparser() noexcept
             : Group(),
               m_prog(),
               m_dest(),
@@ -2332,7 +2332,7 @@ public:
          *
          *  \return Current subparser reference
          */
-        Subparser& title(std::string const& value) noexcept
+        inline Subparser& title(std::string const& value) noexcept
         {
             m_title = detail::_trim_copy(value);
             return *this;
@@ -2345,7 +2345,7 @@ public:
          *
          *  \return Current subparser reference
          */
-        Subparser& description(std::string const& param) noexcept
+        inline Subparser& description(std::string const& param) noexcept
         {
             m_description = detail::_trim_copy(param);
             return *this;
@@ -2358,7 +2358,7 @@ public:
          *
          *  \return Current subparser reference
          */
-        Subparser& prog(std::string const& value) noexcept
+        inline Subparser& prog(std::string const& value) noexcept
         {
             m_prog = detail::_trim_copy(value);
             return *this;
@@ -2371,7 +2371,7 @@ public:
          *
          *  \return Current subparser reference
          */
-        Subparser& dest(std::string const& value) noexcept
+        inline Subparser& dest(std::string const& value) noexcept
         {
             m_dest = detail::_trim_copy(value);
             return *this;
@@ -2384,7 +2384,7 @@ public:
          *
          *  \return Current subparser reference
          */
-        Subparser& required(bool value) noexcept
+        inline Subparser& required(bool value) noexcept
         {
             m_required = value;
             return *this;
@@ -2397,7 +2397,7 @@ public:
          *
          *  \return Current subparser reference
          */
-        Subparser& help(std::string const& value) noexcept
+        inline Subparser& help(std::string const& value) noexcept
         {
             m_help = detail::_trim_copy(value);
             return *this;
@@ -2410,7 +2410,7 @@ public:
          *
          *  \return Current subparser reference
          */
-        Subparser& metavar(std::string const& value) noexcept
+        inline Subparser& metavar(std::string const& value) noexcept
         {
             m_metavar = detail::_trim_copy(value);
             return *this;
@@ -2421,7 +2421,7 @@ public:
          *
          *  \return Subparser 'prog' value
          */
-        std::string const& prog() const noexcept
+        inline std::string const& prog() const noexcept
         {
             return m_prog;
         }
@@ -2431,7 +2431,7 @@ public:
          *
          *  \return Subparser 'dest' value
          */
-        std::string const& dest() const noexcept
+        inline std::string const& dest() const noexcept
         {
             return m_dest;
         }
@@ -2441,7 +2441,7 @@ public:
          *
          *  \return Subparser 'required' value
          */
-        bool required() const noexcept
+        inline bool required() const noexcept
         {
             return m_required;
         }
@@ -2451,7 +2451,7 @@ public:
          *
          *  \return Subparser 'help' message
          */
-        std::string const& help() const noexcept
+        inline std::string const& help() const noexcept
         {
             return m_help;
         }
@@ -2461,7 +2461,7 @@ public:
          *
          *  \return Subparser 'metavar' value
          */
-        std::string const& metavar() const noexcept
+        inline std::string const& metavar() const noexcept
         {
             return m_metavar();
         }
@@ -2473,14 +2473,14 @@ public:
          *
          *  \return Current parser reference
          */
-        Parser& add_parser(std::string const& name) noexcept
+        inline Parser& add_parser(std::string const& name) noexcept
         {
             m_parsers.emplace_back(Parser(name));
             return m_parsers.back();
         }
 
     private:
-        void limit_usage(std::size_t& limit) const noexcept override
+        inline void limit_usage(std::size_t& limit) const noexcept override
         {
             auto const str = usage();
             if (limit < str.size()) {
@@ -2515,7 +2515,7 @@ public:
             }
         }
 
-        std::string usage() const noexcept
+        inline std::string usage() const noexcept
         {
             return flags_to_string() + " ...";
         }
@@ -2586,28 +2586,28 @@ public:
         /*!
          *  \brief Construct object with parsed arguments
          *
-         *  \param arguments Parsed arguments
-         *  \param unrecognized_args Unrecognized arguments
+         *  \param storage Parsed arguments
+         *  \param args Unrecognized arguments
          *
          *  \return Object with parsed arguments
          */
-        explicit Namespace(Storage const& arguments = Storage(),
-                           std::vector<std::string> const& unrecognized_args = std::vector<std::string>())
-            : m_arguments(arguments),
-              m_unrecognized_args(unrecognized_args)
+        explicit Namespace(Storage const& storage = Storage(),
+                           std::vector<std::string> const& args = std::vector<std::string>()) noexcept
+            : m_arguments(storage),
+              m_unrecognized_args(args)
         { }
 
         /*!
          *  \brief Construct object with parsed arguments
          *
-         *  \param arguments Parsed arguments
-         *  \param unrecognized_args Unrecognized arguments
+         *  \param storage Parsed arguments
+         *  \param args Unrecognized arguments
          *
          *  \return Object with parsed arguments
          */
-        explicit Namespace(Storage&& arguments, std::vector<std::string>&& unrecognized_args)
-            : m_arguments(std::move(arguments)),
-              m_unrecognized_args(std::move(unrecognized_args))
+        explicit Namespace(Storage&& storage, std::vector<std::string>&& args) noexcept
+            : m_arguments(std::move(storage)),
+              m_unrecognized_args(std::move(args))
         { }
 
         /*!
@@ -3017,7 +3017,7 @@ public:
          *
          *  \return Unrecognized arguments
          */
-        std::vector<std::string> const& unrecognized_args() const noexcept
+        inline std::vector<std::string> const& unrecognized_args() const noexcept
         {
             return m_unrecognized_args;
         }
@@ -3027,13 +3027,13 @@ public:
          *
          *  \return Unrecognized arguments as args string
          */
-        std::string unrecognized_args_to_args() const noexcept
+        inline std::string unrecognized_args_to_args() const noexcept
         {
             return detail::_vector_to_string(m_unrecognized_args, " ", std::string(), true);
         }
 
     private:
-        Storage const& storage() const noexcept
+        inline Storage const& storage() const noexcept
         {
             return m_arguments;
         }
@@ -3073,14 +3073,14 @@ public:
         }
 
         template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
-        std::optional<T> try_to_type(std::string const& data) const noexcept
+        inline std::optional<T> try_to_type(std::string const& data) const noexcept
         {
             return detail::_string_to_bool(data);
         }
 
         template <class T,
                   typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-        std::optional<T> try_to_type(std::string const& data) const noexcept
+        inline std::optional<T> try_to_type(std::string const& data) const noexcept
         {
             return detail::_remove_quotes(data);
         }
@@ -3132,14 +3132,14 @@ public:
         }
 
         template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
-        T to_type(std::string const& data) const noexcept
+        inline T to_type(std::string const& data) const noexcept
         {
             return detail::_string_to_bool(data);
         }
 
         template <class T,
                   typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-        T to_type(std::string const& data) const noexcept
+        inline T to_type(std::string const& data) const noexcept
         {
             return detail::_remove_quotes(data);
         }
@@ -3175,7 +3175,7 @@ public:
      *
      *  \return Argument parser object
      */
-    explicit ArgumentParser(std::string const& prog = "untitled")
+    explicit ArgumentParser(std::string const& prog = "untitled") noexcept
         : BaseParser(),
           m_prog(prog),
           m_parents(),
@@ -3198,7 +3198,7 @@ public:
      *
      *  \return Argument parser object
      */
-    explicit ArgumentParser(int argc, char* argv[])
+    explicit ArgumentParser(int argc, char* argv[]) noexcept
         : ArgumentParser(argc, const_cast<char const**>(argv))
     { }
 
@@ -3210,7 +3210,7 @@ public:
      *
      *  \return Argument parser object
      */
-    explicit ArgumentParser(int argc, char const* argv[])
+    explicit ArgumentParser(int argc, char const* argv[]) noexcept
         : ArgumentParser(detail::_file_name(argv[0]))
     {
         m_parsed_arguments.reserve(argc - 1);
@@ -3231,7 +3231,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& prog(std::string const& param) noexcept
+    inline ArgumentParser& prog(std::string const& param) noexcept
     {
         auto value = detail::_trim_copy(param);
         if (!value.empty()) {
@@ -3247,7 +3247,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& usage(std::string const& param) noexcept
+    inline ArgumentParser& usage(std::string const& param) noexcept
     {
         m_usage = detail::_trim_copy(param);
         return *this;
@@ -3260,7 +3260,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& description(std::string const& param) noexcept
+    inline ArgumentParser& description(std::string const& param) noexcept
     {
         m_description = detail::_trim_copy(param);
         return *this;
@@ -3273,7 +3273,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& epilog(std::string const& param) noexcept
+    inline ArgumentParser& epilog(std::string const& param) noexcept
     {
         m_epilog = detail::_trim_copy(param);
         return *this;
@@ -3286,7 +3286,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& parents(std::vector<ArgumentParser> const& param) noexcept
+    inline ArgumentParser& parents(std::vector<ArgumentParser> const& param) noexcept
     {
         m_parents = param;
         return *this;
@@ -3299,7 +3299,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& formatter_class(HelpFormatter param) noexcept
+    inline ArgumentParser& formatter_class(HelpFormatter param) noexcept
     {
         m_formatter_class = param;
         return *this;
@@ -3312,7 +3312,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& prefix_chars(std::string const& param) noexcept
+    inline ArgumentParser& prefix_chars(std::string const& param) noexcept
     {
         auto value = detail::_trim_copy(param);
         if (!value.empty()) {
@@ -3328,7 +3328,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& fromfile_prefix_chars(std::string const& param) noexcept
+    inline ArgumentParser& fromfile_prefix_chars(std::string const& param) noexcept
     {
         m_fromfile_prefix_chars = detail::_trim_copy(param);
         return *this;
@@ -3341,7 +3341,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& argument_default(std::string const& param) noexcept
+    inline ArgumentParser& argument_default(std::string const& param) noexcept
     {
         m_argument_default = detail::_trim_copy(param);
         return *this;
@@ -3354,7 +3354,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& add_help(bool value) noexcept
+    inline ArgumentParser& add_help(bool value) noexcept
     {
         m_add_help = value;
         return *this;
@@ -3367,7 +3367,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& allow_abbrev(bool value) noexcept
+    inline ArgumentParser& allow_abbrev(bool value) noexcept
     {
         m_allow_abbrev = value;
         return *this;
@@ -3380,7 +3380,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& exit_on_error(bool value) noexcept
+    inline ArgumentParser& exit_on_error(bool value) noexcept
     {
         m_exit_on_error = value;
         return *this;
@@ -3391,7 +3391,7 @@ public:
      *
      *  \return Argument parser 'prog' value
      */
-    std::string const& prog() const noexcept
+    inline std::string const& prog() const noexcept
     {
         return m_prog;
     }
@@ -3401,7 +3401,7 @@ public:
      *
      *  \return Argument parser 'fromfile_prefix_chars' value
      */
-    std::string const& fromfile_prefix_chars() const noexcept
+    inline std::string const& fromfile_prefix_chars() const noexcept
     {
         return m_fromfile_prefix_chars;
     }
@@ -3411,7 +3411,7 @@ public:
      *
      *  \return Argument parser 'argument_default' value
      */
-    std::string const& argument_default() const noexcept
+    inline std::string const& argument_default() const noexcept
     {
         return m_argument_default();
     }
@@ -3421,7 +3421,7 @@ public:
      *
      *  \return Argument parser 'add_help' value
      */
-    bool add_help() const noexcept
+    inline bool add_help() const noexcept
     {
         return m_add_help;
     }
@@ -3431,7 +3431,7 @@ public:
      *
      *  \return Argument parser 'allow_abbrev' value
      */
-    bool allow_abbrev() const noexcept
+    inline bool allow_abbrev() const noexcept
     {
         return m_allow_abbrev;
     }
@@ -3441,7 +3441,7 @@ public:
      *
      *  \return Argument parser 'exit_on_error' value
      */
-    bool exit_on_error() const noexcept
+    inline bool exit_on_error() const noexcept
     {
         return m_exit_on_error;
     }
@@ -3576,7 +3576,7 @@ public:
      *  \return Object with parsed arguments
      */
     template<typename = void>
-    Namespace parse_args(Namespace const& space = Namespace()) const
+    inline Namespace parse_args(Namespace const& space = Namespace()) const
     {
         return parse_args(m_parsed_arguments, space);
     }
@@ -3591,7 +3591,7 @@ public:
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Namespace parse_args(T const& args, Namespace const& space = Namespace()) const
+    inline Namespace parse_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_args(detail::_split_to_args(args), space);
     }
@@ -3629,7 +3629,7 @@ public:
      *  \return Object with parsed arguments
      */
     template<typename = void>
-    Namespace parse_known_args(Namespace const& space = Namespace()) const
+    inline Namespace parse_known_args(Namespace const& space = Namespace()) const
     {
         return parse_known_args(m_parsed_arguments, space);
     }
@@ -3644,7 +3644,7 @@ public:
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Namespace parse_known_args(T const& args, Namespace const& space = Namespace()) const
+    inline Namespace parse_known_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_known_args(detail::_split_to_args(args), space);
     }
@@ -3682,7 +3682,7 @@ public:
      *  \return Object with parsed arguments
      */
     template<typename = void>
-    Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
+    inline Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(m_parsed_arguments, space);
     }
@@ -3697,7 +3697,7 @@ public:
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Namespace parse_intermixed_args(T const& args, Namespace const& space = Namespace()) const
+    inline Namespace parse_intermixed_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(detail::_split_to_args(args), space);
     }
@@ -3735,7 +3735,7 @@ public:
      *  \return Object with parsed arguments
      */
     template<typename = void>
-    Namespace parse_known_intermixed_args(Namespace const& space = Namespace()) const
+    inline Namespace parse_known_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(m_parsed_arguments, space);
     }
@@ -3750,7 +3750,7 @@ public:
      */
     template<class T,
              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Namespace parse_known_intermixed_args(T const& args, Namespace const& space = Namespace()) const
+    inline Namespace parse_known_intermixed_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(detail::_split_to_args(args), space);
     }
@@ -3820,7 +3820,7 @@ public:
      *
      *  \return Usage format
      */
-    std::string format_usage() const noexcept
+    inline std::string format_usage() const noexcept
     {
         std::stringstream ss;
         print_usage(ss);
@@ -3833,7 +3833,7 @@ public:
      *
      *  \return Help format
      */
-    std::string format_help() const noexcept
+    inline std::string format_help() const noexcept
     {
         std::stringstream ss;
         print_help(ss);
@@ -3847,7 +3847,7 @@ public:
      *  \param status Status code
      *  \param message Error message
      */
-    void exit(int status = 0, std::string const& message = std::string()) const
+    inline void exit(int status = 0, std::string const& message = std::string()) const
     {
         if (status) {
             throw std::logic_error("Exiting because of an error: " + message);
@@ -3861,7 +3861,7 @@ public:
      *
      *  \param message Error message
      */
-    void error(std::string const& message) const noexcept
+    inline void error(std::string const& message) const noexcept
     {
         print_usage(std::cerr);
         std::cerr << m_prog << ": error: " << message << std::endl;
@@ -4707,13 +4707,13 @@ private:
         return Namespace(std::move(result), std::move(unrecognized_args));
     }
 
-    void throw_error(std::string const& message, std::ostream& os = std::cerr) const
+    inline void throw_error(std::string const& message, std::ostream& os = std::cerr) const
     {
         print_usage(os);
         throw std::logic_error(m_prog + ": error: " + message);
     }
 
-    detail::Value<std::string> const& default_argument_value(Argument const& arg) const noexcept
+    inline detail::Value<std::string> const& default_argument_value(Argument const& arg) const noexcept
     {
         return (arg.m_default.has_value() || !m_argument_default.has_value()) ? arg.m_default
                                                                               : m_argument_default;
@@ -4868,13 +4868,13 @@ private:
         return res;
     }
 
-    void print_custom_usage(std::vector<pArgument> const& positional,
-                            std::vector<pArgument> const& optional,
-                            std::deque<pGroup> const& groups,
-                            std::deque<ExclusiveGroup> const& exclusive,
-                            std::pair<Subparser*, std::size_t> const& subparser,
-                            std::string const& program,
-                            std::ostream& os = std::cout) const noexcept
+    inline void print_custom_usage(std::vector<pArgument> const& positional,
+                                   std::vector<pArgument> const& optional,
+                                   std::deque<pGroup> const& groups,
+                                   std::deque<ExclusiveGroup> const& exclusive,
+                                   std::pair<Subparser*, std::size_t> const& subparser,
+                                   std::string const& program,
+                                   std::ostream& os = std::cout) const noexcept
     {
         os << "usage: " << custom_usage(positional, optional, groups, exclusive,
                                         subparser, program) << std::endl;
