@@ -72,6 +72,7 @@ std::string const _default_prefix_chars = "-";
 std::string const _pseudo_argument = "--";
 char const _space = ' ';
 char const _equal = '=';
+std::string const _spaces = " ";
 std::string const _equals = "=";
 
 static inline void _ltrim(std::string& s)
@@ -275,7 +276,7 @@ static inline std::string _bool_to_string(std::string const& str)
 }
 
 static inline std::string _vector_to_string(std::vector<std::string> const& vec,
-                                            std::string const& separator = " ",
+                                            std::string const& separator = detail::_spaces,
                                             std::string const& quotes = std::string(),
                                             bool replace_space = false,
                                             std::string const& none = std::string())
@@ -287,7 +288,7 @@ static inline std::string _vector_to_string(std::vector<std::string> const& vec,
         }
         auto val = el;
         if (quotes.empty() && replace_space && !_have_quotes(val)) {
-            val = _replace(val, ' ', "\\ ");
+            val = _replace(val, _space, "\\ ");
         }
         res += quotes + val + quotes;
     }
@@ -1338,9 +1339,9 @@ private:
         std::string res = "  " + flags_to_string();
         if (!help().empty()) {
             if (res.size() + 2 > limit) {
-                res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
+                res += "\n" + std::string(detail::_argument_help_limit, detail::_space) + help();
             } else {
-                res += std::string(limit - res.size(), ' ') + help();
+                res += std::string(limit - res.size(), detail::_space) + help();
             }
             if (show_default_value && m_type == Optional) {
                 auto const& def = (m_default.has_value() || !argument_default.has_value()) ? m_default
@@ -1360,21 +1361,21 @@ private:
         auto const name = get_argument_name();
         std::string res;
         if (m_type == Optional && !name.empty()) {
-            res += " ";
+            res += detail::_spaces;
         }
         switch (m_nargs) {
             case OPTIONAL :
                 res += "[" +  name + "]";
                 break;
             case ONE_OR_MORE :
-                res += name + " ";
+                res += name + detail::_spaces;
             case ZERO_OR_MORE :
                 res += "[" +  name + " ...]";
                 break;
             case NARGS_INT :
                 for (uint32_t i = 0; i < m_num_args; ++i) {
                     if (i != 0) {
-                        res += " ";
+                        res += detail::_spaces;
                     }
                     res += name;
                 }
@@ -2403,9 +2404,9 @@ public:
             std::string res = "    " + m_name;
             if (!help().empty()) {
                 if (res.size() + 2 > limit) {
-                    res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
+                    res += "\n" + std::string(detail::_argument_help_limit, detail::_space) + help();
                 } else {
-                    res += std::string(limit - res.size(), ' ') + help();
+                    res += std::string(limit - res.size(), detail::_space) + help();
                 }
             }
             return res;
@@ -2659,9 +2660,9 @@ public:
             std::string res = "  " + flags_to_string();
             if (!help().empty()) {
                 if (res.size() + 2 > limit) {
-                    res += "\n" + std::string(detail::_argument_help_limit, ' ') + help();
+                    res += "\n" + std::string(detail::_argument_help_limit, detail::_space) + help();
                 } else {
-                    res += std::string(limit - res.size(), ' ') + help();
+                    res += std::string(limit - res.size(), detail::_space) + help();
                 }
             }
             return res;
@@ -3068,7 +3069,7 @@ public:
                     }
                     return detail::_have_quotes(args.second.front())
                             ? args.second.front()
-                            : detail::_replace(args.second.front(), ' ', "\\ ");
+                            : detail::_replace(args.second.front(), detail::_space, "\\ ");
                 case Action::store_true :
                 case Action::store_false :
                     if (args.second.empty()) {
@@ -3084,7 +3085,7 @@ public:
                 case Action::append :
                 case Action::append_const :
                 case Action::extend :
-                    return detail::_vector_to_string(args.second, " ", std::string(), true);
+                    return detail::_vector_to_string(args.second, detail::_spaces, std::string(), true);
                 default :
                     throw ValueError("action not supported");
             }
@@ -3148,7 +3149,7 @@ public:
          */
         inline std::string unrecognized_args_to_args() const
         {
-            return detail::_vector_to_string(m_unrecognized_args, " ", std::string(), true);
+            return detail::_vector_to_string(m_unrecognized_args, detail::_spaces, std::string(), true);
         }
 
     private:
@@ -4369,9 +4370,9 @@ private:
                     if (str.empty()) {
                         continue;
                     }
-                    program += " " + str;
+                    program += detail::_spaces + str;
                 }
-                const_cast<std::string&>(parser->m_prefix) = program + " " + parser->m_name;
+                const_cast<std::string&>(parser->m_prefix) = program + detail::_spaces + parser->m_name;
                 parser->handle(parser->m_name);
             } else {
                 throw_error("invalid choice: '" + name + "' (choose from " + choices + ")");
@@ -4503,7 +4504,7 @@ private:
                                 if (!args.empty()) {
                                     args += ",";
                                 }
-                                args += " " + flag;
+                                args += detail::_spaces + flag;
                                 break;
                             }
                             if (flag.size() == 2 && detail::_starts_with(arg, flag)) {
@@ -4511,7 +4512,7 @@ private:
                                 if (!args.empty()) {
                                     args += ",";
                                 }
-                                args += " " + flag;
+                                args += detail::_spaces + flag;
                                 break;
                             }
                         }
@@ -4719,7 +4720,7 @@ private:
             std::string args;
             std::string found;
             for (auto const& arg : ex.m_arguments) {
-                args += " " + arg->m_flags.front();
+                args += detail::_spaces + arg->m_flags.front();
                 if (!result.at(arg).empty()) {
                     if (!found.empty()) {
                         throw_error("argument " + arg->m_flags.front()
@@ -4740,7 +4741,7 @@ private:
                 std::string args;
                 std::string found;
                 for (auto const& arg : ex.m_arguments) {
-                    args += " " + arg->m_flags.front();
+                    args += detail::_spaces + arg->m_flags.front();
                     if (!result.at(arg).empty()) {
                         if (!found.empty()) {
                             _throw_error("argument " + arg->m_flags.front()
@@ -4949,15 +4950,15 @@ private:
         if (pos + (min_size > 0 ? (1 + min_size) : 0) <= detail::_usage_limit) {
             offset += program.size() + (min_size > 0);
         } else if (!(ex_opt.empty() && positional.empty() && !subparser.first)) {
-            res += "\n" + std::string(offset - 1, ' ');
+            res += "\n" + std::string(offset - 1, detail::_space);
             pos = offset - 1;
         }
         auto _arg_usage = [&pos, offset, &res] (std::string const& str, bool bkt)
         {
             if ((pos + 1 == offset) || (pos + 1 + str.size() <= detail::_usage_limit)) {
-                res += " ";
+                res += detail::_spaces;
             } else {
-                res += "\n" + std::string(offset, ' ');
+                res += "\n" + std::string(offset, detail::_space);
                 pos = offset;
             }
             res += (bkt ? "[" + str + "]" : str);
