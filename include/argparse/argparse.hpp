@@ -1031,6 +1031,7 @@ public:
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
         std::vector<std::string> values;
+        values.reserve(value.size());
         for (auto const& str : value) {
             auto param = detail::_trim_copy(str);
             if (!param.empty()) {
@@ -4435,6 +4436,7 @@ private:
                     return;
                 }
                 std::vector<std::string> flags;
+                flags.reserve(8);
                 for (std::size_t i = 0; i < name.size(); ++i) {
                     if (name.at(i) == detail::_equal) {
                         if (flags.empty()) {
@@ -4496,6 +4498,7 @@ private:
                     bool is_flag_added = false;
                     std::string args;
                     std::vector<std::string> keys;
+                    keys.reserve(4);
                     for (auto const& opt : optionals) {
                         for (auto const& flag : opt->m_flags) {
                             if (detail::_starts_with(flag, arg)) {
