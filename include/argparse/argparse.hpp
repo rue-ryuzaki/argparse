@@ -1794,7 +1794,7 @@ private:
                     std::size_t limit) const override
     {
         if (!description().empty() || !m_arguments.empty()) {
-            os << std::endl << title() << ":" << std::endl;
+            os << "\n" << title() << ":" << std::endl;
             if (!description().empty()) {
                 os << "  " << description() << std::endl;
             }
@@ -2625,9 +2625,9 @@ public:
         void print_help(std::ostream& os, bool, detail::Value<std::string> const&,
                         std::size_t limit) const override
         {
-            os << std::endl << (title().empty() ? "subcommands" : title()) << ":" << std::endl;
+            os << "\n" << (title().empty() ? "subcommands" : title()) << ":\n";
             if (!description().empty()) {
-                os << "  " << description() << std::endl << std::endl;
+                os << "  " << description() << "\n\n";
             }
             os << print(limit) << std::endl;
             for (auto const& arg : m_parsers) {
@@ -5017,7 +5017,7 @@ private:
             print_custom_usage(positional_all, optional_all, groups, exclusive, subparser, program, os);
         }
         if (!description.empty()) {
-            os << std::endl << description << std::endl;
+            os << "\n" << description << std::endl;
         }
         std::size_t min_size = 0;
         bool show_default = m_formatter_class.has_value()
@@ -5041,10 +5041,10 @@ private:
         }
         min_size = std::min(min_size + 4, detail::_argument_help_limit);
         if (!positional.empty() || sub_positional) {
-            os << std::endl << "positional arguments:" << std::endl;
+            os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
                 if (sub_positional && subparser.second == i) {
-                    os << subparser.first->print(min_size) << std::endl;
+                    os << subparser.first->print(min_size) << "\n";
                 }
                 os << positional.at(i)->print(false, m_argument_default, min_size) << std::endl;
             }
@@ -5056,7 +5056,7 @@ private:
             }
         }
         if (!optional.empty()) {
-            os << std::endl << "optional arguments:" << std::endl;
+            os << "\noptional arguments:" << std::endl;
             for (auto it = std::begin(optional); it != std::end(optional); ++it) {
                 os << (*it)->print(show_default && !(m_add_help && it == std::begin(optional)),
                                    m_argument_default, min_size) << std::endl;
@@ -5072,7 +5072,7 @@ private:
             }
         }
         if (!epilog.empty()) {
-            os << std::endl << epilog << std::endl;
+            os << "\n" << epilog << std::endl;
         }
     }
 
