@@ -668,25 +668,25 @@ public:
     Argument& operator =(Argument const& rhs)
     {
         if (this != &rhs) {
-            this->m_flags   = rhs.m_flags;
-            this->m_name    = rhs.m_name;
-            this->m_type    = rhs.m_type;
-            this->m_action  = rhs.m_action;
-            this->m_nargs   = rhs.m_nargs;
-            this->m_nargs_str= rhs.m_nargs_str;
-            this->m_num_args= rhs.m_num_args;
-            this->m_const   = rhs.m_const;
-            this->m_default = rhs.m_default;
-            this->m_choices = rhs.m_choices;
-            this->m_required= rhs.m_required;
-            this->m_help    = rhs.m_help;
-            this->m_help_type= rhs.m_help_type;
-            this->m_metavar = rhs.m_metavar;
-            this->m_dest_str= rhs.m_dest_str;
-            this->m_dest    = rhs.m_dest;
-            this->m_version = rhs.m_version;
-            this->m_handle_str= rhs.m_handle_str;
-            this->m_handle  = rhs.m_handle;
+            this->m_flags       = rhs.m_flags;
+            this->m_name        = rhs.m_name;
+            this->m_type        = rhs.m_type;
+            this->m_action      = rhs.m_action;
+            this->m_nargs       = rhs.m_nargs;
+            this->m_nargs_str   = rhs.m_nargs_str;
+            this->m_num_args    = rhs.m_num_args;
+            this->m_const       = rhs.m_const;
+            this->m_default     = rhs.m_default;
+            this->m_choices     = rhs.m_choices;
+            this->m_required    = rhs.m_required;
+            this->m_help        = rhs.m_help;
+            this->m_help_type   = rhs.m_help_type;
+            this->m_metavar     = rhs.m_metavar;
+            this->m_dest_str    = rhs.m_dest_str;
+            this->m_dest        = rhs.m_dest;
+            this->m_version     = rhs.m_version;
+            this->m_handle_str  = rhs.m_handle_str;
+            this->m_handle      = rhs.m_handle;
         }
         return *this;
     }
@@ -701,25 +701,25 @@ public:
     Argument& operator =(Argument&& rhs) noexcept
     {
         if (this != &rhs) {
-            this->m_flags   = std::move(rhs.m_flags);
-            this->m_name    = std::move(rhs.m_name);
-            this->m_type    = std::move(rhs.m_type);
-            this->m_action  = std::move(rhs.m_action);
-            this->m_nargs   = std::move(rhs.m_nargs);
-            this->m_nargs_str= std::move(rhs.m_nargs_str);
-            this->m_num_args= std::move(rhs.m_num_args);
-            this->m_const   = std::move(rhs.m_const);
-            this->m_default = std::move(rhs.m_default);
-            this->m_choices = std::move(rhs.m_choices);
-            this->m_required= std::move(rhs.m_required);
-            this->m_help    = std::move(rhs.m_help);
-            this->m_help_type= std::move(rhs.m_help_type);
-            this->m_metavar = std::move(rhs.m_metavar);
-            this->m_dest_str= std::move(rhs.m_dest_str);
-            this->m_dest    = std::move(rhs.m_dest);
-            this->m_version = std::move(rhs.m_version);
-            this->m_handle_str= std::move(rhs.m_handle_str);
-            this->m_handle  = std::move(rhs.m_handle);
+            this->m_flags       = std::move(rhs.m_flags);
+            this->m_name        = std::move(rhs.m_name);
+            this->m_type        = std::move(rhs.m_type);
+            this->m_action      = std::move(rhs.m_action);
+            this->m_nargs       = std::move(rhs.m_nargs);
+            this->m_nargs_str   = std::move(rhs.m_nargs_str);
+            this->m_num_args    = std::move(rhs.m_num_args);
+            this->m_const       = std::move(rhs.m_const);
+            this->m_default     = std::move(rhs.m_default);
+            this->m_choices     = std::move(rhs.m_choices);
+            this->m_required    = std::move(rhs.m_required);
+            this->m_help        = std::move(rhs.m_help);
+            this->m_help_type   = std::move(rhs.m_help_type);
+            this->m_metavar     = std::move(rhs.m_metavar);
+            this->m_dest_str    = std::move(rhs.m_dest_str);
+            this->m_dest        = std::move(rhs.m_dest);
+            this->m_version     = std::move(rhs.m_version);
+            this->m_handle_str  = std::move(rhs.m_handle_str);
+            this->m_handle      = std::move(rhs.m_handle);
         }
         return *this;
     }
@@ -1307,8 +1307,7 @@ private:
         if (m_type == Optional) {
             res += m_flags.front();
         }
-        if (m_action & (Action::store | Action::append
-                        | Action::extend | Action::append_const)) {
+        if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
             res += get_nargs_suffix();
         }
         return res;
@@ -1323,8 +1322,7 @@ private:
                     res += ", ";
                 }
                 res += flag;
-                if (m_action & (Action::store | Action::append
-                                | Action::extend | Action::append_const)) {
+                if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
                     res += get_nargs_suffix();
                 }
             }
@@ -1426,10 +1424,7 @@ private:
 
     inline bool operator ==(std::string const& rhs) const noexcept
     {
-        if (!m_dest_str.empty()) {
-            return m_dest_str == rhs;
-        }
-        return detail::_is_value_exists(rhs, m_flags);
+        return !m_dest_str.empty() ? m_dest_str == rhs : detail::_is_value_exists(rhs, m_flags);
     }
 
     std::vector<std::string> m_flags;
@@ -1744,8 +1739,7 @@ public:
      *
      *  \return Current argument reference
      */
-    template<class T,
-             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
     inline Argument& add_argument(T const& flag)
     {
         return add_argument({ flag });
@@ -1921,8 +1915,7 @@ public:
      *
      *  \return Current argument reference
      */
-    template<class T,
-             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
     inline Argument& add_argument(T const& flag)
     {
         return add_argument({ flag });
@@ -2039,8 +2032,7 @@ public:
      *
      *  \return Current argument reference
      */
-    template<class T,
-             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
     inline Argument& add_argument(T const& flag)
     {
         return add_argument({ flag });
@@ -3282,8 +3274,6 @@ public:
             return result;
         }
 
-        Namespace& operator =(Namespace const&) = delete;
-
         Storage m_arguments;
         std::vector<std::string> m_unrecognized_args;
     };
@@ -3696,7 +3686,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    template<typename = void>
+    template <typename = void>
     inline Namespace parse_args(Namespace const& space = Namespace()) const
     {
         return parse_args(m_parsed_arguments, space);
@@ -3710,8 +3700,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    template<class T,
-             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
     inline Namespace parse_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_args(detail::_split_to_args(args), space);
@@ -3749,7 +3738,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    template<typename = void>
+    template <typename = void>
     inline Namespace parse_known_args(Namespace const& space = Namespace()) const
     {
         return parse_known_args(m_parsed_arguments, space);
@@ -3763,8 +3752,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    template<class T,
-             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
     inline Namespace parse_known_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_known_args(detail::_split_to_args(args), space);
@@ -3802,7 +3790,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    template<typename = void>
+    template <typename = void>
     inline Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(m_parsed_arguments, space);
@@ -3816,8 +3804,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    template<class T,
-             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    template <class T,typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
     inline Namespace parse_intermixed_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(detail::_split_to_args(args), space);
@@ -3855,7 +3842,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    template<typename = void>
+    template <typename = void>
     inline Namespace parse_known_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(m_parsed_arguments, space);
@@ -3869,8 +3856,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    template<class T,
-             typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
     inline Namespace parse_known_intermixed_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(detail::_split_to_args(args), space);
@@ -4024,22 +4010,25 @@ private:
         if (intermixed && subparser.first) {
             throw TypeError("parse_intermixed_args: positional arg with nargs=A...");
         }
-        Parser const* parser = nullptr;
-        auto _throw_error = [this, &parser] (std::string const& error, std::ostream& os = std::cerr)
+        Parser* parser = nullptr;
+        auto _custom_error = [this] (Parser const* p, std::string const& error, std::ostream& os = std::cerr)
         {
-            if (parser) {
-                if (!parser->m_usage.empty()) {
-                    os << "usage: " << parser->m_usage << std::endl;
+            if (p) {
+                if (!p->m_usage.empty()) {
+                    os << "usage: " << p->m_usage << std::endl;
                 } else {
-                    print_custom_usage(parser->get_positional(true),
-                                       parser->get_optional_with_help(true, m_add_help, m_prefix_chars),
-                                       parser->m_groups, parser->m_exclusive,
-                                       { nullptr, 0 }, parser->m_prefix, os);
+                    print_custom_usage(p->get_positional(true),
+                                       p->get_optional_with_help(true, m_add_help, m_prefix_chars),
+                                       p->m_groups, p->m_exclusive, { nullptr, 0 }, p->m_prefix, os);
                 }
-                throw std::logic_error(parser->m_prefix + ": error: " + error);
+                throw std::logic_error(p->m_prefix + ": error: " + error);
             } else {
                 throw_error(error, os);
             }
+        };
+        auto _throw_error = [_custom_error, &parser] (std::string const& error, std::ostream& os = std::cerr)
+        {
+            _custom_error(parser, error, os);
         };
         auto _validate_arguments = [] (std::vector<pArgument> const& arguments)
         {
@@ -4287,7 +4276,6 @@ private:
         };
         auto _try_capture_parser = [&] (std::deque<std::string>& arguments)
         {
-            auto size = arguments.size();
             std::size_t finish = pos;
             std::size_t min_args = 0;
             std::size_t one_args = 0;
@@ -4295,7 +4283,7 @@ private:
             bool capture_need = false;
             for ( ; finish < positional.size(); ++finish) {
                 if (finish == subparser.second) {
-                    if (min_args + 1 > size) {
+                    if (min_args + 1 > arguments.size()) {
                         break;
                     }
                     capture_need = true;
@@ -4319,12 +4307,12 @@ private:
                         min_amount += arg->m_num_args;
                         break;
                 }
-                if (min_args + min_amount > size) {
+                if (min_args + min_amount > arguments.size()) {
                     break;
                 }
                 min_args += min_amount;
             }
-            if (!capture_need && (finish != positional.size() || min_args >= size)) {
+            if (!capture_need && (finish != positional.size() || min_args >= arguments.size())) {
                 if (finish != pos) {
                     _match_positionals(positional, arguments, finish, min_args, one_args, more_args);
                 }
@@ -4335,7 +4323,7 @@ private:
             _match_positionals(positional, arguments, finish, ++min_args, one_args, more_args);
             auto const& name = arguments.front();
             std::string choices;
-            for (auto const& p : subparser.first->m_parsers) {
+            for (auto& p : subparser.first->m_parsers) {
                 if (!choices.empty()) {
                     choices += ", ";
                 }
@@ -4368,12 +4356,11 @@ private:
                         break;
                     }
                     auto const str = positional_args.at(i)->usage();
-                    if (str.empty()) {
-                        continue;
+                    if (!str.empty()) {
+                        program += detail::_spaces + str;
                     }
-                    program += detail::_spaces + str;
                 }
-                const_cast<std::string&>(parser->m_prefix) = program + detail::_spaces + parser->m_name;
+                parser->m_prefix = program + detail::_spaces + parser->m_name;
                 parser->handle(parser->m_name);
             } else {
                 throw_error("invalid choice: '" + name + "' (choose from " + choices + ")");
@@ -4382,56 +4369,48 @@ private:
         auto _match_args_partial = [_match_positionals, &pos, &positional, &unrecognized_args]
                 (std::deque<std::string>& arguments)
         {
-            if (pos >= positional.size()) {
-                unrecognized_args.insert(std::end(unrecognized_args),
-                                         std::begin(arguments), std::end(arguments));
-                return;
-            }
-            std::size_t finish = pos;
-            std::size_t min_args = 0;
-            std::size_t one_args = 0;
-            bool more_args = false;
-            for ( ; finish < positional.size(); ++finish) {
-                auto const& arg = positional.at(finish);
-                if (!(arg->m_action & (Action::store | Action::append | Action::extend))) {
-                    continue;
-                }
-                std::size_t min_amount = 0;
-                switch (arg->m_nargs) {
-                    case Argument::OPTIONAL :
-                        ++one_args;
+            if (pos < positional.size()) {
+                std::size_t finish = pos;
+                std::size_t min_args = 0;
+                std::size_t one_args = 0;
+                bool more_args = false;
+                for ( ; finish < positional.size(); ++finish) {
+                    auto const& arg = positional.at(finish);
+                    if (!(arg->m_action & (Action::store | Action::append | Action::extend))) {
+                        continue;
+                    }
+                    std::size_t min_amount = 0;
+                    switch (arg->m_nargs) {
+                        case Argument::OPTIONAL :
+                            ++one_args;
+                            break;
+                        case Argument::ONE_OR_MORE :
+                            ++min_amount;
+                        case Argument::ZERO_OR_MORE :
+                            more_args = true;
+                            break;
+                        default :
+                            min_amount += arg->m_num_args;
+                            break;
+                    }
+                    if (min_args + min_amount > arguments.size()) {
                         break;
-                    case Argument::ONE_OR_MORE :
-                        ++min_amount;
-                    case Argument::ZERO_OR_MORE :
-                        more_args = true;
-                        break;
-                    default :
-                        min_amount += arg->m_num_args;
-                        break;
+                    }
+                    min_args += min_amount;
                 }
-                if (min_args + min_amount > arguments.size()) {
-                    break;
+                if (finish != pos) {
+                    _match_positionals(positional, arguments, finish, min_args, one_args, more_args);
                 }
-                min_args += min_amount;
             }
-            if (finish == pos) {
-                unrecognized_args.insert(std::end(unrecognized_args),
-                                         std::begin(arguments), std::end(arguments));
-                return;
-            }
-            _match_positionals(positional, arguments, finish, min_args, one_args, more_args);
-            unrecognized_args.insert(std::end(unrecognized_args),
-                                     std::begin(arguments), std::end(arguments));
+            unrecognized_args.insert(std::end(unrecognized_args), std::begin(arguments), std::end(arguments));
         };
         auto _separate_arg_abbrev = [_optional_arg_by_flag, _prefix_chars]
                 (std::vector<std::string>& temp, std::string const& arg,
                 std::string const& name, std::vector<pArgument> const& optionals)
         {
             if (name.size() + 1 == arg.size()) {
-                auto const splitted = detail::_split_equal(arg, _prefix_chars());
-                if (splitted.size() == 2 && !splitted.front().empty()
-                        && _optional_arg_by_flag(splitted.front())) {
+                auto const split = detail::_split_equal(arg, _prefix_chars());
+                if (split.size() == 2 && !split.front().empty() && _optional_arg_by_flag(split.front())) {
                     temp.push_back(arg);
                     return;
                 }
@@ -4440,10 +4419,9 @@ private:
                 for (std::size_t i = 0; i < name.size(); ++i) {
                     if (name.at(i) == detail::_equal) {
                         if (flags.empty()) {
-                            flags.push_back(name.substr(i));
-                        } else {
-                            flags.back() += name.substr(i);
+                            flags.emplace_back(std::string());
                         }
+                        flags.back() += name.substr(i);
                         break;
                     }
                     Argument const* argument = nullptr;
@@ -4719,47 +4697,33 @@ private:
         if (!intermixed_args.empty()) {
             _match_args_partial(intermixed_args);
         }
-        for (auto const& ex : m_exclusive) {
-            std::string args;
-            std::string found;
-            for (auto const& arg : ex.m_arguments) {
-                args += detail::_spaces + arg->m_flags.front();
-                if (!result.at(arg).empty()) {
-                    if (!found.empty()) {
-                        throw_error("argument " + arg->m_flags.front()
-                                     + ": not allowed with argument " + found);
-                    }
-                    found = arg->m_flags.front();
-                }
-            }
-            if (ex.m_required && found.empty()) {
-                if (ex.m_arguments.empty()) {
-                    throw IndexError("list index out of range");
-                }
-                throw_error("one of the arguments" + args + " is required");
-            }
-        }
-        if (parser) {
-            for (auto const& ex : parser->m_exclusive) {
+        auto _check_exclusive_groups
+                = [result, _custom_error] (Parser const* p, std::deque<ExclusiveGroup> const& groups)
+        {
+            for (auto const& ex : groups) {
                 std::string args;
                 std::string found;
                 for (auto const& arg : ex.m_arguments) {
-                    args += detail::_spaces + arg->m_flags.front();
+                    auto const& flag = arg->m_flags.front();
+                    args += detail::_spaces + flag;
                     if (!result.at(arg).empty()) {
                         if (!found.empty()) {
-                            _throw_error("argument " + arg->m_flags.front()
-                                         + ": not allowed with argument " + found);
+                            _custom_error(p, "argument " + flag + ": not allowed with argument " + found);
                         }
-                        found = arg->m_flags.front();
+                        found = flag;
                     }
                 }
                 if (ex.m_required && found.empty()) {
                     if (ex.m_arguments.empty()) {
                         throw IndexError("list index out of range");
                     }
-                    _throw_error("one of the arguments" + args + " is required");
+                    _custom_error(p, "one of the arguments" + args + " is required");
                 }
             }
+        };
+        _check_exclusive_groups(nullptr, m_exclusive);
+        if (parser) {
+            _check_exclusive_groups(parser, parser->m_exclusive);
         }
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
@@ -4882,21 +4846,20 @@ private:
 
     std::pair<Subparser*, std::size_t> subpurser_info(bool add_suppress = true) const
     {
-        auto _func = [] (ArgumentParser const& parser,
-                std::pair<Subparser*, std::size_t>& res, bool add_suppress)
+        std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
+        auto _func = [&res, add_suppress] (ArgumentParser const& parser)
         {
             for (std::size_t p = 0, a = 0, pos = parser.m_subparsers->m_position,
                  size = parser.m_positional.size(); p < pos && a < size; ++a, ++p) {
                 res.second += (add_suppress || !parser.m_positional.at(a).first->m_help_type.has_value());
             }
         };
-        std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
         if (m_subparsers) {
             res.first = m_subparsers.get();
             for (auto const& parent : m_parents) {
                 res.second += parent.positional_arguments(add_suppress, true).size();
             }
-            _func(*this, res, add_suppress);
+            _func(*this);
         } else {
             for (std::size_t i = 0; i < m_parents.size(); ++i) {
                 auto const& parent = m_parents.at(i);
@@ -4905,7 +4868,7 @@ private:
                     for (std::size_t j = 0; j < i; ++j) {
                         res.second += m_parents.at(j).positional_arguments(add_suppress, true).size();
                     }
-                    _func(parent, res, add_suppress);
+                    _func(parent);
                     break;
                 }
             }
