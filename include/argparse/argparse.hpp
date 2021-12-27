@@ -4698,7 +4698,7 @@ private:
             _match_args_partial(intermixed_args);
         }
         auto _check_exclusive_groups
-                = [result, _custom_error] (Parser const* p, std::deque<ExclusiveGroup> const& groups)
+                = [&result, _custom_error] (Parser const* p, std::deque<ExclusiveGroup> const& groups)
         {
             for (auto const& ex : groups) {
                 std::string args;
