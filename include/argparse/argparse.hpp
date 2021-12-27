@@ -413,7 +413,7 @@ enum Enum
  */
 enum HelpFormatter
 {
-    ArgumentDefaultsHelpFormatter,
+    ArgumentDefaultsHelpFormatter = 0x00000001,
 };
 
 /*!
@@ -4986,8 +4986,7 @@ private:
             os << "\n" << description << std::endl;
         }
         std::size_t min_size = 0;
-        bool show_default = m_formatter_class.has_value()
-                && m_formatter_class() == ArgumentDefaultsHelpFormatter;
+        bool show_default = m_formatter_class & ArgumentDefaultsHelpFormatter;
         bool sub_positional = subparser.first && subparser.first->title().empty()
                 && subparser.first->description().empty();
         for (auto const& arg : positional) {
@@ -5044,7 +5043,7 @@ private:
 
     std::string m_prog;
     std::vector<ArgumentParser> m_parents;
-    detail::Value<HelpFormatter> m_formatter_class;
+    HelpFormatter m_formatter_class;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
     bool m_add_help;
