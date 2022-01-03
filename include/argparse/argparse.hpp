@@ -1470,6 +1470,19 @@ public:
     { }
 
     /*!
+     *  \brief Construct group from another group
+     *
+     *  \param orig Group object to copy
+     *
+     *  \return Group object
+     */
+    explicit Group(Group const& orig)
+        : m_title(orig.m_title),
+          m_description(orig.m_description),
+          m_position(orig.m_position)
+    { }
+
+    /*!
      *  \brief Destroy group
      */
     virtual ~Group() = default;
@@ -1528,9 +1541,39 @@ public:
     { }
 
     /*!
+     *  \brief Construct argument data from another argument data
+     *
+     *  \param orig Argument data object to copy
+     *
+     *  \return Argument data object
+     */
+    explicit ArgumentData(ArgumentData const& orig)
+        : m_arguments(orig.m_arguments),
+          m_optional(orig.m_optional),
+          m_positional(orig.m_positional)
+    { }
+
+    /*!
      *  \brief Destroy argument data
      */
     virtual ~ArgumentData() = default;
+
+    /*!
+     *  \brief Copy argument data object from another argument data
+     *
+     *  \param rhs Exclusive group object to copy
+     *
+     *  \return Current argument data reference
+     */
+    ArgumentData& operator =(ArgumentData const& rhs)
+    {
+        if (this != &rhs) {
+            m_arguments     = rhs.m_arguments;
+            m_optional      = rhs.m_optional;
+            m_positional    = rhs.m_positional;
+        }
+        return *this;
+    }
 
 protected:
     std::vector<pArgument> get_optional(bool add_group) const
@@ -1670,23 +1713,16 @@ public:
     /*!
      *  \brief Create argument group object from another argument group
      *
-     *  \param rhs Argument group object to copy
+     *  \param orig Argument group object to copy
      *
      *  \return Argument group object
      */
-    explicit ArgumentGroup(ArgumentGroup const& rhs) noexcept
-        : ArgumentData(),
-          Group(),
-          m_prefix_chars(rhs.m_prefix_chars),
-          m_parent_data(rhs.m_parent_data)
-    {
-        m_title         = rhs.m_title;
-        m_description   = rhs.m_description;
-        m_position      = rhs.m_position;
-        m_arguments     = rhs.m_arguments;
-        m_optional      = rhs.m_optional;
-        m_positional    = rhs.m_positional;
-    }
+    explicit ArgumentGroup(ArgumentGroup const& orig)
+        : ArgumentData(orig),
+          Group(orig),
+          m_prefix_chars(orig.m_prefix_chars),
+          m_parent_data(orig.m_parent_data)
+    { }
 
     /*!
      *  \brief Copy argument group object from another argument group
@@ -1706,28 +1742,6 @@ public:
             m_optional      = rhs.m_optional;
             m_positional    = rhs.m_positional;
             m_parent_data   = rhs.m_parent_data;
-        }
-        return *this;
-    }
-
-    /*!
-     *  \brief Move argument group object from another argument group
-     *
-     *  \param rhs Argument group object to move
-     *
-     *  \return Current argument group reference
-     */
-    ArgumentGroup& operator =(ArgumentGroup&& rhs) noexcept
-    {
-        if (this != &rhs) {
-            m_title         = std::move(rhs.m_title);
-            m_description   = std::move(rhs.m_description);
-            m_position      = std::move(rhs.m_position);
-            m_prefix_chars  = std::move(rhs.m_prefix_chars);
-            m_arguments     = std::move(rhs.m_arguments);
-            m_optional      = std::move(rhs.m_optional);
-            m_positional    = std::move(rhs.m_positional);
-            m_parent_data   = std::move(rhs.m_parent_data);
         }
         return *this;
     }
@@ -1830,23 +1844,19 @@ public:
     /*!
      *  \brief Create exclusive group object from another exclusive group
      *
-     *  \param rhs Exclusive group object to copy
+     *  \param orig Exclusive group object to copy
      *
      *  \return Exclusive group object
      */
-    explicit ExclusiveGroup(ExclusiveGroup const& rhs)
-        : ArgumentData(),
-          m_prefix_chars(rhs.m_prefix_chars),
-          m_parent_data(rhs.m_parent_data),
-          m_required(rhs.m_required)
-    {
-        m_arguments     = rhs.m_arguments;
-        m_optional      = rhs.m_optional;
-        m_positional    = rhs.m_positional;
-    }
+    explicit ExclusiveGroup(ExclusiveGroup const& orig)
+        : ArgumentData(orig),
+          m_prefix_chars(orig.m_prefix_chars),
+          m_parent_data(orig.m_parent_data),
+          m_required(orig.m_required)
+    { }
 
     /*!
-     *  \brief Copy exclusive group object from another argument group
+     *  \brief Copy exclusive group object from another exclusive group
      *
      *  \param rhs Exclusive group object to copy
      *
@@ -1861,26 +1871,6 @@ public:
             m_prefix_chars  = rhs.m_prefix_chars;
             m_parent_data   = rhs.m_parent_data;
             m_required      = rhs.m_required;
-        }
-        return *this;
-    }
-
-    /*!
-     *  \brief Move exclusive group object from another argument group
-     *
-     *  \param rhs Exclusive group object to move
-     *
-     *  \return Current exclusive group reference
-     */
-    ExclusiveGroup& operator =(ExclusiveGroup&& rhs) noexcept
-    {
-        if (this != &rhs) {
-            m_arguments     = std::move(rhs.m_arguments);
-            m_optional      = std::move(rhs.m_optional);
-            m_positional    = std::move(rhs.m_positional);
-            m_prefix_chars  = std::move(rhs.m_prefix_chars);
-            m_parent_data   = std::move(rhs.m_parent_data);
-            m_required      = std::move(rhs.m_required);
         }
         return *this;
     }
