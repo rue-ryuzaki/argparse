@@ -1598,7 +1598,7 @@ TEST_CASE("12. default values", "[argument_parser]")
     }
 }
 
-TEST_CASE("13. value exists check", "[argument_parser]")
+TEST_CASE("13. value exists check", "[namespace]")
 {
     std::string global_default = "global";
     std::string local_default = "local";
@@ -1952,5 +1952,76 @@ TEST_CASE("20. namespace", "[argument_parser]")
         REQUIRE(args3.get<std::string>("foo") == foo);
         REQUIRE(args3.get<std::string>("bar") == bar);
         REQUIRE(args3.get<std::string>("baz") == baz);
+    }
+}
+
+TEST_CASE("21. value types check", "[namespace]")
+{
+    SECTION("21.1. map") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+        parser.add_argument("--bar").action("append").one_or_more().help("bar help");
+
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.exists("foo") == false);
+        REQUIRE(args0.exists("bar") == false);
+        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE(args0.get<std::string>("bar") == "");
+        REQUIRE(args0.get<std::vector<std::string> >("foo").size() == 0);
+        REQUIRE(args0.get<std::vector<std::string> >("bar").size() == 0);
+        REQUIRE(args0.get<std::map<std::string, std::string> >("foo").size() == 0);
+        REQUIRE(args0.get<std::map<std::string, std::string> >("bar").size() == 0);
+#if __cplusplus >= 201402L // C++14+
+        REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
+        REQUIRE(args0.try_get<std::string>("bar").operator bool() == false);
+#endif // C++14+
+
+        // delimiter ':'
+        auto args1 = parser.parse_args({ "--foo=key:value" });
+        REQUIRE(args1.exists("foo") == true);
+        REQUIRE(args1.exists("bar") == false);
+        REQUIRE(args1.get<std::string>("foo") == "key:value");
+        REQUIRE(args1.get<std::string>("bar") == "");
+        REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE(args1.get<std::vector<std::string> >("bar").size() == 0);
+        REQUIRE(args1.get<std::map<std::string, std::string> >("foo", ':').size() == 1);
+        REQUIRE(args1.get<std::map<std::string, std::string> >("bar", ':').size() == 0);
+        REQUIRE(args1.get<std::map<std::string, std::string> >("foo", ':').at("key") == "value");
+#if __cplusplus >= 201402L // C++14+
+        REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args1.try_get<std::string>("bar").operator bool() == false);
+        REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
+        REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
+        REQUIRE(args1.try_get<std::vector<std::string> >("bar")->size() == 0);
+        REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->size() == 1);
+        REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->at("key") == "value");
+#endif // C++14+
+
+        // delimiter '=', unordered_map
+        auto args2 = parser.parse_args({ "--foo=key=value", "--bar", "key1=value1", "key2=value2" });
+        REQUIRE(args2.exists("foo") == true);
+        REQUIRE(args2.exists("bar") == true);
+        REQUIRE(args2.get<std::string>("foo") == "key=value");
+//        REQUIRE(args2.get<std::string>("bar") == "");
+        REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("bar").size() == 2);
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("foo").size() == 1);
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").size() == 2);
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("foo").at("key") == "value");
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key1") == "value1");
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key2") == "value2");
+#if __cplusplus >= 201402L // C++14+
+        REQUIRE(args2.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args2.try_get<std::string>("bar").operator bool() == false);
+        REQUIRE(args2.try_get<std::string>("foo").value() == "key=value");
+        REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 1);
+        REQUIRE(args2.try_get<std::vector<std::string> >("bar")->size() == 2);
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("foo")->size() == 1);
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->size() == 2);
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("foo")->at("key") == "value");
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key1") == "value1");
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key2") == "value2");
+#endif // C++14+
     }
 }
