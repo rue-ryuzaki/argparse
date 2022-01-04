@@ -48,6 +48,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -203,6 +204,16 @@ static inline bool _not_optional(std::string const& arg, std::string const& pref
 {
     return !_is_value_exists(arg.front(), prefix_chars) || was_pseudo_arg
             || (!have_negative_args && _is_negative_number(arg));
+}
+
+static inline std::pair<std::string, std::string> _split_delimiter(std::string const& s, char delim)
+{
+    auto pos = s.find(delim);
+    if (pos != std::string::npos) {
+        return std::make_pair(s.substr(0, pos), s.substr(pos + 1));
+    } else {
+        return std::make_pair(s, std::string());
+    }
 }
 
 static std::vector<std::string> _split_to_args(std::string const& str)
@@ -2685,6 +2696,13 @@ public:
         template <class... Args> struct is_stl_queue<std::stack                 <Args...> >:std::true_type{};
         template <class... Args> struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
 
+        template <class...>      struct voider { using type = void; };
+        template <class... T>    using void_t = typename voider<T...>::type;
+        template <class T, typename U = void>
+                                 struct is_stl_map:std::false_type{};
+        template <class T>       struct is_stl_map<T, void_t<typename T::key_type, typename T::mapped_type,
+                decltype(std::declval<T&>()[std::declval<const typename T::key_type&>()])>>:std::true_type{};
+
     public:
         /*!
          *  \brief Construct object with parsed arguments
@@ -2865,6 +2883,34 @@ public:
         }
 
         /*!
+         *  \brief Try get parsed argument value for mapped types.
+         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value or std::nullopt
+         */
+        template <class T,
+                  typename std::enable_if<is_stl_map<typename std::decay<T>::type>::value>::type* = nullptr>
+        std::optional<T> try_get(std::string const& key, char delim = detail::_equal) const
+        {
+            auto args = try_get_data(key);
+            if (!args.operator bool() || args->first->m_action == Action::count) {
+                return {};
+            }
+            T res{};
+            auto vector = try_to_paired_vector<typename T::key_type,
+                                               typename T::mapped_type>(args->second, delim);
+            if (!vector.operator bool()) {
+                return {};
+            }
+            for (auto const& pair : vector.value()) {
+                res[pair.first] = pair.second;
+            }
+            return res;
+        }
+
+        /*!
          *  \brief Try get parsed argument value for custom types.
          *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
          *
@@ -2879,6 +2925,7 @@ public:
                                           and not std::is_same<std::string, T>::value
                                           and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
+                                          and not is_stl_map<typename std::decay<T>::type>::value
                                           and not is_stl_queue<typename std::decay<T>::type>::value>
                   ::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
@@ -3008,6 +3055,29 @@ public:
         }
 
         /*!
+         *  \brief Get parsed argument value for mapped types
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value
+         */
+        template <class T,
+                  typename std::enable_if<is_stl_map<typename std::decay<T>::type>::value>::type* = nullptr>
+        T get(std::string const& key, char delim = detail::_equal) const
+        {
+            auto const& args = data(key);
+            if (args.first->m_action == Action::count) {
+                throw TypeError("invalid get type for argument '" + key + "'");
+            }
+            T res{};
+            auto vector = to_paired_vector<typename T::key_type, typename T::mapped_type>(args.second, delim);
+            for (auto const& pair : vector) {
+                res[pair.first] = pair.second;
+            }
+            return res;
+        }
+
+        /*!
          *  \brief Get parsed argument value for custom types
          *
          *  \param key Argument name
@@ -3021,6 +3091,7 @@ public:
                                           and not std::is_same<std::string, T>::value
                                           and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
+                                          and not is_stl_map<typename std::decay<T>::type>::value
                                           and not is_stl_queue<typename std::decay<T>::type>::value>
                   ::type* = nullptr>
         T get(std::string const& key) const
@@ -3175,6 +3246,25 @@ public:
             return vec;
         }
 
+        template <class T, class U>
+        std::optional<std::vector<std::pair<T, U> > >
+        try_to_paired_vector(std::vector<std::string> const& args, char delim) const
+        {
+            std::vector<std::pair<T, U> > vec;
+            vec.reserve(args.size());
+            for (auto const& arg : args) {
+                auto const pair = detail::_split_delimiter(arg, delim);
+                auto el1 = try_to_type<T>(pair.first);
+                auto el2 = try_to_type<T>(pair.second);
+                if (el1.operator bool() && el2.operator bool()) {
+                    vec.emplace_back(std::make_pair(el1.value(), el2.value()));
+                } else {
+                    return {};
+                }
+            }
+            return vec;
+        }
+
         template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
         inline std::optional<T> try_to_type(std::string const& data) const noexcept
         {
@@ -3230,6 +3320,18 @@ public:
             vec.reserve(args.size());
             for (auto const& arg : args) {
                 vec.emplace_back(to_type<T>(arg));
+            }
+            return vec;
+        }
+
+        template <class T, class U>
+        std::vector<std::pair<T, U> > to_paired_vector(std::vector<std::string> const& args, char delim) const
+        {
+            std::vector<std::pair<T, U> > vec;
+            vec.reserve(args.size());
+            for (auto const& arg : args) {
+                auto const pair = detail::_split_delimiter(arg, delim);
+                vec.emplace_back(std::make_pair(to_type<T>(pair.first), to_type<U>(pair.second)));
             }
             return vec;
         }
