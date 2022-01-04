@@ -129,7 +129,7 @@ static inline std::string _remove_quotes(std::string const& s)
 
 static inline std::string _replace(std::string s, char c, std::string const& val)
 {
-    std::size_t pos = s.find(c);
+    auto pos = s.find(c);
     while (pos != std::string::npos) {
         s.replace(pos, 1, val);
         pos = s.find(c, pos + val.size());
@@ -1463,7 +1463,7 @@ public:
      *
      *  \return Group object
      */
-    explicit Group() noexcept
+    explicit Group()
         : m_title(),
           m_description(),
           m_position()
@@ -1534,7 +1534,7 @@ public:
      *
      *  \return Argument data object
      */
-    explicit ArgumentData() noexcept
+    explicit ArgumentData()
         : m_arguments(),
           m_optional(),
           m_positional()
@@ -1834,7 +1834,7 @@ public:
      *
      *  \return Exclusive group object
      */
-    explicit ExclusiveGroup(std::string& prefix_chars, ArgumentData* parent_data) noexcept
+    explicit ExclusiveGroup(std::string& prefix_chars, ArgumentData* parent_data)
         : ArgumentData(),
           m_prefix_chars(prefix_chars),
           m_parent_data(parent_data),
@@ -1960,7 +1960,7 @@ public:
      *
      *  \return BaseParser object
      */
-    explicit BaseParser() noexcept
+    explicit BaseParser()
         : ArgumentData(),
           m_usage(),
           m_description(),
@@ -2049,7 +2049,7 @@ public:
      *  \return Current argument group reference
      */
     inline ArgumentGroup& add_argument_group(std::string const& title = std::string(),
-                                             std::string const& description = std::string()) noexcept
+                                             std::string const& description = std::string())
     {
         auto group = std::make_shared<ArgumentGroup>(title, description, m_prefix_chars, this);
         m_groups.push_back(group);
@@ -2092,7 +2092,7 @@ class ArgumentParser : public BaseParser
         typedef std::map<key_type, mapped_type>::iterator       iterator;
         typedef std::map<key_type, mapped_type>::const_iterator const_iterator;
 
-        explicit Storage() noexcept
+        explicit Storage()
             : m_data()
         { }
 
@@ -2418,7 +2418,7 @@ public:
          *
          *  \return Subparser object
          */
-        explicit Subparser() noexcept
+        explicit Subparser()
             : Group(),
               m_prog(),
               m_dest(),
