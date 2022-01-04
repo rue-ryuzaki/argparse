@@ -1957,7 +1957,7 @@ TEST_CASE("20. namespace", "[argument_parser]")
 
 TEST_CASE("21. value types check", "[namespace]")
 {
-    SECTION("21.1. map") {
+    SECTION("21.1. mapped types") {
         auto parser = argparse::ArgumentParser().exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -1998,7 +1998,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->at("key") == "value");
 #endif // C++14+
 
-        // delimiter '=', unordered_map
+        // delimiter '=', std::unordered_map
         auto args2 = parser.parse_args({ "--foo=key=value", "--bar", "key1=value1", "key2=value2" });
         REQUIRE(args2.exists("foo") == true);
         REQUIRE(args2.exists("bar") == true);
@@ -2022,6 +2022,34 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("foo")->at("key") == "value");
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key1") == "value1");
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key2") == "value2");
+#endif // C++14+
+
+        // delimiter '=', std::multimap
+        auto args3 = parser.parse_args({ "--foo=key=value", "--bar", "key=value1", "key=value2" });
+        REQUIRE(args3.exists("foo") == true);
+        REQUIRE(args3.exists("bar") == true);
+        REQUIRE(args3.get<std::string>("foo") == "key=value");
+//        REQUIRE(args3.get<std::string>("bar") == "");
+        REQUIRE(args3.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("bar").size() == 2);
+        REQUIRE(args3.get<std::map<std::string, std::string> >("bar").size() == 1);
+        REQUIRE(args3.get<std::map<std::string, std::string> >("bar").count("key") == 1);
+        REQUIRE(args3.get<std::multimap<std::string, std::string> >("foo").size() == 1);
+        REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").size() == 2);
+        REQUIRE(args3.get<std::multimap<std::string, std::string> >("foo").count("key") == 1);
+        REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").count("key") == 2);
+#if __cplusplus >= 201402L // C++14+
+        REQUIRE(args3.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args3.try_get<std::string>("bar").operator bool() == false);
+        REQUIRE(args3.try_get<std::string>("foo").value() == "key=value");
+        REQUIRE(args3.try_get<std::vector<std::string> >("foo")->size() == 1);
+        REQUIRE(args3.try_get<std::vector<std::string> >("bar")->size() == 2);
+        REQUIRE(args3.try_get<std::map<std::string, std::string> >("bar")->size() == 1);
+        REQUIRE(args3.try_get<std::map<std::string, std::string> >("bar")->count("key") == 1);
+        REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("foo")->size() == 1);
+        REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->size() == 2);
+        REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("foo")->count("key") == 1);
+        REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->count("key") == 2);
 #endif // C++14+
     }
 }
