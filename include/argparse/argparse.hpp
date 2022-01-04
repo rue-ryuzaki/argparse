@@ -2700,8 +2700,8 @@ public:
         template <class... T>    using void_t = typename voider<T...>::type;
         template <class T, typename U = void>
                                  struct is_stl_map:std::false_type{};
-        template <class T>       struct is_stl_map<T, void_t<typename T::key_type, typename T::mapped_type,
-                decltype(std::declval<T&>()[std::declval<const typename T::key_type&>()])>>:std::true_type{};
+        template <class T>       struct is_stl_map<T, void_t<typename T::key_type,
+                                                             typename T::mapped_type>>:std::true_type{};
 
     public:
         /*!
@@ -2905,7 +2905,7 @@ public:
                 return {};
             }
             for (auto const& pair : vector.value()) {
-                res[pair.first] = pair.second;
+                res.emplace(std::make_pair(pair.first, pair.second));
             }
             return res;
         }
@@ -3072,7 +3072,7 @@ public:
             T res{};
             auto vector = to_paired_vector<typename T::key_type, typename T::mapped_type>(args.second, delim);
             for (auto const& pair : vector) {
-                res[pair.first] = pair.second;
+                res.emplace(std::make_pair(pair.first, pair.second));
             }
             return res;
         }
