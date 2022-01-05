@@ -4556,8 +4556,8 @@ private:
                 arguments.insert(std::begin(arguments) + i, std::begin(load_args), std::end(load_args));
             }
         };
-        auto _check_abbreviations = [this, _separate_arg_abbrev, &result,
-                _throw_error, _prefix_chars, &have_negative_args, &was_pseudo_arg]
+        auto _check_abbreviations = [this, _separate_arg_abbrev, _throw_error, _prefix_chars,
+                                     &result, &have_negative_args, &was_pseudo_arg]
                 (std::vector<std::string>& arguments, size_t i, std::vector<pArgument> const& optionals)
         {
             auto& arg = arguments.at(i);
@@ -4652,24 +4652,28 @@ private:
                         if (splitted.size() == 1) {
                             uint32_t n = 0;
                             uint32_t num_args = tmp->m_num_args;
-                            while (true) {
-                                if (++i == parsed_arguments.size()) {
-                                    if (n == 0) {
-                                        switch (tmp->m_nargs) {
-                                            case Argument::NARGS_DEF :
-                                            case Argument::NARGS_INT :
-                                            case Argument::ONE_OR_MORE :
-                                                _throw_error(tmp->error_nargs(arg));
-                                                break;
-                                            case Argument::OPTIONAL :
-                                                _store_value(tmp, tmp->const_value());
-                                                break;
-                                            default :
-                                                break;
-                                        }
-                                    } else if (tmp->m_nargs == Argument::NARGS_INT && n < num_args) {
-                                        _throw_error(tmp->error_nargs(arg));
+                            auto _func = [_throw_error, _store_value, &arg, &n, &num_args, &tmp] ()
+                            {
+                                if (n == 0) {
+                                    switch (tmp->m_nargs) {
+                                        case Argument::NARGS_DEF :
+                                        case Argument::NARGS_INT :
+                                        case Argument::ONE_OR_MORE :
+                                            _throw_error(tmp->error_nargs(arg));
+                                            break;
+                                        case Argument::OPTIONAL :
+                                            _store_value(tmp, tmp->const_value());
+                                            break;
+                                        default :
+                                            break;
                                     }
+                                } else if (tmp->m_nargs == Argument::NARGS_INT && n < num_args) {
+                                    _throw_error(tmp->error_nargs(arg));
+                                }
+                            };
+                            do {
+                                if (++i == parsed_arguments.size()) {
+                                    _func();
                                     break;
                                 } else {
                                     auto const& next = parsed_arguments.at(i);
@@ -4678,35 +4682,15 @@ private:
                                                                      have_negative_args, was_pseudo_arg)) {
                                         _store_value(tmp, next);
                                         ++n;
-                                    } else if (n == 0) {
-                                        --i;
-                                        switch (tmp->m_nargs) {
-                                            case Argument::NARGS_DEF :
-                                            case Argument::NARGS_INT :
-                                            case Argument::ONE_OR_MORE :
-                                                _throw_error(tmp->error_nargs(arg));
-                                                break;
-                                            case Argument::OPTIONAL :
-                                                _store_value(tmp, tmp->m_const());
-                                                break;
-                                            default :
-                                                break;
-                                        }
-                                        break;
                                     } else {
-                                        if (tmp->m_nargs == Argument::NARGS_INT && n < num_args) {
-                                            _throw_error(tmp->error_nargs(arg));
-                                        }
                                         --i;
+                                        _func();
                                         break;
                                     }
                                 }
-                                if (tmp->m_nargs == Argument::NARGS_DEF
-                                        || tmp->m_nargs == Argument::OPTIONAL
-                                        || (tmp->m_nargs == Argument::NARGS_INT && n == num_args)) {
-                                    break;
-                                }
-                            }
+                            } while ((tmp->m_nargs != Argument::NARGS_DEF
+                                      && tmp->m_nargs != Argument::OPTIONAL
+                                      && (tmp->m_nargs != Argument::NARGS_INT || n != num_args)));
                         } else {
                             if (tmp->m_nargs != Argument::NARGS_DEF && tmp->m_num_args > 1) {
                                 _throw_error(tmp->error_nargs(arg));
@@ -4790,7 +4774,7 @@ private:
             _match_args_partial(intermixed_args);
         }
         auto _check_exclusive_groups
-                = [&result, _custom_error] (Parser const* p, std::deque<ExclusiveGroup> const& groups)
+                = [_custom_error, &result] (Parser const* p, std::deque<ExclusiveGroup> const& groups)
         {
             for (auto const& ex : groups) {
                 std::string args;
@@ -4941,9 +4925,9 @@ private:
         std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
         auto _func = [&res, add_suppress] (ArgumentParser const& parser)
         {
-            for (std::size_t p = 0, a = 0, pos = parser.m_subparsers->m_position,
-                 size = parser.m_positional.size(); p < pos && a < size; ++a, ++p) {
-                res.second += (add_suppress || !parser.m_positional.at(a).first->m_help_type.has_value());
+            std::size_t size = std::min(parser.m_subparsers->m_position, parser.m_positional.size());
+            for (std::size_t i = 0; i < size; ++i) {
+                res.second += (add_suppress || !parser.m_positional.at(i).first->m_help_type.has_value());
             }
         };
         if (m_subparsers) {
@@ -5120,11 +5104,8 @@ private:
             }
         }
         for (auto const& group : groups) {
-            if (subparser.first) {
-                if (group.get() != subparser.first || !sub_positional) {
-                    group->print_help(os, show_default, m_argument_default, min_size);
-                }
-            } else if (group.get() != subparser.first) {
+            if ((subparser.first && (group.get() != subparser.first || !sub_positional))
+                    || (!subparser.first && group.get() != subparser.first)) {
                 group->print_help(os, show_default, m_argument_default, min_size);
             }
         }
