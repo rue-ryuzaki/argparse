@@ -1,3 +1,10 @@
+cpp-argparse-dev (1.1.3-0ppa0) focal; urgency=low
+
+  * Add mapped types to Namespace::get<>()
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 09 Jan 2022 22:00:17 +0300
+
 cpp-argparse-dev (1.1.2-0ppa0) focal; urgency=low
 
   * Code refactoring and optimizing
