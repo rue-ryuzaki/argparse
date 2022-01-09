@@ -320,7 +320,7 @@ template <class T>
 class Value
 {
 public:
-    explicit Value() noexcept
+    explicit Value()
         : m_has_value(false),
           m_value()
     { }
@@ -330,7 +330,7 @@ public:
           m_value(orig.m_value)
     { }
 
-    explicit Value(Value&& orig)
+    explicit Value(Value&& orig) noexcept
         : m_has_value(std::move(orig.m_has_value)),
           m_value(std::move(orig.m_value))
     { }
@@ -1021,12 +1021,16 @@ public:
      */
     Argument& choices(std::string const& value)
     {
+        if (!(m_action & (Action::store | Action::append | Action::extend))) {
+            throw TypeError("got an unexpected keyword argument 'choices'");
+        }
         std::vector<std::string> values;
         values.reserve(value.size());
         for (auto const& c : value) {
             values.emplace_back(std::string(1, c));
         }
-        return choices(values);
+        m_choices = std::move(values);
+        return *this;
     }
 
     /*!
@@ -1131,9 +1135,10 @@ public:
         m_dest_str = detail::_trim_copy(value);
         if (m_dest_str.empty()) {
             m_dest.clear();
-        } else if (m_dest.empty()) {
-            m_dest.push_back(m_dest_str);
         } else {
+            if (m_dest.empty()) {
+                m_dest.push_back(std::string());
+            }
             m_dest.front() = m_dest_str;
         }
         return *this;
@@ -2097,11 +2102,11 @@ class ArgumentParser : public BaseParser
         friend class ArgumentParser;
 
     public:
-        typedef pArgument                                       key_type;
-        typedef std::vector<std::string>                        mapped_type;
-        typedef std::pair<const key_type, mapped_type>          value_type;
-        typedef std::map<key_type, mapped_type>::iterator       iterator;
-        typedef std::map<key_type, mapped_type>::const_iterator const_iterator;
+        typedef pArgument                                               key_type;
+        typedef std::vector<std::string>                                mapped_type;
+        typedef std::pair<key_type const, mapped_type>                  value_type;
+        typedef std::map<key_type const, mapped_type>::iterator         iterator;
+        typedef std::map<key_type const, mapped_type>::const_iterator   const_iterator;
 
         explicit Storage()
             : m_data()
@@ -2240,7 +2245,7 @@ class ArgumentParser : public BaseParser
             return res;
         }
 
-        std::map<key_type, mapped_type> m_data;
+        std::map<key_type const, mapped_type> m_data;
     };
 
 public:
@@ -2714,7 +2719,7 @@ public:
          */
         explicit Namespace(Storage const& storage = Storage(),
                            std::vector<std::string> const& args = std::vector<std::string>())
-            : m_arguments(storage),
+            : m_storage(storage),
               m_unrecognized_args(args)
         { }
 
@@ -2727,7 +2732,7 @@ public:
          *  \return Object with parsed arguments
          */
         explicit Namespace(Storage&& storage, std::vector<std::string>&& args) noexcept
-            : m_arguments(std::move(storage)),
+            : m_storage(std::move(storage)),
               m_unrecognized_args(std::move(args))
         { }
 
@@ -2740,11 +2745,11 @@ public:
          */
         bool exists(std::string const& key) const
         {
-            if (m_arguments.exists(key)) {
-                return !m_arguments.at(key).second.empty()
-                        || m_arguments.at(key).first->m_action == Action::count;
+            if (m_storage.exists(key)) {
+                return !m_storage.at(key).second.empty()
+                        || m_storage.at(key).first->m_action == Action::count;
             }
-            for (auto const& pair : m_arguments) {
+            for (auto const& pair : m_storage) {
                 if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
                     for (auto const& flag : pair.first->m_flags) {
                         if (detail::_flag_name(flag) == key) {
@@ -3209,7 +3214,7 @@ public:
     private:
         inline Storage const& storage() const noexcept
         {
-            return m_arguments;
+            return m_storage;
         }
 
 #if __cplusplus >= 201402L // C++14+
@@ -3298,10 +3303,10 @@ public:
 
         Storage::value_type const& data(std::string const& key) const
         {
-            if (m_arguments.exists(key)) {
-                return m_arguments.at(key);
+            if (m_storage.exists(key)) {
+                return m_storage.at(key);
             }
-            for (auto const& pair : m_arguments) {
+            for (auto const& pair : m_storage) {
                 if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
                     for (auto const& flag : pair.first->m_flags) {
                         if (detail::_flag_name(flag) == key) {
@@ -3366,7 +3371,7 @@ public:
             return result;
         }
 
-        Storage m_arguments;
+        Storage m_storage;
         std::vector<std::string> m_unrecognized_args;
     };
 
@@ -4187,7 +4192,7 @@ private:
         auto subparser_arg = std::make_shared<Argument>(std::move(subparser_flags),
                                                         std::move(subparser_name), Argument::Positional);
         Storage result = space.storage();
-        if (space.m_arguments.m_data.empty()) {
+        if (space.m_storage.m_data.empty()) {
             result.create(positional);
             result.create(optional);
             if (subparser.first) {
