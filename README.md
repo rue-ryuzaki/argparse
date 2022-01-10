@@ -2,7 +2,7 @@
 [![macOS](https://github.com/rue-ryuzaki/argparse/workflows/macOS/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AmacOS)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rue-ryuzaki/argparse/main/LICENSE)
 [![GitHub releases](https://img.shields.io/github/release/rue-ryuzaki/argparse.svg)](https://github.com/rue-ryuzaki/argparse/releases)
-# ArgumentParser v1.1.3
+# ArgumentParser
 Python-like argument parser for C++11+ projects
 ## Code example
 ```cpp
