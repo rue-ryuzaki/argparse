@@ -65,6 +65,19 @@ using experimental::optional;
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough="
 
 namespace argparse {
+/*!
+ * \brief Help formatter values
+ *
+ * \enum HelpFormatter
+ */
+enum HelpFormatter
+{
+    RawDescriptionHelpFormatter     = 0x00000001,
+    RawTextHelpFormatter            = 0x00000002,
+    ArgumentDefaultsHelpFormatter   = 0x00000004,
+    MetavarTypeHelpFormatter        = 0x00000008,
+};
+
 namespace detail {
 std::size_t const _usage_limit = 80;
 std::size_t const _argument_help_limit = 24;
@@ -338,6 +351,34 @@ static inline std::string _ignore_explicit(std::string const& arg, std::string c
     return "argument " + arg + ": ignored explicit argument '" + value + "'";
 }
 
+static inline std::string _help_formatter(HelpFormatter formatter, std::string const& str,
+                                          std::size_t limit, std::string const& help)
+{
+    std::string res;
+    if (!help.empty()) {
+        std::size_t offset = _argument_help_limit;
+        if (str.size() + 2 > limit) {
+            res += "\n" + std::string(_argument_help_limit, _space);
+        } else {
+            res += std::string(limit - str.size(), _space);
+            offset = str.size() + 2;
+        }
+        auto lines = detail::_split(help, '\n');
+        if (formatter & RawTextHelpFormatter) {
+            res += lines.front();
+            for (size_t i = 1; i < lines.size(); ++i) {
+                res += "\n" + std::string(offset, _space) + lines.at(i);
+            }
+        } else {
+            for (auto& line : lines) {
+                detail::_trim(line);
+            }
+            res += detail::_vector_to_string(lines);
+        }
+    }
+    return res;
+}
+
 template <class T>
 class Value
 {
@@ -437,19 +478,6 @@ enum Action
 enum Enum
 {
     SUPPRESS,
-};
-
-/*!
- * \brief Help formatter values
- *
- * \enum HelpFormatter
- */
-enum HelpFormatter
-{
-    RawDescriptionHelpFormatter     = 0x00000001,
-    RawTextHelpFormatter            = 0x00000002,
-    ArgumentDefaultsHelpFormatter   = 0x00000004,
-    MetavarTypeHelpFormatter        = 0x00000008,
 };
 
 /*!
@@ -1374,15 +1402,12 @@ private:
     }
 
     std::string print(bool show_default_value, detail::Value<std::string> const& argument_default,
-                      std::size_t limit = detail::_argument_help_limit) const
+                      HelpFormatter formatter, std::size_t limit = detail::_argument_help_limit) const
     {
         std::string res = "  " + flags_to_string();
-        if (!help().empty()) {
-            if (res.size() + 2 > limit) {
-                res += "\n" + std::string(detail::_argument_help_limit, detail::_space) + help();
-            } else {
-                res += std::string(limit - res.size(), detail::_space) + help();
-            }
+        auto formatted_help = detail::_help_formatter(formatter, res, limit, help());
+        if (!formatted_help.empty()) {
+            res += formatted_help;
             if (show_default_value && m_type == Optional) {
                 auto const& def = (m_default.has_value() || !argument_default.has_value()) ? m_default
                                                                                            : argument_default;
@@ -1552,7 +1577,8 @@ protected:
     virtual void limit_usage(std::size_t& limit) const = 0;
     virtual void limit_help_flags(std::size_t& limit) const = 0;
     virtual void print_help(std::ostream& os, bool show_default_value,
-                            detail::Value<std::string> const& argument_default, std::size_t limit) const = 0;
+                            detail::Value<std::string> const& argument_default,
+                            HelpFormatter formatter, std::size_t limit) const = 0;
 
     std::string m_title;
     std::string m_description;
@@ -1841,7 +1867,7 @@ private:
 
     void print_help(std::ostream& os, bool show_default_value,
                     detail::Value<std::string> const& argument_default,
-                    std::size_t limit) const override
+                    HelpFormatter formatter, std::size_t limit) const override
     {
         if (!description().empty() || !m_arguments.empty()) {
             os << "\n" << title() << ":" << std::endl;
@@ -1852,7 +1878,7 @@ private:
                 os << std::endl;
             }
             for (auto const& arg : m_arguments) {
-                os << arg->print(show_default_value, argument_default, limit) << std::endl;
+                os << arg->print(show_default_value, argument_default, formatter, limit) << std::endl;
             }
         }
     }
@@ -2423,16 +2449,10 @@ public:
             }
         }
 
-        std::string print(std::size_t limit = detail::_argument_help_limit) const
+        std::string print(HelpFormatter formatter, std::size_t limit = detail::_argument_help_limit) const
         {
             std::string res = "    " + m_name;
-            if (!help().empty()) {
-                if (res.size() + 2 > limit) {
-                    res += "\n" + std::string(detail::_argument_help_limit, detail::_space) + help();
-                } else {
-                    res += std::string(limit - res.size(), detail::_space) + help();
-                }
-            }
+            res += detail::_help_formatter(formatter, res, limit, help());
             return res;
         }
 
@@ -2647,15 +2667,15 @@ public:
         }
 
         void print_help(std::ostream& os, bool, detail::Value<std::string> const&,
-                        std::size_t limit) const override
+                        HelpFormatter formatter, std::size_t limit) const override
         {
             os << "\n" << (title().empty() ? "subcommands" : title()) << ":\n";
             if (!description().empty()) {
                 os << "  " << description() << "\n\n";
             }
-            os << print(limit) << std::endl;
+            os << print(formatter, limit) << std::endl;
             for (auto const& arg : m_parsers) {
-                os << arg.print(limit) << std::endl;
+                os << arg.print(formatter, limit) << std::endl;
             }
         }
 
@@ -2679,16 +2699,10 @@ public:
             return "{" + res + "}";
         }
 
-        std::string print(std::size_t limit = detail::_argument_help_limit) const
+        std::string print(HelpFormatter formatter, std::size_t limit = detail::_argument_help_limit) const
         {
             std::string res = "  " + flags_to_string();
-            if (!help().empty()) {
-                if (res.size() + 2 > limit) {
-                    res += "\n" + std::string(detail::_argument_help_limit, detail::_space) + help();
-                } else {
-                    res += std::string(limit - res.size(), detail::_space) + help();
-                }
-            }
+            res += detail::_help_formatter(formatter, res, limit, help());
             return res;
         }
 
@@ -5132,7 +5146,7 @@ private:
         auto _use_description_formatter = [this] (std::string const& value)
         {
             auto res = value;
-            if (!(m_formatter_class & RawDescriptionHelpFormatter)) {
+            if (!(m_formatter_class & (RawDescriptionHelpFormatter | RawTextHelpFormatter))) {
                 detail::_trim(res);
                 auto lines = detail::_split(res, '\n');
                 if (!lines.empty()) {
@@ -5172,14 +5186,15 @@ private:
             os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
                 if (sub_positional && subparser.second == i) {
-                    os << subparser.first->print(min_size) << "\n";
+                    os << subparser.first->print(m_formatter_class, min_size) << "\n";
                 }
-                os << positional.at(i)->print(false, m_argument_default, min_size) << std::endl;
+                os << positional.at(i)->print(false, m_argument_default,
+                                              m_formatter_class, min_size) << std::endl;
             }
             if (sub_positional && subparser.second == positional.size()) {
-                os << subparser.first->print(min_size) << std::endl;
+                os << subparser.first->print(m_formatter_class, min_size) << std::endl;
                 for (auto const& arg : subparser.first->m_parsers) {
-                    os << arg.print(min_size) << std::endl;
+                    os << arg.print(m_formatter_class, min_size) << std::endl;
                 }
             }
         }
@@ -5187,13 +5202,13 @@ private:
             os << "\noptional arguments:" << std::endl;
             for (auto it = std::begin(optional); it != std::end(optional); ++it) {
                 os << (*it)->print(show_default && !(m_add_help && it == std::begin(optional)),
-                                   m_argument_default, min_size) << std::endl;
+                                   m_argument_default, m_formatter_class, min_size) << std::endl;
             }
         }
         for (auto const& group : groups) {
             if ((subparser.first && (group.get() != subparser.first || !sub_positional))
                     || (!subparser.first && group.get() != subparser.first)) {
-                group->print_help(os, show_default, m_argument_default, min_size);
+                group->print_help(os, show_default, m_argument_default, m_formatter_class, min_size);
             }
         }
         auto formatter_epilog = _use_description_formatter(epilog);
