@@ -1,3 +1,11 @@
+cpp-argparse-dev (1.1.4-0ppa0) focal; urgency=low
+
+  * Add RawDescriptionHelpFormatter support
+  * Add ArgumentParser::add_formatter_class() function
+  * Fix build with C++14+
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Mon, 10 Jan 2022 21:40:33 +0300
+
 cpp-argparse-dev (1.1.3-0ppa0) focal; urgency=low
 
   * Add mapped types to Namespace::get<>()
