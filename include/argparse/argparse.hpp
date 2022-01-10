@@ -3528,13 +3528,26 @@ public:
     /*!
      *  \brief Set argument parser 'formatter_class' value
      *
-     *  \param param Formatter value
+     *  \param param HelpFormatter value
      *
      *  \return Current argument parser reference
      */
     inline ArgumentParser& formatter_class(HelpFormatter param) noexcept
     {
         m_formatter_class = param;
+        return *this;
+    }
+
+    /*!
+     *  \brief Add argument parser 'formatter_class' value
+     *
+     *  \param param HelpFormatter value
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& add_formatter_class(HelpFormatter param) noexcept
+    {
+        m_formatter_class = static_cast<HelpFormatter>(m_formatter_class | param);
         return *this;
     }
 
