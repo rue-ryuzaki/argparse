@@ -3245,10 +3245,10 @@ public:
 #if __cplusplus >= 201402L // C++14+
         std::optional<Storage::value_type> try_get_data(std::string const& key) const
         {
-            if (m_arguments.exists(key)) {
-                return m_arguments.at(key);
+            if (m_storage.exists(key)) {
+                return m_storage.at(key);
             }
-            for (auto const& pair : m_arguments) {
+            for (auto const& pair : m_storage) {
                 if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
                     for (auto const& flag : pair.first->m_flags) {
                         if (detail::_flag_name(flag) == key) {
