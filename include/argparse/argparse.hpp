@@ -206,6 +206,28 @@ static inline bool _not_optional(std::string const& arg, std::string const& pref
             || (!have_negative_args && _is_negative_number(arg));
 }
 
+static std::vector<std::string> _split(std::string const& str, char delim)
+{
+    std::vector<std::string> result;
+    auto _store_value = [&result] (std::string& value)
+    {
+        if (!value.empty()) {
+            result.push_back(value);
+            value.clear();
+        }
+    };
+    std::string value;
+    for (auto c : str) {
+        if (c == delim) {
+            _store_value(value);
+        } else {
+            value += c;
+        }
+    }
+    _store_value(value);
+    return result;
+}
+
 static inline std::pair<std::string, std::string> _split_delimiter(std::string const& s, char delim)
 {
     auto pos = s.find(delim);
@@ -213,6 +235,19 @@ static inline std::pair<std::string, std::string> _split_delimiter(std::string c
         return std::make_pair(s.substr(0, pos), s.substr(pos + 1));
     } else {
         return std::make_pair(s, std::string());
+    }
+}
+
+static inline std::vector<std::string> _split_equal(std::string const& s,
+                                                    std::string const& prefix)
+{
+    auto pos = _is_value_exists(_equal, prefix)
+            ? s.find(_equal, std::distance(std::begin(s), std::find_if(std::begin(s), std::end(s),
+              [] (char c) -> bool { return c != _equal; }))) : s.find(_equal);
+    if (pos != std::string::npos) {
+        return { s.substr(0, pos), s.substr(pos + 1) };
+    } else {
+        return { s };
     }
 }
 
@@ -261,19 +296,6 @@ static std::vector<std::string> _split_to_args(std::string const& str)
         std::cerr << "incorrect string: '" << str << "'" << std::endl;
     }
     return result;
-}
-
-static inline std::vector<std::string> _split_equal(std::string const& s,
-                                                    std::string const& prefix)
-{
-    auto pos = _is_value_exists(_equal, prefix)
-            ? s.find(_equal, std::distance(std::begin(s), std::find_if(std::begin(s), std::end(s),
-              [] (char c) -> bool { return c != _equal; }))) : s.find(_equal);
-    if (pos != std::string::npos) {
-        return { s.substr(0, pos), s.substr(pos + 1) };
-    } else {
-        return { s };
-    }
 }
 
 static inline bool _string_to_bool(std::string const& str) noexcept
@@ -2308,7 +2330,7 @@ public:
          */
         inline Parser& description(std::string const& param)
         {
-            m_description = detail::_trim_copy(param);
+            m_description = param;
             return *this;
         }
 
@@ -2321,7 +2343,7 @@ public:
          */
         inline Parser& epilog(std::string const& param)
         {
-            m_epilog = detail::_trim_copy(param);
+            m_epilog = param;
             return *this;
         }
 
@@ -3473,7 +3495,7 @@ public:
      */
     inline ArgumentParser& description(std::string const& param)
     {
-        m_description = detail::_trim_copy(param);
+        m_description = param;
         return *this;
     }
 
@@ -3486,7 +3508,7 @@ public:
      */
     inline ArgumentParser& epilog(std::string const& param)
     {
-        m_epilog = detail::_trim_copy(param);
+        m_epilog = param;
         return *this;
     }
 
@@ -5066,8 +5088,24 @@ private:
         } else {
             print_custom_usage(positional_all, optional_all, groups, exclusive, subparser, program, os);
         }
-        if (!description.empty()) {
-            os << "\n" << description << std::endl;
+        auto _use_description_formatter = [this] (std::string const& value)
+        {
+            auto res = value;
+            if (!(m_formatter_class & RawDescriptionHelpFormatter)) {
+                detail::_trim(res);
+                auto lines = detail::_split(res, '\n');
+                if (!lines.empty()) {
+                    for (auto& line : lines) {
+                        detail::_trim(line);
+                    }
+                    res = detail::_vector_to_string(lines);
+                }
+            }
+            return res;
+        };
+        auto formatter_description = _use_description_formatter(description);
+        if (!formatter_description.empty()) {
+            os << "\n" << formatter_description << std::endl;
         }
         std::size_t min_size = 0;
         bool show_default = m_formatter_class & ArgumentDefaultsHelpFormatter;
@@ -5117,8 +5155,9 @@ private:
                 group->print_help(os, show_default, m_argument_default, min_size);
             }
         }
-        if (!epilog.empty()) {
-            os << "\n" << epilog << std::endl;
+        auto formatter_epilog = _use_description_formatter(epilog);
+        if (!formatter_epilog.empty()) {
+            os << "\n" << formatter_epilog << std::endl;
         }
     }
 
