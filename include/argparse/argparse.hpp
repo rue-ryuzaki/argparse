@@ -424,7 +424,10 @@ enum Enum
  */
 enum HelpFormatter
 {
-    ArgumentDefaultsHelpFormatter = 0x00000001,
+    RawDescriptionHelpFormatter     = 0x00000001,
+    RawTextHelpFormatter            = 0x00000002,
+    ArgumentDefaultsHelpFormatter   = 0x00000004,
+    MetavarTypeHelpFormatter        = 0x00000008,
 };
 
 /*!
