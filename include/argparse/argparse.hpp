@@ -3539,6 +3539,20 @@ public:
     }
 
     /*!
+     *  \brief Set argument parser 'formatter_class' value
+     *
+     *  \param param HelpFormatter value
+     *
+     *  \return Current argument parser reference
+     */
+    template <class... Args>
+    inline ArgumentParser& formatter_class(HelpFormatter param, Args... args) noexcept
+    {
+        formatter_class(param);
+        return add_formatter_class(args...);
+    }
+
+    /*!
      *  \brief Add argument parser 'formatter_class' value
      *
      *  \param param HelpFormatter value
@@ -3549,6 +3563,20 @@ public:
     {
         m_formatter_class = static_cast<HelpFormatter>(m_formatter_class | param);
         return *this;
+    }
+
+    /*!
+     *  \brief Add argument parser 'formatter_class' value
+     *
+     *  \param param HelpFormatter value
+     *
+     *  \return Current argument parser reference
+     */
+    template <class... Args>
+    inline ArgumentParser& add_formatter_class(HelpFormatter param, Args... args) noexcept
+    {
+        add_formatter_class(param);
+        return add_formatter_class(args...);
     }
 
     /*!
