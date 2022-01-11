@@ -78,6 +78,96 @@ enum HelpFormatter
     MetavarTypeHelpFormatter        = 0x00000008,
 };
 
+/*!
+ * \brief ArgumentError handler
+ */
+class ArgumentError : public std::invalid_argument
+{
+public:
+    /*!
+     *  \brief Construct ArgumentError handler
+     *
+     *  \param error Error message
+     *
+     *  \return ArgumentError object
+     */
+    explicit ArgumentError(std::string const& error)
+        : std::invalid_argument("argparse.ArgumentError: " + error)
+    { }
+};
+
+/*!
+ * \brief AttributeError handler
+ */
+class AttributeError : public std::invalid_argument
+{
+public:
+    /*!
+     *  \brief Construct AttributeError handler
+     *
+     *  \param error Error message
+     *
+     *  \return AttributeError object
+     */
+    explicit AttributeError(std::string const& error)
+        : std::invalid_argument("AttributeError: " + error)
+    { }
+};
+
+/*!
+ * \brief ValueError handler
+ */
+class ValueError : public std::invalid_argument
+{
+public:
+    /*!
+     *  \brief Construct ValueError handler
+     *
+     *  \param error Error message
+     *
+     *  \return ValueError object
+     */
+    explicit ValueError(std::string const& error)
+        : std::invalid_argument("ValueError: " + error)
+    { }
+};
+
+/*!
+ * \brief IndexError handler
+ */
+class IndexError : public std::logic_error
+{
+public:
+    /*!
+     *  \brief Construct IndexError handler
+     *
+     *  \param error Error message
+     *
+     *  \return IndexError object
+     */
+    explicit IndexError(std::string const& error)
+        : std::logic_error("IndexError: " + error)
+    { }
+};
+
+/*!
+ * \brief TypeError handler
+ */
+class TypeError : public std::logic_error
+{
+public:
+    /*!
+     *  \brief Construct TypeError handler
+     *
+     *  \param error Error message
+     *
+     *  \return TypeError object
+     */
+    explicit TypeError(std::string const& error)
+        : std::logic_error("TypeError: " + error)
+    { }
+};
+
 namespace detail {
 std::size_t const _usage_limit = 80;
 std::size_t const _argument_help_limit = 24;
@@ -390,6 +480,22 @@ static inline std::string _help_formatter(HelpFormatter formatter, std::string c
 }
 
 template <class T>
+std::string _type_name()
+{
+    std::string res = __PRETTY_FUNCTION__;
+    auto pos = res.find('=');
+    auto next = res.find(';', pos + 3);
+    return res.substr(pos + 2, next - pos - 2);
+}
+
+static inline void _check_type_names(std::string const& expected, std::string const& received)
+{
+    if (!expected.empty() && received != expected) {
+        throw TypeError("type_name missmatch: expected " + expected + ", received " + received);
+    }
+}
+
+template <class T>
 class Value
 {
 public:
@@ -491,96 +597,6 @@ enum Enum
 };
 
 /*!
- * \brief ArgumentError handler
- */
-class ArgumentError : public std::invalid_argument
-{
-public:
-    /*!
-     *  \brief Construct ArgumentError handler
-     *
-     *  \param error Error message
-     *
-     *  \return ArgumentError object
-     */
-    explicit ArgumentError(std::string const& error)
-        : std::invalid_argument("argparse.ArgumentError: " + error)
-    { }
-};
-
-/*!
- * \brief AttributeError handler
- */
-class AttributeError : public std::invalid_argument
-{
-public:
-    /*!
-     *  \brief Construct AttributeError handler
-     *
-     *  \param error Error message
-     *
-     *  \return AttributeError object
-     */
-    explicit AttributeError(std::string const& error)
-        : std::invalid_argument("AttributeError: " + error)
-    { }
-};
-
-/*!
- * \brief ValueError handler
- */
-class ValueError : public std::invalid_argument
-{
-public:
-    /*!
-     *  \brief Construct ValueError handler
-     *
-     *  \param error Error message
-     *
-     *  \return ValueError object
-     */
-    explicit ValueError(std::string const& error)
-        : std::invalid_argument("ValueError: " + error)
-    { }
-};
-
-/*!
- * \brief IndexError handler
- */
-class IndexError : public std::logic_error
-{
-public:
-    /*!
-     *  \brief Construct IndexError handler
-     *
-     *  \param error Error message
-     *
-     *  \return IndexError object
-     */
-    explicit IndexError(std::string const& error)
-        : std::logic_error("IndexError: " + error)
-    { }
-};
-
-/*!
- * \brief TypeError handler
- */
-class TypeError : public std::logic_error
-{
-public:
-    /*!
-     *  \brief Construct TypeError handler
-     *
-     *  \param error Error message
-     *
-     *  \return TypeError object
-     */
-    explicit TypeError(std::string const& error)
-        : std::logic_error("TypeError: " + error)
-    { }
-};
-
-/*!
  * \brief Argument class
  */
 class Argument
@@ -631,6 +647,7 @@ public:
           m_num_args(1),
           m_const(),
           m_default(),
+          m_type_name(),
           m_choices(),
           m_required(false),
           m_help(),
@@ -662,6 +679,7 @@ public:
           m_num_args(1),
           m_const(),
           m_default(),
+          m_type_name(),
           m_choices(),
           m_required(false),
           m_help(),
@@ -691,6 +709,7 @@ public:
           m_num_args(orig.m_num_args),
           m_const(orig.m_const),
           m_default(orig.m_default),
+          m_type_name(orig.m_type_name),
           m_choices(orig.m_choices),
           m_required(orig.m_required),
           m_help(orig.m_help),
@@ -720,6 +739,7 @@ public:
           m_num_args(std::move(orig.m_num_args)),
           m_const(std::move(orig.m_const)),
           m_default(std::move(orig.m_default)),
+          m_type_name(std::move(orig.m_type_name)),
           m_choices(std::move(orig.m_choices)),
           m_required(std::move(orig.m_required)),
           m_help(std::move(orig.m_help)),
@@ -751,6 +771,7 @@ public:
             this->m_num_args    = rhs.m_num_args;
             this->m_const       = rhs.m_const;
             this->m_default     = rhs.m_default;
+            this->m_type_name   = rhs.m_type_name;
             this->m_choices     = rhs.m_choices;
             this->m_required    = rhs.m_required;
             this->m_help        = rhs.m_help;
@@ -784,6 +805,7 @@ public:
             this->m_num_args    = std::move(rhs.m_num_args);
             this->m_const       = std::move(rhs.m_const);
             this->m_default     = std::move(rhs.m_default);
+            this->m_type_name   = std::move(rhs.m_type_name);
             this->m_choices     = std::move(rhs.m_choices);
             this->m_required    = std::move(rhs.m_required);
             this->m_help        = std::move(rhs.m_help);
@@ -1076,6 +1098,18 @@ public:
     }
 
     /*!
+     *  \brief Set argument 'type' name
+     *
+     *  \return Current argument reference
+     */
+    template <class T>
+    inline Argument& type()
+    {
+        m_type_name = detail::_type_name<T>();
+        return *this;
+    }
+
+    /*!
      *  \brief Set argument 'choices' value
      *
      *  \param value Choices value
@@ -1310,6 +1344,16 @@ public:
     }
 
     /*!
+     *  \brief Get argument 'type' name
+     *
+     *  \return Argument 'type' name
+     */
+    inline std::string const& type_name() const noexcept
+    {
+        return m_type_name;
+    }
+
+    /*!
      *  \brief Get argument 'choices' value
      *
      *  \return Argument 'choices' value
@@ -1512,6 +1556,7 @@ private:
     uint32_t    m_num_args;
     detail::Value<std::string> m_const;
     detail::Value<std::string> m_default;
+    std::string m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
     bool        m_required;
     std::string m_help;
@@ -2824,6 +2869,7 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
             if (!args.operator bool()) {
                 return {};
             }
@@ -2850,6 +2896,7 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
             if (!args.operator bool()
                     || args->first->m_action == Action::count
                     || args->second.empty()
@@ -2873,6 +2920,7 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
             if (!args.operator bool() || args->first->m_action == Action::count) {
                 return {};
             }
@@ -2896,6 +2944,7 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
             if (!args.operator bool() || args->first->m_action == Action::count) {
                 return {};
             }
@@ -2925,6 +2974,7 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
             if (!args.operator bool() || args->first->m_action == Action::count) {
                 return {};
             }
@@ -2949,6 +2999,7 @@ public:
         std::optional<T> try_get(std::string const& key, char delim = detail::_equal) const
         {
             auto args = try_get_data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::mapped_type>());
             if (!args.operator bool() || args->first->m_action == Action::count) {
                 return {};
             }
@@ -2985,6 +3036,7 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
             if (!args.operator bool() || args->first->m_action == Action::count) {
                 return {};
             }
@@ -3005,6 +3057,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
             if (args.first->m_action == Action::count) {
                 return T(args.second.size());
             }
@@ -3031,6 +3084,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3056,6 +3110,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3075,6 +3130,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3100,6 +3156,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3120,6 +3177,7 @@ public:
         T get(std::string const& key, char delim = detail::_equal) const
         {
             auto const& args = data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::mapped_type>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3151,6 +3209,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
