@@ -370,10 +370,20 @@ static inline std::string _help_formatter(HelpFormatter formatter, std::string c
                 res += "\n" + std::string(offset, _space) + lines.at(i);
             }
         } else {
+            std::string help_formatted;
             for (auto& line : lines) {
                 detail::_trim(line);
+                if (!line.empty()) {
+                    if (!help_formatted.empty()) {
+                        help_formatted += _space;
+                    }
+                    help_formatted += line;
+                }
             }
-            res += detail::_vector_to_string(lines);
+            if (help_formatted.empty()) {
+                return std::string();
+            }
+            res += help_formatted;
         }
     }
     return res;
@@ -1135,7 +1145,7 @@ public:
      */
     inline Argument& help(std::string const& value)
     {
-        m_help = detail::_trim_copy(value);
+        m_help = value;
         m_help_type.clear();
         return *this;
     }
@@ -2398,7 +2408,7 @@ public:
          */
         inline Parser& help(std::string const& value)
         {
-            m_help = detail::_trim_copy(value);
+            m_help = value;
             return *this;
         }
 
@@ -2563,7 +2573,7 @@ public:
          */
         inline Subparser& help(std::string const& value)
         {
-            m_help = detail::_trim_copy(value);
+            m_help = value;
             return *this;
         }
 
