@@ -2810,6 +2810,11 @@ public:
         template <class T>       struct is_stl_map<T, void_t<typename T::key_type,
                                                              typename T::mapped_type>>:std::true_type{};
 
+        template <class T, typename U = void>
+                                 struct is_stl_pair:std::false_type{};
+        template <class T>       struct is_stl_pair<T, void_t<typename T::first_type,
+                                                              typename T::second_type>>:std::true_type{};
+
     public:
         /*!
          *  \brief Construct object with parsed arguments
@@ -2915,6 +2920,34 @@ public:
         }
 
         /*!
+         *  \brief Try get parsed argument value for pair types.
+         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+         *
+         *  \param key Argument name
+         *  \param delim Delimiter
+         *
+         *  \return Parsed argument value
+         */
+        template <class T,
+                  typename std::enable_if<is_stl_pair<typename std::decay<T>::type>::value>::type* = nullptr>
+        std::optional<T> try_get(std::string const& key, char delim = detail::_equal) const
+        {
+            auto args = try_get_data(key);
+            if (!args.operator bool()
+                    || args->first->m_action == Action::count
+                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
+                return {};
+            }
+            if (args->second.empty()) {
+                return T();
+            }
+            if (args->second.size() != 1) {
+                return {};
+            }
+            return try_to_pair<typename T::first_type, typename T::second_type>(args->second.front(), delim);
+        }
+
+        /*!
          *  \brief Try get parsed argument value for std containers types.
          *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
          *
@@ -3005,6 +3038,7 @@ public:
          *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
          *
          *  \param key Argument name
+         *  \param delim Delimiter
          *
          *  \return Parsed argument value or std::nullopt
          */
@@ -3047,6 +3081,7 @@ public:
                                           and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
                                           and not is_stl_map<typename std::decay<T>::type>::value
+                                          and not is_stl_pair<typename std::decay<T>::type>::value
                                           and not is_stl_queue<typename std::decay<T>::type>::value>
                   ::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
@@ -3112,6 +3147,32 @@ public:
                 throw TypeError("trying to get data from array argument '" + key + "'");
             }
             return to_type<T>(args.second.front());
+        }
+
+        /*!
+         *  \brief Get parsed argument value for pair types
+         *
+         *  \param key Argument name
+         *  \param delim Delimiter
+         *
+         *  \return Parsed argument value
+         */
+        template <class T,
+                  typename std::enable_if<is_stl_pair<typename std::decay<T>::type>::value>::type* = nullptr>
+        T get(std::string const& key, char delim = detail::_equal) const
+        {
+            auto const& args = data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
+            if (args.first->m_action == Action::count) {
+                throw TypeError("invalid get type for argument '" + key + "'");
+            }
+            if (args.second.empty()) {
+                return T();
+            }
+            if (args.second.size() != 1) {
+                throw TypeError("trying to get data from array argument '" + key + "'");
+            }
+            return to_pair<typename T::first_type, typename T::second_type>(args.second.front(), delim);
         }
 
         /*!
@@ -3186,6 +3247,7 @@ public:
          *  \brief Get parsed argument value for mapped types
          *
          *  \param key Argument name
+         *  \param delim Delimiter
          *
          *  \return Parsed argument value
          */
@@ -3221,6 +3283,7 @@ public:
                                           and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
                                           and not is_stl_map<typename std::decay<T>::type>::value
+                                          and not is_stl_pair<typename std::decay<T>::type>::value
                                           and not is_stl_queue<typename std::decay<T>::type>::value>
                   ::type* = nullptr>
         T get(std::string const& key) const
@@ -3377,17 +3440,28 @@ public:
         }
 
         template <class T, class U>
+        std::optional<std::pair<T, U> > try_to_pair(std::string const& data, char delim) const
+        {
+            auto const pair = detail::_split_delimiter(data, delim);
+            auto el1 = try_to_type<T>(pair.first);
+            auto el2 = try_to_type<T>(pair.second);
+            if (el1.operator bool() && el2.operator bool()) {
+                return std::make_pair(el1.value(), el2.value());
+            } else {
+                return {};
+            }
+        }
+
+        template <class T, class U>
         std::optional<std::vector<std::pair<T, U> > >
         try_to_paired_vector(std::vector<std::string> const& args, char delim) const
         {
             std::vector<std::pair<T, U> > vec;
             vec.reserve(args.size());
             for (auto const& arg : args) {
-                auto const pair = detail::_split_delimiter(arg, delim);
-                auto el1 = try_to_type<T>(pair.first);
-                auto el2 = try_to_type<T>(pair.second);
-                if (el1.operator bool() && el2.operator bool()) {
-                    vec.emplace_back(std::make_pair(el1.value(), el2.value()));
+                auto pair = try_to_pair<T, U>(arg, delim);
+                if (pair.operator bool()) {
+                    vec.emplace_back(pair.value());
                 } else {
                     return {};
                 }
@@ -3455,13 +3529,19 @@ public:
         }
 
         template <class T, class U>
+        std::pair<T, U> to_pair(std::string const& data, char delim) const
+        {
+            auto const pair = detail::_split_delimiter(data, delim);
+            return std::make_pair(to_type<T>(pair.first), to_type<U>(pair.second));
+        }
+
+        template <class T, class U>
         std::vector<std::pair<T, U> > to_paired_vector(std::vector<std::string> const& args, char delim) const
         {
             std::vector<std::pair<T, U> > vec;
             vec.reserve(args.size());
             for (auto const& arg : args) {
-                auto const pair = detail::_split_delimiter(arg, delim);
-                vec.emplace_back(std::make_pair(to_type<T>(pair.first), to_type<U>(pair.second)));
+                vec.emplace_back(to_pair<T, U>(arg, delim));
             }
             return vec;
         }
