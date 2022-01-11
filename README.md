@@ -309,7 +309,7 @@ int main(int argc, char* argv[])
 - [x] nargs - The number of command-line arguments that should be consumed.
 - [x] const - A constant value required by some action and nargs selections.
 - [x] default - The value produced if the argument is absent from the command line and if it is absent from the namespace object.
-- [ ] type - The type to which the command-line argument should be converted.
+- [x] type - The type to which the command-line argument should be converted.
 - [x] choices - A container of the allowable values for the argument.
 - [x] required - Whether or not the command-line option may be omitted (optionals only).
 - [x] help - A brief description of what the argument does.
