@@ -1429,19 +1429,19 @@ private:
         }
     }
 
-    std::string usage() const
+    std::string usage(HelpFormatter formatter) const
     {
         std::string res;
         if (m_type == Optional) {
             res += m_flags.front();
         }
         if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
-            res += get_nargs_suffix();
+            res += get_nargs_suffix(formatter);
         }
         return res;
     }
 
-    std::string flags_to_string() const
+    std::string flags_to_string(HelpFormatter formatter) const
     {
         std::string res;
         if (m_type == Optional) {
@@ -1451,11 +1451,11 @@ private:
                 }
                 res += flag;
                 if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
-                    res += get_nargs_suffix();
+                    res += get_nargs_suffix(formatter);
                 }
             }
         } else {
-            res += get_argument_name();
+            res += get_argument_name(formatter);
         }
         return res;
     }
@@ -1463,7 +1463,7 @@ private:
     std::string print(bool show_default_value, detail::Value<std::string> const& argument_default,
                       HelpFormatter formatter, std::size_t limit = detail::_argument_help_limit) const
     {
-        std::string res = "  " + flags_to_string();
+        std::string res = "  " + flags_to_string(formatter);
         auto formatted_help = detail::_help_formatter(formatter, res, limit, help());
         if (!formatted_help.empty()) {
             res += formatted_help;
@@ -1480,9 +1480,9 @@ private:
         return res;
     }
 
-    std::string get_nargs_suffix() const
+    std::string get_nargs_suffix(HelpFormatter formatter) const
     {
-        auto const name = get_argument_name();
+        auto const name = get_argument_name(formatter);
         std::string res;
         if (m_type == Optional && !name.empty()) {
             res += detail::_spaces;
@@ -1511,8 +1511,11 @@ private:
         return res;
     }
 
-    std::string get_argument_name() const
+    std::string get_argument_name(HelpFormatter formatter) const
     {
+        if (formatter & MetavarTypeHelpFormatter && !m_type_name.empty()) {
+            return m_type_name;
+        }
         if (m_metavar.has_value()) {
             return metavar();
         }
@@ -1634,8 +1637,8 @@ public:
     }
 
 protected:
-    virtual void limit_usage(std::size_t& limit) const = 0;
-    virtual void limit_help_flags(std::size_t& limit) const = 0;
+    virtual void limit_usage(HelpFormatter formatter, std::size_t& limit) const = 0;
+    virtual void limit_help_flags(HelpFormatter formatter, std::size_t& limit) const = 0;
     virtual void print_help(std::ostream& os, bool show_default_value,
                             detail::Value<std::string> const& argument_default,
                             HelpFormatter formatter, std::size_t limit) const = 0;
@@ -1905,20 +1908,20 @@ public:
     }
 
 private:
-    inline void limit_usage(std::size_t& limit) const override
+    inline void limit_usage(HelpFormatter formatter, std::size_t& limit) const override
     {
         for (auto const& arg : m_arguments) {
-            auto const str = arg->usage();
+            auto const str = arg->usage(formatter);
             if (limit < str.size()) {
                 limit = str.size();
             }
         }
     }
 
-    inline void limit_help_flags(std::size_t& limit) const override
+    inline void limit_help_flags(HelpFormatter formatter, std::size_t& limit) const override
     {
         for (auto const& arg : m_arguments) {
-            auto size = arg->flags_to_string().size();
+            auto size = arg->flags_to_string(formatter).size();
             if (limit < size) {
                 limit = size;
             }
@@ -2059,14 +2062,14 @@ public:
     }
 
 private:
-    std::string usage() const
+    std::string usage(HelpFormatter formatter) const
     {
         std::string res;
         for (auto const& arg : m_arguments) {
             if (!res.empty()) {
                 res += " | ";
             }
-            res += arg->usage();
+            res += arg->usage(formatter);
         }
         return res.empty() ? res : "(" + res + ")";
     }
@@ -2704,7 +2707,7 @@ public:
         }
 
     private:
-        inline void limit_usage(std::size_t& limit) const override
+        inline void limit_usage(HelpFormatter, std::size_t& limit) const override
         {
             auto const str = usage();
             if (limit < str.size()) {
@@ -2712,7 +2715,7 @@ public:
             }
         }
 
-        void limit_help_flags(std::size_t& limit) const override
+        void limit_help_flags(HelpFormatter, std::size_t& limit) const override
         {
             auto size = flags_to_string().size();
             if (limit < size) {
@@ -4615,7 +4618,7 @@ private:
                     if (info.second == i) {
                         break;
                     }
-                    auto const str = positional_args.at(i)->usage();
+                    auto const str = positional_args.at(i)->usage(m_formatter_class);
                     if (!str.empty()) {
                         program += detail::_spaces + str;
                     }
@@ -5120,7 +5123,8 @@ private:
         return res;
     }
 
-    static std::string custom_usage(std::vector<pArgument> const& positional,
+    static std::string custom_usage(HelpFormatter formatter,
+                                    std::vector<pArgument> const& positional,
                                     std::vector<pArgument> const& optional,
                                     std::deque<pGroup> const& groups,
                                     std::deque<ExclusiveGroup> const& exclusive,
@@ -5130,7 +5134,7 @@ private:
         auto res = program;
         std::size_t min_size = 0;
         for (auto const& arg : positional) {
-            auto const str = arg->usage();
+            auto const str = arg->usage(formatter);
             if (min_size < str.size()) {
                 min_size = str.size();
             }
@@ -5140,19 +5144,19 @@ private:
             for (auto arg : ex.m_arguments) {
                 ex_opt.erase(std::remove(std::begin(ex_opt), std::end(ex_opt), arg), std::end(ex_opt));
             }
-            auto const str = ex.usage();
+            auto const str = ex.usage(formatter);
             if (min_size < str.size()) {
                 min_size = str.size();
             }
         }
         for (auto const& arg : ex_opt) {
-            auto const str = arg->usage();
+            auto const str = arg->usage(formatter);
             if (min_size < str.size()) {
                 min_size = str.size();
             }
         }
         for (auto const& group : groups) {
-            group->limit_usage(min_size);
+            group->limit_usage(formatter, min_size);
         }
         std::size_t const usage_length = std::string("usage: ").size();
         std::size_t pos = usage_length + program.size();
@@ -5175,16 +5179,16 @@ private:
             pos += 1 + str.size();
         };
         for (auto const& arg : ex_opt) {
-            _arg_usage(arg->usage(), true);
+            _arg_usage(arg->usage(formatter), true);
         }
         for (auto const& ex : exclusive) {
-            _arg_usage(ex.usage(), false);
+            _arg_usage(ex.usage(formatter), false);
         }
         for (std::size_t i = 0; i < positional.size(); ++i) {
             if (subparser.first && subparser.second == i) {
                 _arg_usage(subparser.first->usage(), false);
             }
-            auto const str = positional.at(i)->usage();
+            auto const str = positional.at(i)->usage(formatter);
             if (str.empty()) {
                 continue;
             }
@@ -5204,8 +5208,8 @@ private:
                                    std::string const& program,
                                    std::ostream& os = std::cout) const
     {
-        os << "usage: " << custom_usage(positional, optional, groups, exclusive,
-                                        subparser, program) << std::endl;
+        os << "usage: " << custom_usage(m_formatter_class, positional, optional, groups,
+                                        exclusive, subparser, program) << std::endl;
     }
 
     void print_custom_help(std::vector<pArgument> const& positional_all,
@@ -5250,19 +5254,19 @@ private:
         bool sub_positional = subparser.first && subparser.first->title().empty()
                 && subparser.first->description().empty();
         for (auto const& arg : positional) {
-            auto size = arg->flags_to_string().size();
+            auto size = arg->flags_to_string(m_formatter_class).size();
             if (min_size < size) {
                 min_size = size;
             }
         }
         for (auto const& arg : optional) {
-            auto size = arg->flags_to_string().size();
+            auto size = arg->flags_to_string(m_formatter_class).size();
             if (min_size < size) {
                 min_size = size;
             }
         }
         for (auto const& group : groups) {
-            group->limit_help_flags(min_size);
+            group->limit_help_flags(m_formatter_class, min_size);
         }
         min_size = std::min(min_size + 4, detail::_argument_help_limit);
         if (!positional.empty() || sub_positional) {
