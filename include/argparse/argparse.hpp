@@ -488,9 +488,14 @@ std::string _type_name()
     return res.substr(pos + 2, next - pos - 2);
 }
 
+static inline bool _correct_type_names(std::string const& expected, std::string const& received)
+{
+    return expected.empty() || received == expected;
+}
+
 static inline void _check_type_names(std::string const& expected, std::string const& received)
 {
-    if (!expected.empty() && received != expected) {
+    if (!_correct_type_names(expected, received)) {
         throw TypeError("type_name missmatch: expected " + expected + ", received " + received);
     }
 }
@@ -2869,8 +2874,8 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
-            if (!args.operator bool()) {
+            if (!args.operator bool()
+                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
                 return {};
             }
             if (args->first->m_action == Action::count) {
@@ -2896,11 +2901,11 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
             if (!args.operator bool()
                     || args->first->m_action == Action::count
                     || args->second.empty()
-                    || args->second.size() != 1) {
+                    || args->second.size() != 1
+                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
                 return {};
             }
             return try_to_type<T>(args->second.front());
@@ -2920,8 +2925,10 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
-            if (!args.operator bool() || args->first->m_action == Action::count) {
+            if (!args.operator bool()
+                    || args->first->m_action == Action::count
+                    || !detail::_correct_type_names(args->first->type_name(),
+                                                    detail::_type_name<typename T::value_type>())) {
                 return {};
             }
             auto vector = try_to_vector<typename T::value_type>(args->second);
@@ -2944,8 +2951,10 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
-            if (!args.operator bool() || args->first->m_action == Action::count) {
+            if (!args.operator bool()
+                    || args->first->m_action == Action::count
+                    || !detail::_correct_type_names(args->first->type_name(),
+                                                    detail::_type_name<typename T::value_type>())) {
                 return {};
             }
             auto vector = try_to_vector<typename T::value_type>(args->second);
@@ -2974,8 +2983,10 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
-            if (!args.operator bool() || args->first->m_action == Action::count) {
+            if (!args.operator bool()
+                    || args->first->m_action == Action::count
+                    || !detail::_correct_type_names(args->first->type_name(),
+                                                    detail::_type_name<typename T::value_type>())) {
                 return {};
             }
             auto vector = try_to_vector<typename T::value_type>(args->second);
@@ -2999,8 +3010,10 @@ public:
         std::optional<T> try_get(std::string const& key, char delim = detail::_equal) const
         {
             auto args = try_get_data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::mapped_type>());
-            if (!args.operator bool() || args->first->m_action == Action::count) {
+            if (!args.operator bool()
+                    || args->first->m_action == Action::count
+                    || !detail::_correct_type_names(args->first->type_name(),
+                                                    detail::_type_name<typename T::mapped_type>())) {
                 return {};
             }
             T res{};
@@ -3036,8 +3049,9 @@ public:
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
-            if (!args.operator bool() || args->first->m_action == Action::count) {
+            if (!args.operator bool()
+                    || args->first->m_action == Action::count
+                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
                 return {};
             }
             return try_to_type<T>(detail::_vector_to_string(args->second));
