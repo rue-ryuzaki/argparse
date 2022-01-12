@@ -54,11 +54,22 @@
 
 #if __cplusplus >= 201703L // C++17+
 #include <optional>
+
+#define ARGPARSE_USE_OPTIONAL 1
 #elif __cplusplus >= 201402L // C++14
+#ifdef __APPLE__
+#warning "use C++17 or higher for std::optional"
+#undef ARGPARSE_USE_OPTIONAL
+#else
 #include <experimental/optional>
 namespace std {
 using experimental::optional;
 } // std
+
+#define ARGPARSE_USE_OPTIONAL 1
+#endif // __APPLE__
+#else
+#undef ARGPARSE_USE_OPTIONAL
 #endif // C++14+
 
 #pragma GCC diagnostic push
@@ -2868,7 +2879,7 @@ public:
             return false;
         }
 
-#if __cplusplus >= 201402L
+#ifdef ARGPARSE_USE_OPTIONAL
         /*!
          *  \brief Try get parsed argument value for integer types.
          *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
@@ -3094,7 +3105,7 @@ public:
             }
             return try_to_type<T>(detail::_vector_to_string(args->second));
         }
-#endif // C++14+
+#endif // ARGPARSE_USE_OPTIONAL
 
         /*!
          *  \brief Get parsed argument value for integer types.
@@ -3405,7 +3416,7 @@ public:
             return m_storage;
         }
 
-#if __cplusplus >= 201402L // C++14+
+#ifdef ARGPARSE_USE_OPTIONAL
         std::optional<Storage::value_type> try_get_data(std::string const& key) const
         {
             if (m_storage.exists(key)) {
@@ -3498,7 +3509,7 @@ public:
             }
             return result;
         }
-#endif // C++14+
+#endif // ARGPARSE_USE_OPTIONAL
 
         Storage::value_type const& data(std::string const& key) const
         {
