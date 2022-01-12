@@ -182,13 +182,13 @@ std::string const _equals = "=";
 static inline void _ltrim(std::string& s)
 {
     s.erase(std::begin(s), std::find_if(std::begin(s), std::end(s),
-                                        not1(std::ptr_fun<int, int>(isspace))));
+                                        [] (int c) { return !std::isspace(c); }));
 }
 
 static inline void _rtrim(std::string& s)
 {
     s.erase(std::find_if(s.rbegin(), s.rend(),
-                         not1(std::ptr_fun<int, int>(isspace))).base(), s.end());
+                         [] (int c) { return !std::isspace(c); }).base(), s.end());
 }
 
 static inline void _trim(std::string& s)
