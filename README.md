@@ -169,6 +169,12 @@ int main(int argc, char* argv[])
     return 0;
 }
 ```
+## Namespace::get<> types support
+- basic types (bool, integral types, floating point types, std::string)
+- std::pair
+- containers (std::array, std::deque, std::forward_list, std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset, std::unordered_set)
+- mapped types (std::map, std::multimap, std::unordered_map)
+- custom types
 ## Custom type example
 ### Namespace::get<>
 Required std::istream& operator >>(std::istream& is, Type& t).
