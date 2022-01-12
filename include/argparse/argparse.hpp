@@ -354,7 +354,7 @@ static inline std::vector<std::string> _split_equal(std::string const& s,
     }
 }
 
-static std::vector<std::string> _split_to_args(std::string const& str)
+static inline std::vector<std::string> _split_to_args(std::string const& str)
 {
     std::vector<std::string> result;
     auto _store_value = [&result] (std::string& value)
