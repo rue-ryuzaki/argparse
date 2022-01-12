@@ -632,18 +632,13 @@ class Argument
         ZERO_OR_MORE,   // "?"
     };
 
-public:
-    /*!
-     * \brief Argument type
-     *
-     * \enum Type
-     */
     enum Type
     {
         Positional,
         Optional
     };
 
+public:
     /*!
      *  \brief Construct argument object with parsed arguments
      *
@@ -2187,6 +2182,9 @@ public:
     /*!
      *  \brief Add argument group
      *
+     *  \param title Group title
+     *  \param description Group description
+     *
      *  \return Current argument group reference
      */
     inline ArgumentGroup& add_argument_group(std::string const& title = std::string(),
@@ -3637,7 +3635,7 @@ public:
     explicit ArgumentParser(int argc, char const* argv[])
         : ArgumentParser(detail::_file_name(argv[0]))
     {
-        m_parsed_arguments.reserve(argc - 1);
+        m_parsed_arguments.reserve(std::size_t(argc - 1));
         for (int i = 1; i < argc; ++i) {
             m_parsed_arguments.emplace_back(std::string(argv[i]));
         }
@@ -3733,6 +3731,7 @@ public:
      *  \brief Set argument parser 'formatter_class' value
      *
      *  \param param HelpFormatter value
+     *  \param args HelpFormatter values
      *
      *  \return Current argument parser reference
      */
@@ -3760,6 +3759,7 @@ public:
      *  \brief Add argument parser 'formatter_class' value
      *
      *  \param param HelpFormatter value
+     *  \param args HelpFormatter values
      *
      *  \return Current argument parser reference
      */
