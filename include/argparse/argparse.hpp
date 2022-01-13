@@ -64,6 +64,7 @@
 #include <experimental/optional>
 namespace std {
 using experimental::optional;
+using experimental::fundamentals_v1::nullopt;
 } // std
 
 #define ARGPARSE_USE_OPTIONAL 1
