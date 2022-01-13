@@ -57,10 +57,7 @@
 
 #define ARGPARSE_USE_OPTIONAL 1
 #elif __cplusplus >= 201402L // C++14
-#ifdef __APPLE__
-#warning "use C++17 or higher for std::optional"
-#undef ARGPARSE_USE_OPTIONAL
-#else
+#if defined(__GNUC__) and (defined(__linux__) or !defined(__clang__))
 #include <experimental/optional>
 namespace std {
 using experimental::optional;
@@ -68,7 +65,10 @@ using experimental::fundamentals_v1::nullopt;
 } // std
 
 #define ARGPARSE_USE_OPTIONAL 1
-#endif // __APPLE__
+#else
+#warning "use C++17 or higher for std::optional"
+#undef ARGPARSE_USE_OPTIONAL
+#endif // __GNUC__
 #else
 #undef ARGPARSE_USE_OPTIONAL
 #endif // C++14+
