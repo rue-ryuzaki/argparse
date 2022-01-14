@@ -54,6 +54,7 @@
 
 #if __cplusplus >= 201703L // C++17+
 #include <optional>
+#include <string_view>
 
 #define ARGPARSE_USE_OPTIONAL 1
 #elif __cplusplus >= 201402L // C++14
@@ -238,9 +239,11 @@ static inline bool _have_quotes(std::string const& s)
             && (s.front() == '\'' || s.front() == '\"');
 }
 
-static inline std::string _remove_quotes(std::string const& s)
+template <class T = std::string,
+          typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+T _remove_quotes(std::string const& s)
 {
-    return _have_quotes(s) ? s.substr(1, s.size() - 2) : s;
+    return _have_quotes(s) ? T(s).substr(1, s.size() - 2) : T(s);
 }
 
 static inline std::string _replace(std::string s, char c, std::string const& val)
@@ -3140,9 +3143,10 @@ public:
          *
          *  \return Parsed argument value
          */
-        template <class T, typename std::enable_if<std::is_same<bool, T>::value
-                                                   or std::is_floating_point<T>::value
-                                                   or std::is_same<std::string, T>::value>::type* = nullptr>
+        template <class T,
+                  typename std::enable_if<std::is_same<bool, T>::value
+                                          or std::is_floating_point<T>::value
+                                          or std::is_constructible<std::string, T>::value>::type* = nullptr>
         T get(std::string const& key) const
         {
             auto const& args = data(key);
@@ -3289,7 +3293,7 @@ public:
                   typename std::enable_if<not std::is_integral<T>::value
                                           and not std::is_same<bool, T>::value
                                           and not std::is_floating_point<T>::value
-                                          and not std::is_same<std::string, T>::value
+                                          and not std::is_constructible<std::string, T>::value
                                           and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
                                           and not is_stl_map<typename std::decay<T>::type>::value
@@ -3489,7 +3493,7 @@ public:
                   typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
         inline std::optional<T> try_to_type(std::string const& data) const
         {
-            return detail::_remove_quotes(data);
+            return detail::_remove_quotes<T>(data);
         }
 
         template <class T,
@@ -3566,7 +3570,7 @@ public:
                   typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
         inline T to_type(std::string const& data) const
         {
-            return detail::_remove_quotes(data);
+            return detail::_remove_quotes<T>(data);
         }
 
         template <class T,
