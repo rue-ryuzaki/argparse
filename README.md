@@ -1,5 +1,6 @@
 [![Ubuntu](https://github.com/rue-ryuzaki/argparse/workflows/Ubuntu/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AUbuntu)
 [![macOS](https://github.com/rue-ryuzaki/argparse/workflows/macOS/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AmacOS)
+[![Windows](https://github.com/rue-ryuzaki/argparse/workflows/Windows/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AWindows)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rue-ryuzaki/argparse/main/LICENSE)
 [![GitHub releases](https://img.shields.io/github/release/rue-ryuzaki/argparse.svg)](https://github.com/rue-ryuzaki/argparse/releases)
 [![GitHub downloads](https://img.shields.io/github/downloads/rue-ryuzaki/argparse/total)](https://github.com/rue-ryuzaki/argparse/releases)
@@ -169,8 +170,8 @@ int main(int argc, char* argv[])
     return 0;
 }
 ```
-## Namespace::get<> types support
-- basic types (bool, integral types, floating point types, std::string)
+## Namespace::get<> types support (+ try_get with std::optional, since C++17)
+- basic types (bool, integral types, floating point types, std::string, std::string_view (since C++17))
 - std::pair
 - containers (std::array, std::deque, std::forward_list, std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset, std::unordered_set)
 - mapped types (std::map, std::multimap, std::unordered_map)
