@@ -2916,9 +2916,10 @@ public:
          *
          *  \return Parsed argument value or std::nullopt
          */
-        template <class T, typename std::enable_if<std::is_same<bool, T>::value
-                                                   or std::is_floating_point<T>::value
-                                                   or std::is_same<std::string, T>::value>::type* = nullptr>
+        template <class T,
+                  typename std::enable_if<std::is_same<bool, T>::value
+                                          or std::is_floating_point<T>::value
+                                          or std::is_constructible<std::string, T>::value>::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
