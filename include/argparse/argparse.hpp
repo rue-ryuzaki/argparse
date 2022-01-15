@@ -3091,7 +3091,7 @@ public:
                   typename std::enable_if<not std::is_integral<T>::value
                                           and not std::is_same<bool, T>::value
                                           and not std::is_floating_point<T>::value
-                                          and not std::is_same<std::string, T>::value
+                                          and not std::is_constructible<std::string, T>::value
                                           and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
                                           and not is_stl_map<typename std::decay<T>::type>::value
