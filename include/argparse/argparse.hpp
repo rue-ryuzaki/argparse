@@ -78,6 +78,14 @@ using experimental::fundamentals_v1::nullopt;
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough="
 
 namespace argparse {
+template <class T>  struct is_literal { enum{value = false}; };
+template <>         struct is_literal<char> { enum{value = true}; };
+template <>         struct is_literal<signed char> { enum{value = true}; };
+template <>         struct is_literal<unsigned char> { enum{value = true}; };
+#if __cplusplus >= 201703L // C++17+
+template <>         struct is_literal<std::byte> { enum{value = true}; };
+#endif // C++17+
+
 /*!
  * \brief Help formatter values
  *
@@ -2883,6 +2891,30 @@ public:
 
 #ifdef ARGPARSE_USE_OPTIONAL
         /*!
+         *  \brief Try get parsed argument value for byte types.
+         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value or std::nullopt
+         */
+        template <class T, typename std::enable_if<is_literal<T>::value>::type* = nullptr>
+        std::optional<T> try_get(std::string const& key) const
+        {
+            auto args = try_get_data(key);
+            if (!args.operator bool()
+                    || args->first->m_action == Action::count
+                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())
+                    || args->second.empty()
+                    || args->second.size() != 1
+                    || args->second.front().empty()
+                    || args->second.front().size() != 1) {
+                return {};
+            }
+            return T(args->second.front().front());
+        }
+
+        /*!
          *  \brief Try get parsed argument value for integer types.
          *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
          *
@@ -2891,6 +2923,7 @@ public:
          *  \return Parsed argument value or std::nullopt
          */
         template <class T, typename std::enable_if<std::is_integral<T>::value
+                                                   and not is_literal<T>::value
                                                    and not std::is_same<bool, T>::value>::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
         {
@@ -3092,8 +3125,9 @@ public:
                                           and not std::is_same<bool, T>::value
                                           and not std::is_floating_point<T>::value
                                           and not std::is_constructible<std::string, T>::value
-                                          and not is_stl_container<typename std::decay<T>::type>::value
+                                          and not is_literal<T>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
+                                          and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_map<typename std::decay<T>::type>::value
                                           and not is_stl_pair<typename std::decay<T>::type>::value
                                           and not is_stl_queue<typename std::decay<T>::type>::value>
@@ -3111,6 +3145,37 @@ public:
 #endif // ARGPARSE_USE_OPTIONAL
 
         /*!
+         *  \brief Get parsed argument value for byte types.
+         *  If argument not parsed, returns default value.
+         *
+         *  \param key Argument name
+         *
+         *  \return Parsed argument value
+         */
+        template <class T, typename std::enable_if<is_literal<T>::value>::type* = nullptr>
+        T get(std::string const& key) const
+        {
+            auto const& args = data(key);
+            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
+            if (args.first->m_action == Action::count) {
+                throw TypeError("invalid get type for argument '" + key + "'");
+            }
+            if (args.second.empty()) {
+                return T();
+            }
+            if (args.second.size() != 1) {
+                throw TypeError("trying to get data from array argument '" + key + "'");
+            }
+            if (args.second.front().empty()) {
+                return T();
+            }
+            if (args.second.front().size() != 1) {
+                throw TypeError("trying to get data from array argument '" + key + "'");
+            }
+            return T(args.second.front().front());
+        }
+
+        /*!
          *  \brief Get parsed argument value for integer types.
          *  If argument not parsed, returns default value.
          *
@@ -3119,6 +3184,7 @@ public:
          *  \return Parsed argument value
          */
         template <class T, typename std::enable_if<std::is_integral<T>::value
+                                                   and not is_literal<T>::value
                                                    and not std::is_same<bool, T>::value>::type* = nullptr>
         T get(std::string const& key) const
         {
@@ -3295,8 +3361,9 @@ public:
                                           and not std::is_same<bool, T>::value
                                           and not std::is_floating_point<T>::value
                                           and not std::is_constructible<std::string, T>::value
-                                          and not is_stl_container<typename std::decay<T>::type>::value
+                                          and not is_literal<T>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
+                                          and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_map<typename std::decay<T>::type>::value
                                           and not is_stl_pair<typename std::decay<T>::type>::value
                                           and not is_stl_queue<typename std::decay<T>::type>::value>
