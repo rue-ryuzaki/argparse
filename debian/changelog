@@ -1,3 +1,14 @@
+cpp-argparse-dev (1.2.0-0ppa0) focal; urgency=low
+
+  * Add RawTextHelpFormatter support
+  * Add MetavarTypeHelpFormatter support
+  * Add initial Argument::type support
+  * Add pair type to Namespace::get<>()
+  * Add byte types to Namespace::get<>()
+  * Add std::string_view support to Namespace::get<>()
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 15 Jan 2022 21:28:19 +0300
+
 cpp-argparse-dev (1.1.4-0ppa0) focal; urgency=low
 
   * Add RawDescriptionHelpFormatter support
