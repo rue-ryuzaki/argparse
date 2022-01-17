@@ -2891,30 +2891,6 @@ public:
 
 #ifdef ARGPARSE_USE_OPTIONAL
         /*!
-         *  \brief Try get parsed argument value for byte types.
-         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value or std::nullopt
-         */
-        template <class T, typename std::enable_if<is_literal<T>::value>::type* = nullptr>
-        std::optional<T> try_get(std::string const& key) const
-        {
-            auto args = try_get_data(key);
-            if (!args.operator bool()
-                    || args->first->m_action == Action::count
-                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())
-                    || args->second.empty()
-                    || args->second.size() != 1
-                    || args->second.front().empty()
-                    || args->second.front().size() != 1) {
-                return {};
-            }
-            return T(args->second.front().front());
-        }
-
-        /*!
          *  \brief Try get parsed argument value for integer types.
          *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
          *
@@ -2942,7 +2918,7 @@ public:
         }
 
         /*!
-         *  \brief Try get parsed argument value for boolean, floating point and string types.
+         *  \brief Try get parsed argument value for boolean, byte, floating point and string types.
          *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
          *
          *  \param key Argument name
@@ -2951,6 +2927,7 @@ public:
          */
         template <class T,
                   typename std::enable_if<std::is_same<bool, T>::value
+                                          or is_literal<T>::value
                                           or std::is_floating_point<T>::value
                                           or std::is_constructible<std::string, T>::value>::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
@@ -3145,37 +3122,6 @@ public:
 #endif // ARGPARSE_USE_OPTIONAL
 
         /*!
-         *  \brief Get parsed argument value for byte types.
-         *  If argument not parsed, returns default value.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value
-         */
-        template <class T, typename std::enable_if<is_literal<T>::value>::type* = nullptr>
-        T get(std::string const& key) const
-        {
-            auto const& args = data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
-            if (args.first->m_action == Action::count) {
-                throw TypeError("invalid get type for argument '" + key + "'");
-            }
-            if (args.second.empty()) {
-                return T();
-            }
-            if (args.second.size() != 1) {
-                throw TypeError("trying to get data from array argument '" + key + "'");
-            }
-            if (args.second.front().empty()) {
-                return T();
-            }
-            if (args.second.front().size() != 1) {
-                throw TypeError("trying to get data from array argument '" + key + "'");
-            }
-            return T(args.second.front().front());
-        }
-
-        /*!
          *  \brief Get parsed argument value for integer types.
          *  If argument not parsed, returns default value.
          *
@@ -3203,7 +3149,7 @@ public:
         }
 
         /*!
-         *  \brief Get parsed argument value for boolean, floating point and string types.
+         *  \brief Get parsed argument value for boolean, byte, floating point and string types.
          *  If argument not parsed, returns default value.
          *
          *  \param key Argument name
@@ -3212,6 +3158,7 @@ public:
          */
         template <class T,
                   typename std::enable_if<std::is_same<bool, T>::value
+                                          or is_literal<T>::value
                                           or std::is_floating_point<T>::value
                                           or std::is_constructible<std::string, T>::value>::type* = nullptr>
         T get(std::string const& key) const
@@ -3551,6 +3498,15 @@ public:
             return vec;
         }
 
+        template <class T, typename std::enable_if<is_literal<T>::value>::type* = nullptr>
+        inline std::optional<T> try_to_type(std::string const& data) const noexcept
+        {
+            if (data.empty() || data.size() != 1) {
+                return {};
+            }
+            return T(data.front());
+        }
+
         template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
         inline std::optional<T> try_to_type(std::string const& data) const noexcept
         {
@@ -3566,6 +3522,7 @@ public:
 
         template <class T,
                   typename std::enable_if<not std::is_constructible<std::string, T>::value
+                                          and not is_literal<T>::value
                                           and not std::is_same<bool, T>::value>::type* = nullptr>
         std::optional<T> try_to_type(std::string const& data) const
         {
@@ -3628,6 +3585,18 @@ public:
             return vec;
         }
 
+        template <class T, typename std::enable_if<is_literal<T>::value>::type* = nullptr>
+        inline T to_type(std::string const& data) const
+        {
+            if (data.empty()) {
+                return T();
+            }
+            if (data.size() != 1) {
+                throw TypeError("trying to get data from array argument value '" + data + "'");
+            }
+            return T(data.front());
+        }
+
         template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
         inline T to_type(std::string const& data) const noexcept
         {
@@ -3643,6 +3612,7 @@ public:
 
         template <class T,
                   typename std::enable_if<not std::is_constructible<std::string, T>::value
+                                          and not is_literal<T>::value
                                           and not std::is_same<bool, T>::value>::type* = nullptr>
         T to_type(std::string const& data) const
         {

@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 ### Don't work:
 - pointer and reference types
 - plain C arrays
-- containers with byte types, std::pair or another containers
+- containers with std::pair or another containers
 - C++17+ types and containers (std::span)
 ## Custom type example
 ### Namespace::get<>
