@@ -14,6 +14,7 @@ jobs:
     runs-on: macos-latest
 
     strategy:
+      fail-fast: false
       matrix:
         standard: [11, 14, 17, 20]
 
