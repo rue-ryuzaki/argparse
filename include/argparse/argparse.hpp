@@ -5151,10 +5151,12 @@ private:
                 }
                 args += subparser.first->flags_to_string();
             }
-            if (!required_args.empty()) {
-                args += ", ";
+            for (auto const& arg : required_args) {
+                if (!args.empty()) {
+                    args += ", ";
+                }
+                args += arg;
             }
-            args += detail::_vector_to_string(required_args, ", ");
             if (!args.empty()) {
                 throw_error("the following arguments are required: " + args);
             }
