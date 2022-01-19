@@ -4737,7 +4737,8 @@ private:
                 sub_optional = parser->get_optional_with_help(true, m_add_help, parser->m_prefix_chars);
                 auto sub_positional = parser->get_positional(true);
                 positional.insert(std::next(std::begin(positional), subparser.second),
-                                  std::begin(sub_positional), std::end(sub_positional));
+                                  std::make_move_iterator(std::begin(sub_positional)),
+                                  std::make_move_iterator(std::end(sub_positional)));
                 arguments.pop_front();
                 have_negative_args = _negative_numbers_presented(sub_optional, parser->m_prefix_chars);
 
@@ -4847,7 +4848,9 @@ private:
                         break;
                     }
                 }
-                temp.insert(std::end(temp), std::begin(flags), std::end(flags));
+                temp.insert(std::end(temp),
+                            std::make_move_iterator(std::begin(flags)),
+                            std::make_move_iterator(std::end(flags)));
             } else {
                 temp.push_back(arg);
             }
@@ -4858,7 +4861,9 @@ private:
                    && detail::_is_value_exists(arguments.at(i).front(), m_fromfile_prefix_chars)) {
                 auto args = convert_arg_line_to_args(arguments.at(i).substr(1));
                 arguments.erase(std::next(std::begin(arguments), i));
-                arguments.insert(std::next(std::begin(arguments), i), std::begin(args), std::end(args));
+                arguments.insert(std::next(std::begin(arguments), i),
+                                 std::make_move_iterator(std::begin(args)),
+                                 std::make_move_iterator(std::end(args)));
             }
         };
         auto _check_abbreviations = [this, _separate_arg_abbrev, _throw_error, _prefix_chars,
@@ -4908,7 +4913,9 @@ private:
                     _separate_arg_abbrev(temp, arg, detail::_flag_name(arg), optionals);
                 }
                 arguments.erase(std::next(std::begin(arguments), i));
-                arguments.insert(std::next(std::begin(arguments), i), std::begin(temp), std::end(temp));
+                arguments.insert(std::next(std::begin(arguments), i),
+                                 std::make_move_iterator(std::begin(temp)),
+                                 std::make_move_iterator(std::end(temp)));
             }
         };
         auto _print_help_and_exit = [this, &parser] ()
@@ -5192,8 +5199,9 @@ private:
         std::vector<pArgument> result;
         result.reserve(m_positional.size());
         for (auto const& parent : m_parents) {
-            auto const args = parent.positional_arguments(add_suppress, add_groups);
-            result.insert(std::end(result), std::begin(args), std::end(args));
+            auto args = parent.positional_arguments(add_suppress, add_groups);
+            result.insert(std::end(result),
+                          std::make_move_iterator(std::begin(args)), std::make_move_iterator(std::end(args)));
         }
         for (auto const& arg : m_positional) {
             if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)) {
@@ -5214,8 +5222,9 @@ private:
             result.emplace_back(std::move(help));
         }
         for (auto const& parent : m_parents) {
-            auto const args = parent.optional_arguments(add_suppress, add_groups);
-            result.insert(std::end(result), std::begin(args), std::end(args));
+            auto args = parent.optional_arguments(add_suppress, add_groups);
+            result.insert(std::end(result),
+                          std::make_move_iterator(std::begin(args)), std::make_move_iterator(std::end(args)));
         }
         for (auto const& arg : m_optional) {
             if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)) {
