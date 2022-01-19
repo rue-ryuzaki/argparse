@@ -2254,7 +2254,7 @@ class ArgumentParser : public BaseParser
             }
             auto const& flag = conflict_arg(key);
             if (flag.empty()) {
-                m_data.insert({ key, value });
+                m_data.insert(std::make_pair(key, value));
             }
         }
 
@@ -2272,7 +2272,7 @@ class ArgumentParser : public BaseParser
             }
             auto const& flag = conflict_arg(key);
             if (flag.empty()) {
-                m_data.insert({ key, value });
+                m_data.insert(std::make_pair(key, value));
             } else {
                 throw ArgumentError("argument " + detail::_vector_to_string(key->m_flags, "/")
                                     + ": conflicting dest string: " + flag);
@@ -4736,7 +4736,7 @@ private:
             if (parser) {
                 sub_optional = parser->get_optional_with_help(true, m_add_help, parser->m_prefix_chars);
                 auto sub_positional = parser->get_positional(true);
-                positional.insert(std::begin(positional) + subparser.second,
+                positional.insert(std::next(std::begin(positional), subparser.second),
                                   std::begin(sub_positional), std::end(sub_positional));
                 arguments.pop_front();
                 have_negative_args = _negative_numbers_presented(sub_optional, parser->m_prefix_chars);
@@ -4856,9 +4856,9 @@ private:
         {
             while (!arguments.at(i).empty()
                    && detail::_is_value_exists(arguments.at(i).front(), m_fromfile_prefix_chars)) {
-                auto const load_args = convert_arg_line_to_args(arguments.at(i).substr(1));
-                arguments.erase(std::begin(arguments) + i);
-                arguments.insert(std::begin(arguments) + i, std::begin(load_args), std::end(load_args));
+                auto args = convert_arg_line_to_args(arguments.at(i).substr(1));
+                arguments.erase(std::next(std::begin(arguments), i));
+                arguments.insert(std::next(std::begin(arguments), i), std::begin(args), std::end(args));
             }
         };
         auto _check_abbreviations = [this, _separate_arg_abbrev, _throw_error, _prefix_chars,
@@ -4907,8 +4907,8 @@ private:
                 } else {
                     _separate_arg_abbrev(temp, arg, detail::_flag_name(arg), optionals);
                 }
-                arguments.erase(std::begin(arguments) + i);
-                arguments.insert(std::begin(arguments) + i, std::begin(temp), std::end(temp));
+                arguments.erase(std::next(std::begin(arguments), i));
+                arguments.insert(std::next(std::begin(arguments), i), std::begin(temp), std::end(temp));
             }
         };
         auto _print_help_and_exit = [this, &parser] ()
