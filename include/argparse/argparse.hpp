@@ -1683,7 +1683,8 @@ public:
      *  \return Argument data object
      */
     explicit ArgumentData()
-        : m_arguments(),
+        : m_conflict_handler(),
+          m_arguments(),
           m_optional(),
           m_positional()
     { }
@@ -1696,7 +1697,8 @@ public:
      *  \return Argument data object
      */
     explicit ArgumentData(ArgumentData const& orig)
-        : m_arguments(orig.m_arguments),
+        : m_conflict_handler(orig.m_conflict_handler),
+          m_arguments(orig.m_arguments),
           m_optional(orig.m_optional),
           m_positional(orig.m_positional)
     { }
@@ -1716,9 +1718,10 @@ public:
     ArgumentData& operator =(ArgumentData const& rhs)
     {
         if (this != &rhs) {
-            m_arguments     = rhs.m_arguments;
-            m_optional      = rhs.m_optional;
-            m_positional    = rhs.m_positional;
+            m_conflict_handler  = rhs.m_conflict_handler;
+            m_arguments         = rhs.m_arguments;
+            m_optional          = rhs.m_optional;
+            m_positional        = rhs.m_positional;
         }
         return *this;
     }
@@ -1813,10 +1816,16 @@ protected:
                                               is_optional ? Argument::Optional : Argument::Positional);
         if (is_optional) {
             for (auto const& arg_flag : arg->m_flags) {
-                for (auto const& opt : m_optional) {
-                    if (detail::_is_value_exists(arg_flag, opt.first->m_flags)) {
-                        throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
-                                            + ": conflicting option string: " + arg_flag);
+                for (auto& opt : m_optional) {
+                    auto it = std::find(std::begin(opt.first->m_flags),
+                                        std::end(opt.first->m_flags), arg_flag);
+                    if (it != std::end(opt.first->m_flags)) {
+                        if (m_conflict_handler == "resolve") {
+                            opt.first->m_flags.erase(it);
+                        } else {
+                            throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
+                                                + ": conflicting option string: " + arg_flag);
+                        }
                     }
                 }
             }
@@ -1824,6 +1833,7 @@ protected:
         m_arguments.emplace_back(std::move(arg));
     }
 
+    std::string m_conflict_handler;
     std::vector<pArgument> m_arguments;
     std::vector<std::pair<pArgument, bool> > m_optional;
     std::vector<std::pair<pArgument, bool> > m_positional;
@@ -3856,6 +3866,22 @@ public:
     }
 
     /*!
+     *  \brief Set argument parser 'argument_default' value
+     *
+     *  \param param Argument default value
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& conflict_handler(std::string const& param)
+    {
+        if (param != "resolve") {
+            throw AttributeError("'ArgumentParser' object has no attribute '_handle_conflict_" + param + "'");
+        }
+        m_conflict_handler = param;
+        return *this;
+    }
+
+    /*!
      *  \brief Set argument parser 'add_help' value
      *
      *  \param value Add help flag
@@ -3922,6 +3948,16 @@ public:
     inline std::string const& argument_default() const noexcept
     {
         return m_argument_default();
+    }
+
+    /*!
+     *  \brief Get argument parser 'conflict_handler' value
+     *
+     *  \return Argument parser 'conflict_handler' value
+     */
+    inline std::string const& conflict_handler() const noexcept
+    {
+        return m_conflict_handler;
     }
 
     /*!
@@ -5229,7 +5265,9 @@ private:
                           std::make_move_iterator(std::begin(args)), std::make_move_iterator(std::end(args)));
         }
         for (auto const& arg : m_optional) {
-            if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)) {
+            if ((add_suppress || !arg.first->m_help_type.has_value())
+                    && (add_groups || !arg.second)
+                    && !arg.first->m_flags.empty()) {
                 result.push_back(arg.first);
             }
         }
