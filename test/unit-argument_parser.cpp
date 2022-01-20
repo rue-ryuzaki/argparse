@@ -1292,19 +1292,21 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         parser_b.add_argument("--baz").choices("XYZ").help("baz help");
 
         auto args0 = parser.parse_args({ "--foo" });
-        REQUIRE(args0.get<uint32_t>("bar") == 0);
+        REQUIRE(args0.exists("bar") == false);
+        REQUIRE(args0.exists("baz") == false);
         REQUIRE(args0.get<bool>("foo") == true);
-        REQUIRE(args0.get<std::string>("baz") == "");
         REQUIRE(args0.get<std::string>("cmd") == "");
 
         auto args1 = parser.parse_args({ "a", "12" });
+        REQUIRE(args1.exists("bar") == true);
+        REQUIRE(args1.exists("baz") == false);
         REQUIRE(args1.get<uint32_t>("bar") == 12);
         REQUIRE(args1.get<bool>("foo") == false);
-        REQUIRE(args1.get<std::string>("baz") == "");
         REQUIRE(args1.get<std::string>("cmd") == "a");
 
         auto args2 = parser.parse_args({ "--foo", "b", "--baz", "Z" });
-        REQUIRE(args2.get<uint32_t>("bar") == 0);
+        REQUIRE(args2.exists("bar") == false);
+        REQUIRE(args2.exists("baz") == true);
         REQUIRE(args2.get<bool>("foo") == true);
         REQUIRE(args2.get<std::string>("baz") == "Z");
         REQUIRE(args2.get<std::string>("cmd") == "b");
@@ -1329,43 +1331,48 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ }));
 
         auto args0 = parser.parse_args({ "boo", "--foo" });
+        REQUIRE(args0.exists("bar") == false);
+        REQUIRE(args0.exists("baz") == false);
         REQUIRE(args0.get<std::string>("boo") == "boo");
-        REQUIRE(args0.get<uint32_t>("bar") == 0);
         REQUIRE(args0.get<bool>("foo") == true);
-        REQUIRE(args0.get<std::string>("baz") == "");
         REQUIRE(args0.get<std::string>("cmd") == "");
 
         auto args1 = parser.parse_args({ "boo", "--foo", "a", "12" });
+        REQUIRE(args1.exists("bar") == true);
+        REQUIRE(args1.exists("baz") == false);
         REQUIRE(args1.get<std::string>("boo") == "boo");
         REQUIRE(args1.get<uint32_t>("bar") == 12);
         REQUIRE(args1.get<bool>("foo") == true);
-        REQUIRE(args1.get<std::string>("baz") == "");
         REQUIRE(args1.get<std::string>("cmd") == "a");
 
         auto args2 = parser.parse_args({ "boo", "--foo", "b", "--baz", "Z" });
+        REQUIRE(args2.exists("bar") == false);
+        REQUIRE(args2.exists("baz") == true);
         REQUIRE(args2.get<std::string>("boo") == "boo");
-        REQUIRE(args2.get<uint32_t>("bar") == 0);
         REQUIRE(args2.get<bool>("foo") == true);
         REQUIRE(args2.get<std::string>("baz") == "Z");
         REQUIRE(args2.get<std::string>("cmd") == "b");
 
         auto args3 = parser.parse_args({ "boo", "a", "12" });
+        REQUIRE(args3.exists("bar") == true);
+        REQUIRE(args3.exists("baz") == false);
         REQUIRE(args3.get<std::string>("boo") == "boo");
         REQUIRE(args3.get<uint32_t>("bar") == 12);
         REQUIRE(args3.get<bool>("foo") == false);
-        REQUIRE(args3.get<std::string>("baz") == "");
         REQUIRE(args3.get<std::string>("cmd") == "a");
 
         auto args4 = parser.parse_args({ "--foo", "boo", "a", "12" });
+        REQUIRE(args4.exists("bar") == true);
+        REQUIRE(args4.exists("baz") == false);
         REQUIRE(args4.get<std::string>("boo") == "boo");
         REQUIRE(args4.get<uint32_t>("bar") == 12);
         REQUIRE(args4.get<bool>("foo") == true);
-        REQUIRE(args4.get<std::string>("baz") == "");
         REQUIRE(args4.get<std::string>("cmd") == "a");
 
         auto args5 = parser.parse_args({ "--foo", "boo", "b", "--baz", "Z" });
+        REQUIRE(args5.exists("bar") == false);
+        REQUIRE(args5.exists("baz") == true);
         REQUIRE(args5.get<std::string>("boo") == "boo");
-        REQUIRE(args5.get<uint32_t>("bar") == 0);
         REQUIRE(args5.get<bool>("foo") == true);
         REQUIRE(args5.get<std::string>("baz") == "Z");
         REQUIRE(args5.get<std::string>("cmd") == "b");
@@ -1389,46 +1396,50 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         parser.add_argument("coo").action("store_const").const_value(const_value).help("coo help");
 
         auto args0 = parser.parse_args({ "--foo" });
+        REQUIRE(args0.exists("bar") == false);
+        REQUIRE(args0.exists("baz") == false);
         REQUIRE(args0.get<bool>("boo") == true);
         REQUIRE(args0.get<bool>("doo") == false);
         REQUIRE(args0.get<std::string>("coo") == const_value);
-        REQUIRE(args0.get<uint32_t>("bar") == 0);
         REQUIRE(args0.get<bool>("foo") == true);
-        REQUIRE(args0.get<std::string>("baz") == "");
         REQUIRE(args0.get<std::string>("cmd") == "");
 
         auto args1 = parser.parse_args({ "--foo", "a", "12" });
+        REQUIRE(args1.exists("bar") == true);
+        REQUIRE(args1.exists("baz") == false);
         REQUIRE(args1.get<bool>("boo") == true);
         REQUIRE(args1.get<bool>("doo") == false);
         REQUIRE(args1.get<std::string>("coo") == const_value);
         REQUIRE(args1.get<uint32_t>("bar") == 12);
         REQUIRE(args1.get<bool>("foo") == true);
-        REQUIRE(args1.get<std::string>("baz") == "");
         REQUIRE(args1.get<std::string>("cmd") == "a");
 
         auto args2 = parser.parse_args({ "--foo", "b", "--baz", "Z" });
+        REQUIRE(args2.exists("bar") == false);
+        REQUIRE(args2.exists("baz") == true);
         REQUIRE(args2.get<bool>("boo") == true);
         REQUIRE(args2.get<bool>("doo") == false);
         REQUIRE(args2.get<std::string>("coo") == const_value);
-        REQUIRE(args2.get<uint32_t>("bar") == 0);
         REQUIRE(args2.get<bool>("foo") == true);
         REQUIRE(args2.get<std::string>("baz") == "Z");
         REQUIRE(args2.get<std::string>("cmd") == "b");
 
         auto args3 = parser.parse_args({ "a", "12" });
+        REQUIRE(args3.exists("bar") == true);
+        REQUIRE(args3.exists("baz") == false);
         REQUIRE(args3.get<bool>("boo") == true);
         REQUIRE(args3.get<bool>("doo") == false);
         REQUIRE(args3.get<std::string>("coo") == const_value);
         REQUIRE(args3.get<uint32_t>("bar") == 12);
         REQUIRE(args3.get<bool>("foo") == false);
-        REQUIRE(args3.get<std::string>("baz") == "");
         REQUIRE(args3.get<std::string>("cmd") == "a");
 
         auto args4 = parser.parse_args({ "--foo", "b", "--baz", "Z" });
+        REQUIRE(args4.exists("bar") == false);
+        REQUIRE(args4.exists("baz") == true);
         REQUIRE(args4.get<bool>("boo") == true);
         REQUIRE(args4.get<bool>("doo") == false);
         REQUIRE(args4.get<std::string>("coo") == const_value);
-        REQUIRE(args4.get<uint32_t>("bar") == 0);
         REQUIRE(args4.get<bool>("foo") == true);
         REQUIRE(args4.get<std::string>("baz") == "Z");
         REQUIRE(args4.get<std::string>("cmd") == "b");
@@ -1448,27 +1459,29 @@ TEST_CASE("11. subparsers", "[argument_parser]")
 
         // so -1 is an option in main
         auto args0 = parser.parse_args({ "-1", "x" });
+        REQUIRE(args0.exists("bar") == false);
+        REQUIRE(args0.exists("baz") == false);
         REQUIRE(args0.get<std::string>("one") == "x");
-        REQUIRE(args0.get<uint32_t>("bar") == 0);
         REQUIRE(args0.get<bool>("foo") == false);
-        REQUIRE(args0.get<std::string>("baz") == "");
         REQUIRE(args0.get<std::string>("cmd") == "");
 
         auto args1 = parser.parse_args({ "a", "-1" });
+        REQUIRE(args1.exists("bar") == true);
+        REQUIRE(args1.exists("baz") == false);
         REQUIRE(args1.get<std::string>("one") == "");
         REQUIRE(args1.get<int32_t>("bar") == -1);
         REQUIRE(args1.get<bool>("foo") == false);
-        REQUIRE(args1.get<std::string>("baz") == "");
         REQUIRE(args1.get<std::string>("cmd") == "a");
 
         // so -2 is an option in main
         REQUIRE_THROWS(parser.parse_args({ "-2" }));
 
         auto args2 = parser.parse_args({ "--foo", "a", "-2" });
+        REQUIRE(args2.exists("bar") == true);
+        REQUIRE(args2.exists("baz") == false);
         REQUIRE(args2.get<std::string>("one") == "");
         REQUIRE(args2.get<int32_t>("bar") == -2);
         REQUIRE(args2.get<bool>("foo") == true);
-        REQUIRE(args2.get<std::string>("baz") == "");
         REQUIRE(args2.get<std::string>("cmd") == "a");
 
         // so both -1s are options in main
@@ -1490,19 +1503,21 @@ TEST_CASE("11. subparsers", "[argument_parser]")
 
         // so -1 is an option in subparser
         auto args0 = parser.parse_args({ "--boo", "-1", "a", "-1", "x", "1" });
+        REQUIRE(args0.exists("bar") == true);
+        REQUIRE(args0.exists("baz") == false);
         REQUIRE(args0.get<std::string>("one") == "x");
         REQUIRE(args0.get<std::string>("boo") == "-1");
         REQUIRE(args0.get<int32_t>("bar") == 1);
         REQUIRE(args0.get<bool>("foo") == false);
-        REQUIRE(args0.get<std::string>("baz") == "");
         REQUIRE(args0.get<std::string>("cmd") == "a");
 
         auto args1 = parser.parse_args({ "a", "-1", "x", "1" });
+        REQUIRE(args1.exists("bar") == true);
+        REQUIRE(args1.exists("baz") == false);
         REQUIRE(args1.get<std::string>("one") == "x");
         REQUIRE(args1.get<std::string>("boo") == "");
         REQUIRE(args1.get<int32_t>("bar") == 1);
         REQUIRE(args1.get<bool>("foo") == false);
-        REQUIRE(args1.get<std::string>("baz") == "");
         REQUIRE(args1.get<std::string>("cmd") == "a");
 
         // so -2 is an option in subparser
