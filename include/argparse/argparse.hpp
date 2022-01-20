@@ -1951,6 +1951,11 @@ public:
     {
         create_argument(flags, m_prefix_chars);
         bool is_optional = m_arguments.back()->m_type == Argument::Optional;
+        if (is_optional && m_parent_data->m_conflict_handler == "resolve") {
+            for (auto& arg : m_parent_data->m_optional) {
+                detail::_resolve_conflict(flags, arg.first->m_flags);
+            }
+        }
         m_parent_data->m_arguments.push_back(m_arguments.back());
         (is_optional ? m_optional : m_positional).push_back(std::make_pair(m_arguments.back(), true));
         (is_optional ? m_parent_data->m_optional
@@ -2105,6 +2110,10 @@ public:
         if (m_arguments.back()->m_type != Argument::Optional) {
             m_arguments.pop_back();
             throw ValueError("mutually exclusive arguments must be optional");
+        } else if (m_parent_data->m_conflict_handler == "resolve") {
+            for (auto& arg : m_parent_data->m_optional) {
+                detail::_resolve_conflict(flags, arg.first->m_flags);
+            }
         }
         m_parent_data->m_arguments.push_back(m_arguments.back());
         m_optional.push_back(std::make_pair(m_arguments.back(), false));
