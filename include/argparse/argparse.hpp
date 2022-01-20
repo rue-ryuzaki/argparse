@@ -247,6 +247,21 @@ static inline bool _have_quotes(std::string const& s)
             && (s.front() == '\'' || s.front() == '\"');
 }
 
+static inline void _resolve_conflict(std::string const& s, std::vector<std::string>& values)
+{
+    auto it = std::find(std::begin(values), std::end(values), s);
+    if (it != std::end(values)) {
+        values.erase(it);
+    }
+}
+
+static inline void _resolve_conflict(std::vector<std::string> const& vec, std::vector<std::string>& values)
+{
+    for (auto const& s : vec) {
+        _resolve_conflict(s, values);
+    }
+}
+
 template <class T = std::string,
           typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
 T _remove_quotes(std::string const& s)
@@ -1745,10 +1760,18 @@ protected:
         std::vector<pArgument> result;
         result.reserve(m_optional.size() + add_help);
         if (add_help) {
-            auto help = std::make_shared<Argument>(detail::_help_flags(prefix_chars),
-                                                   "help", Argument::Optional);
-            help->help("show this help message and exit").action(Action::help);
-            result.emplace_back(std::move(help));
+            auto help_flags = detail::_help_flags(prefix_chars);
+            if (m_conflict_handler == "resolve") {
+                for (auto const& pair : m_optional) {
+                    detail::_resolve_conflict(pair.first->m_flags, help_flags);
+                }
+            }
+            if (!help_flags.empty()) {
+                auto help = std::make_shared<Argument>(std::move(help_flags),
+                                                       "help", Argument::Optional);
+                help->help("show this help message and exit").action(Action::help);
+                result.emplace_back(std::move(help));
+            }
         }
         for (auto const& pair : m_optional) {
             if (add_group || !pair.second) {
@@ -4960,11 +4983,19 @@ private:
                 auto opt_all = parser->get_optional(true);
                 auto opt = parser->get_optional(false);
                 if (m_add_help) {
-                    auto help = std::make_shared<Argument>(detail::_help_flags(parser->m_prefix_chars),
-                                                           "help", Argument::Optional);
-                    help->help("show this help message and exit").action(Action::help);
-                    opt_all.insert(std::begin(opt_all), help);
-                    opt.insert(std::begin(opt), help);
+                    auto help_flags = detail::_help_flags(parser->m_prefix_chars);
+                    if (m_conflict_handler == "resolve") {
+                        for (auto const& arg : opt_all) {
+                            detail::_resolve_conflict(arg->m_flags, help_flags);
+                        }
+                    }
+                    if (!help_flags.empty()) {
+                        auto help = std::make_shared<Argument>(std::move(help_flags),
+                                                               "help", Argument::Optional);
+                        help->help("show this help message and exit").action(Action::help);
+                        opt_all.insert(std::begin(opt_all), help);
+                        opt.insert(std::begin(opt), help);
+                    }
                 }
                 print_custom_help(parser->get_positional(true), opt_all, parser->get_positional(false), opt,
                                   parser->m_groups, parser->m_exclusive, { nullptr, 0 }, parser->m_prefix,
@@ -5254,10 +5285,18 @@ private:
         std::vector<pArgument> result;
         result.reserve(m_optional.size() + 1);
         if (m_add_help) {
-            auto help = std::make_shared<Argument>(detail::_help_flags(m_prefix_chars),
-                                                   "help", Argument::Optional);
-            help->help("show this help message and exit").action(Action::help);
-            result.emplace_back(std::move(help));
+            auto help_flags = detail::_help_flags(m_prefix_chars);
+            if (m_conflict_handler == "resolve") {
+                for (auto const& pair : m_optional) {
+                    detail::_resolve_conflict(pair.first->m_flags, help_flags);
+                }
+            }
+            if (!help_flags.empty()) {
+                auto help = std::make_shared<Argument>(std::move(help_flags),
+                                                       "help", Argument::Optional);
+                help->help("show this help message and exit").action(Action::help);
+                result.emplace_back(std::move(help));
+            }
         }
         for (auto const& parent : m_parents) {
             auto args = parent.optional_arguments(add_suppress, add_groups);
