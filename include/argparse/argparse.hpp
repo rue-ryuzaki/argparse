@@ -2289,6 +2289,33 @@ class ArgumentParser : public BaseParser
             : m_data()
         { }
 
+        void force_add(key_type const& key, mapped_type const& value = mapped_type())
+        {
+            if (key->m_action & (Action::version | Action::help)) {
+                return;
+            }
+            if (key->m_type == Argument::Optional) {
+                auto _get_argument_flags = [] (key_type const& arg) -> std::vector<std::string> const&
+                {
+                    return arg->m_dest_str.empty() ? arg->m_flags : arg->m_dest;
+                };
+                auto const& arg_flags = _get_argument_flags(key);
+                for (auto& pair : m_data) {
+                    if (pair.first->m_type == Argument::Optional) {
+                        detail::_resolve_conflict(arg_flags, pair.first->m_flags);
+                    }
+                }
+            }
+            m_data.insert(std::make_pair(key, value));
+        }
+
+        inline void force_add(std::vector<key_type> const& arguments)
+        {
+            for (auto const& arg : arguments) {
+                force_add(arg);
+            }
+        }
+
         void try_add(key_type const& key, mapped_type const& value = mapped_type())
         {
             if (key->m_action & (Action::version | Action::help)) {
@@ -4567,9 +4594,6 @@ private:
                 if (!subparser_dest.empty()) {
                     result.create(subparser_arg);
                 }
-                for (auto const& parser : subparser.first->m_parsers) {
-                    result.create(parser.m_arguments);
-                }
             }
         } else {
             result.try_add(positional);
@@ -4577,9 +4601,6 @@ private:
             if (subparser.first) {
                 if (!subparser_dest.empty()) {
                     result.try_add(subparser_arg);
-                }
-                for (auto const& parser : subparser.first->m_parsers) {
-                    result.try_add(parser.m_arguments);
                 }
             }
         }
@@ -4828,6 +4849,7 @@ private:
                 }
                 parser->m_prefix = program + detail::_spaces + parser->m_name;
                 parser->handle(parser->m_name);
+                result.force_add(parser->m_arguments);
             } else {
                 throw_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }
