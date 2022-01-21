@@ -2221,6 +2221,22 @@ public:
     /*!
      *  \brief Add argument with flags
      *
+     *  \param flag First flag value
+     *  \param args Other flag values
+     *
+     *  \return Current argument reference
+     */
+    template <class... Args>
+    inline Argument& add_argument(std::string const& flag, Args... args)
+    {
+        std::vector<std::string> flags = { flag };
+        add_arguments(flags, args...);
+        return add_argument(flags);
+    }
+
+    /*!
+     *  \brief Add argument with flags
+     *
      *  \param flags Flags values
      *
      *  \return Current argument reference
@@ -2258,6 +2274,19 @@ public:
     {
         m_exclusive.emplace_back(ExclusiveGroup(m_prefix_chars, this));
         return m_exclusive.back();
+    }
+
+private:
+    void add_arguments(std::vector<std::string>& flags, std::string const& arg)
+    {
+        flags.push_back(arg);
+    }
+
+    template <class... Args>
+    void add_arguments(std::vector<std::string>& flags, std::string const& arg, Args... args)
+    {
+        flags.push_back(arg);
+        add_arguments(flags, args...);
     }
 
 protected:
