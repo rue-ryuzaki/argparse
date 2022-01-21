@@ -6,7 +6,26 @@
 [![GitHub downloads](https://img.shields.io/github/downloads/rue-ryuzaki/argparse/total)](https://github.com/rue-ryuzaki/argparse/releases)
 [![GitHub issues](https://img.shields.io/github/issues/rue-ryuzaki/argparse.svg)](https://github.com/rue-ryuzaki/argparse/issues)
 # ArgumentParser
-Python-like argument parser for C++11+ projects
+Python-like argument parser for C++11+ projects (with similar syntax).
+
+This project is a C++ adaptation of Python argparse and supports most of its features (actions, nargs, subparsers, argument groups, help formatting, auto-generated usage and help, and more).
+## Supported compilers
+C++11 support compiler (tested with gcc and clang)
+## Overview
+- Examples:
+  - [code](#code-example) - [usage](#usage-example) - [output](#output)
+  - [actions](#actions-example)
+  - [nargs](#nargs-example)
+  - [subparsers](#subparsers-example)
+  - [argument groups](#argument-groups-example)
+- [Namespace::get<> types support](#namespaceget-types-support--try_get-with-stdoptional-since-c17)
+  - [custom types](#custom-type-example)
+- [Features](#features)
+  - [handle](#handle)
+- Python API support:
+  - [ArgumentParser objects](#argumentparser-objects-support)
+  - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
+  - [add_argument() actions](#the-add_argumentname-or-flags-method-support)
 ## Code example
 ```cpp
 #include <iostream>
