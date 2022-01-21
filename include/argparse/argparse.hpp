@@ -4613,21 +4613,11 @@ private:
                                                         std::move(subparser_name), Argument::Positional);
         Storage result = space.storage();
         if (space.m_storage.m_data.empty()) {
-            result.create(positional);
+            result.force_add(positional);
             result.create(optional);
-            if (subparser.first) {
-                if (!subparser_dest.empty()) {
-                    result.create(subparser_arg);
-                }
-            }
         } else {
-            result.try_add(positional);
+            result.force_add(positional);
             result.try_add(optional);
-            if (subparser.first) {
-                if (!subparser_dest.empty()) {
-                    result.try_add(subparser_arg);
-                }
-            }
         }
 
         auto _optional_arg_by_flag = [&optional, &sub_optional, &parser]
@@ -4842,6 +4832,7 @@ private:
                 if (p.m_name == name) {
                     parser = &p;
                     if (!subparser_dest.empty()) {
+                        result.force_add(subparser_arg);
                         result.at(subparser_arg).push_back(name);
                     }
                     break;
