@@ -2323,17 +2323,13 @@ class ArgumentParser : public BaseParser
             if (key->m_action & (Action::version | Action::help)) {
                 return;
             }
-            if (key->m_type == Argument::Optional) {
-                auto _get_argument_flags = [] (key_type const& arg) -> std::vector<std::string> const&
-                {
-                    return arg->m_dest_str.empty() ? arg->m_flags : arg->m_dest;
-                };
-                auto const& arg_flags = _get_argument_flags(key);
-                for (auto& pair : m_data) {
-                    if (pair.first->m_type == Argument::Optional) {
-                        detail::_resolve_conflict(arg_flags, pair.first->m_flags);
-                    }
-                }
+            auto _get_argument_flags = [] (key_type const& arg) -> std::vector<std::string> const&
+            {
+                return arg->m_dest_str.empty() ? arg->m_flags : arg->m_dest;
+            };
+            auto const& arg_flags = _get_argument_flags(key);
+            for (auto& pair : m_data) {
+                detail::_resolve_conflict(arg_flags, pair.first->m_flags);
             }
             m_data.insert(std::make_pair(key, value));
         }
