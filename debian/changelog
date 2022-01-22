@@ -1,3 +1,14 @@
+cpp-argparse-dev (1.3.0-0ppa0) focal; urgency=low
+
+  * Allow to use containers with byte types in Namespace::get<>
+  * Add Argument::add_argument(std::string, Args...) function
+  * Add ArgumentParser::conflict_handler("resolve") support
+  * Use conflict resolve for positional args and subparser
+  * Update subparsers arguments storing (check exists() before get() or use try_get())
+  * Fix required arguments error message
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 22 Jan 2022 17:03:25 +0300
+
 cpp-argparse-dev (1.2.0-0ppa0) focal; urgency=low
 
   * Add RawTextHelpFormatter support
