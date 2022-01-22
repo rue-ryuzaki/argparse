@@ -1,3 +1,5 @@
+[![Argument Parser for C++11+](https://raw.githubusercontent.com/rue-ryuzaki/argparse/master/doc/argparse-logo.png)](https://github.com/rue-ryuzaki/argparse/releases)
+
 [![Ubuntu](https://github.com/rue-ryuzaki/argparse/workflows/Ubuntu/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AUbuntu)
 [![macOS](https://github.com/rue-ryuzaki/argparse/workflows/macOS/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AmacOS)
 [![Windows](https://github.com/rue-ryuzaki/argparse/workflows/Windows/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AWindows)
