@@ -1883,6 +1883,15 @@ protected:
                                                 + ": conflicting option string: " + arg_flag);
                         }
                     }
+                    if (opt.first->m_action == Action::BooleanOptionalAction
+                            && m_conflict_handler != "resolve") {
+                        for (auto const& flag : opt.first->m_flags) {
+                            if (detail::_make_no_flag(flag) == arg_flag) {
+                                throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
+                                                    + ": conflicting option string: " + arg_flag);
+                            }
+                        }
+                    }
                 }
             }
         }
