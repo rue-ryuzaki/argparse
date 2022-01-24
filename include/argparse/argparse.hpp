@@ -113,7 +113,7 @@ public:
      *  \return ArgumentError object
      */
     explicit ArgumentError(std::string const& error)
-        : std::invalid_argument("argparse.ArgumentError: " + error)
+        : std::invalid_argument("argparse::ArgumentError: " + error)
     { }
 };
 
@@ -4302,7 +4302,7 @@ public:
                 }
             }
             if (!found) {
-                m_default_values.push_back({ dest, value });
+                m_default_values.push_back(std::make_pair(dest, value));
             }
         }
     }
@@ -5494,7 +5494,7 @@ private:
 
     std::pair<Subparser*, std::size_t> subpurser_info(bool add_suppress = true) const
     {
-        std::pair<Subparser*, std::size_t> res = { nullptr, 0 };
+        std::pair<Subparser*, std::size_t> res = std::make_pair(nullptr, 0);
         auto _func = [&res, add_suppress] (ArgumentParser const& parser)
         {
             std::size_t size = std::min(parser.m_subparsers->m_position, parser.m_positional.size());
