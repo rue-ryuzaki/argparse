@@ -347,7 +347,20 @@ static inline bool _not_optional(std::string const& arg, std::string const& pref
             || (!have_negative_args && _is_negative_number(arg));
 }
 
-static std::vector<std::string> _split(std::string const& str, char delim)
+static inline std::string _make_no_flag(std::string str)
+{
+    auto prefix = str.front();
+    auto it = std::find_if(std::begin(str), std::end(str),
+                           [prefix] (char c) -> bool { return c != prefix; });
+    if (it != std::end(str)) {
+        str.insert(std::distance(std::begin(str), it), "no-");
+    } else {
+        throw ValueError("can't create no- boolean option");
+    }
+    return str;
+}
+
+static inline std::vector<std::string> _split(std::string const& str, char delim)
 {
     std::vector<std::string> result;
     auto _store_value = [&result] (std::string& value)
@@ -627,6 +640,7 @@ enum Action
     help            = 0x00000080,
     version         = 0x00000100,
     extend          = 0x00000200,
+    BooleanOptionalAction = 0x00001000,
 };
 
 /*!
@@ -922,6 +936,7 @@ public:
         }
         switch (value) {
             case Action::store_true :
+            case Action::BooleanOptionalAction :
                 m_default.clear();
                 m_const = "1";
                 m_nargs = NARGS_INT;
@@ -947,6 +962,7 @@ public:
                     throw TypeError("got an unexpected keyword argument 'required'");
                 }
             case Action::count :
+                m_const = std::string();
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
                 m_num_args = 0;
@@ -955,6 +971,7 @@ public:
             case Action::store :
             case Action::append :
             case Action::extend :
+                m_const = std::string();
                 if (m_num_args == 0) {
                     m_nargs = NARGS_DEF;
                     m_nargs_str = "1";
@@ -985,6 +1002,7 @@ public:
             case Action::help :
             case Action::version :
             case Action::count :
+            case Action::BooleanOptionalAction :
                 throw TypeError("got an unexpected keyword argument 'nargs'");
             case Action::store :
                 if (value == 0) {
@@ -1177,7 +1195,7 @@ public:
      */
     Argument& choices(std::vector<std::string> const& value)
     {
-        if (!(m_action & (Action::store | Action::append | Action::extend))) {
+        if (!(m_action & (Action::store | Action::append | Action::extend | Action::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
         std::vector<std::string> values;
@@ -1248,7 +1266,7 @@ public:
     inline Argument& metavar(std::string const& value)
     {
         if (!(m_action & (Action::store | Action::store_const | Action::append
-                          | Action::append_const | Action::extend))) {
+                          | Action::append_const | Action::extend | Action::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'metavar'");
         }
         m_metavar = detail::_trim_copy(value);
@@ -1466,7 +1484,19 @@ private:
     {
         std::string res;
         if (m_type == Optional) {
-            res += m_flags.front();
+            if (m_action & Action::BooleanOptionalAction) {
+                for (auto const& flag : m_flags) {
+                    if (!res.empty()) {
+                        res += " | ";
+                    }
+                    res += flag;
+                    if (m_action & Action::BooleanOptionalAction) {
+                        res += " | " + detail::_make_no_flag(flag);
+                    }
+                }
+            } else {
+                res += m_flags.front();
+            }
         }
         if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
             res += get_nargs_suffix(formatter);
@@ -1483,6 +1513,9 @@ private:
                     res += ", ";
                 }
                 res += flag;
+                if (m_action & Action::BooleanOptionalAction) {
+                    res += ", " + detail::_make_no_flag(flag);
+                }
                 if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
                     res += get_nargs_suffix(formatter);
                 }
@@ -3456,6 +3489,15 @@ public:
                 case Action::append_const :
                 case Action::extend :
                     return detail::_vector_to_string(args.second, detail::_spaces, std::string(), true);
+                case Action::BooleanOptionalAction :
+                    if (args.second.empty()) {
+                        return detail::_bool_to_string(args.first->m_default());
+                    }
+                    if (args.second.size() != 1) {
+                        throw TypeError("trying to get data from array argument '" + key + "'");
+                    }
+                    return args.second.front() == args.first->m_const()
+                            ? detail::_bool_to_string(args.second.front()) : args.second.front();
                 default :
                     throw ValueError("action not supported");
             }
@@ -3497,6 +3539,15 @@ public:
                 case Action::append_const :
                 case Action::extend :
                     return "[" + detail::_vector_to_string(args.second, ", ", quotes, false, "None") + "]";
+                case Action::BooleanOptionalAction :
+                    if (args.second.empty()) {
+                        return detail::_bool_to_string(args.first->m_default());
+                    }
+                    if (args.second.size() != 1) {
+                        throw TypeError("trying to get data from array argument '" + key + "'");
+                    }
+                    return (args.second.front() == args.first->m_const() || args.second.front().empty())
+                            ? detail::_bool_to_string(args.second.front()) : args.second.front();
                 default :
                     throw ValueError("action not supported");
             }
@@ -4628,6 +4679,15 @@ private:
                     return arg;
                 }
             }
+            for (auto const& arg : (parser ? sub_optional : optional)) {
+                if (arg->m_action == Action::BooleanOptionalAction) {
+                    for (auto const& flag : arg->m_flags) {
+                        if (detail::_make_no_flag(flag) == key) {
+                            return arg;
+                        }
+                    }
+                }
+            }
             return nullptr;
         };
         auto _prefix_chars = [this, &parser] () -> std::string const&
@@ -5129,12 +5189,18 @@ private:
                     case Action::store_false :
                     case Action::append_const :
                     case Action::count :
+                    case Action::BooleanOptionalAction :
                         if (splitted.size() == 1) {
                             if (tmp->m_action == Action::append_const && !tmp->m_default().empty()) {
                                 _throw_error(detail::_ignore_default(tmp->m_flags.front(),
                                                                      tmp->m_default()));
                             }
-                            result.self_value_stored(tmp);
+                            if (tmp->m_action == Action::BooleanOptionalAction) {
+                                bool exist = detail::_is_value_exists(splitted.front(), tmp->m_flags);
+                                result.store_value(tmp, exist ? tmp->m_const() : std::string());
+                            } else {
+                                result.self_value_stored(tmp);
+                            }
                         } else {
                             _throw_error(detail::_ignore_explicit(arg, splitted.back()));
                         }
@@ -5320,7 +5386,8 @@ private:
                           std::make_move_iterator(std::begin(args)), std::make_move_iterator(std::end(args)));
         }
         for (auto const& arg : m_positional) {
-            if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)) {
+            if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)
+                    && arg.first->m_action != Action::BooleanOptionalAction) {
                 result.push_back(arg.first);
             }
         }
