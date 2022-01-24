@@ -1816,7 +1816,7 @@ protected:
             auto help_flags = detail::_help_flags(prefix_chars);
             if (m_conflict_handler == "resolve") {
                 for (auto const& pair : m_optional) {
-                    detail::_resolve_conflict(pair.first->m_flags, help_flags);
+                    detail::_resolve_conflict(pair.first->m_all_flags, help_flags);
                 }
             }
             if (!help_flags.empty()) {
@@ -1897,7 +1897,7 @@ protected:
                 if (m_conflict_handler == "resolve") {
                     flags.erase(it);
                 } else {
-                    throw ArgumentError("argument " + detail::_vector_to_string(arg->m_flags, "/")
+                    throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
                                         + ": conflicting option string: " + flag);
                 }
             }
@@ -2025,6 +2025,7 @@ public:
         if (is_optional && m_parent_data->m_conflict_handler == "resolve") {
             for (auto& arg : m_parent_data->m_optional) {
                 detail::_resolve_conflict(flags, arg.first->m_flags);
+                detail::_resolve_conflict(flags, arg.first->m_all_flags);
             }
         }
         m_parent_data->m_arguments.push_back(m_arguments.back());
@@ -2184,6 +2185,7 @@ public:
         } else if (m_parent_data->m_conflict_handler == "resolve") {
             for (auto& arg : m_parent_data->m_optional) {
                 detail::_resolve_conflict(flags, arg.first->m_flags);
+                detail::_resolve_conflict(flags, arg.first->m_all_flags);
             }
         }
         m_parent_data->m_arguments.push_back(m_arguments.back());
@@ -2401,6 +2403,7 @@ class ArgumentParser : public BaseParser
             auto const& arg_flags = _get_argument_flags(key);
             for (auto& pair : m_data) {
                 detail::_resolve_conflict(arg_flags, pair.first->m_flags);
+                detail::_resolve_conflict(arg_flags, pair.first->m_all_flags);
             }
             m_data.insert(std::make_pair(key, value));
         }
@@ -4688,7 +4691,7 @@ private:
         {
             if (detail::_is_value_exists(detail::_default_prefix_char, prefix_chars)) {
                 for (auto const& arg : optionals) {
-                    for (auto const& flag : arg->m_flags) {
+                    for (auto const& flag : arg->m_all_flags) {
                         if (detail::_is_negative_number(flag)) {
                             return true;
                         }
@@ -5040,7 +5043,7 @@ private:
                     }
                     Argument const* argument = nullptr;
                     for (auto const& opt : optionals) {
-                        for (auto const& flag : opt->m_flags) {
+                        for (auto const& flag : opt->m_all_flags) {
                             if (flag.size() == 2 && flag.back() == name.at(i)) {
                                 flags.push_back(flag);
                                 argument = opt.get();
@@ -5096,7 +5099,7 @@ private:
                     std::vector<std::string> keys;
                     keys.reserve(4);
                     for (auto const& opt : optionals) {
-                        for (auto const& flag : opt->m_flags) {
+                        for (auto const& flag : opt->m_all_flags) {
                             if (detail::_starts_with(flag, arg)) {
                                 is_flag_added = true;
                                 keys.push_back(flag);
@@ -5143,7 +5146,7 @@ private:
                     auto help_flags = detail::_help_flags(parser->m_prefix_chars);
                     if (m_conflict_handler == "resolve") {
                         for (auto const& arg : opt_all) {
-                            detail::_resolve_conflict(arg->m_flags, help_flags);
+                            detail::_resolve_conflict(arg->m_all_flags, help_flags);
                         }
                     }
                     if (!help_flags.empty()) {
@@ -5346,7 +5349,7 @@ private:
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
             if (arg->m_required && result.at(arg).empty()) {
-                auto args = detail::_vector_to_string(arg->m_flags, "/");
+                auto args = detail::_vector_to_string(arg->m_all_flags, "/");
                 required_args.emplace_back(std::move(args));
             }
         }
@@ -5452,7 +5455,7 @@ private:
             auto help_flags = detail::_help_flags(m_prefix_chars);
             if (m_conflict_handler == "resolve") {
                 for (auto const& pair : m_optional) {
-                    detail::_resolve_conflict(pair.first->m_flags, help_flags);
+                    detail::_resolve_conflict(pair.first->m_all_flags, help_flags);
                 }
             }
             if (!help_flags.empty()) {
