@@ -691,6 +691,7 @@ public:
      */
     explicit Argument(std::vector<std::string> const& flags, std::string const& name, Type type)
         : m_flags(flags),
+          m_no_flags(),
           m_name(name),
           m_type(type),
           m_action(Action::store),
@@ -709,7 +710,8 @@ public:
           m_dest(),
           m_version(),
           m_handle_str(nullptr),
-          m_handle(nullptr)
+          m_handle(nullptr),
+          m_post_trigger(nullptr)
     { }
 
     /*!
@@ -723,6 +725,7 @@ public:
      */
     explicit Argument(std::vector<std::string>&& flags, std::string&& name, Type type)
         : m_flags(std::move(flags)),
+          m_no_flags(),
           m_name(std::move(name)),
           m_type(type),
           m_action(Action::store),
@@ -741,7 +744,8 @@ public:
           m_dest(),
           m_version(),
           m_handle_str(nullptr),
-          m_handle(nullptr)
+          m_handle(nullptr),
+          m_post_trigger(nullptr)
     { }
 
     /*!
@@ -753,6 +757,7 @@ public:
      */
     explicit Argument(Argument const& orig)
         : m_flags(orig.m_flags),
+          m_no_flags(orig.m_no_flags),
           m_name(orig.m_name),
           m_type(orig.m_type),
           m_action(orig.m_action),
@@ -771,7 +776,8 @@ public:
           m_dest(orig.m_dest),
           m_version(orig.m_version),
           m_handle_str(orig.m_handle_str),
-          m_handle(orig.m_handle)
+          m_handle(orig.m_handle),
+          m_post_trigger(orig.m_post_trigger)
     { }
 
     /*!
@@ -783,6 +789,7 @@ public:
      */
     explicit Argument(Argument&& orig) noexcept
         : m_flags(std::move(orig.m_flags)),
+          m_no_flags(std::move(orig.m_no_flags)),
           m_name(std::move(orig.m_name)),
           m_type(std::move(orig.m_type)),
           m_action(std::move(orig.m_action)),
@@ -801,7 +808,8 @@ public:
           m_dest(std::move(orig.m_dest)),
           m_version(std::move(orig.m_version)),
           m_handle_str(std::move(orig.m_handle_str)),
-          m_handle(std::move(orig.m_handle))
+          m_handle(std::move(orig.m_handle)),
+          m_post_trigger(std::move(orig.m_post_trigger))
     { }
 
     /*!
@@ -815,6 +823,7 @@ public:
     {
         if (this != &rhs) {
             this->m_flags       = rhs.m_flags;
+            this->m_no_flags    = rhs.m_no_flags;
             this->m_name        = rhs.m_name;
             this->m_type        = rhs.m_type;
             this->m_action      = rhs.m_action;
@@ -834,6 +843,7 @@ public:
             this->m_version     = rhs.m_version;
             this->m_handle_str  = rhs.m_handle_str;
             this->m_handle      = rhs.m_handle;
+            this->m_post_trigger= rhs.m_post_trigger;
         }
         return *this;
     }
@@ -849,6 +859,7 @@ public:
     {
         if (this != &rhs) {
             this->m_flags       = std::move(rhs.m_flags);
+            this->m_no_flags    = std::move(rhs.m_no_flags);
             this->m_name        = std::move(rhs.m_name);
             this->m_type        = std::move(rhs.m_type);
             this->m_action      = std::move(rhs.m_action);
@@ -868,6 +879,7 @@ public:
             this->m_version     = std::move(rhs.m_version);
             this->m_handle_str  = std::move(rhs.m_handle_str);
             this->m_handle      = std::move(rhs.m_handle);
+            this->m_post_trigger= std::move(rhs.m_post_trigger);
         }
         return *this;
     }
@@ -934,9 +946,18 @@ public:
                        | Action::append_const | Action::extend))) {
             m_metavar.clear();
         }
+        m_no_flags.clear();
+        if (m_type == Optional && value == Action::BooleanOptionalAction) {
+            for (auto const& flag : m_flags) {
+                m_no_flags.push_back(detail::_make_no_flag(flag));
+            }
+            if (m_post_trigger) {
+                m_post_trigger(this);
+            }
+        }
         switch (value) {
-            case Action::store_true :
             case Action::BooleanOptionalAction :
+            case Action::store_true :
                 m_default.clear();
                 m_const = "1";
                 m_nargs = NARGS_INT;
@@ -1354,9 +1375,20 @@ public:
      *
      *  \return Argument flags values
      */
-    inline std::vector<std::string> const& flags() const noexcept
+    inline std::vector<std::string> flags() const
     {
-        return m_flags;
+        std::vector<std::string> result;
+        result.reserve(m_flags.size() + m_no_flags.size());
+        for (auto const& flag : m_flags) {
+            result.push_back(flag);
+            if (m_action & Action::BooleanOptionalAction) {
+                auto no_flag = detail::_make_no_flag(flag);
+                if (detail::_is_value_exists(no_flag, m_no_flags)) {
+                    result.push_back(no_flag);
+                }
+            }
+        }
+        return result;
     }
 
     /*!
@@ -1485,14 +1517,11 @@ private:
         std::string res;
         if (m_type == Optional) {
             if (m_action & Action::BooleanOptionalAction) {
-                for (auto const& flag : m_flags) {
+                for (auto const& flag : flags()) {
                     if (!res.empty()) {
                         res += " | ";
                     }
                     res += flag;
-                    if (m_action & Action::BooleanOptionalAction) {
-                        res += " | " + detail::_make_no_flag(flag);
-                    }
                 }
             } else {
                 res += m_flags.front();
@@ -1508,14 +1537,11 @@ private:
     {
         std::string res;
         if (m_type == Optional) {
-            for (auto const& flag : m_flags) {
+            for (auto const& flag : flags()) {
                 if (!res.empty()) {
                     res += ", ";
                 }
                 res += flag;
-                if (m_action & Action::BooleanOptionalAction) {
-                    res += ", " + detail::_make_no_flag(flag);
-                }
                 if (m_action & (Action::store | Action::append | Action::extend | Action::append_const)) {
                     res += get_nargs_suffix(formatter);
                 }
@@ -1622,6 +1648,7 @@ private:
     }
 
     std::vector<std::string> m_flags;
+    std::vector<std::string> m_no_flags;
     std::string m_name;
     Type        m_type;
     Action      m_action;
@@ -1641,6 +1668,7 @@ private:
     detail::Value<std::string> m_version;
     std::function<void(std::string)> m_handle_str;
     std::function<void()> m_handle;
+    std::function<void(Argument const*)> m_post_trigger;
 };
 
 typedef std::shared_ptr<Argument> pArgument;
@@ -1871,37 +1899,53 @@ protected:
         auto arg = std::make_shared<Argument>(std::move(flags), std::move(flag_name),
                                               is_optional ? Argument::Optional : Argument::Positional);
         if (is_optional) {
+            auto _check_conflict = [this, &arg] (std::string const& flag, std::vector<std::string>& flags)
+            {
+                auto it = std::find(std::begin(flags), std::end(flags), flag);
+                if (it != std::end(flags)) {
+                    if (m_conflict_handler == "resolve") {
+                        flags.erase(it);
+                    } else {
+                        throw ArgumentError("argument " + detail::_vector_to_string(arg->m_flags, "/")
+                                            + ": conflicting option string: " + flag);
+                    }
+                }
+            };
             for (auto const& arg_flag : arg->m_flags) {
                 for (auto& opt : m_optional) {
-                    auto it = std::find(std::begin(opt.first->m_flags),
-                                        std::end(opt.first->m_flags), arg_flag);
-                    if (it != std::end(opt.first->m_flags)) {
-                        if (m_conflict_handler == "resolve") {
-                            opt.first->m_flags.erase(it);
-                        } else {
-                            throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
-                                                + ": conflicting option string: " + arg_flag);
-                        }
+                    _check_conflict(arg_flag, opt.first->m_flags);
+                    if (opt.first->m_action == Action::BooleanOptionalAction) {
+                        _check_conflict(arg_flag, opt.first->m_no_flags);
                     }
-                    if (opt.first->m_action == Action::BooleanOptionalAction
-                            && m_conflict_handler != "resolve") {
-                        for (auto const& flag : opt.first->m_flags) {
-                            if (detail::_make_no_flag(flag) == arg_flag) {
+                }
+            }
+        }
+        m_arguments.emplace_back(std::move(arg));
+        if (is_optional) {
+            m_arguments.back()->m_post_trigger = [this] (Argument const* arg)
+            {
+                for (auto const& arg_flag : arg->m_no_flags) {
+                    for (auto& opt : m_optional) {
+                        auto it = std::find(std::begin(opt.first->m_flags),
+                                            std::end(opt.first->m_flags), arg_flag);
+                        if (it != std::end(opt.first->m_flags)) {
+                            if (m_conflict_handler == "resolve") {
+                                opt.first->m_flags.erase(it);
+                            } else {
                                 throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
                                                     + ": conflicting option string: " + arg_flag);
                             }
                         }
                     }
                 }
-            }
+            };
         }
-        m_arguments.emplace_back(std::move(arg));
     }
 
     std::string m_conflict_handler;
-    std::vector<pArgument> m_arguments;
-    std::vector<std::pair<pArgument, bool> > m_optional;
-    std::vector<std::pair<pArgument, bool> > m_positional;
+    std::deque<pArgument> m_arguments;
+    std::deque<std::pair<pArgument, bool> > m_optional;
+    std::deque<std::pair<pArgument, bool> > m_positional;
 };
 
 /*!
@@ -2377,6 +2421,13 @@ class ArgumentParser : public BaseParser
         }
 
         inline void force_add(std::vector<key_type> const& arguments)
+        {
+            for (auto const& arg : arguments) {
+                force_add(arg);
+            }
+        }
+
+        inline void force_add(std::deque<key_type> const& arguments)
         {
             for (auto const& arg : arguments) {
                 force_add(arg);
@@ -4607,6 +4658,20 @@ private:
         {
             _custom_error(parser, error, os);
         };
+        auto _validate_arguments_deque = [] (std::deque<pArgument> const& arguments)
+        {
+            for (auto const& arg : arguments) {
+                if ((arg->m_action & (Action::store_const | Action::append_const))
+                        && !arg->m_const.has_value()) {
+                    throw TypeError("missing 1 required positional argument: 'const'");
+                }
+                for (auto const& flag : arg->m_flags) {
+                    if (flag == detail::_pseudo_argument && arg->m_dest_str.empty()) {
+                        throw ValueError("dest= is required for options like '--'");
+                    }
+                }
+            }
+        };
         auto _validate_arguments = [] (std::vector<pArgument> const& arguments)
         {
             for (auto const& arg : arguments) {
@@ -4657,7 +4722,7 @@ private:
         _validate_arguments(optional);
         if (subparser.first) {
             for (auto const& parser : subparser.first->m_parsers) {
-                _validate_arguments(parser.m_arguments);
+                _validate_arguments_deque(parser.m_arguments);
             }
             subparser_dest = subparser.first->m_dest;
             if (!subparser_dest.empty()) {
@@ -4684,17 +4749,8 @@ private:
                 (std::string const& key) -> pArgument const
         {
             for (auto const& arg : (parser ? sub_optional : optional)) {
-                if (detail::_is_value_exists(key, arg->m_flags)) {
+                if (detail::_is_value_exists(key, arg->flags())) {
                     return arg;
-                }
-            }
-            for (auto const& arg : (parser ? sub_optional : optional)) {
-                if (arg->m_action == Action::BooleanOptionalAction) {
-                    for (auto const& flag : arg->m_flags) {
-                        if (detail::_make_no_flag(flag) == key) {
-                            return arg;
-                        }
-                    }
                 }
             }
             return nullptr;
