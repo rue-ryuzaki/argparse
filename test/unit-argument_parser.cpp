@@ -447,9 +447,9 @@ TEST_CASE("8. argument actions", "[argument]")
     std::string const_value = "const";
     std::string new_value = "new";
 
-    auto parser = argparse::ArgumentParser().exit_on_error(false);
-
     SECTION("8.1. optional arguments") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
         parser.add_argument("--store").action(argparse::store);
         parser.add_argument("--store_const").action(argparse::store_const).const_value(const_value);
         parser.add_argument("--store_true").action(argparse::store_true);
@@ -491,6 +491,8 @@ TEST_CASE("8. argument actions", "[argument]")
     }
 
     SECTION("8.2. positional arguments") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
         parser.add_argument("store").action(argparse::store);
         parser.add_argument("store_const").action(argparse::store_const).const_value(const_value);
         parser.add_argument("store_true").action(argparse::store_true);
@@ -517,6 +519,75 @@ TEST_CASE("8. argument actions", "[argument]")
         REQUIRE(args.get<std::vector<std::string> >("append").size() == 1);
         REQUIRE(args.get<std::vector<std::string> >("append_const").size() == 1);
         REQUIRE(args.get<std::vector<std::string> >("extend").size() == 1);
+    }
+
+    SECTION("8.3. BooleanOptionalAction example") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+        std::string default_value = "default";
+
+        parser.add_argument("--foo").action(argparse::BooleanOptionalAction).default_value(default_value);
+
+        REQUIRE(parser.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
+
+        // no args -> empty or default value
+        auto args0 = parser.parse_args();
+
+        REQUIRE(args0.get<std::string>("foo") == default_value);
+        REQUIRE(args0.to_string("foo") == default_value);
+
+        // set --foo -> foo = true
+        auto args1 = parser.parse_args("--foo");
+
+        REQUIRE(args1.get<std::string>("foo") == "1");
+        REQUIRE(args1.get<bool>("foo") == true);
+        REQUIRE(args1.to_string("foo") == "true");
+
+        // set --no-foo -> foo = false
+        auto args2 = parser.parse_args("--no-foo");
+
+        REQUIRE(args2.get<std::string>("foo") == "");
+        REQUIRE(args2.get<bool>("foo") == false);
+        REQUIRE(args2.to_string("foo") == "false");
+    }
+
+    SECTION("8.4. BooleanOptionalAction conflict options [1]") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
+        parser.add_argument("--no-bar").action(argparse::store_true);
+
+        REQUIRE_THROWS(parser.parse_args("--no-")); // --no-foo or --no-bar?
+    }
+
+    SECTION("8.5. BooleanOptionalAction conflict options [2]") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
+        REQUIRE_THROWS(parser.add_argument("--no-foo"));
+    }
+
+//    SECTION("8.6. BooleanOptionalAction conflict options [3]") {
+//        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+//        parser.add_argument("--no-foo").action(argparse::store_true);
+//        REQUIRE_THROWS(parser.add_argument("--foo").action(argparse::BooleanOptionalAction));
+//    }
+
+    SECTION("8.7. BooleanOptionalAction conflict options resolved") {
+        auto parser1 = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+
+        parser1.add_argument("--foo").action(argparse::BooleanOptionalAction);
+        parser1.add_argument("--no-foo").action(argparse::store_true);
+
+        REQUIRE(parser1.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
+
+        auto parser2 = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+
+        parser2.add_argument("--no-foo").action(argparse::store_true);
+        parser2.add_argument("--foo").action(argparse::BooleanOptionalAction);
+
+        REQUIRE(parser2.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
     }
 }
 
