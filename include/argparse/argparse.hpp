@@ -691,7 +691,7 @@ public:
      */
     explicit Argument(std::vector<std::string> const& flags, std::string const& name, Type type)
         : m_flags(flags),
-          m_no_flags(),
+          m_all_flags(m_flags),
           m_name(name),
           m_type(type),
           m_action(Action::store),
@@ -725,7 +725,7 @@ public:
      */
     explicit Argument(std::vector<std::string>&& flags, std::string&& name, Type type)
         : m_flags(std::move(flags)),
-          m_no_flags(),
+          m_all_flags(m_flags),
           m_name(std::move(name)),
           m_type(type),
           m_action(Action::store),
@@ -757,7 +757,7 @@ public:
      */
     explicit Argument(Argument const& orig)
         : m_flags(orig.m_flags),
-          m_no_flags(orig.m_no_flags),
+          m_all_flags(orig.m_all_flags),
           m_name(orig.m_name),
           m_type(orig.m_type),
           m_action(orig.m_action),
@@ -789,7 +789,7 @@ public:
      */
     explicit Argument(Argument&& orig) noexcept
         : m_flags(std::move(orig.m_flags)),
-          m_no_flags(std::move(orig.m_no_flags)),
+          m_all_flags(std::move(orig.m_all_flags)),
           m_name(std::move(orig.m_name)),
           m_type(std::move(orig.m_type)),
           m_action(std::move(orig.m_action)),
@@ -823,7 +823,7 @@ public:
     {
         if (this != &rhs) {
             this->m_flags       = rhs.m_flags;
-            this->m_no_flags    = rhs.m_no_flags;
+            this->m_all_flags   = rhs.m_all_flags;
             this->m_name        = rhs.m_name;
             this->m_type        = rhs.m_type;
             this->m_action      = rhs.m_action;
@@ -859,7 +859,7 @@ public:
     {
         if (this != &rhs) {
             this->m_flags       = std::move(rhs.m_flags);
-            this->m_no_flags    = std::move(rhs.m_no_flags);
+            this->m_all_flags   = std::move(rhs.m_all_flags);
             this->m_name        = std::move(rhs.m_name);
             this->m_type        = std::move(rhs.m_type);
             this->m_action      = std::move(rhs.m_action);
@@ -946,14 +946,17 @@ public:
                        | Action::append_const | Action::extend))) {
             m_metavar.clear();
         }
-        m_no_flags.clear();
         if (m_type == Optional && value == Action::BooleanOptionalAction) {
+            m_all_flags.clear();
             for (auto const& flag : m_flags) {
-                m_no_flags.push_back(detail::_make_no_flag(flag));
+                m_all_flags.push_back(flag);
+                m_all_flags.push_back(detail::_make_no_flag(flag));
             }
             if (m_post_trigger) {
                 m_post_trigger(this);
             }
+        } else {
+            m_all_flags = m_flags;
         }
         switch (value) {
             case Action::BooleanOptionalAction :
@@ -1375,20 +1378,9 @@ public:
      *
      *  \return Argument flags values
      */
-    inline std::vector<std::string> flags() const
+    inline std::vector<std::string> const& flags() const noexcept
     {
-        std::vector<std::string> result;
-        result.reserve(m_flags.size() + m_no_flags.size());
-        for (auto const& flag : m_flags) {
-            result.push_back(flag);
-            if (m_action & Action::BooleanOptionalAction) {
-                auto no_flag = detail::_make_no_flag(flag);
-                if (detail::_is_value_exists(no_flag, m_no_flags)) {
-                    result.push_back(no_flag);
-                }
-            }
-        }
-        return result;
+        return m_all_flags;
     }
 
     /*!
@@ -1648,7 +1640,7 @@ private:
     }
 
     std::vector<std::string> m_flags;
-    std::vector<std::string> m_no_flags;
+    std::vector<std::string> m_all_flags;
     std::string m_name;
     Type        m_type;
     Action      m_action;
@@ -1898,44 +1890,37 @@ protected:
         }
         auto arg = std::make_shared<Argument>(std::move(flags), std::move(flag_name),
                                               is_optional ? Argument::Optional : Argument::Positional);
-        if (is_optional) {
-            auto _check_conflict = [this, &arg] (std::string const& flag, std::vector<std::string>& flags)
-            {
-                auto it = std::find(std::begin(flags), std::end(flags), flag);
-                if (it != std::end(flags)) {
-                    if (m_conflict_handler == "resolve") {
-                        flags.erase(it);
-                    } else {
-                        throw ArgumentError("argument " + detail::_vector_to_string(arg->m_flags, "/")
-                                            + ": conflicting option string: " + flag);
-                    }
+        auto _check_conflict = [this, &arg] (std::string const& flag, std::vector<std::string>& flags)
+        {
+            auto it = std::find(std::begin(flags), std::end(flags), flag);
+            if (it != std::end(flags)) {
+                if (m_conflict_handler == "resolve") {
+                    flags.erase(it);
+                } else {
+                    throw ArgumentError("argument " + detail::_vector_to_string(arg->m_flags, "/")
+                                        + ": conflicting option string: " + flag);
                 }
-            };
+            }
+        };
+        if (is_optional) {
             for (auto const& arg_flag : arg->m_flags) {
                 for (auto& opt : m_optional) {
                     _check_conflict(arg_flag, opt.first->m_flags);
-                    if (opt.first->m_action == Action::BooleanOptionalAction) {
-                        _check_conflict(arg_flag, opt.first->m_no_flags);
-                    }
+                    _check_conflict(arg_flag, opt.first->m_all_flags);
                 }
             }
         }
         m_arguments.emplace_back(std::move(arg));
         if (is_optional) {
-            m_arguments.back()->m_post_trigger = [this] (Argument const* arg)
+            m_arguments.back()->m_post_trigger = [this, _check_conflict] (Argument const* arg)
             {
-                for (auto const& arg_flag : arg->m_no_flags) {
+                for (auto const& arg_flag : arg->m_all_flags) {
                     for (auto& opt : m_optional) {
-                        auto it = std::find(std::begin(opt.first->m_flags),
-                                            std::end(opt.first->m_flags), arg_flag);
-                        if (it != std::end(opt.first->m_flags)) {
-                            if (m_conflict_handler == "resolve") {
-                                opt.first->m_flags.erase(it);
-                            } else {
-                                throw ArgumentError("argument " + detail::_vector_to_string(arg->flags(), "/")
-                                                    + ": conflicting option string: " + arg_flag);
-                            }
+                        if (opt.first.get() == arg) {
+                            continue;
                         }
+                        _check_conflict(arg_flag, opt.first->m_flags);
+                        _check_conflict(arg_flag, opt.first->m_all_flags);
                     }
                 }
             };
