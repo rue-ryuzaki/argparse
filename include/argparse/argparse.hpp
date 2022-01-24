@@ -4547,7 +4547,7 @@ public:
     {
         std::stringstream ss;
         print_usage(ss);
-        return ss.str();
+        return detail::_trim_copy(ss.str());
     }
 
     /*!
@@ -4560,7 +4560,7 @@ public:
     {
         std::stringstream ss;
         print_help(ss);
-        return ss.str();
+        return detail::_trim_copy(ss.str());
     }
 
     /*!
