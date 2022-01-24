@@ -959,9 +959,9 @@ public:
             m_all_flags = m_flags;
         }
         switch (value) {
-            case Action::BooleanOptionalAction :
             case Action::store_true :
                 m_default.clear();
+            case Action::BooleanOptionalAction :
                 m_const = "1";
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
