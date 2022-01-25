@@ -367,3 +367,4 @@ int main(int argc, char* argv[])
 - [x] 'help' - This prints a complete help message for all the options in the current parser and then exits.
 - [x] 'version' - This expects a version= keyword argument in the add_argument() call, and prints version information and exits when invoked.
 - [x] 'extend' - This stores a list, and extends each argument value to the list.
+- [x] argparse::BooleanOptionalAction - Adds support for boolean actions such as --foo and --no-foo
