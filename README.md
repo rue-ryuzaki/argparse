@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
     auto parser = argparse::ArgumentParser(argc, argv);
     parser.add_argument("--foo").action("store_true").help("foo help");
 
-    auto& subparsers = parser.add_subparsers().help("sub-command help");
+    auto& subparsers = parser.add_subparsers().dest("sub").help("sub-command help");
 
     auto& parser_a = subparsers.add_parser("a").help("a help");
     parser_a.add_argument("bar").help("bar help");
@@ -162,9 +162,17 @@ int main(int argc, char* argv[])
 
     auto const args = parser.parse_args();
 
-    std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
     std::cout << "foo: " << args.get<bool>("foo") << std::endl;
-    std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
+    std::cout << "foo: " << args.to_string("foo") << std::endl;
+    if (args.exists("sub")) {
+        std::cout << "sub: " << args.get<std::string>("sub") << std::endl;
+    }
+    if (args.exists("bar")) {
+        std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
+    }
+    if (args.exists("bar")) {
+        std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
+    }
 
     return 0;
 }
