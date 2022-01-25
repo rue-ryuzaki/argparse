@@ -574,7 +574,7 @@ TEST_CASE("8. argument actions", "[argument]")
 //        REQUIRE_THROWS(parser.add_argument("--foo").action(argparse::BooleanOptionalAction));
 //    }
 
-    SECTION("8.7. BooleanOptionalAction conflict options resolved") {
+    SECTION("8.7. BooleanOptionalAction conflict options resolved [1]") {
         auto parser1 = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
 
         parser1.add_argument("--foo").action(argparse::BooleanOptionalAction);
@@ -588,6 +588,35 @@ TEST_CASE("8. argument actions", "[argument]")
         parser2.add_argument("--foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser2.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
+    }
+
+    SECTION("8.8. BooleanOptionalAction conflict options resolved [2]") {
+        auto parser = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+
+        std::string default_value = "default";
+
+        // if 'dest' is not set, you can't get the parsed value of the argument (because of resolve from next argument)
+        parser.add_argument("--foo").action(argparse::BooleanOptionalAction).dest("bar").default_value(default_value);
+        parser.add_argument("--foo").action("store_true");
+
+        auto args0 = parser.parse_args({ });
+
+        REQUIRE(args0.to_string("bar") == default_value);
+        REQUIRE(args0.get<bool>("foo") == false);
+        REQUIRE(args0.to_string("foo") == "false");
+
+        auto args1 = parser.parse_args({ "--foo" });
+
+        REQUIRE(args1.to_string("bar") == default_value);
+        REQUIRE(args1.get<bool>("foo") == true);
+        REQUIRE(args1.to_string("foo") == "true");
+
+        auto args2 = parser.parse_args({ "--no-foo" });
+
+        REQUIRE(args2.get<bool>("bar") == false);
+        REQUIRE(args2.to_string("bar") == "false");
+        REQUIRE(args2.get<bool>("foo") == false);
+        REQUIRE(args2.to_string("foo") == "false");
     }
 }
 

@@ -5473,7 +5473,7 @@ private:
         for (auto const& arg : m_optional) {
             if ((add_suppress || !arg.first->m_help_type.has_value())
                     && (add_groups || !arg.second)
-                    && !arg.first->m_flags.empty()) {
+                    && !arg.first->m_all_flags.empty()) {
                 result.push_back(arg.first);
             }
         }
