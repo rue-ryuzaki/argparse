@@ -40,8 +40,8 @@ int main(int argc, char* argv[])
             .prog("FooBar")
             .description("foo description")
             .epilog("bar epilog");
-    parser.add_argument({ "-f", "--foo" }).help("FOO help").default_value("foo");
-    parser.add_argument({ "-b", "--bar" }).help("BAR help").default_value("42");
+    parser.add_argument("-f", "--foo").help("FOO help").default_value("foo");
+    parser.add_argument("-b", "--bar").help("BAR help").default_value("42");
     parser.add_argument("baz").help("BAZ help");
     parser.print_help();
 
@@ -262,8 +262,8 @@ int main(int argc, char* argv[])
 ```
 ## Features
 ### Handle
-Parser::handle(std::function<void()> func)
-Parser::handle(std::function<void(std::string)> func) // gets parser name
+#### Parser::handle(std::function<void()> func)
+#### Parser::handle(std::function<void(std::string)> func) // gets parser name
 ```cpp
 #include <iostream>
 
@@ -293,7 +293,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 ```
-Argument::handle(std::function<void()> func)
+#### Argument::handle(std::function<void()> func)
 Preferably for value-independent arguments (Action: "store_true", "store_false" or "count")
 ```cpp
 #include <iostream>
@@ -311,8 +311,9 @@ int main(int argc, char* argv[])
     return 0;
 }
 ```
-Argument::handle(std::function<void(std::string)> func)
+#### Argument::handle(std::function<void(std::string)> func)
 Preferably for value-dependent arguments (Action: "store", "store_const", "append", "append_const" or "extend")
+
 For value-independent arguments gets const value (Action: "store_true", "store_false") or empty string (Action: "count")
 ```cpp
 #include <iostream>
