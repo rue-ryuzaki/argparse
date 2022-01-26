@@ -3869,11 +3869,14 @@ public:
      *  \return Argument parser object
      */
     explicit ArgumentParser(int argc, char const* argv[])
-        : ArgumentParser(detail::_file_name(argv[0]))
+        : ArgumentParser()
     {
-        m_parsed_arguments.reserve(std::size_t(argc - 1));
-        for (int i = 1; i < argc; ++i) {
-            m_parsed_arguments.emplace_back(std::string(argv[i]));
+        if (argc > 0) {
+            m_prog = detail::_file_name(argv[0]);
+            m_parsed_arguments.reserve(std::size_t(argc - 1));
+            for (int i = 1; i < argc; ++i) {
+                m_parsed_arguments.emplace_back(std::string(argv[i]));
+            }
         }
     }
 
