@@ -3871,10 +3871,13 @@ public:
     explicit ArgumentParser(int argc, char const* argv[])
         : ArgumentParser()
     {
-        if (argc > 0) {
+        if (argc > 0 && argv != nullptr && argv[0] != nullptr) {
             m_prog = detail::_file_name(argv[0]);
             m_parsed_arguments.reserve(std::size_t(argc - 1));
             for (int i = 1; i < argc; ++i) {
+                if (argv[i] == nullptr) {
+                    break;
+                }
                 m_parsed_arguments.emplace_back(std::string(argv[i]));
             }
         }
