@@ -1,3 +1,11 @@
+cpp-argparse-dev (1.3.1-0ppa0) focal; urgency=low
+
+  * Add argparse::BooleanOptionalAction action support
+  * Fix format_help, format_usage
+  * Add check for CLI arguments
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 30 Jan 2022 19:01:24 +0300
+
 cpp-argparse-dev (1.3.0-0ppa0) focal; urgency=low
 
   * Allow to use containers with byte types in Namespace::get<>
