@@ -5625,13 +5625,13 @@ private:
         } else {
             print_custom_usage(positional_all, optional_all, groups, exclusive, subparser, program, os);
         }
-        auto _use_description_formatter = [this] (std::string const& value)
+        auto _use_text_formatter = [] (std::string const& value, HelpFormatter formatter)
         {
             auto res = value;
-            if (!(m_formatter_class & (RawDescriptionHelpFormatter | RawTextHelpFormatter))) {
+            if (!(formatter & (RawDescriptionHelpFormatter | RawTextHelpFormatter))) {
                 detail::_trim(res);
                 auto lines = detail::_split(res, '\n');
-                if (!lines.empty()) {
+                if (lines.size() > 1) {
                     for (auto& line : lines) {
                         detail::_trim(line);
                     }
@@ -5640,7 +5640,7 @@ private:
             }
             return res;
         };
-        auto formatter_description = _use_description_formatter(description);
+        auto formatter_description = _use_text_formatter(description, m_formatter_class);
         if (!formatter_description.empty()) {
             os << "\n" << formatter_description << std::endl;
         }
@@ -5693,7 +5693,7 @@ private:
                 group->print_help(os, show_default, m_argument_default, m_formatter_class, min_size);
             }
         }
-        auto formatter_epilog = _use_description_formatter(epilog);
+        auto formatter_epilog = _use_text_formatter(epilog, m_formatter_class);
         if (!formatter_epilog.empty()) {
             os << "\n" << formatter_epilog << std::endl;
         }
