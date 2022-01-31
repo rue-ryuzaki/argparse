@@ -78,13 +78,16 @@ using experimental::fundamentals_v1::nullopt;
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough="
 
 namespace argparse {
-template <class T>  struct is_literal { enum{value = false}; };
-template <>         struct is_literal<char> { enum{value = true}; };
-template <>         struct is_literal<signed char> { enum{value = true}; };
-template <>         struct is_literal<unsigned char> { enum{value = true}; };
+template <class T>  struct is_byte_type { enum{value = false}; };
+template <>         struct is_byte_type<char> { enum{value = true}; };
+template <>         struct is_byte_type<signed char> { enum{value = true}; };
+template <>         struct is_byte_type<unsigned char> { enum{value = true}; };
 #if __cplusplus >= 201703L // C++17+
-template <>         struct is_literal<std::byte> { enum{value = true}; };
+template <>         struct is_byte_type<std::byte> { enum{value = true}; };
 #endif // C++17+
+#if __cplusplus >= 202002L // C++20+
+template <>         struct is_byte_type<char8_t> { enum{value = true}; };
+#endif // C++20+
 
 /*!
  * \brief Help formatter values
@@ -3070,7 +3073,7 @@ public:
          *  \return Parsed argument value or std::nullopt
          */
         template <class T, typename std::enable_if<std::is_integral<T>::value
-                                                   and not is_literal<T>::value
+                                                   and not is_byte_type<T>::value
                                                    and not std::is_same<bool, T>::value>::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
         {
@@ -3098,7 +3101,7 @@ public:
          */
         template <class T,
                   typename std::enable_if<std::is_same<bool, T>::value
-                                          or is_literal<T>::value
+                                          or is_byte_type<T>::value
                                           or std::is_floating_point<T>::value
                                           or std::is_constructible<std::string, T>::value>::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
@@ -3273,7 +3276,7 @@ public:
                                           and not std::is_same<bool, T>::value
                                           and not std::is_floating_point<T>::value
                                           and not std::is_constructible<std::string, T>::value
-                                          and not is_literal<T>::value
+                                          and not is_byte_type<T>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
                                           and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_map<typename std::decay<T>::type>::value
@@ -3301,7 +3304,7 @@ public:
          *  \return Parsed argument value
          */
         template <class T, typename std::enable_if<std::is_integral<T>::value
-                                                   and not is_literal<T>::value
+                                                   and not is_byte_type<T>::value
                                                    and not std::is_same<bool, T>::value>::type* = nullptr>
         T get(std::string const& key) const
         {
@@ -3329,7 +3332,7 @@ public:
          */
         template <class T,
                   typename std::enable_if<std::is_same<bool, T>::value
-                                          or is_literal<T>::value
+                                          or is_byte_type<T>::value
                                           or std::is_floating_point<T>::value
                                           or std::is_constructible<std::string, T>::value>::type* = nullptr>
         T get(std::string const& key) const
@@ -3479,7 +3482,7 @@ public:
                                           and not std::is_same<bool, T>::value
                                           and not std::is_floating_point<T>::value
                                           and not std::is_constructible<std::string, T>::value
-                                          and not is_literal<T>::value
+                                          and not is_byte_type<T>::value
                                           and not is_stl_array<typename std::decay<T>::type>::value
                                           and not is_stl_container<typename std::decay<T>::type>::value
                                           and not is_stl_map<typename std::decay<T>::type>::value
@@ -3687,7 +3690,7 @@ public:
             return vec;
         }
 
-        template <class T, typename std::enable_if<is_literal<T>::value>::type* = nullptr>
+        template <class T, typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
         inline std::optional<T> try_to_type(std::string const& data) const noexcept
         {
             if (data.empty() || data.size() != 1) {
@@ -3711,7 +3714,7 @@ public:
 
         template <class T,
                   typename std::enable_if<not std::is_constructible<std::string, T>::value
-                                          and not is_literal<T>::value
+                                          and not is_byte_type<T>::value
                                           and not std::is_same<bool, T>::value>::type* = nullptr>
         std::optional<T> try_to_type(std::string const& data) const
         {
@@ -3774,7 +3777,7 @@ public:
             return vec;
         }
 
-        template <class T, typename std::enable_if<is_literal<T>::value>::type* = nullptr>
+        template <class T, typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
         inline T to_type(std::string const& data) const
         {
             if (data.empty()) {
@@ -3801,7 +3804,7 @@ public:
 
         template <class T,
                   typename std::enable_if<not std::is_constructible<std::string, T>::value
-                                          and not is_literal<T>::value
+                                          and not is_byte_type<T>::value
                                           and not std::is_same<bool, T>::value>::type* = nullptr>
         T to_type(std::string const& data) const
         {
