@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
 ## Namespace::get<> types support (+ try_get with std::optional, since C++17)
 - basic types (bool, integral types, floating point types, std::string, std::string_view (since C++17))
 - std::pair
-- byte types (char, signed/unsigned char, int8_t, uint8_t, std::byte)
+- byte types (char, signed/unsigned char, int8_t, uint8_t, char8_t, std::byte)
 - containers (std::array, std::deque, std::forward_list, std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset, std::unordered_set)
 - mapped types (std::map, std::multimap, std::unordered_map)
 - custom types
