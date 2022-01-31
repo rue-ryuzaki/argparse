@@ -1610,7 +1610,18 @@ private:
         return m_type == Optional ? detail::_to_upper(res) : res;
     }
 
-    std::string error_nargs(std::string const& arg) const
+    inline std::vector<std::string> const& get_argument_flags() const noexcept
+    {
+        return m_dest_str.empty() ? m_flags : m_dest;
+    }
+
+    inline void resolve_conflict_flags(std::vector<std::string> const& flags)
+    {
+        detail::_resolve_conflict(flags, m_flags);
+        detail::_resolve_conflict(flags, m_all_flags);
+    }
+
+    inline std::string error_nargs(std::string const& arg) const
     {
         switch (m_nargs) {
             case NARGS_DEF :
@@ -2024,8 +2035,7 @@ public:
         bool is_optional = m_arguments.back()->m_type == Argument::Optional;
         if (is_optional && m_parent_data->m_conflict_handler == "resolve") {
             for (auto& arg : m_parent_data->m_optional) {
-                detail::_resolve_conflict(flags, arg.first->m_flags);
-                detail::_resolve_conflict(flags, arg.first->m_all_flags);
+                arg.first->resolve_conflict_flags(flags);
             }
         }
         m_parent_data->m_arguments.push_back(m_arguments.back());
@@ -2184,8 +2194,7 @@ public:
             throw ValueError("mutually exclusive arguments must be optional");
         } else if (m_parent_data->m_conflict_handler == "resolve") {
             for (auto& arg : m_parent_data->m_optional) {
-                detail::_resolve_conflict(flags, arg.first->m_flags);
-                detail::_resolve_conflict(flags, arg.first->m_all_flags);
+                arg.first->resolve_conflict_flags(flags);
             }
         }
         m_parent_data->m_arguments.push_back(m_arguments.back());
@@ -2396,26 +2405,15 @@ class ArgumentParser : public BaseParser
             if (key->m_action & (Action::version | Action::help)) {
                 return;
             }
-            auto _get_argument_flags = [] (key_type const& arg) -> std::vector<std::string> const&
-            {
-                return arg->m_dest_str.empty() ? arg->m_flags : arg->m_dest;
-            };
-            auto const& arg_flags = _get_argument_flags(key);
+            auto const& arg_flags = key->get_argument_flags();
             for (auto& pair : m_data) {
-                detail::_resolve_conflict(arg_flags, pair.first->m_flags);
-                detail::_resolve_conflict(arg_flags, pair.first->m_all_flags);
+                pair.first->resolve_conflict_flags(arg_flags);
             }
             m_data.insert(std::make_pair(key, value));
         }
 
-        inline void force_add(std::vector<key_type> const& arguments)
-        {
-            for (auto const& arg : arguments) {
-                force_add(arg);
-            }
-        }
-
-        inline void force_add(std::deque<key_type> const& arguments)
+        template <class T>
+        void force_add(T const& arguments)
         {
             for (auto const& arg : arguments) {
                 force_add(arg);
@@ -2433,7 +2431,8 @@ class ArgumentParser : public BaseParser
             }
         }
 
-        inline void try_add(std::vector<key_type> const& arguments)
+        template <class T>
+        void try_add(T const& arguments)
         {
             for (auto const& arg : arguments) {
                 try_add(arg);
@@ -2454,7 +2453,8 @@ class ArgumentParser : public BaseParser
             }
         }
 
-        inline void create(std::vector<key_type> const& arguments)
+        template <class T>
+        void create(T const& arguments)
         {
             for (auto const& arg : arguments) {
                 create(arg);
@@ -2539,13 +2539,9 @@ class ArgumentParser : public BaseParser
     private:
         std::string const& conflict_arg(key_type const& arg) const noexcept
         {
-            auto _get_argument_flags = [] (key_type const& arg) -> std::vector<std::string> const&
-            {
-                return arg->m_dest_str.empty() ? arg->m_flags : arg->m_dest;
-            };
-            auto const& arg_flags = _get_argument_flags(arg);
+            auto const& arg_flags = arg->get_argument_flags();
             for (auto const& pair : m_data) {
-                for (auto const& flag : _get_argument_flags(pair.first)) {
+                for (auto const& flag : pair.first->get_argument_flags()) {
                     if (detail::_is_value_exists(flag, arg_flags)) {
                         return flag;
                     }
