@@ -1830,7 +1830,7 @@ protected:
             auto help_flags = detail::_help_flags(prefix_chars);
             if (m_conflict_handler == "resolve") {
                 for (auto const& pair : m_optional) {
-                    detail::_resolve_conflict(pair.first->m_all_flags, help_flags);
+                    detail::_resolve_conflict(pair.first->flags(), help_flags);
                 }
             }
             if (!help_flags.empty()) {
@@ -1928,7 +1928,7 @@ protected:
         if (is_optional) {
             m_arguments.back()->m_post_trigger = [this, _check_conflict] (Argument const* arg)
             {
-                for (auto const& arg_flag : arg->m_all_flags) {
+                for (auto const& arg_flag : arg->flags()) {
                     for (auto& opt : m_optional) {
                         if (opt.first.get() == arg) {
                             continue;
@@ -4209,7 +4209,7 @@ public:
     std::string get_default(std::string const& dest) const
     {
         auto const positional = positional_arguments(true, true);
-        auto const optional = optional_arguments(true, true);
+        auto const optional = optional_arguments(true, true).second;
         for (auto const& arg : positional) {
             if (detail::_is_value_exists(dest, arg->m_flags)) {
                 return default_argument_value(*arg)();
@@ -4519,7 +4519,7 @@ public:
             os << "usage: " << usage() << std::endl;
         } else {
             auto const positional = positional_arguments(false, true);
-            auto const optional = optional_arguments(false, true);
+            auto const optional = optional_arguments(false, true).second;
             auto const subparser = subpurser_info(false);
             print_custom_usage(positional, optional, m_groups, m_exclusive, subparser, m_prog, os);
         }
@@ -4534,12 +4534,12 @@ public:
     void print_help(std::ostream& os = std::cout) const
     {
         auto const positional_all = positional_arguments(false, true);
-        auto const optional_all = optional_arguments(false, true);
+        auto const optional_all = optional_arguments(false, true).second;
         auto const positional = positional_arguments(false, false);
         auto const optional = optional_arguments(false, false);
         auto const subparser = subpurser_info(false);
-        print_custom_help(positional_all, optional_all, positional, optional, m_groups, m_exclusive,
-                          subparser, m_prog, m_usage, m_description, m_epilog, os);
+        print_custom_help(positional_all, optional_all, positional, optional.second, optional.first, m_groups,
+                          m_exclusive, subparser, m_prog, m_usage, m_description, m_epilog, os);
     }
 
     /*!
@@ -4696,7 +4696,7 @@ private:
         {
             if (detail::_is_value_exists(detail::_default_prefix_char, prefix_chars)) {
                 for (auto const& arg : optionals) {
-                    for (auto const& flag : arg->m_all_flags) {
+                    for (auto const& flag : arg->flags()) {
                         if (detail::_is_negative_number(flag)) {
                             return true;
                         }
@@ -4706,7 +4706,7 @@ private:
             return false;
         };
         auto positional = positional_arguments(true, true);
-        auto const optional = optional_arguments(true, true);
+        auto const optional = optional_arguments(true, true).second;
         std::vector<pArgument> sub_optional;
         std::string subparser_dest;
         std::vector<std::string> subparser_flags;
@@ -5048,7 +5048,7 @@ private:
                     }
                     Argument const* argument = nullptr;
                     for (auto const& opt : optionals) {
-                        for (auto const& flag : opt->m_all_flags) {
+                        for (auto const& flag : opt->flags()) {
                             if (flag.size() == 2 && flag.back() == name.at(i)) {
                                 flags.push_back(flag);
                                 argument = opt.get();
@@ -5104,7 +5104,7 @@ private:
                     std::vector<std::string> keys;
                     keys.reserve(4);
                     for (auto const& opt : optionals) {
-                        for (auto const& flag : opt->m_all_flags) {
+                        for (auto const& flag : opt->flags()) {
                             if (detail::_starts_with(flag, arg)) {
                                 is_flag_added = true;
                                 keys.push_back(flag);
@@ -5145,13 +5145,14 @@ private:
         auto _print_help_and_exit = [this, &parser] ()
         {
             if (parser) {
+                bool add_help = false;
                 auto opt_all = parser->get_optional(true);
                 auto opt = parser->get_optional(false);
                 if (m_add_help) {
                     auto help_flags = detail::_help_flags(parser->m_prefix_chars);
                     if (m_conflict_handler == "resolve") {
                         for (auto const& arg : opt_all) {
-                            detail::_resolve_conflict(arg->m_all_flags, help_flags);
+                            detail::_resolve_conflict(arg->flags(), help_flags);
                         }
                     }
                     if (!help_flags.empty()) {
@@ -5160,11 +5161,12 @@ private:
                         help->help("show this help message and exit").action(Action::help);
                         opt_all.insert(std::begin(opt_all), help);
                         opt.insert(std::begin(opt), help);
+                        add_help = true;
                     }
                 }
                 print_custom_help(parser->get_positional(true), opt_all, parser->get_positional(false), opt,
-                                  parser->m_groups, parser->m_exclusive, { nullptr, 0 }, parser->m_prefix,
-                                  parser->usage(), parser->description(), parser->epilog());
+                                  add_help, parser->m_groups, parser->m_exclusive, std::make_pair(nullptr, 0),
+                                  parser->m_prefix, parser->usage(), parser->description(), parser->epilog());
             } else {
                 print_help();
             }
@@ -5354,7 +5356,7 @@ private:
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
             if (arg->m_required && result.at(arg).empty()) {
-                auto args = detail::_vector_to_string(arg->m_all_flags, "/");
+                auto args = detail::_vector_to_string(arg->flags(), "/");
                 required_args.emplace_back(std::move(args));
             }
         }
@@ -5452,15 +5454,17 @@ private:
         return result;
     }
 
-    std::vector<pArgument> optional_arguments(bool add_suppress = true, bool add_groups = true) const
+    std::pair<bool, std::vector<pArgument> >
+    optional_arguments(bool add_suppress = true, bool add_groups = true) const
     {
+        bool add_help = false;
         std::vector<pArgument> result;
         result.reserve(m_optional.size() + 1);
         if (m_add_help) {
             auto help_flags = detail::_help_flags(m_prefix_chars);
             if (m_conflict_handler == "resolve") {
                 for (auto const& pair : m_optional) {
-                    detail::_resolve_conflict(pair.first->m_all_flags, help_flags);
+                    detail::_resolve_conflict(pair.first->flags(), help_flags);
                 }
             }
             if (!help_flags.empty()) {
@@ -5468,21 +5472,22 @@ private:
                                                        "help", Argument::Optional);
                 help->help("show this help message and exit").action(Action::help);
                 result.emplace_back(std::move(help));
+                add_help = true;
             }
         }
         for (auto const& parent : m_parents) {
-            auto args = parent.optional_arguments(add_suppress, add_groups);
+            auto args = parent.optional_arguments(add_suppress, add_groups).second;
             result.insert(std::end(result),
                           std::make_move_iterator(std::begin(args)), std::make_move_iterator(std::end(args)));
         }
         for (auto const& arg : m_optional) {
             if ((add_suppress || !arg.first->m_help_type.has_value())
                     && (add_groups || !arg.second)
-                    && !arg.first->m_all_flags.empty()) {
+                    && !arg.first->flags().empty()) {
                 result.push_back(arg.first);
             }
         }
-        return result;
+        return std::make_pair(add_help, result);
     }
 
     std::pair<Subparser*, std::size_t> subpurser_info(bool add_suppress = true) const
@@ -5610,6 +5615,7 @@ private:
                            std::vector<pArgument> const& optional_all,
                            std::vector<pArgument> const& positional,
                            std::vector<pArgument> const& optional,
+                           bool help_added,
                            std::deque<pGroup> const& groups,
                            std::deque<ExclusiveGroup> const& exclusive,
                            std::pair<Subparser*, std::size_t> const& subparser,
@@ -5682,7 +5688,7 @@ private:
         if (!optional.empty()) {
             os << "\noptional arguments:" << std::endl;
             for (auto it = std::begin(optional); it != std::end(optional); ++it) {
-                os << (*it)->print(show_default && !(m_add_help && it == std::begin(optional)),
+                os << (*it)->print(show_default && !(help_added && it == std::begin(optional)),
                                    m_argument_default, m_formatter_class, min_size) << std::endl;
             }
         }
