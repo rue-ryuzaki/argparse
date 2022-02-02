@@ -1808,7 +1808,57 @@ public:
         return *this;
     }
 
+    /*!
+     *  \brief Add argument with flag
+     *
+     *  \param flag Flag value
+     *
+     *  \return Current argument reference
+     */
+    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    inline Argument& add_argument(T const& flag)
+    {
+        return add_argument({ flag });
+    }
+
+    /*!
+     *  \brief Add argument with flags
+     *
+     *  \param flag First flag value
+     *  \param args Other flag values
+     *
+     *  \return Current argument reference
+     */
+    template <class... Args>
+    inline Argument& add_argument(std::string const& flag, Args... args)
+    {
+        std::vector<std::string> flags = { flag };
+        add_arguments(flags, args...);
+        return add_argument(flags);
+    }
+
+    /*!
+     *  \brief Add argument with flags
+     *
+     *  \param flags Flags values
+     *
+     *  \return Current argument reference
+     */
+    virtual Argument& add_argument(std::vector<std::string> const& flags) = 0;
+
 protected:
+    inline void add_arguments(std::vector<std::string>& flags, std::string const& arg)
+    {
+        flags.push_back(arg);
+    }
+
+    template <class... Args>
+    void add_arguments(std::vector<std::string>& flags, std::string const& arg, Args... args)
+    {
+        flags.push_back(arg);
+        add_arguments(flags, args...);
+    }
+
     std::vector<pArgument> get_optional(bool add_group) const
     {
         std::vector<pArgument> result;
@@ -1955,6 +2005,8 @@ class ArgumentGroup : public ArgumentData, public Group
     friend class ArgumentParser;
 
 public:
+    using ArgumentData::add_argument;
+
     /*!
      *  \brief Construct argument group
      *
@@ -2013,26 +2065,13 @@ public:
     }
 
     /*!
-     *  \brief Add argument with flag
-     *
-     *  \param flag Flag value
-     *
-     *  \return Current argument reference
-     */
-    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Argument& add_argument(T const& flag)
-    {
-        return add_argument({ flag });
-    }
-
-    /*!
      *  \brief Add argument with flags
      *
      *  \param flags Flags values
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::vector<std::string> const& flags)
+    Argument& add_argument(std::vector<std::string> const& flags) override
     {
         create_argument(flags, m_prefix_chars);
         bool is_optional = m_arguments.back()->m_type == Argument::Optional;
@@ -2097,6 +2136,8 @@ public:
     friend class ArgumentParser;
 
 public:
+    using ArgumentData::add_argument;
+
     /*!
      *  \brief Construct exclusive group
      *
@@ -2170,26 +2211,13 @@ public:
     }
 
     /*!
-     *  \brief Add argument with flag
-     *
-     *  \param flag Flag value
-     *
-     *  \return Current argument reference
-     */
-    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Argument& add_argument(T const& flag)
-    {
-        return add_argument({ flag });
-    }
-
-    /*!
      *  \brief Add argument with flags
      *
      *  \param flags Flags values
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::vector<std::string> const& flags)
+    Argument& add_argument(std::vector<std::string> const& flags) override
     {
         create_argument(flags, m_prefix_chars);
         if (m_arguments.back()->m_type != Argument::Optional) {
@@ -2230,6 +2258,8 @@ private:
 class BaseParser : public ArgumentData
 {
 public:
+    using ArgumentData::add_argument;
+
     /*!
      *  \brief Construct base parser
      *
@@ -2291,42 +2321,13 @@ public:
     }
 
     /*!
-     *  \brief Add argument with flag
-     *
-     *  \param flag Flag value
-     *
-     *  \return Current argument reference
-     */
-    template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Argument& add_argument(T const& flag)
-    {
-        return add_argument({ flag });
-    }
-
-    /*!
-     *  \brief Add argument with flags
-     *
-     *  \param flag First flag value
-     *  \param args Other flag values
-     *
-     *  \return Current argument reference
-     */
-    template <class... Args>
-    inline Argument& add_argument(std::string const& flag, Args... args)
-    {
-        std::vector<std::string> flags = { flag };
-        add_arguments(flags, args...);
-        return add_argument(flags);
-    }
-
-    /*!
      *  \brief Add argument with flags
      *
      *  \param flags Flags values
      *
      *  \return Current argument reference
      */
-    inline Argument& add_argument(std::vector<std::string> const& flags)
+    inline Argument& add_argument(std::vector<std::string> const& flags) override
     {
         create_argument(flags, m_prefix_chars);
         bool is_optional = m_arguments.back()->m_type == Argument::Optional;
@@ -2359,19 +2360,6 @@ public:
     {
         m_exclusive.emplace_back(ExclusiveGroup(m_prefix_chars, this));
         return m_exclusive.back();
-    }
-
-private:
-    void add_arguments(std::vector<std::string>& flags, std::string const& arg)
-    {
-        flags.push_back(arg);
-    }
-
-    template <class... Args>
-    void add_arguments(std::vector<std::string>& flags, std::string const& arg, Args... args)
-    {
-        flags.push_back(arg);
-        add_arguments(flags, args...);
     }
 
 protected:
