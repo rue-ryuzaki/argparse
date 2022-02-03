@@ -2130,6 +2130,9 @@ private:
     ArgumentData* m_parent_data;
 };
 
+/*!
+ * \brief ExclusiveGroup class
+ */
 class ExclusiveGroup : public ArgumentData
 {
 public:
@@ -5351,12 +5354,16 @@ private:
         bool subparser_required = subparser.first && !parser && subparser.first->required();
         if (!required_args.empty() || pos < positional.size() || subparser_required) {
             std::string args;
+            auto _append_value = [] (std::string const& value, std::string& args)
+            {
+                if (!args.empty()) {
+                    args += ", ";
+                }
+                args += value;
+            };
             for ( ; pos < positional.size(); ++pos) {
                 if (subparser_required && pos == subparser.second) {
-                    if (!args.empty()) {
-                        args += ", ";
-                    }
-                    args += subparser.first->flags_to_string();
+                    _append_value(subparser.first->flags_to_string(), args);
                 }
                 auto const& arg = positional.at(pos);
                 if (args.empty()) {
@@ -5368,22 +5375,13 @@ private:
                         continue;
                     }
                 }
-                if (!args.empty()) {
-                    args += ", ";
-                }
-                args += arg->m_flags.front();
+                _append_value(arg->m_flags.front(), args);
             }
             if (subparser_required && pos == subparser.second) {
-                if (!args.empty()) {
-                    args += ", ";
-                }
-                args += subparser.first->flags_to_string();
+                _append_value(subparser.first->flags_to_string(), args);
             }
             for (auto const& arg : required_args) {
-                if (!args.empty()) {
-                    args += ", ";
-                }
-                args += arg;
+                _append_value(arg, args);
             }
             if (!args.empty()) {
                 throw_error("the following arguments are required: " + args);
@@ -5469,8 +5467,7 @@ private:
                           std::make_move_iterator(std::begin(args)), std::make_move_iterator(std::end(args)));
         }
         for (auto const& arg : m_optional) {
-            if ((add_suppress || !arg.first->m_help_type.has_value())
-                    && (add_groups || !arg.second)
+            if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)
                     && !arg.first->flags().empty()) {
                 result.push_back(arg.first);
             }
