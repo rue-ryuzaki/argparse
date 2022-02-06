@@ -75,8 +75,10 @@ using experimental::fundamentals_v1::nullopt;
 #undef ARGPARSE_USE_OPTIONAL
 #endif // C++14+
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough="
+#endif // __GNUC__
 
 namespace argparse {
 template <class T>  struct is_byte_type { enum{value = false}; };
@@ -2915,9 +2917,9 @@ public:
                 limit = size;
             }
             for (auto const& arg : m_parsers) {
-                auto size = arg.m_name.size() + 2;
-                if (limit < size) {
-                    limit = size;
+                auto s = arg.m_name.size() + 2;
+                if (limit < s) {
+                    limit = s;
                 }
             }
         }
@@ -4712,8 +4714,8 @@ private:
         _validate_arguments(positional);
         _validate_arguments(optional);
         if (subparser.first) {
-            for (auto const& parser : subparser.first->m_parsers) {
-                _validate_arguments_deque(parser.m_arguments);
+            for (auto const& p : subparser.first->m_parsers) {
+                _validate_arguments_deque(p.m_arguments);
             }
             subparser_dest = subparser.first->m_dest;
             if (!subparser_dest.empty()) {
@@ -5711,6 +5713,8 @@ private:
 };
 } // argparse
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif // __GNUC__
 
 #endif // _ARGPARSE_ARGUMENT_PARSER_HPP_
