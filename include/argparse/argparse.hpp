@@ -5484,9 +5484,9 @@ private:
         return std::make_pair(add_help, result);
     }
 
-    std::pair<Subparser*, std::size_t> subpurser_info(bool add_suppress = true) const
+    std::pair<std::shared_ptr<Subparser>, std::size_t> subpurser_info(bool add_suppress = true) const
     {
-        std::pair<Subparser*, std::size_t> res = std::make_pair(nullptr, 0);
+        std::pair<std::shared_ptr<Subparser>, std::size_t> res = std::make_pair(nullptr, 0);
         auto _func = [&res, add_suppress] (ArgumentParser const& parser)
         {
             std::size_t size = std::min(parser.m_subparsers->m_position, parser.m_positional.size());
@@ -5495,7 +5495,7 @@ private:
             }
         };
         if (m_subparsers) {
-            res.first = m_subparsers.get();
+            res.first = m_subparsers;
             for (auto const& parent : m_parents) {
                 res.second += parent.positional_arguments(add_suppress, true).size();
             }
@@ -5504,7 +5504,7 @@ private:
             for (std::size_t i = 0; i < m_parents.size(); ++i) {
                 auto const& parent = m_parents.at(i);
                 if (parent.m_subparsers) {
-                    res.first = parent.m_subparsers.get();
+                    res.first = parent.m_subparsers;
                     for (std::size_t j = 0; j < i; ++j) {
                         res.second += m_parents.at(j).positional_arguments(add_suppress, true).size();
                     }
@@ -5521,7 +5521,7 @@ private:
                                     std::vector<pArgument> const& optional,
                                     std::deque<pGroup> const& groups,
                                     std::deque<ExclusiveGroup> const& exclusive,
-                                    std::pair<Subparser*, std::size_t> const& subparser,
+                                    std::pair<std::shared_ptr<Subparser>, std::size_t> const& subparser,
                                     std::string const& program)
     {
         auto res = program;
@@ -5597,7 +5597,7 @@ private:
                                    std::vector<pArgument> const& optional,
                                    std::deque<pGroup> const& groups,
                                    std::deque<ExclusiveGroup> const& exclusive,
-                                   std::pair<Subparser*, std::size_t> const& subparser,
+                                   std::pair<std::shared_ptr<Subparser>, std::size_t> const& subparser,
                                    std::string const& program,
                                    std::ostream& os = std::cout) const
     {
@@ -5612,7 +5612,7 @@ private:
                            bool help_added,
                            std::deque<pGroup> const& groups,
                            std::deque<ExclusiveGroup> const& exclusive,
-                           std::pair<Subparser*, std::size_t> const& subparser,
+                           std::pair<std::shared_ptr<Subparser>, std::size_t> const& subparser,
                            std::string const& program,
                            std::string const& usage,
                            std::string const& description,
@@ -5687,8 +5687,8 @@ private:
             }
         }
         for (auto const& group : groups) {
-            if ((subparser.first && (group.get() != subparser.first || !sub_positional))
-                    || (!subparser.first && group.get() != subparser.first)) {
+            if ((subparser.first && (group != subparser.first || !sub_positional))
+                    || (!subparser.first && group != subparser.first)) {
                 group->print_help(os, show_default, m_argument_default, m_formatter_class, min_size);
             }
         }
