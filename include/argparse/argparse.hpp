@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <deque>
 #include <forward_list>
 #include <fstream>
