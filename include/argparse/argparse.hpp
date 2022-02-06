@@ -2172,7 +2172,7 @@ public:
      *
      *  \return Exclusive group object
      */
-    explicit ExclusiveGroup(ExclusiveGroup const& orig)
+    ExclusiveGroup(ExclusiveGroup const& orig)
         : ArgumentData(orig),
           m_prefix_chars(orig.m_prefix_chars),
           m_parent_data(orig.m_parent_data),
