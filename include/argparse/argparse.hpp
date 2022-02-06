@@ -1142,7 +1142,7 @@ public:
      *  \return Current argument reference
      */
     template <class T,
-              typename std::enable_if<not std::is_constructible<std::string, T>::value>::type* = nullptr>
+              typename std::enable_if<!std::is_constructible<std::string, T>::value>::type* = nullptr>
     inline Argument& const_value(T const& value)
     {
         std::stringstream ss;
@@ -1171,7 +1171,7 @@ public:
      *  \return Current argument reference
      */
     template <class T,
-              typename std::enable_if<not std::is_constructible<std::string, T>::value>::type* = nullptr>
+              typename std::enable_if<!std::is_constructible<std::string, T>::value>::type* = nullptr>
     inline Argument& default_value(T const& value)
     {
         std::stringstream ss;
@@ -3064,8 +3064,8 @@ public:
          *  \return Parsed argument value or std::nullopt
          */
         template <class T, typename std::enable_if<std::is_integral<T>::value
-                                                   and not is_byte_type<T>::value
-                                                   and not std::is_same<bool, T>::value>::type* = nullptr>
+                                                   && !is_byte_type<T>::value
+                                                   && !std::is_same<bool, T>::value>::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
@@ -3092,9 +3092,9 @@ public:
          */
         template <class T,
                   typename std::enable_if<std::is_same<bool, T>::value
-                                          or is_byte_type<T>::value
-                                          or std::is_floating_point<T>::value
-                                          or std::is_constructible<std::string, T>::value>::type* = nullptr>
+                                          || is_byte_type<T>::value
+                                          || std::is_floating_point<T>::value
+                                          || std::is_constructible<std::string, T>::value>::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
         {
             auto args = try_get_data(key);
@@ -3263,16 +3263,16 @@ public:
          *  \return Parsed argument value or std::nullopt
          */
         template <class T,
-                  typename std::enable_if<not std::is_integral<T>::value
-                                          and not std::is_same<bool, T>::value
-                                          and not std::is_floating_point<T>::value
-                                          and not std::is_constructible<std::string, T>::value
-                                          and not is_byte_type<T>::value
-                                          and not is_stl_array<typename std::decay<T>::type>::value
-                                          and not is_stl_container<typename std::decay<T>::type>::value
-                                          and not is_stl_map<typename std::decay<T>::type>::value
-                                          and not is_stl_pair<typename std::decay<T>::type>::value
-                                          and not is_stl_queue<typename std::decay<T>::type>::value>
+                  typename std::enable_if<!std::is_integral<T>::value
+                                          && !std::is_same<bool, T>::value
+                                          && !std::is_floating_point<T>::value
+                                          && !std::is_constructible<std::string, T>::value
+                                          && !is_byte_type<T>::value
+                                          && !is_stl_array<typename std::decay<T>::type>::value
+                                          && !is_stl_container<typename std::decay<T>::type>::value
+                                          && !is_stl_map<typename std::decay<T>::type>::value
+                                          && !is_stl_pair<typename std::decay<T>::type>::value
+                                          && !is_stl_queue<typename std::decay<T>::type>::value>
                   ::type* = nullptr>
         std::optional<T> try_get(std::string const& key) const
         {
@@ -3295,8 +3295,8 @@ public:
          *  \return Parsed argument value
          */
         template <class T, typename std::enable_if<std::is_integral<T>::value
-                                                   and not is_byte_type<T>::value
-                                                   and not std::is_same<bool, T>::value>::type* = nullptr>
+                                                   && !is_byte_type<T>::value
+                                                   && !std::is_same<bool, T>::value>::type* = nullptr>
         T get(std::string const& key) const
         {
             auto const& args = data(key);
@@ -3323,9 +3323,9 @@ public:
          */
         template <class T,
                   typename std::enable_if<std::is_same<bool, T>::value
-                                          or is_byte_type<T>::value
-                                          or std::is_floating_point<T>::value
-                                          or std::is_constructible<std::string, T>::value>::type* = nullptr>
+                                          || is_byte_type<T>::value
+                                          || std::is_floating_point<T>::value
+                                          || std::is_constructible<std::string, T>::value>::type* = nullptr>
         T get(std::string const& key) const
         {
             auto const& args = data(key);
@@ -3469,16 +3469,16 @@ public:
          *  \return Parsed argument value
          */
         template <class T,
-                  typename std::enable_if<not std::is_integral<T>::value
-                                          and not std::is_same<bool, T>::value
-                                          and not std::is_floating_point<T>::value
-                                          and not std::is_constructible<std::string, T>::value
-                                          and not is_byte_type<T>::value
-                                          and not is_stl_array<typename std::decay<T>::type>::value
-                                          and not is_stl_container<typename std::decay<T>::type>::value
-                                          and not is_stl_map<typename std::decay<T>::type>::value
-                                          and not is_stl_pair<typename std::decay<T>::type>::value
-                                          and not is_stl_queue<typename std::decay<T>::type>::value>
+                  typename std::enable_if<!std::is_integral<T>::value
+                                          && !std::is_same<bool, T>::value
+                                          && !std::is_floating_point<T>::value
+                                          && !std::is_constructible<std::string, T>::value
+                                          && !is_byte_type<T>::value
+                                          && !is_stl_array<typename std::decay<T>::type>::value
+                                          && !is_stl_container<typename std::decay<T>::type>::value
+                                          && !is_stl_map<typename std::decay<T>::type>::value
+                                          && !is_stl_pair<typename std::decay<T>::type>::value
+                                          && !is_stl_queue<typename std::decay<T>::type>::value>
                   ::type* = nullptr>
         T get(std::string const& key) const
         {
@@ -3704,9 +3704,9 @@ public:
         }
 
         template <class T,
-                  typename std::enable_if<not std::is_constructible<std::string, T>::value
-                                          and not is_byte_type<T>::value
-                                          and not std::is_same<bool, T>::value>::type* = nullptr>
+                  typename std::enable_if<!std::is_constructible<std::string, T>::value
+                                          && !is_byte_type<T>::value
+                                          && !std::is_same<bool, T>::value>::type* = nullptr>
         std::optional<T> try_to_type(std::string const& data) const
         {
             if (data.empty()) {
@@ -3794,9 +3794,9 @@ public:
         }
 
         template <class T,
-                  typename std::enable_if<not std::is_constructible<std::string, T>::value
-                                          and not is_byte_type<T>::value
-                                          and not std::is_same<bool, T>::value>::type* = nullptr>
+                  typename std::enable_if<!std::is_constructible<std::string, T>::value
+                                          && !is_byte_type<T>::value
+                                          && !std::is_same<bool, T>::value>::type* = nullptr>
         T to_type(std::string const& data) const
         {
             if (data.empty()) {
