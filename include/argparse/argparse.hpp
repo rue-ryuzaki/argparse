@@ -537,10 +537,16 @@ static inline std::string _help_formatter(HelpFormatter formatter, std::string c
 template <class T>
 std::string _type_name()
 {
+#if !defined(__PRETTY_FUNCTION__) && !defined(__GNUC__)
+    std::string res = __FUNCSIG__;
+    auto pos = res.find("__cdecl");
+    return res.substr(pos + 27, res.size() - pos - 34);
+#else
     std::string res = __PRETTY_FUNCTION__;
     auto pos = res.find('=');
     auto next = res.find(';', pos + 3);
     return res.substr(pos + 2, next - pos - 2);
+#endif // __PRETTY_FUNCTION__
 }
 
 static inline bool _correct_type_names(std::string const& expected, std::string const& received)
