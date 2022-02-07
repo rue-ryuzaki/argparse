@@ -3,6 +3,7 @@
 [![Ubuntu](https://github.com/rue-ryuzaki/argparse/workflows/Ubuntu/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AUbuntu)
 [![macOS](https://github.com/rue-ryuzaki/argparse/workflows/macOS/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AmacOS)
 [![Windows](https://github.com/rue-ryuzaki/argparse/workflows/Windows/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AWindows)
+[![Windows MSVC](https://github.com/rue-ryuzaki/argparse/workflows/Windows%20MSVC/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AWindows-MSVC)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rue-ryuzaki/argparse/main/LICENSE)
 [![GitHub releases](https://img.shields.io/github/release/rue-ryuzaki/argparse.svg)](https://github.com/rue-ryuzaki/argparse/releases)
 [![GitHub downloads](https://img.shields.io/github/downloads/rue-ryuzaki/argparse/total)](https://github.com/rue-ryuzaki/argparse/releases)
@@ -12,7 +13,10 @@ Python-like argument parser for C++11+ projects (with similar syntax).
 
 This project is a C++ adaptation of Python argparse and supports most of its features (actions, nargs, subparsers, argument groups, help formatting, auto-generated usage and help, and more).
 ## Supported compilers
-C++11 support compiler (tested with gcc and clang)
+C++11 support compiler
+ - Ubuntu (gcc, clang)
+ - macOS (clang)
+ - Windows (mingw, clang, msvc2019)
 ## Overview
 - Examples:
   - [code](#code-example) - [usage](#usage-example) - [output](#output)
