@@ -232,13 +232,15 @@ static inline std::string _trim_copy(std::string s)
 
 static inline std::string _to_lower(std::string s)
 {
-    std::transform(std::begin(s), std::end(s), std::begin(s), tolower);
+    std::transform(std::begin(s), std::end(s), std::begin(s),
+                   [] (unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return s;
 }
 
 static inline std::string _to_upper(std::string s)
 {
-    std::transform(std::begin(s), std::end(s), std::begin(s), toupper);
+    std::transform(std::begin(s), std::end(s), std::begin(s),
+                   [] (unsigned char c) { return static_cast<char>(std::toupper(c)); });
     return s;
 }
 
