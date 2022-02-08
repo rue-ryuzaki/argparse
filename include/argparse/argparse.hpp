@@ -1895,8 +1895,7 @@ protected:
                 }
             }
             if (!help_flags.empty()) {
-                auto help = std::make_shared<Argument>(std::move(help_flags),
-                                                       "help", Argument::Optional);
+                auto help = std::make_shared<Argument>(std::move(help_flags), "help", Argument::Optional);
                 help->help("show this help message and exit").action(Action::help);
                 result.emplace_back(std::move(help));
             }
@@ -4641,8 +4640,9 @@ private:
                     os << "usage: " << p->m_usage << std::endl;
                 } else {
                     print_custom_usage(p->get_positional(true),
-                                       p->get_optional_with_help(true, m_add_help, m_prefix_chars),
-                                       p->m_groups, p->m_exclusive, { nullptr, 0 }, p->m_prefix, os);
+                                       p->get_optional_with_help(true, m_add_help, p->m_prefix_chars),
+                                       p->m_groups, p->m_exclusive,
+                                       std::make_pair(nullptr, 0), p->m_prefix, os);
                 }
                 throw std::logic_error(p->m_prefix + ": error: " + error);
             } else {
@@ -5465,8 +5465,7 @@ private:
                 }
             }
             if (!help_flags.empty()) {
-                auto help = std::make_shared<Argument>(std::move(help_flags),
-                                                       "help", Argument::Optional);
+                auto help = std::make_shared<Argument>(std::move(help_flags), "help", Argument::Optional);
                 help->help("show this help message and exit").action(Action::help);
                 result.emplace_back(std::move(help));
                 add_help = true;
