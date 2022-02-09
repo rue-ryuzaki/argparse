@@ -4653,32 +4653,22 @@ private:
         {
             _custom_error(parser, error, os);
         };
-        auto _validate_arguments_deque = [] (std::deque<pArgument> const& arguments)
+        auto _validate_argument = [] (pArgument const& arg)
         {
-            for (auto const& arg : arguments) {
-                if ((arg->m_action & (Action::store_const | Action::append_const))
-                        && !arg->m_const.has_value()) {
-                    throw TypeError("missing 1 required positional argument: 'const'");
-                }
-                for (auto const& flag : arg->m_flags) {
-                    if (flag == detail::_pseudo_argument && arg->m_dest_str.empty()) {
-                        throw ValueError("dest= is required for options like '--'");
-                    }
+            if ((arg->m_action & (Action::store_const | Action::append_const))
+                    && !arg->m_const.has_value()) {
+                throw TypeError("missing 1 required positional argument: 'const'");
+            }
+            for (auto const& flag : arg->m_flags) {
+                if (flag == detail::_pseudo_argument && arg->m_dest_str.empty()) {
+                    throw ValueError("dest= is required for options like '--'");
                 }
             }
         };
-        auto _validate_arguments = [] (std::vector<pArgument> const& arguments)
+        auto _validate_arguments = [_validate_argument] (std::vector<pArgument> const& arguments)
         {
             for (auto const& arg : arguments) {
-                if ((arg->m_action & (Action::store_const | Action::append_const))
-                        && !arg->m_const.has_value()) {
-                    throw TypeError("missing 1 required positional argument: 'const'");
-                }
-                for (auto const& flag : arg->m_flags) {
-                    if (flag == detail::_pseudo_argument && arg->m_dest_str.empty()) {
-                        throw ValueError("dest= is required for options like '--'");
-                    }
-                }
+                _validate_argument(arg);
             }
         };
         auto _validate_argument_value = [_throw_error] (Argument const& arg, std::string const& value)
@@ -4717,7 +4707,9 @@ private:
         _validate_arguments(optional);
         if (subparser.first) {
             for (auto const& p : subparser.first->m_parsers) {
-                _validate_arguments_deque(p.m_arguments);
+                for (auto const& arg : p.m_arguments) {
+                    _validate_argument(arg);
+                }
             }
             subparser_dest = subparser.first->m_dest;
             if (!subparser_dest.empty()) {
