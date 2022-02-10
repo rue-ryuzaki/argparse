@@ -4626,8 +4626,10 @@ private:
                               bool only_known = false, bool intermixed = false,
                               Namespace const& space = Namespace()) const
     {
-        parsed_arguments.insert(std::end(parsed_arguments),
-                                std::begin(space.unrecognized_args()), std::end(space.unrecognized_args()));
+        if (!space.unrecognized_args().empty()) {
+            auto const& args = space.unrecognized_args();
+            parsed_arguments.insert(std::end(parsed_arguments), std::begin(args), std::end(args));
+        }
         auto const subparser = subpurser_info();
         if (intermixed && subparser.first) {
             throw TypeError("parse_intermixed_args: positional arg with nargs=A...");
@@ -4887,7 +4889,7 @@ private:
                 }
             }
         };
-        auto _try_capture_parser = [&] (std::deque<std::string>& arguments)
+        auto _try_capture_parser = [&] (std::deque<std::string>& args)
         {
             std::size_t finish = pos;
             std::size_t min_args = 0;
@@ -4896,7 +4898,7 @@ private:
             bool capture_need = false;
             for ( ; finish < positional.size(); ++finish) {
                 if (finish == subparser.second) {
-                    if (min_args + 1 > arguments.size()) {
+                    if (min_args + 1 > args.size()) {
                         break;
                     }
                     capture_need = true;
@@ -4920,21 +4922,22 @@ private:
                         min_amount += arg->m_num_args;
                         break;
                 }
-                if (min_args + min_amount > arguments.size()) {
+                if (min_args + min_amount > args.size()) {
                     break;
                 }
                 min_args += min_amount;
             }
-            if (!capture_need && (finish != positional.size() || min_args >= arguments.size())) {
+            if (!capture_need && (finish != positional.size() || min_args >= args.size())) {
                 if (finish != pos) {
-                    _match_positionals(positional, arguments, finish, min_args, one_args, more_args);
+                    _match_positionals(positional, args, finish, min_args, one_args, more_args);
                 }
-                unrecognized_args.insert(std::end(unrecognized_args),
-                                         std::begin(arguments), std::end(arguments));
+                if (!args.empty()) {
+                    unrecognized_args.insert(std::end(unrecognized_args), std::begin(args), std::end(args));
+                }
                 return;
             }
-            _match_positionals(positional, arguments, finish, ++min_args, one_args, more_args);
-            auto const& name = arguments.front();
+            _match_positionals(positional, args, finish, ++min_args, one_args, more_args);
+            auto const& name = args.front();
             std::string choices;
             for (auto& p : subparser.first->m_parsers) {
                 if (!choices.empty()) {
@@ -4953,10 +4956,12 @@ private:
             if (parser) {
                 sub_optional = parser->get_optional_with_help(true, m_add_help, parser->m_prefix_chars);
                 auto sub_positional = parser->get_positional(true);
-                positional.insert(std::next(std::begin(positional), subparser.second),
-                                  std::make_move_iterator(std::begin(sub_positional)),
-                                  std::make_move_iterator(std::end(sub_positional)));
-                arguments.pop_front();
+                if (!sub_positional.empty()) {
+                    positional.insert(std::next(std::begin(positional), subparser.second),
+                                      std::make_move_iterator(std::begin(sub_positional)),
+                                      std::make_move_iterator(std::end(sub_positional)));
+                }
+                args.pop_front();
                 have_negative_args = _negative_numbers_presented(sub_optional, parser->m_prefix_chars);
 
                 bool add_suppress = false;
@@ -4983,7 +4988,7 @@ private:
             }
         };
         auto _match_args_partial = [_match_positionals, &pos, &positional, &unrecognized_args]
-                (std::deque<std::string>& arguments)
+                (std::deque<std::string>& args)
         {
             if (pos < positional.size()) {
                 std::size_t finish = pos;
@@ -5009,16 +5014,18 @@ private:
                             min_amount += arg->m_num_args;
                             break;
                     }
-                    if (min_args + min_amount > arguments.size()) {
+                    if (min_args + min_amount > args.size()) {
                         break;
                     }
                     min_args += min_amount;
                 }
                 if (finish != pos) {
-                    _match_positionals(positional, arguments, finish, min_args, one_args, more_args);
+                    _match_positionals(positional, args, finish, min_args, one_args, more_args);
                 }
             }
-            unrecognized_args.insert(std::end(unrecognized_args), std::begin(arguments), std::end(arguments));
+            if (!args.empty()) {
+                unrecognized_args.insert(std::end(unrecognized_args), std::begin(args), std::end(args));
+            }
         };
         auto _separate_arg_abbrev = [_optional_arg_by_flag, _prefix_chars]
                 (std::vector<std::string>& temp, std::string const& arg,
@@ -5285,8 +5292,8 @@ private:
                                                             have_negative_args, was_pseudo_arg)) {
                 unrecognized_args.push_back(arg);
             } else {
-                std::deque<std::string> values;
-                values.push_back(parsed_arguments.at(i));
+                std::deque<std::string> args;
+                args.push_back(parsed_arguments.at(i));
                 while (true) {
                     if (++i == parsed_arguments.size()) {
                         break;
@@ -5294,7 +5301,7 @@ private:
                         auto const& next = parsed_arguments.at(i);
                         if (next.empty() || detail::_not_optional(next, _prefix_chars(),
                                                                   have_negative_args, was_pseudo_arg)) {
-                            values.push_back(next);
+                            args.push_back(next);
                         } else {
                             --i;
                             break;
@@ -5302,16 +5309,18 @@ private:
                     }
                 }
                 if (intermixed) {
-                    intermixed_args.insert(std::end(intermixed_args), std::begin(values), std::end(values));
+                    if (!args.empty()) {
+                        intermixed_args.insert(std::end(intermixed_args), std::begin(args), std::end(args));
+                    }
                 } else {
                     if (subparser.first && !parser) {
-                        _try_capture_parser(values);
+                        _try_capture_parser(args);
                         if (parser) {
                             i -= (i == parsed_arguments.size());
-                            i -= values.size();
+                            i -= args.size();
                         }
                     } else {
-                        _match_args_partial(values);
+                        _match_args_partial(args);
                     }
                 }
             }
@@ -5431,8 +5440,11 @@ private:
         result.reserve(m_positional.size());
         for (auto const& parent : m_parents) {
             auto args = parent.positional_arguments(add_suppress, add_groups);
-            result.insert(std::end(result),
-                          std::make_move_iterator(std::begin(args)), std::make_move_iterator(std::end(args)));
+            if (!args.empty()) {
+                result.insert(std::end(result),
+                              std::make_move_iterator(std::begin(args)),
+                              std::make_move_iterator(std::end(args)));
+            }
         }
         for (auto const& arg : m_positional) {
             if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)
@@ -5465,8 +5477,11 @@ private:
         }
         for (auto const& parent : m_parents) {
             auto args = parent.optional_arguments(add_suppress, add_groups).second;
-            result.insert(std::end(result),
-                          std::make_move_iterator(std::begin(args)), std::make_move_iterator(std::end(args)));
+            if (!args.empty()) {
+                result.insert(std::end(result),
+                              std::make_move_iterator(std::begin(args)),
+                              std::make_move_iterator(std::end(args)));
+            }
         }
         for (auto const& arg : m_optional) {
             if ((add_suppress || !arg.first->m_help_type.has_value()) && (add_groups || !arg.second)
