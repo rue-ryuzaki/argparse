@@ -251,8 +251,7 @@ static inline std::string _file_name(std::string const& s)
 
 static inline bool _have_quotes(std::string const& s)
 {
-    return s.size() > 1 && s.front() == s.back()
-            && (s.front() == '\'' || s.front() == '\"');
+    return s.size() > 1 && s.front() == s.back() && (s.front() == '\'' || s.front() == '\"');
 }
 
 static inline void _resolve_conflict(std::string const& s, std::vector<std::string>& values)
@@ -1154,7 +1153,7 @@ public:
      */
     template <class T,
               typename std::enable_if<!std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Argument& const_value(T const& value)
+    Argument& const_value(T const& value)
     {
         std::stringstream ss;
         ss << value;
@@ -1183,7 +1182,7 @@ public:
      */
     template <class T,
               typename std::enable_if<!std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Argument& default_value(T const& value)
+    Argument& default_value(T const& value)
     {
         std::stringstream ss;
         ss << value;
@@ -1197,7 +1196,7 @@ public:
      *  \return Current argument reference
      */
     template <class T>
-    inline Argument& type()
+    Argument& type()
     {
         m_type_name = detail::_type_name<T>();
         return *this;
@@ -1827,7 +1826,7 @@ public:
      *  \return Current argument reference
      */
     template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Argument& add_argument(T const& flag)
+    Argument& add_argument(T const& flag)
     {
         return add_argument({ flag });
     }
@@ -1841,7 +1840,7 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
-    inline Argument& add_argument(std::string const& flag, Args... args)
+    Argument& add_argument(std::string const& flag, Args... args)
     {
         std::vector<std::string> flags = { flag };
         add_arguments(flags, args...);
@@ -3692,7 +3691,7 @@ public:
         }
 
         template <class T, typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
-        inline std::optional<T> try_to_type(std::string const& data) const noexcept
+        std::optional<T> try_to_type(std::string const& data) const noexcept
         {
             if (data.empty() || data.size() != 1) {
                 return {};
@@ -3701,14 +3700,14 @@ public:
         }
 
         template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
-        inline std::optional<T> try_to_type(std::string const& data) const noexcept
+        std::optional<T> try_to_type(std::string const& data) const noexcept
         {
             return detail::_string_to_bool(data);
         }
 
         template <class T,
                   typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-        inline std::optional<T> try_to_type(std::string const& data) const
+        std::optional<T> try_to_type(std::string const& data) const
         {
             return detail::_remove_quotes<T>(data);
         }
@@ -3779,7 +3778,7 @@ public:
         }
 
         template <class T, typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
-        inline T to_type(std::string const& data) const
+        T to_type(std::string const& data) const
         {
             if (data.empty()) {
                 return T();
@@ -3791,14 +3790,14 @@ public:
         }
 
         template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
-        inline T to_type(std::string const& data) const noexcept
+        T to_type(std::string const& data) const noexcept
         {
             return detail::_string_to_bool(data);
         }
 
         template <class T,
                   typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-        inline T to_type(std::string const& data) const
+        T to_type(std::string const& data) const
         {
             return detail::_remove_quotes<T>(data);
         }
@@ -3978,7 +3977,7 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
-    inline ArgumentParser& formatter_class(HelpFormatter param, Args... args) noexcept
+    ArgumentParser& formatter_class(HelpFormatter param, Args... args) noexcept
     {
         formatter_class(param);
         return add_formatter_class(args...);
@@ -4006,7 +4005,7 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
-    inline ArgumentParser& add_formatter_class(HelpFormatter param, Args... args) noexcept
+    ArgumentParser& add_formatter_class(HelpFormatter param, Args... args) noexcept
     {
         add_formatter_class(param);
         return add_formatter_class(args...);
@@ -4309,7 +4308,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <typename = void>
-    inline Namespace parse_args(Namespace const& space = Namespace()) const
+    Namespace parse_args(Namespace const& space = Namespace()) const
     {
         return parse_args(m_parsed_arguments, space);
     }
@@ -4323,7 +4322,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Namespace parse_args(T const& args, Namespace const& space = Namespace()) const
+    Namespace parse_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_args(detail::_split_to_args(args), space);
     }
@@ -4361,7 +4360,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <typename = void>
-    inline Namespace parse_known_args(Namespace const& space = Namespace()) const
+    Namespace parse_known_args(Namespace const& space = Namespace()) const
     {
         return parse_known_args(m_parsed_arguments, space);
     }
@@ -4375,7 +4374,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Namespace parse_known_args(T const& args, Namespace const& space = Namespace()) const
+    Namespace parse_known_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_known_args(detail::_split_to_args(args), space);
     }
@@ -4413,7 +4412,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <typename = void>
-    inline Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
+    Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(m_parsed_arguments, space);
     }
@@ -4427,7 +4426,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T,typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Namespace parse_intermixed_args(T const& args, Namespace const& space = Namespace()) const
+    Namespace parse_intermixed_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(detail::_split_to_args(args), space);
     }
@@ -4465,7 +4464,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <typename = void>
-    inline Namespace parse_known_intermixed_args(Namespace const& space = Namespace()) const
+    Namespace parse_known_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(m_parsed_arguments, space);
     }
@@ -4479,7 +4478,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T, typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Namespace parse_known_intermixed_args(T const& args, Namespace const& space = Namespace()) const
+    Namespace parse_known_intermixed_args(T const& args, Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(detail::_split_to_args(args), space);
     }
