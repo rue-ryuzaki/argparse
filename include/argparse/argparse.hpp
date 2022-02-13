@@ -557,13 +557,6 @@ static inline bool _correct_type_names(std::string const& expected, std::string 
     return expected.empty() || received == expected;
 }
 
-static inline void _check_type_names(std::string const& expected, std::string const& received)
-{
-    if (!_correct_type_names(expected, received)) {
-        throw TypeError("type_name missmatch: expected " + expected + ", received " + received);
-    }
-}
-
 template <class T>
 class Value
 {
@@ -634,6 +627,13 @@ private:
     bool    m_has_value;
     T       m_value;
 };
+
+static inline void _check_type_names(Value<std::string> const& expected, std::string const& received)
+{
+    if (expected.has_value() && !_correct_type_names(expected(), received)) {
+        throw TypeError("type_name missmatch: expected " + expected() + ", received " + received);
+    }
+}
 } // details
 
 /*!
@@ -1191,7 +1191,7 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'type' name
+     *  \brief Set argument 'type' name (for MetavarTypeHelpFormatter and Namespace::get<T> type check)
      *
      *  \return Current argument reference
      */
@@ -1199,6 +1199,19 @@ public:
     Argument& type()
     {
         m_type_name = detail::_type_name<T>();
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'type' name (for MetavarTypeHelpFormatter)
+     *
+     *  \param value Type name value
+     *
+     *  \return Current argument reference
+     */
+    Argument& type(std::string const& value)
+    {
+        m_type_name.clear(detail::_trim_copy(value));
         return *this;
     }
 
@@ -1437,13 +1450,13 @@ public:
     }
 
     /*!
-     *  \brief Get argument 'type' name
+     *  \brief Get argument 'type' name (for MetavarTypeHelpFormatter)
      *
      *  \return Argument 'type' name
      */
     inline std::string const& type_name() const noexcept
     {
-        return m_type_name;
+        return m_type_name();
     }
 
     /*!
@@ -1610,8 +1623,8 @@ private:
 
     std::string get_argument_name(HelpFormatter formatter) const
     {
-        if (formatter & MetavarTypeHelpFormatter && !m_type_name.empty()) {
-            return m_type_name;
+        if (formatter & MetavarTypeHelpFormatter && !type_name().empty()) {
+            return type_name();
         }
         if (m_metavar.has_value()) {
             return metavar();
@@ -1673,7 +1686,7 @@ private:
     uint32_t    m_num_args;
     detail::Value<std::string> m_const;
     detail::Value<std::string> m_default;
-    std::string m_type_name;
+    detail::Value<std::string> m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
     bool        m_required;
     std::string m_help;
@@ -3309,7 +3322,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
+            detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
             if (args.first->m_action == Action::count) {
                 return T(args.second.size());
             }
@@ -3338,7 +3351,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
+            detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3364,7 +3377,7 @@ public:
         T get(std::string const& key, char delim = detail::_equal) const
         {
             auto const& args = data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
+            detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3390,7 +3403,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
+            detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::value_type>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3410,7 +3423,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
+            detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::value_type>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3436,7 +3449,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::value_type>());
+            detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::value_type>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3458,7 +3471,7 @@ public:
         T get(std::string const& key, char delim = detail::_equal) const
         {
             auto const& args = data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<typename T::mapped_type>());
+            detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::mapped_type>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
@@ -3492,7 +3505,7 @@ public:
         T get(std::string const& key) const
         {
             auto const& args = data(key);
-            detail::_check_type_names(args.first->type_name(), detail::_type_name<T>());
+            detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
             if (args.first->m_action == Action::count) {
                 throw TypeError("invalid get type for argument '" + key + "'");
             }
