@@ -21,7 +21,7 @@ endif()
 
 add_library(argparse INTERFACE)
 
-if (NOT WIN32)
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set_target_properties(argparse PROPERTIES
         PUBLIC_HEADER include/argparse/argparse.hpp
     )
