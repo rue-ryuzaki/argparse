@@ -16,7 +16,7 @@ This project is a C++ adaptation of Python argparse and supports most of its fea
 C++11 support compiler
  - Ubuntu (gcc, clang)
  - macOS (clang)
- - Windows (mingw, clang, msvc2019)
+ - Windows (mingw, clang, msvc2019, msvc2022) (github legacy: msvc2017)
 ## Overview
 - Examples:
   - [code](#code-example) - [usage](#usage-example) - [output](#output)
