@@ -54,7 +54,13 @@
 #include <vector>
 
 #if __cplusplus >= 201703L // C++17+
-//#include <filesystem>
+#if (!defined __WIN32 or defined(__clang__)) or (defined __WIN32 and defined(__GNUC__) and (__GNUC__ > 8))
+#include <filesystem>
+
+#define ARGPARSE_USE_FILESYSTEM 1
+#else
+#undef ARGPARSE_USE_FILESYSTEM
+#endif //
 #include <optional>
 #include <string_view>
 
@@ -68,12 +74,15 @@ using experimental::fundamentals_v1::nullopt;
 } // std
 
 #define ARGPARSE_USE_OPTIONAL 1
+#undef ARGPARSE_USE_FILESYSTEM
 #else
 #warning "use C++17 or higher for std::optional"
 #undef ARGPARSE_USE_OPTIONAL
+#undef ARGPARSE_USE_FILESYSTEM
 #endif // __GNUC__
 #else
 #undef ARGPARSE_USE_OPTIONAL
+#undef ARGPARSE_USE_FILESYSTEM
 #endif // C++14+
 
 #if defined(__GNUC__)
@@ -247,11 +256,11 @@ static inline std::string _to_upper(std::string s)
 
 static inline std::string _file_name(std::string const& s)
 {
-//#if __cplusplus >= 201703L // C++17+
-//    return std::filesystem::path(s).filename().string();
-//#else
+#ifdef ARGPARSE_USE_FILESYSTEM
+    return std::filesystem::path(s).filename().string();
+#else
     return s.substr(s.find_last_of("/\\") + 1);
-//#endif // C++17+
+#endif // ARGPARSE_USE_FILESYSTEM
 }
 
 static inline bool _have_quotes(std::string const& s)
