@@ -54,6 +54,7 @@
 #include <vector>
 
 #if __cplusplus >= 201703L // C++17+
+#include <filesystem>
 #include <optional>
 #include <string_view>
 
@@ -246,7 +247,11 @@ static inline std::string _to_upper(std::string s)
 
 static inline std::string _file_name(std::string const& s)
 {
+#if __cplusplus >= 201703L // C++17+
+    return std::filesystem::path(s).filename();
+#else
     return s.substr(s.find_last_of("/\\") + 1);
+#endif // C++17+
 }
 
 static inline bool _have_quotes(std::string const& s)
@@ -288,7 +293,11 @@ static inline std::string _replace(std::string s, char c, std::string const& val
 
 static inline bool _starts_with(std::string const& s, std::string const& pattern)
 {
+#if __cplusplus >= 202002L // C++20+
+    return s.starts_with(pattern);
+#else
     return s.compare(0, pattern.size(), pattern) == 0;
+#endif // C++20+
 }
 
 template <class T>
