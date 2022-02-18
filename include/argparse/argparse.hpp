@@ -58,7 +58,9 @@
 
 // filesystem
 #if __cplusplus >= 201703L // C++17+
-#if (!defined __WIN32 or defined(__clang__)) or (defined __WIN32 and defined(__GNUC__) and (__GNUC__ > 8))
+#if (defined(_MSC_VER) && _MSC_VER >= 1914) \
+    || (defined(__clang__) && (__clang_major__ > 8)) \
+    || (defined(__GNUC__) && (__GNUC__ > 8))
 #include <filesystem>
 
 #define ARGPARSE_USE_FILESYSTEM 1
@@ -75,7 +77,7 @@
 
 #define ARGPARSE_USE_OPTIONAL 1
 #elif __cplusplus >= 201402L // C++14
-#if defined(__GNUC__) and (defined(__linux__) or !defined(__clang__))
+#if defined(__GNUC__) && (defined(__linux__) || !defined(__clang__))
 #include <experimental/optional>
 namespace std {
 using experimental::optional;
