@@ -65,20 +65,9 @@
 #else
 #undef ARGPARSE_USE_FILESYSTEM
 #endif //
-#elif __cplusplus >= 201402L // C++14
-#if defined(__GNUC__) and (defined(__linux__) or !defined(__clang__))
-#include <experimental/filesystem>
-namespace std {
-using experimental::filesystem;
-} // std
-
-#define ARGPARSE_USE_FILESYSTEM 1
 #else
 #undef ARGPARSE_USE_FILESYSTEM
-#endif // __GNUC__
-#else
-#undef ARGPARSE_USE_FILESYSTEM
-#endif // C++14+
+#endif // C++17+
 
 // optional
 #if __cplusplus >= 201703L // C++17+
