@@ -210,13 +210,13 @@ std::string const _equals = "=";
 static inline void _ltrim(std::string& s)
 {
     s.erase(std::begin(s), std::find_if(std::begin(s), std::end(s),
-                                        [] (int c) { return !std::isspace(c); }));
+                                        [] (unsigned char c) { return !std::isspace(c); }));
 }
 
 static inline void _rtrim(std::string& s)
 {
     s.erase(std::find_if(s.rbegin(), s.rend(),
-                         [] (int c) { return !std::isspace(c); }).base(), s.end());
+                         [] (unsigned char c) { return !std::isspace(c); }).base(), s.end());
 }
 
 static inline void _trim(std::string& s)
