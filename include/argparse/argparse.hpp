@@ -48,11 +48,15 @@
 #include <stack>
 #include <stdexcept>
 #include <string>
+#if __cplusplus >= 201703L // C++17+
+#include <string_view>
+#endif // C++17+
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
+// filesystem
 #if __cplusplus >= 201703L // C++17+
 #if (!defined __WIN32 or defined(__clang__)) or (defined __WIN32 and defined(__GNUC__) and (__GNUC__ > 8))
 #include <filesystem>
@@ -61,8 +65,24 @@
 #else
 #undef ARGPARSE_USE_FILESYSTEM
 #endif //
+#elif __cplusplus >= 201402L // C++14
+#if defined(__GNUC__) and (defined(__linux__) or !defined(__clang__))
+#include <experimental/filesystem>
+namespace std {
+using experimental::filesystem;
+} // std
+
+#define ARGPARSE_USE_FILESYSTEM 1
+#else
+#undef ARGPARSE_USE_FILESYSTEM
+#endif // __GNUC__
+#else
+#undef ARGPARSE_USE_FILESYSTEM
+#endif // C++14+
+
+// optional
+#if __cplusplus >= 201703L // C++17+
 #include <optional>
-#include <string_view>
 
 #define ARGPARSE_USE_OPTIONAL 1
 #elif __cplusplus >= 201402L // C++14
@@ -74,15 +94,11 @@ using experimental::fundamentals_v1::nullopt;
 } // std
 
 #define ARGPARSE_USE_OPTIONAL 1
-#undef ARGPARSE_USE_FILESYSTEM
 #else
-#warning "use C++17 or higher for std::optional"
 #undef ARGPARSE_USE_OPTIONAL
-#undef ARGPARSE_USE_FILESYSTEM
 #endif // __GNUC__
 #else
 #undef ARGPARSE_USE_OPTIONAL
-#undef ARGPARSE_USE_FILESYSTEM
 #endif // C++14+
 
 #if defined(__GNUC__)
