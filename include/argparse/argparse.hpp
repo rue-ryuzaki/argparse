@@ -54,7 +54,7 @@
 #include <vector>
 
 #if __cplusplus >= 201703L // C++17+
-#include <filesystem>
+//#include <filesystem>
 #include <optional>
 #include <string_view>
 
@@ -247,11 +247,11 @@ static inline std::string _to_upper(std::string s)
 
 static inline std::string _file_name(std::string const& s)
 {
-#if __cplusplus >= 201703L // C++17+
-    return std::filesystem::path(s).filename();
-#else
+//#if __cplusplus >= 201703L // C++17+
+//    return std::filesystem::path(s).filename().string();
+//#else
     return s.substr(s.find_last_of("/\\") + 1);
-#endif // C++17+
+//#endif // C++17+
 }
 
 static inline bool _have_quotes(std::string const& s)
