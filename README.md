@@ -33,6 +33,10 @@ C++11 support compiler
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
   - [add_argument() actions](#the-add_argumentname-or-flags-method-support)
 ## Code example
+- create parser: auto parser = argparse::ArgumentParser(...);
+- add arguments: parser.add_argument(...);
+- parse arguments: auto const args = parser.parse_args();
+- get parsed argument values: args.get<...>(...);
 ```cpp
 #include <iostream>
 
@@ -84,6 +88,7 @@ bar: 101
 baz: baaz
 ```
 ## Actions example
+See [supported actions](https://github.com/rue-ryuzaki/argparse#the-add_argument-actions-support)
 ```cpp
 #include <iostream>
 
@@ -119,6 +124,11 @@ int main(int argc, char* argv[])
 }
 ```
 ## Nargs example
+Supported nargs:
+- "?" or zero_ore_one(), argument must have zero or one value
+- "*" or zero_or_more(), argument must have zero or more values
+- "+" or one_or_more(), argument must have one or more values
+- N (positive number), argument must have N values
 ```cpp
 #include <iostream>
 
@@ -379,13 +389,13 @@ int main(int argc, char* argv[])
 - [x] metavar - A name for the argument in usage messages.
 - [x] dest - The name of the attribute to be added to the object returned by parse_args().
 ## The add_argument() actions support
-- [x] 'store' - This just stores the argument’s value. This is the default action.
-- [x] 'store_const' - This stores the value specified by the const keyword argument.
-- [x] 'store_true' and 'store_false' - These are special cases of 'store_const' used for storing the values true and false respectively. In addition, they create default values of false and true respectively.
-- [x] 'append' - This stores a list, and appends each argument value to the list. This is useful to allow an option to be specified multiple times.
-- [x] 'append_const' - This stores a list, and appends the value specified by the const keyword argument to the list.
-- [x] 'count' - This counts the number of times a keyword argument occurs.
-- [x] 'help' - This prints a complete help message for all the options in the current parser and then exits.
-- [x] 'version' - This expects a version= keyword argument in the add_argument() call, and prints version information and exits when invoked.
-- [x] 'extend' - This stores a list, and extends each argument value to the list.
+- [x] "store" - This just stores the argument’s value. This is the default action.
+- [x] "store_const" - This stores the value specified by the const keyword argument.
+- [x] "store_true" and "store_false" - These are special cases of "store_const" used for storing the values true and false respectively. In addition, they create default values of false and true respectively.
+- [x] "append" - This stores a list, and appends each argument value to the list. This is useful to allow an option to be specified multiple times.
+- [x] "append_const" - This stores a list, and appends the value specified by the const keyword argument to the list.
+- [x] "count" - This counts the number of times a keyword argument occurs.
+- [x] "help" - This prints a complete help message for all the options in the current parser and then exits.
+- [x] "version" - This expects a version= keyword argument in the add_argument() call, and prints version information and exits when invoked.
+- [x] "extend" - This stores a list, and extends each argument value to the list.
 - [x] argparse::BooleanOptionalAction - Adds support for boolean actions such as --foo and --no-foo
