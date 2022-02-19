@@ -146,6 +146,13 @@ int main(int argc, char* argv[])
 }
 ```
 ## Subparsers example
+If you need to get the subparser's parser name, set dest value to the subparser, or use [handle](https://github.com/rue-ryuzaki/argparse#parserhandlestdfunctionvoidstdstring-func--gets-parser-name) in parsers.
+
+Note:
+
+If subparser not selected in parsed arguments, it is not added to the Namespace, like the arguments of its parsers.
+
+Check if value exists first (Namespace::exists()), or use Namespace::try_get<>() instead of Namespace::get<>() (since C++17).
 ```cpp
 #include <iostream>
 
@@ -182,6 +189,7 @@ int main(int argc, char* argv[])
 }
 ```
 ## Argument groups example
+You can group arguments into groups, each with its own title and description.
 ```cpp
 #include <iostream>
 
@@ -267,7 +275,9 @@ int main(int argc, char* argv[])
 ## Features
 ### Handle
 #### Parser::handle(std::function<void()> func)
+If you need to handle subparser's parser detection.
 #### Parser::handle(std::function<void(std::string)> func) // gets parser name
+If you need to handle the subparser's parser name.
 ```cpp
 #include <iostream>
 
@@ -290,14 +300,19 @@ int main(int argc, char* argv[])
 
     auto const args = parser.parse_args();
 
-    std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
     std::cout << "foo: " << args.get<bool>("foo") << std::endl;
-    std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
+    if (args.exists("bar")) {
+        std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
+    }
+    if (args.exists("bar")) {
+        std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
+    }
 
     return 0;
 }
 ```
 #### Argument::handle(std::function<void()> func)
+If you need to handle argument detection.
 Preferably for value-independent arguments (Action: "store_true", "store_false" or "count")
 ```cpp
 #include <iostream>
@@ -316,6 +331,7 @@ int main(int argc, char* argv[])
 }
 ```
 #### Argument::handle(std::function<void(std::string)> func)
+If you need to handle the parsed value of the argument.
 Preferably for value-dependent arguments (Action: "store", "store_const", "append", "append_const" or "extend")
 
 For value-independent arguments gets const value (Action: "store_true", "store_false") or empty string (Action: "count")
