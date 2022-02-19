@@ -124,7 +124,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang: [3.9, 4.0]
+        clang: ['3.9', '4.0']
         standard: [11, 14]
 
     env:
@@ -153,7 +153,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang: [5.0, 6.0, 7, 8, 9]
+        clang: ['5.0', '6.0', 7, 8, 9]
         standard: [11, 14, 17]
 
     env:
