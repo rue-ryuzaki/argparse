@@ -92,10 +92,10 @@ using experimental::fundamentals_v1::nullopt;
 #undef ARGPARSE_USE_OPTIONAL
 #endif // C++14+
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__APPLE__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough="
-#endif // __GNUC__
+#endif // __GNUC__ && !__APPLE__
 
 namespace argparse {
 template <class T>  struct is_byte_type { enum{value = false}; };
@@ -385,7 +385,7 @@ static inline std::string _make_no_flag(std::string str)
     auto it = std::find_if(std::begin(str), std::end(str),
                            [prefix] (char c) -> bool { return c != prefix; });
     if (it != std::end(str)) {
-        str.insert(std::distance(std::begin(str), it), "no-");
+        str.insert(static_cast<std::string::size_type>(std::distance(std::begin(str), it)), "no-");
     } else {
         throw ValueError("can't create no- boolean option");
     }
@@ -428,8 +428,11 @@ static inline std::vector<std::string> _split_equal(std::string const& s,
                                                     std::string const& prefix)
 {
     auto pos = _is_value_exists(_equal, prefix)
-            ? s.find(_equal, std::distance(std::begin(s), std::find_if(std::begin(s), std::end(s),
-              [] (char c) -> bool { return c != _equal; }))) : s.find(_equal);
+               ? s.find(_equal, static_cast<std::string::size_type>(
+                            std::distance(std::begin(s),
+                                          std::find_if(std::begin(s), std::end(s),
+                                                       [] (char c) -> bool { return c != _equal; }))))
+               : s.find(_equal);
     if (pos != std::string::npos) {
         return { s.substr(0, pos), s.substr(pos + 1) };
     } else {
@@ -4994,7 +4997,8 @@ private:
                 sub_optional = parser->get_optional_with_help(true, m_add_help, parser->m_prefix_chars);
                 auto sub_positional = parser->get_positional(true);
                 if (!sub_positional.empty()) {
-                    positional.insert(std::next(std::begin(positional), subparser.second),
+                    using dtype = std::vector<std::shared_ptr<Argument>>::difference_type;
+                    positional.insert(std::next(std::begin(positional), static_cast<dtype>(subparser.second)),
                                       std::make_move_iterator(std::begin(sub_positional)),
                                       std::make_move_iterator(std::end(sub_positional)));
                 }
@@ -5122,8 +5126,9 @@ private:
             while (!arguments.at(i).empty()
                    && detail::_is_value_exists(arguments.at(i).front(), m_fromfile_prefix_chars)) {
                 auto args = convert_arg_line_to_args(arguments.at(i).substr(1));
-                arguments.erase(std::next(std::begin(arguments), i));
-                arguments.insert(std::next(std::begin(arguments), i),
+                using dtype = std::vector<std::string>::difference_type;
+                arguments.erase(std::next(std::begin(arguments), static_cast<dtype>(i)));
+                arguments.insert(std::next(std::begin(arguments), static_cast<dtype>(i)),
                                  std::make_move_iterator(std::begin(args)),
                                  std::make_move_iterator(std::end(args)));
             }
@@ -5174,8 +5179,9 @@ private:
                 } else {
                     _separate_arg_abbrev(temp, arg, detail::_flag_name(arg), optionals);
                 }
-                arguments.erase(std::next(std::begin(arguments), i));
-                arguments.insert(std::next(std::begin(arguments), i),
+                using dtype = std::vector<std::string>::difference_type;
+                arguments.erase(std::next(std::begin(arguments), static_cast<dtype>(i)));
+                arguments.insert(std::next(std::begin(arguments), static_cast<dtype>(i)),
                                  std::make_move_iterator(std::begin(temp)),
                                  std::make_move_iterator(std::end(temp)));
             }
@@ -5758,8 +5764,8 @@ private:
 };
 } // argparse
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__APPLE__)
 #pragma GCC diagnostic pop
-#endif // __GNUC__
+#endif // __GNUC__ && __APPLE__
 
 #endif // _ARGPARSE_ARGUMENT_PARSER_HPP_
