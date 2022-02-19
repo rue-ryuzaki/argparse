@@ -117,3 +117,118 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build
       run: ctest -C ${{env.BUILD_TYPE}}
+
+  clang-ubuntu18-14:
+    runs-on: ubuntu-18.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        clang: [3.9, 4.0]
+        standard: [11, 14]
+
+    env:
+      CC: clang-${{ matrix.clang }}
+      CXX: clang++-${{ matrix.clang }}
+
+    steps:
+    - name: Install Clang
+      run: sudo apt-get install clang-${{ matrix.clang }}
+
+    - uses: actions/checkout@v2
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}}
+
+  clang-ubuntu18-17:
+    runs-on: ubuntu-18.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        clang: [5.0, 6.0, 7, 8, 9]
+        standard: [11, 14, 17]
+
+    env:
+      CC: clang-${{ matrix.clang }}
+      CXX: clang++-${{ matrix.clang }}
+
+    steps:
+    - name: Install Clang
+      run: sudo apt-get install clang-${{ matrix.clang }}
+
+    - uses: actions/checkout@v2
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}}
+
+  clang-ubuntu20-20:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        clang: [9, 10, 11, 12]
+        standard: [11, 14, 17, 20]
+
+    env:
+      CC: clang-${{ matrix.clang }}
+      CXX: clang++-${{ matrix.clang }}
+
+    steps:
+    - name: Install Clang
+      run: sudo apt-get install clang-${{ matrix.clang }}
+
+    - uses: actions/checkout@v2
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}}
+
+  clang-latest:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        standard: [11, 14, 17, 20]
+
+    env:
+      CC: clang
+      CXX: clang++
+
+    steps:
+    - name: Install Clang
+      run: sudo apt-get install clang
+
+    - uses: actions/checkout@v2
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}}
