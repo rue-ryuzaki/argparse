@@ -2616,6 +2616,8 @@ public:
     using BaseParser::epilog;
     using BaseParser::prefix_chars;
 
+    class Namespace;
+
     /*!
      * \brief Parser class
      */
@@ -2642,7 +2644,8 @@ public:
               m_help(),
               m_prefix(),
               m_handle_str(),
-              m_handle()
+              m_handle(),
+              m_parse_trigger()
         { }
 
         /*!
@@ -2742,6 +2745,19 @@ public:
         }
 
         /*!
+         *  \brief Set parser 'parse_trigger' function
+         *
+         *  \param func Parse trigger function
+         *
+         *  \return Current parser reference
+         */
+        inline Parser& parse_trigger(std::function<void(Namespace const&)> func) noexcept
+        {
+            m_parse_trigger = func;
+            return *this;
+        }
+
+        /*!
          *  \brief Get parser 'help' message
          *
          *  \return Parser 'help' message
@@ -2762,6 +2778,13 @@ public:
             }
         }
 
+        inline void parse_trigger(Namespace const& args) const
+        {
+            if (m_parse_trigger) {
+                m_parse_trigger(args);
+            }
+        }
+
         std::string print(HelpFormatter formatter, std::size_t limit = detail::_argument_help_limit) const
         {
             std::string res = "    " + m_name;
@@ -2774,6 +2797,7 @@ public:
         std::string m_prefix;
         std::function<void(std::string)> m_handle_str;
         std::function<void()> m_handle;
+        std::function<void(Namespace const&)> m_parse_trigger;
     };
 
     /*!
@@ -5476,7 +5500,11 @@ private:
                 result.create(arg, { pair.second });
             }
         }
-        return Namespace(std::move(result), std::move(unrecognized_args));
+        auto res = Namespace(std::move(result), std::move(unrecognized_args));
+        if (parser) {
+            parser->parse_trigger(res);
+        }
+        return res;
     }
 
     inline void throw_error(std::string const& message, std::ostream& os = std::cerr) const
