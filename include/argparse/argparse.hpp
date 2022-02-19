@@ -1415,6 +1415,7 @@ public:
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
         m_handle_str = func;
+        m_handle = nullptr;
         return *this;
     }
 
@@ -1434,6 +1435,7 @@ public:
             std::cerr << "better to use Argument::handle(std::function<void(std::string)> func)" << std::endl;
         }
         m_handle = func;
+        m_handle_str = nullptr;
         return *this;
     }
 
