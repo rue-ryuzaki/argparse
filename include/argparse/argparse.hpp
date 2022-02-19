@@ -2723,6 +2723,7 @@ public:
         inline Parser& handle(std::function<void(std::string)> func) noexcept
         {
             m_handle_str = func;
+            m_handle = nullptr;
             return *this;
         }
 
@@ -2736,6 +2737,7 @@ public:
         inline Parser& handle(std::function<void()> func) noexcept
         {
             m_handle = func;
+            m_handle_str = nullptr;
             return *this;
         }
 
