@@ -1131,6 +1131,16 @@ public:
     }
 
     /*!
+     *  \brief Set argument 'nargs' zero_or_one ("?") value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& zero_or_one()
+    {
+        return nargs("?");
+    }
+
+    /*!
      *  \brief Set argument 'nargs' zero_or_more ("*") value
      *
      *  \return Current argument reference
