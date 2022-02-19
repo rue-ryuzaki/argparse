@@ -14,9 +14,9 @@ Python-like argument parser for C++11+ projects (with similar syntax).
 This project is a C++ adaptation of Python argparse and supports most of its features (actions, nargs, subparsers, argument groups, help formatting, auto-generated usage and help, and more).
 ## Supported compilers
 C++11 support compiler
- - Ubuntu (gcc, clang)
- - macOS (clang)
- - Windows (mingw, clang, msvc2019, msvc2022) (github legacy: msvc2017)
+ - Ubuntu: gcc (tested 5 up to 10), clang (tested 3.9 up to 12)
+ - macOS: clang (tested 13 (default) on macos-latest)
+ - Windows: mingw (tested 8.1), clang (tested 11, 12), msvc (tested 2019, 2022), github legacy: msvc2017
 ## Overview
 - Examples:
   - [code](#code-example) - [usage](#usage-example) - [output](#output)
@@ -384,7 +384,7 @@ int main(int argc, char* argv[])
 - [x] nargs - The number of command-line arguments that should be consumed.
 - [x] const - A constant value required by some action and nargs selections.
 - [x] default - The value produced if the argument is absent from the command line and if it is absent from the namespace object.
-- [x] type - The type to which the command-line argument should be converted.
+- [x] type - The type to which the command-line argument should be converted (for MetavarTypeHelpFormatter and Namespace::get<T> type check).
 - [x] choices - A container of the allowable values for the argument.
 - [x] required - Whether or not the command-line option may be omitted (optionals only).
 - [x] help - A brief description of what the argument does.
