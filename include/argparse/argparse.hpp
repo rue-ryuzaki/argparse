@@ -1458,9 +1458,6 @@ public:
         if (m_action & (Action::version | Action::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
-        if (!(m_action & (Action::store_true | Action::store_false | Action::count))) {
-            std::cerr << "better to use Argument::handle(std::function<void(std::string)> func)" << std::endl;
-        }
         m_handle = func;
         m_handle_str = nullptr;
         return *this;
