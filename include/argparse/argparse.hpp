@@ -594,12 +594,12 @@ public:
           m_value()
     { }
 
-    explicit Value(Value const& orig)
+    Value(Value const& orig)
         : m_has_value(orig.m_has_value),
           m_value(orig.m_value)
     { }
 
-    explicit Value(Value&& orig) noexcept
+    Value(Value&& orig) noexcept
         : m_has_value(std::move(orig.m_has_value)),
           m_value(std::move(orig.m_value))
     { }
@@ -716,20 +716,11 @@ class Argument
 
     enum Type
     {
+        NoType,
         Positional,
         Optional
     };
 
-public:
-    /*!
-     *  \brief Construct argument object with parsed arguments
-     *
-     *  \param flags Argument flags
-     *  \param name Argument name
-     *  \param type Argument type
-     *
-     *  \return Argument object
-     */
     explicit Argument(std::vector<std::string> const& flags, std::string const& name, Type type)
         : m_flags(flags),
           m_all_flags(m_flags),
@@ -755,20 +746,56 @@ public:
           m_post_trigger(nullptr)
     { }
 
-    /*!
-     *  \brief Construct argument object with parsed arguments
-     *
-     *  \param flags Argument flags
-     *  \param name Argument name
-     *  \param type Argument type
-     *
-     *  \return Argument object
-     */
     explicit Argument(std::vector<std::string>&& flags, std::string&& name, Type type)
         : m_flags(std::move(flags)),
           m_all_flags(m_flags),
           m_name(std::move(name)),
           m_type(type),
+          m_action(Action::store),
+          m_nargs(NARGS_DEF),
+          m_nargs_str("1"),
+          m_num_args(1),
+          m_const(),
+          m_default(),
+          m_type_name(),
+          m_choices(),
+          m_required(false),
+          m_help(),
+          m_help_type(),
+          m_metavar(),
+          m_dest_str(),
+          m_dest(),
+          m_version(),
+          m_handle_str(nullptr),
+          m_handle(nullptr),
+          m_post_trigger(nullptr)
+    { }
+
+    static std::shared_ptr<Argument>
+    make_argument(std::vector<std::string> const& flags, std::string const& name, Type type)
+    {
+        return std::make_shared<Argument>(Argument(flags, name, type));
+    }
+
+    static std::shared_ptr<Argument>
+    make_argument(std::vector<std::string>&& flags, std::string&& name, Type type)
+    {
+        return std::make_shared<Argument>(Argument(std::move(flags), std::move(name), type));
+    }
+
+public:
+    /*!
+     *  \brief Construct argument object with parsed arguments
+     *
+     *  \param flags Argument flags
+     *
+     *  \return Argument object
+     */
+    explicit Argument(std::vector<std::string> const& flags)
+        : m_flags(flags),
+          m_all_flags(m_flags),
+          m_name(),
+          m_type(NoType),
           m_action(Action::store),
           m_nargs(NARGS_DEF),
           m_nargs_str("1"),
@@ -796,7 +823,7 @@ public:
      *
      *  \return Argument object
      */
-    explicit Argument(Argument const& orig)
+    Argument(Argument const& orig)
         : m_flags(orig.m_flags),
           m_all_flags(orig.m_all_flags),
           m_name(orig.m_name),
@@ -828,7 +855,7 @@ public:
      *
      *  \return Argument object
      */
-    explicit Argument(Argument&& orig) noexcept
+    Argument(Argument&& orig) noexcept
         : m_flags(std::move(orig.m_flags)),
           m_all_flags(std::move(orig.m_all_flags)),
           m_name(std::move(orig.m_name)),
@@ -987,7 +1014,7 @@ public:
                        | Action::append_const | Action::extend))) {
             m_metavar.clear();
         }
-        if (m_type == Optional && value == Action::BooleanOptionalAction) {
+        if (m_type != Positional && value == Action::BooleanOptionalAction) {
             m_all_flags.clear();
             for (auto const& flag : m_flags) {
                 m_all_flags.push_back(flag);
@@ -1768,7 +1795,7 @@ public:
      *
      *  \return Group object
      */
-    explicit Group(Group const& orig)
+    Group(Group const& orig)
         : m_title(orig.m_title),
           m_description(orig.m_description),
           m_position(orig.m_position)
@@ -1841,7 +1868,7 @@ public:
      *
      *  \return Argument data object
      */
-    explicit ArgumentData(ArgumentData const& orig)
+    ArgumentData(ArgumentData const& orig)
         : m_conflict_handler(orig.m_conflict_handler),
           m_arguments(orig.m_arguments),
           m_optional(orig.m_optional),
@@ -1947,7 +1974,7 @@ protected:
                 }
             }
             if (!help_flags.empty()) {
-                auto help = std::make_shared<Argument>(std::move(help_flags), "help", Argument::Optional);
+                auto help = Argument::make_argument(std::move(help_flags), "help", Argument::Optional);
                 help->help("show this help message and exit").action(Action::help);
                 result.emplace_back(std::move(help));
             }
@@ -2014,8 +2041,8 @@ protected:
             }
             _update_flag_name(flag, flag_name, prefixes);
         }
-        auto arg = std::make_shared<Argument>(std::move(flags), std::move(flag_name),
-                                              is_optional ? Argument::Optional : Argument::Positional);
+        auto arg = Argument::make_argument(std::move(flags), std::move(flag_name),
+                                           is_optional ? Argument::Optional : Argument::Positional);
         auto _check_conflict = [this, &arg] (std::string const& flag, std::vector<std::string>& flags)
         {
             auto it = std::find(std::begin(flags), std::end(flags), flag);
@@ -2051,6 +2078,85 @@ protected:
                 }
             };
         }
+    }
+
+    void validate_argument(Argument arg, std::string const& prefix_chars)
+    {
+        auto const& flags = arg.m_flags;
+        auto flag_name = flags.front();
+        if (flag_name.empty()) {
+            throw IndexError("string index out of range");
+        }
+        std::size_t prefixes = 0;
+        auto _update_flag_name = [] (std::string const& arg, std::string& flag_name, std::size_t& prefixes)
+        {
+            auto name = detail::_flag_name(arg);
+            std::size_t count_prefixes = arg.size() - name.size();
+            if (prefixes < count_prefixes) {
+                prefixes = count_prefixes;
+                flag_name = std::move(name);
+            }
+        };
+        bool is_optional = detail::_is_value_exists(flag_name.front(), prefix_chars);
+        if (is_optional) {
+            _update_flag_name(flag_name, flag_name, prefixes);
+        } else if (flags.size() > 1) {
+            // no positional multiflag
+            throw ValueError("invalid option string " + flags.front()
+                             + ": must starts with a character '" + prefix_chars + "'");
+        }
+        for (std::size_t i = 1; i < flags.size(); ++i) {
+            // check arguments
+            auto& flag = flags.at(i);
+            if (flag.empty()) {
+                throw IndexError("string index out of range");
+            }
+            if (!detail::_is_value_exists(flag.front(), prefix_chars)) {
+                // no positional and optional args
+                throw ValueError("invalid option string " + flag
+                                 + ": must starts with a character '" + prefix_chars + "'");
+            }
+            _update_flag_name(flag, flag_name, prefixes);
+        }
+        arg.m_name = flag_name;
+        arg.m_type = is_optional ? Argument::Optional : Argument::Positional;
+        if (arg.m_type == Argument::Positional) {
+            // check
+            if (arg.m_action == Action::BooleanOptionalAction) {
+                arg.m_all_flags = arg.m_flags;
+            }
+            if (arg.m_action & (Action::version | Action::help)) {
+                // version and help actions cannot be positional
+                throw TypeError("got an unexpected keyword argument 'required'");
+            }
+            if (arg.m_required) {
+                throw TypeError("'required' is an invalid argument for positionals");
+            }
+            if (!arg.m_dest.empty()) {
+                throw ValueError("dest supplied twice for positional argument");
+            }
+        }
+        auto _check_conflict = [this, &arg] (std::string const& flag, std::vector<std::string>& flags)
+        {
+            auto it = std::find(std::begin(flags), std::end(flags), flag);
+            if (it != std::end(flags)) {
+                if (m_conflict_handler == "resolve") {
+                    flags.erase(it);
+                } else {
+                    throw ArgumentError("argument " + detail::_vector_to_string(arg.flags(), "/")
+                                        + ": conflicting option string: " + flag);
+                }
+            }
+        };
+        if (is_optional) {
+            for (auto const& arg_flag : arg.flags()) {
+                for (auto& opt : m_optional) {
+                    _check_conflict(arg_flag, opt.first->m_flags);
+                    _check_conflict(arg_flag, opt.first->m_all_flags);
+                }
+            }
+        }
+        m_arguments.emplace_back(std::make_shared<Argument>(arg));
     }
 
     std::string m_conflict_handler;
@@ -2097,7 +2203,7 @@ public:
      *
      *  \return Argument group object
      */
-    explicit ArgumentGroup(ArgumentGroup const& orig)
+    ArgumentGroup(ArgumentGroup const& orig)
         : ArgumentData(orig),
           Group(orig),
           m_prefix_chars(orig.m_prefix_chars),
@@ -2615,6 +2721,7 @@ public:
     using BaseParser::description;
     using BaseParser::epilog;
     using BaseParser::prefix_chars;
+    using BaseParser::add_argument;
 
     class Namespace;
 
@@ -2630,6 +2737,7 @@ public:
         using BaseParser::description;
         using BaseParser::epilog;
         using BaseParser::prefix_chars;
+        using BaseParser::add_argument;
 
         /*!
          *  \brief Construct parser with name
@@ -2754,6 +2862,21 @@ public:
         inline Parser& parse_trigger(std::function<void(Namespace const&)> func) noexcept
         {
             m_parse_trigger = func;
+            return *this;
+        }
+
+        /*!
+         *  \brief Add argument
+         *
+         *  \param argument Argument
+         *
+         *  \return Current parser reference
+         */
+        inline Parser& add_argument(Argument const& argument)
+        {
+            validate_argument(Argument(argument), m_prefix_chars);
+            bool is_optional = m_arguments.back()->m_type == Argument::Optional;
+            (is_optional ? m_optional : m_positional).push_back(std::make_pair(m_arguments.back(), false));
             return *this;
         }
 
@@ -4258,6 +4381,21 @@ public:
     }
 
     /*!
+     *  \brief Add argument
+     *
+     *  \param argument Argument
+     *
+     *  \return Current parser reference
+     */
+    inline ArgumentParser& add_argument(Argument const& argument)
+    {
+        validate_argument(Argument(argument), m_prefix_chars);
+        bool is_optional = m_arguments.back()->m_type == Argument::Optional;
+        (is_optional ? m_optional : m_positional).push_back(std::make_pair(m_arguments.back(), false));
+        return *this;
+    }
+
+    /*!
      *  \brief Add subparsers
      *
      *  \return Current subparser reference
@@ -4801,8 +4939,8 @@ private:
         bool was_pseudo_arg = false;
 
         auto subparser_name = subparser_dest;
-        auto subparser_arg = std::make_shared<Argument>(std::move(subparser_flags),
-                                                        std::move(subparser_name), Argument::Positional);
+        auto subparser_arg = Argument::make_argument(std::move(subparser_flags),
+                                                     std::move(subparser_name), Argument::Positional);
         Storage result = space.storage();
         if (space.m_storage.m_data.empty()) {
             result.force_add(positional);
@@ -5238,8 +5376,8 @@ private:
                         }
                     }
                     if (!help_flags.empty()) {
-                        auto help = std::make_shared<Argument>(std::move(help_flags),
-                                                               "help", Argument::Optional);
+                        auto help = Argument::make_argument(std::move(help_flags),
+                                                            "help", Argument::Optional);
                         help->help("show this help message and exit").action(Action::help);
                         opt_all.insert(std::begin(opt_all), help);
                         opt.insert(std::begin(opt), help);
@@ -5494,8 +5632,8 @@ private:
         }
         for (auto const& pair : m_default_values) {
             if (!result.exists(pair.first)) {
-                auto arg = std::make_shared<Argument>(std::vector<std::string>{ pair.first },
-                                                      pair.first, Argument::Positional);
+                auto arg = Argument::make_argument(std::vector<std::string>{ pair.first },
+                                                   pair.first, Argument::Positional);
                 arg->default_value(pair.second);
                 result.create(arg, { pair.second });
             }
@@ -5554,7 +5692,7 @@ private:
                 }
             }
             if (!help_flags.empty()) {
-                auto help = std::make_shared<Argument>(std::move(help_flags), "help", Argument::Optional);
+                auto help = Argument::make_argument(std::move(help_flags), "help", Argument::Optional);
                 help->help("show this help message and exit").action(Action::help);
                 result.emplace_back(std::move(help));
                 add_help = true;
