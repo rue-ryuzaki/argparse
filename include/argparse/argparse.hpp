@@ -2079,7 +2079,11 @@ protected:
 
     void validate_argument(Argument arg, std::string const& prefix_chars)
     {
-        auto const& flags = arg.m_flags;
+        auto& flags = arg.m_flags;
+        if (flags.empty()) {
+            throw ValueError("empty options");
+        }
+        detail::_trim(flags.front());
         auto flag_name = flags.front();
         if (flag_name.empty()) {
             throw IndexError("string index out of range");
@@ -2105,6 +2109,7 @@ protected:
         for (std::size_t i = 1; i < flags.size(); ++i) {
             // check arguments
             auto& flag = flags.at(i);
+            detail::_trim(flag);
             if (flag.empty()) {
                 throw IndexError("string index out of range");
             }
