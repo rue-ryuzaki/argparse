@@ -2750,7 +2750,7 @@ public:
               m_prefix(),
               m_handle_str(),
               m_handle(),
-              m_parse_trigger()
+              m_parse_handle()
         { }
 
         /*!
@@ -2850,15 +2850,15 @@ public:
         }
 
         /*!
-         *  \brief Set parser 'parse_trigger' function
+         *  \brief Set parser 'handle' function
          *
-         *  \param func Parse trigger function
+         *  \param func Parse handle function
          *
          *  \return Current parser reference
          */
-        inline Parser& parse_trigger(std::function<void(Namespace const&)> func) noexcept
+        inline Parser& handle(std::function<void(Namespace const&)> func) noexcept
         {
-            m_parse_trigger = func;
+            m_parse_handle = func;
             return *this;
         }
 
@@ -2898,10 +2898,10 @@ public:
             }
         }
 
-        inline void parse_trigger(Namespace const& args) const
+        inline void parse_handle(Namespace const& args) const
         {
-            if (m_parse_trigger) {
-                m_parse_trigger(args);
+            if (m_parse_handle) {
+                m_parse_handle(args);
             }
         }
 
@@ -2917,7 +2917,7 @@ public:
         std::string m_prefix;
         std::function<void(std::string)> m_handle_str;
         std::function<void()> m_handle;
-        std::function<void(Namespace const&)> m_parse_trigger;
+        std::function<void(Namespace const&)> m_parse_handle;
     };
 
     /*!
@@ -5637,7 +5637,7 @@ private:
         }
         auto res = Namespace(std::move(result), std::move(unrecognized_args));
         if (parser) {
-            parser->parse_trigger(res);
+            parser->parse_handle(res);
         }
         return res;
     }
