@@ -1,3 +1,15 @@
+cpp-argparse-dev (1.3.3-0ppa0) focal; urgency=low
+
+  * Use modern C++ features
+  * Fix build warnings #1
+  * Avoid to use both Argument::handle and Parser::handle functions
+  * Add Parser::handle(std::function<void(Namespace)>) function #2
+  * Add overloaded add_argument::(Argument) function #2
+  * Remove excess print to stderr
+  * Update examples
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 20 Feb 2022 16:11:09 +0300
+
 cpp-argparse-dev (1.3.2-0ppa0) focal; urgency=low
 
   * Add char8_t support to Namespace::get<>()
