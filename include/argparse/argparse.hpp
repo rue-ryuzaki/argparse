@@ -4946,14 +4946,15 @@ private:
         auto subparser_name = subparser_dest;
         auto subparser_arg = Argument::make_argument(std::move(subparser_flags),
                                                      std::move(subparser_name), Argument::Positional);
-        Storage result = space.storage();
+        Storage storage = space.storage();
         if (space.m_storage.m_data.empty()) {
-            result.force_add(positional);
-            result.create(optional);
+            storage.force_add(positional);
+            storage.create(optional);
         } else {
-            result.force_add(positional);
-            result.try_add(optional);
+            storage.force_add(positional);
+            storage.try_add(optional);
         }
+        Storage sub_storage;
 
         auto _optional_arg_by_flag = [&optional, &sub_optional, &parser]
                 (std::string const& key) -> pArgument const
@@ -4974,24 +4975,24 @@ private:
         std::deque<std::string> intermixed_args;
 
         std::size_t pos = 0;
-        auto _store_value = [_validate_argument_value, &result] (pArgument const& arg, std::string const& val)
+        auto _store_value = [_validate_argument_value, &storage] (pArgument const& arg, std::string const& val)
         {
             _validate_argument_value(*arg, val);
-            result.store_value(arg, val);
+            storage.store_value(arg, val);
         };
-        auto _store_default_value = [this, &result] (pArgument const& arg)
+        auto _store_default_value = [this, &storage] (pArgument const& arg)
         {
             auto const& value = default_argument_value(*arg);
             if (value.has_value()) {
-                result.store_default_value(arg, value());
+                storage.store_default_value(arg, value());
             }
         };
-        auto _is_positional_arg_stored = [_throw_error, &result] (pArgument const& arg) -> bool
+        auto _is_positional_arg_stored = [_throw_error, &storage] (pArgument const& arg) -> bool
         {
             if (arg->m_action == Action::append_const && arg->m_default.has_value()) {
                 _throw_error(detail::_ignore_default(arg->m_flags.front(), arg->m_default()));
             }
-            return result.self_value_stored(arg);
+            return storage.self_value_stored(arg);
         };
         auto _match_positionals = [_is_positional_arg_stored, _store_value, _store_default_value, &pos]
                 (std::vector<pArgument> const& positional, std::deque<std::string>& arguments,
@@ -5168,8 +5169,9 @@ private:
                 if (p.m_name == name) {
                     parser = &p;
                     if (!subparser_dest.empty()) {
-                        result.force_add(subparser_arg);
-                        result.at(subparser_arg).push_back(name);
+                        storage.force_add(subparser_arg);
+                        storage.at(subparser_arg).push_back(name);
+                        sub_storage.force_add(subparser_arg);
                     }
                     break;
                 }
@@ -5204,7 +5206,8 @@ private:
                 }
                 parser->m_prefix = program + detail::_spaces + parser->m_name;
                 parser->handle(parser->m_name);
-                result.force_add(parser->m_arguments);
+                storage.force_add(parser->m_arguments);
+                sub_storage.force_add(parser->m_arguments);
             } else {
                 throw_error("invalid choice: '" + name + "' (choose from " + choices + ")");
             }
@@ -5315,11 +5318,11 @@ private:
             }
         };
         auto _check_abbreviations = [this, _separate_arg_abbrev, _throw_error, _prefix_chars,
-                                     &result, &have_negative_args, &was_pseudo_arg]
+                                     &storage, &have_negative_args, &was_pseudo_arg]
                 (std::vector<std::string>& arguments, size_t i, std::vector<pArgument> const& optionals)
         {
             auto& arg = arguments.at(i);
-            if (!arg.empty() && !result.exists(arg)
+            if (!arg.empty() && !storage.exists(arg)
                     && detail::_is_optional(arg, _prefix_chars(), have_negative_args, was_pseudo_arg)) {
                 std::vector<std::string> temp;
                 if (m_allow_abbrev) {
@@ -5417,7 +5420,7 @@ private:
             if (tmp) {
                 switch (tmp->m_action) {
                     case Action::store :
-                        result.at(tmp).clear();
+                        storage.at(tmp).clear();
                     case Action::append :
                     case Action::extend :
                         if (splitted.size() == 1) {
@@ -5482,9 +5485,9 @@ private:
                             }
                             if (tmp->m_action == Action::BooleanOptionalAction) {
                                 bool exist = detail::_is_value_exists(splitted.front(), tmp->m_flags);
-                                result.store_value(tmp, exist ? tmp->m_const() : std::string());
+                                storage.store_value(tmp, exist ? tmp->m_const() : std::string());
                             } else {
-                                result.self_value_stored(tmp);
+                                storage.self_value_stored(tmp);
                             }
                         } else {
                             _throw_error(detail::_ignore_explicit(arg, splitted.back()));
@@ -5553,7 +5556,7 @@ private:
             _match_args_partial(intermixed_args);
         }
         auto _check_exclusive_groups
-                = [_custom_error, &result] (Parser const* p, std::deque<ExclusiveGroup> const& groups)
+                = [_custom_error, &storage] (Parser const* p, std::deque<ExclusiveGroup> const& groups)
         {
             for (auto const& ex : groups) {
                 std::string args;
@@ -5561,7 +5564,7 @@ private:
                 for (auto const& arg : ex.m_arguments) {
                     auto const& flag = arg->m_flags.front();
                     args += detail::_spaces + flag;
-                    if (!result.at(arg).empty()) {
+                    if (!storage.at(arg).empty()) {
                         if (!found.empty()) {
                             _custom_error(p, "argument " + flag + ": not allowed with argument " + found);
                         }
@@ -5582,7 +5585,7 @@ private:
         }
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
-            if (arg->m_required && result.at(arg).empty()) {
+            if (arg->m_required && storage.at(arg).empty()) {
                 auto args = detail::_vector_to_string(arg->flags(), "/");
                 required_args.emplace_back(std::move(args));
             }
@@ -5626,7 +5629,7 @@ private:
         if (!only_known && !unrecognized_args.empty()) {
             throw_error("unrecognized arguments: " + detail::_vector_to_string(unrecognized_args));
         }
-        for (auto& arg : result) {
+        for (auto& arg : storage) {
             if (arg.second.empty() && arg.first->m_action != Action::count
                     && arg.first->m_type == Argument::Optional) {
                 auto const& value = default_argument_value(*arg.first);
@@ -5636,18 +5639,20 @@ private:
             }
         }
         for (auto const& pair : m_default_values) {
-            if (!result.exists(pair.first)) {
+            if (!storage.exists(pair.first)) {
                 auto arg = Argument::make_argument(std::vector<std::string>{ pair.first },
                                                    pair.first, Argument::Positional);
                 arg->default_value(pair.second);
-                result.create(arg, { pair.second });
+                storage.create(arg, { pair.second });
             }
         }
-        auto res = Namespace(std::move(result), std::move(unrecognized_args));
         if (parser) {
-            parser->parse_handle(res);
+            for (auto& arg : sub_storage) {
+                arg.second = storage.at(arg.first);
+            }
+            parser->parse_handle(Namespace(sub_storage));
         }
-        return res;
+        return Namespace(std::move(storage), std::move(unrecognized_args));
     }
 
     inline void throw_error(std::string const& message, std::ostream& os = std::cerr) const
