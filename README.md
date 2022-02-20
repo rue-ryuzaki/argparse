@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
     if (args.exists("bar")) {
         std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
     }
-    if (args.exists("bar")) {
+    if (args.exists("baz")) {
         std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
     }
 
@@ -286,10 +286,45 @@ int main(int argc, char* argv[])
 ```
 ## Features
 ### Handle
+#### Parser::handle(std::function<void(argparse::ArgumentParser::Namespace)> func)
+Called when the parser is executed and passed the namespace of the parser.
+```cpp
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv);
+    parser.add_argument("--foo").action("store_true").help("foo help");
+
+    auto& subparsers = parser.add_subparsers().help("sub-command help");
+
+    auto& parser_a = subparsers.add_parser("a").help("a help");
+    parser_a.add_argument("bar").help("bar help");
+    parser_a.handle([] (argparse::ArgumentParser::Namespace const& args)
+    {
+        std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
+    });
+
+    auto& parser_b = subparsers.add_parser("b").help("b help");
+    parser_b.add_argument("--baz").choices("XYZ").help("baz help");
+    parser_b.handle([] (argparse::ArgumentParser::Namespace const& args)
+    {
+        std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
+    });
+
+    auto const args = parser.parse_args();
+
+    std::cout << "foo: " << args.get<bool>("foo") << std::endl;
+
+    return 0;
+}
+```
 #### Parser::handle(std::function<void()> func)
-If you need to handle subparser's parser detection.
-#### Parser::handle(std::function<void(std::string)> func) // gets parser name
-If you need to handle the subparser's parser name.
+Called when the parser is executed.
+#### Parser::handle(std::function<void(std::string)> func)
+Called when the parser is executed and passed the value of the parser.
 ```cpp
 #include <iostream>
 
@@ -316,7 +351,7 @@ int main(int argc, char* argv[])
     if (args.exists("bar")) {
         std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
     }
-    if (args.exists("bar")) {
+    if (args.exists("baz")) {
         std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
     }
 
@@ -324,7 +359,7 @@ int main(int argc, char* argv[])
 }
 ```
 #### Argument::handle(std::function<void()> func)
-If you need to handle argument detection.
+Called when the argument is present.
 Preferably for value-independent arguments (Action: "store_true", "store_false" or "count")
 ```cpp
 #include <iostream>
@@ -343,7 +378,7 @@ int main(int argc, char* argv[])
 }
 ```
 #### Argument::handle(std::function<void(std::string)> func)
-If you need to handle the parsed value of the argument.
+Called when the argument is present and passed the value of the argument.
 Preferably for value-dependent arguments (Action: "store", "store_const", "append", "append_const" or "extend")
 
 For value-independent arguments gets const value (Action: "store_true", "store_false") or empty string (Action: "count")
