@@ -1014,7 +1014,7 @@ public:
                        | Action::append_const | Action::extend))) {
             m_metavar.clear();
         }
-        if (m_type != Positional && value == Action::BooleanOptionalAction) {
+        if (m_type == Optional && value == Action::BooleanOptionalAction) {
             m_all_flags.clear();
             for (auto const& flag : m_flags) {
                 m_all_flags.push_back(flag);
@@ -1197,7 +1197,7 @@ public:
     Argument& const_value(std::string const& value)
     {
         if (m_action & (Action::store_const | Action::append_const)
-                || (m_type == Optional && m_nargs == OPTIONAL
+                || (m_type != Positional && m_nargs == OPTIONAL
                     && (m_action & (Action::store | Action::append | Action::extend)))) {
             m_const = detail::_trim_copy(value);
         } else if (m_type == Optional && m_nargs != OPTIONAL
@@ -2117,11 +2117,8 @@ protected:
         }
         arg.m_name = flag_name;
         arg.m_type = is_optional ? Argument::Optional : Argument::Positional;
+        // check
         if (arg.m_type == Argument::Positional) {
-            // check
-            if (arg.m_action == Action::BooleanOptionalAction) {
-                arg.m_all_flags = arg.m_flags;
-            }
             if (arg.m_action & (Action::version | Action::help)) {
                 // version and help actions cannot be positional
                 throw TypeError("got an unexpected keyword argument 'required'");
@@ -2131,6 +2128,17 @@ protected:
             }
             if (!arg.m_dest.empty()) {
                 throw ValueError("dest supplied twice for positional argument");
+            }
+            if (arg.m_const.has_value() && !(arg.m_action & (Action::store_const | Action::append_const))) {
+                throw TypeError("got an unexpected keyword argument 'const'");
+            }
+        } else {
+            if (arg.m_action == Action::BooleanOptionalAction) {
+                arg.m_all_flags.clear();
+                for (auto const& flag : arg.m_flags) {
+                    arg.m_all_flags.push_back(flag);
+                    arg.m_all_flags.push_back(detail::_make_no_flag(flag));
+                }
             }
         }
         auto _check_conflict = [this, &arg] (std::string const& flag, std::vector<std::string>& flags)
