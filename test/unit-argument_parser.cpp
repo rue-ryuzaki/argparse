@@ -459,6 +459,9 @@ TEST_CASE("8. argument actions", "[argument]")
         parser.add_argument("--count").action(argparse::count);
         parser.add_argument("--extend").action(argparse::extend);
 
+        parser.add_argument(argparse::Argument({ "--help" }).action(argparse::help));
+        parser.add_argument(argparse::Argument({ "--version" }).action(argparse::version));
+
         // no args
         auto args1 = parser.parse_args({ });
         REQUIRE(args1.get<std::string>("--store") == "");
@@ -501,6 +504,13 @@ TEST_CASE("8. argument actions", "[argument]")
         parser.add_argument("append_const").action(argparse::append_const).const_value(const_value);
         parser.add_argument("count").action(argparse::count);
         parser.add_argument("extend").action(argparse::extend);
+
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "const_store" }).nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "required_true" }).required(true)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "required_false" }).required(false)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "dest" }).dest("dest")));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "help" }).action(argparse::help)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "version" }).action(argparse::version)));
 
         REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
@@ -588,6 +598,20 @@ TEST_CASE("8. argument actions", "[argument]")
         parser2.add_argument("--foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser2.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
+
+        auto parser3 = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+
+        parser3.add_argument(argparse::Argument({ "--foo" }).action(argparse::BooleanOptionalAction));
+        parser3.add_argument(argparse::Argument({ "--no-foo" }).action(argparse::store_true));
+
+        REQUIRE(parser3.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
+
+        auto parser4 = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+
+        parser4.add_argument(argparse::Argument({ "--no-foo" }).action(argparse::store_true));
+        parser4.add_argument(argparse::Argument({ "--foo" }).action(argparse::BooleanOptionalAction));
+
+        REQUIRE(parser4.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
     }
 
     SECTION("8.8. BooleanOptionalAction conflict options resolved [2]") {
@@ -1652,6 +1676,36 @@ TEST_CASE("11. subparsers", "[argument_parser]")
 
         REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ "--foo" }));
+    }
+
+    SECTION("11.7. subparser namespace handle") {
+        parser.add_argument("--foo").action("store_true").help("foo help");
+
+        auto& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+
+        auto& parser_a = subparsers.add_parser("a").help("a help")
+                         .handle([] (argparse::ArgumentParser::Namespace const& args)
+        {
+            REQUIRE(args.exists("foo") == false);
+            REQUIRE(args.exists("cmd") == true);
+            REQUIRE(args.exists("bar") == true);
+            REQUIRE(args.exists("baz") == false);
+        });
+        parser_a.add_argument("bar").help("bar help");
+
+        auto& parser_b = subparsers.add_parser("b").help("b help")
+                         .handle([] (argparse::ArgumentParser::Namespace const& args)
+        {
+             REQUIRE(args.exists("foo") == false);
+             REQUIRE(args.exists("cmd") == true);
+             REQUIRE(args.exists("bar") == false);
+             REQUIRE(args.exists("baz") == true);
+        });
+        parser_b.add_argument("--baz").choices("XYZ").help("baz help");
+
+        parser.parse_args({ "--foo" });
+        parser.parse_args({ "a", "12" });
+        parser.parse_args({ "--foo", "b", "--baz", "Z" });
     }
 }
 
