@@ -734,7 +734,7 @@ class Argument
           m_default(),
           m_type_name(),
           m_choices(),
-          m_required(false),
+          m_required(),
           m_help(),
           m_help_type(),
           m_metavar(),
@@ -759,7 +759,7 @@ class Argument
           m_default(),
           m_type_name(),
           m_choices(),
-          m_required(false),
+          m_required(),
           m_help(),
           m_help_type(),
           m_metavar(),
@@ -804,7 +804,7 @@ public:
           m_default(),
           m_type_name(),
           m_choices(),
-          m_required(false),
+          m_required(),
           m_help(),
           m_help_type(),
           m_metavar(),
@@ -1054,7 +1054,7 @@ public:
                     throw TypeError("got an unexpected keyword argument 'required'");
                 }
             case Action::count :
-                m_const = std::string();
+                m_const.clear();
                 m_nargs = NARGS_INT;
                 m_nargs_str = "0";
                 m_num_args = 0;
@@ -1063,7 +1063,7 @@ public:
             case Action::store :
             case Action::append :
             case Action::extend :
-                m_const = std::string();
+                m_const.clear();
                 if (m_num_args == 0) {
                     m_nargs = NARGS_DEF;
                     m_nargs_str = "1";
@@ -1540,7 +1540,7 @@ public:
      */
     inline bool required() const noexcept
     {
-        return m_required;
+        return m_required();
     }
 
     /*!
@@ -1752,7 +1752,7 @@ private:
     detail::Value<std::string> m_default;
     detail::Value<std::string> m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
-    bool        m_required;
+    detail::Value<bool> m_required;
     std::string m_help;
     detail::Value<Enum> m_help_type;
     detail::Value<std::string> m_metavar;
@@ -2123,7 +2123,7 @@ protected:
                 // version and help actions cannot be positional
                 throw TypeError("got an unexpected keyword argument 'required'");
             }
-            if (arg.m_required) {
+            if (arg.m_required.has_value()) {
                 throw TypeError("'required' is an invalid argument for positionals");
             }
             if (!arg.m_dest.empty()) {
@@ -5585,7 +5585,7 @@ private:
         }
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
-            if (arg->m_required && storage.at(arg).empty()) {
+            if (arg->required() && storage.at(arg).empty()) {
                 auto args = detail::_vector_to_string(arg->flags(), "/");
                 required_args.emplace_back(std::move(args));
             }
