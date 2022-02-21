@@ -2557,175 +2557,6 @@ protected:
  */
 class ArgumentParser : public BaseParser
 {
-    class Storage
-    {
-        friend class ArgumentParser;
-
-    public:
-        typedef pArgument                                               key_type;
-        typedef std::vector<std::string>                                mapped_type;
-        typedef std::pair<key_type const, mapped_type>                  value_type;
-        typedef std::map<key_type const, mapped_type>::iterator         iterator;
-        typedef std::map<key_type const, mapped_type>::const_iterator   const_iterator;
-
-        explicit Storage()
-            : m_data()
-        { }
-
-        void force_add(key_type const& key, mapped_type const& value = mapped_type())
-        {
-            if (key->m_action & (Action::version | Action::help)) {
-                return;
-            }
-            auto const& arg_flags = key->get_argument_flags();
-            for (auto& pair : m_data) {
-                pair.first->resolve_conflict_flags(arg_flags);
-            }
-            m_data.insert(std::make_pair(key, value));
-        }
-
-        template <class T>
-        void force_add(T const& arguments)
-        {
-            for (auto const& arg : arguments) {
-                force_add(arg);
-            }
-        }
-
-        void try_add(key_type const& key, mapped_type const& value = mapped_type())
-        {
-            if (key->m_action & (Action::version | Action::help)) {
-                return;
-            }
-            auto const& flag = conflict_arg(key);
-            if (flag.empty()) {
-                m_data.insert(std::make_pair(key, value));
-            }
-        }
-
-        template <class T>
-        void try_add(T const& arguments)
-        {
-            for (auto const& arg : arguments) {
-                try_add(arg);
-            }
-        }
-
-        void create(key_type const& key, mapped_type const& value = mapped_type())
-        {
-            if (key->m_action & (Action::version | Action::help)) {
-                return;
-            }
-            auto const& flag = conflict_arg(key);
-            if (flag.empty()) {
-                m_data.insert(std::make_pair(key, value));
-            } else {
-                throw ArgumentError("argument " + detail::_vector_to_string(key->m_flags, "/")
-                                    + ": conflicting dest string: " + flag);
-            }
-        }
-
-        template <class T>
-        void create(T const& arguments)
-        {
-            for (auto const& arg : arguments) {
-                create(arg);
-            }
-        }
-
-        inline void store_value(key_type const& arg, std::string const& value)
-        {
-            at(arg).push_back(value);
-            arg->handle(value);
-        }
-
-        void store_default_value(key_type const& arg, std::string const& value)
-        {
-            if (arg->m_action == Action::store) {
-                auto& storage = at(arg);
-                if (storage.empty()) {
-                    storage.push_back(value);
-                }
-            }
-        }
-
-        bool self_value_stored(key_type const& arg)
-        {
-            if (arg->m_action & (Action::store_const | Action::store_true | Action::store_false)) {
-                auto& storage = at(arg);
-                if (storage.empty()) {
-                    storage.push_back(arg->m_const());
-                }
-                arg->handle(arg->m_const());
-                return true;
-            } else if (arg->m_action == Action::append_const) {
-                at(arg).push_back(arg->m_const());
-                arg->handle(arg->m_const());
-                return true;
-            } else if (arg->m_action == Action::count) {
-                at(arg).emplace_back(std::string());
-                arg->handle(std::string());
-                return true;
-            }
-            return false;
-        }
-
-        inline bool exists(std::string const& key) const
-        {
-            return std::find_if(std::begin(m_data), std::end(m_data),
-                                [key] (value_type const& pair) -> bool
-            { return *(pair.first) == key; }) != std::end(m_data);
-        }
-
-        inline bool exists(key_type const& key) const
-        {
-            return m_data.count(key) != 0;
-        }
-
-        value_type const& at(std::string const& key) const
-        {
-            auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                   [key] (value_type const& pair) -> bool
-            { return *(pair.first) == key; });
-            if (it == std::end(m_data)) {
-                throw std::logic_error("key '" + key + "' not found");
-            }
-            return *it;
-        }
-
-        inline mapped_type& at(key_type const& key)
-        {
-            return m_data.at(key);
-        }
-
-        inline mapped_type const& at(key_type const& key) const
-        {
-            return m_data.at(key);
-        }
-
-        inline iterator       begin()        noexcept { return std::begin(m_data); }
-        inline iterator       end()          noexcept { return std::end(m_data); }
-        inline const_iterator begin()  const noexcept { return std::begin(m_data); }
-        inline const_iterator end()    const noexcept { return std::end(m_data); }
-
-    private:
-        std::string const& conflict_arg(key_type const& arg) const noexcept
-        {
-            auto const& arg_flags = arg->get_argument_flags();
-            for (auto const& pair : m_data) {
-                for (auto const& flag : pair.first->get_argument_flags()) {
-                    if (detail::_is_value_exists(flag, arg_flags)) {
-                        return flag;
-                    }
-                }
-            }
-            static std::string res;
-            return res;
-        }
-
-        std::map<key_type const, mapped_type> m_data;
-    };
-
 public:
     using BaseParser::usage;
     using BaseParser::description;
@@ -3189,6 +3020,175 @@ public:
      */
     class Namespace
     {
+        class Storage
+        {
+            friend class ArgumentParser;
+
+        public:
+            typedef pArgument                                               key_type;
+            typedef std::vector<std::string>                                mapped_type;
+            typedef std::pair<key_type const, mapped_type>                  value_type;
+            typedef std::map<key_type const, mapped_type>::iterator         iterator;
+            typedef std::map<key_type const, mapped_type>::const_iterator   const_iterator;
+
+            explicit Storage()
+                : m_data()
+            { }
+
+            void force_add(key_type const& key, mapped_type const& value = mapped_type())
+            {
+                if (key->m_action & (Action::version | Action::help)) {
+                    return;
+                }
+                auto const& arg_flags = key->get_argument_flags();
+                for (auto& pair : m_data) {
+                    pair.first->resolve_conflict_flags(arg_flags);
+                }
+                m_data.insert(std::make_pair(key, value));
+            }
+
+            template <class T>
+            void force_add(T const& arguments)
+            {
+                for (auto const& arg : arguments) {
+                    force_add(arg);
+                }
+            }
+
+            void try_add(key_type const& key, mapped_type const& value = mapped_type())
+            {
+                if (key->m_action & (Action::version | Action::help)) {
+                    return;
+                }
+                auto const& flag = conflict_arg(key);
+                if (flag.empty()) {
+                    m_data.insert(std::make_pair(key, value));
+                }
+            }
+
+            template <class T>
+            void try_add(T const& arguments)
+            {
+                for (auto const& arg : arguments) {
+                    try_add(arg);
+                }
+            }
+
+            void create(key_type const& key, mapped_type const& value = mapped_type())
+            {
+                if (key->m_action & (Action::version | Action::help)) {
+                    return;
+                }
+                auto const& flag = conflict_arg(key);
+                if (flag.empty()) {
+                    m_data.insert(std::make_pair(key, value));
+                } else {
+                    throw ArgumentError("argument " + detail::_vector_to_string(key->m_flags, "/")
+                                        + ": conflicting dest string: " + flag);
+                }
+            }
+
+            template <class T>
+            void create(T const& arguments)
+            {
+                for (auto const& arg : arguments) {
+                    create(arg);
+                }
+            }
+
+            inline void store_value(key_type const& arg, std::string const& value)
+            {
+                at(arg).push_back(value);
+                arg->handle(value);
+            }
+
+            void store_default_value(key_type const& arg, std::string const& value)
+            {
+                if (arg->m_action == Action::store) {
+                    auto& storage = at(arg);
+                    if (storage.empty()) {
+                        storage.push_back(value);
+                    }
+                }
+            }
+
+            bool self_value_stored(key_type const& arg)
+            {
+                if (arg->m_action & (Action::store_const | Action::store_true | Action::store_false)) {
+                    auto& storage = at(arg);
+                    if (storage.empty()) {
+                        storage.push_back(arg->m_const());
+                    }
+                    arg->handle(arg->m_const());
+                    return true;
+                } else if (arg->m_action == Action::append_const) {
+                    at(arg).push_back(arg->m_const());
+                    arg->handle(arg->m_const());
+                    return true;
+                } else if (arg->m_action == Action::count) {
+                    at(arg).emplace_back(std::string());
+                    arg->handle(std::string());
+                    return true;
+                }
+                return false;
+            }
+
+            inline bool exists(std::string const& key) const
+            {
+                return std::find_if(std::begin(m_data), std::end(m_data),
+                                    [key] (value_type const& pair) -> bool
+                { return *(pair.first) == key; }) != std::end(m_data);
+            }
+
+            inline bool exists(key_type const& key) const
+            {
+                return m_data.count(key) != 0;
+            }
+
+            value_type const& at(std::string const& key) const
+            {
+                auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                       [key] (value_type const& pair) -> bool
+                { return *(pair.first) == key; });
+                if (it == std::end(m_data)) {
+                    throw std::logic_error("key '" + key + "' not found");
+                }
+                return *it;
+            }
+
+            inline mapped_type& at(key_type const& key)
+            {
+                return m_data.at(key);
+            }
+
+            inline mapped_type const& at(key_type const& key) const
+            {
+                return m_data.at(key);
+            }
+
+            inline iterator       begin()        noexcept { return std::begin(m_data); }
+            inline iterator       end()          noexcept { return std::end(m_data); }
+            inline const_iterator begin()  const noexcept { return std::begin(m_data); }
+            inline const_iterator end()    const noexcept { return std::end(m_data); }
+
+        private:
+            std::string const& conflict_arg(key_type const& arg) const noexcept
+            {
+                auto const& arg_flags = arg->get_argument_flags();
+                for (auto const& pair : m_data) {
+                    for (auto const& flag : pair.first->get_argument_flags()) {
+                        if (detail::_is_value_exists(flag, arg_flags)) {
+                            return flag;
+                        }
+                    }
+                }
+                static std::string res;
+                return res;
+            }
+
+            std::map<key_type const, mapped_type> m_data;
+        };
+
         friend class ArgumentParser;
 
         template <class T>       struct is_stl_container:std::false_type{};
@@ -4951,7 +4951,7 @@ private:
         auto subparser_name = subparser_dest;
         auto subparser_arg = Argument::make_argument(std::move(subparser_flags),
                                                      std::move(subparser_name), Argument::Positional);
-        Storage storage = space.storage();
+        Namespace::Storage storage = space.storage();
         if (space.m_storage.m_data.empty()) {
             storage.force_add(positional);
             storage.create(optional);
@@ -4959,7 +4959,7 @@ private:
             storage.force_add(positional);
             storage.try_add(optional);
         }
-        Storage sub_storage;
+        Namespace::Storage sub_storage;
 
         auto _optional_arg_by_flag = [&optional, &sub_optional, &parser]
                 (std::string const& key) -> pArgument const
