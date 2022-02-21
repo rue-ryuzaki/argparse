@@ -2742,13 +2742,6 @@ public:
             }
         }
 
-        inline void parse_handle(Namespace const& args) const
-        {
-            if (m_parse_handle) {
-                m_parse_handle(args);
-            }
-        }
-
         std::string print(HelpFormatter formatter, std::size_t limit = detail::_argument_help_limit) const
         {
             std::string res = "    " + m_name;
@@ -5651,11 +5644,11 @@ private:
                 storage.create(arg, { pair.second });
             }
         }
-        if (parser) {
+        if (parser && parser->m_parse_handle) {
             for (auto& arg : sub_storage) {
                 arg.second = storage.at(arg.first);
             }
-            parser->parse_handle(Namespace(sub_storage));
+            parser->m_parse_handle(Namespace(sub_storage));
         }
         return Namespace(std::move(storage), std::move(unrecognized_args));
     }
