@@ -1430,7 +1430,8 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'handle' value
+     *  \brief Set argument 'handle' value.
+     * Called when the argument is present and passed the value of the argument.
      *
      *  \param func Handle function
      *
@@ -1447,7 +1448,8 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'handle' value
+     *  \brief Set argument 'handle' value.
+     * Called when the argument is present.
      *
      *  \param func Handle function
      *
@@ -2666,7 +2668,8 @@ public:
         }
 
         /*!
-         *  \brief Set parser 'handle' function
+         *  \brief Set parser 'handle' function.
+         * Called when the parser is executed and passed the value of the parser.
          *
          *  \param func Handle function
          *
@@ -2680,7 +2683,8 @@ public:
         }
 
         /*!
-         *  \brief Set parser 'handle' function
+         *  \brief Set parser 'handle' function.
+         * Called when the parser is executed.
          *
          *  \param func Handle function
          *
@@ -2694,7 +2698,8 @@ public:
         }
 
         /*!
-         *  \brief Set parser 'handle' function
+         *  \brief Set parser 'handle' function.
+         * Called when the parser is executed and passed the namespace of the parser.
          *
          *  \param func Parse handle function
          *
