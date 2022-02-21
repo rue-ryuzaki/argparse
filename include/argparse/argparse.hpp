@@ -92,10 +92,10 @@ using experimental::fundamentals_v1::nullopt;
 #undef ARGPARSE_USE_OPTIONAL
 #endif // C++14+
 
-#if defined(__GNUC__) && !defined(__APPLE__)
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough="
-#endif // __GNUC__ && !__APPLE__
+#endif // __GNUC__ && !__clang__
 
 namespace argparse {
 template <class T>  struct is_byte_type { enum{value = false}; };
@@ -5959,8 +5959,8 @@ private:
 };
 } // argparse
 
-#if defined(__GNUC__) && !defined(__APPLE__)
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
-#endif // __GNUC__ && __APPLE__
+#endif // __GNUC__ && __clang__
 
 #endif // _ARGPARSE_ARGUMENT_PARSER_HPP_
