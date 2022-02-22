@@ -286,7 +286,7 @@ int main(int argc, char* argv[])
 ```
 ## Features
 ### Handle
-#### Parser::handle(std::function<void(argparse::ArgumentParser::Namespace)> func)
+#### Parser::handle(std::function<void(argparse::Namespace)> func)
 Called when the parser is executed and passed the namespace of the parser.
 ```cpp
 #include <iostream>
@@ -302,14 +302,14 @@ int main(int argc, char* argv[])
 
     auto& parser_a = subparsers.add_parser("a").help("a help");
     parser_a.add_argument("bar").help("bar help");
-    parser_a.handle([] (argparse::ArgumentParser::Namespace const& args)
+    parser_a.handle([] (argparse::Namespace const& args)
     {
         std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
     });
 
     auto& parser_b = subparsers.add_parser("b").help("b help");
     parser_b.add_argument("--baz").choices("XYZ").help("baz help");
-    parser_b.handle([] (argparse::ArgumentParser::Namespace const& args)
+    parser_b.handle([] (argparse::Namespace const& args)
     {
         std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
     });
