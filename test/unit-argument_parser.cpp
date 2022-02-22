@@ -1683,8 +1683,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
 
         auto& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
 
-        auto& parser_a = subparsers.add_parser("a").help("a help")
-                         .handle([] (argparse::ArgumentParser::Namespace const& args)
+        auto& parser_a = subparsers.add_parser("a").help("a help").handle([] (argparse::Namespace const& args)
         {
             REQUIRE(args.exists("foo") == false);
             REQUIRE(args.exists("cmd") == true);
@@ -1693,8 +1692,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         });
         parser_a.add_argument("bar").help("bar help");
 
-        auto& parser_b = subparsers.add_parser("b").help("b help")
-                         .handle([] (argparse::ArgumentParser::Namespace const& args)
+        auto& parser_b = subparsers.add_parser("b").help("b help").handle([] (argparse::Namespace const& args)
         {
              REQUIRE(args.exists("foo") == false);
              REQUIRE(args.exists("cmd") == true);
