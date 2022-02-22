@@ -704,6 +704,7 @@ class Argument
     friend class ArgumentParser;
     friend class BaseParser;
     friend class ExclusiveGroup;
+    friend class Namespace;
 
     enum Nargs
     {
@@ -2555,6 +2556,1027 @@ protected:
 };
 
 /*!
+ * \brief Object with parsed arguments
+ */
+class Namespace
+{
+    class Storage
+    {
+        friend class ArgumentParser;
+
+    public:
+        typedef pArgument                                               key_type;
+        typedef std::vector<std::string>                                mapped_type;
+        typedef std::pair<key_type const, mapped_type>                  value_type;
+        typedef std::map<key_type const, mapped_type>::iterator         iterator;
+        typedef std::map<key_type const, mapped_type>::const_iterator   const_iterator;
+
+        explicit Storage()
+            : m_data()
+        { }
+
+        void force_add(key_type const& key, mapped_type const& value = mapped_type())
+        {
+            if (key->m_action & (Action::version | Action::help)) {
+                return;
+            }
+            auto const& arg_flags = key->get_argument_flags();
+            for (auto& pair : m_data) {
+                pair.first->resolve_conflict_flags(arg_flags);
+            }
+            m_data.insert(std::make_pair(key, value));
+        }
+
+        template <class T>
+        void force_add(T const& arguments)
+        {
+            for (auto const& arg : arguments) {
+                force_add(arg);
+            }
+        }
+
+        void try_add(key_type const& key, mapped_type const& value = mapped_type())
+        {
+            if (key->m_action & (Action::version | Action::help)) {
+                return;
+            }
+            auto const& flag = conflict_arg(key);
+            if (flag.empty()) {
+                m_data.insert(std::make_pair(key, value));
+            }
+        }
+
+        template <class T>
+        void try_add(T const& arguments)
+        {
+            for (auto const& arg : arguments) {
+                try_add(arg);
+            }
+        }
+
+        void create(key_type const& key, mapped_type const& value = mapped_type())
+        {
+            if (key->m_action & (Action::version | Action::help)) {
+                return;
+            }
+            auto const& flag = conflict_arg(key);
+            if (flag.empty()) {
+                m_data.insert(std::make_pair(key, value));
+            } else {
+                throw ArgumentError("argument " + detail::_vector_to_string(key->m_flags, "/")
+                                    + ": conflicting dest string: " + flag);
+            }
+        }
+
+        template <class T>
+        void create(T const& arguments)
+        {
+            for (auto const& arg : arguments) {
+                create(arg);
+            }
+        }
+
+        inline void store_value(key_type const& arg, std::string const& value)
+        {
+            at(arg).push_back(value);
+            arg->handle(value);
+        }
+
+        void store_default_value(key_type const& arg, std::string const& value)
+        {
+            if (arg->m_action == Action::store) {
+                auto& storage = at(arg);
+                if (storage.empty()) {
+                    storage.push_back(value);
+                }
+            }
+        }
+
+        bool self_value_stored(key_type const& arg)
+        {
+            if (arg->m_action & (Action::store_const | Action::store_true | Action::store_false)) {
+                auto& storage = at(arg);
+                if (storage.empty()) {
+                    storage.push_back(arg->m_const());
+                }
+                arg->handle(arg->m_const());
+                return true;
+            } else if (arg->m_action == Action::append_const) {
+                at(arg).push_back(arg->m_const());
+                arg->handle(arg->m_const());
+                return true;
+            } else if (arg->m_action == Action::count) {
+                at(arg).emplace_back(std::string());
+                arg->handle(std::string());
+                return true;
+            }
+            return false;
+        }
+
+        inline bool exists(std::string const& key) const
+        {
+            return std::find_if(std::begin(m_data), std::end(m_data),
+                                [key] (value_type const& pair) -> bool
+            { return *(pair.first) == key; }) != std::end(m_data);
+        }
+
+        inline bool exists(key_type const& key) const
+        {
+            return m_data.count(key) != 0;
+        }
+
+        value_type const& at(std::string const& key) const
+        {
+            auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                   [key] (value_type const& pair) -> bool
+            { return *(pair.first) == key; });
+            if (it == std::end(m_data)) {
+                throw std::logic_error("key '" + key + "' not found");
+            }
+            return *it;
+        }
+
+        inline mapped_type& at(key_type const& key)
+        {
+            return m_data.at(key);
+        }
+
+        inline mapped_type const& at(key_type const& key) const
+        {
+            return m_data.at(key);
+        }
+
+        inline iterator       begin()        noexcept { return std::begin(m_data); }
+        inline iterator       end()          noexcept { return std::end(m_data); }
+        inline const_iterator begin()  const noexcept { return std::begin(m_data); }
+        inline const_iterator end()    const noexcept { return std::end(m_data); }
+
+    private:
+        std::string const& conflict_arg(key_type const& arg) const noexcept
+        {
+            auto const& arg_flags = arg->get_argument_flags();
+            for (auto const& pair : m_data) {
+                for (auto const& flag : pair.first->get_argument_flags()) {
+                    if (detail::_is_value_exists(flag, arg_flags)) {
+                        return flag;
+                    }
+                }
+            }
+            static std::string res;
+            return res;
+        }
+
+        std::map<key_type const, mapped_type> m_data;
+    };
+
+    friend class ArgumentParser;
+
+    template <class T>       struct is_stl_container:std::false_type{};
+    template <class... Args> struct is_stl_container<std::deque             <Args...> >:std::true_type{};
+    template <class... Args> struct is_stl_container<std::forward_list      <Args...> >:std::true_type{};
+    template <class... Args> struct is_stl_container<std::list              <Args...> >:std::true_type{};
+    template <class... Args> struct is_stl_container<std::multiset          <Args...> >:std::true_type{};
+    template <class... Args> struct is_stl_container<std::priority_queue    <Args...> >:std::true_type{};
+    template <class... Args> struct is_stl_container<std::set               <Args...> >:std::true_type{};
+    template <class... Args> struct is_stl_container<std::vector            <Args...> >:std::true_type{};
+    template <class... Args> struct is_stl_container<std::unordered_multiset<Args...> >:std::true_type{};
+    template <class... Args> struct is_stl_container<std::unordered_set     <Args...> >:std::true_type{};
+
+    template <class T>       struct is_stl_array:std::false_type{};
+    template <class T,
+              std::size_t N> struct is_stl_array<std::array                 <T, N> >   :std::true_type{};
+
+    template <class T>       struct is_stl_queue:std::false_type{};
+    template <class... Args> struct is_stl_queue<std::stack                 <Args...> >:std::true_type{};
+    template <class... Args> struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
+
+    template <class...>      struct voider { using type = void; };
+    template <class... T>    using void_t = typename voider<T...>::type;
+    template <class T, typename U = void>
+                             struct is_stl_map:std::false_type{};
+    template <class T>       struct is_stl_map<T, void_t<typename T::key_type,
+                                                         typename T::mapped_type>>:std::true_type{};
+
+    template <class T, typename U = void>
+                             struct is_stl_pair:std::false_type{};
+    template <class T>       struct is_stl_pair<T, void_t<typename T::first_type,
+                                                          typename T::second_type>>:std::true_type{};
+
+public:
+    /*!
+     *  \brief Construct object with parsed arguments
+     *
+     *  \param storage Parsed arguments
+     *  \param args Unrecognized arguments
+     *
+     *  \return Object with parsed arguments
+     */
+    explicit Namespace(Storage const& storage = Storage(),
+                       std::vector<std::string> const& args = std::vector<std::string>())
+        : m_storage(storage),
+          m_unrecognized_args(args)
+    { }
+
+    /*!
+     *  \brief Construct object with parsed arguments
+     *
+     *  \param storage Parsed arguments
+     *  \param args Unrecognized arguments
+     *
+     *  \return Object with parsed arguments
+     */
+    explicit Namespace(Storage&& storage, std::vector<std::string>&& args) noexcept
+        : m_storage(std::move(storage)),
+          m_unrecognized_args(std::move(args))
+    { }
+
+    /*!
+     *  \brief Check if argument name exists and specified in parsed arguments
+     *
+     *  \param key Argument name
+     *
+     *  \return true if argument name exists and specified, otherwise false
+     */
+    bool exists(std::string const& key) const
+    {
+        if (m_storage.exists(key)) {
+            return !m_storage.at(key).second.empty()
+                    || m_storage.at(key).first->m_action == Action::count;
+        }
+        for (auto const& pair : m_storage) {
+            if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
+                for (auto const& flag : pair.first->m_flags) {
+                    if (detail::_flag_name(flag) == key) {
+                        return !pair.second.empty() || pair.first->m_action == Action::count;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+#ifdef ARGPARSE_USE_OPTIONAL
+    /*!
+     *  \brief Try get parsed argument value for integer types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T, typename std::enable_if<std::is_integral<T>::value
+                                               && !is_byte_type<T>::value
+                                               && !std::is_same<bool, T>::value>::type* = nullptr>
+    std::optional<T> try_get(std::string const& key) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
+            return {};
+        }
+        if (args->first->m_action == Action::count) {
+            return T(args->second.size());
+        }
+        if (args->second.empty() || args->second.size() != 1) {
+            return {};
+        }
+        return try_to_type<T>(args->second.front());
+    }
+
+    /*!
+     *  \brief Try get parsed argument value for boolean, byte, floating point and string types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<std::is_same<bool, T>::value
+                                      || is_byte_type<T>::value
+                                      || std::is_floating_point<T>::value
+                                      || std::is_constructible<std::string, T>::value>::type* = nullptr>
+    std::optional<T> try_get(std::string const& key) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->m_action == Action::count
+                || args->second.empty()
+                || args->second.size() != 1
+                || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
+            return {};
+        }
+        return try_to_type<T>(args->second.front());
+    }
+
+    /*!
+     *  \brief Try get parsed argument value for pair types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value
+     */
+    template <class T,
+              typename std::enable_if<is_stl_pair<typename std::decay<T>::type>::value>::type* = nullptr>
+    std::optional<T> try_get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->m_action == Action::count
+                || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
+            return {};
+        }
+        if (args->second.empty()) {
+            return T();
+        }
+        if (args->second.size() != 1) {
+            return {};
+        }
+        return try_to_pair<typename T::first_type, typename T::second_type>(args->second.front(), delim);
+    }
+
+    /*!
+     *  \brief Try get parsed argument value for std containers types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<is_stl_container<typename std::decay<T>::type>::value>::type*
+                                                                                                = nullptr>
+    std::optional<T> try_get(std::string const& key) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->m_action == Action::count
+                || !detail::_correct_type_names(args->first->type_name(),
+                                                detail::_type_name<typename T::value_type>())) {
+            return {};
+        }
+        auto vector = try_to_vector<typename T::value_type>(args->second);
+        if (!vector.operator bool()) {
+            return {};
+        }
+        return T(std::begin(vector.value()), std::end(vector.value()));
+    }
+
+    /*!
+     *  \brief Try get parsed argument value std array type.
+     *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<is_stl_array<typename std::decay<T>::type>::value>::type* = nullptr>
+    std::optional<T> try_get(std::string const& key) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->m_action == Action::count
+                || !detail::_correct_type_names(args->first->type_name(),
+                                                detail::_type_name<typename T::value_type>())) {
+            return {};
+        }
+        auto vector = try_to_vector<typename T::value_type>(args->second);
+        if (!vector.operator bool()) {
+            return {};
+        }
+        T res{};
+        if (res.size() != vector->size()) {
+            std::cerr << "error: array size mismatch: " << res.size()
+                      << ", expected " << vector.size() << std::endl;
+        }
+        std::copy_n(std::begin(vector.value()), std::min(res.size(), vector->size()), std::begin(res));
+        return res;
+    }
+
+    /*!
+     *  \brief Try get parsed argument value for queue types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
+    std::optional<T> try_get(std::string const& key) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->m_action == Action::count
+                || !detail::_correct_type_names(args->first->type_name(),
+                                                detail::_type_name<typename T::value_type>())) {
+            return {};
+        }
+        auto vector = try_to_vector<typename T::value_type>(args->second);
+        if (!vector.operator bool()) {
+            return {};
+        }
+        return T(std::deque<typename T::value_type>(std::begin(vector.value()),
+                                                    std::end(vector.value())));
+    }
+
+    /*!
+     *  \brief Try get parsed argument value for mapped types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<is_stl_map<typename std::decay<T>::type>::value>::type* = nullptr>
+    std::optional<T> try_get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->m_action == Action::count
+                || !detail::_correct_type_names(args->first->type_name(),
+                                                detail::_type_name<typename T::mapped_type>())) {
+            return {};
+        }
+        T res{};
+        auto vector = try_to_paired_vector<typename T::key_type,
+                                           typename T::mapped_type>(args->second, delim);
+        if (!vector.operator bool()) {
+            return {};
+        }
+        for (auto const& pair : vector.value()) {
+            res.emplace(std::make_pair(pair.first, pair.second));
+        }
+        return res;
+    }
+
+    /*!
+     *  \brief Try get parsed argument value for custom types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<!std::is_integral<T>::value
+                                      && !std::is_same<bool, T>::value
+                                      && !std::is_floating_point<T>::value
+                                      && !std::is_constructible<std::string, T>::value
+                                      && !is_byte_type<T>::value
+                                      && !is_stl_array<typename std::decay<T>::type>::value
+                                      && !is_stl_container<typename std::decay<T>::type>::value
+                                      && !is_stl_map<typename std::decay<T>::type>::value
+                                      && !is_stl_pair<typename std::decay<T>::type>::value
+                                      && !is_stl_queue<typename std::decay<T>::type>::value>
+              ::type* = nullptr>
+    std::optional<T> try_get(std::string const& key) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->m_action == Action::count
+                || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
+            return {};
+        }
+        return try_to_type<T>(detail::_vector_to_string(args->second));
+    }
+#endif // ARGPARSE_USE_OPTIONAL
+
+    /*!
+     *  \brief Get parsed argument value for integer types.
+     *  If argument not parsed, returns default value.
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value
+     */
+    template <class T, typename std::enable_if<std::is_integral<T>::value
+                                               && !is_byte_type<T>::value
+                                               && !std::is_same<bool, T>::value>::type* = nullptr>
+    T get(std::string const& key) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
+        if (args.first->m_action == Action::count) {
+            return T(args.second.size());
+        }
+        if (args.second.empty()) {
+            return T();
+        }
+        if (args.second.size() != 1) {
+            throw TypeError("trying to get data from array argument '" + key + "'");
+        }
+        return to_type<T>(args.second.front());
+    }
+
+    /*!
+     *  \brief Get parsed argument value for boolean, byte, floating point and string types.
+     *  If argument not parsed, returns default value.
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value
+     */
+    template <class T,
+              typename std::enable_if<std::is_same<bool, T>::value
+                                      || is_byte_type<T>::value
+                                      || std::is_floating_point<T>::value
+                                      || std::is_constructible<std::string, T>::value>::type* = nullptr>
+    T get(std::string const& key) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
+        if (args.first->m_action == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        if (args.second.empty()) {
+            return T();
+        }
+        if (args.second.size() != 1) {
+            throw TypeError("trying to get data from array argument '" + key + "'");
+        }
+        return to_type<T>(args.second.front());
+    }
+
+    /*!
+     *  \brief Get parsed argument value for pair types
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value
+     */
+    template <class T,
+              typename std::enable_if<is_stl_pair<typename std::decay<T>::type>::value>::type* = nullptr>
+    T get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
+        if (args.first->m_action == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        if (args.second.empty()) {
+            return T();
+        }
+        if (args.second.size() != 1) {
+            throw TypeError("trying to get data from array argument '" + key + "'");
+        }
+        return to_pair<typename T::first_type, typename T::second_type>(args.second.front(), delim);
+    }
+
+    /*!
+     *  \brief Get parsed argument value for std containers types
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value
+     */
+    template <class T,
+              typename std::enable_if<is_stl_container<typename std::decay<T>::type>::value>::type*
+                                                                                                = nullptr>
+    T get(std::string const& key) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::value_type>());
+        if (args.first->m_action == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        auto vector = to_vector<typename T::value_type>(args.second);
+        return T(std::begin(vector), std::end(vector));
+    }
+
+    /*!
+     *  \brief Get parsed argument value std array type
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value
+     */
+    template <class T,
+              typename std::enable_if<is_stl_array<typename std::decay<T>::type>::value>::type* = nullptr>
+    T get(std::string const& key) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::value_type>());
+        if (args.first->m_action == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        auto vector = to_vector<typename T::value_type>(args.second);
+        T res{};
+        if (res.size() != vector.size()) {
+            std::cerr << "error: array size mismatch: " << res.size()
+                      << ", expected " << vector.size() << std::endl;
+        }
+        std::copy_n(std::begin(vector), std::min(res.size(), vector.size()), std::begin(res));
+        return res;
+    }
+
+    /*!
+     *  \brief Get parsed argument value for queue types
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value
+     */
+    template <class T,
+              typename std::enable_if<is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
+    T get(std::string const& key) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::value_type>());
+        if (args.first->m_action == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        auto vector = to_vector<typename T::value_type>(args.second);
+        return T(std::deque<typename T::value_type>(std::begin(vector),
+                                                    std::end(vector)));
+    }
+
+    /*!
+     *  \brief Get parsed argument value for mapped types
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value
+     */
+    template <class T,
+              typename std::enable_if<is_stl_map<typename std::decay<T>::type>::value>::type* = nullptr>
+    T get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::mapped_type>());
+        if (args.first->m_action == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        T res{};
+        auto vector = to_paired_vector<typename T::key_type, typename T::mapped_type>(args.second, delim);
+        for (auto const& pair : vector) {
+            res.emplace(std::make_pair(pair.first, pair.second));
+        }
+        return res;
+    }
+
+    /*!
+     *  \brief Get parsed argument value for custom types
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value
+     */
+    template <class T,
+              typename std::enable_if<!std::is_integral<T>::value
+                                      && !std::is_same<bool, T>::value
+                                      && !std::is_floating_point<T>::value
+                                      && !std::is_constructible<std::string, T>::value
+                                      && !is_byte_type<T>::value
+                                      && !is_stl_array<typename std::decay<T>::type>::value
+                                      && !is_stl_container<typename std::decay<T>::type>::value
+                                      && !is_stl_map<typename std::decay<T>::type>::value
+                                      && !is_stl_pair<typename std::decay<T>::type>::value
+                                      && !is_stl_queue<typename std::decay<T>::type>::value>
+              ::type* = nullptr>
+    T get(std::string const& key) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
+        if (args.first->m_action == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        return to_type<T>(detail::_vector_to_string(args.second));
+    }
+
+    /*!
+     *  \brief Get parsed argument value as args string
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value as args string
+     */
+    std::string to_args(std::string const& key) const
+    {
+        auto const& args = data(key);
+        switch (args.first->m_action) {
+            case Action::store_const :
+                if (args.second.empty()) {
+                    return std::string();
+                }
+                if (args.second.size() != 1) {
+                    throw TypeError("trying to get data from array argument '" + key + "'");
+                }
+                return detail::_have_quotes(args.second.front())
+                        ? args.second.front()
+                        : detail::_replace(args.second.front(), detail::_space, "\\ ");
+            case Action::store_true :
+            case Action::store_false :
+                if (args.second.empty()) {
+                    return detail::_bool_to_string(args.first->m_default());
+                }
+                if (args.second.size() != 1) {
+                    throw TypeError("trying to get data from array argument '" + key + "'");
+                }
+                return detail::_bool_to_string(args.second.front());
+            case Action::count :
+                return std::to_string(args.second.size());
+            case Action::store :
+            case Action::append :
+            case Action::append_const :
+            case Action::extend :
+                return detail::_vector_to_string(args.second, detail::_spaces, std::string(), true);
+            case Action::BooleanOptionalAction :
+                if (args.second.empty()) {
+                    return detail::_bool_to_string(args.first->m_default());
+                }
+                if (args.second.size() != 1) {
+                    throw TypeError("trying to get data from array argument '" + key + "'");
+                }
+                return args.second.front() == args.first->m_const()
+                        ? detail::_bool_to_string(args.second.front()) : args.second.front();
+            default :
+                throw ValueError("action not supported");
+        }
+    }
+
+    /*!
+     *  \brief Get parsed argument value as string
+     *
+     *  \param key Argument name
+     *  \param quotes Value quotes
+     *
+     *  \return Parsed argument value as string
+     */
+    std::string to_string(std::string const& key, std::string const& quotes = std::string()) const
+    {
+        auto const& args = data(key);
+        switch (args.first->m_action) {
+            case Action::store_const :
+                if (args.second.empty()) {
+                    return std::string();
+                }
+                if (args.second.size() != 1) {
+                    throw TypeError("trying to get data from array argument '" + key + "'");
+                }
+                return args.second.front();
+            case Action::store_true :
+            case Action::store_false :
+                if (args.second.empty()) {
+                    return detail::_bool_to_string(args.first->m_default());
+                }
+                if (args.second.size() != 1) {
+                    throw TypeError("trying to get data from array argument '" + key + "'");
+                }
+                return detail::_bool_to_string(args.second.front());
+            case Action::count :
+                return std::to_string(args.second.size());
+            case Action::store :
+            case Action::append :
+            case Action::append_const :
+            case Action::extend :
+                return "[" + detail::_vector_to_string(args.second, ", ", quotes, false, "None") + "]";
+            case Action::BooleanOptionalAction :
+                if (args.second.empty()) {
+                    return detail::_bool_to_string(args.first->m_default());
+                }
+                if (args.second.size() != 1) {
+                    throw TypeError("trying to get data from array argument '" + key + "'");
+                }
+                return (args.second.front() == args.first->m_const() || args.second.front().empty())
+                        ? detail::_bool_to_string(args.second.front()) : args.second.front();
+            default :
+                throw ValueError("action not supported");
+        }
+    }
+
+    /*!
+     *  \brief Get unrecognized arguments
+     *
+     *  \return Unrecognized arguments
+     */
+    inline std::vector<std::string> const& unrecognized_args() const noexcept
+    {
+        return m_unrecognized_args;
+    }
+
+    /*!
+     *  \brief Get unrecognized arguments as args string
+     *
+     *  \return Unrecognized arguments as args string
+     */
+    inline std::string unrecognized_args_to_args() const
+    {
+        return detail::_vector_to_string(m_unrecognized_args, detail::_spaces, std::string(), true);
+    }
+
+private:
+    inline Storage const& storage() const noexcept
+    {
+        return m_storage;
+    }
+
+#ifdef ARGPARSE_USE_OPTIONAL
+    std::optional<Storage::value_type> try_get_data(std::string const& key) const
+    {
+        if (m_storage.exists(key)) {
+            return m_storage.at(key);
+        }
+        for (auto const& pair : m_storage) {
+            if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
+                for (auto const& flag : pair.first->m_flags) {
+                    if (detail::_flag_name(flag) == key) {
+                        return pair;
+                    }
+                }
+            }
+        }
+        return {};
+    }
+
+    template <class T>
+    std::optional<std::vector<T> > try_to_vector(std::vector<std::string> const& args) const
+    {
+        std::vector<T> vec;
+        vec.reserve(args.size());
+        for (auto const& arg : args) {
+            auto el = try_to_type<T>(arg);
+            if (el.operator bool()) {
+                vec.emplace_back(el.value());
+            } else {
+                return {};
+            }
+        }
+        return vec;
+    }
+
+    template <class T, class U>
+    std::optional<std::pair<T, U> > try_to_pair(std::string const& data, char delim) const
+    {
+        auto const pair = detail::_split_delimiter(data, delim);
+        auto el1 = try_to_type<T>(pair.first);
+        auto el2 = try_to_type<T>(pair.second);
+        if (el1.operator bool() && el2.operator bool()) {
+            return std::make_pair(el1.value(), el2.value());
+        } else {
+            return {};
+        }
+    }
+
+    template <class T, class U>
+    std::optional<std::vector<std::pair<T, U> > >
+    try_to_paired_vector(std::vector<std::string> const& args, char delim) const
+    {
+        std::vector<std::pair<T, U> > vec;
+        vec.reserve(args.size());
+        for (auto const& arg : args) {
+            auto pair = try_to_pair<T, U>(arg, delim);
+            if (pair.operator bool()) {
+                vec.emplace_back(pair.value());
+            } else {
+                return {};
+            }
+        }
+        return vec;
+    }
+
+    template <class T, typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
+    std::optional<T> try_to_type(std::string const& data) const noexcept
+    {
+        if (data.empty() || data.size() != 1) {
+            return {};
+        }
+        return T(data.front());
+    }
+
+    template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
+    std::optional<T> try_to_type(std::string const& data) const noexcept
+    {
+        return detail::_string_to_bool(data);
+    }
+
+    template <class T,
+              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    std::optional<T> try_to_type(std::string const& data) const
+    {
+        return detail::_remove_quotes<T>(data);
+    }
+
+    template <class T,
+              typename std::enable_if<!std::is_constructible<std::string, T>::value
+                                      && !is_byte_type<T>::value
+                                      && !std::is_same<bool, T>::value>::type* = nullptr>
+    std::optional<T> try_to_type(std::string const& data) const
+    {
+        if (data.empty()) {
+            return T();
+        }
+        T result;
+        std::stringstream ss(data);
+        ss >> result;
+        if (ss.fail() || !ss.eof()) {
+            return {};
+        }
+        return result;
+    }
+#endif // ARGPARSE_USE_OPTIONAL
+
+    Storage::value_type const& data(std::string const& key) const
+    {
+        if (m_storage.exists(key)) {
+            return m_storage.at(key);
+        }
+        for (auto const& pair : m_storage) {
+            if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
+                for (auto const& flag : pair.first->m_flags) {
+                    if (detail::_flag_name(flag) == key) {
+                        return pair;
+                    }
+                }
+            }
+        }
+        throw AttributeError("'Namespace' object has no attribute '" + key + "'");
+    }
+
+    template <class T>
+    std::vector<T> to_vector(std::vector<std::string> const& args) const
+    {
+        std::vector<T> vec;
+        vec.reserve(args.size());
+        for (auto const& arg : args) {
+            vec.emplace_back(to_type<T>(arg));
+        }
+        return vec;
+    }
+
+    template <class T, class U>
+    std::pair<T, U> to_pair(std::string const& data, char delim) const
+    {
+        auto const pair = detail::_split_delimiter(data, delim);
+        return std::make_pair(to_type<T>(pair.first), to_type<U>(pair.second));
+    }
+
+    template <class T, class U>
+    std::vector<std::pair<T, U> > to_paired_vector(std::vector<std::string> const& args, char delim) const
+    {
+        std::vector<std::pair<T, U> > vec;
+        vec.reserve(args.size());
+        for (auto const& arg : args) {
+            vec.emplace_back(to_pair<T, U>(arg, delim));
+        }
+        return vec;
+    }
+
+    template <class T, typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
+    T to_type(std::string const& data) const
+    {
+        if (data.empty()) {
+            return T();
+        }
+        if (data.size() != 1) {
+            throw TypeError("trying to get data from array argument value '" + data + "'");
+        }
+        return T(data.front());
+    }
+
+    template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
+    T to_type(std::string const& data) const noexcept
+    {
+        return detail::_string_to_bool(data);
+    }
+
+    template <class T,
+              typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
+    T to_type(std::string const& data) const
+    {
+        return detail::_remove_quotes<T>(data);
+    }
+
+    template <class T,
+              typename std::enable_if<!std::is_constructible<std::string, T>::value
+                                      && !is_byte_type<T>::value
+                                      && !std::is_same<bool, T>::value>::type* = nullptr>
+    T to_type(std::string const& data) const
+    {
+        if (data.empty()) {
+            return T();
+        }
+        T result;
+        std::stringstream ss(data);
+        ss >> result;
+        if (ss.fail() || !ss.eof()) {
+            throw TypeError("can't convert value '" + data + "'");
+        }
+        return result;
+    }
+
+    Storage m_storage;
+    std::vector<std::string> m_unrecognized_args;
+};
+
+/*!
  * \brief ArgumentParser objects
  */
 class ArgumentParser : public BaseParser
@@ -2566,7 +3588,8 @@ public:
     using BaseParser::prefix_chars;
     using BaseParser::add_argument;
 
-    class Namespace;
+    // compatibility for version v1.3.3 and earlier
+    using Namespace = argparse::Namespace;
 
     /*!
      * \brief Parser class
@@ -3011,1027 +4034,6 @@ public:
         std::string m_help;
         detail::Value<std::string> m_metavar;
         std::deque<Parser> m_parsers;
-    };
-
-    /*!
-     * \brief Object with parsed arguments
-     */
-    class Namespace
-    {
-        class Storage
-        {
-            friend class ArgumentParser;
-
-        public:
-            typedef pArgument                                               key_type;
-            typedef std::vector<std::string>                                mapped_type;
-            typedef std::pair<key_type const, mapped_type>                  value_type;
-            typedef std::map<key_type const, mapped_type>::iterator         iterator;
-            typedef std::map<key_type const, mapped_type>::const_iterator   const_iterator;
-
-            explicit Storage()
-                : m_data()
-            { }
-
-            void force_add(key_type const& key, mapped_type const& value = mapped_type())
-            {
-                if (key->m_action & (Action::version | Action::help)) {
-                    return;
-                }
-                auto const& arg_flags = key->get_argument_flags();
-                for (auto& pair : m_data) {
-                    pair.first->resolve_conflict_flags(arg_flags);
-                }
-                m_data.insert(std::make_pair(key, value));
-            }
-
-            template <class T>
-            void force_add(T const& arguments)
-            {
-                for (auto const& arg : arguments) {
-                    force_add(arg);
-                }
-            }
-
-            void try_add(key_type const& key, mapped_type const& value = mapped_type())
-            {
-                if (key->m_action & (Action::version | Action::help)) {
-                    return;
-                }
-                auto const& flag = conflict_arg(key);
-                if (flag.empty()) {
-                    m_data.insert(std::make_pair(key, value));
-                }
-            }
-
-            template <class T>
-            void try_add(T const& arguments)
-            {
-                for (auto const& arg : arguments) {
-                    try_add(arg);
-                }
-            }
-
-            void create(key_type const& key, mapped_type const& value = mapped_type())
-            {
-                if (key->m_action & (Action::version | Action::help)) {
-                    return;
-                }
-                auto const& flag = conflict_arg(key);
-                if (flag.empty()) {
-                    m_data.insert(std::make_pair(key, value));
-                } else {
-                    throw ArgumentError("argument " + detail::_vector_to_string(key->m_flags, "/")
-                                        + ": conflicting dest string: " + flag);
-                }
-            }
-
-            template <class T>
-            void create(T const& arguments)
-            {
-                for (auto const& arg : arguments) {
-                    create(arg);
-                }
-            }
-
-            inline void store_value(key_type const& arg, std::string const& value)
-            {
-                at(arg).push_back(value);
-                arg->handle(value);
-            }
-
-            void store_default_value(key_type const& arg, std::string const& value)
-            {
-                if (arg->m_action == Action::store) {
-                    auto& storage = at(arg);
-                    if (storage.empty()) {
-                        storage.push_back(value);
-                    }
-                }
-            }
-
-            bool self_value_stored(key_type const& arg)
-            {
-                if (arg->m_action & (Action::store_const | Action::store_true | Action::store_false)) {
-                    auto& storage = at(arg);
-                    if (storage.empty()) {
-                        storage.push_back(arg->m_const());
-                    }
-                    arg->handle(arg->m_const());
-                    return true;
-                } else if (arg->m_action == Action::append_const) {
-                    at(arg).push_back(arg->m_const());
-                    arg->handle(arg->m_const());
-                    return true;
-                } else if (arg->m_action == Action::count) {
-                    at(arg).emplace_back(std::string());
-                    arg->handle(std::string());
-                    return true;
-                }
-                return false;
-            }
-
-            inline bool exists(std::string const& key) const
-            {
-                return std::find_if(std::begin(m_data), std::end(m_data),
-                                    [key] (value_type const& pair) -> bool
-                { return *(pair.first) == key; }) != std::end(m_data);
-            }
-
-            inline bool exists(key_type const& key) const
-            {
-                return m_data.count(key) != 0;
-            }
-
-            value_type const& at(std::string const& key) const
-            {
-                auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                       [key] (value_type const& pair) -> bool
-                { return *(pair.first) == key; });
-                if (it == std::end(m_data)) {
-                    throw std::logic_error("key '" + key + "' not found");
-                }
-                return *it;
-            }
-
-            inline mapped_type& at(key_type const& key)
-            {
-                return m_data.at(key);
-            }
-
-            inline mapped_type const& at(key_type const& key) const
-            {
-                return m_data.at(key);
-            }
-
-            inline iterator       begin()        noexcept { return std::begin(m_data); }
-            inline iterator       end()          noexcept { return std::end(m_data); }
-            inline const_iterator begin()  const noexcept { return std::begin(m_data); }
-            inline const_iterator end()    const noexcept { return std::end(m_data); }
-
-        private:
-            std::string const& conflict_arg(key_type const& arg) const noexcept
-            {
-                auto const& arg_flags = arg->get_argument_flags();
-                for (auto const& pair : m_data) {
-                    for (auto const& flag : pair.first->get_argument_flags()) {
-                        if (detail::_is_value_exists(flag, arg_flags)) {
-                            return flag;
-                        }
-                    }
-                }
-                static std::string res;
-                return res;
-            }
-
-            std::map<key_type const, mapped_type> m_data;
-        };
-
-        friend class ArgumentParser;
-
-        template <class T>       struct is_stl_container:std::false_type{};
-        template <class... Args> struct is_stl_container<std::deque             <Args...> >:std::true_type{};
-        template <class... Args> struct is_stl_container<std::forward_list      <Args...> >:std::true_type{};
-        template <class... Args> struct is_stl_container<std::list              <Args...> >:std::true_type{};
-        template <class... Args> struct is_stl_container<std::multiset          <Args...> >:std::true_type{};
-        template <class... Args> struct is_stl_container<std::priority_queue    <Args...> >:std::true_type{};
-        template <class... Args> struct is_stl_container<std::set               <Args...> >:std::true_type{};
-        template <class... Args> struct is_stl_container<std::vector            <Args...> >:std::true_type{};
-        template <class... Args> struct is_stl_container<std::unordered_multiset<Args...> >:std::true_type{};
-        template <class... Args> struct is_stl_container<std::unordered_set     <Args...> >:std::true_type{};
-
-        template <class T>       struct is_stl_array:std::false_type{};
-        template <class T,
-                  std::size_t N> struct is_stl_array<std::array                 <T, N> >   :std::true_type{};
-
-        template <class T>       struct is_stl_queue:std::false_type{};
-        template <class... Args> struct is_stl_queue<std::stack                 <Args...> >:std::true_type{};
-        template <class... Args> struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
-
-        template <class...>      struct voider { using type = void; };
-        template <class... T>    using void_t = typename voider<T...>::type;
-        template <class T, typename U = void>
-                                 struct is_stl_map:std::false_type{};
-        template <class T>       struct is_stl_map<T, void_t<typename T::key_type,
-                                                             typename T::mapped_type>>:std::true_type{};
-
-        template <class T, typename U = void>
-                                 struct is_stl_pair:std::false_type{};
-        template <class T>       struct is_stl_pair<T, void_t<typename T::first_type,
-                                                              typename T::second_type>>:std::true_type{};
-
-    public:
-        /*!
-         *  \brief Construct object with parsed arguments
-         *
-         *  \param storage Parsed arguments
-         *  \param args Unrecognized arguments
-         *
-         *  \return Object with parsed arguments
-         */
-        explicit Namespace(Storage const& storage = Storage(),
-                           std::vector<std::string> const& args = std::vector<std::string>())
-            : m_storage(storage),
-              m_unrecognized_args(args)
-        { }
-
-        /*!
-         *  \brief Construct object with parsed arguments
-         *
-         *  \param storage Parsed arguments
-         *  \param args Unrecognized arguments
-         *
-         *  \return Object with parsed arguments
-         */
-        explicit Namespace(Storage&& storage, std::vector<std::string>&& args) noexcept
-            : m_storage(std::move(storage)),
-              m_unrecognized_args(std::move(args))
-        { }
-
-        /*!
-         *  \brief Check if argument name exists and specified in parsed arguments
-         *
-         *  \param key Argument name
-         *
-         *  \return true if argument name exists and specified, otherwise false
-         */
-        bool exists(std::string const& key) const
-        {
-            if (m_storage.exists(key)) {
-                return !m_storage.at(key).second.empty()
-                        || m_storage.at(key).first->m_action == Action::count;
-            }
-            for (auto const& pair : m_storage) {
-                if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
-                    for (auto const& flag : pair.first->m_flags) {
-                        if (detail::_flag_name(flag) == key) {
-                            return !pair.second.empty() || pair.first->m_action == Action::count;
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
-#ifdef ARGPARSE_USE_OPTIONAL
-        /*!
-         *  \brief Try get parsed argument value for integer types.
-         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value or std::nullopt
-         */
-        template <class T, typename std::enable_if<std::is_integral<T>::value
-                                                   && !is_byte_type<T>::value
-                                                   && !std::is_same<bool, T>::value>::type* = nullptr>
-        std::optional<T> try_get(std::string const& key) const
-        {
-            auto args = try_get_data(key);
-            if (!args.operator bool()
-                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
-                return {};
-            }
-            if (args->first->m_action == Action::count) {
-                return T(args->second.size());
-            }
-            if (args->second.empty() || args->second.size() != 1) {
-                return {};
-            }
-            return try_to_type<T>(args->second.front());
-        }
-
-        /*!
-         *  \brief Try get parsed argument value for boolean, byte, floating point and string types.
-         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value or std::nullopt
-         */
-        template <class T,
-                  typename std::enable_if<std::is_same<bool, T>::value
-                                          || is_byte_type<T>::value
-                                          || std::is_floating_point<T>::value
-                                          || std::is_constructible<std::string, T>::value>::type* = nullptr>
-        std::optional<T> try_get(std::string const& key) const
-        {
-            auto args = try_get_data(key);
-            if (!args.operator bool()
-                    || args->first->m_action == Action::count
-                    || args->second.empty()
-                    || args->second.size() != 1
-                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
-                return {};
-            }
-            return try_to_type<T>(args->second.front());
-        }
-
-        /*!
-         *  \brief Try get parsed argument value for pair types.
-         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
-         *
-         *  \param key Argument name
-         *  \param delim Delimiter
-         *
-         *  \return Parsed argument value
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_pair<typename std::decay<T>::type>::value>::type* = nullptr>
-        std::optional<T> try_get(std::string const& key, char delim = detail::_equal) const
-        {
-            auto args = try_get_data(key);
-            if (!args.operator bool()
-                    || args->first->m_action == Action::count
-                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
-                return {};
-            }
-            if (args->second.empty()) {
-                return T();
-            }
-            if (args->second.size() != 1) {
-                return {};
-            }
-            return try_to_pair<typename T::first_type, typename T::second_type>(args->second.front(), delim);
-        }
-
-        /*!
-         *  \brief Try get parsed argument value for std containers types.
-         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value or std::nullopt
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_container<typename std::decay<T>::type>::value>::type*
-                                                                                                    = nullptr>
-        std::optional<T> try_get(std::string const& key) const
-        {
-            auto args = try_get_data(key);
-            if (!args.operator bool()
-                    || args->first->m_action == Action::count
-                    || !detail::_correct_type_names(args->first->type_name(),
-                                                    detail::_type_name<typename T::value_type>())) {
-                return {};
-            }
-            auto vector = try_to_vector<typename T::value_type>(args->second);
-            if (!vector.operator bool()) {
-                return {};
-            }
-            return T(std::begin(vector.value()), std::end(vector.value()));
-        }
-
-        /*!
-         *  \brief Try get parsed argument value std array type.
-         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value or std::nullopt
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_array<typename std::decay<T>::type>::value>::type* = nullptr>
-        std::optional<T> try_get(std::string const& key) const
-        {
-            auto args = try_get_data(key);
-            if (!args.operator bool()
-                    || args->first->m_action == Action::count
-                    || !detail::_correct_type_names(args->first->type_name(),
-                                                    detail::_type_name<typename T::value_type>())) {
-                return {};
-            }
-            auto vector = try_to_vector<typename T::value_type>(args->second);
-            if (!vector.operator bool()) {
-                return {};
-            }
-            T res{};
-            if (res.size() != vector->size()) {
-                std::cerr << "error: array size mismatch: " << res.size()
-                          << ", expected " << vector.size() << std::endl;
-            }
-            std::copy_n(std::begin(vector.value()), std::min(res.size(), vector->size()), std::begin(res));
-            return res;
-        }
-
-        /*!
-         *  \brief Try get parsed argument value for queue types.
-         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value or std::nullopt
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
-        std::optional<T> try_get(std::string const& key) const
-        {
-            auto args = try_get_data(key);
-            if (!args.operator bool()
-                    || args->first->m_action == Action::count
-                    || !detail::_correct_type_names(args->first->type_name(),
-                                                    detail::_type_name<typename T::value_type>())) {
-                return {};
-            }
-            auto vector = try_to_vector<typename T::value_type>(args->second);
-            if (!vector.operator bool()) {
-                return {};
-            }
-            return T(std::deque<typename T::value_type>(std::begin(vector.value()),
-                                                        std::end(vector.value())));
-        }
-
-        /*!
-         *  \brief Try get parsed argument value for mapped types.
-         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
-         *
-         *  \param key Argument name
-         *  \param delim Delimiter
-         *
-         *  \return Parsed argument value or std::nullopt
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_map<typename std::decay<T>::type>::value>::type* = nullptr>
-        std::optional<T> try_get(std::string const& key, char delim = detail::_equal) const
-        {
-            auto args = try_get_data(key);
-            if (!args.operator bool()
-                    || args->first->m_action == Action::count
-                    || !detail::_correct_type_names(args->first->type_name(),
-                                                    detail::_type_name<typename T::mapped_type>())) {
-                return {};
-            }
-            T res{};
-            auto vector = try_to_paired_vector<typename T::key_type,
-                                               typename T::mapped_type>(args->second, delim);
-            if (!vector.operator bool()) {
-                return {};
-            }
-            for (auto const& pair : vector.value()) {
-                res.emplace(std::make_pair(pair.first, pair.second));
-            }
-            return res;
-        }
-
-        /*!
-         *  \brief Try get parsed argument value for custom types.
-         *  If invalid type, argument not exists, not parsed or can't be parsed, returns std::nullopt.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value or std::nullopt
-         */
-        template <class T,
-                  typename std::enable_if<!std::is_integral<T>::value
-                                          && !std::is_same<bool, T>::value
-                                          && !std::is_floating_point<T>::value
-                                          && !std::is_constructible<std::string, T>::value
-                                          && !is_byte_type<T>::value
-                                          && !is_stl_array<typename std::decay<T>::type>::value
-                                          && !is_stl_container<typename std::decay<T>::type>::value
-                                          && !is_stl_map<typename std::decay<T>::type>::value
-                                          && !is_stl_pair<typename std::decay<T>::type>::value
-                                          && !is_stl_queue<typename std::decay<T>::type>::value>
-                  ::type* = nullptr>
-        std::optional<T> try_get(std::string const& key) const
-        {
-            auto args = try_get_data(key);
-            if (!args.operator bool()
-                    || args->first->m_action == Action::count
-                    || !detail::_correct_type_names(args->first->type_name(), detail::_type_name<T>())) {
-                return {};
-            }
-            return try_to_type<T>(detail::_vector_to_string(args->second));
-        }
-#endif // ARGPARSE_USE_OPTIONAL
-
-        /*!
-         *  \brief Get parsed argument value for integer types.
-         *  If argument not parsed, returns default value.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value
-         */
-        template <class T, typename std::enable_if<std::is_integral<T>::value
-                                                   && !is_byte_type<T>::value
-                                                   && !std::is_same<bool, T>::value>::type* = nullptr>
-        T get(std::string const& key) const
-        {
-            auto const& args = data(key);
-            detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
-            if (args.first->m_action == Action::count) {
-                return T(args.second.size());
-            }
-            if (args.second.empty()) {
-                return T();
-            }
-            if (args.second.size() != 1) {
-                throw TypeError("trying to get data from array argument '" + key + "'");
-            }
-            return to_type<T>(args.second.front());
-        }
-
-        /*!
-         *  \brief Get parsed argument value for boolean, byte, floating point and string types.
-         *  If argument not parsed, returns default value.
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value
-         */
-        template <class T,
-                  typename std::enable_if<std::is_same<bool, T>::value
-                                          || is_byte_type<T>::value
-                                          || std::is_floating_point<T>::value
-                                          || std::is_constructible<std::string, T>::value>::type* = nullptr>
-        T get(std::string const& key) const
-        {
-            auto const& args = data(key);
-            detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
-            if (args.first->m_action == Action::count) {
-                throw TypeError("invalid get type for argument '" + key + "'");
-            }
-            if (args.second.empty()) {
-                return T();
-            }
-            if (args.second.size() != 1) {
-                throw TypeError("trying to get data from array argument '" + key + "'");
-            }
-            return to_type<T>(args.second.front());
-        }
-
-        /*!
-         *  \brief Get parsed argument value for pair types
-         *
-         *  \param key Argument name
-         *  \param delim Delimiter
-         *
-         *  \return Parsed argument value
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_pair<typename std::decay<T>::type>::value>::type* = nullptr>
-        T get(std::string const& key, char delim = detail::_equal) const
-        {
-            auto const& args = data(key);
-            detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
-            if (args.first->m_action == Action::count) {
-                throw TypeError("invalid get type for argument '" + key + "'");
-            }
-            if (args.second.empty()) {
-                return T();
-            }
-            if (args.second.size() != 1) {
-                throw TypeError("trying to get data from array argument '" + key + "'");
-            }
-            return to_pair<typename T::first_type, typename T::second_type>(args.second.front(), delim);
-        }
-
-        /*!
-         *  \brief Get parsed argument value for std containers types
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_container<typename std::decay<T>::type>::value>::type*
-                                                                                                    = nullptr>
-        T get(std::string const& key) const
-        {
-            auto const& args = data(key);
-            detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::value_type>());
-            if (args.first->m_action == Action::count) {
-                throw TypeError("invalid get type for argument '" + key + "'");
-            }
-            auto vector = to_vector<typename T::value_type>(args.second);
-            return T(std::begin(vector), std::end(vector));
-        }
-
-        /*!
-         *  \brief Get parsed argument value std array type
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_array<typename std::decay<T>::type>::value>::type* = nullptr>
-        T get(std::string const& key) const
-        {
-            auto const& args = data(key);
-            detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::value_type>());
-            if (args.first->m_action == Action::count) {
-                throw TypeError("invalid get type for argument '" + key + "'");
-            }
-            auto vector = to_vector<typename T::value_type>(args.second);
-            T res{};
-            if (res.size() != vector.size()) {
-                std::cerr << "error: array size mismatch: " << res.size()
-                          << ", expected " << vector.size() << std::endl;
-            }
-            std::copy_n(std::begin(vector), std::min(res.size(), vector.size()), std::begin(res));
-            return res;
-        }
-
-        /*!
-         *  \brief Get parsed argument value for queue types
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_queue<typename std::decay<T>::type>::value>::type* = nullptr>
-        T get(std::string const& key) const
-        {
-            auto const& args = data(key);
-            detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::value_type>());
-            if (args.first->m_action == Action::count) {
-                throw TypeError("invalid get type for argument '" + key + "'");
-            }
-            auto vector = to_vector<typename T::value_type>(args.second);
-            return T(std::deque<typename T::value_type>(std::begin(vector),
-                                                        std::end(vector)));
-        }
-
-        /*!
-         *  \brief Get parsed argument value for mapped types
-         *
-         *  \param key Argument name
-         *  \param delim Delimiter
-         *
-         *  \return Parsed argument value
-         */
-        template <class T,
-                  typename std::enable_if<is_stl_map<typename std::decay<T>::type>::value>::type* = nullptr>
-        T get(std::string const& key, char delim = detail::_equal) const
-        {
-            auto const& args = data(key);
-            detail::_check_type_names(args.first->m_type_name, detail::_type_name<typename T::mapped_type>());
-            if (args.first->m_action == Action::count) {
-                throw TypeError("invalid get type for argument '" + key + "'");
-            }
-            T res{};
-            auto vector = to_paired_vector<typename T::key_type, typename T::mapped_type>(args.second, delim);
-            for (auto const& pair : vector) {
-                res.emplace(std::make_pair(pair.first, pair.second));
-            }
-            return res;
-        }
-
-        /*!
-         *  \brief Get parsed argument value for custom types
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value
-         */
-        template <class T,
-                  typename std::enable_if<!std::is_integral<T>::value
-                                          && !std::is_same<bool, T>::value
-                                          && !std::is_floating_point<T>::value
-                                          && !std::is_constructible<std::string, T>::value
-                                          && !is_byte_type<T>::value
-                                          && !is_stl_array<typename std::decay<T>::type>::value
-                                          && !is_stl_container<typename std::decay<T>::type>::value
-                                          && !is_stl_map<typename std::decay<T>::type>::value
-                                          && !is_stl_pair<typename std::decay<T>::type>::value
-                                          && !is_stl_queue<typename std::decay<T>::type>::value>
-                  ::type* = nullptr>
-        T get(std::string const& key) const
-        {
-            auto const& args = data(key);
-            detail::_check_type_names(args.first->m_type_name, detail::_type_name<T>());
-            if (args.first->m_action == Action::count) {
-                throw TypeError("invalid get type for argument '" + key + "'");
-            }
-            return to_type<T>(detail::_vector_to_string(args.second));
-        }
-
-        /*!
-         *  \brief Get parsed argument value as args string
-         *
-         *  \param key Argument name
-         *
-         *  \return Parsed argument value as args string
-         */
-        std::string to_args(std::string const& key) const
-        {
-            auto const& args = data(key);
-            switch (args.first->m_action) {
-                case Action::store_const :
-                    if (args.second.empty()) {
-                        return std::string();
-                    }
-                    if (args.second.size() != 1) {
-                        throw TypeError("trying to get data from array argument '" + key + "'");
-                    }
-                    return detail::_have_quotes(args.second.front())
-                            ? args.second.front()
-                            : detail::_replace(args.second.front(), detail::_space, "\\ ");
-                case Action::store_true :
-                case Action::store_false :
-                    if (args.second.empty()) {
-                        return detail::_bool_to_string(args.first->m_default());
-                    }
-                    if (args.second.size() != 1) {
-                        throw TypeError("trying to get data from array argument '" + key + "'");
-                    }
-                    return detail::_bool_to_string(args.second.front());
-                case Action::count :
-                    return std::to_string(args.second.size());
-                case Action::store :
-                case Action::append :
-                case Action::append_const :
-                case Action::extend :
-                    return detail::_vector_to_string(args.second, detail::_spaces, std::string(), true);
-                case Action::BooleanOptionalAction :
-                    if (args.second.empty()) {
-                        return detail::_bool_to_string(args.first->m_default());
-                    }
-                    if (args.second.size() != 1) {
-                        throw TypeError("trying to get data from array argument '" + key + "'");
-                    }
-                    return args.second.front() == args.first->m_const()
-                            ? detail::_bool_to_string(args.second.front()) : args.second.front();
-                default :
-                    throw ValueError("action not supported");
-            }
-        }
-
-        /*!
-         *  \brief Get parsed argument value as string
-         *
-         *  \param key Argument name
-         *  \param quotes Value quotes
-         *
-         *  \return Parsed argument value as string
-         */
-        std::string to_string(std::string const& key, std::string const& quotes = std::string()) const
-        {
-            auto const& args = data(key);
-            switch (args.first->m_action) {
-                case Action::store_const :
-                    if (args.second.empty()) {
-                        return std::string();
-                    }
-                    if (args.second.size() != 1) {
-                        throw TypeError("trying to get data from array argument '" + key + "'");
-                    }
-                    return args.second.front();
-                case Action::store_true :
-                case Action::store_false :
-                    if (args.second.empty()) {
-                        return detail::_bool_to_string(args.first->m_default());
-                    }
-                    if (args.second.size() != 1) {
-                        throw TypeError("trying to get data from array argument '" + key + "'");
-                    }
-                    return detail::_bool_to_string(args.second.front());
-                case Action::count :
-                    return std::to_string(args.second.size());
-                case Action::store :
-                case Action::append :
-                case Action::append_const :
-                case Action::extend :
-                    return "[" + detail::_vector_to_string(args.second, ", ", quotes, false, "None") + "]";
-                case Action::BooleanOptionalAction :
-                    if (args.second.empty()) {
-                        return detail::_bool_to_string(args.first->m_default());
-                    }
-                    if (args.second.size() != 1) {
-                        throw TypeError("trying to get data from array argument '" + key + "'");
-                    }
-                    return (args.second.front() == args.first->m_const() || args.second.front().empty())
-                            ? detail::_bool_to_string(args.second.front()) : args.second.front();
-                default :
-                    throw ValueError("action not supported");
-            }
-        }
-
-        /*!
-         *  \brief Get unrecognized arguments
-         *
-         *  \return Unrecognized arguments
-         */
-        inline std::vector<std::string> const& unrecognized_args() const noexcept
-        {
-            return m_unrecognized_args;
-        }
-
-        /*!
-         *  \brief Get unrecognized arguments as args string
-         *
-         *  \return Unrecognized arguments as args string
-         */
-        inline std::string unrecognized_args_to_args() const
-        {
-            return detail::_vector_to_string(m_unrecognized_args, detail::_spaces, std::string(), true);
-        }
-
-    private:
-        inline Storage const& storage() const noexcept
-        {
-            return m_storage;
-        }
-
-#ifdef ARGPARSE_USE_OPTIONAL
-        std::optional<Storage::value_type> try_get_data(std::string const& key) const
-        {
-            if (m_storage.exists(key)) {
-                return m_storage.at(key);
-            }
-            for (auto const& pair : m_storage) {
-                if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
-                    for (auto const& flag : pair.first->m_flags) {
-                        if (detail::_flag_name(flag) == key) {
-                            return pair;
-                        }
-                    }
-                }
-            }
-            return {};
-        }
-
-        template <class T>
-        std::optional<std::vector<T> > try_to_vector(std::vector<std::string> const& args) const
-        {
-            std::vector<T> vec;
-            vec.reserve(args.size());
-            for (auto const& arg : args) {
-                auto el = try_to_type<T>(arg);
-                if (el.operator bool()) {
-                    vec.emplace_back(el.value());
-                } else {
-                    return {};
-                }
-            }
-            return vec;
-        }
-
-        template <class T, class U>
-        std::optional<std::pair<T, U> > try_to_pair(std::string const& data, char delim) const
-        {
-            auto const pair = detail::_split_delimiter(data, delim);
-            auto el1 = try_to_type<T>(pair.first);
-            auto el2 = try_to_type<T>(pair.second);
-            if (el1.operator bool() && el2.operator bool()) {
-                return std::make_pair(el1.value(), el2.value());
-            } else {
-                return {};
-            }
-        }
-
-        template <class T, class U>
-        std::optional<std::vector<std::pair<T, U> > >
-        try_to_paired_vector(std::vector<std::string> const& args, char delim) const
-        {
-            std::vector<std::pair<T, U> > vec;
-            vec.reserve(args.size());
-            for (auto const& arg : args) {
-                auto pair = try_to_pair<T, U>(arg, delim);
-                if (pair.operator bool()) {
-                    vec.emplace_back(pair.value());
-                } else {
-                    return {};
-                }
-            }
-            return vec;
-        }
-
-        template <class T, typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
-        std::optional<T> try_to_type(std::string const& data) const noexcept
-        {
-            if (data.empty() || data.size() != 1) {
-                return {};
-            }
-            return T(data.front());
-        }
-
-        template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
-        std::optional<T> try_to_type(std::string const& data) const noexcept
-        {
-            return detail::_string_to_bool(data);
-        }
-
-        template <class T,
-                  typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-        std::optional<T> try_to_type(std::string const& data) const
-        {
-            return detail::_remove_quotes<T>(data);
-        }
-
-        template <class T,
-                  typename std::enable_if<!std::is_constructible<std::string, T>::value
-                                          && !is_byte_type<T>::value
-                                          && !std::is_same<bool, T>::value>::type* = nullptr>
-        std::optional<T> try_to_type(std::string const& data) const
-        {
-            if (data.empty()) {
-                return T();
-            }
-            T result;
-            std::stringstream ss(data);
-            ss >> result;
-            if (ss.fail() || !ss.eof()) {
-                return {};
-            }
-            return result;
-        }
-#endif // ARGPARSE_USE_OPTIONAL
-
-        Storage::value_type const& data(std::string const& key) const
-        {
-            if (m_storage.exists(key)) {
-                return m_storage.at(key);
-            }
-            for (auto const& pair : m_storage) {
-                if (pair.first->m_type == Argument::Optional && pair.first->m_dest_str.empty()) {
-                    for (auto const& flag : pair.first->m_flags) {
-                        if (detail::_flag_name(flag) == key) {
-                            return pair;
-                        }
-                    }
-                }
-            }
-            throw AttributeError("'Namespace' object has no attribute '" + key + "'");
-        }
-
-        template <class T>
-        std::vector<T> to_vector(std::vector<std::string> const& args) const
-        {
-            std::vector<T> vec;
-            vec.reserve(args.size());
-            for (auto const& arg : args) {
-                vec.emplace_back(to_type<T>(arg));
-            }
-            return vec;
-        }
-
-        template <class T, class U>
-        std::pair<T, U> to_pair(std::string const& data, char delim) const
-        {
-            auto const pair = detail::_split_delimiter(data, delim);
-            return std::make_pair(to_type<T>(pair.first), to_type<U>(pair.second));
-        }
-
-        template <class T, class U>
-        std::vector<std::pair<T, U> > to_paired_vector(std::vector<std::string> const& args, char delim) const
-        {
-            std::vector<std::pair<T, U> > vec;
-            vec.reserve(args.size());
-            for (auto const& arg : args) {
-                vec.emplace_back(to_pair<T, U>(arg, delim));
-            }
-            return vec;
-        }
-
-        template <class T, typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
-        T to_type(std::string const& data) const
-        {
-            if (data.empty()) {
-                return T();
-            }
-            if (data.size() != 1) {
-                throw TypeError("trying to get data from array argument value '" + data + "'");
-            }
-            return T(data.front());
-        }
-
-        template <class T, typename std::enable_if<std::is_same<bool, T>::value>::type* = nullptr>
-        T to_type(std::string const& data) const noexcept
-        {
-            return detail::_string_to_bool(data);
-        }
-
-        template <class T,
-                  typename std::enable_if<std::is_constructible<std::string, T>::value>::type* = nullptr>
-        T to_type(std::string const& data) const
-        {
-            return detail::_remove_quotes<T>(data);
-        }
-
-        template <class T,
-                  typename std::enable_if<!std::is_constructible<std::string, T>::value
-                                          && !is_byte_type<T>::value
-                                          && !std::is_same<bool, T>::value>::type* = nullptr>
-        T to_type(std::string const& data) const
-        {
-            if (data.empty()) {
-                return T();
-            }
-            T result;
-            std::stringstream ss(data);
-            ss >> result;
-            if (ss.fail() || !ss.eof()) {
-                throw TypeError("can't convert value '" + data + "'");
-            }
-            return result;
-        }
-
-        Storage m_storage;
-        std::vector<std::string> m_unrecognized_args;
     };
 
 public:
