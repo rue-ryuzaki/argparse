@@ -92,11 +92,6 @@ using experimental::fundamentals_v1::nullopt;
 #undef ARGPARSE_USE_OPTIONAL
 #endif // C++14+
 
-#if defined(__GNUC__) && (__GNUC__ > 6) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough="
-#endif // __GNUC__ && __GNUC__ > 6 && !__clang__
-
 namespace argparse {
 template <class T>  struct is_byte_type { enum{value = false}; };
 template <>         struct is_byte_type<char> { enum{value = true}; };
@@ -1030,6 +1025,7 @@ public:
         switch (value) {
             case Action::store_true :
                 m_default.clear();
+                // fallthrough
             case Action::BooleanOptionalAction :
                 m_const = "1";
                 m_nargs = NARGS_INT;
@@ -1039,6 +1035,7 @@ public:
                 break;
             case Action::store_false :
                 m_default.clear("1");
+                // fallthrough
             case Action::store_const :
             case Action::append_const :
                 m_const = std::string();
@@ -1049,11 +1046,13 @@ public:
                 break;
             case Action::version :
                 help("show program's version number and exit");
+                // fallthrough
             case Action::help :
                 if (m_type == Positional) {
                     // version and help actions cannot be positional
                     throw TypeError("got an unexpected keyword argument 'required'");
                 }
+                // fallthrough
             case Action::count :
                 m_const.clear();
                 m_nargs = NARGS_INT;
@@ -1670,6 +1669,7 @@ private:
                 break;
             case ONE_OR_MORE :
                 res += name + detail::_spaces;
+                // fallthrough
             case ZERO_OR_MORE :
                 res += "[" +  name + " ...]";
                 break;
@@ -5150,6 +5150,7 @@ private:
                         break;
                     case Argument::ONE_OR_MORE :
                         ++min_amount;
+                        // fallthrough
                     case Argument::ZERO_OR_MORE :
                         more_args = true;
                         break;
@@ -5245,6 +5246,7 @@ private:
                             break;
                         case Argument::ONE_OR_MORE :
                             ++min_amount;
+                            // fallthrough
                         case Argument::ZERO_OR_MORE :
                             more_args = true;
                             break;
@@ -5434,6 +5436,7 @@ private:
                 switch (tmp->m_action) {
                     case Action::store :
                         storage.at(tmp).clear();
+                        // fallthrough
                     case Action::append :
                     case Action::extend :
                         if (splitted.size() == 1) {
@@ -5966,9 +5969,5 @@ private:
     std::shared_ptr<Subparser> m_subparsers;
 };
 } // argparse
-
-#if defined(__GNUC__) && (__GNUC__ > 6) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif // __GNUC__ && __GNUC__ > 6 && __clang__
 
 #endif // _ARGPARSE_ARGUMENT_PARSER_HPP_
