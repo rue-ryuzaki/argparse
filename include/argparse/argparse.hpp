@@ -111,17 +111,17 @@ template <>         struct is_byte_type<char8_t> { enum{value = true}; };
  */
 enum Action
 {
-    store           = 0x00000001,
-    store_const     = 0x00000002,
-    store_true      = 0x00000004,
-    store_false     = 0x00000008,
-    append          = 0x00000010,
-    append_const    = 0x00000020,
-    count           = 0x00000040,
-    help            = 0x00000080,
-    version         = 0x00000100,
-    extend          = 0x00000200,
-    BooleanOptionalAction = 0x00001000,
+    store                   = 0x00000001,
+    store_const             = 0x00000002,
+    store_true              = 0x00000004,
+    store_false             = 0x00000008,
+    append                  = 0x00000010,
+    append_const            = 0x00000020,
+    count                   = 0x00000040,
+    help                    = 0x00000080,
+    version                 = 0x00000100,
+    extend                  = 0x00000200,
+    BooleanOptionalAction   = 0x00001000,
 };
 
 /*!
@@ -331,10 +331,8 @@ _resolve_conflict(std::vector<std::string> const& vec,
     }
 }
 
-template <class T = std::string,
-          typename std::enable_if<
-              std::is_constructible<std::string, T>::value>::type* = nullptr>
-T
+template <class T = std::string>
+typename std::enable_if<std::is_constructible<std::string, T>::value, T>::type
 _remove_quotes(std::string const& s)
 {
     return _have_quotes(s) ? T(s).substr(1, s.size() - 2) : T(s);
@@ -714,9 +712,9 @@ public:
         m_value     = value;
     }
 
-    inline bool        has_value() const noexcept { return m_has_value; }
-    inline T const&    value()     const noexcept { return m_value; }
-    inline T const& operator()()   const noexcept { return m_value; }
+    inline bool        has_value()  const noexcept { return m_has_value; }
+    inline T const&    value()      const noexcept { return m_value; }
+    inline T const&    operator()() const noexcept { return m_value; }
 
 private:
     bool    m_has_value;
@@ -1294,9 +1292,8 @@ public:
      *  \return Current argument reference
      */
     template <class T,
-              typename std::enable_if<
-                  !std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
+              class = typename std::enable_if<
+                  !std::is_constructible<std::string, T>::value>::type>
     Argument& const_value(T const& value)
     {
         std::stringstream ss;
@@ -1325,9 +1322,8 @@ public:
      *  \return Current argument reference
      */
     template <class T,
-              typename std::enable_if<
-                  !std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
+              class = typename std::enable_if<
+                  !std::is_constructible<std::string, T>::value>::type>
     Argument& default_value(T const& value)
     {
         std::stringstream ss;
@@ -2002,9 +1998,8 @@ public:
      *  \return Current argument reference
      */
     template <class T,
-              typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
+              class = typename std::enable_if<
+                  std::is_constructible<std::string, T>::value>::type>
     Argument& add_argument(T const& flag)
     {
         return add_argument({ flag });
@@ -2590,7 +2585,8 @@ public:
      *
      *  \return BaseParser object
      */
-    explicit BaseParser()
+    explicit
+    BaseParser()
         : ArgumentData(),
           m_usage(),
           m_description(),
@@ -2926,13 +2922,13 @@ class Namespace
     struct is_stl_map:std::false_type{};
     template <class T>
     struct is_stl_map<T, void_t<typename T::key_type,
-                                     typename T::mapped_type>>:std::true_type{};
+                                    typename T::mapped_type> >:std::true_type{};
 
     template <class T, typename U = void>
     struct is_stl_pair:std::false_type{};
     template <class T>
     struct is_stl_pair<T, void_t<typename T::first_type,
-                                     typename T::second_type>>:std::true_type{};
+                                    typename T::second_type> >:std::true_type{};
 
 public:
     /*!
@@ -3001,12 +2997,12 @@ public:
      *
      *  \return Parsed argument value or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                  std::is_integral<T>::value
-                  && !is_byte_type<T>::value
-                  && !std::is_same<bool, T>::value>::type* = nullptr>
-    std::optional<T> try_get(std::string const& key) const
+    template <class T>
+    std::optional<typename std::enable_if<
+        std::is_integral<T>::value
+        && !is_byte_type<T>::value
+        && !std::is_same<bool, T>::value, T>::type>
+    try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -3033,14 +3029,13 @@ public:
      *
      *  \return Parsed argument value or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                  std::is_same<bool, T>::value
-                  || is_byte_type<T>::value
-                  || std::is_floating_point<T>::value
-                  || std::is_constructible<std::string, T>::value>
-              ::type* = nullptr>
-    std::optional<T> try_get(std::string const& key) const
+    template <class T>
+    std::optional<typename std::enable_if<
+        std::is_same<bool, T>::value
+        || is_byte_type<T>::value
+        || std::is_floating_point<T>::value
+        || std::is_constructible<std::string, T>::value, T>::type>
+    try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -3064,11 +3059,9 @@ public:
      *
      *  \return Parsed argument value
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_pair<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    std::optional<T>
+    template <class T>
+    std::optional<typename std::enable_if<
+        is_stl_pair<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
     {
         auto args = try_get_data(key);
@@ -3097,11 +3090,10 @@ public:
      *
      *  \return Parsed argument value or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_container<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    std::optional<T> try_get(std::string const& key) const
+    template <class T>
+    std::optional<typename std::enable_if<
+        is_stl_container<typename std::decay<T>::type>::value, T>::type>
+    try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -3127,11 +3119,10 @@ public:
      *
      *  \return Parsed argument value or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_array<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    std::optional<T> try_get(std::string const& key) const
+    template <class T>
+    std::optional<typename std::enable_if<
+        is_stl_array<typename std::decay<T>::type>::value, T>::type>
+    try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -3164,11 +3155,10 @@ public:
      *
      *  \return Parsed argument value or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_queue<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    std::optional<T> try_get(std::string const& key) const
+    template <class T>
+    std::optional<typename std::enable_if<
+        is_stl_queue<typename std::decay<T>::type>::value, T>::type>
+    try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -3196,11 +3186,9 @@ public:
      *
      *  \return Parsed argument value or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_map<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    std::optional<T>
+    template <class T>
+    std::optional<typename std::enable_if<
+        is_stl_map<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
     {
         auto args = try_get_data(key);
@@ -3234,20 +3222,19 @@ public:
      *
      *  \return Parsed argument value or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                  !std::is_integral<T>::value
-                  && !std::is_same<bool, T>::value
-                  && !std::is_floating_point<T>::value
-                  && !std::is_constructible<std::string, T>::value
-                  && !is_byte_type<T>::value
-                  && !is_stl_array<typename std::decay<T>::type>::value
-                  && !is_stl_container<typename std::decay<T>::type>::value
-                  && !is_stl_map<typename std::decay<T>::type>::value
-                  && !is_stl_pair<typename std::decay<T>::type>::value
-                  && !is_stl_queue<typename std::decay<T>::type>::value>
-              ::type* = nullptr>
-    std::optional<T> try_get(std::string const& key) const
+    template <class T>
+    std::optional<typename std::enable_if<
+        !std::is_integral<T>::value
+        && !std::is_same<bool, T>::value
+        && !std::is_floating_point<T>::value
+        && !std::is_constructible<std::string, T>::value
+        && !is_byte_type<T>::value
+        && !is_stl_array<typename std::decay<T>::type>::value
+        && !is_stl_container<typename std::decay<T>::type>::value
+        && !is_stl_map<typename std::decay<T>::type>::value
+        && !is_stl_pair<typename std::decay<T>::type>::value
+        && !is_stl_queue<typename std::decay<T>::type>::value, T>::type>
+    try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -3268,12 +3255,11 @@ public:
      *
      *  \return Parsed argument value
      */
-    template <class T,
-              typename std::enable_if<
-                  std::is_integral<T>::value
-                  && !is_byte_type<T>::value
-                  && !std::is_same<bool, T>::value>::type* = nullptr>
-    T get(std::string const& key) const
+    template <class T>
+    typename std::enable_if<std::is_integral<T>::value
+                            && !is_byte_type<T>::value
+                            && !std::is_same<bool, T>::value, T>::type
+    get(std::string const& key) const
     {
         auto const& args = data(key);
         detail::_check_type_names(args.first->m_type_name,
@@ -3300,14 +3286,13 @@ public:
      *
      *  \return Parsed argument value
      */
-    template <class T,
-              typename std::enable_if<
-                  std::is_same<bool, T>::value
-                  || is_byte_type<T>::value
-                  || std::is_floating_point<T>::value
-                  || std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
-    T get(std::string const& key) const
+    template <class T>
+    typename std::enable_if<
+        std::is_same<bool, T>::value
+        || is_byte_type<T>::value
+        || std::is_floating_point<T>::value
+        || std::is_constructible<std::string, T>::value, T>::type
+    get(std::string const& key) const
     {
         auto const& args = data(key);
         detail::_check_type_names(args.first->m_type_name,
@@ -3333,11 +3318,10 @@ public:
      *
      *  \return Parsed argument value
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_pair<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    T get(std::string const& key, char delim = detail::_equal) const
+    template <class T>
+    typename std::enable_if<
+        is_stl_pair<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
         detail::_check_type_names(args.first->m_type_name,
@@ -3363,11 +3347,10 @@ public:
      *
      *  \return Parsed argument value
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_container<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    T get(std::string const& key) const
+    template <class T>
+    typename std::enable_if<
+        is_stl_container<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key) const
     {
         auto const& args = data(key);
         detail::_check_type_names(args.first->m_type_name,
@@ -3386,11 +3369,10 @@ public:
      *
      *  \return Parsed argument value
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_array<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    T get(std::string const& key) const
+    template <class T>
+    typename std::enable_if<
+        is_stl_array<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key) const
     {
         auto const& args = data(key);
         detail::_check_type_names(args.first->m_type_name,
@@ -3416,11 +3398,10 @@ public:
      *
      *  \return Parsed argument value
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_queue<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    T get(std::string const& key) const
+    template <class T>
+    typename std::enable_if<
+        is_stl_queue<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key) const
     {
         auto const& args = data(key);
         detail::_check_type_names(args.first->m_type_name,
@@ -3441,11 +3422,10 @@ public:
      *
      *  \return Parsed argument value
      */
-    template <class T,
-              typename std::enable_if<
-                  is_stl_map<typename std::decay<T>::type>::value>::type*
-              = nullptr>
-    T get(std::string const& key, char delim = detail::_equal) const
+    template <class T>
+    typename std::enable_if<
+        is_stl_map<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
         detail::_check_type_names(args.first->m_type_name,
@@ -3469,20 +3449,19 @@ public:
      *
      *  \return Parsed argument value
      */
-    template <class T,
-              typename std::enable_if<
-                  !std::is_integral<T>::value
-                  && !std::is_same<bool, T>::value
-                  && !std::is_floating_point<T>::value
-                  && !std::is_constructible<std::string, T>::value
-                  && !is_byte_type<T>::value
-                  && !is_stl_array<typename std::decay<T>::type>::value
-                  && !is_stl_container<typename std::decay<T>::type>::value
-                  && !is_stl_map<typename std::decay<T>::type>::value
-                  && !is_stl_pair<typename std::decay<T>::type>::value
-                  && !is_stl_queue<typename std::decay<T>::type>::value>
-              ::type* = nullptr>
-    T get(std::string const& key) const
+    template <class T>
+    typename std::enable_if<
+        !std::is_integral<T>::value
+        && !std::is_same<bool, T>::value
+        && !std::is_floating_point<T>::value
+        && !std::is_constructible<std::string, T>::value
+        && !is_byte_type<T>::value
+        && !is_stl_array<typename std::decay<T>::type>::value
+        && !is_stl_container<typename std::decay<T>::type>::value
+        && !is_stl_map<typename std::decay<T>::type>::value
+        && !is_stl_pair<typename std::decay<T>::type>::value
+        && !is_stl_queue<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key) const
     {
         auto const& args = data(key);
         detail::_check_type_names(args.first->m_type_name,
@@ -3703,9 +3682,9 @@ private:
         return vec;
     }
 
-    template <class T,
-              typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
-    std::optional<T> try_to_type(std::string const& data) const noexcept
+    template <class T>
+    std::optional<typename std::enable_if<is_byte_type<T>::value, T>::type>
+    try_to_type(std::string const& data) const noexcept
     {
         if (data.empty() || data.size() != 1) {
             return {};
@@ -3713,29 +3692,28 @@ private:
         return T(data.front());
     }
 
-    template <class T,
-              typename std::enable_if<
-                  std::is_same<bool, T>::value>::type* = nullptr>
-    std::optional<T> try_to_type(std::string const& data) const noexcept
+    template <class T>
+    std::optional<typename std::enable_if<
+        std::is_same<bool, T>::value, T>::type>
+    try_to_type(std::string const& data) const noexcept
     {
         return detail::_string_to_bool(data);
     }
 
-    template <class T,
-              typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
-    std::optional<T> try_to_type(std::string const& data) const
+    template <class T>
+    std::optional<typename std::enable_if<
+        std::is_constructible<std::string, T>::value, T>::type>
+    try_to_type(std::string const& data) const
     {
         return detail::_remove_quotes<T>(data);
     }
 
-    template <class T,
-              typename std::enable_if<
-                  !std::is_constructible<std::string, T>::value
-                  && !is_byte_type<T>::value
-                  && !std::is_same<bool, T>::value>::type* = nullptr>
-    std::optional<T> try_to_type(std::string const& data) const
+    template <class T>
+    std::optional<typename std::enable_if<
+        !std::is_constructible<std::string, T>::value
+        && !is_byte_type<T>::value
+        && !std::is_same<bool, T>::value, T>::type>
+    try_to_type(std::string const& data) const
     {
         if (data.empty()) {
             return T();
@@ -3799,9 +3777,9 @@ private:
         return vec;
     }
 
-    template <class T,
-              typename std::enable_if<is_byte_type<T>::value>::type* = nullptr>
-    T to_type(std::string const& data) const
+    template <class T>
+    typename std::enable_if<is_byte_type<T>::value, T>::type
+    to_type(std::string const& data) const
     {
         if (data.empty()) {
             return T();
@@ -3813,29 +3791,26 @@ private:
         return T(data.front());
     }
 
-    template <class T,
-              typename std::enable_if<
-                  std::is_same<bool, T>::value>::type* = nullptr>
-    T to_type(std::string const& data) const noexcept
+    template <class T>
+    typename std::enable_if<std::is_same<bool, T>::value, T>::type
+    to_type(std::string const& data) const noexcept
     {
         return detail::_string_to_bool(data);
     }
 
-    template <class T,
-              typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
-    T to_type(std::string const& data) const
+    template <class T>
+    typename std::enable_if<
+        std::is_constructible<std::string, T>::value, T>::type
+    to_type(std::string const& data) const
     {
         return detail::_remove_quotes<T>(data);
     }
 
-    template <class T,
-              typename std::enable_if<
-                  !std::is_constructible<std::string, T>::value
-                  && !is_byte_type<T>::value
-                  && !std::is_same<bool, T>::value>::type* = nullptr>
-    T to_type(std::string const& data) const
+    template <class T>
+    typename std::enable_if<!std::is_constructible<std::string, T>::value
+                            && !is_byte_type<T>::value
+                            && !std::is_same<bool, T>::value, T>::type
+    to_type(std::string const& data) const
     {
         if (data.empty()) {
             return T();
@@ -3893,7 +3868,8 @@ public:
          *
          *  \return Parser object
          */
-        explicit Parser(std::string const& name)
+        explicit
+        Parser(std::string const& name)
             : BaseParser(),
               m_name(name),
               m_help(),
@@ -4340,7 +4316,8 @@ public:
      *
      *  \return Argument parser object
      */
-    explicit ArgumentParser(std::string const& prog = "untitled")
+    explicit
+    ArgumentParser(std::string const& prog = "untitled")
         : BaseParser(),
           m_prog(prog),
           m_parents(),
@@ -4363,7 +4340,8 @@ public:
      *
      *  \return Argument parser object
      */
-    explicit ArgumentParser(int argc, char* argv[])
+    explicit
+    ArgumentParser(int argc, char* argv[])
         : ArgumentParser(argc, const_cast<char const**>(argv))
     { }
 
@@ -4375,7 +4353,8 @@ public:
      *
      *  \return Argument parser object
      */
-    explicit ArgumentParser(int argc, char const* argv[])
+    explicit
+    ArgumentParser(int argc, char const* argv[])
         : ArgumentParser()
     {
         if (argc > 0 && argv != nullptr && argv[0] != nullptr) {
@@ -4852,9 +4831,8 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T,
-              typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
+              class = typename std::enable_if<
+                  std::is_constructible<std::string, T>::value>::type>
     argparse::Namespace
     parse_args(T const& args,
                argparse::Namespace const& space = argparse::Namespace()) const
@@ -4912,9 +4890,8 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T,
-              typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
+              class = typename std::enable_if<
+                  std::is_constructible<std::string, T>::value>::type>
     argparse::Namespace
     parse_known_args(
             T const& args,
@@ -4974,9 +4951,8 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T,
-              typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
+              class = typename std::enable_if<
+                  std::is_constructible<std::string, T>::value>::type>
     argparse::Namespace
     parse_intermixed_args(
             T const& args,
@@ -5036,9 +5012,8 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T,
-              typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type*
-              = nullptr>
+              class = typename std::enable_if<
+                  std::is_constructible<std::string, T>::value>::type>
     argparse::Namespace
     parse_known_intermixed_args(
             T const& args,
