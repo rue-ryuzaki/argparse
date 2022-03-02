@@ -109,7 +109,7 @@ template <>         struct is_byte_type<char8_t> { enum{value = true}; };
  *
  * \enum Action
  */
-enum Action
+enum Action : uint32_t
 {
     store                   = 0x00000001,
     store_const             = 0x00000002,
