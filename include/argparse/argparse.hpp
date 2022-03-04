@@ -51,6 +51,7 @@
 #if __cplusplus >= 201703L // C++17+
 #include <string_view>
 #endif // C++17+
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -2928,6 +2929,11 @@ class Namespace
     friend class ArgumentParser;
 
     template <class T>
+    struct is_stl_array:std::false_type{};
+    template <class T, std::size_t N>
+    struct is_stl_array<std::array                 <T, N> >   :std::true_type{};
+
+    template <class T>
     struct is_stl_container:std::false_type{};
     template <class... Args>
     struct is_stl_container<std::deque             <Args...> >:std::true_type{};
@@ -2948,18 +2954,6 @@ class Namespace
     template <class... Args>
     struct is_stl_container<std::unordered_set     <Args...> >:std::true_type{};
 
-    template <class T>
-    struct is_stl_array:std::false_type{};
-    template <class T, std::size_t N>
-    struct is_stl_array<std::array                 <T, N> >   :std::true_type{};
-
-    template <class T>
-    struct is_stl_queue:std::false_type{};
-    template <class... Args>
-    struct is_stl_queue<std::stack                 <Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
-
     template <class...>
     struct voider { using type = void; };
     template <class... T>
@@ -2975,6 +2969,29 @@ class Namespace
     template <class T>
     struct is_stl_pair<T, void_t<typename T::first_type,
                                     typename T::second_type> >:std::true_type{};
+
+    template <class T>
+    struct is_stl_queue:std::false_type{};
+    template <class... Args>
+    struct is_stl_queue<std::stack                 <Args...> >:std::true_type{};
+    template <class... Args>
+    struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
+
+    template <class T>
+    struct is_stl_tuple:std::false_type{};
+    template <class... Args>
+    struct is_stl_tuple<std::tuple                 <Args...> >:std::true_type{};
+
+    template <class T> struct type_tag {};
+
+    template <std::size_t... Is>
+    struct seq{};
+
+    template <std::size_t N, std::size_t... Is>
+    struct gen_seq:gen_seq<N - 1, N - 1, Is...>{};
+
+    template <std::size_t... Is>
+    struct gen_seq<0, Is...>:seq<Is...>{};
 
 public:
     /*!
@@ -3228,6 +3245,36 @@ public:
     }
 
     /*!
+     *  \brief Get parsed argument value for tuple
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value
+     */
+    template <class T>
+    typename std::enable_if<
+        is_stl_tuple<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_names(args.first->m_type_name,
+                                  detail::_type_name<T>());
+        if (args.first->m_action == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        if (args.second.empty()) {
+            return T();
+        }
+        if (args.second.size() != 1) {
+            throw
+            TypeError("trying to get data from array argument '" + key + "'");
+        }
+        return to_tuple(type_tag<T>{},
+                        detail::_split(args.second.front(), delim));
+    }
+
+    /*!
      *  \brief Get parsed argument value for custom types
      *
      *  \param key Argument name
@@ -3245,7 +3292,8 @@ public:
         && !is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_map<typename std::decay<T>::type>::value
         && !is_stl_pair<typename std::decay<T>::type>::value
-        && !is_stl_queue<typename std::decay<T>::type>::value, T>::type
+        && !is_stl_queue<typename std::decay<T>::type>::value
+        && !is_stl_tuple<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3598,6 +3646,38 @@ public:
     }
 
     /*!
+     *  \brief Try get parsed argument value for tuple.
+     *  If invalid type, argument not exists, not parsed or can't be parsed,
+     *  returns std::nullopt.
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T>
+    std::optional<typename std::enable_if<
+        is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
+    try_get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->m_action == Action::count
+                || !detail::_correct_type_names(args->first->type_name(),
+                                                detail::_type_name<T>())) {
+            return {};
+        }
+        if (args->second.empty()) {
+            return T();
+        }
+        if (args->second.size() != 1) {
+            return {};
+        }
+        return try_to_tuple(type_tag<T>{},
+                            detail::_split(args->second.front(), delim));
+    }
+
+    /*!
      *  \brief Try get parsed argument value for custom types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
@@ -3617,7 +3697,8 @@ public:
         && !is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_map<typename std::decay<T>::type>::value
         && !is_stl_pair<typename std::decay<T>::type>::value
-        && !is_stl_queue<typename std::decay<T>::type>::value, T>::type>
+        && !is_stl_queue<typename std::decay<T>::type>::value
+        && !is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -3705,6 +3786,21 @@ private:
             vec.emplace_back(to_type<T>(arg));
         }
         return vec;
+    }
+
+    template <class... Ts, std::size_t... Idxs>
+    std::tuple<Ts...>
+    parse_tuple(std::vector<std::string> const& values, seq<Idxs...>) const
+    {
+        return {to_type<Ts>(values[Idxs])...};
+    }
+
+    template <class... Ts>
+    std::tuple<Ts...>
+    to_tuple(type_tag<std::tuple<Ts...>>,
+             std::vector<std::string> const& values) const
+    {
+        return parse_tuple<Ts...>(values, gen_seq<sizeof...(Ts)>());
     }
 
     template <class T>
@@ -3820,6 +3916,19 @@ private:
             }
         }
         return vec;
+    }
+
+    template <class... Ts>
+    std::optional<std::tuple<Ts...> >
+    try_to_tuple(type_tag<std::tuple<Ts...>>,
+                 std::vector<std::string> const& values) const
+    {
+        try {
+            auto res = parse_tuple<Ts...>(values, gen_seq<sizeof...(Ts)>());
+            return res;
+        } catch (...) {
+            return {};
+        }
     }
 
     template <class T>
