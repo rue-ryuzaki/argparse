@@ -244,7 +244,7 @@ std::string const _spaces = " ";
 std::string const _equals = "=";
 
 uint32_t const _bool_action = Action::store_true | Action::store_false;
-uint32_t const _store_action = Action::store |Action::append |Action::extend;
+uint32_t const _store_action = Action::store | Action::append | Action::extend;
 uint32_t const _const_action = Action::store_const | Action::append_const;
 uint32_t const _store_const_action = _store_action | _const_action;
 
@@ -4894,22 +4894,11 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    argparse::Namespace
+    inline argparse::Namespace
     parse_args(std::vector<std::string> const& args,
                argparse::Namespace const& space = argparse::Namespace()) const
     {
-        if (m_exit_on_error) {
-            try {
-                return parse_arguments(args, false, false, space);
-            } catch (std::exception& e) {
-                std::cerr << e.what() << std::endl;
-            } catch (...) {
-                std::cerr << "error: unexpected error" << std::endl;
-            }
-            ::exit(1);
-        } else {
-            return parse_arguments(args, false, false, space);
-        }
+        return on_parse_arguments(args, false, false, space);
     }
 
     /*!
@@ -4954,23 +4943,12 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    argparse::Namespace
+    inline argparse::Namespace
     parse_known_args(
             std::vector<std::string> const& args,
             argparse::Namespace const& space = argparse::Namespace()) const
     {
-        if (m_exit_on_error) {
-            try {
-                return parse_arguments(args, true, false, space);
-            } catch (std::exception& e) {
-                std::cerr << e.what() << std::endl;
-            } catch (...) {
-                std::cerr << "error: unexpected error" << std::endl;
-            }
-            ::exit(1);
-        } else {
-            return parse_arguments(args, true, false, space);
-        }
+        return on_parse_arguments(args, true, false, space);
     }
 
     /*!
@@ -5015,23 +4993,12 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    argparse::Namespace
+    inline argparse::Namespace
     parse_intermixed_args(
             std::vector<std::string> const& args,
             argparse::Namespace const& space = argparse::Namespace()) const
     {
-        if (m_exit_on_error) {
-            try {
-                return parse_arguments(args, false, true, space);
-            } catch (std::exception& e) {
-                std::cerr << e.what() << std::endl;
-            } catch (...) {
-                std::cerr << "error: unexpected error" << std::endl;
-            }
-            ::exit(1);
-        } else {
-            return parse_arguments(args, false, true, space);
-        }
+        return on_parse_arguments(args, false, true, space);
     }
 
     /*!
@@ -5076,23 +5043,12 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    argparse::Namespace
+    inline argparse::Namespace
     parse_known_intermixed_args(
             std::vector<std::string> const& args,
             argparse::Namespace const& space = argparse::Namespace()) const
     {
-        if (m_exit_on_error) {
-            try {
-                return parse_arguments(args, true, true, space);
-            } catch (std::exception& e) {
-                std::cerr << e.what() << std::endl;
-            } catch (...) {
-                std::cerr << "error: unexpected error" << std::endl;
-            }
-            ::exit(1);
-        } else {
-            return parse_arguments(args, true, true, space);
-        }
+        return on_parse_arguments(args, true, true, space);
     }
 
     /*!
@@ -5217,11 +5173,29 @@ public:
 
 private:
     argparse::Namespace
-    parse_arguments(
-            std::vector<std::string> parsed_arguments,
-            bool only_known = false,
-            bool intermixed = false,
-            argparse::Namespace const& space = argparse::Namespace()) const
+    on_parse_arguments(std::vector<std::string> args,
+                       bool only_known,
+                       bool intermixed,
+                       argparse::Namespace const& space) const
+    {
+        if (!m_exit_on_error) {
+            return parse_arguments(args, only_known, intermixed, space);
+        }
+        try {
+            return parse_arguments(args, only_known, intermixed, space);
+        } catch (std::exception& e) {
+            std::cerr << e.what() << std::endl;
+        } catch (...) {
+            std::cerr << "error: unexpected error" << std::endl;
+        }
+        ::exit(1);
+    }
+
+    argparse::Namespace
+    parse_arguments(std::vector<std::string> parsed_arguments,
+                    bool only_known,
+                    bool intermixed,
+                    argparse::Namespace const& space) const
     {
         if (!space.unrecognized_args().empty()) {
             auto const& args = space.unrecognized_args();
@@ -5286,8 +5260,7 @@ private:
             auto const& choices = arg.m_choices;
             if (choices.has_value()) {
                 auto str = detail::_remove_quotes(value);
-                if (!str.empty()
-                        && !detail::_is_value_exists(str, choices())) {
+                if (!str.empty() && !detail::_is_value_exists(str, choices())) {
                     auto values
                             = detail::_vector_to_string(choices(), ", ", "'");
                     _throw_error("argument " + arg.m_flags.front()
@@ -5616,8 +5589,7 @@ private:
                     if (info.second == i) {
                         break;
                     }
-                    auto const str
-                            = positional_args.at(i)->usage(m_formatter_class);
+                    auto str = positional_args.at(i)->usage(m_formatter_class);
                     if (!str.empty()) {
                         program += detail::_spaces + str;
                     }
@@ -5730,7 +5702,7 @@ private:
             }
         };
         auto _check_load_args
-                = [this] (std::vector<std::string>& arguments, size_t i)
+                = [this] (std::vector<std::string>& arguments, std::size_t i)
         {
             while (!arguments.at(i).empty()
                    && detail::_is_value_exists(arguments.at(i).front(),
@@ -5748,8 +5720,7 @@ private:
         auto _check_abbreviations
                 = [this, _separate_arg_abbrev, _throw_error, _prefix_chars,
                 &storage, &have_negative_args, &was_pseudo_arg]
-                (std::vector<std::string>& arguments,
-                size_t i,
+                (std::vector<std::string>& arguments, std::size_t i,
                 std::vector<pArgument> const& optionals)
         {
             auto& arg = arguments.at(i);
@@ -5877,8 +5848,8 @@ private:
                         if (splitted.size() == 1) {
                             uint32_t n = 0;
                             uint32_t num_args = tmp->m_num_args;
-                            auto _func = [_throw_error, _store_value, &arg, &n,
-                                    &num_args, &tmp] ()
+                            auto _func = [_throw_error, _store_value,
+                                         &arg, &n, &num_args, &tmp] ()
                             {
                                 if (n == 0) {
                                     switch (tmp->m_nargs) {
@@ -6075,13 +6046,12 @@ private:
         if (!required_args.empty()
                 || pos < positional.size() || subparser_required) {
             std::string args;
-            auto _append_value
-                    = [] (std::string const& value, std::string& args)
+            auto _append_value = [] (std::string const& val, std::string& args)
             {
                 if (!args.empty()) {
                     args += ", ";
                 }
-                args += value;
+                args += val;
             };
             for ( ; pos < positional.size(); ++pos) {
                 if (subparser_required && pos == subparser.second) {
