@@ -3792,7 +3792,7 @@ private:
     std::tuple<Ts...>
     parse_tuple(std::vector<std::string> const& values, seq<Idxs...>) const
     {
-        return {to_type<Ts>(values[Idxs])...};
+        return std::make_tuple(to_type<Ts>(values[Idxs])...);
     }
 
     template <class... Ts>
