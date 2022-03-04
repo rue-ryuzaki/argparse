@@ -3876,7 +3876,7 @@ private:
     {
         auto const pair = detail::_split_delimiter(data, delim);
         auto el1 = try_to_type<T>(pair.first);
-        auto el2 = try_to_type<T>(pair.second);
+        auto el2 = try_to_type<U>(pair.second);
         if (el1.operator bool() && el2.operator bool()) {
             return std::make_pair(el1.value(), el2.value());
         } else {
