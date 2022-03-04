@@ -16,7 +16,7 @@ This project is a C++ adaptation of Python argparse and supports most of its fea
 C++11 support compiler
  - Ubuntu: gcc (tested 5 up to 10), clang (tested 3.9 up to 12)
  - macOS: clang (tested 13 on macos-11)
- - Windows: mingw (tested 8.1), clang (tested 11, 12), msvc (tested 2019, 2022), github legacy: msvc2017
+ - Windows: mingw (tested 8.1), clang (tested 11, 12, 13), msvc (tested 2019, 2022), github legacy: msvc2017
 ## Overview
 - Examples:
   - [code](#code-example) - [usage](#usage-example) - [output](#output)
@@ -225,15 +225,16 @@ int main(int argc, char* argv[])
 ```
 ## Namespace::get<> types support (+ try_get with std::optional, since C++17)
 - basic types (bool, integral types, floating point types, std::string, std::string_view (since C++17))
-- std::pair
 - byte types (char, signed/unsigned char, int8_t, uint8_t, char8_t, std::byte)
 - containers (std::array, std::deque, std::forward_list, std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset, std::unordered_set)
 - mapped types (std::map, std::multimap, std::unordered_map)
+- std::pair
+- std::tuple
 - custom types
 ### Don't work:
 - pointer and reference types
 - plain C arrays
-- containers with std::pair or another containers
+- containers with std::pair/std::tuple or another containers
 - C++17+ types and containers (std::span)
 ## Custom type example
 ### Namespace::get<>
