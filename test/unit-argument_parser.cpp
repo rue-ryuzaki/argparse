@@ -470,7 +470,7 @@ TEST_CASE("8. argument actions", "[argument]")
         REQUIRE(args1.get<bool>("--store_false") == true);
         REQUIRE(args1.get<std::string>("--append") == "");
         REQUIRE(args1.get<std::string>("--append_const") == "");
-        REQUIRE(args1.get<size_t>("--count") == 0);
+        REQUIRE(args1.get<std::size_t>("--count") == 0);
         REQUIRE(args1.get<std::string>("--extend") == "");
         REQUIRE(args1.get<std::vector<std::string> >("--store").size() == 0);
         REQUIRE(args1.get<std::vector<std::string> >("--append").size() == 0);
@@ -485,7 +485,7 @@ TEST_CASE("8. argument actions", "[argument]")
         REQUIRE(args2.get<bool>("--store_false") == false);
         REQUIRE(args2.get<std::string>("--append") == new_value); // TODO : return array value
         REQUIRE(args2.get<std::string>("--append_const") == const_value); // TODO : return array value
-        REQUIRE(args2.get<size_t>("--count") == 1);
+        REQUIRE(args2.get<std::size_t>("--count") == 1);
         REQUIRE(args2.get<std::string>("--extend") == new_value); // TODO : return array value
         REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--append").size() == 1);
@@ -523,7 +523,7 @@ TEST_CASE("8. argument actions", "[argument]")
         REQUIRE(args.get<bool>("store_false") == false);
         REQUIRE(args.get<std::string>("append") == new_value); // TODO : return array value
         REQUIRE(args.get<std::string>("append_const") == const_value); // TODO : return array value
-        REQUIRE(args.get<size_t>("count") == 1);
+        REQUIRE(args.get<std::size_t>("count") == 1);
         REQUIRE(args.get<std::string>("extend") == new_value); // TODO : return array value
         REQUIRE(args.get<std::vector<std::string> >("store").size() == 1);
         REQUIRE(args.get<std::vector<std::string> >("append").size() == 1);
@@ -2230,6 +2230,65 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->size() == 2);
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("foo")->count("key") == 1);
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->count("key") == 2);
+#endif // ARGPARSE_USE_OPTIONAL
+    }
+
+    SECTION("21.2. paired types") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.exists("foo") == false);
+        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE(args0.get<std::vector<std::string> >("foo").size() == 0);
+#ifdef ARGPARSE_USE_OPTIONAL
+        REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
+#endif // ARGPARSE_USE_OPTIONAL
+
+        // delimiter ':'
+        auto args1 = parser.parse_args({ "--foo=key:value" });
+        REQUIRE(args1.exists("foo") == true);
+        REQUIRE(args1.get<std::string>("foo") == "key:value");
+        REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE(args1.get<std::pair<std::string, std::string> >("foo", ':').first == "key");
+        REQUIRE(args1.get<std::pair<std::string, std::string> >("foo", ':').second == "value");
+#ifdef ARGPARSE_USE_OPTIONAL
+        REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
+        REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
+        REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->first == "key");
+        REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->second == "value");
+#endif // ARGPARSE_USE_OPTIONAL
+    }
+
+    SECTION("21.3. tuple") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.exists("foo") == false);
+        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE(args0.get<std::vector<std::string> >("foo").size() == 0);
+
+        // delimiter ':'
+        auto args1 = parser.parse_args({ "--foo=1:value:3" });
+        auto tuple1 = args1.get<std::tuple<int, std::string, int> >("foo", ':');
+        REQUIRE(args1.exists("foo") == true);
+        REQUIRE(args1.get<std::string>("foo") == "1:value:3");
+        REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE(std::get<0>(tuple1) == 1);
+        REQUIRE(std::get<1>(tuple1) == "value");
+        REQUIRE(std::get<2>(tuple1) == 3);
+#ifdef ARGPARSE_USE_OPTIONAL
+        REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args1.try_get<std::string>("foo").value() == "1:value:3");
+        REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
+        auto try_tuple1 = args1.try_get<std::tuple<int, std::string, int> >("foo", ':');
+        REQUIRE(std::get<0>(try_tuple1.value()) == 1);
+        REQUIRE(std::get<1>(try_tuple1.value()) == "value");
+        REQUIRE(std::get<2>(try_tuple1.value()) == 3);
 #endif // ARGPARSE_USE_OPTIONAL
     }
 }
