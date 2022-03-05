@@ -3213,6 +3213,15 @@ public:
         if (args.second.empty()) {
             return T();
         }
+        if (std::isspace(delim)) {
+            if (args.second.size() != 2) {
+                throw
+                TypeError("invalid data for paired argument '" + key + "'");
+            }
+            return std::make_pair(
+                        to_type<typename T::first_type>(args.second.front()),
+                        to_type<typename T::second_type>(args.second.at(1)));
+        }
         if (args.second.size() != 1) {
             throw
             TypeError("trying to get data from array argument '" + key + "'");
@@ -3265,6 +3274,9 @@ public:
         }
         if (args.second.empty()) {
             return T();
+        }
+        if (std::isspace(delim)) {
+            return to_tuple(type_tag<T>{}, args.second);
         }
         if (args.second.size() != 1) {
             throw
@@ -3608,6 +3620,18 @@ public:
         if (args->second.empty()) {
             return T();
         }
+        if (std::isspace(delim)) {
+            if (args->second.size() != 2) {
+                return {};
+            }
+            auto el1 = try_to_type<typename T::first_type>(args->second.at(0));
+            auto el2 = try_to_type<typename T::second_type>(args->second.at(1));
+            if (el1.operator bool() && el2.operator bool()) {
+                return std::make_pair(el1.value(), el2.value());
+            } else {
+                return {};
+            }
+        }
         if (args->second.size() != 1) {
             return {};
         }
@@ -3669,6 +3693,9 @@ public:
         }
         if (args->second.empty()) {
             return T();
+        }
+        if (std::isspace(delim)) {
+            return try_to_tuple(type_tag<T>{}, args->second);
         }
         if (args->second.size() != 1) {
             return {};
