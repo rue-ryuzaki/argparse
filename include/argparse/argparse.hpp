@@ -515,8 +515,10 @@ _split_to_args(std::string const& str)
     std::deque<char> quotes;
     for (std::size_t i = 0; i < str.size(); ++i) {
         auto c = str.at(i);
+        bool skip = false;
         if (c == '\\') {
             // skip space
+            skip = true;
             if (++i == str.size()) {
                 value += c;
                 break;
@@ -527,7 +529,9 @@ _split_to_args(std::string const& str)
                 c = str.at(i);
             }
         }
-        if (std::isspace(static_cast<unsigned char>(c)) && quotes.empty()) {
+        if (((c == _space && !skip)
+             || (c != _space && std::isspace(static_cast<unsigned char>(c))))
+                && quotes.empty()) {
             _store_value(value);
         } else {
             if (c == '\"' || c == '\'') {
