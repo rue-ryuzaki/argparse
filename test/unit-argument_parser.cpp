@@ -2260,6 +2260,23 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->first == "key");
         REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->second == "value");
 #endif // ARGPARSE_USE_OPTIONAL
+
+        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+
+        parser2.add_argument("--foo").action("store").nargs(2).help("foo help");
+
+        // delimiter ' '
+        auto args2 = parser2.parse_args({ "--foo", "key", "value" });
+        // or parser2.parse_args("--foo key value");
+        REQUIRE(args2.exists("foo") == true);
+        REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 2);
+        REQUIRE(args2.get<std::pair<std::string, std::string> >("foo", ' ').first == "key");
+        REQUIRE(args2.get<std::pair<std::string, std::string> >("foo", ' ').second == "value");
+#ifdef ARGPARSE_USE_OPTIONAL
+        REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 2);
+        REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->first == "key");
+        REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->second == "value");
+#endif // ARGPARSE_USE_OPTIONAL
     }
 
     SECTION("21.3. tuple") {
@@ -2289,6 +2306,27 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(std::get<0>(try_tuple1.value()) == 1);
         REQUIRE(std::get<1>(try_tuple1.value()) == "value");
         REQUIRE(std::get<2>(try_tuple1.value()) == 3);
+#endif // ARGPARSE_USE_OPTIONAL
+
+        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+
+        parser2.add_argument("--foo").action("store").nargs(3).help("foo help");
+
+        // delimiter ' '
+        auto args2 = parser2.parse_args({ "--foo", "1", "value", "3" });
+        // or parser2.parse_args("--foo 1 value 3");
+        auto tuple2 = args2.get<std::tuple<int, std::string, int> >("foo", ' ');
+        REQUIRE(args2.exists("foo") == true);
+        REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 3);
+        REQUIRE(std::get<0>(tuple2) == 1);
+        REQUIRE(std::get<1>(tuple2) == "value");
+        REQUIRE(std::get<2>(tuple2) == 3);
+#ifdef ARGPARSE_USE_OPTIONAL
+        REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 3);
+        auto try_tuple2 = args2.try_get<std::tuple<int, std::string, int> >("foo", ' ');
+        REQUIRE(std::get<0>(try_tuple2.value()) == 1);
+        REQUIRE(std::get<1>(try_tuple2.value()) == "value");
+        REQUIRE(std::get<2>(try_tuple2.value()) == 3);
 #endif // ARGPARSE_USE_OPTIONAL
     }
 }
