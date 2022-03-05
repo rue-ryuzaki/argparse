@@ -3869,7 +3869,7 @@ private:
             return T();
         }
         T result;
-        std::stringstream ss(data);
+        std::stringstream ss(detail::_remove_quotes(data));
         ss >> result;
         if (ss.fail() || !ss.eof()) {
             throw TypeError("can't convert value '" + data + "'");
@@ -3995,7 +3995,7 @@ private:
             return T();
         }
         T result;
-        std::stringstream ss(data);
+        std::stringstream ss(detail::_remove_quotes(data));
         ss >> result;
         if (ss.fail() || !ss.eof()) {
             return {};
