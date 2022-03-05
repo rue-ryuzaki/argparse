@@ -527,17 +527,21 @@ _split_to_args(std::string const& str)
                 c = str.at(i);
             }
         }
-        if (std::isspace(c) && quotes.empty()) {
+        if (std::isspace(static_cast<unsigned char>(c)) && quotes.empty()) {
             _store_value(value);
         } else {
             if (c == '\"' || c == '\'') {
                 if (!quotes.empty()
                         && quotes.back() == c
                         && (i + 1 == str.size()
-                            || std::isspace(str.at(i + 1))
-                            || std::ispunct(str.at(i + 1)))) {
+                            || std::isspace(static_cast<unsigned char>(
+                                                str.at(i + 1)))
+                            || std::ispunct(static_cast<unsigned char>(
+                                                str.at(i + 1))))) {
                     quotes.pop_back();
-                } else if (value.empty() || std::ispunct(value.back())) {
+                } else if (value.empty()
+                           || std::ispunct(static_cast<unsigned char>(
+                                               value.back()))) {
                     quotes.push_back(c);
                 }
             }
@@ -3215,7 +3219,7 @@ public:
         if (args.second.empty()) {
             return T();
         }
-        if (std::isspace(delim)) {
+        if (std::isspace(static_cast<unsigned char>(delim))) {
             if (args.second.size() != 2) {
                 throw
                 TypeError("invalid data for paired argument '" + key + "'");
@@ -3277,7 +3281,7 @@ public:
         if (args.second.empty()) {
             return T();
         }
-        if (std::isspace(delim)) {
+        if (std::isspace(static_cast<unsigned char>(delim))) {
             return to_tuple(type_tag<T>{}, args.second);
         }
         if (args.second.size() != 1) {
@@ -3622,7 +3626,7 @@ public:
         if (args->second.empty()) {
             return T();
         }
-        if (std::isspace(delim)) {
+        if (std::isspace(static_cast<unsigned char>(delim))) {
             if (args->second.size() != 2) {
                 return {};
             }
@@ -3696,7 +3700,7 @@ public:
         if (args->second.empty()) {
             return T();
         }
-        if (std::isspace(delim)) {
+        if (std::isspace(static_cast<unsigned char>(delim))) {
             return try_to_tuple(type_tag<T>{}, args->second);
         }
         if (args->second.size() != 1) {
@@ -3799,7 +3803,7 @@ private:
     to_paired_vector(std::vector<std::string> const& args, char delim) const
     {
         std::vector<std::pair<T, U> > vec;
-        if (std::isspace(delim)) {
+        if (std::isspace(static_cast<unsigned char>(delim))) {
             if (args.size() & 1) {
                 throw TypeError("invalid stored argument amount");
             }
