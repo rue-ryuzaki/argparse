@@ -514,10 +514,9 @@ _split_to_args(std::string const& str)
     std::string value;
     std::deque<char> quotes;
     for (std::size_t i = 0; i < str.size(); ++i) {
-        bool skip = false;
         auto c = str.at(i);
         if (c == '\\') {
-            skip = true;
+            // skip space
             if (++i == str.size()) {
                 value += c;
                 break;
@@ -528,14 +527,17 @@ _split_to_args(std::string const& str)
                 c = str.at(i);
             }
         }
-        if (((c == _space && !skip) || c == '\t' || c == '\n')
-                && quotes.empty()) {
+        if (std::isspace(c) && quotes.empty()) {
             _store_value(value);
         } else {
             if (c == '\"' || c == '\'') {
-                if (!quotes.empty() && quotes.back() == c) {
+                if (!quotes.empty()
+                        && quotes.back() == c
+                        && (i + 1 == str.size()
+                            || std::isspace(str.at(i + 1))
+                            || std::ispunct(str.at(i + 1)))) {
                     quotes.pop_back();
-                } else if (value.empty()) {
+                } else if (value.empty() || std::ispunct(value.back())) {
                     quotes.push_back(c);
                 }
             }
@@ -544,7 +546,7 @@ _split_to_args(std::string const& str)
     }
     _store_value(value);
     if (!quotes.empty()) {
-        std::cerr << "incorrect string: '" << str << "'" << std::endl;
+        std::cerr << "possible incorrect string: '" << str << "'" << std::endl;
     }
     return result;
 }
