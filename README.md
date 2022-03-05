@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 ## Subparsers example
 If you want to use subcommands with arguments (like git commands: git clone URL -b BRANCH, git merge --ff, git status), use subparsers.
 
-If you need to get the subparser's parser name, set dest value to the subparser, or use [handle](https://github.com/rue-ryuzaki/argparse#parserhandlestdfunctionvoidstdstring-func--gets-parser-name) in parsers.
+If you need to get the subparser's parser name, set dest value to the subparser, or use [handle](https://github.com/rue-ryuzaki/argparse#parserhandlestdfunctionvoidstdstring-func) in parsers.
 
 Note:
 
