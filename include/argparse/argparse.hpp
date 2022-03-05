@@ -3797,9 +3797,20 @@ private:
     to_paired_vector(std::vector<std::string> const& args, char delim) const
     {
         std::vector<std::pair<T, U> > vec;
-        vec.reserve(args.size());
-        for (auto const& arg : args) {
-            vec.emplace_back(to_pair<T, U>(arg, delim));
+        if (std::isspace(delim)) {
+            if (args.size() & 1) {
+                throw TypeError("invalid stored argument amount");
+            }
+            vec.reserve(args.size() / 2);
+            for (std::size_t i = 0; i < args.size(); i += 2) {
+                vec.emplace_back(std::make_pair(to_type<T>(args.at(i)),
+                                                to_type<U>(args.at(i + 1))));
+            }
+        } else {
+            vec.reserve(args.size());
+            for (auto const& arg : args) {
+                vec.emplace_back(to_pair<T, U>(arg, delim));
+            }
         }
         return vec;
     }
