@@ -4952,25 +4952,28 @@ public:
     void
     set_defaults(std::vector<std::pair<std::string, std::string> > const& pairs)
     {
-        auto _set_value = []
-                (Argument& arg, std::string const& dest, std::string const& val)
+        auto _set_value
+                = [] (std::deque<pArgument>& arguments,
+                std::string const& dest, std::string const& val)
         {
-            if (arg.m_type == Argument::Positional) {
-                if (detail::_is_value_exists(dest, arg.m_flags)) {
-                    arg.default_value(val);
-                    return true;
-                }
-            } else if (!arg.m_dest_str.empty()) {
-                if (arg.m_dest_str == dest) {
-                    arg.default_value(val);
-                    return true;
-                }
-            } else {
-                for (auto const& flag : arg.m_flags) {
-                    auto name = detail::_flag_name(flag);
-                    if (flag == dest || name == dest) {
-                        arg.default_value(val);
+            for (auto& arg : arguments) {
+                if (arg->m_type == Argument::Positional) {
+                    if (detail::_is_value_exists(dest, arg->m_flags)) {
+                        arg->default_value(val);
                         return true;
+                    }
+                } else if (!arg->m_dest_str.empty()) {
+                    if (arg->m_dest_str == dest) {
+                        arg->default_value(val);
+                        return true;
+                    }
+                } else {
+                    for (auto const& flag : arg->m_flags) {
+                        auto name = detail::_flag_name(flag);
+                        if (flag == dest || name == dest) {
+                            arg->default_value(val);
+                            return true;
+                        }
                     }
                 }
             }
@@ -4982,28 +4985,12 @@ public:
                 continue;
             }
             auto value = detail::_trim_copy(pair.second);
-            bool found = false;
-            for (auto& parent : m_parents) {
-                for (auto& arg : parent.m_arguments) {
-                    if (_set_value(*arg, dest, value)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (found) {
-                    break;
-                }
+            auto it = std::begin(m_parents);
+            for ( ; it != std::end(m_parents)
+                  && !_set_value(it->m_arguments, dest, value); ++it) {
             }
-            if (found) {
-                continue;
-            }
-            for (auto& arg : m_arguments) {
-                if (_set_value(*arg, dest, value)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
+            if (it == std::end(m_parents)
+                    && !_set_value(m_arguments, dest, value)) {
                 m_default_values.push_back(std::make_pair(dest, value));
             }
         }
@@ -6349,7 +6336,7 @@ private:
 
     SubparserInfo subpurser_info(bool add_suppress = true) const
     {
-        SubparserInfo res = std::make_pair(nullptr, 0);
+        SubparserInfo res = std::make_pair(m_subparsers, 0);
         auto _func = [&res, add_suppress] (ArgumentParser const& parser)
         {
             std::size_t size = std::min(parser.m_subparsers->m_position,
@@ -6362,7 +6349,6 @@ private:
             }
         };
         if (m_subparsers) {
-            res.first = m_subparsers;
             for (auto const& parent : m_parents) {
                 res.second
                       += parent.positional_arguments(add_suppress, true).size();
@@ -6490,7 +6476,7 @@ private:
                       bool help_added,
                       std::deque<pGroup> const& groups,
                       std::deque<ExclusiveGroup> const& exclusive,
-                      SubparserInfo const& subparser,
+                      SubparserInfo const& subparser_info,
                       std::string const& program,
                       std::string const& usage,
                       std::string const& description,
@@ -6501,10 +6487,10 @@ private:
             os << "usage: " << usage << std::endl;
         } else {
             print_custom_usage(positional_all, optional_all, groups, exclusive,
-                               subparser, program, os);
+                               subparser_info, program, os);
         }
-        auto _use_text_formatter = []
-                (std::string const& value, HelpFormatter formatter)
+        auto _use_text_formatter
+                = [] (std::string const& value, HelpFormatter formatter)
         {
             auto res = value;
             if (!(formatter
@@ -6527,9 +6513,9 @@ private:
         }
         std::size_t min_size = 0;
         bool show_default = m_formatter_class & ArgumentDefaultsHelpFormatter;
-        bool sub_positional = subparser.first
-                && subparser.first->title().empty()
-                && subparser.first->description().empty();
+        auto subparser = subparser_info.first;
+        bool sub_positional = subparser && subparser->title().empty()
+                              && subparser->description().empty();
         for (auto const& arg : positional) {
             auto size = arg->flags_to_string(m_formatter_class).size();
             if (min_size < size) {
@@ -6549,36 +6535,32 @@ private:
         if (!positional.empty() || sub_positional) {
             os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
-                if (sub_positional && subparser.second == i) {
-                    os << subparser.first->print(m_formatter_class, min_size)
-                       << "\n";
+                if (sub_positional && subparser_info.second == i) {
+                    os << subparser->print(m_formatter_class, min_size) << "\n";
                 }
                 os << positional.at(i)->print(false, m_argument_default,
                                               m_formatter_class, min_size)
                    << std::endl;
             }
-            if (sub_positional && subparser.second == positional.size()) {
-                os << subparser.first->print(m_formatter_class, min_size)
-                   << std::endl;
-                for (auto const& arg : subparser.first->m_parsers) {
+            if (sub_positional && subparser_info.second == positional.size()) {
+                os << subparser->print(m_formatter_class, min_size) << "\n";
+                for (auto const& arg : subparser->m_parsers) {
                     os << arg.print(m_formatter_class, min_size) << std::endl;
                 }
             }
         }
         if (!optional.empty()) {
-            os << "\noptional arguments:" << std::endl;
+            os << "\noptional arguments:\n";
             for (auto i = std::begin(optional); i != std::end(optional); ++i) {
                 os << (*i)->print(show_default
                                   && !(help_added && i == std::begin(optional)),
                                   m_argument_default,
-                                  m_formatter_class, min_size)
-                   << std::endl;
+                                  m_formatter_class, min_size) << std::endl;
             }
         }
         for (auto const& group : groups) {
-            if ((subparser.first
-                 && (group != subparser.first || !sub_positional))
-                    || (!subparser.first && group != subparser.first)) {
+            if ((subparser && (group != subparser || !sub_positional))
+                    || (!subparser && group != subparser)) {
                 group->print_help(os, show_default, m_argument_default,
                                   m_formatter_class, min_size);
             }
