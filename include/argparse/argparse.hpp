@@ -4554,7 +4554,7 @@ public:
      */
     explicit
     ArgumentParser(int argc, char const* argv[])
-        : ArgumentParser()
+        : ArgumentParser("untitled")
     {
         if (argc > 0 && argv != nullptr && argv[0] != nullptr) {
             m_prog = detail::_file_name(argv[0]);
