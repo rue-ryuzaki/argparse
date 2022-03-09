@@ -733,17 +733,15 @@ private:
 };
 
 static inline bool
-_correct_type_names(std::string const& expected,
-                    std::string const& received)
+_is_type_name_correct(std::string const& expected, std::string const& received)
 {
     return expected.empty() || received == expected;
 }
 
 static inline void
-_check_type_names(Value<std::string> const& expected,
-                  std::string const& received)
+_check_type_name(Value<std::string> const& expected,std::string const& received)
 {
-    if (expected.has_value() && !_correct_type_names(expected(), received)) {
+    if (expected.has_value() && !_is_type_name_correct(expected(), received)) {
         throw TypeError("type_name missmatch: expected " + expected()
                         + ", received " + received);
     }
@@ -774,11 +772,11 @@ class Argument
 
     enum Nargs
     {
-        NARGS_DEF,      // ""
-        NARGS_INT,      // "N"
-        ONE_OR_MORE,    // "+"
-        OPTIONAL,       // "*"
-        ZERO_OR_MORE,   // "?"
+        NARGS_DEF   = 0x01, // ""
+        NARGS_NUM   = 0x02, // "N"
+        ONE_OR_MORE = 0x04, // "+"
+        OPTIONAL    = 0x08, // "*"
+        ZERO_OR_MORE= 0x10, // "?"
     };
 
     enum Type
@@ -1110,7 +1108,7 @@ public:
                 // fallthrough
             case Action::BooleanOptionalAction :
                 m_const = "1";
-                m_nargs = NARGS_INT;
+                m_nargs = NARGS_NUM;
                 m_nargs_str = "0";
                 m_num_args = 0;
                 m_choices.clear();
@@ -1121,7 +1119,7 @@ public:
             case Action::store_const :
             case Action::append_const :
                 m_const = std::string();
-                m_nargs = NARGS_INT;
+                m_nargs = NARGS_NUM;
                 m_nargs_str = "0";
                 m_num_args = 0;
                 m_choices.clear();
@@ -1138,7 +1136,7 @@ public:
                 // fallthrough
             case Action::count :
                 m_const.clear();
-                m_nargs = NARGS_INT;
+                m_nargs = NARGS_NUM;
                 m_nargs_str = "0";
                 m_num_args = 0;
                 m_choices.clear();
@@ -1200,7 +1198,7 @@ public:
             default:
                 throw ValueError("unknown action");
         }
-        m_nargs = NARGS_INT;
+        m_nargs = NARGS_NUM;
         m_nargs_str = std::to_string(value);
         m_num_args = value;
         return *this;
@@ -1768,7 +1766,7 @@ private:
             case ZERO_OR_MORE :
                 res += "[" +  name + " ...]";
                 break;
-            case NARGS_INT :
+            case NARGS_NUM :
                 for (uint32_t i = 0; i < m_num_args; ++i) {
                     if (i != 0) {
                         res += detail::_spaces;
@@ -1816,7 +1814,7 @@ private:
                 return "argument " + arg + ": expected one argument";
             case ONE_OR_MORE :
                 return "argument " + arg + ": expected at least one argument";
-            case NARGS_INT :
+            case NARGS_NUM :
                 return "argument " + arg + ": expected " + nargs()
                         + " arguments";
             default :
@@ -3077,8 +3075,8 @@ public:
     get(std::string const& key) const
     {
         auto const& args = data(key);
-        detail::_check_type_names(args.first->m_type_name,
-                                  detail::_type_name<T>());
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<T>());
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3107,8 +3105,8 @@ public:
     get(std::string const& key) const
     {
         auto const& args = data(key);
-        detail::_check_type_names(args.first->m_type_name,
-                                  detail::_type_name<T>());
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<T>());
         if (args.first->m_action == Action::count) {
             return T(args.second.size());
         }
@@ -3135,8 +3133,8 @@ public:
     get(std::string const& key) const
     {
         auto const& args = data(key);
-        detail::_check_type_names(args.first->m_type_name,
-                                  detail::_type_name<typename T::value_type>());
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<typename T::value_type>());
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3164,8 +3162,8 @@ public:
     get(std::string const& key) const
     {
         auto const& args = data(key);
-        detail::_check_type_names(args.first->m_type_name,
-                                  detail::_type_name<typename T::value_type>());
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<typename T::value_type>());
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3187,7 +3185,7 @@ public:
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
-        detail::_check_type_names(args.first->m_type_name,
+        detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<typename T::mapped_type>());
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
@@ -3215,8 +3213,8 @@ public:
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
-        detail::_check_type_names(args.first->m_type_name,
-                                  detail::_type_name<T>());
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<T>());
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3253,8 +3251,8 @@ public:
     get(std::string const& key) const
     {
         auto const& args = data(key);
-        detail::_check_type_names(args.first->m_type_name,
-                                  detail::_type_name<typename T::value_type>());
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<typename T::value_type>());
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3277,8 +3275,8 @@ public:
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
-        detail::_check_type_names(args.first->m_type_name,
-                                  detail::_type_name<T>());
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<T>());
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3319,8 +3317,8 @@ public:
     get(std::string const& key) const
     {
         auto const& args = data(key);
-        detail::_check_type_names(args.first->m_type_name,
-                                  detail::_type_name<T>());
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<T>());
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3466,8 +3464,8 @@ public:
                 || args->first->m_action == Action::count
                 || args->second.empty()
                 || args->second.size() != 1
-                || !detail::_correct_type_names(args->first->type_name(),
-                                                detail::_type_name<T>())) {
+                || !detail::_is_type_name_correct(args->first->type_name(),
+                                                  detail::_type_name<T>())) {
             return {};
         }
         return try_to_type<T>(args->second.front());
@@ -3490,8 +3488,8 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || !detail::_correct_type_names(args->first->type_name(),
-                                                detail::_type_name<T>())) {
+                || !detail::_is_type_name_correct(args->first->type_name(),
+                                                  detail::_type_name<T>())) {
             return {};
         }
         if (args->first->m_action == Action::count) {
@@ -3520,7 +3518,7 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->m_action == Action::count
-                || !detail::_correct_type_names(
+                || !detail::_is_type_name_correct(
                         args->first->type_name(),
                         detail::_type_name<typename T::value_type>())) {
             return {};
@@ -3556,7 +3554,7 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->m_action == Action::count
-                || !detail::_correct_type_names(
+                || !detail::_is_type_name_correct(
                         args->first->type_name(),
                         detail::_type_name<typename T::value_type>())) {
             return {};
@@ -3586,7 +3584,7 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->m_action == Action::count
-                || !detail::_correct_type_names(
+                || !detail::_is_type_name_correct(
                         args->first->type_name(),
                         detail::_type_name<typename T::mapped_type>())) {
             return {};
@@ -3623,8 +3621,8 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->m_action == Action::count
-                || !detail::_correct_type_names(args->first->type_name(),
-                                                detail::_type_name<T>())) {
+                || !detail::_is_type_name_correct(args->first->type_name(),
+                                                  detail::_type_name<T>())) {
             return {};
         }
         if (args->second.empty()) {
@@ -3666,7 +3664,7 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->m_action == Action::count
-                || !detail::_correct_type_names(
+                || !detail::_is_type_name_correct(
                         args->first->type_name(),
                         detail::_type_name<typename T::value_type>())) {
             return {};
@@ -3697,8 +3695,8 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->m_action == Action::count
-                || !detail::_correct_type_names(args->first->type_name(),
-                                                detail::_type_name<T>())) {
+                || !detail::_is_type_name_correct(args->first->type_name(),
+                                                  detail::_type_name<T>())) {
             return {};
         }
         if (args->second.empty()) {
@@ -3741,8 +3739,8 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->m_action == Action::count
-                || !detail::_correct_type_names(args->first->type_name(),
-                                                detail::_type_name<T>())) {
+                || !detail::_is_type_name_correct(args->first->type_name(),
+                                                  detail::_type_name<T>())) {
             return {};
         }
         return try_to_type<T>(detail::_vector_to_string(args->second));
@@ -4490,7 +4488,7 @@ public:
             return "{" + res + "}";
         }
 
-        std::string
+        inline std::string
         print(HelpFormatter formatter,
               std::size_t limit = detail::_argument_help_limit) const
         {
@@ -5535,7 +5533,7 @@ private:
                         case Argument::ZERO_OR_MORE :
                             _store_default_value(arg);
                             break;
-                        case Argument::NARGS_INT :
+                        case Argument::NARGS_NUM :
                             for (std::size_t n = 0; n < arg->m_num_args; ++n) {
                                 _store_first_value(arg, arguments);
                             }
@@ -5575,7 +5573,7 @@ private:
                                 _store_default_value(arg);
                             }
                             break;
-                        case Argument::NARGS_INT :
+                        case Argument::NARGS_NUM :
                             for (std::size_t n = 0; n < arg->m_num_args; ++n) {
                                 _store_first_value(arg, arguments);
                             }
@@ -5603,7 +5601,7 @@ private:
                                 _store_default_value(arg);
                             }
                             break;
-                        case Argument::NARGS_INT :
+                        case Argument::NARGS_NUM :
                             for (std::size_t n = 0; n < arg->m_num_args; ++n) {
                                 _store_first_value(arg, arguments);
                             }
@@ -5996,7 +5994,7 @@ private:
                                 if (n == 0) {
                                     switch (tmp->m_nargs) {
                                         case Argument::NARGS_DEF :
-                                        case Argument::NARGS_INT :
+                                        case Argument::NARGS_NUM :
                                         case Argument::ONE_OR_MORE :
                                             _throw_error(tmp->error_nargs(arg));
                                             break;
@@ -6007,7 +6005,7 @@ private:
                                         default :
                                             break;
                                     }
-                                } else if (tmp->m_nargs == Argument::NARGS_INT
+                                } else if (tmp->m_nargs == Argument::NARGS_NUM
                                            && n < num_args) {
                                     _throw_error(tmp->error_nargs(arg));
                                 }
@@ -6034,7 +6032,7 @@ private:
                                 }
                             } while ((tmp->m_nargs != Argument::NARGS_DEF
                                       && tmp->m_nargs != Argument::OPTIONAL
-                                      && (tmp->m_nargs != Argument::NARGS_INT
+                                      && (tmp->m_nargs != Argument::NARGS_NUM
                                           || n != num_args)));
                         } else {
                             if (tmp->m_nargs != Argument::NARGS_DEF
@@ -6204,8 +6202,8 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    if (arg->m_nargs == Argument::OPTIONAL
-                            || arg->m_nargs == Argument::ZERO_OR_MORE) {
+                    if (arg->m_nargs
+                            & (Argument::OPTIONAL | Argument::ZERO_OR_MORE)) {
                         _store_default_value(arg);
                         continue;
                     }
