@@ -10,6 +10,35 @@ env:
   BUILD_TYPE: Release
 
 jobs:
+  gcc-ubuntu18-11:
+    runs-on: ubuntu-18.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        gcc: ['4.8']
+        standard: [11]
+
+    env:
+      CC: gcc-${{ matrix.gcc }}
+      CXX: g++-${{ matrix.gcc }}
+
+    steps:
+    - name: Install GCC
+      run: sudo apt-get install gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
+
+    - uses: actions/checkout@v2
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C ${{env.BUILD_TYPE}}
+
   gcc-ubuntu18-14:
     runs-on: ubuntu-18.04
 
