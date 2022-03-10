@@ -652,12 +652,15 @@ _type_name()
 #if !defined(__PRETTY_FUNCTION__) && !defined(__GNUC__)
     std::string res = __FUNCSIG__;
     auto pos = res.find("__cdecl");
-    return res.substr(pos + 27, res.size() - pos - 34);
+    return res.substr(pos + 27, res.size() - pos - 27 - 7);
+#elif defined(__clang__)
+    std::string res = __PRETTY_FUNCTION__;
+    auto pos = res.find('=') + 2;
+    return res.substr(pos, res.size() - pos - 1);
 #else
     std::string res = __PRETTY_FUNCTION__;
-    auto pos = res.find('=');
-    auto next = res.find(';', pos + 3);
-    return res.substr(pos + 2, next - pos - 2);
+    auto pos = res.find('=') + 2;
+    return res.substr(pos, res.find(';', pos) - pos);
 #endif // __PRETTY_FUNCTION__
 }
 
