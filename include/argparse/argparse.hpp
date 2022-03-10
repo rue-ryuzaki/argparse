@@ -657,10 +657,12 @@ _type_name()
     std::string res = __PRETTY_FUNCTION__;
     auto pos = res.find('=') + 2;
     return res.substr(pos, res.size() - pos - 1);
-#else
+#elif defined(__GNUC__)
     std::string res = __PRETTY_FUNCTION__;
     auto pos = res.find('=') + 2;
     return res.substr(pos, res.find(';', pos) - pos);
+#else
+    return std::string();
 #endif // __PRETTY_FUNCTION__
 }
 
@@ -745,8 +747,8 @@ static inline void
 _check_type_name(Value<std::string> const& expected,std::string const& received)
 {
     if (expected.has_value() && !_is_type_name_correct(expected(), received)) {
-        throw TypeError("type_name missmatch: expected " + expected()
-                        + ", received " + received);
+        throw TypeError("type_name missmatch: expected '" + expected() + "'"
+                        + ", received '" + received + "'");
     }
 }
 } // details
