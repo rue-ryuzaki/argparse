@@ -1989,7 +1989,7 @@ public:
     /*!
      *  \brief Copy argument data object from another argument data
      *
-     *  \param rhs Exclusive group object to copy
+     *  \param rhs ArgumentData data object to copy
      *
      *  \return Current argument data reference
      */
@@ -6147,8 +6147,7 @@ private:
         if (!intermixed_args.empty()) {
             _match_args_partial(intermixed_args);
         }
-        auto _check_exclusive_groups
-                = [_custom_error, &storage]
+        auto _check_mutex_groups = [_custom_error, &storage]
                 (Parser const* p, std::deque<ExclusiveGroup> const& groups)
         {
             for (auto const& ex : groups) {
@@ -6175,9 +6174,9 @@ private:
                 }
             }
         };
-        _check_exclusive_groups(nullptr, m_mutex_groups);
+        _check_mutex_groups(nullptr, m_mutex_groups);
         if (parser) {
-            _check_exclusive_groups(parser, parser->m_mutex_groups);
+            _check_mutex_groups(parser, parser->m_mutex_groups);
         }
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
@@ -6379,7 +6378,7 @@ private:
                  std::vector<pArgument> const& positional,
                  std::vector<pArgument> const& optional,
                  std::deque<pGroup> const& groups,
-                 std::deque<ExclusiveGroup> const& exclusive,
+                 std::deque<ExclusiveGroup> const& mutex_groups,
                  SubparserInfo const& subparser,
                  std::string const& program)
     {
@@ -6392,7 +6391,7 @@ private:
             }
         }
         auto ex_opt = optional;
-        for (auto const& ex : exclusive) {
+        for (auto const& ex : mutex_groups) {
             for (auto arg : ex.m_arguments) {
                 ex_opt.erase(std::remove(std::begin(ex_opt),
                                          std::end(ex_opt), arg),
@@ -6438,7 +6437,7 @@ private:
         for (auto const& arg : ex_opt) {
             _arg_usage(arg->usage(formatter), true);
         }
-        for (auto const& ex : exclusive) {
+        for (auto const& ex : mutex_groups) {
             _arg_usage(ex.usage(formatter), false);
         }
         for (std::size_t i = 0; i < positional.size(); ++i) {
