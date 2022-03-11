@@ -1764,7 +1764,8 @@ private:
         auto formatted = detail::_help_formatter(formatter, res, limit, help());
         if (!formatted.empty()) {
             res += formatted;
-            if (show_default_value && m_type == Optional) {
+            if (show_default_value && m_type == Optional
+                    && !(m_action & (Action::help | Action::version))) {
                 auto const& def = (m_default.has_value()
                                    || !argument_default.has_value())
                         ? m_default : argument_default;
