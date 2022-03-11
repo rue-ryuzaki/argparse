@@ -884,6 +884,7 @@ public:
           m_num_args(1),
           m_const(),
           m_default(),
+          m_default_type(),
           m_type_name(),
           m_choices(),
           m_required(),
@@ -916,6 +917,7 @@ public:
           m_num_args(orig.m_num_args),
           m_const(orig.m_const),
           m_default(orig.m_default),
+          m_default_type(orig.m_default_type),
           m_type_name(orig.m_type_name),
           m_choices(orig.m_choices),
           m_required(orig.m_required),
@@ -948,6 +950,7 @@ public:
           m_num_args(std::move(orig.m_num_args)),
           m_const(std::move(orig.m_const)),
           m_default(std::move(orig.m_default)),
+          m_default_type(std::move(orig.m_default_type)),
           m_type_name(std::move(orig.m_type_name)),
           m_choices(std::move(orig.m_choices)),
           m_required(std::move(orig.m_required)),
@@ -982,6 +985,7 @@ public:
             this->m_num_args    = rhs.m_num_args;
             this->m_const       = rhs.m_const;
             this->m_default     = rhs.m_default;
+            this->m_default_type= rhs.m_default_type;
             this->m_type_name   = rhs.m_type_name;
             this->m_choices     = rhs.m_choices;
             this->m_required    = rhs.m_required;
@@ -1018,6 +1022,7 @@ public:
             this->m_num_args    = std::move(rhs.m_num_args);
             this->m_const       = std::move(rhs.m_const);
             this->m_default     = std::move(rhs.m_default);
+            this->m_default_type= std::move(rhs.m_default_type);
             this->m_type_name   = std::move(rhs.m_type_name);
             this->m_choices     = std::move(rhs.m_choices);
             this->m_required    = std::move(rhs.m_required);
@@ -1325,6 +1330,7 @@ public:
     inline Argument& default_value(std::string const& value)
     {
         m_default = detail::_trim_copy(value);
+        m_default_type.clear();
         return *this;
     }
 
@@ -1343,6 +1349,23 @@ public:
         std::stringstream ss;
         ss << value;
         m_default = ss.str();
+        m_default_type.clear();
+        return *this;
+    }
+
+    /*!
+     *  \brief Suppress argument 'default' value
+     *
+     *  \param value argparse::SUPPRESS
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& default_value(Enum value)
+    {
+        if (value != SUPPRESS) {
+            throw TypeError("got an unexpected keyword argument 'default'");
+        }
+        m_default_type = value;
         return *this;
     }
 
@@ -1853,6 +1876,7 @@ private:
     uint32_t    m_num_args;
     detail::Value<std::string> m_const;
     detail::Value<std::string> m_default;
+    detail::Value<Enum> m_default_type;
     detail::Value<std::string> m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
     detail::Value<bool> m_required;
@@ -4528,6 +4552,7 @@ public:
           m_formatter_class(),
           m_fromfile_prefix_chars(),
           m_argument_default(),
+          m_argument_default_type(),
           m_add_help(true),
           m_allow_abbrev(true),
           m_exit_on_error(true),
@@ -4743,11 +4768,29 @@ public:
     inline ArgumentParser& argument_default(std::string const& param)
     {
         m_argument_default = detail::_trim_copy(param);
+        m_argument_default_type.clear();
         return *this;
     }
 
     /*!
-     *  \brief Set argument parser 'argument_default' value
+     *  \brief Suppress argument parser 'argument_default' value
+     *
+     *  \param value argparse::SUPPRESS
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& argument_default(Enum value)
+    {
+        if (value != SUPPRESS) {
+            throw
+            TypeError("got an unexpected keyword argument 'argument_default'");
+        }
+        m_argument_default_type = value;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument parser 'conflict_handler' value
      *
      *  \param param Argument default value
      *
@@ -6578,6 +6621,7 @@ private:
     HelpFormatter m_formatter_class;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
+    detail::Value<Enum> m_argument_default_type;
     bool m_add_help;
     bool m_allow_abbrev;
     bool m_exit_on_error;
