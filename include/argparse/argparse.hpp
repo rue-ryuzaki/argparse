@@ -1770,8 +1770,7 @@ private:
                 auto const& def = (m_default.has_value()
                                    || !argument_default.has_value())
                         ? m_default : argument_default;
-                if ((m_default_type.has_value()
-                     && m_default_type() == SUPPRESS)
+                if ((m_default_type.has_value() && m_default_type() == SUPPRESS)
                         || (suppress_default && !def.has_value())) {
                     return res;
                 }
@@ -6280,10 +6279,17 @@ private:
             throw_error("unrecognized arguments: "
                         + detail::_vector_to_string(unrecognized_args));
         }
+        bool suppress_default = m_argument_default_type.has_value()
+                && m_argument_default_type() == SUPPRESS;
         for (auto& arg : storage) {
             if (arg.second.empty() && arg.first->m_action != Action::count
                     && arg.first->m_type == Argument::Optional) {
                 auto const& value = default_argument_value(*arg.first);
+                if ((arg.first->m_default_type.has_value()
+                     && arg.first->m_default_type() == SUPPRESS)
+                        || (suppress_default && !value.has_value())) {
+                    continue;
+                }
                 if (value.has_value()
                         || arg.first->action() & detail::_bool_action) {
                     arg.second.push_back(value());
