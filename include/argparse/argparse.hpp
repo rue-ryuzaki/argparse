@@ -1755,7 +1755,7 @@ private:
         return res;
     }
 
-    std::string print(bool show_default_value,
+    std::string print(bool suppress_default,
                       detail::Value<std::string> const& argument_default,
                       HelpFormatter formatter,
                       std::size_t limit = detail::_argument_help_limit) const
@@ -1764,11 +1764,17 @@ private:
         auto formatted = detail::_help_formatter(formatter, res, limit, help());
         if (!formatted.empty()) {
             res += formatted;
-            if (show_default_value && m_type == Optional
+            if (m_type == Optional
+                    && (formatter & ArgumentDefaultsHelpFormatter)
                     && !(m_action & (Action::help | Action::version))) {
                 auto const& def = (m_default.has_value()
                                    || !argument_default.has_value())
                         ? m_default : argument_default;
+                if ((m_default_type.has_value()
+                     && m_default_type() == SUPPRESS)
+                        || (suppress_default && !def.has_value())) {
+                    return res;
+                }
                 if (!def.has_value() && m_action & detail::_bool_action) {
                     res += " (default: " + detail::_bool_to_string(def()) + ")";
                 } else {
@@ -2451,7 +2457,7 @@ private:
     }
 
     void print_help(std::ostream& os,
-                    bool show_default_value,
+                    bool suppress_default,
                     detail::Value<std::string> const& argument_default,
                     HelpFormatter formatter,
                     std::size_t limit) const override
@@ -2465,7 +2471,7 @@ private:
                 os << std::endl;
             }
             for (auto const& arg : m_arguments) {
-                os << arg->print(show_default_value, argument_default,
+                os << arg->print(suppress_default, argument_default,
                                  formatter, limit) << std::endl;
             }
         }
@@ -6560,7 +6566,9 @@ private:
             os << "\n" << formatter_description << std::endl;
         }
         std::size_t min_size = 0;
-        bool show_default = m_formatter_class & ArgumentDefaultsHelpFormatter;
+        bool suppress_default
+                = m_argument_default_type.has_value()
+                && m_argument_default_type() == SUPPRESS;
         auto subparser = subparser_info.first;
         bool sub_positional = subparser && subparser->title().empty()
                               && subparser->description().empty();
@@ -6586,9 +6594,10 @@ private:
                 if (sub_positional && subparser_info.second == i) {
                     os << subparser->print(m_formatter_class, min_size) << "\n";
                 }
-                os << positional.at(i)->print(false, m_argument_default,
-                                              m_formatter_class, min_size)
-                   << std::endl;
+                os << positional.at(i)->print(suppress_default,
+                                              m_argument_default,
+                                              m_formatter_class,
+                                              min_size) << std::endl;
             }
             if (sub_positional && subparser_info.second == positional.size()) {
                 os << subparser->print(m_formatter_class, min_size) << "\n";
@@ -6600,7 +6609,7 @@ private:
         if (!optional.empty()) {
             os << "\noptional arguments:\n";
             for (auto i = std::begin(optional); i != std::end(optional); ++i) {
-                os << (*i)->print(show_default
+                os << (*i)->print(suppress_default
                                   && !(help_added && i == std::begin(optional)),
                                   m_argument_default,
                                   m_formatter_class, min_size) << std::endl;
@@ -6609,7 +6618,7 @@ private:
         for (auto const& group : groups) {
             if ((subparser && (group != subparser || !sub_positional))
                     || (!subparser && group != subparser)) {
-                group->print_help(os, show_default, m_argument_default,
+                group->print_help(os, suppress_default, m_argument_default,
                                   m_formatter_class, min_size);
             }
         }
