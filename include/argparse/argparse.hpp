@@ -2623,7 +2623,7 @@ public:
           m_epilog(),
           m_prefix_chars(detail::_default_prefix_chars),
           m_groups(),
-          m_exclusive()
+          m_mutex_groups()
     { }
 
     /*!
@@ -2743,8 +2743,8 @@ public:
      */
     inline ExclusiveGroup& add_mutually_exclusive_group()
     {
-        m_exclusive.emplace_back(ExclusiveGroup(m_prefix_chars, this));
-        return m_exclusive.back();
+        m_mutex_groups.emplace_back(ExclusiveGroup(m_prefix_chars, this));
+        return m_mutex_groups.back();
     }
 
 protected:
@@ -2753,7 +2753,7 @@ protected:
     std::string m_epilog;
     std::string m_prefix_chars;
     std::deque<pGroup> m_groups;
-    std::deque<ExclusiveGroup> m_exclusive;
+    std::deque<ExclusiveGroup> m_mutex_groups;
 };
 
 /*!
@@ -4077,7 +4077,7 @@ public:
             : BaseParser(),
               m_name(name),
               m_help(),
-              m_prefix(),
+              m_prog(),
               m_handle_str(),
               m_handle(),
               m_parse_handle()
@@ -4246,7 +4246,7 @@ public:
 
         std::string m_name;
         std::string m_help;
-        std::string m_prefix;
+        std::string m_prog;
         std::function<void(std::string)> m_handle_str;
         std::function<void()> m_handle;
         std::function<void(argparse::Namespace const&)> m_parse_handle;
@@ -5210,7 +5210,7 @@ public:
             auto const positional = positional_arguments(false, true);
             auto const optional = optional_arguments(false, true).second;
             auto const subparser = subpurser_info(false);
-            print_custom_usage(positional, optional, m_groups, m_exclusive,
+            print_custom_usage(positional, optional, m_groups, m_mutex_groups,
                                subparser, m_prog, os);
         }
     }
@@ -5230,7 +5230,7 @@ public:
         auto const subparser = subpurser_info(false);
         print_custom_help(positional_all, optional_all, positional,
                           optional.second, optional.first, m_groups,
-                          m_exclusive, subparser, m_prog, m_usage,
+                          m_mutex_groups, subparser, m_prog, m_usage,
                           m_description, m_epilog, os);
     }
 
@@ -5364,11 +5364,11 @@ private:
                     print_custom_usage(p->get_positional(true),
                                        p->get_optional_with_help(
                                            true, m_add_help, p->m_prefix_chars),
-                                       p->m_groups, p->m_exclusive,
+                                       p->m_groups, p->m_mutex_groups,
                                        std::make_pair(nullptr, 0),
-                                       p->m_prefix, os);
+                                       p->m_prog, os);
                 }
-                throw std::logic_error(p->m_prefix + ": error: " + error);
+                throw std::logic_error(p->m_prog + ": error: " + error);
             } else {
                 throw_error(error, os);
             }
@@ -5739,7 +5739,7 @@ private:
                         program += detail::_spaces + str;
                     }
                 }
-                parser->m_prefix = program + detail::_spaces + parser->m_name;
+                parser->m_prog = program + detail::_spaces + parser->m_name;
                 parser->handle(parser->m_name);
                 storage.force_add(parser->m_arguments);
                 sub_storage.force_add(parser->m_arguments);
@@ -5954,9 +5954,9 @@ private:
                 print_custom_help(parser->get_positional(true), opt_all,
                                   parser->get_positional(false), opt,
                                   add_help, parser->m_groups,
-                                  parser->m_exclusive,
+                                  parser->m_mutex_groups,
                                   std::make_pair(nullptr, 0),
-                                  parser->m_prefix, parser->usage(),
+                                  parser->m_prog, parser->usage(),
                                   parser->description(), parser->epilog());
             } else {
                 print_help();
@@ -6175,9 +6175,9 @@ private:
                 }
             }
         };
-        _check_exclusive_groups(nullptr, m_exclusive);
+        _check_exclusive_groups(nullptr, m_mutex_groups);
         if (parser) {
-            _check_exclusive_groups(parser, parser->m_exclusive);
+            _check_exclusive_groups(parser, parser->m_mutex_groups);
         }
         std::vector<std::string> required_args;
         for (auto const& arg : optional) {
@@ -6461,13 +6461,13 @@ private:
     print_custom_usage(std::vector<pArgument> const& positional,
                        std::vector<pArgument> const& optional,
                        std::deque<pGroup> const& groups,
-                       std::deque<ExclusiveGroup> const& exclusive,
+                       std::deque<ExclusiveGroup> const& mutex_groups,
                        SubparserInfo const& subparser,
-                       std::string const& program,
+                       std::string const& prog,
                        std::ostream& os = std::cout) const
     {
         os << "usage: " << custom_usage(m_formatter_class, positional, optional,
-                                        groups, exclusive, subparser, program)
+                                        groups, mutex_groups, subparser, prog)
            << std::endl;
     }
 
@@ -6478,9 +6478,9 @@ private:
                       std::vector<pArgument> const& optional,
                       bool help_added,
                       std::deque<pGroup> const& groups,
-                      std::deque<ExclusiveGroup> const& exclusive,
+                      std::deque<ExclusiveGroup> const& mutex_groups,
                       SubparserInfo const& subparser_info,
-                      std::string const& program,
+                      std::string const& prog,
                       std::string const& usage,
                       std::string const& description,
                       std::string const& epilog,
@@ -6489,8 +6489,8 @@ private:
         if (!usage.empty()) {
             os << "usage: " << usage << std::endl;
         } else {
-            print_custom_usage(positional_all, optional_all, groups, exclusive,
-                               subparser_info, program, os);
+            print_custom_usage(positional_all, optional_all, groups,
+                               mutex_groups, subparser_info, prog, os);
         }
         auto _use_text_formatter
                 = [] (std::string const& value, HelpFormatter formatter)
