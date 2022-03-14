@@ -244,6 +244,8 @@ char const _equal = '=';
 std::string const _spaces = " ";
 std::string const _equals = "=";
 
+std::string const _suppress = "==SUPPRESS==";
+
 uint32_t const _bool_action = Action::store_true | Action::store_false;
 uint32_t const _store_action = Action::store | Action::append | Action::extend;
 uint32_t const _const_action = Action::store_const | Action::append_const;
@@ -4976,12 +4978,20 @@ public:
                 return default_argument_value(*arg)();
             }
         }
+        bool suppress_default = m_argument_default_type.has_value()
+                                && m_argument_default_type() == SUPPRESS;
+        auto _arg_suppressed = [this, suppress_default] (pArgument const& arg)
+        {
+            return (arg->m_default_type.has_value()
+                    && arg->m_default_type() == argparse::SUPPRESS)
+                    || (suppress_default
+                        && !default_argument_value(*arg).has_value());
+        };
         for (auto const& arg : optional) {
             if (!arg->m_dest_str.empty()) {
                 if (arg->dest() == dest) {
-                    if (arg->m_default_type.has_value()
-                            && arg->m_default_type() == argparse::SUPPRESS) {
-                        return std::string();
+                    if (_arg_suppressed(arg)) {
+                        return detail::_suppress;
                     }
                     return default_argument_value(*arg)();
                 }
@@ -4989,9 +4999,8 @@ public:
                 for (auto const& flag : arg->m_flags) {
                     auto name = detail::_flag_name(flag);
                     if (flag == dest || name == dest) {
-                        if (arg->m_default_type.has_value()
-                               && arg->m_default_type() == argparse::SUPPRESS) {
-                            return std::string();
+                        if (_arg_suppressed(arg)) {
+                            return detail::_suppress;
                         }
                         return default_argument_value(*arg)();
                     }
@@ -6288,7 +6297,7 @@ private:
                         + detail::_vector_to_string(unrecognized_args));
         }
         bool suppress_default = m_argument_default_type.has_value()
-                && m_argument_default_type() == SUPPRESS;
+                                && m_argument_default_type() == SUPPRESS;
         for (auto it = storage.begin(); it != storage.end(); ) {
             if (it->second.empty() && it->first->m_action != Action::count
                     && it->first->m_type == Argument::Optional) {
