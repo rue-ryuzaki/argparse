@@ -1776,6 +1776,60 @@ TEST_CASE("12. default values", "[argument_parser]")
         REQUIRE(args2.get<std::string>("bar") == local_default);
         REQUIRE(args2.get<std::string>("foobaz") == new_default);
     }
+
+    SECTION("12.3. suppress global value") {
+        auto parser = argparse::ArgumentParser().argument_default(argparse::SUPPRESS).exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+        parser.add_argument("--bar").action("store").default_value(local_default).help("bar help");
+
+        REQUIRE(parser.get_default("foo") == "");
+        REQUIRE(parser.get_default("bar") == local_default);
+
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.exists("foo") == false);
+        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE(args0.get<std::string>("bar") == local_default);
+
+        auto args1 = parser.parse_args({ "--foo", new_default });
+        REQUIRE(args1.get<std::string>("foo") == new_default);
+        REQUIRE(args1.get<std::string>("bar") == local_default);
+
+        parser.set_defaults({ { "foo", new_default } });
+        REQUIRE(parser.get_default("foo") == new_default);
+        REQUIRE(parser.get_default("bar") == local_default);
+
+        auto args2 = parser.parse_args({ });
+        REQUIRE(args2.get<std::string>("foo") == new_default);
+        REQUIRE(args2.get<std::string>("bar") == local_default);
+    }
+
+    SECTION("12.4. suppress local value") {
+        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+        parser.add_argument("--bar").action("store").default_value(argparse::SUPPRESS).help("bar help");
+
+        REQUIRE(parser.get_default("foo") == global_default);
+        REQUIRE(parser.get_default("bar") == "");
+
+        auto args0 = parser.parse_args({ });
+        REQUIRE(args0.get<std::string>("foo") == global_default);
+        REQUIRE(args0.exists("bar") == false);
+        REQUIRE(args0.get<std::string>("bar") == "");
+
+        auto args1 = parser.parse_args({ "--bar", new_default });
+        REQUIRE(args1.get<std::string>("foo") == global_default);
+        REQUIRE(args1.get<std::string>("bar") == new_default);
+
+        parser.set_defaults({ { "bar", new_default } });
+        REQUIRE(parser.get_default("foo") == global_default);
+        REQUIRE(parser.get_default("bar") == new_default);
+
+        auto args2 = parser.parse_args({ });
+        REQUIRE(args2.get<std::string>("foo") == global_default);
+        REQUIRE(args2.get<std::string>("bar") == new_default);
+    }
 }
 
 TEST_CASE("13. value exists check", "[namespace]")
