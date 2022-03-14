@@ -2802,7 +2802,7 @@ class Namespace
         typedef std::vector<std::string>                mapped_type;
         typedef std::pair<key_type const, mapped_type>  value_type;
         typedef std::map<key_type const, mapped_type>   map_type;
-        typedef map_type::iterator iterator;
+        typedef map_type::iterator                      iterator;
         typedef map_type::const_iterator                const_iterator;
 
         explicit
