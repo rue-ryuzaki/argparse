@@ -1788,7 +1788,7 @@ TEST_CASE("12. default values", "[argument_parser]")
 
         auto args0 = parser.parse_args({ });
         REQUIRE(args0.exists("foo") == false);
-        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE_THROWS(args0.get<std::string>("foo"));
         REQUIRE(args0.get<std::string>("bar") == local_default);
 
         auto args1 = parser.parse_args({ "--foo", new_default });
@@ -1816,7 +1816,7 @@ TEST_CASE("12. default values", "[argument_parser]")
         auto args0 = parser.parse_args({ });
         REQUIRE(args0.get<std::string>("foo") == global_default);
         REQUIRE(args0.exists("bar") == false);
-        REQUIRE(args0.get<std::string>("bar") == "");
+        REQUIRE_THROWS(args0.get<std::string>("bar"));
 
         auto args1 = parser.parse_args({ "--bar", new_default });
         REQUIRE(args1.get<std::string>("foo") == global_default);

@@ -6289,20 +6289,22 @@ private:
         }
         bool suppress_default = m_argument_default_type.has_value()
                 && m_argument_default_type() == SUPPRESS;
-        for (auto& arg : storage) {
-            if (arg.second.empty() && arg.first->m_action != Action::count
-                    && arg.first->m_type == Argument::Optional) {
-                auto const& value = default_argument_value(*arg.first);
-                if ((arg.first->m_default_type.has_value()
-                     && arg.first->m_default_type() == SUPPRESS)
+        for (auto it = storage.begin(); it != storage.end(); ) {
+            if (it->second.empty() && it->first->m_action != Action::count
+                    && it->first->m_type == Argument::Optional) {
+                auto const& value = default_argument_value(*(it->first));
+                if ((it->first->m_default_type.has_value()
+                     && it->first->m_default_type() == SUPPRESS)
                         || (suppress_default && !value.has_value())) {
+                    it = storage.m_data.erase(it);
                     continue;
                 }
                 if (value.has_value()
-                        || arg.first->action() & detail::_bool_action) {
-                    arg.second.push_back(value());
+                        || it->first->action() & detail::_bool_action) {
+                    it->second.push_back(value());
                 }
             }
+            ++it;
         }
         for (auto const& pair : m_default_values) {
             if (!storage.exists(pair.first)) {
@@ -6314,8 +6316,13 @@ private:
             }
         }
         if (parser && parser->m_parse_handle) {
-            for (auto& arg : sub_storage) {
-                arg.second = storage.at(arg.first);
+            for (auto it = sub_storage.begin(); it != sub_storage.end(); ) {
+                if (storage.exists(it->first)) {
+                    it->second = storage.at(it->first);
+                    ++it;
+                } else {
+                    it = sub_storage.m_data.erase(it);
+                }
             }
             parser->m_parse_handle(argparse::Namespace(sub_storage));
         }
