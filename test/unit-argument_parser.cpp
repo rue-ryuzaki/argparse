@@ -1783,7 +1783,7 @@ TEST_CASE("12. default values", "[argument_parser]")
         parser.add_argument("--foo").action("store").help("foo help");
         parser.add_argument("--bar").action("store").default_value(local_default).help("bar help");
 
-        REQUIRE(parser.get_default("foo") == "");
+        REQUIRE(parser.get_default("foo") == argparse::detail::_suppress);
         REQUIRE(parser.get_default("bar") == local_default);
 
         auto args0 = parser.parse_args({ });
@@ -1811,7 +1811,7 @@ TEST_CASE("12. default values", "[argument_parser]")
         parser.add_argument("--bar").action("store").default_value(argparse::SUPPRESS).help("bar help");
 
         REQUIRE(parser.get_default("foo") == global_default);
-        REQUIRE(parser.get_default("bar") == "");
+        REQUIRE(parser.get_default("bar") == argparse::detail::_suppress);
 
         auto args0 = parser.parse_args({ });
         REQUIRE(args0.get<std::string>("foo") == global_default);
