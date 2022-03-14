@@ -4979,12 +4979,20 @@ public:
         for (auto const& arg : optional) {
             if (!arg->m_dest_str.empty()) {
                 if (arg->dest() == dest) {
+                    if (arg->m_default_type.has_value()
+                            && arg->m_default_type() == argparse::SUPPRESS) {
+                        return std::string();
+                    }
                     return default_argument_value(*arg)();
                 }
             } else {
                 for (auto const& flag : arg->m_flags) {
                     auto name = detail::_flag_name(flag);
                     if (flag == dest || name == dest) {
+                        if (arg->m_default_type.has_value()
+                               && arg->m_default_type() == argparse::SUPPRESS) {
+                            return std::string();
+                        }
                         return default_argument_value(*arg)();
                     }
                 }
