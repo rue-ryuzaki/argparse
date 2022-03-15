@@ -872,10 +872,37 @@ public:
     /*!
      *  \brief Construct argument object with parsed arguments
      *
+     *  \param flag First argument flag
+     *  \param args Other argument flags
+     *
+     *  \return Argument object
+     */
+    template <class... Args>
+    explicit
+    Argument(std::string const& flag, Args... args)
+        : Argument(std::vector<std::string>{ flag, args... })
+    { }
+
+    /*!
+     *  \brief Construct argument object with parsed arguments
+     *
      *  \param flags Argument flags
      *
      *  \return Argument object
      */
+    explicit
+    Argument(std::initializer_list<std::string> flags)
+        : Argument(std::vector<std::string>{ flags })
+    { }
+
+    /*!
+     *  \brief Construct argument object with parsed arguments
+     *
+     *  \param flags Argument flags
+     *
+     *  \return Argument object
+     */
+    template <typename = void>
     explicit
     Argument(std::vector<std::string> const& flags)
         : m_flags(flags),
@@ -4173,6 +4200,7 @@ public:
          *
          *  \return Current parser reference
          */
+        template <typename = void>
         inline Parser& add_argument(Argument const& argument)
         {
             validate_argument(Argument(argument), m_prefix_chars);
@@ -4866,6 +4894,7 @@ public:
      *
      *  \return Current parser reference
      */
+    template <typename = void>
     inline ArgumentParser& add_argument(Argument const& argument)
     {
         validate_argument(Argument(argument), m_prefix_chars);
