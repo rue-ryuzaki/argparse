@@ -2039,21 +2039,6 @@ public:
     }
 
 protected:
-    inline void
-    add_arguments(std::vector<std::string>& flags, std::string const& arg)
-    {
-        flags.push_back(arg);
-    }
-
-    template <class... Args>
-    void
-    add_arguments(std::vector<std::string>& flags,
-                  std::string const& arg, Args... args)
-    {
-        flags.push_back(arg);
-        add_arguments(flags, args...);
-    }
-
     std::vector<pArgument> get_optional(bool add_group) const
     {
         std::vector<pArgument> result;
@@ -2380,21 +2365,6 @@ public:
     }
 
     /*!
-     *  \brief Add argument with flag
-     *
-     *  \param flag Flag value
-     *
-     *  \return Current argument reference
-     */
-    template <class T,
-              class = typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type>
-    Argument& add_argument(T const& flag)
-    {
-        return add_argument({ flag });
-    }
-
-    /*!
      *  \brief Add argument with flags
      *
      *  \param flag First flag value
@@ -2405,9 +2375,7 @@ public:
     template <class... Args>
     Argument& add_argument(std::string const& flag, Args... args)
     {
-        std::vector<std::string> flags = { flag };
-        add_arguments(flags, args...);
-        return add_argument(flags);
+        return add_argument(std::vector<std::string>{ flag, args... });
     }
 
     /*!
@@ -2565,21 +2533,6 @@ public:
     }
 
     /*!
-     *  \brief Add argument with flag
-     *
-     *  \param flag Flag value
-     *
-     *  \return Current argument reference
-     */
-    template <class T,
-              class = typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type>
-    Argument& add_argument(T const& flag)
-    {
-        return add_argument({ flag });
-    }
-
-    /*!
      *  \brief Add argument with flags
      *
      *  \param flag First flag value
@@ -2590,9 +2543,7 @@ public:
     template <class... Args>
     Argument& add_argument(std::string const& flag, Args... args)
     {
-        std::vector<std::string> flags = { flag };
-        add_arguments(flags, args...);
-        return add_argument(flags);
+        return add_argument(std::vector<std::string>{ flag, args... });
     }
 
     /*!
@@ -2706,21 +2657,6 @@ public:
     }
 
     /*!
-     *  \brief Add argument with flag
-     *
-     *  \param flag Flag value
-     *
-     *  \return Current argument reference
-     */
-    template <class T,
-              class = typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type>
-    Argument& add_argument(T const& flag)
-    {
-        return add_argument({ flag });
-    }
-
-    /*!
      *  \brief Add argument with flags
      *
      *  \param flag First flag value
@@ -2731,9 +2667,7 @@ public:
     template <class... Args>
     Argument& add_argument(std::string const& flag, Args... args)
     {
-        std::vector<std::string> flags = { flag };
-        add_arguments(flags, args...);
-        return add_argument(flags);
+        return add_argument(std::vector<std::string>{ flag, args... });
     }
 
     /*!
