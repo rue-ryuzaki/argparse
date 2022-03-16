@@ -303,7 +303,7 @@ static inline std::string
 _file_name(std::string const& path)
 {
 #ifdef ARGPARSE_USE_FILESYSTEM
-    return std::filesystem::path(path).filename().string();
+    return std::filesystem::path(path.c_str()).filename().string();
 #else
     return path.substr(path.find_last_of("/\\") + 1);
 #endif // ARGPARSE_USE_FILESYSTEM
