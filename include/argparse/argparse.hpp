@@ -234,24 +234,24 @@ public:
 };
 
 namespace detail {
-std::size_t const _usage_limit = 80;
-std::size_t const _argument_help_limit = 24;
-char const _default_prefix_char = '-';
+std::size_t constexpr _usage_limit = 80;
+std::size_t constexpr _argument_help_limit = 24;
+char constexpr _default_prefix_char = '-';
 std::string const _default_prefix_chars = "-";
 std::string const _pseudo_argument = "--";
-char const _space = ' ';
-char const _equal = '=';
+char constexpr _space = ' ';
+char constexpr _equal = '=';
 std::string const _spaces = " ";
 std::string const _equals = "=";
 
 std::string const _suppress = "==SUPPRESS==";
 
-uint32_t const _bool_action = Action::store_true | Action::store_false;
-uint32_t const _store_action = Action::store | Action::append | Action::extend;
-uint32_t const _const_action = Action::store_const | Action::append_const;
-uint32_t const _store_const_action = _store_action | _const_action;
+uint32_t constexpr _bool_action = Action::store_true | Action::store_false;
+uint32_t constexpr _store_action = Action::store|Action::append|Action::extend;
+uint32_t constexpr _const_action = Action::store_const | Action::append_const;
+uint32_t constexpr _store_const_action = _store_action | _const_action;
 
-static inline void
+inline void
 _ltrim(std::string& s)
 {
     s.erase(std::begin(s),
@@ -259,7 +259,7 @@ _ltrim(std::string& s)
                          [] (unsigned char c) { return !std::isspace(c); }));
 }
 
-static inline void
+inline void
 _rtrim(std::string& s)
 {
     s.erase(std::find_if(s.rbegin(), s.rend(),
@@ -267,21 +267,21 @@ _rtrim(std::string& s)
     { return !std::isspace(c); }).base(), s.end());
 }
 
-static inline void
+inline void
 _trim(std::string& s)
 {
     _ltrim(s);
     _rtrim(s);
 }
 
-static inline std::string
+inline std::string
 _trim_copy(std::string s)
 {
     _trim(s);
     return s;
 }
 
-static inline std::string
+inline std::string
 _to_lower(std::string s)
 {
     std::transform(std::begin(s), std::end(s), std::begin(s),
@@ -290,7 +290,7 @@ _to_lower(std::string s)
     return s;
 }
 
-static inline std::string
+inline std::string
 _to_upper(std::string s)
 {
     std::transform(std::begin(s), std::end(s), std::begin(s),
@@ -299,7 +299,7 @@ _to_upper(std::string s)
     return s;
 }
 
-static inline std::string
+inline std::string
 _file_name(std::string const& path)
 {
 #ifdef ARGPARSE_USE_FILESYSTEM
@@ -309,14 +309,14 @@ _file_name(std::string const& path)
 #endif // ARGPARSE_USE_FILESYSTEM
 }
 
-static inline bool
+inline bool
 _have_quotes(std::string const& str)
 {
     return str.size() > 1 && str.front() == str.back()
             && (str.front() == '\'' || str.front() == '\"');
 }
 
-static inline void
+inline void
 _resolve_conflict(std::string const& s, std::vector<std::string>& values)
 {
     auto it = std::find(std::begin(values), std::end(values), s);
@@ -325,7 +325,7 @@ _resolve_conflict(std::string const& s, std::vector<std::string>& values)
     }
 }
 
-static inline void
+inline void
 _resolve_conflict(std::vector<std::string> const& vec,
                   std::vector<std::string>& values)
 {
@@ -341,7 +341,7 @@ _remove_quotes(std::string const& s)
     return _have_quotes(s) ? T(s).substr(1, s.size() - 2) : T(s);
 }
 
-static inline std::string
+inline std::string
 _replace(std::string s, char c, std::string const& value)
 {
     auto pos = s.find(c);
@@ -352,7 +352,7 @@ _replace(std::string s, char c, std::string const& value)
     return s;
 }
 
-static inline bool
+inline bool
 _starts_with(std::string const& s, std::string const& value)
 {
 #if __cplusplus >= 202002L // C++20+
@@ -374,7 +374,7 @@ _is_value_exists(T const& value, std::vector<T> const& vec) noexcept
     return false;
 }
 
-static inline bool
+inline bool
 _is_value_exists(char value, std::string const& str) noexcept
 {
     for (auto const& el : str) {
@@ -385,7 +385,7 @@ _is_value_exists(char value, std::string const& str) noexcept
     return false;
 }
 
-static inline std::string
+inline std::string
 _flag_name(std::string str)
 {
     auto prefix = str.front();
@@ -395,7 +395,7 @@ _flag_name(std::string str)
     return str;
 }
 
-static inline std::vector<std::string>
+inline std::vector<std::string>
 _help_flags(std::string const& prefix_chars)
 {
     auto const& prefix
@@ -404,7 +404,7 @@ _help_flags(std::string const& prefix_chars)
     return { std::string(1, prefix) + "h", std::string(2, prefix) + "help" };
 }
 
-static inline bool
+inline bool
 _is_negative_number(std::string const& str)
 {
     double value;
@@ -416,7 +416,7 @@ _is_negative_number(std::string const& str)
     return value < 0;
 }
 
-static inline bool
+inline bool
 _is_optional(std::string const& arg,
              std::string const& prefix_chars,
              bool have_negative_args,
@@ -426,7 +426,7 @@ _is_optional(std::string const& arg,
             && (have_negative_args || !_is_negative_number(arg));
 }
 
-static inline bool
+inline bool
 _not_optional(std::string const& arg,
               std::string const& prefix_chars,
               bool have_negative_args,
@@ -436,7 +436,7 @@ _not_optional(std::string const& arg,
             || (!have_negative_args && _is_negative_number(arg));
 }
 
-static inline std::string
+inline std::string
 _make_no_flag(std::string str)
 {
     auto prefix = str.front();
@@ -451,7 +451,7 @@ _make_no_flag(std::string str)
     return str;
 }
 
-static inline std::vector<std::string>
+inline std::vector<std::string>
 _split(std::string const& str, char delim)
 {
     std::vector<std::string> result;
@@ -474,7 +474,7 @@ _split(std::string const& str, char delim)
     return result;
 }
 
-static inline std::pair<std::string, std::string>
+inline std::pair<std::string, std::string>
 _split_delimiter(std::string const& s, char delim)
 {
     auto pos = s.find(delim);
@@ -485,7 +485,7 @@ _split_delimiter(std::string const& s, char delim)
     }
 }
 
-static inline std::vector<std::string>
+inline std::vector<std::string>
 _split_equal(std::string const& s, std::string const& prefix)
 {
     auto pos = _is_value_exists(_equal, prefix)
@@ -502,7 +502,7 @@ _split_equal(std::string const& s, std::string const& prefix)
     }
 }
 
-static inline std::vector<std::string>
+inline std::vector<std::string>
 _split_to_args(std::string const& str)
 {
     std::vector<std::string> result;
@@ -561,19 +561,19 @@ _split_to_args(std::string const& str)
     return result;
 }
 
-static inline bool
+inline bool
 _string_to_bool(std::string const& str) noexcept
 {
     return !str.empty();
 }
 
-static inline std::string
+inline std::string
 _bool_to_string(std::string const& str)
 {
     return _string_to_bool(str) ? "true" : "false";
 }
 
-static inline std::string
+inline std::string
 _vector_to_string(std::vector<std::string> const& vec,
                   std::string const& separator = detail::_spaces,
                   std::string const& quotes = std::string(),
@@ -594,19 +594,19 @@ _vector_to_string(std::vector<std::string> const& vec,
     return res.empty() ? none : res;
 }
 
-static inline std::string
+inline std::string
 _ignore_default(std::string const& arg, std::string const& value)
 {
     return "argument " + arg + ": ignored default value '" + value + "'";
 }
 
-static inline std::string
+inline std::string
 _ignore_explicit(std::string const& arg, std::string const& value)
 {
     return "argument " + arg + ": ignored explicit argument '" + value + "'";
 }
 
-static inline std::string
+inline std::string
 _help_formatter(HelpFormatter formatter,
                 std::string const& str,
                 std::size_t limit,
@@ -739,13 +739,13 @@ private:
     T       m_value;
 };
 
-static inline bool
+inline bool
 _is_type_name_correct(std::string const& expected, std::string const& received)
 {
     return expected.empty() || received == expected;
 }
 
-static inline void
+inline void
 _check_type_name(Value<std::string> const& expected,std::string const& received)
 {
     if (expected.has_value() && !_is_type_name_correct(expected(), received)) {
