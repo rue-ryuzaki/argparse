@@ -5738,8 +5738,7 @@ private:
                                                         parser->m_prefix_chars);
                 auto sub_positional = parser->get_positional(true);
                 if (!sub_positional.empty()) {
-                    using dtype
-                      = std::vector<std::shared_ptr<Argument>>::difference_type;
+                    using dtype = std::vector<pArgument>::difference_type;
                     positional.insert(std::next(std::begin(positional),
                                                 static_cast<dtype>(
                                                     subparser.second)),
