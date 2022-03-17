@@ -2770,7 +2770,8 @@ class Namespace
 
         explicit
         Storage()
-            : m_data()
+            : m_data(),
+              m_conflict_arg()
         { }
 
         void
@@ -2927,11 +2928,11 @@ class Namespace
                     }
                 }
             }
-            static std::string res;
-            return res;
+            return m_conflict_arg;
         }
 
         map_type m_data;
+        std::string m_conflict_arg;
     };
 
     friend class ArgumentParser;
