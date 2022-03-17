@@ -1787,7 +1787,7 @@ private:
     std::string print(bool suppress_default,
                       detail::Value<std::string> const& argument_default,
                       HelpFormatter formatter,
-                      std::size_t limit = detail::_argument_help_limit) const
+                      std::size_t limit) const
     {
         std::string res = "  " + flags_to_string(formatter);
         auto formatted = detail::_help_formatter(formatter, res, limit, help());
@@ -4232,9 +4232,8 @@ public:
             }
         }
 
-        std::string
-        print(HelpFormatter formatter,
-              std::size_t limit = detail::_argument_help_limit) const
+        inline std::string
+        print(HelpFormatter formatter, std::size_t limit) const
         {
             std::string res = "    " + m_name;
             res += detail::_help_formatter(formatter, res, limit, help());
@@ -4491,8 +4490,7 @@ public:
         }
 
         inline std::string
-        print(HelpFormatter formatter,
-              std::size_t limit = detail::_argument_help_limit) const
+        print(HelpFormatter formatter, std::size_t limit) const
         {
             std::string res = "  " + flags_to_string();
             res += detail::_help_formatter(formatter, res, limit, help());
