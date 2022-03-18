@@ -5239,9 +5239,8 @@ public:
         } else {
             auto const positional = positional_arguments(false, true);
             auto const optional = optional_arguments(false, true).second;
-            auto const subparser = subpurser_info(false);
             print_custom_usage(positional, optional, m_groups, m_mutex_groups,
-                               subparser, m_prog, os);
+                               subpurser_info(false), m_prog, os);
         }
     }
 
@@ -5257,11 +5256,10 @@ public:
         auto const optional_all = optional_arguments(false, true).second;
         auto const positional = positional_arguments(false, false);
         auto const optional = optional_arguments(false, false);
-        auto const subparser = subpurser_info(false);
         print_custom_help(positional_all, optional_all, positional,
                           optional.second, optional.first, m_groups,
-                          m_mutex_groups, subparser, m_prog, m_usage,
-                          m_description, m_epilog, os);
+                          m_mutex_groups, subpurser_info(false), m_prog,
+                          m_usage, m_description, m_epilog, os);
     }
 
     /*!
@@ -5384,8 +5382,7 @@ private:
         }
         Parser* parser = nullptr;
         auto _custom_error = [this]
-                (Parser const* p, std::string const& error,
-                 std::ostream& os = std::cerr)
+         (Parser const* p, std::string const& err, std::ostream& os = std::cerr)
         {
             if (p) {
                 if (!p->m_usage.empty()) {
@@ -5398,9 +5395,9 @@ private:
                                        std::make_pair(nullptr, 0),
                                        p->m_prog, os);
                 }
-                throw std::logic_error(p->m_prog + ": error: " + error);
+                throw std::logic_error(p->m_prog + ": error: " + err);
             } else {
-                throw_error(error, os);
+                throw_error(err, os);
             }
         };
         auto _throw_error = [_custom_error, &parser]
@@ -6459,8 +6456,7 @@ private:
         std::size_t offset = usage_length;
         if (pos + (min_size > 0 ? (1 + min_size) : 0) <= detail::_usage_limit) {
             offset += program.size() + (min_size > 0);
-        } else if (!(ex_opt.empty() && positional.empty()
-                     && !subparser.first)) {
+        } else if (!(ex_opt.empty() && positional.empty() && !subparser.first)){
             res += "\n" + std::string(offset - 1, detail::_space);
             pos = offset - 1;
         }
@@ -6506,7 +6502,7 @@ private:
                        std::deque<ExclusiveGroup> const& mutex_groups,
                        SubparserInfo const& subparser,
                        std::string const& prog,
-                       std::ostream& os = std::cout) const
+                       std::ostream& os) const
     {
         os << "usage: " << custom_usage(m_formatter_class, positional, optional,
                                         groups, mutex_groups, subparser, prog)
