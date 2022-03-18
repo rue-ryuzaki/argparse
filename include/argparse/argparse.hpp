@@ -5296,11 +5296,11 @@ public:
      *  \param status Status code
      *  \param message Error message
      */
-    inline void
+    virtual inline void
     exit(int status = 0, std::string const& message = std::string()) const
     {
-        if (status) {
-            throw std::logic_error("Exiting because of an error: " + message);
+        if (!message.empty()) {
+            std::cerr << message << std::endl;
         }
         ::exit(status);
     }
