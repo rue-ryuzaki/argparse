@@ -36,7 +36,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest -C ${{env.BUILD_TYPE}}
 
-  clang2019:
+  clang-2019:
     runs-on: windows-2019
 
     strategy:
