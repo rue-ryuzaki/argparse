@@ -31,6 +31,10 @@
 #define ARGPARSE_VERSION_MINOR 3
 #define ARGPARSE_VERSION_PATCH 7
 
+#undef ARGPARSE_EXPORT
+#undef ARGPARSE_USE_FILESYSTEM
+#undef ARGPARSE_USE_OPTIONAL
+
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -65,11 +69,7 @@
 #include <filesystem>
 
 #define ARGPARSE_USE_FILESYSTEM 1
-#else
-#undef ARGPARSE_USE_FILESYSTEM
 #endif //
-#else
-#undef ARGPARSE_USE_FILESYSTEM
 #endif // C++17+
 
 // optional
@@ -86,12 +86,10 @@ using experimental::fundamentals_v1::nullopt;
 } // std
 
 #define ARGPARSE_USE_OPTIONAL 1
-#else
-#undef ARGPARSE_USE_OPTIONAL
 #endif // __GNUC__
-#else
-#undef ARGPARSE_USE_OPTIONAL
 #endif // C++14+
+
+#define ARGPARSE_EXPORT
 
 namespace argparse {
 template <class T>  struct is_byte_type { enum{value = false}; };
@@ -110,7 +108,7 @@ template <>         struct is_byte_type<char8_t> { enum{value = true}; };
  *
  * \enum Action
  */
-enum Action : uint32_t
+ARGPARSE_EXPORT enum Action : uint32_t
 {
     store                   = 0x00000001,
     store_const             = 0x00000002,
@@ -130,7 +128,7 @@ enum Action : uint32_t
  *
  * \enum HelpFormatter
  */
-enum HelpFormatter
+ARGPARSE_EXPORT enum HelpFormatter
 {
     RawDescriptionHelpFormatter     = 0x00000001,
     RawTextHelpFormatter            = 0x00000002,
@@ -141,7 +139,7 @@ enum HelpFormatter
 /*!
  * \brief ArgumentError handler
  */
-class ArgumentError : public std::invalid_argument
+ARGPARSE_EXPORT class ArgumentError : public std::invalid_argument
 {
 public:
     /*!
@@ -160,7 +158,7 @@ public:
 /*!
  * \brief AttributeError handler
  */
-class AttributeError : public std::invalid_argument
+ARGPARSE_EXPORT class AttributeError : public std::invalid_argument
 {
 public:
     /*!
@@ -179,7 +177,7 @@ public:
 /*!
  * \brief ValueError handler
  */
-class ValueError : public std::invalid_argument
+ARGPARSE_EXPORT class ValueError : public std::invalid_argument
 {
 public:
     /*!
@@ -198,7 +196,7 @@ public:
 /*!
  * \brief IndexError handler
  */
-class IndexError : public std::logic_error
+ARGPARSE_EXPORT class IndexError : public std::logic_error
 {
 public:
     /*!
@@ -217,7 +215,7 @@ public:
 /*!
  * \brief TypeError handler
  */
-class TypeError : public std::logic_error
+ARGPARSE_EXPORT class TypeError : public std::logic_error
 {
 public:
     /*!
@@ -760,7 +758,7 @@ _check_type_name(Value<std::string> const& expected,std::string const& received)
  *
  * \enum Enum
  */
-enum Enum
+ARGPARSE_EXPORT enum Enum
 {
     SUPPRESS,
 };
@@ -768,7 +766,7 @@ enum Enum
 /*!
  * \brief Argument class
  */
-class Argument
+ARGPARSE_EXPORT class Argument
 {
     friend class ArgumentData;
     friend class ArgumentGroup;
@@ -2326,7 +2324,7 @@ protected:
 /*!
  * \brief ArgumentGroup class
  */
-class ArgumentGroup : public ArgumentData, public Group
+ARGPARSE_EXPORT class ArgumentGroup : public ArgumentData, public Group
 {
     friend class ArgumentParser;
 
@@ -2480,7 +2478,7 @@ private:
 /*!
  * \brief ExclusiveGroup class
  */
-class ExclusiveGroup : public ArgumentData
+ARGPARSE_EXPORT class ExclusiveGroup : public ArgumentData
 {
 public:
     friend class ArgumentParser;
@@ -2754,7 +2752,7 @@ protected:
 /*!
  * \brief Object with parsed arguments
  */
-class Namespace
+ARGPARSE_EXPORT class Namespace
 {
     class Storage
     {
@@ -4031,7 +4029,7 @@ private:
 /*!
  * \brief ArgumentParser objects
  */
-class ArgumentParser : public BaseParser
+ARGPARSE_EXPORT class ArgumentParser : public BaseParser
 {
 public:
     using BaseParser::usage;
@@ -6630,5 +6628,8 @@ private:
     std::shared_ptr<Subparser> m_subparsers;
 };
 } // argparse
+
+#undef ARGPARSE_EXPORT
+#undef ARGPARSE_USE_FILESYSTEM
 
 #endif // _ARGPARSE_ARGUMENT_PARSER_HPP_
