@@ -1542,7 +1542,7 @@ public:
      */
     Argument& dest(std::string const& value)
     {
-        if (m_type == Positional) {
+        if (m_type == Positional && !m_flags.empty()) {
             throw ValueError("dest supplied twice for positional argument");
         }
         m_dest_str = detail::_trim_copy(value);
@@ -2121,7 +2121,12 @@ protected:
                          std::string const& prefix_chars)
     {
         if (flags.empty()) {
-            throw ValueError("empty options");
+            auto flag_name = std::string();
+            auto arg = Argument::make_argument(std::move(flags),
+                                               std::move(flag_name),
+                                               Argument::Positional);
+            m_arguments.emplace_back(std::move(arg));
+            return;
         }
         detail::_trim(flags.front());
         auto flag_name = flags.front();
@@ -2397,15 +2402,14 @@ public:
     /*!
      *  \brief Add argument with flags
      *
-     *  \param flag First flag value
-     *  \param args Other flag values
+     *  \param args Flag values
      *
      *  \return Current argument reference
      */
     template <class... Args>
-    Argument& add_argument(std::string const& flag, Args... args)
+    Argument& add_argument(Args... args)
     {
-        return add_argument(std::vector<std::string>{ flag, args... });
+        return add_argument(std::vector<std::string>{ args... });
     }
 
     /*!
@@ -2565,15 +2569,14 @@ public:
     /*!
      *  \brief Add argument with flags
      *
-     *  \param flag First flag value
-     *  \param args Other flag values
+     *  \param args Flag values
      *
      *  \return Current argument reference
      */
     template <class... Args>
-    Argument& add_argument(std::string const& flag, Args... args)
+    Argument& add_argument(Args... args)
     {
-        return add_argument(std::vector<std::string>{ flag, args... });
+        return add_argument(std::vector<std::string>{ args... });
     }
 
     /*!
@@ -2689,15 +2692,14 @@ public:
     /*!
      *  \brief Add argument with flags
      *
-     *  \param flag First flag value
-     *  \param args Other flag values
+     *  \param args Flag values
      *
      *  \return Current argument reference
      */
     template <class... Args>
-    Argument& add_argument(std::string const& flag, Args... args)
+    Argument& add_argument(Args... args)
     {
-        return add_argument(std::vector<std::string>{ flag, args... });
+        return add_argument(std::vector<std::string>{ args... });
     }
 
     /*!
@@ -5410,6 +5412,11 @@ private:
         };
         auto _validate_argument = [] (pArgument const& arg)
         {
+            if (arg->m_type == Argument::Positional
+                    && arg->m_flags.empty() && arg->m_dest.empty()) {
+                throw
+                TypeError("missing 1 required positional argument: 'dest'");
+            }
             if ((arg->m_action & detail::_const_action)
                     && !arg->m_const.has_value()) {
                 throw
