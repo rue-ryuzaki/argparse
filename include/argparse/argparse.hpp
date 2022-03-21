@@ -870,15 +870,14 @@ public:
     /*!
      *  \brief Construct argument object with parsed arguments
      *
-     *  \param flag First argument flag
-     *  \param args Other argument flags
+     *  \param args Argument flags
      *
      *  \return Argument object
      */
     template <class... Args>
     explicit
-    Argument(std::string const& flag, Args... args)
-        : Argument(std::vector<std::string>{ flag, args... })
+    Argument(Args... args)
+        : Argument(std::vector<std::string>{ args... })
     { }
 
     /*!
@@ -2214,56 +2213,62 @@ protected:
     void validate_argument(Argument arg, std::string const& prefix_chars)
     {
         auto& flags = arg.m_flags;
+        bool is_optional = false;
         if (flags.empty()) {
-            throw ValueError("empty options");
-        }
-        detail::_trim(flags.front());
-        auto flag_name = flags.front();
-        if (flag_name.empty()) {
-            throw IndexError("string index out of range");
-        }
-        std::size_t prefixes = 0;
-        auto _update_flag_name = []
-                (std::string const& arg, std::string& flag, std::size_t& count)
-        {
-            auto name = detail::_flag_name(arg);
-            std::size_t count_prefixes = arg.size() - name.size();
-            if (count < count_prefixes) {
-                count = count_prefixes;
-                flag = std::move(name);
-            }
-        };
-        bool is_optional
-                = detail::_is_value_exists(flag_name.front(), prefix_chars);
-        if (is_optional) {
-            _update_flag_name(flag_name, flag_name, prefixes);
-        } else if (flags.size() > 1) {
-            // no positional multiflag
-            throw
-            ValueError("invalid option string " + flags.front()
-                       + ": must starts with a character '"
-                       + prefix_chars + "'");
-        }
-        for (std::size_t i = 1; i < flags.size(); ++i) {
-            // check arguments
-            auto& flag = flags.at(i);
-            detail::_trim(flag);
-            if (flag.empty()) {
+            arg.m_name = arg.dest();
+        } else {
+            detail::_trim(flags.front());
+            auto flag_name = flags.front();
+            if (flag_name.empty()) {
                 throw IndexError("string index out of range");
             }
-            if (!detail::_is_value_exists(flag.front(), prefix_chars)) {
-                // no positional and optional args
+            std::size_t prefixes = 0;
+            auto _update_flag_name = []
+                 (std::string const& arg, std::string& flag, std::size_t& count)
+            {
+                auto name = detail::_flag_name(arg);
+                std::size_t count_prefixes = arg.size() - name.size();
+                if (count < count_prefixes) {
+                    count = count_prefixes;
+                    flag = std::move(name);
+                }
+            };
+            is_optional
+                    = detail::_is_value_exists(flag_name.front(), prefix_chars);
+            if (is_optional) {
+                _update_flag_name(flag_name, flag_name, prefixes);
+            } else if (flags.size() > 1) {
+                // no positional multiflag
                 throw
-                ValueError("invalid option string " + flag
+                ValueError("invalid option string " + flags.front()
                            + ": must starts with a character '"
                            + prefix_chars + "'");
             }
-            _update_flag_name(flag, flag_name, prefixes);
+            for (std::size_t i = 1; i < flags.size(); ++i) {
+                // check arguments
+                auto& flag = flags.at(i);
+                detail::_trim(flag);
+                if (flag.empty()) {
+                    throw IndexError("string index out of range");
+                }
+                if (!detail::_is_value_exists(flag.front(), prefix_chars)) {
+                    // no positional and optional args
+                    throw
+                    ValueError("invalid option string " + flag
+                               + ": must starts with a character '"
+                               + prefix_chars + "'");
+                }
+                _update_flag_name(flag, flag_name, prefixes);
+            }
+            arg.m_name = flag_name;
         }
-        arg.m_name = flag_name;
         arg.m_type = is_optional ? Argument::Optional : Argument::Positional;
         // check
         if (arg.m_type == Argument::Positional) {
+            if (arg.m_dest.empty() && flags.empty()) {
+                throw
+                TypeError("missing 1 required positional argument: 'dest'");
+            }
             if (arg.m_action & (Action::version | Action::help)) {
                 // version and help actions cannot be positional
                 throw
@@ -2273,7 +2278,7 @@ protected:
                 throw
                 TypeError("'required' is an invalid argument for positionals");
             }
-            if (!arg.m_dest.empty()) {
+            if (!arg.m_dest.empty() && !flags.empty()) {
                 throw ValueError("dest supplied twice for positional argument");
             }
             if (arg.m_const.has_value()
