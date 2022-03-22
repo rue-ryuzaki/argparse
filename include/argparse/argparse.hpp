@@ -780,8 +780,8 @@ ARGPARSE_EXPORT class Argument
         NARGS_DEF   = 0x01, // ""
         NARGS_NUM   = 0x02, // "N"
         ONE_OR_MORE = 0x04, // "+"
-        OPTIONAL    = 0x08, // "*"
-        ZERO_OR_MORE= 0x10, // "?"
+        OPTIONAL    = 0x08, // "?"
+        ZERO_OR_MORE= 0x10, // "*"
     };
 
     enum Type
