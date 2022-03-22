@@ -3426,6 +3426,13 @@ public:
             case Action::append :
             case Action::append_const :
             case Action::extend :
+                if ((args.first->m_action == Action::store
+                     && (args.first->m_nargs
+                         & (Argument::NARGS_DEF | Argument::OPTIONAL)))
+                        || args.second.empty()) {
+                    return detail::_vector_to_string(args.second, ", ",
+                                                     quotes, false, "None");
+                }
                 return "[" + detail::_vector_to_string(args.second, ", ",
                                                        quotes, false,
                                                        "None") + "]";
