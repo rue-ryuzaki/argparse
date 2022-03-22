@@ -6085,8 +6085,10 @@ private:
                                             _throw_error(tmp->error_nargs(arg));
                                             break;
                                         case Argument::OPTIONAL :
-                                            _store_value(tmp,
-                                                         tmp->const_value());
+                                            if (tmp->m_const.has_value()) {
+                                                _store_value(tmp,
+                                                            tmp->const_value());
+                                            }
                                             break;
                                         default :
                                             break;
