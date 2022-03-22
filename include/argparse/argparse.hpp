@@ -3332,6 +3332,16 @@ public:
     }
 
     /*!
+     *  \brief Print namespace to output stream
+     *
+     *  \param os Output stream
+     */
+    void print(std::ostream& os = std::cout) const
+    {
+        os << to_string() << std::endl;
+    }
+
+    /*!
      *  \brief Get parsed argument value as args string
      *
      *  \param key Argument name
@@ -3451,6 +3461,34 @@ public:
             default :
                 throw ValueError("action not supported");
         }
+    }
+
+    /*!
+     *  \brief Get namespace as string
+     *
+     *  \return Namespace as string
+     */
+    std::string to_string() const
+    {
+        std::string result;
+        for (auto const& pair : m_storage) {
+            auto const& flags = pair.first->get_argument_flags();
+            if (flags.empty()) {
+                continue;
+            }
+            if (!result.empty()) {
+                result += ", ";
+            }
+            auto const& name = !pair.first->dest().empty() ? pair.first->dest()
+                                                           : pair.first->m_name;
+            result += name + detail::_equals + to_string(flags.front(), "'");
+        }
+        auto unknown_args
+                = detail::_vector_to_string(m_unrecognized_args, ", ", "'");
+        if (unknown_args.empty()) {
+            return "Namespace(" + result + ")";
+        }
+        return "(Namespace(" + result + "), [" + unknown_args + "])";
     }
 
 #ifdef ARGPARSE_USE_OPTIONAL
