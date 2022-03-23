@@ -2771,62 +2771,77 @@ ARGPARSE_EXPORT class Namespace
         public:
             mapped_type()
                 : m_exists(),
+                  m_is_default(),
                   m_values()
             { }
 
-            mapped_type(bool exists, std::vector<std::string> const& values)
+            mapped_type(bool exists, bool is_default,
+                        std::vector<std::string> const& values)
                 : m_exists(exists),
+                  m_is_default(is_default),
                   m_values(values)
             { }
 
-            void clear()
+            inline void clear()
             {
-                m_exists = false; // TODO
+                m_exists = false;
+                m_is_default = false;
                 m_values.clear();
             }
 
-            void have_value()
+            inline void have_value()
             {
                 m_exists = true;
             }
 
-            bool exists() const
+            inline bool exists() const
             {
                 return m_exists;
             }
 
-            std::vector<std::string> const& operator ()() const
+            inline void push_default(std::string const& value)
+            {
+                m_is_default = true;
+                push_back(value);
+            }
+
+            inline bool is_default() const
+            {
+                return m_is_default;
+            }
+
+            inline std::vector<std::string> const& operator ()() const
             {
                 return m_values;
             }
 
-            std::size_t size() const
+            inline std::size_t size() const
             {
                 return m_values.size();
             }
 
-            bool empty() const
+            inline bool empty() const
             {
                 return m_values.empty();
             }
 
-            std::string const& front() const
+            inline std::string const& front() const
             {
                 return m_values.front();
             }
 
-            std::string const& at(std::size_t i) const
+            inline std::string const& at(std::size_t i) const
             {
                 return m_values.at(i);
             }
 
-            void emplace_back(std::string&& value)
+            inline void emplace_back(std::string&& value)
             {
                 m_exists = true;
                 m_values.emplace_back(std::move(value));
             }
 
-            void push_back(std::string const& value)
+            inline void push_back(std::string const& value)
             {
                 m_exists = true;
                 m_values.push_back(value);
@@ -2834,6 +2849,7 @@ ARGPARSE_EXPORT class Namespace
 
         private:
             bool m_exists;
+            bool m_is_default;
             std::vector<std::string> m_values;
         };
 
@@ -3515,7 +3531,7 @@ public:
                 if ((args.first->m_action == Action::store
                      && (args.first->m_nargs
                          & (Argument::NARGS_DEF | Argument::OPTIONAL)))
-                        || !args.second.exists()) {
+                        || !args.second.exists() || args.second.is_default()) {
                     return detail::_vector_to_string(args.second(), ", ",
                                                      quotes, false, "None");
                 }
@@ -6412,7 +6428,7 @@ private:
         bool suppress_default = m_argument_default_type.has_value()
                                 && m_argument_default_type() == SUPPRESS;
         for (auto it = storage.begin(); it != storage.end(); ) {
-            if (it->second.empty() && it->first->m_action != Action::count
+            if (!it->second.exists() && it->first->m_action != Action::count
                     && it->first->m_type == Argument::Optional) {
                 auto const& value = default_argument_value(*(it->first));
                 if ((it->first->m_default_type.has_value()
@@ -6423,7 +6439,7 @@ private:
                 }
                 if (value.has_value()
                         || it->first->action() & detail::_bool_action) {
-                    it->second.push_back(value());
+                    it->second.push_default(value());
                 }
             }
             ++it;
@@ -6434,7 +6450,7 @@ private:
                             std::vector<std::string>{ pair.first },
                             pair.first, Argument::Positional);
                 arg->default_value(pair.second);
-                storage.create(arg, { true, { pair.second } });
+                storage.create(arg, { true, true, { pair.second } });
             }
         }
         if (parser && parser->m_parse_handle) {
