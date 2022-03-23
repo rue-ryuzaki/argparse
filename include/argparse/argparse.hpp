@@ -2766,8 +2766,78 @@ ARGPARSE_EXPORT class Namespace
         friend class ArgumentParser;
 
     public:
+        class mapped_type
+        {
+        public:
+            mapped_type()
+                : m_exists(),
+                  m_values()
+            { }
+
+            mapped_type(bool exists, std::vector<std::string> const& values)
+                : m_exists(exists),
+                  m_values(values)
+            { }
+
+            void clear()
+            {
+                m_exists = false; // TODO
+                m_values.clear();
+            }
+
+            void have_value()
+            {
+                m_exists = true;
+            }
+
+            bool exists() const
+            {
+                return m_exists;
+            }
+
+            std::vector<std::string> const& operator ()() const
+            {
+                return m_values;
+            }
+
+            std::size_t size() const
+            {
+                return m_values.size();
+            }
+
+            bool empty() const
+            {
+                return m_values.empty();
+            }
+
+            std::string const& front() const
+            {
+                return m_values.front();
+            }
+
+            std::string const& at(std::size_t i) const
+            {
+                return m_values.at(i);
+            }
+
+            void emplace_back(std::string&& value)
+            {
+                m_exists = true;
+                m_values.emplace_back(std::move(value));
+            }
+
+            void push_back(std::string const& value)
+            {
+                m_exists = true;
+                m_values.push_back(value);
+            }
+
+        private:
+            bool m_exists;
+            std::vector<std::string> m_values;
+        };
+
         typedef pArgument                               key_type;
-        typedef std::vector<std::string>                mapped_type;
         typedef std::pair<key_type const, mapped_type>  value_type;
         typedef std::map<key_type const, mapped_type>   map_type;
         typedef map_type::iterator                      iterator;
@@ -2843,6 +2913,12 @@ ARGPARSE_EXPORT class Namespace
             for (auto const& arg : arguments) {
                 create(arg);
             }
+        }
+
+        inline void have_value(key_type const& arg, std::string const& value)
+        {
+            at(arg).have_value();
+            arg->handle(value);
         }
 
         inline void store_value(key_type const& arg, std::string const& value)
@@ -3144,7 +3220,7 @@ public:
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        auto vector = to_vector<typename T::value_type>(args.second);
+        auto vector = to_vector<typename T::value_type>(args.second());
         T res{};
         if (res.size() != vector.size()) {
             std::cerr << "error: array size mismatch: " << res.size()
@@ -3173,7 +3249,7 @@ public:
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        auto vector = to_vector<typename T::value_type>(args.second);
+        auto vector = to_vector<typename T::value_type>(args.second());
         return T(std::begin(vector), std::end(vector));
     }
 
@@ -3198,7 +3274,7 @@ public:
         }
         T res{};
         auto vector = to_paired_vector<typename T::key_type,
-                typename T::mapped_type>(args.second, delim);
+                typename T::mapped_type>(args.second(), delim);
         for (auto const& pair : vector) {
             res.emplace(std::make_pair(pair.first, pair.second));
         }
@@ -3262,7 +3338,7 @@ public:
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        auto vector = to_vector<typename T::value_type>(args.second);
+        auto vector = to_vector<typename T::value_type>(args.second());
         return T(std::deque<typename T::value_type>(std::begin(vector),
                                                     std::end(vector)));
     }
@@ -3290,7 +3366,7 @@ public:
             return T();
         }
         if (std::isspace(static_cast<unsigned char>(delim))) {
-            return to_tuple(type_tag<T>{}, args.second);
+            return to_tuple(type_tag<T>{}, args.second());
         }
         if (args.second.size() != 1) {
             throw
@@ -3328,7 +3404,7 @@ public:
         if (args.first->m_action == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        return to_type<T>(detail::_vector_to_string(args.second));
+        return to_type<T>(detail::_vector_to_string(args.second()));
     }
 
     /*!
@@ -3380,7 +3456,7 @@ public:
             case Action::append :
             case Action::append_const :
             case Action::extend :
-                return detail::_vector_to_string(args.second, detail::_spaces,
+                return detail::_vector_to_string(args.second(), detail::_spaces,
                                                  std::string(), true);
             case Action::BooleanOptionalAction :
                 if (args.second.empty()) {
@@ -3439,13 +3515,25 @@ public:
                 if ((args.first->m_action == Action::store
                      && (args.first->m_nargs
                          & (Argument::NARGS_DEF | Argument::OPTIONAL)))
-                        || args.second.empty()) {
-                    return detail::_vector_to_string(args.second, ", ",
+                        || !args.second.exists()) {
+                    return detail::_vector_to_string(args.second(), ", ",
                                                      quotes, false, "None");
                 }
-                return "[" + detail::_vector_to_string(args.second, ", ",
-                                                       quotes, false,
-                                                       "None") + "]";
+                if (args.first->m_action != Action::append
+                        || (args.first->m_nargs
+                            & (Argument::NARGS_DEF | Argument::OPTIONAL))) {
+                    std::string none = (args.first->m_nargs
+                                        & Argument::ZERO_OR_MORE) ? "" : "None";
+                    return "[" + detail::_vector_to_string(args.second(), ", ",
+                                                           quotes, false,
+                                                           none) + "]";
+                } else {
+                    std::string none = (args.first->m_nargs
+                                        & Argument::ZERO_OR_MORE) ? "" : "None";
+                    return "[[" + detail::_vector_to_string(args.second(), ", ",
+                                                            quotes, false,
+                                                            none) + "]]";
+                }
             case Action::BooleanOptionalAction :
                 if (args.second.empty()) {
                     return detail::_bool_to_string(args.first->m_default());
@@ -3574,7 +3662,7 @@ public:
                         detail::_type_name<typename T::value_type>())) {
             return {};
         }
-        auto vector = try_to_vector<typename T::value_type>(args->second);
+        auto vector = try_to_vector<typename T::value_type>(args->second());
         if (!vector.operator bool()) {
             return {};
         }
@@ -3610,7 +3698,7 @@ public:
                         detail::_type_name<typename T::value_type>())) {
             return {};
         }
-        auto vector = try_to_vector<typename T::value_type>(args->second);
+        auto vector = try_to_vector<typename T::value_type>(args->second());
         if (!vector.operator bool()) {
             return {};
         }
@@ -3643,7 +3731,7 @@ public:
         T res{};
         auto vector
                 = try_to_paired_vector<typename T::key_type,
-                                       typename T::mapped_type>(args->second,
+                                       typename T::mapped_type>(args->second(),
                                                                 delim);
         if (!vector.operator bool()) {
             return {};
@@ -3720,7 +3808,7 @@ public:
                         detail::_type_name<typename T::value_type>())) {
             return {};
         }
-        auto vector = try_to_vector<typename T::value_type>(args->second);
+        auto vector = try_to_vector<typename T::value_type>(args->second());
         if (!vector.operator bool()) {
             return {};
         }
@@ -3754,7 +3842,7 @@ public:
             return T();
         }
         if (std::isspace(static_cast<unsigned char>(delim))) {
-            return try_to_tuple(type_tag<T>{}, args->second);
+            return try_to_tuple(type_tag<T>{}, args->second());
         }
         if (args->second.size() != 1) {
             return {};
@@ -3794,7 +3882,7 @@ public:
                                                   detail::_type_name<T>())) {
             return {};
         }
-        return try_to_type<T>(detail::_vector_to_string(args->second));
+        return try_to_type<T>(detail::_vector_to_string(args->second()));
     }
 #endif // ARGPARSE_USE_OPTIONAL
 
@@ -5569,6 +5657,13 @@ private:
         std::deque<std::string> intermixed_args;
 
         std::size_t pos = 0;
+        auto _have_value
+                = [_validate_argument_value, &storage] (pArgument const& arg)
+        {
+            std::string val;
+            _validate_argument_value(*arg, val);
+            storage.have_value(arg, val);
+        };
         auto _store_value = [_validate_argument_value, &storage]
                 (pArgument const& arg, std::string const& val)
         {
@@ -6074,8 +6169,8 @@ private:
                         if (splitted.size() == 1) {
                             uint32_t n = 0;
                             uint32_t num_args = tmp->m_num_args;
-                            auto _func = [_throw_error, _store_value,
-                                         &arg, &n, &num_args, &tmp] ()
+                            auto _func = [_throw_error, _have_value,
+                                    _store_value, &arg, &n, &num_args, &tmp] ()
                             {
                                 if (n == 0) {
                                     switch (tmp->m_nargs) {
@@ -6088,9 +6183,12 @@ private:
                                             if (tmp->m_const.has_value()) {
                                                 _store_value(tmp,
                                                             tmp->const_value());
+                                            } else {
+                                                _have_value(tmp);
                                             }
                                             break;
                                         default :
+                                            _have_value(tmp);
                                             break;
                                     }
                                 } else if (tmp->m_nargs == Argument::NARGS_NUM
@@ -6336,7 +6434,7 @@ private:
                             std::vector<std::string>{ pair.first },
                             pair.first, Argument::Positional);
                 arg->default_value(pair.second);
-                storage.create(arg, { pair.second });
+                storage.create(arg, { true, { pair.second } });
             }
         }
         if (parser && parser->m_parse_handle) {
