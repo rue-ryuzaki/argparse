@@ -685,6 +685,16 @@ public:
           m_value(std::move(orig.m_value))
     { }
 
+    Value(T const& orig)
+        : m_has_value(true),
+          m_value(orig)
+    { }
+
+    Value(T&& orig) noexcept
+        : m_has_value(true),
+          m_value(std::move(orig))
+    { }
+
     inline Value& operator =(Value const& rhs)
     {
         if (this != &rhs) {
@@ -3104,15 +3114,40 @@ public:
      *  \brief Construct object with parsed arguments
      *
      *  \param storage Parsed arguments
+     *
+     *  \return Object with parsed arguments
+     */
+    explicit
+    Namespace(Storage const& storage = Storage())
+        : m_storage(storage),
+          m_unrecognized_args()
+    { }
+
+    /*!
+     *  \brief Construct object with parsed arguments
+     *
+     *  \param storage Parsed arguments
      *  \param args Unrecognized arguments
      *
      *  \return Object with parsed arguments
      */
     explicit
-    Namespace(Storage const& storage = Storage(),
-              std::vector<std::string> const& args = std::vector<std::string>())
+    Namespace(Storage const& storage, std::vector<std::string> const& args)
         : m_storage(storage),
           m_unrecognized_args(args)
+    { }
+
+    /*!
+     *  \brief Construct object with parsed arguments
+     *
+     *  \param storage Parsed arguments
+     *
+     *  \return Object with parsed arguments
+     */
+    explicit
+    Namespace(Storage&& storage) noexcept
+        : m_storage(std::move(storage)),
+          m_unrecognized_args()
     { }
 
     /*!
@@ -3587,11 +3622,11 @@ public:
                                                            : pair.first->m_name;
             result += name + detail::_equals + to_string(flags.front(), "'");
         }
-        auto unknown_args
-                = detail::_vector_to_string(m_unrecognized_args, ", ", "'");
-        if (unknown_args.empty()) {
+        if (!m_unrecognized_args.has_value()) {
             return "Namespace(" + result + ")";
         }
+        auto unknown_args
+                = detail::_vector_to_string(m_unrecognized_args(), ", ", "'");
         return "(Namespace(" + result + "), [" + unknown_args + "])";
     }
 
@@ -3909,7 +3944,7 @@ public:
      */
     inline std::vector<std::string> const& unrecognized_args() const noexcept
     {
-        return m_unrecognized_args;
+        return m_unrecognized_args();
     }
 
     /*!
@@ -3919,7 +3954,7 @@ public:
      */
     inline std::string unrecognized_args_to_args() const
     {
-        return detail::_vector_to_string(m_unrecognized_args, detail::_spaces,
+        return detail::_vector_to_string(m_unrecognized_args(), detail::_spaces,
                                          std::string(), true);
     }
 
@@ -4179,7 +4214,7 @@ private:
 #endif // ARGPARSE_USE_OPTIONAL
 
     Storage m_storage;
-    std::vector<std::string> m_unrecognized_args;
+    detail::Value<std::vector<std::string> > m_unrecognized_args;
 };
 
 /*!
@@ -6464,8 +6499,12 @@ private:
             }
             parser->m_parse_handle(argparse::Namespace(sub_storage));
         }
-        return argparse::Namespace(std::move(storage),
-                                   std::move(unrecognized_args));
+        if (only_known) {
+            return argparse::Namespace(std::move(storage),
+                                       std::move(unrecognized_args));
+        } else {
+            return argparse::Namespace(std::move(storage));
+        }
     }
 
     inline void
