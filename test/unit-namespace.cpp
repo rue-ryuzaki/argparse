@@ -9,12 +9,13 @@ TEST_CASE("1. to string", "[namespace]")
     SECTION("1.1. sample") {
         auto parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo");
+        parser.add_argument("--bar").dest("foobar");
 
-        REQUIRE(parser.parse_args("").to_string() == "Namespace(foo=None)");
-        REQUIRE(parser.parse_args("--foo a").to_string() == "Namespace(foo='a')");
-        REQUIRE(parser.parse_known_args("").to_string() == "(Namespace(foo=None), [])");
-        REQUIRE(parser.parse_known_args("a").to_string() == "(Namespace(foo=None), ['a'])");
-        REQUIRE(parser.parse_known_args("--foo a").to_string() == "(Namespace(foo='a'), [])");
+        REQUIRE(parser.parse_args("").to_string() == "Namespace(foo=None, foobar=None)");
+        REQUIRE(parser.parse_args("--foo a").to_string() == "Namespace(foo='a', foobar=None)");
+        REQUIRE(parser.parse_known_args("").to_string() == "(Namespace(foo=None, foobar=None), [])");
+        REQUIRE(parser.parse_known_args("a").to_string() == "(Namespace(foo=None, foobar=None), ['a'])");
+        REQUIRE(parser.parse_known_args("--bar a").to_string() == "(Namespace(foo=None, foobar='a'), [])");
     }
 
     SECTION("1.2. optional action store without default value") {
@@ -37,7 +38,7 @@ TEST_CASE("1. to string", "[namespace]")
         REQUIRE(parser.parse_args("--foo5 a a").to_string() == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=['a', 'a'])");
     }
 
-    SECTION("1.3. optional action store without default value") {
+    SECTION("1.3. optional action store with default value") {
         auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("store");
         parser.add_argument("--foo2").action("store").nargs("?");
