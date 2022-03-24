@@ -3565,8 +3565,13 @@ public:
                 return "'" + args.second.front() + "'";
             case Action::store_true :
             case Action::store_false :
+            case Action::BooleanOptionalAction :
                 if (args.second.empty()) {
-                    return detail::_bool_to_string(args.first->m_default());
+                    if (args.first->m_action == Action::BooleanOptionalAction) {
+                        return std::string("None");
+                    } else {
+                        return detail::_bool_to_string(args.first->m_default());
+                    }
                 }
                 if (args.second.size() != 1) {
                     throw TypeError("trying to get data from array argument '"
@@ -3610,18 +3615,6 @@ public:
                                                             quotes, false,
                                                             none) + "]]";
                 }
-            case Action::BooleanOptionalAction :
-                if (args.second.empty()) {
-                    return detail::_bool_to_string(args.first->m_default());
-                }
-                if (args.second.size() != 1) {
-                    throw TypeError("trying to get data from array argument '"
-                                    + key + "'");
-                }
-                return (args.second.front() == args.first->m_const()
-                        || args.second.front().empty())
-                        ? detail::_bool_to_string(args.second.front())
-                        : args.second.front();
             default :
                 throw ValueError("action not supported");
         }
