@@ -6249,6 +6249,11 @@ private:
                                             if (tmp->m_const.has_value()) {
                                                 _store_value(tmp,
                                                             tmp->const_value());
+                                            } else if (tmp->m_action
+                                                       == Action::extend) {
+                                                throw
+                                                TypeError("'NoneType' object "
+                                                          "is not iterable");
                                             } else {
                                                 _have_value(tmp);
                                             }
