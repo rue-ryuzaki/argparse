@@ -3556,13 +3556,13 @@ public:
         switch (args.first->m_action) {
             case Action::store_const :
                 if (args.second.empty()) {
-                    return std::string();
+                    return std::string("None");
                 }
                 if (args.second.size() != 1) {
                     throw TypeError("trying to get data from array argument '"
                                     + key + "'");
                 }
-                return args.second.front();
+                return "'" + args.second.front() + "'";
             case Action::store_true :
             case Action::store_false :
                 if (args.second.empty()) {
@@ -3571,6 +3571,9 @@ public:
                 if (args.second.size() != 1) {
                     throw TypeError("trying to get data from array argument '"
                                     + key + "'");
+                }
+                if (args.second.is_default()) {
+                    return "'" + args.second.front() + "'";
                 }
                 return detail::_bool_to_string(args.second.front());
             case Action::count :
@@ -6508,9 +6511,10 @@ private:
                     it = storage.erase(it);
                     continue;
                 }
-                if (value.has_value()
-                        || it->first->action() & detail::_bool_action) {
+                if (value.has_value()) {
                     it->second.push_default(value());
+                } else if (it->first->action() & detail::_bool_action) {
+                    it->second.push_back(value());
                 }
             }
             ++it;
