@@ -3590,7 +3590,10 @@ public:
                         || (args.first->m_nargs
                             & (Argument::NARGS_DEF | Argument::OPTIONAL))) {
                     std::string none = (args.first->m_nargs
-                                        & Argument::ZERO_OR_MORE) ? "" : "None";
+                                        & Argument::ZERO_OR_MORE)
+                            || (args.first->m_action == Action::extend
+                                && (args.first->m_nargs
+                                    & Argument::OPTIONAL)) ? "" : "None";
                     return "[" + detail::_vector_to_string(args.second(), ", ",
                                                            quotes, false,
                                                            none) + "]";
@@ -6247,8 +6250,21 @@ private:
                                             break;
                                         case Argument::OPTIONAL :
                                             if (tmp->m_const.has_value()) {
-                                                _store_value(tmp,
+                                                if (tmp->m_action
+                                                        == Action::extend) {
+                                                    if (tmp->m_const().empty()){
+                                                        _have_value(tmp);
+                                                    } else {
+                                                        for (auto arg
+                                                             : tmp->m_const()) {
+                                                            _store_value(tmp,
+                                                           std::string(1, arg));
+                                                        }
+                                                    }
+                                                } else {
+                                                    _store_value(tmp,
                                                             tmp->const_value());
+                                                }
                                             } else if (tmp->m_action
                                                        == Action::extend) {
                                                 throw
