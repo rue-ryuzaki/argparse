@@ -6227,6 +6227,45 @@ private:
             }
             auto const tmp = (was_pseudo_arg ? nullptr
                                              : _optional_arg_by_flag(arg));
+            auto _store_func = [_throw_error, _have_value,_store_value,
+                    &arg, &tmp] (uint32_t n)
+            {
+                if (n == 0) {
+                    switch (tmp->m_nargs) {
+                        case Argument::NARGS_DEF :
+                        case Argument::NARGS_NUM :
+                        case Argument::ONE_OR_MORE :
+                            _throw_error(tmp->error_nargs(arg));
+                            break;
+                        case Argument::OPTIONAL :
+                            if (tmp->m_const.has_value()) {
+                                if (tmp->m_action == Action::extend) {
+                                    if (tmp->m_const().empty()) {
+                                        _have_value(tmp);
+                                    } else {
+                                        for (auto c : tmp->m_const()) {
+                                            _store_value(tmp, std::string(1,c));
+                                        }
+                                    }
+                                } else {
+                                    _store_value(tmp, tmp->const_value());
+                                }
+                            } else if (tmp->m_action == Action::extend) {
+                                throw
+                                TypeError("'NoneType' object is not iterable");
+                            } else {
+                                _have_value(tmp);
+                            }
+                            break;
+                        default :
+                            _have_value(tmp);
+                            break;
+                    }
+                } else if (tmp->m_nargs == Argument::NARGS_NUM
+                           && n < tmp->m_num_args) {
+                    _throw_error(tmp->error_nargs(arg));
+                }
+            };
             if (tmp) {
                 switch (tmp->m_action) {
                     case Action::store :
@@ -6236,55 +6275,9 @@ private:
                     case Action::extend :
                         if (splitted.size() == 1) {
                             uint32_t n = 0;
-                            uint32_t num_args = tmp->m_num_args;
-                            auto _func = [_throw_error, _have_value,
-                                    _store_value, &arg, &n, &num_args, &tmp] ()
-                            {
-                                if (n == 0) {
-                                    switch (tmp->m_nargs) {
-                                        case Argument::NARGS_DEF :
-                                        case Argument::NARGS_NUM :
-                                        case Argument::ONE_OR_MORE :
-                                            _throw_error(tmp->error_nargs(arg));
-                                            break;
-                                        case Argument::OPTIONAL :
-                                            if (tmp->m_const.has_value()) {
-                                                if (tmp->m_action
-                                                        == Action::extend) {
-                                                    if (tmp->m_const().empty()){
-                                                        _have_value(tmp);
-                                                    } else {
-                                                        for (auto arg
-                                                             : tmp->m_const()) {
-                                                            _store_value(tmp,
-                                                           std::string(1, arg));
-                                                        }
-                                                    }
-                                                } else {
-                                                    _store_value(tmp,
-                                                            tmp->const_value());
-                                                }
-                                            } else if (tmp->m_action
-                                                       == Action::extend) {
-                                                throw
-                                                TypeError("'NoneType' object "
-                                                          "is not iterable");
-                                            } else {
-                                                _have_value(tmp);
-                                            }
-                                            break;
-                                        default :
-                                            _have_value(tmp);
-                                            break;
-                                    }
-                                } else if (tmp->m_nargs == Argument::NARGS_NUM
-                                           && n < num_args) {
-                                    _throw_error(tmp->error_nargs(arg));
-                                }
-                            };
                             do {
                                 if (++i == parsed_arguments.size()) {
-                                    _func();
+                                    _store_func(n);
                                     break;
                                 } else {
                                     auto const& next = parsed_arguments.at(i);
@@ -6298,14 +6291,14 @@ private:
                                         ++n;
                                     } else {
                                         --i;
-                                        _func();
+                                        _store_func(n);
                                         break;
                                     }
                                 }
                             } while ((tmp->m_nargs != Argument::NARGS_DEF
                                       && tmp->m_nargs != Argument::OPTIONAL
                                       && (tmp->m_nargs != Argument::NARGS_NUM
-                                          || n != num_args)));
+                                          || n != tmp->m_num_args)));
                         } else {
                             if (tmp->m_nargs != Argument::NARGS_DEF
                                     && tmp->m_num_args > 1) {
