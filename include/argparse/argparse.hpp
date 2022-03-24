@@ -2864,8 +2864,8 @@ ARGPARSE_EXPORT class Namespace
         };
 
         typedef pArgument                               key_type;
-        typedef std::pair<key_type const, mapped_type>  value_type;
-        typedef std::map<key_type const, mapped_type>   map_type;
+        typedef std::pair<key_type, mapped_type>        value_type;
+        typedef std::deque<value_type>                  map_type;
         typedef map_type::iterator                      iterator;
         typedef map_type::const_iterator                const_iterator;
 
@@ -2885,7 +2885,7 @@ ARGPARSE_EXPORT class Namespace
             for (auto& pair : m_data) {
                 pair.first->resolve_conflict_flags(arg_flags);
             }
-            m_data.insert(std::make_pair(key, value));
+            m_data.push_back(std::make_pair(key, value));
         }
 
         template <class T>
@@ -2904,7 +2904,7 @@ ARGPARSE_EXPORT class Namespace
             }
             auto const& flag = conflict_arg(key);
             if (flag.empty()) {
-                m_data.insert(std::make_pair(key, value));
+                m_data.push_back(std::make_pair(key, value));
             }
         }
 
@@ -2924,7 +2924,7 @@ ARGPARSE_EXPORT class Namespace
             }
             auto const& flag = conflict_arg(key);
             if (flag.empty()) {
-                m_data.insert(std::make_pair(key, value));
+                m_data.push_back(std::make_pair(key, value));
             } else {
                 throw
                 ArgumentError("argument "
@@ -2993,7 +2993,10 @@ ARGPARSE_EXPORT class Namespace
 
         inline bool exists(key_type const& key) const
         {
-            return m_data.count(key) != 0;
+            auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                   [key] (value_type const& pair) -> bool
+            { return pair.first == key; });
+            return it != std::end(m_data);
         }
 
         value_type const& at(std::string const& key) const
@@ -3009,13 +3012,27 @@ ARGPARSE_EXPORT class Namespace
 
         inline mapped_type& at(key_type const& key)
         {
-            return m_data.at(key);
+            auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                   [key] (value_type const& pair) -> bool
+            { return pair.first == key; });
+            if (it == std::end(m_data)) {
+                throw std::logic_error("key '" + key->m_name + "' not found");
+            }
+            return it->second;
         }
 
         inline mapped_type const& at(key_type const& key) const
         {
-            return m_data.at(key);
+            auto it = std::find_if(std::begin(m_data), std::end(m_data),
+                                   [key] (value_type const& pair) -> bool
+            { return pair.first == key; });
+            if (it == std::end(m_data)) {
+                throw std::logic_error("key '" + key->m_name + "' not found");
+            }
+            return it->second;
         }
+
+        inline iterator erase(const_iterator i){ return m_data.erase(i); }
 
         inline iterator begin()       noexcept { return std::begin(m_data); }
         inline iterator end()         noexcept { return std::end(m_data); }
@@ -6469,7 +6486,7 @@ private:
                 if ((it->first->m_default_type.has_value()
                      && it->first->m_default_type() == SUPPRESS)
                         || (suppress_default && !value.has_value())) {
-                    it = storage.m_data.erase(it);
+                    it = storage.erase(it);
                     continue;
                 }
                 if (value.has_value()
@@ -6494,7 +6511,7 @@ private:
                     it->second = storage.at(it->first);
                     ++it;
                 } else {
-                    it = sub_storage.m_data.erase(it);
+                    it = sub_storage.erase(it);
                 }
             }
             parser->m_parse_handle(argparse::Namespace(sub_storage));
