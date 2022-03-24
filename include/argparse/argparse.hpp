@@ -2941,10 +2941,9 @@ ARGPARSE_EXPORT class Namespace
             }
         }
 
-        inline void have_value(key_type const& arg, std::string const& value)
+        inline void have_value(key_type const& arg)
         {
             at(arg).have_value();
-            arg->handle(value);
         }
 
         inline void store_value(key_type const& arg, std::string const& value)
@@ -5728,9 +5727,8 @@ private:
         auto _have_value
                 = [_validate_argument_value, &storage] (pArgument const& arg)
         {
-            std::string val;
-            _validate_argument_value(*arg, val);
-            storage.have_value(arg, val);
+            _validate_argument_value(*arg, std::string());
+            storage.have_value(arg);
         };
         auto _store_value = [_validate_argument_value, &storage]
                 (pArgument const& arg, std::string const& val)
