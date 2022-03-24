@@ -3032,7 +3032,7 @@ ARGPARSE_EXPORT class Namespace
             return it->second;
         }
 
-        inline iterator erase(const_iterator i){ return m_data.erase(i); }
+        inline iterator erase(iterator i)      { return m_data.erase(i); }
 
         inline iterator begin()       noexcept { return std::begin(m_data); }
         inline iterator end()         noexcept { return std::end(m_data); }
