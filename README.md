@@ -3,7 +3,6 @@
 [![Ubuntu](https://github.com/rue-ryuzaki/argparse/workflows/Ubuntu/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AUbuntu)
 [![macOS](https://github.com/rue-ryuzaki/argparse/workflows/macOS/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AmacOS)
 [![Windows](https://github.com/rue-ryuzaki/argparse/workflows/Windows/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AWindows)
-[![Windows MSVC](https://github.com/rue-ryuzaki/argparse/workflows/Windows%20MSVC/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AWindows-MSVC)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rue-ryuzaki/argparse/main/LICENSE)
 [![GitHub releases](https://img.shields.io/github/release/rue-ryuzaki/argparse.svg)](https://github.com/rue-ryuzaki/argparse/releases)
 [![GitHub downloads](https://img.shields.io/github/downloads/rue-ryuzaki/argparse/total)](https://github.com/rue-ryuzaki/argparse/releases)
@@ -16,7 +15,7 @@ This project is a C++ adaptation of Python argparse and supports most of its fea
 C++11 support compiler
  - Ubuntu: gcc (tested 4.8, 5 up to 10), clang (tested 3.9 up to 12)
  - macOS: clang (tested 13 on macos-11)
- - Windows: mingw (tested 8.1), clang (tested 11, 12, 13), msvc (tested 2019, 2022), github legacy: msvc2017
+ - Windows: mingw (tested 8.1), clang (tested 11 up to 14), msvc (tested 2019, 2022), github legacy: msvc2017
 ## Overview
 - Examples:
   - [code](#code-example) - [usage](#usage-example) - [output](#output)
