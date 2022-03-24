@@ -544,7 +544,7 @@ TEST_CASE("8. argument actions", "[argument]")
         auto args0 = parser.parse_args();
 
         REQUIRE(args0.get<std::string>("foo") == default_value);
-        REQUIRE(args0.to_string("foo") == default_value);
+        REQUIRE(args0.to_string("foo") == "'" + default_value + "'");
 
         // set --foo -> foo = true
         auto args1 = parser.parse_args("--foo");
@@ -625,13 +625,13 @@ TEST_CASE("8. argument actions", "[argument]")
 
         auto args0 = parser.parse_args({ });
 
-        REQUIRE(args0.to_string("bar") == default_value);
+        REQUIRE(args0.to_string("bar") == "'" + default_value + "'");
         REQUIRE(args0.get<bool>("foo") == false);
         REQUIRE(args0.to_string("foo") == "false");
 
         auto args1 = parser.parse_args({ "--foo" });
 
-        REQUIRE(args1.to_string("bar") == default_value);
+        REQUIRE(args1.to_string("bar") == "'" + default_value + "'");
         REQUIRE(args1.get<bool>("foo") == true);
         REQUIRE(args1.to_string("foo") == "true");
 

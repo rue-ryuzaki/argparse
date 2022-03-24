@@ -202,4 +202,51 @@ TEST_CASE("1. to string", "[namespace]")
         REQUIRE(parser.parse_args("--foo3").to_string() == "Namespace(foo1='global', foo2='global', foo3=true, foo4='global')");
         REQUIRE(parser.parse_args("--foo4").to_string() == "Namespace(foo1='global', foo2='global', foo3='global', foo4=false)");
     }
+
+    SECTION("1.10. optional action append_const without default value") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        parser.add_argument("--foo1").action("append_const").const_value(const_value);
+        parser.add_argument("--foo2").action("append_const").const_value("");
+
+        REQUIRE(parser.parse_args("").to_string()       == "Namespace(foo1=None, foo2=None)");
+        REQUIRE(parser.parse_args("--foo1").to_string() == "Namespace(foo1=['const'], foo2=None)");
+        REQUIRE(parser.parse_args("--foo2").to_string() == "Namespace(foo1=None, foo2=[''])");
+    }
+
+    SECTION("1.11. optional action append_const with default value") {
+        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        parser.add_argument("--foo1").action("append_const").const_value(const_value);
+        parser.add_argument("--foo2").action("append_const").const_value("");
+
+        REQUIRE(parser.parse_args("").to_string()       == "Namespace(foo1='global', foo2='global')");
+        REQUIRE(parser.parse_args("--foo1").to_string() == "Namespace(foo1=['const'], foo2='global')");
+        REQUIRE(parser.parse_args("--foo2").to_string() == "Namespace(foo1='global', foo2=[''])");
+    }
+
+    SECTION("1.12. optional action BooleanOptionalAction without default value") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
+
+        REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo=None)");
+        REQUIRE(parser.parse_args("--foo").to_string()      == "Namespace(foo=true)");
+        REQUIRE(parser.parse_args("--no-foo").to_string()   == "Namespace(foo=false)");
+    }
+
+    SECTION("1.13. optional action BooleanOptionalAction with default value") {
+        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
+
+        REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo='global')");
+        REQUIRE(parser.parse_args("--foo").to_string()      == "Namespace(foo=true)");
+        REQUIRE(parser.parse_args("--no-foo").to_string()   == "Namespace(foo=false)");
+    }
+
+    SECTION("1.14. optional action count") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        parser.add_argument("-f", "--foo").action("count");
+
+        REQUIRE(parser.parse_args("").to_string()       == "Namespace(foo=None)");
+        REQUIRE(parser.parse_args("-f").to_string()     == "Namespace(foo=1)");
+        REQUIRE(parser.parse_args("-f -f").to_string()  == "Namespace(foo=2)");
+    }
 }
