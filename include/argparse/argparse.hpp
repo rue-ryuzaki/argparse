@@ -3577,6 +3577,9 @@ public:
                 }
                 return detail::_bool_to_string(args.second.front());
             case Action::count :
+                if (args.second.empty()) {
+                    return std::string("None");
+                }
                 return std::to_string(args.second.size());
             case Action::store :
             case Action::append :
