@@ -505,7 +505,6 @@ TEST_CASE("8. argument actions", "[argument]")
         parser.add_argument("count").action(argparse::count);
         parser.add_argument("extend").action(argparse::extend);
 
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "const_store" }).nargs("?").const_value(const_value)));
         REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "required_true" }).required(true)));
         REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "required_false" }).required(false)));
         REQUIRE_THROWS(parser.add_argument(argparse::Argument({ "dest" }).dest("dest")));
