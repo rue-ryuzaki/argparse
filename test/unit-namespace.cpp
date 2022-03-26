@@ -17,6 +17,10 @@ TEST_CASE("1. to string", "[namespace]")
         REQUIRE(parser.parse_known_args("").to_string() == "(Namespace(foo=None, foobar=None), [])");
         REQUIRE(parser.parse_known_args("a").to_string() == "(Namespace(foo=None, foobar=None), ['a'])");
         REQUIRE(parser.parse_known_args("--bar a").to_string() == "(Namespace(foo=None, foobar='a'), [])");
+
+        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+        parser2.set_defaults({ { "foo", "bar" } });
+        REQUIRE(parser2.parse_args("").to_string() == "Namespace(foo='bar')");
     }
 
     SECTION("1.2. optional action store without default value") {
@@ -248,5 +252,274 @@ TEST_CASE("1. to string", "[namespace]")
         REQUIRE(parser.parse_args("").to_string()       == "Namespace(foo=None)");
         REQUIRE(parser.parse_args("-f").to_string()     == "Namespace(foo=1)");
         REQUIRE(parser.parse_args("-f -f").to_string()  == "Namespace(foo=2)");
+    }
+
+    SECTION("1.15. positional action store without default value") {
+        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser3 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser4 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser5 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser6 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser7 = argparse::ArgumentParser().exit_on_error(false);
+        parser1.add_argument("foo").action("store");
+        parser2.add_argument("foo").action("store").nargs("?");
+        parser3.add_argument("foo").action("store").nargs("*");
+        parser4.add_argument("foo").action("store").nargs("+");
+        parser5.add_argument("foo").action("store").nargs(2);
+        parser6.add_argument("foo").action("store").nargs("?").const_value(const_value);
+        parser7.add_argument("foo").action("store").nargs("?").const_value("");
+
+        REQUIRE_THROWS(parser1.parse_args(""));
+        REQUIRE(parser1.parse_args("a").to_string()     == "Namespace(foo='a')");
+        REQUIRE(parser2.parse_args("").to_string()      == "Namespace(foo=None)");
+        REQUIRE(parser2.parse_args("a").to_string()     == "Namespace(foo='a')");
+        REQUIRE(parser3.parse_args("").to_string()      == "Namespace(foo=[])");
+        REQUIRE(parser3.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser4.parse_args(""));
+        REQUIRE(parser4.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser5.parse_args(""));
+        REQUIRE(parser5.parse_args("a a").to_string()   == "Namespace(foo=['a', 'a'])");
+        REQUIRE(parser6.parse_args("").to_string()      == "Namespace(foo=None)");
+        REQUIRE(parser6.parse_args("a").to_string()     == "Namespace(foo='a')");
+        REQUIRE(parser7.parse_args("").to_string()      == "Namespace(foo=None)");
+        REQUIRE(parser7.parse_args("a").to_string()     == "Namespace(foo='a')");
+    }
+
+    SECTION("1.16. positional action store with default value") {
+        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        parser1.add_argument("foo").action("store");
+        parser2.add_argument("foo").action("store").nargs("?");
+        parser3.add_argument("foo").action("store").nargs("*");
+        parser4.add_argument("foo").action("store").nargs("+");
+        parser5.add_argument("foo").action("store").nargs(2);
+        parser6.add_argument("foo").action("store").nargs("?").const_value(const_value);
+        parser7.add_argument("foo").action("store").nargs("?").const_value("");
+
+        REQUIRE_THROWS(parser1.parse_args(""));
+        REQUIRE(parser1.parse_args("a").to_string()     == "Namespace(foo='a')");
+        REQUIRE(parser2.parse_args("").to_string()      == "Namespace(foo='global')");
+        REQUIRE(parser2.parse_args("a").to_string()     == "Namespace(foo='a')");
+        REQUIRE(parser3.parse_args("").to_string()      == "Namespace(foo='global')");
+        REQUIRE(parser3.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser4.parse_args(""));
+        REQUIRE(parser4.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser5.parse_args(""));
+        REQUIRE(parser5.parse_args("a a").to_string()   == "Namespace(foo=['a', 'a'])");
+        REQUIRE(parser6.parse_args("").to_string()      == "Namespace(foo='global')");
+        REQUIRE(parser6.parse_args("a").to_string()     == "Namespace(foo='a')");
+        REQUIRE(parser7.parse_args("").to_string()      == "Namespace(foo='global')");
+        REQUIRE(parser7.parse_args("a").to_string()     == "Namespace(foo='a')");
+    }
+
+    SECTION("1.17. positional action append without default value") {
+        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser3 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser4 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser5 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser6 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser7 = argparse::ArgumentParser().exit_on_error(false);
+        parser1.add_argument("foo").action("append");
+        parser2.add_argument("foo").action("append").nargs("?");
+        parser3.add_argument("foo").action("append").nargs("*");
+        parser4.add_argument("foo").action("append").nargs("+");
+        parser5.add_argument("foo").action("append").nargs(2);
+        parser6.add_argument("foo").action("append").nargs("?").const_value(const_value);
+        parser7.add_argument("foo").action("append").nargs("?").const_value("");
+
+        REQUIRE_THROWS(parser1.parse_args(""));
+        REQUIRE(parser1.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE(parser2.parse_args("").to_string()      == "Namespace(foo=[None])");
+        REQUIRE(parser2.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE(parser3.parse_args("").to_string()      == "Namespace(foo=[[]])");
+        REQUIRE(parser3.parse_args("a").to_string()     == "Namespace(foo=[['a']])");
+        REQUIRE_THROWS(parser4.parse_args(""));
+        REQUIRE(parser4.parse_args("a").to_string()     == "Namespace(foo=[['a']])");
+        REQUIRE_THROWS(parser5.parse_args(""));
+        REQUIRE(parser5.parse_args("a a").to_string()   == "Namespace(foo=[['a', 'a']])");
+        REQUIRE(parser6.parse_args("").to_string()      == "Namespace(foo=[None])");
+        REQUIRE(parser6.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE(parser7.parse_args("").to_string()      == "Namespace(foo=[None])");
+        REQUIRE(parser7.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+    }
+
+    SECTION("1.18. positional action append with default value") {
+        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        parser1.add_argument("foo").action("append");
+        parser2.add_argument("foo").action("append").nargs("?");
+        parser3.add_argument("foo").action("append").nargs("*");
+        parser4.add_argument("foo").action("append").nargs("+");
+        parser5.add_argument("foo").action("append").nargs(2);
+        parser6.add_argument("foo").action("append").nargs("?").const_value(const_value);
+        parser7.add_argument("foo").action("append").nargs("?").const_value("");
+
+        REQUIRE_THROWS(parser1.parse_args(""));
+        REQUIRE(parser1.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE(parser2.parse_args("").to_string()      == "Namespace(foo=[None])");
+        REQUIRE(parser2.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE(parser3.parse_args("").to_string()      == "Namespace(foo=[[]])");
+        REQUIRE(parser3.parse_args("a").to_string()     == "Namespace(foo=[['a']])");
+        REQUIRE_THROWS(parser4.parse_args(""));
+        REQUIRE(parser4.parse_args("a").to_string()     == "Namespace(foo=[['a']])");
+        REQUIRE_THROWS(parser5.parse_args(""));
+        REQUIRE(parser5.parse_args("a a").to_string()   == "Namespace(foo=[['a', 'a']])");
+        REQUIRE(parser6.parse_args("").to_string()      == "Namespace(foo=[None])");
+        REQUIRE(parser6.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE(parser7.parse_args("").to_string()      == "Namespace(foo=[None])");
+        REQUIRE(parser7.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+    }
+
+    SECTION("1.19. positional action extend without default value") {
+        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser3 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser4 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser5 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser6 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser7 = argparse::ArgumentParser().exit_on_error(false);
+        parser1.add_argument("foo").action("extend");
+        parser2.add_argument("foo").action("extend").nargs("?");
+        parser3.add_argument("foo").action("extend").nargs("*");
+        parser4.add_argument("foo").action("extend").nargs("+");
+        parser5.add_argument("foo").action("extend").nargs(2);
+        parser6.add_argument("foo").action("extend").nargs("?").const_value(const_value);
+        parser7.add_argument("foo").action("extend").nargs("?").const_value("");
+
+        REQUIRE_THROWS(parser1.parse_args(""));
+        REQUIRE(parser1.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser2.parse_args(""));
+        REQUIRE(parser2.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE(parser3.parse_args("").to_string()      == "Namespace(foo=[])");
+        REQUIRE(parser3.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser4.parse_args(""));
+        REQUIRE(parser4.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser5.parse_args(""));
+        REQUIRE(parser5.parse_args("a a").to_string()   == "Namespace(foo=['a', 'a'])");
+        REQUIRE_THROWS(parser6.parse_args(""));
+        REQUIRE(parser6.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser7.parse_args(""));
+        REQUIRE(parser7.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+    }
+
+    SECTION("1.20. positional action extend with default value") {
+        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        parser1.add_argument("foo").action("extend");
+        parser2.add_argument("foo").action("extend").nargs("?");
+        parser3.add_argument("foo").action("extend").nargs("*");
+        parser4.add_argument("foo").action("extend").nargs("+");
+        parser5.add_argument("foo").action("extend").nargs(2);
+        parser6.add_argument("foo").action("extend").nargs("?").const_value(const_value);
+        parser7.add_argument("foo").action("extend").nargs("?").const_value("");
+
+        REQUIRE_THROWS(parser1.parse_args(""));
+        REQUIRE(parser1.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser2.parse_args(""));
+        REQUIRE(parser2.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE(parser3.parse_args("").to_string()      == "Namespace(foo=[])");
+        REQUIRE(parser3.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser4.parse_args(""));
+        REQUIRE(parser4.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser5.parse_args(""));
+        REQUIRE(parser5.parse_args("a a").to_string()   == "Namespace(foo=['a', 'a'])");
+        REQUIRE_THROWS(parser6.parse_args(""));
+        REQUIRE(parser6.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+        REQUIRE_THROWS(parser7.parse_args(""));
+        REQUIRE(parser7.parse_args("a").to_string()     == "Namespace(foo=['a'])");
+    }
+
+    SECTION("1.21. positional action store const without default value") {
+        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser3 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser4 = argparse::ArgumentParser().exit_on_error(false);
+        parser1.add_argument("foo").action("store_const").const_value(const_value);
+        parser2.add_argument("foo").action("store_const").const_value("");
+        parser3.add_argument("foo").action("store_true");
+        parser4.add_argument("foo").action("store_false");
+
+        REQUIRE(parser1.parse_args("").to_string()  == "Namespace(foo='const')");
+        REQUIRE(parser2.parse_args("").to_string()  == "Namespace(foo='')");
+        REQUIRE(parser3.parse_args("").to_string()  == "Namespace(foo=true)");
+        REQUIRE(parser4.parse_args("").to_string()  == "Namespace(foo=false)");
+    }
+
+    SECTION("1.22. positional action store const with default value") {
+        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        parser1.add_argument("foo").action("store_const").const_value(const_value);
+        parser2.add_argument("foo").action("store_const").const_value("");
+        parser3.add_argument("foo").action("store_true");
+        parser4.add_argument("foo").action("store_false");
+
+        REQUIRE(parser1.parse_args("").to_string()  == "Namespace(foo='const')");
+        REQUIRE(parser2.parse_args("").to_string()  == "Namespace(foo='')");
+        REQUIRE(parser3.parse_args("").to_string()  == "Namespace(foo=true)");
+        REQUIRE(parser4.parse_args("").to_string()  == "Namespace(foo=false)");
+    }
+
+    SECTION("1.23. positional action append_const without default value") {
+        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+        parser1.add_argument("foo").action("append_const").const_value(const_value);
+        parser2.add_argument("foo").action("append_const").const_value("");
+
+        REQUIRE(parser1.parse_args("").to_string()  == "Namespace(foo=['const'])");
+        REQUIRE(parser2.parse_args("").to_string()  == "Namespace(foo=[''])");
+    }
+
+    SECTION("1.24. positional action append_const with default value") {
+        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        parser1.add_argument("foo").action("append_const").const_value(const_value);
+        parser2.add_argument("foo").action("append_const").const_value("");
+
+        REQUIRE(parser1.parse_args("").to_string()  == "Namespace(foo=['const'])");
+        REQUIRE(parser2.parse_args("").to_string()  == "Namespace(foo=[''])");
+    }
+
+    SECTION("1.25. positional action BooleanOptionalAction without default value") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        parser.add_argument("foo").action(argparse::BooleanOptionalAction);
+
+        REQUIRE(parser.parse_args("").to_string()   == "Namespace(foo=None)");
+        REQUIRE_THROWS(parser.parse_args("a"));
+    }
+
+    SECTION("1.26. positional action BooleanOptionalAction with default value") {
+        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        parser.add_argument("foo").action(argparse::BooleanOptionalAction);
+
+        REQUIRE(parser.parse_args("").to_string()   == "Namespace(foo='global')");
+        REQUIRE_THROWS(parser.parse_args("a"));
+    }
+
+    SECTION("1.27. positional action count") {
+        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        parser.add_argument("foo").action("count");
+
+        REQUIRE(parser.parse_args("").to_string()   == "Namespace(foo=1)");
+        REQUIRE_THROWS(parser.parse_args("a"));
+        REQUIRE_THROWS(parser.parse_args("a a"));
     }
 }
