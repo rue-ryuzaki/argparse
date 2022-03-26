@@ -1329,8 +1329,7 @@ public:
     Argument& const_value(std::string const& value)
     {
         if (m_action & detail::_const_action
-                || (m_type != Positional && m_nargs == OPTIONAL
-                    && (m_action & detail::_store_action))) {
+                || (m_nargs == OPTIONAL && (m_action & detail::_store_action))){
             m_const = detail::_trim_copy(value);
         } else if (m_type == Optional && m_nargs != OPTIONAL
                    && (m_action & detail::_store_action)) {
@@ -2297,6 +2296,8 @@ protected:
                 throw ValueError("dest supplied twice for positional argument");
             }
             if (arg.m_const.has_value()
+                    && !(arg.m_nargs == Argument::OPTIONAL
+                         && (arg.m_action & detail::_store_action))
                     && !(arg.m_action & detail::_const_action)) {
                 throw TypeError("got an unexpected keyword argument 'const'");
             }
@@ -2954,10 +2955,11 @@ ARGPARSE_EXPORT class Namespace
 
         void store_default_value(key_type const& arg, std::string const& value)
         {
-            if (arg->m_action == Action::store) {
+            if (arg->m_action
+                    & (Action::store | Action::BooleanOptionalAction)) {
                 auto& storage = at(arg);
                 if (storage.empty()) {
-                    storage.push_back(value);
+                    storage.push_default(value);
                 }
             }
         }
@@ -3593,7 +3595,9 @@ public:
                 if ((args.first->m_action == Action::store
                      && (args.first->m_nargs
                          & (Argument::NARGS_DEF | Argument::OPTIONAL)))
-                        || !args.second.exists() || args.second.is_default()) {
+                        || (!args.second.exists()
+                            && args.first->m_type == Argument::Optional)
+                        || args.second.is_default()) {
                     return detail::_vector_to_string(args.second(), ", ",
                                                      quotes, false, "None");
                 }
@@ -5774,6 +5778,10 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
+                    if (arg->m_action == Action::BooleanOptionalAction) {
+                        _store_default_value(arg);
+                        continue;
+                    }
                     switch (arg->m_nargs) {
                         case Argument::NARGS_DEF :
                         case Argument::ONE_OR_MORE :
@@ -5797,6 +5805,10 @@ private:
                 for ( ; pos < finish; ++pos) {
                     auto const& arg = positional.at(pos);
                     if (_is_positional_arg_stored(arg)) {
+                        continue;
+                    }
+                    if (arg->m_action == Action::BooleanOptionalAction) {
+                        _store_default_value(arg);
                         continue;
                     }
                     switch (arg->m_nargs) {
@@ -5839,6 +5851,10 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
+                    if (arg->m_action == Action::BooleanOptionalAction) {
+                        _store_default_value(arg);
+                        continue;
+                    }
                     switch (arg->m_nargs) {
                         case Argument::NARGS_DEF :
                             _store_first_value(arg, arguments);
@@ -5864,6 +5880,10 @@ private:
                 for ( ; pos < finish; ++pos) {
                     auto const& arg = positional.at(pos);
                     if (_is_positional_arg_stored(arg)) {
+                        continue;
+                    }
+                    if (arg->m_action == Action::BooleanOptionalAction) {
+                        _store_default_value(arg);
                         continue;
                     }
                     if (arg->m_nargs == Argument::NARGS_DEF) {
@@ -6466,8 +6486,13 @@ private:
                     if (_is_positional_arg_stored(arg)) {
                         continue;
                     }
-                    if (arg->m_nargs
-                            & (Argument::OPTIONAL | Argument::ZERO_OR_MORE)) {
+                    if (arg->m_action == Action::extend
+                            && (arg->m_nargs & Argument::OPTIONAL)) {
+                        throw TypeError("'NoneType' object is not iterable");
+                    }
+                    if ((arg->m_nargs
+                         & (Argument::OPTIONAL | Argument::ZERO_OR_MORE))
+                            || arg->m_action == Action::BooleanOptionalAction) {
                         _store_default_value(arg);
                         continue;
                     }
@@ -6566,8 +6591,7 @@ private:
         }
         for (auto const& arg : m_positional) {
             if ((add_suppress || !arg.first->m_help_type.has_value())
-                    && (add_groups || !arg.second)
-                    && arg.first->m_action != Action::BooleanOptionalAction) {
+                    && (add_groups || !arg.second)) {
                 result.push_back(arg.first);
             }
         }
