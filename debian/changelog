@@ -1,3 +1,16 @@
+cpp-argparse-dev (1.3.8-0ppa0) focal; urgency=low
+
+  * Allow to add_argument(Argument().dest(...))
+  * Allow to add_argument().dest(...)
+  * Add Namespace::print() and Namespace::to_string()
+  * Fix default value store
+  * Don't handle none argument value
+  * Fix nargs "?" with const and action "extend"
+  * Fix Namespace::to_string(...)
+  * Fix positional args store
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 26 Mar 2022 19:58:34 +0300
+
 cpp-argparse-dev (1.3.7-0ppa0) focal; urgency=low
 
   * Add default value SUPPRESS in get_default
