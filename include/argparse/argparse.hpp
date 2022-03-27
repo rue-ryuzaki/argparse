@@ -576,7 +576,9 @@ _vector_to_string(std::vector<std::string> const& vec,
                   std::string const& separator = detail::_spaces,
                   std::string const& quotes = std::string(),
                   bool replace_space = false,
-                  std::string const& none = std::string())
+                  std::string const& none = std::string(),
+                  std::string const& begin = std::string(),
+                  std::string const& end = std::string())
 {
     std::string res;
     for (auto const& el : vec) {
@@ -589,7 +591,7 @@ _vector_to_string(std::vector<std::string> const& vec,
         }
         res += quotes + val + quotes;
     }
-    return res.empty() ? none : res;
+    return begin + (res.empty() ? none : res) + end;
 }
 
 inline std::string
@@ -3609,15 +3611,15 @@ public:
                             || (args.first->m_action == Action::extend
                                 && (args.first->m_nargs
                                     & Argument::OPTIONAL)) ? "" : "None";
-                    return "[" + detail::_vector_to_string(args.second(), ", ",
-                                                           quotes, false,
-                                                           none) + "]";
+                    return detail::_vector_to_string(args.second(), ", ",
+                                                     quotes, false, none,
+                                                     "[", "]");
                 } else {
                     std::string none = (args.first->m_nargs
                                         & Argument::ZERO_OR_MORE) ? "" : "None";
-                    return "[[" + detail::_vector_to_string(args.second(), ", ",
-                                                            quotes, false,
-                                                            none) + "]]";
+                    return detail::_vector_to_string(args.second(), ", ",
+                                                     quotes, false, none,
+                                                     "[[", "]]");
                 }
             default :
                 throw ValueError("action not supported");
