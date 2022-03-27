@@ -2788,9 +2788,8 @@ ARGPARSE_EXPORT class Namespace
                   m_values()
             { }
 
-            mapped_type(bool exists, bool is_default,
-                        std::vector<std::string> const& values)
-                : m_exists(exists),
+            mapped_type(bool is_default, std::vector<std::string> const& values)
+                : m_exists(true),
                   m_is_default(is_default),
                   m_values(values)
             { }
@@ -2802,12 +2801,7 @@ ARGPARSE_EXPORT class Namespace
                 m_values.clear();
             }
 
-            inline void have_value()
-            {
-                m_exists = true;
-            }
-
-            inline bool exists() const
+            inline bool exists() const noexcept
             {
                 return m_exists;
             }
@@ -2818,27 +2812,27 @@ ARGPARSE_EXPORT class Namespace
                 push_back(value);
             }
 
-            inline bool is_default() const
+            inline bool is_default() const noexcept
             {
                 return m_is_default;
             }
 
-            inline std::vector<std::string> const& operator ()() const
+            inline std::vector<std::string> const& operator ()() const noexcept
             {
                 return m_values;
             }
 
-            inline std::size_t size() const
+            inline std::size_t size() const noexcept
             {
                 return m_values.size();
             }
 
-            inline bool empty() const
+            inline bool empty() const noexcept
             {
                 return m_values.empty();
             }
 
-            inline std::string const& front() const
+            inline std::string const& front() const noexcept
             {
                 return m_values.front();
             }
@@ -2858,6 +2852,14 @@ ARGPARSE_EXPORT class Namespace
             {
                 m_exists = true;
                 m_values.push_back(value);
+            }
+
+            inline void push_values(std::vector<std::string> const& values)
+            {
+                m_exists = true;
+                m_values.reserve(m_values.size() + values.size());
+                m_values.insert(std::end(m_values),
+                                std::begin(values), std::end(values));
             }
 
         private:
@@ -2946,13 +2948,22 @@ ARGPARSE_EXPORT class Namespace
 
         inline void have_value(key_type const& arg)
         {
-            at(arg).have_value();
+            at(arg).push_values({ });
         }
 
         inline void store_value(key_type const& arg, std::string const& value)
         {
             at(arg).push_back(value);
             arg->handle(value);
+        }
+
+        inline void store_values(key_type const& arg,
+                                 std::vector<std::string> const& values)
+        {
+            at(arg).push_values(values);
+            for (auto const& value : values) {
+                arg->handle(value);
+            }
         }
 
         void store_default_value(key_type const& arg, std::string const& value)
@@ -5744,6 +5755,14 @@ private:
             _validate_argument_value(*arg, val);
             storage.store_value(arg, val);
         };
+        auto _store_values = [_validate_argument_value, &storage]
+                (pArgument const& arg, std::vector<std::string> const& values)
+        {
+            for (auto const& val : values) {
+                _validate_argument_value(*arg, val);
+            }
+            storage.store_values(arg, values);
+        };
         auto _store_default_value = [this, &storage] (pArgument const& arg)
         {
             auto const& value = default_argument_value(*arg);
@@ -5762,17 +5781,28 @@ private:
             return storage.self_value_stored(arg);
         };
         auto _match_positionals
-                = [_is_positional_arg_stored, _store_value,
+                = [_is_positional_arg_stored, _store_value, _store_values,
                    _store_default_value, &pos]
                 (std::vector<pArgument> const& positional,
                 std::deque<std::string>& arguments, std::size_t finish,
                 std::size_t min_args, std::size_t one_args, bool more_args)
         {
             auto _store_first_value = [_store_value]
-                    (pArgument const& arg, std::deque<std::string>& values)
+                    (pArgument const& arg, std::deque<std::string>& arguments)
             {
-                _store_value(arg, values.front());
-                values.pop_front();
+                _store_value(arg, arguments.front());
+                arguments.pop_front();
+            };
+            auto _store_n_values = [_store_values] (pArgument const& arg,
+                    std::deque<std::string>& arguments, std::size_t n)
+            {
+                std::vector<std::string> values;
+                values.reserve(n);
+                for (std::size_t i = 0; i < n; ++i) {
+                    values.push_back(arguments.front());
+                    arguments.pop_front();
+                }
+                 _store_values(arg, values);
             };
             if (min_args == arguments.size()) {
                 for ( ; pos < finish; ++pos) {
@@ -5794,9 +5824,7 @@ private:
                             _store_default_value(arg);
                             break;
                         case Argument::NARGS_NUM :
-                            for (std::size_t n = 0; n < arg->m_num_args; ++n) {
-                                _store_first_value(arg, arguments);
-                            }
+                            _store_n_values(arg, arguments, arg->m_num_args);
                             break;
                         default :
                             break;
@@ -5818,29 +5846,22 @@ private:
                             _store_first_value(arg, arguments);
                             break;
                         case Argument::ONE_OR_MORE :
-                            _store_first_value(arg, arguments);
-                            while (over_args > 0) {
-                                _store_first_value(arg, arguments);
-                                --over_args;
-                            }
+                            _store_n_values(arg, arguments, 1 + over_args);
+                            over_args = 0;
                             break;
                         case Argument::OPTIONAL :
                             _store_default_value(arg);
                             break;
                         case Argument::ZERO_OR_MORE :
                             if (over_args > 0) {
-                                while (over_args > 0) {
-                                    _store_first_value(arg, arguments);
-                                    --over_args;
-                                }
+                                _store_n_values(arg, arguments, over_args);
+                                over_args = 0;
                             } else {
                                 _store_default_value(arg);
                             }
                             break;
                         case Argument::NARGS_NUM :
-                            for (std::size_t n = 0; n < arg->m_num_args; ++n) {
-                                _store_first_value(arg, arguments);
-                            }
+                            _store_n_values(arg, arguments, arg->m_num_args);
                             break;
                         default :
                             break;
@@ -5870,9 +5891,7 @@ private:
                             }
                             break;
                         case Argument::NARGS_NUM :
-                            for (std::size_t n = 0; n < arg->m_num_args; ++n) {
-                                _store_first_value(arg, arguments);
-                            }
+                            _store_n_values(arg, arguments, arg->m_num_args);
                             break;
                         default :
                             break;
@@ -5891,9 +5910,7 @@ private:
                     if (arg->m_nargs == Argument::NARGS_DEF) {
                         _store_first_value(arg, arguments);
                     } else {
-                        for (std::size_t n = 0; n < arg->m_num_args; ++n) {
-                            _store_first_value(arg, arguments);
-                        }
+                        _store_n_values(arg, arguments, arg->m_num_args);
                     }
                 }
             }
@@ -6249,8 +6266,8 @@ private:
             }
             auto const tmp = (was_pseudo_arg ? nullptr
                                              : _optional_arg_by_flag(arg));
-            auto _store_func = [_throw_error, _have_value,_store_value,
-                    &arg, &tmp] (uint32_t n)
+            auto _store_func = [_throw_error, _have_value,
+                    _store_value, _store_values, &arg, &tmp] (uint32_t n)
             {
                 if (n == 0) {
                     switch (tmp->m_nargs) {
@@ -6265,9 +6282,12 @@ private:
                                     if (tmp->m_const().empty()) {
                                         _have_value(tmp);
                                     } else {
+                                        std::vector<std::string> values;
+                                        values.reserve(tmp->m_const().size());
                                         for (auto c : tmp->m_const()) {
-                                            _store_value(tmp, std::string(1,c));
+                                            values.push_back(std::string(1, c));
                                         }
+                                        _store_values(tmp, values);
                                     }
                                 } else {
                                     _store_value(tmp, tmp->const_value());
@@ -6297,6 +6317,7 @@ private:
                     case Action::extend :
                         if (splitted.size() == 1) {
                             uint32_t n = 0;
+                            std::vector<std::string> values;
                             do {
                                 if (++i == parsed_arguments.size()) {
                                     _store_func(n);
@@ -6309,7 +6330,7 @@ private:
                                                 _prefix_chars(),
                                                 have_negative_args,
                                                 was_pseudo_arg)) {
-                                        _store_value(tmp, next);
+                                        values.push_back(next);
                                         ++n;
                                     } else {
                                         --i;
@@ -6321,6 +6342,9 @@ private:
                                       && tmp->m_nargs != Argument::OPTIONAL
                                       && (tmp->m_nargs != Argument::NARGS_NUM
                                           || n != tmp->m_num_args)));
+                            if (!values.empty()) {
+                                _store_values(tmp, values);
+                            }
                         } else {
                             if (tmp->m_nargs != Argument::NARGS_DEF
                                     && tmp->m_num_args > 1) {
@@ -6541,7 +6565,7 @@ private:
                             std::vector<std::string>{ pair.first },
                             pair.first, Argument::Positional);
                 arg->default_value(pair.second);
-                storage.create(arg, { true, true, { pair.second } });
+                storage.create(arg, { true, { pair.second } });
             }
         }
         if (parser && parser->m_parse_handle) {
