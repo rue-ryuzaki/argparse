@@ -3152,7 +3152,72 @@ ARGPARSE_EXPORT class Namespace
     template <class T>
     struct is_stl_matrix:std::false_type{};
     template <class... Args>
+    struct is_stl_matrix<std::deque<std::deque   <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::deque<std::forward_list<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::deque<std::list    <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::deque<std::multiset<Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::deque<std::priority_queue<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::deque<std::set     <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::deque<std::vector  <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::deque<std::unordered_multiset<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::deque<std::unordered_set<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::list<std::deque    <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::list<std::forward_list<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::list<std::list     <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::list<std::multiset <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::list<std::priority_queue<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::list<std::set      <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::list<std::vector   <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::list<std::unordered_multiset<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::list<std::unordered_set<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::vector<std::deque  <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::vector<std::forward_list<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::vector<std::list   <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::vector<std::multiset<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::vector<std::priority_queue<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::vector<std::set    <Args...> > >:std::true_type{};
+    template <class... Args>
     struct is_stl_matrix<std::vector<std::vector <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::vector<std::unordered_multiset<Args...> > >
+                                                              :std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix<std::vector<std::unordered_set<Args...> > >
+                                                              :std::true_type{};
 
     template <class T, typename U = void>
     struct is_stl_pair:std::false_type{};
@@ -3408,7 +3473,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for 2D vectors
+     *  \brief Get parsed argument value for 2D deque, list, vector
      *
      *  \param key Argument name
      *
@@ -3431,7 +3496,8 @@ public:
         T res{};
         for (auto const& vec : args.second.matrix()) {
             auto vector = to_vector<typename T::value_type::value_type>(vec);
-            res.push_back(vector);
+            res.push_back(typename T::value_type(std::begin(vector),
+                                                 std::end(vector)));
         }
         return res;
     }
@@ -3904,7 +3970,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for 2D vectors.
+     *  \brief Try get parsed argument value for 2D deque, list, vector.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -3934,7 +4000,8 @@ public:
             if (!vector.operator bool()) {
                 return {};
             }
-            res.push_back(vector.value());
+            res.push_back(typename T::value_type(std::begin(vector.value()),
+                                                 std::end(vector.value())));
         }
         return res;
     }
