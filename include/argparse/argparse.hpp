@@ -595,6 +595,26 @@ _vector_to_string(std::vector<std::string> const& vec,
 }
 
 inline std::string
+_matrix_to_string(std::vector<std::vector<std::string> > const& matrix,
+                  std::string const& separator = detail::_spaces,
+                  std::string const& quotes = std::string(),
+                  bool replace_space = false,
+                  std::string const& none = std::string(),
+                  std::string const& begin = std::string(),
+                  std::string const& end = std::string())
+{
+    std::string res;
+    for (auto const& vec : matrix) {
+        if (!res.empty()) {
+            res += separator;
+        }
+        res += _vector_to_string(vec, separator, quotes, replace_space,
+                                 none, begin, end);
+    }
+    return begin + (res.empty() ? (begin + res + end) : res) + end;
+}
+
+inline std::string
 _ignore_default(std::string const& arg, std::string const& value)
 {
     return "argument " + arg + ": ignored default value '" + value + "'";
@@ -2785,13 +2805,15 @@ ARGPARSE_EXPORT class Namespace
             mapped_type()
                 : m_exists(),
                   m_is_default(),
-                  m_values()
+                  m_values(),
+                  m_matrix()
             { }
 
             mapped_type(bool is_default, std::vector<std::string> const& values)
                 : m_exists(true),
                   m_is_default(is_default),
-                  m_values(values)
+                  m_values(values),
+                  m_matrix({ m_values })
             { }
 
             inline void clear()
@@ -2799,6 +2821,7 @@ ARGPARSE_EXPORT class Namespace
                 m_exists = false;
                 m_is_default = false;
                 m_values.clear();
+                m_matrix.clear();
             }
 
             inline bool exists() const noexcept
@@ -2846,12 +2869,14 @@ ARGPARSE_EXPORT class Namespace
             {
                 m_exists = true;
                 m_values.emplace_back(std::move(value));
+                push_to_matrix();
             }
 
             inline void push_back(std::string const& value)
             {
                 m_exists = true;
                 m_values.push_back(value);
+                push_to_matrix();
             }
 
             inline void push_values(std::vector<std::string> const& values)
@@ -2860,12 +2885,25 @@ ARGPARSE_EXPORT class Namespace
                 m_values.reserve(m_values.size() + values.size());
                 m_values.insert(std::end(m_values),
                                 std::begin(values), std::end(values));
+                m_matrix.push_back(values);
+            }
+
+            inline std::vector<std::vector<std::string> > const&
+            matrix() const noexcept
+            {
+                return m_matrix;
             }
 
         private:
+            inline void push_to_matrix()
+            {
+                m_matrix.push_back({ m_values.back() });
+            }
+
             bool m_exists;
             bool m_is_default;
             std::vector<std::string> m_values;
+            std::vector<std::vector<std::string> > m_matrix;
         };
 
         typedef pArgument                               key_type;
@@ -3628,9 +3666,9 @@ public:
                 } else {
                     std::string none = (args.first->m_nargs
                                         & Argument::ZERO_OR_MORE) ? "" : "None";
-                    return detail::_vector_to_string(args.second(), ", ",
+                    return detail::_matrix_to_string(args.second.matrix(), ", ",
                                                      quotes, false, none,
-                                                     "[[", "]]");
+                                                     "[", "]");
                 }
             default :
                 throw ValueError("action not supported");
