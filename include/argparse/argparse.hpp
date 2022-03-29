@@ -90,9 +90,9 @@ using experimental::fundamentals_v1::nullopt;
 #endif // C++14+
 
 #if __cplusplus >= 201703L // C++17+
-#define ARGPARSE_INLINE inline
+#define ARGPARSE_INLINE_VARIABLE inline
 #else
-#define ARGPARSE_INLINE
+#define ARGPARSE_INLINE_VARIABLE
 #endif // C++17+
 
 #define ARGPARSE_EXPORT
@@ -238,25 +238,25 @@ public:
 };
 
 namespace detail {
-std::size_t ARGPARSE_INLINE constexpr _usage_limit = 80;
-std::size_t ARGPARSE_INLINE constexpr _argument_help_limit = 24;
-char ARGPARSE_INLINE constexpr _default_prefix_char = '-';
-std::string ARGPARSE_INLINE const _default_prefix_chars = "-";
-std::string ARGPARSE_INLINE const _pseudo_argument = "--";
-char ARGPARSE_INLINE constexpr _space = ' ';
-char ARGPARSE_INLINE constexpr _equal = '=';
-std::string ARGPARSE_INLINE const _spaces = " ";
-std::string ARGPARSE_INLINE const _equals = "=";
+std::size_t ARGPARSE_INLINE_VARIABLE constexpr _usage_limit = 80;
+std::size_t ARGPARSE_INLINE_VARIABLE constexpr _argument_help_limit = 24;
+char ARGPARSE_INLINE_VARIABLE constexpr _default_prefix_char = '-';
+std::string ARGPARSE_INLINE_VARIABLE const _default_prefix_chars = "-";
+std::string ARGPARSE_INLINE_VARIABLE const _pseudo_argument = "--";
+char ARGPARSE_INLINE_VARIABLE constexpr _space = ' ';
+char ARGPARSE_INLINE_VARIABLE constexpr _equal = '=';
+std::string ARGPARSE_INLINE_VARIABLE const _spaces = " ";
+std::string ARGPARSE_INLINE_VARIABLE const _equals = "=";
 
-std::string ARGPARSE_INLINE const _suppress = "==SUPPRESS==";
+std::string ARGPARSE_INLINE_VARIABLE const _suppress = "==SUPPRESS==";
 
-uint32_t ARGPARSE_INLINE constexpr
+uint32_t ARGPARSE_INLINE_VARIABLE constexpr
 _bool_action = Action::store_true | Action::store_false;
-uint32_t ARGPARSE_INLINE constexpr
+uint32_t ARGPARSE_INLINE_VARIABLE constexpr
 _store_action = Action::store | Action::append | Action::extend;
-uint32_t ARGPARSE_INLINE constexpr
+uint32_t ARGPARSE_INLINE_VARIABLE constexpr
 _const_action = Action::store_const | Action::append_const;
-uint32_t ARGPARSE_INLINE constexpr
+uint32_t ARGPARSE_INLINE_VARIABLE constexpr
 _store_const_action = _store_action | _const_action;
 
 inline void
@@ -7110,7 +7110,7 @@ private:
 } // argparse
 
 #undef ARGPARSE_EXPORT
-#undef ARGPARSE_INLINE
+#undef ARGPARSE_INLINE_VARIABLE
 #undef ARGPARSE_USE_FILESYSTEM
 
 #endif // _ARGPARSE_ARGUMENT_PARSER_HPP_
