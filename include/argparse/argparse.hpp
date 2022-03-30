@@ -795,14 +795,14 @@ private:
     T       m_value;
 };
 
-inline bool
-_is_type_name_correct(std::string const& expected, std::string const& received)
+inline bool _is_type_name_correct(std::string const& expected,
+                                  std::string const& received) ARGPARSE_NOEXCEPT
 {
     return expected.empty() || received == expected;
 }
 
-inline void
-_check_type_name(Value<std::string> const& expected,std::string const& received)
+inline void _check_type_name(Value<std::string> const& expected,
+                             std::string const& received)
 {
     if (expected.has_value() && !_is_type_name_correct(expected(), received)) {
         throw TypeError("type_name missmatch: expected '" + expected() + "'"
@@ -1132,7 +1132,7 @@ public:
      *
      *  \return true if current argument lesser, otherwise false
      */
-    inline bool operator <(Argument const& rhs) const ARGPARSE_NOEXCEPT
+    inline bool operator <(Argument const& rhs) const
     {
         return m_flags < rhs.m_flags;
     }
@@ -1942,7 +1942,7 @@ private:
         }
     }
 
-    inline bool operator ==(Argument const& rhs) const ARGPARSE_NOEXCEPT
+    inline bool operator ==(Argument const& rhs) const
     {
         return m_flags == rhs.m_flags
                 && m_name == rhs.m_name
@@ -3327,8 +3327,8 @@ public:
      *  \return Object with parsed arguments
      */
     explicit
-    Namespace(Storage&& storage, std::vector<std::string>&& args)
-                                                               ARGPARSE_NOEXCEPT
+    Namespace(Storage&& storage,
+              std::vector<std::string>&& args) ARGPARSE_NOEXCEPT
         : m_storage(std::move(storage)),
           m_unrecognized_args(std::move(args))
     { }
@@ -4941,6 +4941,7 @@ public:
         std::deque<Parser> m_parsers;
     };
 
+private:
     typedef std::pair<std::shared_ptr<Subparser>, std::size_t> SubparserInfo;
 
 public:
