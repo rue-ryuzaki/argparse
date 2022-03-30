@@ -256,14 +256,15 @@ std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _usage_limit = 80;
 std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
                                                       _argument_help_limit = 24;
 char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _default_prefix_char = '-';
-std::string ARGPARSE_INLINE_VARIABLE const _default_prefix_chars = "-";
-std::string ARGPARSE_INLINE_VARIABLE const _pseudo_argument = "--";
+char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
+                                                  _default_prefix_chars[] = "-";
+char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _pseudo_argument[] = "--";
 char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _space = ' ';
 char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _equal = '=';
-std::string ARGPARSE_INLINE_VARIABLE const _spaces = " ";
-std::string ARGPARSE_INLINE_VARIABLE const _equals = "=";
-
-std::string ARGPARSE_INLINE_VARIABLE const _suppress = "==SUPPRESS==";
+char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _spaces[] = " ";
+char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _equals[] = "=";
+char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
+                                                   _suppress[] = "==SUPPRESS==";
 
 uint32_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
 _bool_action = Action::store_true | Action::store_false;
