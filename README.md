@@ -226,6 +226,7 @@ int main(int argc, char* argv[])
 - basic types (bool, integral types, floating point types, std::string, std::string_view (since C++17))
 - byte types (char, signed/unsigned char, int8_t, uint8_t, char8_t, std::byte)
 - containers (std::array, std::deque, std::forward_list, std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset, std::unordered_set)
+- 2 dimensional containers (std::deque, std::list, std::vector with another containers)
 - mapped types (std::map, std::multimap, std::unordered_map)
 - std::pair
 - std::tuple
@@ -233,7 +234,7 @@ int main(int argc, char* argv[])
 ### Don't work:
 - pointer and reference types
 - plain C arrays
-- containers with std::pair/std::tuple or another containers
+- containers with std::pair/std::tuple
 - C++17+ types and containers (std::span)
 ## Custom type example
 ### Namespace::get<>
