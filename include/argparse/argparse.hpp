@@ -46,6 +46,7 @@
 #include <forward_list>
 #include <fstream>
 #include <functional>
+#include <initializer_list>
 #include <iostream>
 #include <list>
 #include <map>
