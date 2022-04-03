@@ -1802,6 +1802,21 @@ private:
         }
     }
 
+    inline void validate() const
+    {
+        if (m_type == Positional && m_flags.empty() && m_dest.empty()) {
+            throw TypeError("missing 1 required positional argument: 'dest'");
+        }
+        if ((m_action & detail::_const_action) && !m_const.has_value()) {
+            throw TypeError("missing 1 required positional argument: 'const'");
+        }
+        for (auto const& flag : m_flags) {
+            if (flag == detail::_pseudo_argument && m_dest_str.empty()) {
+                throw ValueError("dest= is required for options like '--'");
+            }
+        }
+    }
+
     std::string usage(HelpFormatter formatter) const
     {
         std::string res;
@@ -5429,33 +5444,6 @@ public:
     void
     set_defaults(std::vector<std::pair<std::string, std::string> > const& pairs)
     {
-        auto _set_value
-                = [] (std::deque<pArgument>& arguments,
-                std::string const& dest, std::string const& val)
-        {
-            for (auto& arg : arguments) {
-                if (arg->m_type == Argument::Positional) {
-                    if (detail::_is_value_exists(dest, arg->m_flags)) {
-                        arg->default_value(val);
-                        return true;
-                    }
-                } else if (!arg->m_dest_str.empty()) {
-                    if (arg->m_dest_str == dest) {
-                        arg->default_value(val);
-                        return true;
-                    }
-                } else {
-                    for (auto const& flag : arg->m_flags) {
-                        auto name = detail::_flag_name(flag);
-                        if (flag == dest || name == dest) {
-                            arg->default_value(val);
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        };
         for (auto const& pair : pairs) {
             auto dest = detail::_trim_copy(pair.first);
             if (dest.empty()) {
@@ -5464,10 +5452,10 @@ public:
             auto value = detail::_trim_copy(pair.second);
             auto it = std::begin(m_parents);
             for ( ; it != std::end(m_parents)
-                  && !_set_value(it->m_arguments, dest, value); ++it) {
+                  && !is_default_stored(it->m_arguments, dest, value); ++it) {
             }
             if (it == std::end(m_parents)
-                    && !_set_value(m_arguments, dest, value)) {
+                    && !is_default_stored(m_arguments, dest, value)) {
                 m_default_values.push_back(std::make_pair(dest, value));
             }
         }
@@ -5788,6 +5776,14 @@ public:
         return res;
     }
 
+protected:
+    inline void
+    throw_error(std::string const& message, std::ostream& os = std::cerr) const
+    {
+        print_usage(os);
+        throw std::logic_error(m_prog + ": error: " + message);
+    }
+
 private:
     argparse::Namespace
     on_parse_arguments(std::vector<std::string> args,
@@ -5849,30 +5845,10 @@ private:
         {
             _custom_error(parser, error, os);
         };
-        auto _validate_argument = [] (pArgument const& arg)
-        {
-            if (arg->m_type == Argument::Positional
-                    && arg->m_flags.empty() && arg->m_dest.empty()) {
-                throw
-                TypeError("missing 1 required positional argument: 'dest'");
-            }
-            if ((arg->m_action & detail::_const_action)
-                    && !arg->m_const.has_value()) {
-                throw
-                TypeError("missing 1 required positional argument: 'const'");
-            }
-            for (auto const& flag : arg->m_flags) {
-                if (flag == detail::_pseudo_argument
-                        && arg->m_dest_str.empty()) {
-                    throw ValueError("dest= is required for options like '--'");
-                }
-            }
-        };
-        auto _validate_arguments = [_validate_argument]
-                (std::vector<pArgument> const& arguments)
+        auto _validate_arguments = [] (std::vector<pArgument> const& arguments)
         {
             for (auto const& arg : arguments) {
-                _validate_argument(arg);
+                arg->validate();
             }
         };
         auto _validate_argument_value = [_throw_error]
@@ -5917,7 +5893,7 @@ private:
         if (subparser.first) {
             for (auto const& p : subparser.first->m_parsers) {
                 for (auto const& arg : p.m_arguments) {
-                    _validate_argument(arg);
+                    arg->validate();
                 }
             }
             subparser_dest = subparser.first->m_dest;
@@ -6807,19 +6783,40 @@ private:
         }
     }
 
-    inline void
-    throw_error(std::string const& message, std::ostream& os = std::cerr) const
-    {
-        print_usage(os);
-        throw std::logic_error(m_prog + ": error: " + message);
-    }
-
     inline detail::Value<std::string> const&
     default_argument_value(Argument const& arg) const ARGPARSE_NOEXCEPT
     {
         return (arg.m_default.has_value()
                 || !m_argument_default.has_value()) ? arg.m_default
                                                     : m_argument_default;
+    }
+
+    static bool
+    is_default_stored(std::deque<pArgument>& arguments,
+                      std::string const& dest, std::string const& val)
+    {
+        for (auto& arg : arguments) {
+            if (arg->m_type == Argument::Positional) {
+                if (detail::_is_value_exists(dest, arg->m_flags)) {
+                    arg->default_value(val);
+                    return true;
+                }
+            } else if (!arg->m_dest_str.empty()) {
+                if (arg->m_dest_str == dest) {
+                    arg->default_value(val);
+                    return true;
+                }
+            } else {
+                for (auto const& flag : arg->m_flags) {
+                    auto name = detail::_flag_name(flag);
+                    if (flag == dest || name == dest) {
+                        arg->default_value(val);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     std::vector<pArgument>
