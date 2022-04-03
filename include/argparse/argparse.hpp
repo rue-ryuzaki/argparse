@@ -603,7 +603,7 @@ _bool_to_string(std::string const& str)
 
 inline std::string
 _vector_to_string(std::vector<std::string> const& vec,
-                  std::string const& separator = detail::_spaces,
+                  std::string const& separator = _spaces,
                   std::string const& quotes = std::string(),
                   bool replace_space = false,
                   std::string const& none = std::string(),
@@ -626,7 +626,7 @@ _vector_to_string(std::vector<std::string> const& vec,
 
 inline std::string
 _matrix_to_string(std::vector<std::vector<std::string> > const& matrix,
-                  std::string const& separator = detail::_spaces,
+                  std::string const& separator = _spaces,
                   std::string const& quotes = std::string(),
                   bool replace_space = false,
                   std::string const& none = std::string(),
@@ -671,7 +671,7 @@ _help_formatter(HelpFormatter formatter,
             res += std::string(limit - str.size(), _space);
             offset = str.size() + 2;
         }
-        auto lines = detail::_split(help, '\n');
+        auto lines = _split(help, '\n');
         if (formatter & RawTextHelpFormatter) {
             res += lines.front();
             for (size_t i = 1; i < lines.size(); ++i) {
@@ -680,7 +680,7 @@ _help_formatter(HelpFormatter formatter,
         } else {
             std::string help_formatted;
             for (auto& line : lines) {
-                detail::_trim(line);
+                _trim(line);
                 if (!line.empty()) {
                     if (!help_formatted.empty()) {
                         help_formatted += _space;
