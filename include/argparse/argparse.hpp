@@ -785,6 +785,11 @@ public:
         return m_has_value == rhs.m_has_value && m_value == rhs.m_value;
     }
 
+    inline bool operator ==(T const& rhs) const ARGPARSE_NOEXCEPT
+    {
+        return m_has_value && m_value == rhs;
+    }
+
     inline void clear(T const& value = T())
     {
         m_has_value = false;
@@ -1381,7 +1386,7 @@ public:
      */
     Argument& const_value(std::string const& value)
     {
-        if (m_action & detail::_const_action
+        if ((m_action & detail::_const_action)
                 || (m_nargs == OPTIONAL && (m_action & detail::_store_action))){
             m_const = detail::_trim_copy(value);
         } else if (m_type == Optional && m_nargs != OPTIONAL
@@ -1822,7 +1827,7 @@ private:
     {
         std::string res;
         if (m_type == Optional) {
-            if (m_action & Action::BooleanOptionalAction) {
+            if (m_action == Action::BooleanOptionalAction) {
                 for (auto const& flag : flags()) {
                     if (!res.empty()) {
                         res += " | ";
@@ -1873,11 +1878,11 @@ private:
                 auto const& def = (m_default.has_value()
                                    || !argument_default.has_value())
                         ? m_default : argument_default;
-                if ((m_default_type.has_value() && m_default_type() == SUPPRESS)
+                if (m_default_type == SUPPRESS
                         || (suppress_default && !def.has_value())) {
                     return res;
                 }
-                if (!def.has_value() && m_action & detail::_bool_action) {
+                if (!def.has_value() && (m_action & detail::_bool_action)) {
                     res += " (default: " + detail::_bool_to_string(def()) + ")";
                 } else {
                     res += " (default: " + ((def.has_value() || !def().empty())
@@ -1922,7 +1927,7 @@ private:
 
     std::string get_argument_name(HelpFormatter formatter) const
     {
-        if (formatter & MetavarTypeHelpFormatter && !type_name().empty()) {
+        if ((formatter & MetavarTypeHelpFormatter) && !type_name().empty()) {
             return type_name();
         }
         if (m_metavar.has_value()) {
@@ -3781,17 +3786,17 @@ public:
                 if (args.first->m_action != Action::append
                         || (args.first->m_nargs
                             & (Argument::NARGS_DEF | Argument::OPTIONAL))) {
-                    std::string none = (args.first->m_nargs
-                                        & Argument::ZERO_OR_MORE)
+                    std::string none
+                            = args.first->m_nargs == Argument::ZERO_OR_MORE
                             || (args.first->m_action == Action::extend
-                                && (args.first->m_nargs
-                                    & Argument::OPTIONAL)) ? "" : "None";
+                                && args.first->m_nargs == Argument::OPTIONAL)
+                            ? "" : "None";
                     return detail::_vector_to_string(args.second(), ", ",
                                                      quotes, false, none,
                                                      "[", "]");
                 } else {
-                    std::string none = (args.first->m_nargs
-                                        & Argument::ZERO_OR_MORE) ? "" : "None";
+                    std::string none = args.first->m_nargs
+                                        == Argument::ZERO_OR_MORE ? "" : "None";
                     return detail::_matrix_to_string(args.second.matrix(), ", ",
                                                      quotes, false, none,
                                                      "[", "]");
@@ -5374,12 +5379,10 @@ public:
                 return default_argument_value(*arg)();
             }
         }
-        bool suppress_default = m_argument_default_type.has_value()
-                                && m_argument_default_type() == SUPPRESS;
+        bool suppress_default = m_argument_default_type == SUPPRESS;
         auto _arg_suppressed = [this, suppress_default] (pArgument const& arg)
         {
-            return (arg->m_default_type.has_value()
-                    && arg->m_default_type() == argparse::SUPPRESS)
+            return arg->m_default_type == argparse::SUPPRESS
                     || (suppress_default
                         && !default_argument_value(*arg).has_value());
         };
@@ -6537,7 +6540,7 @@ private:
                                                  tmp->m_flags.front(),
                                                  tmp->m_default()));
                             }
-                            if (tmp->m_action & Action::BooleanOptionalAction) {
+                            if (tmp->m_action == Action::BooleanOptionalAction){
                                 bool exist = detail::_is_value_exists(
                                             splitted.front(), tmp->m_flags);
                                 storage.store_value(tmp, exist ? tmp->m_const()
@@ -6684,7 +6687,7 @@ private:
                         continue;
                     }
                     if (arg->m_action == Action::extend
-                            && (arg->m_nargs & Argument::OPTIONAL)) {
+                            && arg->m_nargs == Argument::OPTIONAL) {
                         throw TypeError("'NoneType' object is not iterable");
                     }
                     if ((arg->m_nargs
@@ -6710,14 +6713,12 @@ private:
             throw_error("unrecognized arguments: "
                         + detail::_vector_to_string(unrecognized_args));
         }
-        bool suppress_default = m_argument_default_type.has_value()
-                                && m_argument_default_type() == SUPPRESS;
+        bool suppress_default = m_argument_default_type == SUPPRESS;
         for (auto it = storage.begin(); it != storage.end(); ) {
             if (!it->second.exists() && it->first->m_action != Action::count
                     && it->first->m_type == Argument::Optional) {
                 auto const& value = default_argument_value(*(it->first));
-                if ((it->first->m_default_type.has_value()
-                     && it->first->m_default_type() == SUPPRESS)
+                if (it->first->m_default_type == SUPPRESS
                         || (suppress_default && !value.has_value())) {
                     it = storage.erase(it);
                     continue;
@@ -7034,9 +7035,7 @@ private:
             os << "\n" << formatter_description << std::endl;
         }
         std::size_t min_size = 0;
-        bool suppress_default
-                = m_argument_default_type.has_value()
-                && m_argument_default_type() == SUPPRESS;
+        bool suppress_default = m_argument_default_type == SUPPRESS;
         auto subparser = subparser_info.first;
         bool sub_positional = subparser && subparser->title().empty()
                               && subparser->description().empty();
