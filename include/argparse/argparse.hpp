@@ -880,8 +880,7 @@ ARGPARSE_EXPORT class Argument
           m_required(),
           m_help(),
           m_metavar(),
-          m_dest_str(),
-          m_dest(),
+          m_dest(std::vector<std::string>{ std::string() }),
           m_version(),
           m_handle(nullptr),
           m_post_trigger(nullptr)
@@ -908,8 +907,7 @@ ARGPARSE_EXPORT class Argument
           m_required(),
           m_help(),
           m_metavar(),
-          m_dest_str(),
-          m_dest(),
+          m_dest(std::vector<std::string>{ std::string() }),
           m_version(),
           m_handle(nullptr),
           m_post_trigger(nullptr)
@@ -985,8 +983,7 @@ public:
           m_required(),
           m_help(),
           m_metavar(),
-          m_dest_str(),
-          m_dest(),
+          m_dest(std::vector<std::string>{ std::string() }),
           m_version(),
           m_handle(nullptr),
           m_post_trigger(nullptr)
@@ -1017,7 +1014,6 @@ public:
           m_required(orig.m_required),
           m_help(orig.m_help),
           m_metavar(orig.m_metavar),
-          m_dest_str(orig.m_dest_str),
           m_dest(orig.m_dest),
           m_version(orig.m_version),
           m_handle(orig.m_handle),
@@ -1049,7 +1045,6 @@ public:
           m_required(std::move(orig.m_required)),
           m_help(std::move(orig.m_help)),
           m_metavar(std::move(orig.m_metavar)),
-          m_dest_str(std::move(orig.m_dest_str)),
           m_dest(std::move(orig.m_dest)),
           m_version(std::move(orig.m_version)),
           m_handle(std::move(orig.m_handle)),
@@ -1083,7 +1078,6 @@ public:
             this->m_required    = rhs.m_required;
             this->m_help        = rhs.m_help;
             this->m_metavar     = rhs.m_metavar;
-            this->m_dest_str    = rhs.m_dest_str;
             this->m_dest        = rhs.m_dest;
             this->m_version     = rhs.m_version;
             this->m_handle      = rhs.m_handle;
@@ -1119,7 +1113,6 @@ public:
             this->m_required    = std::move(rhs.m_required);
             this->m_help        = std::move(rhs.m_help);
             this->m_metavar     = std::move(rhs.m_metavar);
-            this->m_dest_str    = std::move(rhs.m_dest_str);
             this->m_dest        = std::move(rhs.m_dest);
             this->m_version     = std::move(rhs.m_version);
             this->m_handle      = std::move(rhs.m_handle);
@@ -1604,15 +1597,7 @@ public:
         if (m_type == Positional && !m_flags.empty()) {
             throw ValueError("dest supplied twice for positional argument");
         }
-        m_dest_str = detail::_trim_copy(value);
-        if (m_dest_str.empty()) {
-            m_dest.clear();
-        } else {
-            if (m_dest.empty()) {
-                m_dest.push_back(std::string());
-            }
-            m_dest.front() = m_dest_str;
-        }
+        m_dest.front() = detail::_trim_copy(value);
         return *this;
     }
 
@@ -1774,7 +1759,7 @@ public:
      */
     inline std::string const& dest() const ARGPARSE_NOEXCEPT
     {
-        return m_dest_str;
+        return m_dest.front();
     }
 
     /*!
@@ -1797,14 +1782,14 @@ private:
 
     inline void validate() const
     {
-        if (m_type == Positional && m_flags.empty() && m_dest.empty()) {
+        if (m_type == Positional && m_flags.empty() && dest().empty()) {
             throw TypeError("missing 1 required positional argument: 'dest'");
         }
         if ((m_action & detail::_const_action) && !m_const.has_value()) {
             throw TypeError("missing 1 required positional argument: 'const'");
         }
         for (auto const& flag : m_flags) {
-            if (flag == detail::_pseudo_argument && m_dest_str.empty()) {
+            if (flag == detail::_pseudo_argument && dest().empty()) {
                 throw ValueError("dest= is required for options like '--'");
             }
         }
@@ -1923,14 +1908,14 @@ private:
         if (m_choices.has_value()) {
             return "{" + detail::_vector_to_string(choices(), ",") + "}";
         }
-        auto const& res = m_dest_str.empty() ? m_name : m_dest_str;
+        auto const& res = dest().empty() ? m_name : dest();
         return m_type == Optional ? detail::_to_upper(res) : res;
     }
 
     inline std::vector<std::string> const&
     get_argument_flags() const ARGPARSE_NOEXCEPT
     {
-        return m_dest_str.empty() ? m_flags : m_dest;
+        return dest().empty() ? m_flags : m_dest;
     }
 
     inline void resolve_conflict_flags(std::vector<std::string> const& flags)
@@ -1961,13 +1946,13 @@ private:
                 && m_type == rhs.m_type
                 && m_action == rhs.m_action
                 && m_const == rhs.m_const
-                && m_dest_str == rhs.m_dest_str;
+                && dest() == rhs.dest();
     }
 
     inline bool operator ==(std::string const& rhs) const ARGPARSE_NOEXCEPT
     {
-        return !m_dest_str.empty() ? m_dest_str == rhs
-                                   : detail::_is_value_exists(rhs, m_flags);
+        return !dest().empty() ? dest() == rhs
+                               : detail::_is_value_exists(rhs, m_flags);
     }
 
     std::vector<std::string> m_flags;
@@ -1987,7 +1972,6 @@ private:
     detail::Value<bool> m_required;
     std::string m_help;
     detail::Value<std::string> m_metavar;
-    std::string m_dest_str;
     std::vector<std::string> m_dest;
     detail::Value<std::string> m_version;
     std::function<void(std::string)> m_handle;
@@ -2312,7 +2296,7 @@ protected:
         arg.m_type = is_optional ? Argument::Optional : Argument::Positional;
         // check
         if (arg.m_type == Argument::Positional) {
-            if (arg.m_dest.empty() && flags.empty()) {
+            if (arg.dest().empty() && flags.empty()) {
                 throw
                 TypeError("missing 1 required positional argument: 'dest'");
             }
@@ -2325,7 +2309,7 @@ protected:
                 throw
                 TypeError("'required' is an invalid argument for positionals");
             }
-            if (!arg.m_dest.empty() && !flags.empty()) {
+            if (!arg.dest().empty() && !flags.empty()) {
                 throw ValueError("dest supplied twice for positional argument");
             }
             if (arg.m_const.has_value()
@@ -3332,7 +3316,7 @@ public:
         }
         for (auto const& pair : m_storage) {
             if (pair.first->m_type == Argument::Optional
-                    && pair.first->m_dest_str.empty()) {
+                    && pair.first->dest().empty()) {
                 for (auto const& flag : pair.first->m_flags) {
                     if (detail::_flag_name(flag) == key) {
                         return !pair.second.empty()
@@ -4195,7 +4179,7 @@ private:
         }
         for (auto const& pair : m_storage) {
             if (pair.first->m_type == Argument::Optional
-                    && pair.first->m_dest_str.empty()) {
+                    && pair.first->dest().empty()) {
                 for (auto const& flag : pair.first->m_flags) {
                     if (detail::_flag_name(flag) == key) {
                         return pair;
@@ -4324,7 +4308,7 @@ private:
         }
         for (auto const& pair : m_storage) {
             if (pair.first->m_type == Argument::Optional
-                    && pair.first->m_dest_str.empty()) {
+                    && pair.first->dest().empty()) {
                 for (auto const& flag : pair.first->m_flags) {
                     if (detail::_flag_name(flag) == key) {
                         return pair;
@@ -5365,7 +5349,7 @@ public:
                         && !default_argument_value(*arg).has_value());
         };
         for (auto const& arg : optional) {
-            if (!arg->m_dest_str.empty()) {
+            if (!arg->dest().empty()) {
                 if (arg->dest() == dest) {
                     if (_arg_suppressed(arg)) {
                         return detail::_suppress;
@@ -6755,8 +6739,8 @@ private:
                     arg->default_value(val);
                     return true;
                 }
-            } else if (!arg->m_dest_str.empty()) {
-                if (arg->m_dest_str == dest) {
+            } else if (!arg->dest().empty()) {
+                if (arg->dest() == dest) {
                     arg->default_value(val);
                     return true;
                 }
