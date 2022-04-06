@@ -2263,8 +2263,9 @@ protected:
         }
     }
 
-    void validate_argument(Argument arg, std::string const& prefix_chars)
+    void validate_argument(Argument const& ar, std::string const& prefix_chars)
     {
+        auto arg = ar;
         auto& flags = arg.m_flags;
         bool is_optional = false;
         if (flags.empty()) {
