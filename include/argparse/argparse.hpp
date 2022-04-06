@@ -883,7 +883,6 @@ ARGPARSE_EXPORT class Argument
           m_dest_str(),
           m_dest(),
           m_version(),
-          m_handle_str(nullptr),
           m_handle(nullptr),
           m_post_trigger(nullptr)
     { }
@@ -912,7 +911,6 @@ ARGPARSE_EXPORT class Argument
           m_dest_str(),
           m_dest(),
           m_version(),
-          m_handle_str(nullptr),
           m_handle(nullptr),
           m_post_trigger(nullptr)
     { }
@@ -990,7 +988,6 @@ public:
           m_dest_str(),
           m_dest(),
           m_version(),
-          m_handle_str(nullptr),
           m_handle(nullptr),
           m_post_trigger(nullptr)
     { }
@@ -1023,7 +1020,6 @@ public:
           m_dest_str(orig.m_dest_str),
           m_dest(orig.m_dest),
           m_version(orig.m_version),
-          m_handle_str(orig.m_handle_str),
           m_handle(orig.m_handle),
           m_post_trigger(orig.m_post_trigger)
     { }
@@ -1056,7 +1052,6 @@ public:
           m_dest_str(std::move(orig.m_dest_str)),
           m_dest(std::move(orig.m_dest)),
           m_version(std::move(orig.m_version)),
-          m_handle_str(std::move(orig.m_handle_str)),
           m_handle(std::move(orig.m_handle)),
           m_post_trigger(std::move(orig.m_post_trigger))
     { }
@@ -1091,7 +1086,6 @@ public:
             this->m_dest_str    = rhs.m_dest_str;
             this->m_dest        = rhs.m_dest;
             this->m_version     = rhs.m_version;
-            this->m_handle_str  = rhs.m_handle_str;
             this->m_handle      = rhs.m_handle;
             this->m_post_trigger= rhs.m_post_trigger;
         }
@@ -1128,7 +1122,6 @@ public:
             this->m_dest_str    = std::move(rhs.m_dest_str);
             this->m_dest        = std::move(rhs.m_dest);
             this->m_version     = std::move(rhs.m_version);
-            this->m_handle_str  = std::move(rhs.m_handle_str);
             this->m_handle      = std::move(rhs.m_handle);
             this->m_post_trigger= std::move(rhs.m_post_trigger);
         }
@@ -1190,7 +1183,6 @@ public:
     Argument& action(Action value)
     {
         if (m_action & (Action::version | Action::help)) {
-            m_handle_str = nullptr;
             m_handle = nullptr;
         }
         if (!(value & detail::_store_const_action)) {
@@ -1654,8 +1646,7 @@ public:
         if (m_action & (Action::version | Action::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
-        m_handle_str = func;
-        m_handle = nullptr;
+        m_handle = func;
         return *this;
     }
 
@@ -1672,8 +1663,7 @@ public:
         if (m_action & (Action::version | Action::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
-        m_handle = func;
-        m_handle_str = nullptr;
+        m_handle = [func] (std::string const&) { func(); };
         return *this;
     }
 
@@ -1800,11 +1790,8 @@ public:
 private:
     inline void handle(std::string const& str) const
     {
-        if (m_handle_str) {
-            m_handle_str(detail::_remove_quotes(str));
-        }
         if (m_handle) {
-            m_handle();
+            m_handle(detail::_remove_quotes(str));
         }
     }
 
@@ -2003,8 +1990,7 @@ private:
     std::string m_dest_str;
     std::vector<std::string> m_dest;
     detail::Value<std::string> m_version;
-    std::function<void(std::string)> m_handle_str;
-    std::function<void()> m_handle;
+    std::function<void(std::string)> m_handle;
     std::function<void(Argument const*)> m_post_trigger;
 };
 
@@ -4506,7 +4492,6 @@ public:
               m_name(name),
               m_help(),
               m_prog(),
-              m_handle_str(),
               m_handle(),
               m_parse_handle()
         { }
@@ -4591,8 +4576,7 @@ public:
         inline Parser&
         handle(std::function<void(std::string)> func) ARGPARSE_NOEXCEPT
         {
-            m_handle_str = func;
-            m_handle = nullptr;
+            m_handle = func;
             return *this;
         }
 
@@ -4606,8 +4590,7 @@ public:
          */
         inline Parser& handle(std::function<void()> func) ARGPARSE_NOEXCEPT
         {
-            m_handle = func;
-            m_handle_str = nullptr;
+            m_handle = [func] (std::string const&) { func(); };
             return *this;
         }
 
@@ -4658,11 +4641,8 @@ public:
     private:
         inline void handle(std::string const& str) const
         {
-            if (m_handle_str) {
-                m_handle_str(str);
-            }
             if (m_handle) {
-                m_handle();
+                m_handle(detail::_remove_quotes(str));
             }
         }
 
@@ -4677,8 +4657,7 @@ public:
         std::string m_name;
         std::string m_help;
         std::string m_prog;
-        std::function<void(std::string)> m_handle_str;
-        std::function<void()> m_handle;
+        std::function<void(std::string)> m_handle;
         std::function<void(argparse::Namespace const&)> m_parse_handle;
     };
 
