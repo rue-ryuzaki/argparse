@@ -2001,19 +2001,6 @@ public:
     { }
 
     /*!
-     *  \brief Construct group from another group
-     *
-     *  \param orig Group object to copy
-     *
-     *  \return Group object
-     */
-    Group(Group const& orig)
-        : m_title(orig.m_title),
-          m_description(orig.m_description),
-          m_position(orig.m_position)
-    { }
-
-    /*!
      *  \brief Destroy group
      */
     virtual ~Group() ARGPARSE_NOEXCEPT = default;
