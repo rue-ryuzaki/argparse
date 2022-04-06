@@ -133,19 +133,19 @@ template <>         struct is_byte_type<char8_t> { enum{value = true}; };
  *
  * \enum Action
  */
-ARGPARSE_EXPORT enum Action : uint32_t
+ARGPARSE_EXPORT enum Action : uint16_t
 {
-    store                   = 0x00000001,
-    store_const             = 0x00000002,
-    store_true              = 0x00000004,
-    store_false             = 0x00000008,
-    append                  = 0x00000010,
-    append_const            = 0x00000020,
-    count                   = 0x00000040,
-    help                    = 0x00000080,
-    version                 = 0x00000100,
-    extend                  = 0x00000200,
-    BooleanOptionalAction   = 0x00001000,
+    store                   = 0x0001,
+    store_const             = 0x0002,
+    store_true              = 0x0004,
+    store_false             = 0x0008,
+    append                  = 0x0010,
+    append_const            = 0x0020,
+    count                   = 0x0040,
+    help                    = 0x0080,
+    version                 = 0x0100,
+    extend                  = 0x0200,
+    BooleanOptionalAction   = 0x1000,
 };
 
 /*!
@@ -724,35 +724,35 @@ class Value
 {
 public:
     explicit Value()
-        : m_has_value(false),
-          m_value()
+        : m_value(),
+          m_has_value(false)
     { }
 
     Value(Value const& orig)
-        : m_has_value(orig.m_has_value),
-          m_value(orig.m_value)
+        : m_value(orig.m_value),
+          m_has_value(orig.m_has_value)
     { }
 
     Value(Value&& orig) ARGPARSE_NOEXCEPT
-        : m_has_value(std::move(orig.m_has_value)),
-          m_value(std::move(orig.m_value))
+        : m_value(std::move(orig.m_value)),
+          m_has_value(std::move(orig.m_has_value))
     { }
 
     Value(T const& orig)
-        : m_has_value(true),
-          m_value(orig)
+        : m_value(orig),
+          m_has_value(true)
     { }
 
     Value(T&& orig) ARGPARSE_NOEXCEPT
-        : m_has_value(true),
-          m_value(std::move(orig))
+        : m_value(std::move(orig)),
+          m_has_value(true)
     { }
 
     inline Value& operator =(Value const& rhs)
     {
         if (this != &rhs) {
-            m_has_value = rhs.m_has_value;
             m_value     = rhs.m_value;
+            m_has_value = rhs.m_has_value;
         }
         return *this;
     }
@@ -760,23 +760,23 @@ public:
     inline Value& operator =(Value&& rhs) ARGPARSE_NOEXCEPT
     {
         if (this != &rhs) {
-            m_has_value = std::move(rhs.m_has_value);
             m_value     = std::move(rhs.m_value);
+            m_has_value = std::move(rhs.m_has_value);
         }
         return *this;
     }
 
     inline Value& operator =(T const& rhs)
     {
-        m_has_value = true;
         m_value     = rhs;
+        m_has_value = true;
         return *this;
     }
 
     inline Value& operator =(T&& rhs) ARGPARSE_NOEXCEPT
     {
-        m_has_value = true;
         m_value     = std::move(rhs);
+        m_has_value = true;
         return *this;
     }
 
@@ -792,8 +792,8 @@ public:
 
     inline void clear(T const& value = T())
     {
-        m_has_value = false;
         m_value     = value;
+        m_has_value = false;
     }
 
     inline bool     has_value()  const ARGPARSE_NOEXCEPT { return m_has_value; }
@@ -801,8 +801,8 @@ public:
     inline T const& operator()() const ARGPARSE_NOEXCEPT { return m_value; }
 
 private:
-    bool    m_has_value;
     T       m_value;
+    bool    m_has_value;
 };
 
 inline bool _is_type_name_correct(std::string const& expected,
@@ -826,7 +826,7 @@ inline void _check_type_name(Value<std::string> const& expected,
  *
  * \enum Enum
  */
-ARGPARSE_EXPORT enum Enum
+ARGPARSE_EXPORT enum Enum : uint8_t
 {
     SUPPRESS,
 };
@@ -843,7 +843,7 @@ ARGPARSE_EXPORT class Argument
     friend class ExclusiveGroup;
     friend class Namespace;
 
-    enum Nargs
+    enum Nargs : uint8_t
     {
         NARGS_DEF   = 0x01, // ""
         NARGS_NUM   = 0x02, // "N"
@@ -852,7 +852,7 @@ ARGPARSE_EXPORT class Argument
         ZERO_OR_MORE= 0x10, // "*"
     };
 
-    enum Type
+    enum Type : uint8_t
     {
         NoType,
         Positional,
@@ -866,19 +866,19 @@ ARGPARSE_EXPORT class Argument
         : m_flags(flags),
           m_all_flags(m_flags),
           m_name(name),
-          m_type(type),
           m_action(Action::store),
+          m_type(type),
+          m_default_type(),
+          m_help_type(),
           m_nargs(NARGS_DEF),
-          m_nargs_str("1"),
           m_num_args(1),
+          m_nargs_str("1"),
           m_const(),
           m_default(),
-          m_default_type(),
           m_type_name(),
           m_choices(),
           m_required(),
           m_help(),
-          m_help_type(),
           m_metavar(),
           m_dest_str(),
           m_dest(),
@@ -895,19 +895,19 @@ ARGPARSE_EXPORT class Argument
         : m_flags(std::move(flags)),
           m_all_flags(m_flags),
           m_name(std::move(name)),
-          m_type(type),
           m_action(Action::store),
+          m_type(type),
+          m_default_type(),
+          m_help_type(),
           m_nargs(NARGS_DEF),
-          m_nargs_str("1"),
           m_num_args(1),
+          m_nargs_str("1"),
           m_const(),
           m_default(),
-          m_default_type(),
           m_type_name(),
           m_choices(),
           m_required(),
           m_help(),
-          m_help_type(),
           m_metavar(),
           m_dest_str(),
           m_dest(),
@@ -973,19 +973,19 @@ public:
         : m_flags(flags),
           m_all_flags(m_flags),
           m_name(),
-          m_type(NoType),
           m_action(Action::store),
+          m_type(NoType),
+          m_default_type(),
+          m_help_type(),
           m_nargs(NARGS_DEF),
-          m_nargs_str("1"),
           m_num_args(1),
+          m_nargs_str("1"),
           m_const(),
           m_default(),
-          m_default_type(),
           m_type_name(),
           m_choices(),
           m_required(),
           m_help(),
-          m_help_type(),
           m_metavar(),
           m_dest_str(),
           m_dest(),
@@ -1006,19 +1006,19 @@ public:
         : m_flags(orig.m_flags),
           m_all_flags(orig.m_all_flags),
           m_name(orig.m_name),
-          m_type(orig.m_type),
           m_action(orig.m_action),
+          m_type(orig.m_type),
+          m_default_type(orig.m_default_type),
+          m_help_type(orig.m_help_type),
           m_nargs(orig.m_nargs),
-          m_nargs_str(orig.m_nargs_str),
           m_num_args(orig.m_num_args),
+          m_nargs_str(orig.m_nargs_str),
           m_const(orig.m_const),
           m_default(orig.m_default),
-          m_default_type(orig.m_default_type),
           m_type_name(orig.m_type_name),
           m_choices(orig.m_choices),
           m_required(orig.m_required),
           m_help(orig.m_help),
-          m_help_type(orig.m_help_type),
           m_metavar(orig.m_metavar),
           m_dest_str(orig.m_dest_str),
           m_dest(orig.m_dest),
@@ -1039,19 +1039,19 @@ public:
         : m_flags(std::move(orig.m_flags)),
           m_all_flags(std::move(orig.m_all_flags)),
           m_name(std::move(orig.m_name)),
-          m_type(std::move(orig.m_type)),
           m_action(std::move(orig.m_action)),
+          m_type(std::move(orig.m_type)),
+          m_default_type(std::move(orig.m_default_type)),
+          m_help_type(std::move(orig.m_help_type)),
           m_nargs(std::move(orig.m_nargs)),
-          m_nargs_str(std::move(orig.m_nargs_str)),
           m_num_args(std::move(orig.m_num_args)),
+          m_nargs_str(std::move(orig.m_nargs_str)),
           m_const(std::move(orig.m_const)),
           m_default(std::move(orig.m_default)),
-          m_default_type(std::move(orig.m_default_type)),
           m_type_name(std::move(orig.m_type_name)),
           m_choices(std::move(orig.m_choices)),
           m_required(std::move(orig.m_required)),
           m_help(std::move(orig.m_help)),
-          m_help_type(std::move(orig.m_help_type)),
           m_metavar(std::move(orig.m_metavar)),
           m_dest_str(std::move(orig.m_dest_str)),
           m_dest(std::move(orig.m_dest)),
@@ -1074,19 +1074,19 @@ public:
             this->m_flags       = rhs.m_flags;
             this->m_all_flags   = rhs.m_all_flags;
             this->m_name        = rhs.m_name;
-            this->m_type        = rhs.m_type;
             this->m_action      = rhs.m_action;
+            this->m_type        = rhs.m_type;
+            this->m_default_type= rhs.m_default_type;
+            this->m_help_type   = rhs.m_help_type;
             this->m_nargs       = rhs.m_nargs;
-            this->m_nargs_str   = rhs.m_nargs_str;
             this->m_num_args    = rhs.m_num_args;
+            this->m_nargs_str   = rhs.m_nargs_str;
             this->m_const       = rhs.m_const;
             this->m_default     = rhs.m_default;
-            this->m_default_type= rhs.m_default_type;
             this->m_type_name   = rhs.m_type_name;
             this->m_choices     = rhs.m_choices;
             this->m_required    = rhs.m_required;
             this->m_help        = rhs.m_help;
-            this->m_help_type   = rhs.m_help_type;
             this->m_metavar     = rhs.m_metavar;
             this->m_dest_str    = rhs.m_dest_str;
             this->m_dest        = rhs.m_dest;
@@ -1111,19 +1111,19 @@ public:
             this->m_flags       = std::move(rhs.m_flags);
             this->m_all_flags   = std::move(rhs.m_all_flags);
             this->m_name        = std::move(rhs.m_name);
-            this->m_type        = std::move(rhs.m_type);
             this->m_action      = std::move(rhs.m_action);
+            this->m_type        = std::move(rhs.m_type);
+            this->m_default_type= std::move(rhs.m_default_type);
+            this->m_help_type   = std::move(rhs.m_help_type);
             this->m_nargs       = std::move(rhs.m_nargs);
-            this->m_nargs_str   = std::move(rhs.m_nargs_str);
             this->m_num_args    = std::move(rhs.m_num_args);
+            this->m_nargs_str   = std::move(rhs.m_nargs_str);
             this->m_const       = std::move(rhs.m_const);
             this->m_default     = std::move(rhs.m_default);
-            this->m_default_type= std::move(rhs.m_default_type);
             this->m_type_name   = std::move(rhs.m_type_name);
             this->m_choices     = std::move(rhs.m_choices);
             this->m_required    = std::move(rhs.m_required);
             this->m_help        = std::move(rhs.m_help);
-            this->m_help_type   = std::move(rhs.m_help_type);
             this->m_metavar     = std::move(rhs.m_metavar);
             this->m_dest_str    = std::move(rhs.m_dest_str);
             this->m_dest        = std::move(rhs.m_dest);
@@ -1986,19 +1986,19 @@ private:
     std::vector<std::string> m_flags;
     std::vector<std::string> m_all_flags;
     std::string m_name;
-    Type        m_type;
     Action      m_action;
+    Type        m_type;
+    detail::Value<Enum> m_default_type;
+    detail::Value<Enum> m_help_type;
     Nargs       m_nargs;
-    std::string m_nargs_str;
     uint32_t    m_num_args;
+    std::string m_nargs_str;
     detail::Value<std::string> m_const;
     detail::Value<std::string> m_default;
-    detail::Value<Enum> m_default_type;
     detail::Value<std::string> m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
     detail::Value<bool> m_required;
     std::string m_help;
-    detail::Value<Enum> m_help_type;
     detail::Value<std::string> m_metavar;
     std::string m_dest_str;
     std::vector<std::string> m_dest;
