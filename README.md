@@ -3,6 +3,7 @@
 [![Ubuntu](https://github.com/rue-ryuzaki/argparse/workflows/Ubuntu/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AUbuntu)
 [![macOS](https://github.com/rue-ryuzaki/argparse/workflows/macOS/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AmacOS)
 [![Windows](https://github.com/rue-ryuzaki/argparse/workflows/Windows/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AWindows)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/24785/badge.svg)](https://scan.coverity.com/projects/argparse)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/rue-ryuzaki/argparse.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rue-ryuzaki/argparse/alerts/)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/rue-ryuzaki/argparse.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rue-ryuzaki/argparse/context:cpp)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rue-ryuzaki/argparse/main/LICENSE)
