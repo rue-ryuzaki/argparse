@@ -665,18 +665,18 @@ _help_formatter(HelpFormatter formatter,
 {
     std::string res;
     if (!help.empty()) {
-        std::size_t offset = _argument_help_limit;
+        std::size_t indent = _argument_help_limit;
         if (str.size() + 2 > limit) {
             res += "\n" + std::string(_argument_help_limit, _space);
         } else {
             res += std::string(limit - str.size(), _space);
-            offset = str.size() + 2;
+            indent = str.size() + 2;
         }
         auto lines = _split(help, '\n');
         if (formatter & RawTextHelpFormatter) {
             res += lines.front();
             for (size_t i = 1; i < lines.size(); ++i) {
-                res += "\n" + std::string(offset, _space) + lines.at(i);
+                res += "\n" + std::string(indent, _space) + lines.at(i);
             }
         } else {
             std::string help_formatted;
@@ -6885,22 +6885,22 @@ private:
         }
         std::size_t const usage_length = std::string("usage: ").size();
         std::size_t pos = usage_length + program.size();
-        std::size_t offset = usage_length;
+        std::size_t indent = usage_length;
         if (pos + (min_size > 0 ? (1 + min_size) : 0) <= detail::_usage_limit) {
-            offset += program.size() + (min_size > 0);
+            indent += program.size() + (min_size > 0);
         } else if (!(ex_opt.empty() && positional.empty() && !subparser.first)){
-            res += "\n" + std::string(offset - 1, detail::_space);
-            pos = offset - 1;
+            res += "\n" + std::string(indent - 1, detail::_space);
+            pos = indent - 1;
         }
         auto _arg_usage
-                = [&pos, offset, &res] (std::string const& str, bool bkt)
+                = [&pos, indent, &res] (std::string const& str, bool bkt)
         {
-            if ((pos + 1 == offset)
+            if ((pos + 1 == indent)
                     || (pos + 1 + str.size() <= detail::_usage_limit)) {
                 res += detail::_spaces;
             } else {
-                res += "\n" + std::string(offset, detail::_space);
-                pos = offset;
+                res += "\n" + std::string(indent, detail::_space);
+                pos = indent;
             }
             res += (bkt ? "[" + str + "]" : str);
             pos += 1 + str.size();
