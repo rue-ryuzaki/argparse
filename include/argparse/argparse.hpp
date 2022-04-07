@@ -481,12 +481,12 @@ _make_no_flag(std::string str)
 }
 
 inline std::vector<std::string>
-_split(std::string const& str, char delim)
+_split(std::string const& str, char delim, bool force = false)
 {
     std::vector<std::string> result;
-    auto _store_value = [&result] (std::string& value)
+    auto _store_value = [&result] (std::string& value, bool force = false)
     {
-        if (!value.empty()) {
+        if (!value.empty() || force) {
             result.push_back(value);
             value.clear();
         }
@@ -494,7 +494,7 @@ _split(std::string const& str, char delim)
     std::string value;
     for (auto c : str) {
         if (c == delim) {
-            _store_value(value);
+            _store_value(value, force);
         } else {
             value += c;
         }
@@ -658,44 +658,77 @@ _ignore_explicit(std::string const& arg, std::string const& value)
 }
 
 inline std::string
-_help_formatter(HelpFormatter formatter,
-                std::string const& str,
-                std::size_t limit,
-                std::string const& help)
+_format_output(std::string const& head, std::string const& body,
+               std::size_t interlayer, std::size_t indent, std::size_t limit,
+               char delimiter = '\n')
 {
-    std::string res;
-    if (!help.empty()) {
-        std::size_t indent = _argument_help_limit;
-        if (str.size() + 2 > limit) {
-            res += "\n" + std::string(_argument_help_limit, _space);
-        } else {
-            res += std::string(limit - str.size(), _space);
-            indent = str.size() + 2;
+    std::vector<std::string> result;
+    auto _store_value = [&result] (std::string& value, bool force = false)
+    {
+        if (!value.empty() || force) {
+            result.push_back(value);
+            value.clear();
         }
-        auto lines = _split(help, '\n');
-        if (formatter & RawTextHelpFormatter) {
-            res += lines.front();
-            for (size_t i = 1; i < lines.size(); ++i) {
-                res += "\n" + std::string(indent, _space) + lines.at(i);
-            }
+    };
+    std::string value = head;
+    if (value.size() + interlayer > indent) {
+        _store_value(value);
+    }
+    auto _func = [_store_value, indent, limit, &result, &value]
+            (std::string const& str)
+    {
+        if (value.size() > indent && value.size() + 1 + str.size() > limit) {
+            _store_value(value);
+        }
+        if (value.size() < indent) {
+            value.resize(indent, _space);
+            value += str;
         } else {
-            std::string help_formatted;
-            for (auto& line : lines) {
-                _trim(line);
-                if (!line.empty()) {
-                    if (!help_formatted.empty()) {
-                        help_formatted += _space;
-                    }
-                    help_formatted += line;
-                }
+            value += _spaces + str;
+        }
+    };
+    auto split_str = _split(body, '\n', true);
+    for (auto const& str : split_str) {
+        if (delimiter == '\n') {
+            _func(str);
+        } else if (str.empty()) {
+            value.resize(indent, _space);
+            _store_value(value, true);
+        } else {
+            auto sub_split_str = _split(str, delimiter, true);
+            for (auto const& sub : sub_split_str) {
+                _func(sub);
             }
-            if (help_formatted.empty()) {
-                return std::string();
-            }
-            res += help_formatted;
+            _store_value(value);
         }
     }
-    return res;
+    _store_value(value);
+    return _vector_to_string(result, "\n");
+}
+
+inline std::string
+_help_formatter(HelpFormatter formatter,
+                std::string const& help)
+{
+    if (help.empty()) {
+        return std::string();
+    }
+    if (formatter & RawTextHelpFormatter) {
+        return help;
+    } else {
+        std::string help_formatted;
+        auto lines = _split(help, '\n');
+        for (auto& line : lines) {
+            _trim(line);
+            if (!line.empty()) {
+                if (!help_formatted.empty()) {
+                    help_formatted += _space;
+                }
+                help_formatted += line;
+            }
+        }
+        return help_formatted;
+    }
 }
 
 template <class T>
@@ -788,6 +821,16 @@ public:
     inline bool operator ==(T const& rhs) const ARGPARSE_NOEXCEPT
     {
         return m_has_value && m_value == rhs;
+    }
+
+    inline bool operator !=(Value const& rhs) const ARGPARSE_NOEXCEPT
+    {
+        return !(*this == rhs);
+    }
+
+    inline bool operator !=(T const& rhs) const ARGPARSE_NOEXCEPT
+    {
+        return !(*this == rhs);
     }
 
     inline void clear(T const& value = T())
@@ -1841,28 +1884,29 @@ private:
                       std::size_t limit) const
     {
         std::string res = "  " + flags_to_string(formatter);
-        auto formatted = detail::_help_formatter(formatter, res, limit, help());
+        auto formatted = detail::_help_formatter(formatter, help());
         if (!formatted.empty()) {
-            res += formatted;
             if (m_type == Optional
                     && (formatter & ArgumentDefaultsHelpFormatter)
                     && !(m_action & (Action::help | Action::version))) {
                 auto const& def = (m_default.has_value()
                                    || !argument_default.has_value())
                         ? m_default : argument_default;
-                if (m_default_type == SUPPRESS
-                        || (suppress_default && !def.has_value())) {
-                    return res;
-                }
-                if (!def.has_value() && (m_action & detail::_bool_action)) {
-                    res += " (default: " + detail::_bool_to_string(def()) + ")";
-                } else {
-                    res += " (default: " + ((def.has_value() || !def().empty())
-                                            ? def() : "None") + ")";
+                if (m_default_type != SUPPRESS
+                        && !(suppress_default && !def.has_value())) {
+                    if (!def.has_value() && (m_action & detail::_bool_action)) {
+                        formatted += " (default: "
+                                + detail::_bool_to_string(def()) + ")";
+                    } else {
+                        formatted += " (default: "
+                                + ((def.has_value() || !def().empty())
+                                   ? def() : "None") + ")";
+                    }
                 }
             }
         }
-        return res;
+        return detail::_format_output(res, formatted, 2, limit,
+                                      detail::_usage_limit, detail::_space);
     }
 
     std::string get_nargs_suffix(HelpFormatter formatter) const
@@ -2026,8 +2070,6 @@ public:
     }
 
 protected:
-    virtual void limit_usage(HelpFormatter formatter,
-                             std::size_t& limit)                      const = 0;
     virtual void limit_help_flags(HelpFormatter formatter,
                                   std::size_t& limit)                 const = 0;
     virtual void print_help(std::ostream& os,
@@ -2453,17 +2495,6 @@ public:
     }
 
 private:
-    inline void
-    limit_usage(HelpFormatter formatter, std::size_t& limit) const override
-    {
-        for (auto const& arg : m_arguments) {
-            auto const str = arg->usage(formatter);
-            if (limit < str.size()) {
-                limit = str.size();
-            }
-        }
-    }
-
     inline void
     limit_help_flags(HelpFormatter formatter, std::size_t& limit) const override
     {
@@ -4621,9 +4652,10 @@ public:
         inline std::string
         print(HelpFormatter formatter, std::size_t limit) const
         {
-            std::string res = "    " + m_name;
-            res += detail::_help_formatter(formatter, res, limit, help());
-            return res;
+            return detail::_format_output(
+                        "    " + m_name,
+                        detail::_help_formatter(formatter, help()),
+                        2, limit, detail::_usage_limit, detail::_space);
         }
 
         std::string m_name;
@@ -4815,15 +4847,6 @@ public:
         }
 
     private:
-        inline void
-        limit_usage(HelpFormatter, std::size_t& limit) const override
-        {
-            auto const str = usage();
-            if (limit < str.size()) {
-                limit = str.size();
-            }
-        }
-
         void limit_help_flags(HelpFormatter, std::size_t& limit) const override
         {
             auto size = flags_to_string().size();
@@ -4877,9 +4900,10 @@ public:
         inline std::string
         print(HelpFormatter formatter, std::size_t limit) const
         {
-            std::string res = "  " + flags_to_string();
-            res += detail::_help_formatter(formatter, res, limit, help());
-            return res;
+            return detail::_format_output(
+                        "  " + flags_to_string(),
+                        detail::_help_formatter(formatter, help()),
+                        2, limit, detail::_usage_limit, detail::_space);
         }
 
         std::string m_prog;
@@ -5599,7 +5623,7 @@ public:
         } else {
             auto const positional = positional_arguments(false, true);
             auto const optional = optional_arguments(false, true).second;
-            print_custom_usage(positional, optional, m_groups, m_mutex_groups,
+            print_custom_usage(positional, optional, m_mutex_groups,
                                subpurser_info(false), m_prog, os);
         }
     }
@@ -5759,7 +5783,7 @@ private:
                     print_custom_usage(p->get_positional(true),
                                        p->get_optional_with_help(
                                            true, m_add_help, p->m_prefix_chars),
-                                       p->m_groups, p->m_mutex_groups,
+                                       p->m_mutex_groups,
                                        std::make_pair(nullptr, 0),
                                        p->m_prog, os);
                 }
@@ -6849,19 +6873,10 @@ private:
     custom_usage(HelpFormatter formatter,
                  std::vector<pArgument> const& positional,
                  std::vector<pArgument> const& optional,
-                 std::deque<pGroup> const& groups,
                  std::deque<ExclusiveGroup> const& mutex_groups,
-                 SubparserInfo const& subparser,
-                 std::string const& program)
+                 SubparserInfo const& subparser)
     {
-        auto res = program;
-        std::size_t min_size = 0;
-        for (auto const& arg : positional) {
-            auto const str = arg->usage(formatter);
-            if (min_size < str.size()) {
-                min_size = str.size();
-            }
-        }
+        std::string res;
         auto ex_opt = optional;
         for (auto const& ex : mutex_groups) {
             for (auto arg : ex.m_arguments) {
@@ -6869,41 +6884,13 @@ private:
                                          std::end(ex_opt), arg),
                              std::end(ex_opt));
             }
-            auto const str = ex.usage(formatter);
-            if (min_size < str.size()) {
-                min_size = str.size();
-            }
         }
-        for (auto const& arg : ex_opt) {
-            auto const str = arg->usage(formatter);
-            if (min_size < str.size()) {
-                min_size = str.size();
-            }
-        }
-        for (auto const& group : groups) {
-            group->limit_usage(formatter, min_size);
-        }
-        std::size_t const usage_length = std::string("usage: ").size();
-        std::size_t pos = usage_length + program.size();
-        std::size_t indent = usage_length;
-        if (pos + (min_size > 0 ? (1 + min_size) : 0) <= detail::_usage_limit) {
-            indent += program.size() + (min_size > 0);
-        } else if (!(ex_opt.empty() && positional.empty() && !subparser.first)){
-            res += "\n" + std::string(indent - 1, detail::_space);
-            pos = indent - 1;
-        }
-        auto _arg_usage
-                = [&pos, indent, &res] (std::string const& str, bool bkt)
+        auto _arg_usage = [&res] (std::string const& str, bool bkt)
         {
-            if ((pos + 1 == indent)
-                    || (pos + 1 + str.size() <= detail::_usage_limit)) {
-                res += detail::_spaces;
-            } else {
-                res += "\n" + std::string(indent, detail::_space);
-                pos = indent;
+            if (!res.empty()) {
+                res += '\n';
             }
             res += (bkt ? "[" + str + "]" : str);
-            pos += 1 + str.size();
         };
         for (auto const& arg : ex_opt) {
             _arg_usage(arg->usage(formatter), true);
@@ -6930,14 +6917,17 @@ private:
     inline void
     print_custom_usage(std::vector<pArgument> const& positional,
                        std::vector<pArgument> const& optional,
-                       std::deque<pGroup> const& groups,
                        std::deque<ExclusiveGroup> const& mutex_groups,
                        SubparserInfo const& subparser,
                        std::string const& prog,
                        std::ostream& os) const
     {
-        os << "usage: " << custom_usage(m_formatter_class, positional, optional,
-                                        groups, mutex_groups, subparser, prog)
+        std::string usage = "usage: " + prog;
+        os << detail::_format_output(
+                  usage,
+                  custom_usage(m_formatter_class, positional, optional,
+                               mutex_groups, subparser),
+                  1, usage.size() + 1, detail::_usage_limit)
            << std::endl;
     }
 
@@ -6959,7 +6949,7 @@ private:
         if (!usage.empty()) {
             os << "usage: " << usage << std::endl;
         } else {
-            print_custom_usage(positional_all, optional_all, groups,
+            print_custom_usage(positional_all, optional_all,
                                mutex_groups, subparser_info, prog, os);
         }
         auto _use_text_formatter
