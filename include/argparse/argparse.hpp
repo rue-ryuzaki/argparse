@@ -258,6 +258,7 @@ public:
 
 namespace detail {
 std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _default_width = 80;
+std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _minimum_width = 33;
 std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
                                                       _argument_help_limit = 24;
 char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _default_prefix_char = '-';
@@ -5196,6 +5197,22 @@ public:
     }
 
     /*!
+     *  \brief Set output width value (min 33)
+     *
+     *  \param value Output width
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& output_width(std::size_t value) ARGPARSE_NOEXCEPT
+    {
+        m_output_width = value;
+        if (m_output_width() < detail::_minimum_width) {
+            m_output_width = detail::_minimum_width;
+        }
+        return *this;
+    }
+
+    /*!
      *  \brief Set argument parser 'add_help' value
      *
      *  \param value Add help flag
@@ -5272,6 +5289,17 @@ public:
     inline std::string const& conflict_handler() const ARGPARSE_NOEXCEPT
     {
         return m_conflict_handler;
+    }
+
+    /*!
+     *  \brief Get output width value (default 80)
+     *
+     *  \return Output width value
+     */
+    inline std::size_t output_width() const ARGPARSE_NOEXCEPT
+    {
+        return m_output_width.has_value() ? m_output_width()
+                                          : detail::_default_width;
     }
 
     /*!
@@ -6744,12 +6772,6 @@ private:
         return (arg.m_default.has_value()
                 || !m_argument_default.has_value()) ? arg.m_default
                                                     : m_argument_default;
-    }
-
-    inline std::size_t output_width() const ARGPARSE_NOEXCEPT
-    {
-        return m_output_width.has_value() ? m_output_width()
-                                          : detail::_default_width;
     }
 
     static bool
