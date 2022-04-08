@@ -6981,12 +6981,16 @@ private:
                        std::string const& prog,
                        std::ostream& os) const
     {
-        std::string usage = "usage: " + prog;
+        auto const w = output_width();
+        std::string usage = "usage:";
+        std::string usage_prog = usage + " " + prog;
+        std::size_t indent
+                = 1 + (w > detail::_minimum_width ? usage_prog : usage).size();
         os << detail::_format_output(
-                  usage,
+                  usage_prog,
                   custom_usage(m_formatter_class, positional, optional,
                                mutex_groups, subparser),
-                  1, usage.size() + 1, output_width())
+                  1, indent, w)
            << std::endl;
     }
 
