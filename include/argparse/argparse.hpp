@@ -260,8 +260,8 @@ namespace detail {
 std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _default_width = 80;
 std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _minimum_width = 33;
 std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _default_height= 24;
-std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
-                                                      _argument_help_limit = 24;
+std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _min_help_width= 22;
+std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _max_name_width= 24;
 char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _default_prefix_char = '-';
 char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
                                                   _default_prefix_chars[] = "-";
@@ -6811,6 +6811,23 @@ private:
         return false;
     }
 
+    inline std::size_t argument_name_limit() const
+    {
+        return output_width() - argument_help_limit();
+    }
+
+    inline std::size_t argument_help_limit() const
+    {
+        auto width = output_width();
+        if (width >= 2 * detail::_max_name_width) {
+            return width - detail::_max_name_width;
+        }
+        if (width >= 2 * detail::_min_help_width) {
+            return width >> 1;
+        }
+        return detail::_min_help_width;
+    }
+
     std::vector<pArgument>
     positional_arguments(bool add_suppress = true, bool add_groups = true) const
     {
@@ -7037,7 +7054,7 @@ private:
         for (auto const& group : groups) {
             group->limit_help_flags(m_formatter_class, min_size);
         }
-        min_size = std::min(min_size + 4, detail::_argument_help_limit);
+        min_size = std::min(min_size + 4, argument_name_limit());
         if (!positional.empty() || sub_positional) {
             os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
