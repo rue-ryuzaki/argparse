@@ -935,7 +935,7 @@ ARGPARSE_EXPORT class Argument
         NARGS_DEF   = 0x01, // ""
         NARGS_NUM   = 0x02, // "N"
         ONE_OR_MORE = 0x04, // "+"
-        OPTIONAL    = 0x08, // "?"
+        ZERO_OR_ONE = 0x08, // "?"
         ZERO_OR_MORE= 0x10, // "*"
     };
 
@@ -1396,7 +1396,7 @@ public:
         }
         auto param = detail::_trim_copy(value);
         if (param == "?") {
-            m_nargs = OPTIONAL;
+            m_nargs = ZERO_OR_ONE;
         } else if (param == "*") {
             m_nargs = ZERO_OR_MORE;
         } else if (param == "+") {
@@ -1459,9 +1459,10 @@ public:
     Argument& const_value(std::string const& value)
     {
         if ((m_action & detail::_const_action)
-                || (m_nargs == OPTIONAL && (m_action & detail::_store_action))){
+                || (m_nargs == ZERO_OR_ONE
+                    && (m_action & detail::_store_action))) {
             m_const = detail::_trim_copy(value);
-        } else if (m_type == Optional && m_nargs != OPTIONAL
+        } else if (m_type == Optional && m_nargs != ZERO_OR_ONE
                    && (m_action & detail::_store_action)) {
             throw ValueError("nargs must be '?' to supply const");
         } else {
@@ -1962,7 +1963,7 @@ private:
             res += detail::_spaces;
         }
         switch (m_nargs) {
-            case OPTIONAL :
+            case ZERO_OR_ONE :
                 res += "[" +  name + "]";
                 break;
             case ONE_OR_MORE :
@@ -2389,7 +2390,7 @@ protected:
                 throw ValueError("dest supplied twice for positional argument");
             }
             if (arg.m_const.has_value()
-                    && !(arg.m_nargs == Argument::OPTIONAL
+                    && !(arg.m_nargs == Argument::ZERO_OR_ONE
                          && (arg.m_action & detail::_store_action))
                     && !(arg.m_action & detail::_const_action)) {
                 throw TypeError("got an unexpected keyword argument 'const'");
@@ -3811,7 +3812,7 @@ public:
             case Action::extend :
                 if ((args.first->m_action == Action::store
                      && (args.first->m_nargs
-                         & (Argument::NARGS_DEF | Argument::OPTIONAL)))
+                         & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE)))
                         || (!args.second.exists()
                             && args.first->m_type == Argument::Optional)
                         || args.second.is_default()) {
@@ -3820,11 +3821,11 @@ public:
                 }
                 if (args.first->m_action != Action::append
                         || (args.first->m_nargs
-                            & (Argument::NARGS_DEF | Argument::OPTIONAL))) {
+                            & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))) {
                     std::string none
                             = args.first->m_nargs == Argument::ZERO_OR_MORE
                             || (args.first->m_action == Action::extend
-                                && args.first->m_nargs == Argument::OPTIONAL)
+                                && args.first->m_nargs == Argument::ZERO_OR_ONE)
                             ? "" : "None";
                     return detail::_vector_to_string(args.second(), ", ",
                                                      quotes, false, none,
@@ -6043,7 +6044,7 @@ private:
                         case Argument::ONE_OR_MORE :
                             _store_first_value(arg, arguments);
                             break;
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                         case Argument::ZERO_OR_MORE :
                             _store_default_value(arg);
                             break;
@@ -6073,7 +6074,7 @@ private:
                             _store_n_values(arg, arguments, 1 + over_args);
                             over_args = 0;
                             break;
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                             _store_default_value(arg);
                             break;
                         case Argument::ZERO_OR_MORE :
@@ -6106,7 +6107,7 @@ private:
                         case Argument::NARGS_DEF :
                             _store_first_value(arg, arguments);
                             break;
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                             if (over_args < one_args) {
                                 _store_first_value(arg, arguments);
                                 ++over_args;
@@ -6160,7 +6161,7 @@ private:
                 }
                 std::size_t min_amount = 0;
                 switch (arg->m_nargs) {
-                    case Argument::OPTIONAL :
+                    case Argument::ZERO_OR_ONE :
                         ++one_args;
                         break;
                     case Argument::ONE_OR_MORE :
@@ -6271,7 +6272,7 @@ private:
                     }
                     std::size_t min_amount = 0;
                     switch (arg->m_nargs) {
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                             ++one_args;
                             break;
                         case Argument::ONE_OR_MORE :
@@ -6500,7 +6501,7 @@ private:
                         case Argument::ONE_OR_MORE :
                             _throw_error(tmp->error_nargs(arg));
                             break;
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                             if (tmp->m_const.has_value()) {
                                 if (tmp->m_action == Action::extend) {
                                     if (tmp->m_const().empty()) {
@@ -6563,7 +6564,7 @@ private:
                                     }
                                 }
                             } while ((tmp->m_nargs != Argument::NARGS_DEF
-                                      && tmp->m_nargs != Argument::OPTIONAL
+                                      && tmp->m_nargs != Argument::ZERO_OR_ONE
                                       && (tmp->m_nargs != Argument::NARGS_NUM
                                           || n != tmp->m_num_args)));
                             if (!values.empty()) {
@@ -6737,11 +6738,11 @@ private:
                         continue;
                     }
                     if (arg->m_action == Action::extend
-                            && arg->m_nargs == Argument::OPTIONAL) {
+                            && arg->m_nargs == Argument::ZERO_OR_ONE) {
                         throw TypeError("'NoneType' object is not iterable");
                     }
                     if ((arg->m_nargs
-                         & (Argument::OPTIONAL | Argument::ZERO_OR_MORE))
+                         & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE))
                             || arg->m_action == Action::BooleanOptionalAction) {
                         _store_default_value(arg);
                         continue;
