@@ -259,6 +259,7 @@ public:
 namespace detail {
 std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _default_width = 80;
 std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _minimum_width = 33;
+std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _default_height= 24;
 std::size_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
                                                       _argument_help_limit = 24;
 char ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR _default_prefix_char = '-';
@@ -280,6 +281,14 @@ uint32_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
 _const_action = Action::store_const | Action::append_const;
 uint32_t ARGPARSE_INLINE_VARIABLE ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
+
+inline std::pair<std::size_t, std::size_t>
+_get_terminal_size()
+{
+    std::size_t width = _default_width;
+    std::size_t height = _default_height;
+    return std::make_pair(width, height);
+}
 
 inline void
 _ltrim(std::string& s)
@@ -5292,14 +5301,14 @@ public:
     }
 
     /*!
-     *  \brief Get output width value (default 80)
+     *  \brief Get output width value (default terminal width 80)
      *
      *  \return Output width value
      */
-    inline std::size_t output_width() const ARGPARSE_NOEXCEPT
+    inline std::size_t output_width() const
     {
         return m_output_width.has_value() ? m_output_width()
-                                          : detail::_default_width;
+                                          : detail::_get_terminal_size().first;
     }
 
     /*!
