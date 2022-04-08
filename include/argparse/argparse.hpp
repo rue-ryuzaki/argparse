@@ -299,13 +299,14 @@ _get_terminal_size()
     std::size_t height = _default_height;
 #if defined(_WIN32)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-    width = static_cast<std::size_t>
-            (csbi.srWindow.Right - csbi.srWindow.Left + 1);
-    height = static_cast<std::size_t>
-            (csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
-    if (width < _minimum_width) {
-        width = _minimum_width;
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+        width = static_cast<std::size_t>
+                (csbi.srWindow.Right - csbi.srWindow.Left + 1);
+        height = static_cast<std::size_t>
+                (csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
+        if (width < _minimum_width) {
+            width = _minimum_width;
+        }
     }
 #elif defined(__linux__)
     int fd = open("/dev/tty", O_RDWR);
