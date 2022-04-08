@@ -3480,8 +3480,13 @@ public:
             std::cerr << "error: array size mismatch: " << res.size()
                       << ", expected " << vector.size() << std::endl;
         }
+#ifdef min
+        std::copy_n(std::begin(vector),
+                    min(res.size(), vector.size()), std::begin(res));
+#else
         std::copy_n(std::begin(vector),
                     std::min(res.size(), vector.size()), std::begin(res));
+#endif // min
         return res;
     }
 
@@ -3961,8 +3966,13 @@ public:
             std::cerr << "error: array size mismatch: " << res.size()
                       << ", expected " << vector.size() << std::endl;
         }
+#ifdef min
+        std::copy_n(std::begin(vector.value()),
+                    min(res.size(), vector->size()), std::begin(res));
+#else
         std::copy_n(std::begin(vector.value()),
                     std::min(res.size(), vector->size()), std::begin(res));
+#endif // min
         return res;
     }
 
@@ -6930,8 +6940,13 @@ private:
         SubparserInfo res = std::make_pair(m_subparsers, 0);
         auto _func = [&res, add_suppress] (ArgumentParser const& parser)
         {
+#ifdef min
+            std::size_t size = min(parser.m_subparsers->m_position,
+                                   parser.m_positional.size());
+#else
             std::size_t size = std::min(parser.m_subparsers->m_position,
                                         parser.m_positional.size());
+#endif // min
             for (std::size_t i = 0; i < size; ++i) {
                 res.second
                         += (add_suppress
@@ -7092,7 +7107,11 @@ private:
         for (auto const& group : groups) {
             group->limit_help_flags(m_formatter_class, min_size);
         }
+#ifdef min
+        min_size = min(min_size + 4, argument_name_limit());
+#else
         min_size = std::min(min_size + 4, argument_name_limit());
+#endif // min
         if (!positional.empty() || sub_positional) {
             os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
