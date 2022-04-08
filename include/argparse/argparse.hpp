@@ -684,8 +684,7 @@ _format_output(std::string const& head, std::string const& body,
     if (value.size() + interlayer > indent) {
         _store_value(value);
     }
-    auto _func = [_store_value, indent, limit, &result, &value]
-            (std::string const& str)
+    auto _func = [_store_value, indent, limit, &value] (std::string const& str)
     {
         if (value.size() > indent && value.size() + 1 + str.size() > limit) {
             _store_value(value);
