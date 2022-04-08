@@ -66,6 +66,14 @@
 #include <unordered_set>
 #include <vector>
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#include <Windows.h>
+#elif defined(__linux__)
+#include <sys/ioctl.h>
+#endif // _WIN32 / __linux__
+
 // filesystem
 #if __cplusplus >= 201703L // C++17+
 #if (defined(_MSC_VER) && _MSC_VER >= 1914) \
@@ -285,8 +293,28 @@ _store_const_action = _store_action | _const_action;
 inline std::pair<std::size_t, std::size_t>
 _get_terminal_size()
 {
+#if defined(_WIN32)
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    std::size_t width = static_cast<std::size_t>
+            (csbi.srWindow.Right - csbi.srWindow.Left + 1);
+    std::size_t height = static_cast<std::size_t>
+            (csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
+    if (width < _minimum_width) {
+        width = _minimum_width;
+    }
+#elif defined(__linux__)
+    struct winsize w;
+    ioctl(fileno(stdout), TIOCGWINSZ, &w);
+    std::size_t width = static_cast<std::size_t>(w.ws_col);
+    std::size_t height = static_cast<std::size_t>(w.ws_row);
+    if (width < _minimum_width) {
+        width = _minimum_width;
+    }
+#else // default values
     std::size_t width = _default_width;
     std::size_t height = _default_height;
+#endif // _WIN32 / __linux__
     return std::make_pair(width, height);
 }
 
