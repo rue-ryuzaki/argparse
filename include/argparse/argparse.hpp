@@ -2508,6 +2508,33 @@ public:
         return *m_data.m_arguments.back();
     }
 
+    /*!
+     *  \brief Add argument
+     *
+     *  \param argument Argument
+     *
+     *  \return Current argument group reference
+     */
+    template <typename = void>
+    inline ArgumentGroup& add_argument(Argument const& argument)
+    {
+        m_data.validate_argument(Argument(argument), m_prefix_chars);
+        bool is_optional
+                = m_data.m_arguments.back()->m_type == Argument::Optional;
+        if (is_optional && m_parent_data.m_conflict_handler == "resolve") {
+            for (auto& arg : m_parent_data.m_optional) {
+                arg.first->resolve_conflict_flags(
+                            m_data.m_arguments.back()->flags());
+            }
+        }
+        m_parent_data.m_arguments.push_back(m_data.m_arguments.back());
+        (is_optional ? m_data.m_optional : m_data.m_positional)
+                .push_back(std::make_pair(m_data.m_arguments.back(), true));
+        (is_optional ? m_parent_data.m_optional : m_parent_data.m_positional)
+                .push_back(std::make_pair(m_data.m_arguments.back(), true));
+        return *this;
+    }
+
 private:
     inline void
     limit_help_flags(HelpFormatter formatter, std::size_t& limit) const override
@@ -2664,6 +2691,34 @@ public:
         m_parent_data.m_optional
                 .push_back(std::make_pair(m_data.m_arguments.back(), false));
         return *m_data.m_arguments.back();
+    }
+
+    /*!
+     *  \brief Add argument
+     *
+     *  \param argument Argument
+     *
+     *  \return Current mutually exclusive group reference
+     */
+    template <typename = void>
+    inline MutuallyExclusiveGroup& add_argument(Argument const& argument)
+    {
+        m_data.validate_argument(Argument(argument), m_prefix_chars);
+        if (m_data.m_arguments.back()->m_type != Argument::Optional) {
+            m_data.m_arguments.pop_back();
+            throw ValueError("mutually exclusive arguments must be optional");
+        } else if (m_parent_data.m_conflict_handler == "resolve") {
+            for (auto& arg : m_parent_data.m_optional) {
+                arg.first->resolve_conflict_flags(
+                            m_data.m_arguments.back()->flags());
+            }
+        }
+        m_parent_data.m_arguments.push_back(m_data.m_arguments.back());
+        m_data.m_optional
+                .push_back(std::make_pair(m_data.m_arguments.back(), false));
+        m_parent_data.m_optional
+                .push_back(std::make_pair(m_data.m_arguments.back(), false));
+        return *this;
     }
 
 private:
