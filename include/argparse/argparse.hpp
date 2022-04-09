@@ -929,7 +929,7 @@ _ARGPARSE_EXPORT class Argument
     friend class ArgumentGroup;
     friend class ArgumentParser;
     friend class BaseParser;
-    friend class ExclusiveGroup;
+    friend class MutuallyExclusiveGroup;
     friend class Namespace;
 
     enum Nargs : uint8_t
@@ -2136,7 +2136,7 @@ protected:
 class ArgumentData
 {
     friend class ArgumentGroup;
-    friend class ExclusiveGroup;
+    friend class MutuallyExclusiveGroup;
 
 protected:
     typedef std::shared_ptr<Argument> pArgument;
@@ -2581,23 +2581,23 @@ private:
 };
 
 /*!
- * \brief ExclusiveGroup class
+ * \brief MutuallyExclusiveGroup class
  */
-_ARGPARSE_EXPORT class ExclusiveGroup : public ArgumentData
+_ARGPARSE_EXPORT class MutuallyExclusiveGroup : public ArgumentData
 {
     friend class ArgumentParser;
 
 public:
     /*!
-     *  \brief Construct exclusive group
+     *  \brief Construct mutually exclusive group
      *
      *  \param prefix_chars Parent prefix chars
      *  \param parent_data Parent argument data
      *
-     *  \return Exclusive group object
+     *  \return Mutually exclusive group object
      */
     explicit
-    ExclusiveGroup(std::string& prefix_chars, ArgumentData* parent_data)
+    MutuallyExclusiveGroup(std::string& prefix_chars, ArgumentData* parent_data)
         : ArgumentData(),
           m_prefix_chars(prefix_chars),
           m_parent_data(parent_data),
@@ -2605,13 +2605,14 @@ public:
     { }
 
     /*!
-     *  \brief Create exclusive group object from another exclusive group
+     *  \brief Create mutually exclusive group object from another
+     *   mutually exclusive group
      *
-     *  \param orig Exclusive group object to copy
+     *  \param orig Mutually exclusive group object to copy
      *
-     *  \return Exclusive group object
+     *  \return Mutually exclusive group object
      */
-    ExclusiveGroup(ExclusiveGroup const& orig)
+    MutuallyExclusiveGroup(MutuallyExclusiveGroup const& orig)
         : ArgumentData(orig),
           m_prefix_chars(orig.m_prefix_chars),
           m_parent_data(orig.m_parent_data),
@@ -2619,13 +2620,14 @@ public:
     { }
 
     /*!
-     *  \brief Copy exclusive group object from another exclusive group
+     *  \brief Copy mutually exclusive group object from another
+     *  mutually exclusive group
      *
-     *  \param rhs Exclusive group object to copy
+     *  \param rhs Mutually exclusive group object to copy
      *
-     *  \return Current exclusive group reference
+     *  \return Current mutually exclusive group reference
      */
-    ExclusiveGroup& operator =(ExclusiveGroup const& rhs)
+    MutuallyExclusiveGroup& operator =(MutuallyExclusiveGroup const& rhs)
     {
         if (this != &rhs) {
             m_arguments     = rhs.m_arguments;
@@ -2639,22 +2641,22 @@ public:
     }
 
     /*!
-     *  \brief Set exclusive group 'required' value
+     *  \brief Set mutually exclusive group 'required' value
      *
      *  \param value Required flag
      *
-     *  \return Current exclusive group reference
+     *  \return Current mutually exclusive group reference
      */
-    inline ExclusiveGroup& required(bool value) _ARGPARSE_NOEXCEPT
+    inline MutuallyExclusiveGroup& required(bool value) _ARGPARSE_NOEXCEPT
     {
         m_required = value;
         return *this;
     }
 
     /*!
-     *  \brief Get exclusive group 'required' value
+     *  \brief Get mutually exclusive group 'required' value
      *
-     *  \return Exclusive group 'required' value
+     *  \return Mutually exclusive group 'required' value
      */
     inline bool required() const _ARGPARSE_NOEXCEPT
     {
@@ -2716,6 +2718,13 @@ private:
     ArgumentData* m_parent_data;
     bool m_required;
 };
+
+// compatibility for version v1.3.8 and earlier
+using ExclusiveGroup
+#if __cplusplus >= 201402L // C++14+
+[[deprecated("Use argparse::MutuallyExclusiveGroup instead.")]]
+#endif // C++14
+    = MutuallyExclusiveGroup;
 
 /*!
  * \brief BaseParser class
@@ -2839,9 +2848,10 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
-    inline ExclusiveGroup& add_mutually_exclusive_group()
+    inline MutuallyExclusiveGroup& add_mutually_exclusive_group()
     {
-        m_mutex_groups.emplace_back(ExclusiveGroup(m_prefix_chars, this));
+        m_mutex_groups.emplace_back(
+                    MutuallyExclusiveGroup(m_prefix_chars, this));
         return m_mutex_groups.back();
     }
 
@@ -2851,7 +2861,7 @@ protected:
     std::string m_epilog;
     std::string m_prefix_chars;
     std::deque<pGroup> m_groups;
-    std::deque<ExclusiveGroup> m_mutex_groups;
+    std::deque<MutuallyExclusiveGroup> m_mutex_groups;
 };
 
 /*!
@@ -6694,7 +6704,7 @@ private:
             _match_args_partial(intermixed_args);
         }
         auto _check_mutex_groups = [_custom_error, &storage]
-                (Parser const* p, std::deque<ExclusiveGroup> const& groups)
+             (Parser const* p, std::deque<MutuallyExclusiveGroup> const& groups)
         {
             for (auto const& ex : groups) {
                 std::string args;
@@ -6987,7 +6997,7 @@ private:
     custom_usage(HelpFormatter formatter,
                  std::vector<pArgument> const& positional,
                  std::vector<pArgument> const& optional,
-                 std::deque<ExclusiveGroup> const& mutex_groups,
+                 std::deque<MutuallyExclusiveGroup> const& mutex_groups,
                  SubparserInfo const& subparser)
     {
         std::string res;
@@ -7031,7 +7041,7 @@ private:
     inline void
     print_custom_usage(std::vector<pArgument> const& positional,
                        std::vector<pArgument> const& optional,
-                       std::deque<ExclusiveGroup> const& mutex_groups,
+                       std::deque<MutuallyExclusiveGroup> const& mutex_groups,
                        SubparserInfo const& subparser,
                        std::string const& prog,
                        std::ostream& os) const
@@ -7056,7 +7066,7 @@ private:
                       std::vector<pArgument> const& optional,
                       bool help_added,
                       std::deque<pGroup> const& groups,
-                      std::deque<ExclusiveGroup> const& mutex_groups,
+                      std::deque<MutuallyExclusiveGroup> const& mutex_groups,
                       SubparserInfo const& subparser_info,
                       std::string const& prog,
                       std::string const& usage,
