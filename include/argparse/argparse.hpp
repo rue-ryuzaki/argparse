@@ -66,6 +66,16 @@
 #include <unordered_set>
 #include <vector>
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#include <Windows.h>
+#else // UNIX
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
+#endif // _WIN32
+
 // filesystem
 #if __cplusplus >= 201703L // C++17+
 #if (defined(_MSC_VER) && _MSC_VER >= 1914) \
@@ -287,6 +297,31 @@ _get_terminal_size()
 {
     std::size_t width = _default_width;
     std::size_t height = _default_height;
+#if defined(_WIN32)
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+        width = static_cast<std::size_t>
+                (csbi.srWindow.Right - csbi.srWindow.Left + 1);
+        height = static_cast<std::size_t>
+                (csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
+        if (width < _minimum_width) {
+            width = _minimum_width;
+        }
+    }
+#else // UNIX
+    int fd = open("/dev/tty", O_RDWR);
+    if (fd >= 0) {
+        struct winsize w;
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) >= 0) {
+            width = static_cast<std::size_t>(w.ws_col);
+            height = static_cast<std::size_t>(w.ws_row);
+            if (width < _minimum_width) {
+                width = _minimum_width;
+            }
+        }
+    }
+    close(fd);
+#endif // _WIN32
     return std::make_pair(width, height);
 }
 
@@ -900,7 +935,7 @@ ARGPARSE_EXPORT class Argument
         NARGS_DEF   = 0x01, // ""
         NARGS_NUM   = 0x02, // "N"
         ONE_OR_MORE = 0x04, // "+"
-        OPTIONAL    = 0x08, // "?"
+        ZERO_OR_ONE = 0x08, // "?"
         ZERO_OR_MORE= 0x10, // "*"
     };
 
@@ -1361,7 +1396,7 @@ public:
         }
         auto param = detail::_trim_copy(value);
         if (param == "?") {
-            m_nargs = OPTIONAL;
+            m_nargs = ZERO_OR_ONE;
         } else if (param == "*") {
             m_nargs = ZERO_OR_MORE;
         } else if (param == "+") {
@@ -1424,9 +1459,10 @@ public:
     Argument& const_value(std::string const& value)
     {
         if ((m_action & detail::_const_action)
-                || (m_nargs == OPTIONAL && (m_action & detail::_store_action))){
+                || (m_nargs == ZERO_OR_ONE
+                    && (m_action & detail::_store_action))) {
             m_const = detail::_trim_copy(value);
-        } else if (m_type == Optional && m_nargs != OPTIONAL
+        } else if (m_type == Optional && m_nargs != ZERO_OR_ONE
                    && (m_action & detail::_store_action)) {
             throw ValueError("nargs must be '?' to supply const");
         } else {
@@ -1927,7 +1963,7 @@ private:
             res += detail::_spaces;
         }
         switch (m_nargs) {
-            case OPTIONAL :
+            case ZERO_OR_ONE :
                 res += "[" +  name + "]";
                 break;
             case ONE_OR_MORE :
@@ -2354,7 +2390,7 @@ protected:
                 throw ValueError("dest supplied twice for positional argument");
             }
             if (arg.m_const.has_value()
-                    && !(arg.m_nargs == Argument::OPTIONAL
+                    && !(arg.m_nargs == Argument::ZERO_OR_ONE
                          && (arg.m_action & detail::_store_action))
                     && !(arg.m_action & detail::_const_action)) {
                 throw TypeError("got an unexpected keyword argument 'const'");
@@ -3445,8 +3481,13 @@ public:
             std::cerr << "error: array size mismatch: " << res.size()
                       << ", expected " << vector.size() << std::endl;
         }
+#ifdef min
+        std::copy_n(std::begin(vector),
+                    min(res.size(), vector.size()), std::begin(res));
+#else
         std::copy_n(std::begin(vector),
                     std::min(res.size(), vector.size()), std::begin(res));
+#endif // min
         return res;
     }
 
@@ -3776,7 +3817,7 @@ public:
             case Action::extend :
                 if ((args.first->m_action == Action::store
                      && (args.first->m_nargs
-                         & (Argument::NARGS_DEF | Argument::OPTIONAL)))
+                         & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE)))
                         || (!args.second.exists()
                             && args.first->m_type == Argument::Optional)
                         || args.second.is_default()) {
@@ -3785,11 +3826,11 @@ public:
                 }
                 if (args.first->m_action != Action::append
                         || (args.first->m_nargs
-                            & (Argument::NARGS_DEF | Argument::OPTIONAL))) {
+                            & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))) {
                     std::string none
                             = args.first->m_nargs == Argument::ZERO_OR_MORE
                             || (args.first->m_action == Action::extend
-                                && args.first->m_nargs == Argument::OPTIONAL)
+                                && args.first->m_nargs == Argument::ZERO_OR_ONE)
                             ? "" : "None";
                     return detail::_vector_to_string(args.second(), ", ",
                                                      quotes, false, none,
@@ -3926,8 +3967,13 @@ public:
             std::cerr << "error: array size mismatch: " << res.size()
                       << ", expected " << vector.size() << std::endl;
         }
+#ifdef min
+        std::copy_n(std::begin(vector.value()),
+                    min(res.size(), vector->size()), std::begin(res));
+#else
         std::copy_n(std::begin(vector.value()),
                     std::min(res.size(), vector->size()), std::begin(res));
+#endif // min
         return res;
     }
 
@@ -6008,7 +6054,7 @@ private:
                         case Argument::ONE_OR_MORE :
                             _store_first_value(arg, arguments);
                             break;
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                         case Argument::ZERO_OR_MORE :
                             _store_default_value(arg);
                             break;
@@ -6038,7 +6084,7 @@ private:
                             _store_n_values(arg, arguments, 1 + over_args);
                             over_args = 0;
                             break;
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                             _store_default_value(arg);
                             break;
                         case Argument::ZERO_OR_MORE :
@@ -6071,7 +6117,7 @@ private:
                         case Argument::NARGS_DEF :
                             _store_first_value(arg, arguments);
                             break;
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                             if (over_args < one_args) {
                                 _store_first_value(arg, arguments);
                                 ++over_args;
@@ -6125,7 +6171,7 @@ private:
                 }
                 std::size_t min_amount = 0;
                 switch (arg->m_nargs) {
-                    case Argument::OPTIONAL :
+                    case Argument::ZERO_OR_ONE :
                         ++one_args;
                         break;
                     case Argument::ONE_OR_MORE :
@@ -6236,7 +6282,7 @@ private:
                     }
                     std::size_t min_amount = 0;
                     switch (arg->m_nargs) {
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                             ++one_args;
                             break;
                         case Argument::ONE_OR_MORE :
@@ -6465,7 +6511,7 @@ private:
                         case Argument::ONE_OR_MORE :
                             _throw_error(tmp->error_nargs(arg));
                             break;
-                        case Argument::OPTIONAL :
+                        case Argument::ZERO_OR_ONE :
                             if (tmp->m_const.has_value()) {
                                 if (tmp->m_action == Action::extend) {
                                     if (tmp->m_const().empty()) {
@@ -6528,7 +6574,7 @@ private:
                                     }
                                 }
                             } while ((tmp->m_nargs != Argument::NARGS_DEF
-                                      && tmp->m_nargs != Argument::OPTIONAL
+                                      && tmp->m_nargs != Argument::ZERO_OR_ONE
                                       && (tmp->m_nargs != Argument::NARGS_NUM
                                           || n != tmp->m_num_args)));
                             if (!values.empty()) {
@@ -6702,11 +6748,11 @@ private:
                         continue;
                     }
                     if (arg->m_action == Action::extend
-                            && arg->m_nargs == Argument::OPTIONAL) {
+                            && arg->m_nargs == Argument::ZERO_OR_ONE) {
                         throw TypeError("'NoneType' object is not iterable");
                     }
                     if ((arg->m_nargs
-                         & (Argument::OPTIONAL | Argument::ZERO_OR_MORE))
+                         & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE))
                             || arg->m_action == Action::BooleanOptionalAction) {
                         _store_default_value(arg);
                         continue;
@@ -6895,8 +6941,13 @@ private:
         SubparserInfo res = std::make_pair(m_subparsers, 0);
         auto _func = [&res, add_suppress] (ArgumentParser const& parser)
         {
+#ifdef min
+            std::size_t size = min(parser.m_subparsers->m_position,
+                                   parser.m_positional.size());
+#else
             std::size_t size = std::min(parser.m_subparsers->m_position,
                                         parser.m_positional.size());
+#endif // min
             for (std::size_t i = 0; i < size; ++i) {
                 res.second
                         += (add_suppress
@@ -7057,7 +7108,11 @@ private:
         for (auto const& group : groups) {
             group->limit_help_flags(m_formatter_class, min_size);
         }
+#ifdef min
+        min_size = min(min_size + 4, argument_name_limit());
+#else
         min_size = std::min(min_size + 4, argument_name_limit());
+#endif // min
         if (!positional.empty() || sub_positional) {
             os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
