@@ -2070,8 +2070,6 @@ private:
     std::function<void(Argument const*)> m_post_trigger;
 };
 
-typedef std::shared_ptr<Argument> pArgument;
-
 /*!
  * \brief Group class
  */
@@ -2132,8 +2130,6 @@ protected:
     std::size_t m_position;
 };
 
-typedef std::shared_ptr<Group> pGroup;
-
 /*!
  * \brief ArgumentData class
  */
@@ -2141,6 +2137,9 @@ class ArgumentData
 {
     friend class ArgumentGroup;
     friend class ExclusiveGroup;
+
+protected:
+    typedef std::shared_ptr<Argument> pArgument;
 
 public:
     /*!
@@ -2586,7 +2585,6 @@ private:
  */
 _ARGPARSE_EXPORT class ExclusiveGroup : public ArgumentData
 {
-public:
     friend class ArgumentParser;
 
 public:
@@ -2724,6 +2722,9 @@ private:
  */
 class BaseParser : public ArgumentData
 {
+protected:
+    typedef std::shared_ptr<Group> pGroup;
+
 public:
     /*!
      *  \brief Construct base parser
@@ -2858,6 +2859,8 @@ protected:
  */
 _ARGPARSE_EXPORT class Namespace
 {
+    typedef std::shared_ptr<Argument> pArgument;
+
     class Storage
     {
         friend class ArgumentParser;
