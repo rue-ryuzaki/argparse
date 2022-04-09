@@ -70,11 +70,11 @@
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
 #include <Windows.h>
-#elif defined(__linux__)
+#else // UNIX
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
-#endif // _WIN32 / __linux__
+#endif // _WIN32
 
 // filesystem
 #if __cplusplus >= 201703L // C++17+
@@ -308,7 +308,7 @@ _get_terminal_size()
             width = _minimum_width;
         }
     }
-#elif defined(__linux__)
+#else // UNIX
     int fd = open("/dev/tty", O_RDWR);
     if (fd >= 0) {
         struct winsize w;
@@ -321,7 +321,7 @@ _get_terminal_size()
         }
     }
     close(fd);
-#endif // _WIN32 / __linux__
+#endif // _WIN32
     return std::make_pair(width, height);
 }
 
