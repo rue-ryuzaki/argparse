@@ -928,6 +928,7 @@ _ARGPARSE_EXPORT class Argument
     friend class ArgumentData;
     friend class ArgumentGroup;
     friend class ArgumentParser;
+    friend class BaseArgumentGroup;
     friend class BaseParser;
     friend class MutuallyExclusiveGroup;
     friend class Namespace;
@@ -2139,8 +2140,8 @@ protected:
 class ArgumentData
 {
     friend class ArgumentGroup;
-    friend class ArgumentObject;
     friend class ArgumentParser;
+    friend class BaseArgumentGroup;
     friend class BaseParser;
     friend class MutuallyExclusiveGroup;
 
@@ -2407,65 +2408,56 @@ protected:
 };
 
 /*!
- * \brief ArgumentGroup class
+ * \brief BaseArgumentGroup class
  */
-_ARGPARSE_EXPORT class ArgumentGroup : public Group
+class BaseArgumentGroup
 {
-    friend class ArgumentParser;
-    friend class BaseParser;
+    friend class ArgumentGroup;
 
-    explicit
-    ArgumentGroup(std::string const& title,
-                  std::string const& description,
-                  std::string& prefix_chars,
-                  ArgumentData& parent_data)
-        : Group(title, description),
-          m_data(),
+protected:
+    BaseArgumentGroup(std::string& prefix_chars,
+                      ArgumentData& parent_data,
+                      bool is_mutex_group)
+        : m_data(),
           m_prefix_chars(prefix_chars),
-          m_parent_data(parent_data)
+          m_parent_data(parent_data),
+          m_is_mutex_group(is_mutex_group)
     { }
-
-    static inline std::shared_ptr<ArgumentGroup>
-    make_argument_group(std::string const& title,
-                        std::string const& description,
-                        std::string& prefix_chars,
-                        ArgumentData& parent_data)
-    {
-        return std::make_shared<ArgumentGroup>
-                (ArgumentGroup(title, description, prefix_chars, parent_data));
-    }
 
 public:
     /*!
-     *  \brief Create argument group object from another argument group
+     *  \brief Create base argument group object from another argument group
      *
-     *  \param orig Argument group object to copy
+     *  \param orig Base argument group object to copy
      *
-     *  \return Argument group object
+     *  \return Base rgument group object
      */
-    ArgumentGroup(ArgumentGroup const& orig)
-        : Group(orig),
-          m_data(orig.m_data),
+    BaseArgumentGroup(BaseArgumentGroup const& orig)
+        : m_data(orig.m_data),
           m_prefix_chars(orig.m_prefix_chars),
-          m_parent_data(orig.m_parent_data)
+          m_parent_data(orig.m_parent_data),
+          m_is_mutex_group(orig.m_is_mutex_group)
     { }
 
     /*!
-     *  \brief Copy argument group object from another argument group
-     *
-     *  \param rhs Argument group object to copy
-     *
-     *  \return Current argument group reference
+     *  \brief Destroy basea argument group object
      */
-    ArgumentGroup& operator =(ArgumentGroup const& rhs)
+    virtual ~BaseArgumentGroup() _ARGPARSE_NOEXCEPT = default;
+
+    /*!
+     *  \brief Copy base argument group object from another argument group
+     *
+     *  \param rhs Base argument group object to copy
+     *
+     *  \return Current base argument group reference
+     */
+    BaseArgumentGroup& operator =(BaseArgumentGroup const& rhs)
     {
         if (this != &rhs) {
-            m_title         = rhs.m_title;
-            m_description   = rhs.m_description;
-            m_position      = rhs.m_position;
             m_data          = rhs.m_data;
             m_prefix_chars  = rhs.m_prefix_chars;
             m_parent_data   = rhs.m_parent_data;
+            m_is_mutex_group= rhs.m_is_mutex_group;
         }
         return *this;
     }
@@ -2490,14 +2482,28 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::vector<std::string> const& flags)
+    inline Argument& add_argument(std::vector<std::string> const& flags)
     {
         m_data.create_argument(flags, m_prefix_chars);
+        process_add_argument();
+        return *m_data.m_arguments.back();
+    }
+
+protected:
+    inline void process_add_argument()
+    {
         bool is_optional
                 = m_data.m_arguments.back()->m_type == Argument::Optional;
-        if (is_optional && m_parent_data.m_conflict_handler == "resolve") {
+        if (!is_optional) {
+            if (m_is_mutex_group) {
+                m_data.m_arguments.pop_back();
+                throw
+                ValueError("mutually exclusive arguments must be optional");
+            }
+        } else if (m_parent_data.m_conflict_handler == "resolve") {
             for (auto& arg : m_parent_data.m_optional) {
-                arg.first->resolve_conflict_flags(flags);
+                arg.first->resolve_conflict_flags(
+                            m_data.m_arguments.back()->flags());
             }
         }
         m_parent_data.m_arguments.push_back(m_data.m_arguments.back());
@@ -2505,7 +2511,76 @@ public:
                 .push_back(std::make_pair(m_data.m_arguments.back(), true));
         (is_optional ? m_parent_data.m_optional : m_parent_data.m_positional)
                 .push_back(std::make_pair(m_data.m_arguments.back(), true));
-        return *m_data.m_arguments.back();
+    }
+
+    ArgumentData m_data;
+    std::string& m_prefix_chars;
+    ArgumentData& m_parent_data;
+
+private:
+    bool m_is_mutex_group;
+};
+
+/*!
+ * \brief ArgumentGroup class
+ */
+_ARGPARSE_EXPORT class ArgumentGroup : public Group, public BaseArgumentGroup
+{
+    friend class ArgumentParser;
+    friend class BaseParser;
+
+    explicit
+    ArgumentGroup(std::string const& title,
+                  std::string const& description,
+                  std::string& prefix_chars,
+                  ArgumentData& parent_data)
+        : Group(title, description),
+          BaseArgumentGroup(prefix_chars, parent_data, false)
+    { }
+
+    static inline std::shared_ptr<ArgumentGroup>
+    make_argument_group(std::string const& title,
+                        std::string const& description,
+                        std::string& prefix_chars,
+                        ArgumentData& parent_data)
+    {
+        return std::make_shared<ArgumentGroup>
+                (ArgumentGroup(title, description, prefix_chars, parent_data));
+    }
+
+public:
+    using BaseArgumentGroup::add_argument;
+
+    /*!
+     *  \brief Create argument group object from another argument group
+     *
+     *  \param orig Argument group object to copy
+     *
+     *  \return Argument group object
+     */
+    ArgumentGroup(ArgumentGroup const& orig)
+        : Group(orig),
+          BaseArgumentGroup(orig)
+    { }
+
+    /*!
+     *  \brief Copy argument group object from another argument group
+     *
+     *  \param rhs Argument group object to copy
+     *
+     *  \return Current argument group reference
+     */
+    ArgumentGroup& operator =(ArgumentGroup const& rhs)
+    {
+        if (this != &rhs) {
+            m_title         = rhs.m_title;
+            m_description   = rhs.m_description;
+            m_position      = rhs.m_position;
+            m_data          = rhs.m_data;
+            m_prefix_chars  = rhs.m_prefix_chars;
+            m_parent_data   = rhs.m_parent_data;
+        }
+        return *this;
     }
 
     /*!
@@ -2519,19 +2594,7 @@ public:
     inline ArgumentGroup& add_argument(Argument const& argument)
     {
         m_data.validate_argument(Argument(argument), m_prefix_chars);
-        bool is_optional
-                = m_data.m_arguments.back()->m_type == Argument::Optional;
-        if (is_optional && m_parent_data.m_conflict_handler == "resolve") {
-            for (auto& arg : m_parent_data.m_optional) {
-                arg.first->resolve_conflict_flags(
-                            m_data.m_arguments.back()->flags());
-            }
-        }
-        m_parent_data.m_arguments.push_back(m_data.m_arguments.back());
-        (is_optional ? m_data.m_optional : m_data.m_positional)
-                .push_back(std::make_pair(m_data.m_arguments.back(), true));
-        (is_optional ? m_parent_data.m_optional : m_parent_data.m_positional)
-                .push_back(std::make_pair(m_data.m_arguments.back(), true));
+        process_add_argument();
         return *this;
     }
 
@@ -2568,25 +2631,19 @@ private:
             }
         }
     }
-
-    ArgumentData m_data;
-    std::string& m_prefix_chars;
-    ArgumentData& m_parent_data;
 };
 
 /*!
  * \brief MutuallyExclusiveGroup class
  */
-_ARGPARSE_EXPORT class MutuallyExclusiveGroup
+_ARGPARSE_EXPORT class MutuallyExclusiveGroup : public BaseArgumentGroup
 {
     friend class ArgumentParser;
     friend class BaseParser;
 
     explicit
     MutuallyExclusiveGroup(std::string& prefix_chars, ArgumentData& parent_data)
-        : m_data(),
-          m_prefix_chars(prefix_chars),
-          m_parent_data(parent_data),
+        : BaseArgumentGroup(prefix_chars, parent_data, true),
           m_required(false)
     { }
 
@@ -2597,6 +2654,8 @@ _ARGPARSE_EXPORT class MutuallyExclusiveGroup
     }
 
 public:
+    using BaseArgumentGroup::add_argument;
+
     /*!
      *  \brief Create mutually exclusive group object from another
      *   mutually exclusive group
@@ -2606,9 +2665,7 @@ public:
      *  \return Mutually exclusive group object
      */
     MutuallyExclusiveGroup(MutuallyExclusiveGroup const& orig)
-        : m_data(orig.m_data),
-          m_prefix_chars(orig.m_prefix_chars),
-          m_parent_data(orig.m_parent_data),
+        : BaseArgumentGroup(orig),
           m_required(orig.m_required)
     { }
 
@@ -2655,45 +2712,6 @@ public:
     }
 
     /*!
-     *  \brief Add argument with flags
-     *
-     *  \param args Flag values
-     *
-     *  \return Current argument reference
-     */
-    template <class... Args>
-    Argument& add_argument(Args... args)
-    {
-        return add_argument(std::vector<std::string>{ args... });
-    }
-
-    /*!
-     *  \brief Add argument with flags
-     *
-     *  \param flags Flags values
-     *
-     *  \return Current argument reference
-     */
-    Argument& add_argument(std::vector<std::string> const& flags)
-    {
-        m_data.create_argument(flags, m_prefix_chars);
-        if (m_data.m_arguments.back()->m_type != Argument::Optional) {
-            m_data.m_arguments.pop_back();
-            throw ValueError("mutually exclusive arguments must be optional");
-        } else if (m_parent_data.m_conflict_handler == "resolve") {
-            for (auto& arg : m_parent_data.m_optional) {
-                arg.first->resolve_conflict_flags(flags);
-            }
-        }
-        m_parent_data.m_arguments.push_back(m_data.m_arguments.back());
-        m_data.m_optional
-                .push_back(std::make_pair(m_data.m_arguments.back(), false));
-        m_parent_data.m_optional
-                .push_back(std::make_pair(m_data.m_arguments.back(), false));
-        return *m_data.m_arguments.back();
-    }
-
-    /*!
      *  \brief Add argument
      *
      *  \param argument Argument
@@ -2704,20 +2722,7 @@ public:
     inline MutuallyExclusiveGroup& add_argument(Argument const& argument)
     {
         m_data.validate_argument(Argument(argument), m_prefix_chars);
-        if (m_data.m_arguments.back()->m_type != Argument::Optional) {
-            m_data.m_arguments.pop_back();
-            throw ValueError("mutually exclusive arguments must be optional");
-        } else if (m_parent_data.m_conflict_handler == "resolve") {
-            for (auto& arg : m_parent_data.m_optional) {
-                arg.first->resolve_conflict_flags(
-                            m_data.m_arguments.back()->flags());
-            }
-        }
-        m_parent_data.m_arguments.push_back(m_data.m_arguments.back());
-        m_data.m_optional
-                .push_back(std::make_pair(m_data.m_arguments.back(), false));
-        m_parent_data.m_optional
-                .push_back(std::make_pair(m_data.m_arguments.back(), false));
+        process_add_argument();
         return *this;
     }
 
@@ -2734,9 +2739,6 @@ private:
         return res.empty() ? res : "(" + res + ")";
     }
 
-    ArgumentData m_data;
-    std::string& m_prefix_chars;
-    ArgumentData& m_parent_data;
     bool m_required;
 };
 
@@ -2835,10 +2837,7 @@ public:
     inline Argument& add_argument(std::vector<std::string> const& flags)
     {
         m_data.create_argument(flags, m_prefix_chars);
-        bool is_optional
-                = m_data.m_arguments.back()->m_type == Argument::Optional;
-        (is_optional ? m_data.m_optional : m_data.m_positional)
-                .push_back(std::make_pair(m_data.m_arguments.back(), false));
+        process_add_argument();
         return *m_data.m_arguments.back();
     }
 
@@ -2873,6 +2872,13 @@ public:
     }
 
 protected:
+    inline void process_add_argument()
+    {
+        bool optional = m_data.m_arguments.back()->m_type == Argument::Optional;
+        (optional ? m_data.m_optional : m_data.m_positional)
+                .push_back(std::make_pair(m_data.m_arguments.back(), false));
+    }
+
     ArgumentData m_data;
     std::string m_usage;
     std::string m_description;
@@ -4681,10 +4687,7 @@ public:
         inline Parser& add_argument(Argument const& argument)
         {
             m_data.validate_argument(Argument(argument), m_prefix_chars);
-            bool is_optional
-                    = m_data.m_arguments.back()->m_type == Argument::Optional;
-            (is_optional ? m_data.m_optional : m_data.m_positional)
-                   .push_back(std::make_pair(m_data.m_arguments.back(), false));
+            process_add_argument();
             return *this;
         }
 
@@ -5397,10 +5400,7 @@ public:
     inline ArgumentParser& add_argument(Argument const& argument)
     {
         m_data.validate_argument(Argument(argument), m_prefix_chars);
-        bool is_optional
-                = m_data.m_arguments.back()->m_type == Argument::Optional;
-        (is_optional ? m_data.m_optional : m_data.m_positional)
-                .push_back(std::make_pair(m_data.m_arguments.back(), false));
+        process_add_argument();
         return *this;
     }
 
