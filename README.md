@@ -30,6 +30,7 @@ C++11 support compiler
   - [custom types](#custom-type-example)
 - [Features](#features)
   - [handle](#handle)
+  - [terminal size auto-detection](#terminal-size-auto-detection)
 - Python API support:
   - [ArgumentParser objects](#argumentparser-objects-support)
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
@@ -403,6 +404,8 @@ int main(int argc, char* argv[])
     return 0;
 }
 ```
+### Terminal size auto-detection
+By default, help output is positioned based on the terminal's width. But you can manually specify the width of the available area using the ArgumentParser::output_width(...) method.
 ## ArgumentParser objects support
 - [x] prog - The name of the program (default: argv[0] or "untitled")
 - [x] usage - The string describing the program usage (default: generated from arguments added to parser)
