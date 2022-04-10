@@ -6694,15 +6694,15 @@ private:
                 std::string args;
                 std::string found;
                 for (auto const& arg : ex.m_data.m_arguments) {
-                    auto const& flag = arg->m_flags.front();
-                    args += detail::_spaces + flag;
+                    auto flags = detail::_vector_to_string(arg->flags(), "/");
+                    args += detail::_spaces + flags;
                     if (!storage.at(arg).empty()) {
                         if (!found.empty()) {
-                            _custom_error(p, "argument " + flag
+                            _custom_error(p, "argument " + flags
                                           + ": not allowed with argument "
                                           + found);
                         }
-                        found = flag;
+                        found = flags;
                     }
                 }
                 if (ex.m_required && found.empty()) {
