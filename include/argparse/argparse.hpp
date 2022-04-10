@@ -2412,8 +2412,6 @@ protected:
  */
 class BaseArgumentGroup
 {
-    friend class ArgumentGroup;
-
 protected:
     BaseArgumentGroup(std::string& prefix_chars,
                       ArgumentData& parent_data,
@@ -2492,9 +2490,8 @@ public:
 protected:
     inline void process_add_argument()
     {
-        bool is_optional
-                = m_data.m_arguments.back()->m_type == Argument::Optional;
-        if (!is_optional) {
+        bool optional = m_data.m_arguments.back()->m_type == Argument::Optional;
+        if (!optional) {
             if (m_is_mutex_group) {
                 m_data.m_arguments.pop_back();
                 throw
@@ -2507,9 +2504,9 @@ protected:
             }
         }
         m_parent_data.m_arguments.push_back(m_data.m_arguments.back());
-        (is_optional ? m_data.m_optional : m_data.m_positional)
+        (optional ? m_data.m_optional : m_data.m_positional)
                 .push_back(std::make_pair(m_data.m_arguments.back(), true));
-        (is_optional ? m_parent_data.m_optional : m_parent_data.m_positional)
+        (optional ? m_parent_data.m_optional : m_parent_data.m_positional)
                 .push_back(std::make_pair(m_data.m_arguments.back(), true));
     }
 
@@ -2526,7 +2523,6 @@ private:
  */
 _ARGPARSE_EXPORT class ArgumentGroup : public Group, public BaseArgumentGroup
 {
-    friend class ArgumentParser;
     friend class BaseParser;
 
     explicit
