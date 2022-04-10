@@ -815,12 +815,12 @@ public:
           m_has_value(std::move(orig.m_has_value))
     { }
 
-    Value(T const& orig)
+    explicit Value(T const& orig)
         : m_value(orig),
           m_has_value(true)
     { }
 
-    Value(T&& orig) _ARGPARSE_NOEXCEPT
+    explicit Value(T&& orig) _ARGPARSE_NOEXCEPT
         : m_value(std::move(orig)),
           m_has_value(true)
     { }
@@ -3106,9 +3106,9 @@ _ARGPARSE_EXPORT class Namespace
         {
             if (arg->m_action
                     & (Action::store | Action::BooleanOptionalAction)) {
-                auto& storage = at(arg);
-                if (storage.empty()) {
-                    storage.push_default(value);
+                auto& arg_data = at(arg);
+                if (arg_data.empty()) {
+                    arg_data.push_default(value);
                 }
             }
         }
@@ -3116,9 +3116,9 @@ _ARGPARSE_EXPORT class Namespace
         bool self_value_stored(key_type const& arg)
         {
             if (arg->m_action & (Action::store_const | detail::_bool_action)) {
-                auto& storage = at(arg);
-                if (storage.empty()) {
-                    storage.push_back(arg->m_const());
+                auto& arg_data = at(arg);
+                if (arg_data.empty()) {
+                    arg_data.push_back(arg->m_const());
                 }
                 arg->handle(arg->m_const());
                 return true;
@@ -5823,7 +5823,7 @@ protected:
 
 private:
     argparse::Namespace
-    on_parse_arguments(std::vector<std::string> args,
+    on_parse_arguments(std::vector<std::string> const& args,
                        bool only_known,
                        bool intermixed,
                        argparse::Namespace const& space) const
@@ -5842,11 +5842,12 @@ private:
     }
 
     argparse::Namespace
-    parse_arguments(std::vector<std::string> parsed_arguments,
+    parse_arguments(std::vector<std::string> const& in_parsed_arguments,
                     bool only_known,
                     bool intermixed,
                     argparse::Namespace const& space) const
     {
+        auto parsed_arguments = in_parsed_arguments;
         if (!space.unrecognized_args().empty()) {
             auto const& args = space.unrecognized_args();
             parsed_arguments.insert(std::end(parsed_arguments),
@@ -6897,7 +6898,7 @@ private:
     std::pair<bool, std::vector<pArgument> >
     optional_arguments(bool add_suppress = true, bool add_groups = true) const
     {
-        bool add_help = false;
+        bool help_added = false;
         std::vector<pArgument> result;
         result.reserve(m_data.m_optional.size() + 1);
         if (m_add_help) {
@@ -6913,7 +6914,7 @@ private:
                 help->help("show this help message and exit")
                         .action(Action::help);
                 result.emplace_back(std::move(help));
-                add_help = true;
+                help_added = true;
             }
         }
         for (auto const& parent : m_parents) {
@@ -6932,7 +6933,7 @@ private:
                 result.push_back(arg.first);
             }
         }
-        return std::make_pair(add_help, result);
+        return std::make_pair(help_added, result);
     }
 
     SubparserInfo subpurser_info(bool add_suppress = true) const
@@ -7031,12 +7032,12 @@ private:
                        std::ostream& os) const
     {
         auto const w = output_width();
-        std::string usage = "usage:";
-        std::string usage_prog = usage + " " + prog;
+        std::string head = "usage:";
+        std::string head_prog = head + " " + prog;
         std::size_t indent
-                = 1 + (w > detail::_minimum_width ? usage_prog : usage).size();
+                = 1 + (w > detail::_minimum_width ? head_prog : head).size();
         os << detail::_format_output(
-                  usage_prog,
+                  head_prog,
                   custom_usage(m_formatter_class, positional, optional,
                                mutex_groups, subparser),
                   1, indent, w)
