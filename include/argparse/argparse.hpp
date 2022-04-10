@@ -1879,10 +1879,10 @@ private:
         if ((m_action & detail::_const_action) && !m_const.has_value()) {
             throw TypeError("missing 1 required positional argument: 'const'");
         }
-        for (auto const& flag : m_flags) {
-            if (flag == detail::_pseudo_argument && dest().empty()) {
-                throw ValueError("dest= is required for options like '--'");
-            }
+        if (std::any_of(std::begin(m_flags), std::end(m_flags),
+                        [] (std::string const& flag)
+        { return flag == detail::_pseudo_argument; }) && dest().empty()) {
+            throw ValueError("dest= is required for options like '--'");
         }
     }
 
@@ -4301,9 +4301,10 @@ private:
             }
         } else {
             vec.reserve(args.size());
-            for (auto const& arg : args) {
-                vec.emplace_back(to_pair<T, U>(arg, delim));
-            }
+            std::transform(std::begin(args), std::end(args),
+                           std::back_inserter(vec),
+                           [this, delim] (std::string const& a)
+            { return to_pair<T, U>(a, delim); });
         }
         return vec;
     }
@@ -5464,12 +5465,11 @@ public:
                 }
             }
         }
-        for (auto const& pair : m_default_values) {
-            if (pair.first == dest) {
-                return pair.second;
-            }
-        }
-        return std::string();
+        auto it = std::find_if(
+                    std::begin(m_default_values), std::end(m_default_values),
+                    [dest] (std::pair<std::string, std::string> const& pair)
+        { return pair.first == dest; });
+        return it != std::end(m_default_values) ? it->second :std::string();
     }
 
     /*!
@@ -7065,20 +7065,19 @@ private:
             print_custom_usage(positional_all, optional_all,
                                mutex_groups, subparser_info, prog, os);
         }
-        auto _use_text_formatter
-                = [] (std::string const& value, HelpFormatter formatter)
+        auto _use_text_formatter = [] (std::string const& str, HelpFormatter hf)
         {
-            auto res = value;
-            if (!(formatter
-                  & (RawDescriptionHelpFormatter | RawTextHelpFormatter))) {
-                detail::_trim(res);
-                auto lines = detail::_split(res, '\n');
-                if (lines.size() > 1) {
-                    for (auto& line : lines) {
-                        detail::_trim(line);
-                    }
-                    res = detail::_vector_to_string(lines);
+            if (hf & (RawDescriptionHelpFormatter | RawTextHelpFormatter)) {
+                return str;
+            }
+            auto res = str;
+            detail::_trim(res);
+            auto lines = detail::_split(res, '\n');
+            if (lines.size() > 1) {
+                for (auto& line : lines) {
+                    detail::_trim(line);
                 }
+                return detail::_vector_to_string(lines);
             }
             return res;
         };
@@ -7087,50 +7086,48 @@ private:
         if (!formatter_description.empty()) {
             os << "\n" << formatter_description << std::endl;
         }
-        std::size_t min_size = 0;
+        std::size_t size = 0;
+        auto _update_size = [&size] (std::size_t value)
+        {
+            if (size < value) {
+                size = value;
+            }
+        };
         std::size_t width = output_width();
         bool suppress_default = m_argument_default_type == SUPPRESS;
         auto subparser = subparser_info.first;
         bool sub_positional = subparser && subparser->title().empty()
                               && subparser->description().empty();
         for (auto const& arg : positional) {
-            auto size = arg->flags_to_string(m_formatter_class).size();
-            if (min_size < size) {
-                min_size = size;
-            }
+            _update_size(arg->flags_to_string(m_formatter_class).size());
         }
         for (auto const& arg : optional) {
-            auto size = arg->flags_to_string(m_formatter_class).size();
-            if (min_size < size) {
-                min_size = size;
-            }
+            _update_size(arg->flags_to_string(m_formatter_class).size());
         }
         for (auto const& group : groups) {
-            group->limit_help_flags(m_formatter_class, min_size);
+            group->limit_help_flags(m_formatter_class, size);
         }
 #ifdef min
-        min_size = min(min_size + 4, argument_name_limit());
+        size = min(size + 4, argument_name_limit());
 #else
-        min_size = std::min(min_size + 4, argument_name_limit());
+        size = std::min(size + 4, argument_name_limit());
 #endif // min
         if (!positional.empty() || sub_positional) {
             os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
                 if (sub_positional && subparser_info.second == i) {
-                    os << subparser->print(m_formatter_class, min_size, width)
+                    os << subparser->print(m_formatter_class, size, width)
                        << "\n";
                 }
                 os << positional.at(i)->print(suppress_default,
                                               m_argument_default,
                                               m_formatter_class,
-                                              min_size, width) << std::endl;
+                                              size, width) << std::endl;
             }
             if (sub_positional && subparser_info.second == positional.size()) {
-                os << subparser->print(m_formatter_class, min_size, width)
-                   << "\n";
+                os << subparser->print(m_formatter_class, size, width) << "\n";
                 for (auto const& arg : subparser->m_parsers) {
-                    os << arg.print(m_formatter_class, min_size, width)
-                       << std::endl;
+                    os << arg.print(m_formatter_class, size, width)<< std::endl;
                 }
             }
         }
@@ -7140,15 +7137,14 @@ private:
                 os << (*i)->print(suppress_default
                                   && !(help_added && i == std::begin(optional)),
                                   m_argument_default,
-                                  m_formatter_class, min_size, width)
-                   << std::endl;
+                                  m_formatter_class, size, width) << std::endl;
             }
         }
         for (auto const& group : groups) {
             if ((subparser && (group != subparser || !sub_positional))
                     || (!subparser && group != subparser)) {
                 group->print_help(os, suppress_default, m_argument_default,
-                                  m_formatter_class, min_size, width);
+                                  m_formatter_class, size, width);
             }
         }
         auto formatter_epilog = _use_text_formatter(epilog, m_formatter_class);
