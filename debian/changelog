@@ -1,3 +1,14 @@
+cpp-argparse-dev (1.4.0-0ppa0) focal; urgency=low
+
+  * Add 2D containers support for Namespace::get()
+  * Update help formatting
+  * Allow to set output width
+  * Add terminal size auto-detection
+  * Rename ExclusiveGroup to MutuallyExclusiveGroup
+  * Add add_argument(Argument) to ArgumentGroup and MutuallyExclusiveGroup
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 10 Apr 2022 15:22:26 +0300
+
 cpp-argparse-dev (1.3.8-0ppa0) focal; urgency=low
 
   * Allow to add_argument(Argument().dest(...))
