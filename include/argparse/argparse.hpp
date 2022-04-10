@@ -319,8 +319,8 @@ _get_terminal_size()
                 width = _minimum_width;
             }
         }
+        close(fd);
     }
-    close(fd);
 #endif // _WIN32
     return std::make_pair(width, height);
 }
