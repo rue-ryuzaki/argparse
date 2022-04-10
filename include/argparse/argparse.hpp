@@ -5250,7 +5250,7 @@ public:
     }
 
     /*!
-     *  \brief Set output width value (min 33)
+     *  \brief Set output width value (default auto-detected or 80, min 33)
      *
      *  \param value Output width
      *
@@ -5345,7 +5345,7 @@ public:
     }
 
     /*!
-     *  \brief Get output width value (default terminal width 80)
+     *  \brief Get output width value (default auto-detected or 80, min 33)
      *
      *  \return Output width value
      */
