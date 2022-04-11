@@ -1272,11 +1272,7 @@ public:
             m_metavar.clear();
         }
         if (m_type == Optional && value == Action::BooleanOptionalAction) {
-            m_all_flags.clear();
-            for (auto const& flag : m_flags) {
-                m_all_flags.push_back(flag);
-                m_all_flags.push_back(detail::_make_no_flag(flag));
-            }
+            make_no_flags();
             if (m_post_trigger) {
                 m_post_trigger(this);
             }
@@ -1886,6 +1882,15 @@ private:
         }
     }
 
+    inline void make_no_flags()
+    {
+        m_all_flags.clear();
+        for (auto const& flag : m_flags) {
+            m_all_flags.push_back(flag);
+            m_all_flags.push_back(detail::_make_no_flag(flag));
+        }
+    }
+
     std::string usage(HelpFormatter formatter) const
     {
         std::string res;
@@ -2366,14 +2371,8 @@ protected:
                     && !(arg.m_action & detail::_const_action)) {
                 throw TypeError("got an unexpected keyword argument 'const'");
             }
-        } else {
-            if (arg.m_action == Action::BooleanOptionalAction) {
-                arg.m_all_flags.clear();
-                for (auto const& flag : arg.m_flags) {
-                    arg.m_all_flags.push_back(flag);
-                    arg.m_all_flags.push_back(detail::_make_no_flag(flag));
-                }
-            }
+        } else if (arg.m_action == Action::BooleanOptionalAction) {
+            arg.make_no_flags();
         }
         auto _check_conflict = [this, &arg]
                 (std::string const& flag, std::vector<std::string>& flags)
