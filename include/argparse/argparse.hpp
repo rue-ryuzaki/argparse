@@ -775,6 +775,24 @@ _help_formatter(HelpFormatter formatter,
     }
 }
 
+inline std::string
+_raw_text_formatter(HelpFormatter formatter, std::string const& text)
+{
+    if (formatter & (RawDescriptionHelpFormatter | RawTextHelpFormatter)) {
+        return text;
+    }
+    auto res = text;
+    _trim(res);
+    auto lines = _split(res, '\n');
+    if (lines.size() > 1) {
+        for (auto& line : lines) {
+            _trim(line);
+        }
+        return _vector_to_string(lines);
+    }
+    return res;
+}
+
 template <class T>
 std::string
 _type_name()
@@ -7029,6 +7047,11 @@ private:
            << std::endl;
     }
 
+    static bool is_subparser_positional(std::shared_ptr<Subparser> const& sub)
+    {
+        return sub && sub->title().empty() && sub->description().empty();
+    }
+
     void
     print_custom_help(std::vector<pArgument> const& positional_all,
                       std::vector<pArgument> const& optional_all,
@@ -7050,24 +7073,8 @@ private:
             print_custom_usage(positional_all, optional_all,
                                mutex_groups, subparser_info, prog, os);
         }
-        auto _use_text_formatter = [] (std::string const& str, HelpFormatter hf)
-        {
-            if (hf & (RawDescriptionHelpFormatter | RawTextHelpFormatter)) {
-                return str;
-            }
-            auto res = str;
-            detail::_trim(res);
-            auto lines = detail::_split(res, '\n');
-            if (lines.size() > 1) {
-                for (auto& line : lines) {
-                    detail::_trim(line);
-                }
-                return detail::_vector_to_string(lines);
-            }
-            return res;
-        };
         auto formatter_description
-                = _use_text_formatter(description, m_formatter_class);
+                = detail::_raw_text_formatter(m_formatter_class, description);
         if (!formatter_description.empty()) {
             os << "\n" << formatter_description << std::endl;
         }
@@ -7081,8 +7088,7 @@ private:
         std::size_t width = output_width();
         bool suppress_default = m_argument_default_type == SUPPRESS;
         auto subparser = subparser_info.first;
-        bool sub_positional = subparser && subparser->title().empty()
-                              && subparser->description().empty();
+        bool sub_positional = is_subparser_positional(subparser);
         for (auto const& arg : positional) {
             _update_size(arg->flags_to_string(m_formatter_class).size());
         }
@@ -7132,7 +7138,8 @@ private:
                                   m_formatter_class, size, width);
             }
         }
-        auto formatter_epilog = _use_text_formatter(epilog, m_formatter_class);
+        auto formatter_epilog
+                = detail::_raw_text_formatter(m_formatter_class, epilog);
         if (!formatter_epilog.empty()) {
             os << "\n" << formatter_epilog << std::endl;
         }
