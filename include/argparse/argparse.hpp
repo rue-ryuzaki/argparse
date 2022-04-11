@@ -1293,20 +1293,7 @@ public:
      */
     Argument& action(Action value)
     {
-        if (m_action & (Action::version | Action::help)) {
-            m_handle = nullptr;
-        }
-        if (!(value & detail::_store_const_action)) {
-            m_metavar.clear();
-        }
-        if (m_type == Optional && value == Action::BooleanOptionalAction) {
-            make_no_flags();
-            if (m_post_trigger) {
-                m_post_trigger(this);
-            }
-        } else {
-            m_all_flags = m_flags;
-        }
+        prepare_action(value);
         switch (value) {
             case Action::store_true :
                 m_default.clear();
@@ -1907,6 +1894,24 @@ private:
                         [] (std::string const& flag)
         { return flag == detail::_pseudo_argument; }) && dest().empty()) {
             throw ValueError("dest= is required for options like '--'");
+        }
+    }
+
+    inline void prepare_action(Action value)
+    {
+        if (m_action & (Action::version | Action::help)) {
+            m_handle = nullptr;
+        }
+        if (!(value & detail::_store_const_action)) {
+            m_metavar.clear();
+        }
+        if (m_type == Optional && value == Action::BooleanOptionalAction) {
+            make_no_flags();
+            if (m_post_trigger) {
+                m_post_trigger(this);
+            }
+        } else {
+            m_all_flags = m_flags;
         }
     }
 
