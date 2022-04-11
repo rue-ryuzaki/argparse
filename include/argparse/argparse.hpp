@@ -586,6 +586,24 @@ _split_equal(std::string const& s, std::string const& prefix)
     }
 }
 
+inline void
+_process_quotes(std::deque<char>& quotes, std::string const& value,
+                std::string const& str, char c, std::size_t i)
+{
+    if (c == '\"' || c == '\'') {
+        if (!quotes.empty()
+                && quotes.back() == c
+                && (i == str.size()
+                    || std::isspace(static_cast<unsigned char>(str.at(i)))
+                    || std::ispunct(static_cast<unsigned char>(str.at(i))))) {
+            quotes.pop_back();
+        } else if (value.empty()
+                   || std::ispunct(static_cast<unsigned char>(value.back()))) {
+            quotes.push_back(c);
+        }
+    }
+}
+
 inline std::vector<std::string>
 _split_to_args(std::string const& str)
 {
@@ -613,21 +631,7 @@ _split_to_args(std::string const& str)
                 && quotes.empty()) {
             _store_value_to(value, result);
         } else {
-            if (c == '\"' || c == '\'') {
-                if (!quotes.empty()
-                        && quotes.back() == c
-                        && (i + 1 == str.size()
-                            || std::isspace(static_cast<unsigned char>(
-                                                str.at(i + 1)))
-                            || std::ispunct(static_cast<unsigned char>(
-                                                str.at(i + 1))))) {
-                    quotes.pop_back();
-                } else if (value.empty()
-                           || std::ispunct(static_cast<unsigned char>(
-                                               value.back()))) {
-                    quotes.push_back(c);
-                }
-            }
+            _process_quotes(quotes, value, str, c, i + 1);
             value += c;
         }
     }
