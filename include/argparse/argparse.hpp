@@ -309,18 +309,25 @@ _get_terminal_size()
         }
     }
 #else // UNIX
-    int fd = open("/dev/tty", O_RDWR);
-    if (fd >= 0) {
-        struct winsize w;
-        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) >= 0) {
-            width = static_cast<std::size_t>(w.ws_col);
-            height = static_cast<std::size_t>(w.ws_row);
-            if (width < _minimum_width) {
-                width = _minimum_width;
-            }
+#if defined(TIOCGSIZE)
+    struct ttysize w;
+    if (ioctl(STDOUT_FILENO, TIOCGSIZE, &w) >= 0) {
+        width = static_cast<std::size_t>(w.ts_cols);
+        height = static_cast<std::size_t>(w.ts_lines);
+        if (width < _minimum_width) {
+            width = _minimum_width;
         }
-        close(fd);
     }
+#elif defined(TIOCGWINSZ)
+    struct winsize w;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) >= 0) {
+        width = static_cast<std::size_t>(w.ws_col);
+        height = static_cast<std::size_t>(w.ws_row);
+        if (width < _minimum_width) {
+            width = _minimum_width;
+        }
+    }
+#endif // TIOCGSIZE
 #endif // _WIN32
     return std::make_pair(width, height);
 }
