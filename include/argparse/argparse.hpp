@@ -2264,29 +2264,15 @@ protected:
         }
     }
 
-    void create_argument(std::vector<std::string> flags,
-                         std::string const& prefix_chars)
+    static void check_flag_name(std::string const& flag)
     {
-        if (flags.empty()) {
-            auto flag_name = std::string();
-            auto arg = Argument::make_argument(std::move(flags),
-                                               std::move(flag_name),
-                                               Argument::Positional);
-            m_arguments.emplace_back(std::move(arg));
-            return;
-        }
-        detail::_trim(flags.front());
-        auto flag_name = flags.front();
-        if (flag_name.empty()) {
+        if (flag.empty()) {
             throw IndexError("string index out of range");
         }
-        std::size_t prefixes = 0;
-        bool is_optional
-                = detail::_is_value_exists(flag_name.front(), prefix_chars);
-        update_flag_name(flags, prefix_chars, is_optional, flag_name, prefixes);
-        auto arg = Argument::make_argument(
-                    std::move(flags), std::move(flag_name),
-                    is_optional ? Argument::Optional : Argument::Positional);
+    }
+
+    inline void check_conflict_arg(Argument const* arg)
+    {
         auto _check_conflict = [this, &arg]
                 (std::string const& flag, std::vector<std::string>& flags)
         {
@@ -2302,28 +2288,45 @@ protected:
                 }
             }
         };
-        if (is_optional) {
-            for (auto const& arg_flag : arg->m_flags) {
-                for (auto& opt : m_optional) {
-                    _check_conflict(arg_flag, opt.first->m_flags);
-                    _check_conflict(arg_flag, opt.first->m_all_flags);
+        for (auto const& flag : arg->flags()) {
+            for (auto& opt : m_optional) {
+                if (opt.first.get() == arg) {
+                    continue;
                 }
+                _check_conflict(flag, opt.first->m_flags);
+                _check_conflict(flag, opt.first->m_all_flags);
             }
+        }
+    }
+
+    void create_argument(std::vector<std::string> flags,
+                         std::string const& prefix_chars)
+    {
+        if (flags.empty()) {
+            auto flag = std::string();
+            auto arg = Argument::make_argument(std::move(flags),
+                                               std::move(flag),
+                                               Argument::Positional);
+            m_arguments.emplace_back(std::move(arg));
+            return;
+        }
+        detail::_trim(flags.front());
+        auto flag = flags.front();
+        check_flag_name(flag);
+        std::size_t prefixes = 0;
+        bool is_optional = detail::_is_value_exists(flag.front(), prefix_chars);
+        update_flag_name(flags, prefix_chars, is_optional, flag, prefixes);
+        auto arg = Argument::make_argument(
+                    std::move(flags), std::move(flag),
+                    is_optional ? Argument::Optional : Argument::Positional);
+        if (is_optional) {
+            check_conflict_arg(arg.get());
         }
         m_arguments.emplace_back(std::move(arg));
         if (is_optional) {
-            m_arguments.back()->m_post_trigger
-                    = [this, _check_conflict] (Argument const* arg)
+            m_arguments.back()->m_post_trigger = [this] (Argument const* arg)
             {
-                for (auto const& arg_flag : arg->flags()) {
-                    for (auto& opt : m_optional) {
-                        if (opt.first.get() == arg) {
-                            continue;
-                        }
-                        _check_conflict(arg_flag, opt.first->m_flags);
-                        _check_conflict(arg_flag, opt.first->m_all_flags);
-                    }
-                }
+                check_conflict_arg(arg);
             };
         }
     }
@@ -2338,9 +2341,7 @@ protected:
         } else {
             detail::_trim(flags.front());
             auto flag = flags.front();
-            if (flag.empty()) {
-                throw IndexError("string index out of range");
-            }
+            check_flag_name(flag);
             std::size_t prefixes = 0;
             is_optional = detail::_is_value_exists(flag.front(), prefix_chars);
             update_flag_name(flags, prefix_chars, is_optional, flag, prefixes);
@@ -2348,7 +2349,7 @@ protected:
         }
         arg.m_type = is_optional ? Argument::Optional : Argument::Positional;
         // check
-        if (arg.m_type == Argument::Positional) {
+        if (!is_optional) {
             if (arg.dest().empty() && flags.empty()) {
                 throw
                 TypeError("missing 1 required positional argument: 'dest'");
@@ -2371,31 +2372,11 @@ protected:
                     && !(arg.m_action & detail::_const_action)) {
                 throw TypeError("got an unexpected keyword argument 'const'");
             }
-        } else if (arg.m_action == Action::BooleanOptionalAction) {
-            arg.make_no_flags();
-        }
-        auto _check_conflict = [this, &arg]
-                (std::string const& flag, std::vector<std::string>& flags)
-        {
-            auto it = std::find(std::begin(flags), std::end(flags), flag);
-            if (it != std::end(flags)) {
-                if (m_conflict_handler == "resolve") {
-                    flags.erase(it);
-                } else {
-                    throw
-                    ArgumentError("argument "
-                                  + detail::_vector_to_string(arg.flags(), "/")
-                                  + ": conflicting option string: " + flag);
-                }
+        } else {
+            if (arg.m_action == Action::BooleanOptionalAction) {
+                arg.make_no_flags();
             }
-        };
-        if (is_optional) {
-            for (auto const& arg_flag : arg.flags()) {
-                for (auto& opt : m_optional) {
-                    _check_conflict(arg_flag, opt.first->m_flags);
-                    _check_conflict(arg_flag, opt.first->m_all_flags);
-                }
-            }
+            check_conflict_arg(&arg);
         }
         m_arguments.emplace_back(std::make_shared<Argument>(arg));
     }
