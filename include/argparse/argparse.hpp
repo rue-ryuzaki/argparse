@@ -532,26 +532,29 @@ _make_no_flag(std::string str)
     return str;
 }
 
+inline void
+_store_value_to(std::string& value, std::vector<std::string>& result,
+                bool force = false)
+{
+    if (!value.empty() || force) {
+        result.push_back(value);
+        value.clear();
+    }
+}
+
 inline std::vector<std::string>
 _split(std::string const& str, char delim, bool force = false)
 {
     std::vector<std::string> result;
-    auto _store_value = [&result] (std::string& value, bool force = false)
-    {
-        if (!value.empty() || force) {
-            result.push_back(value);
-            value.clear();
-        }
-    };
     std::string value;
     for (auto c : str) {
         if (c == delim) {
-            _store_value(value, force);
+            _store_value_to(value, result, force);
         } else {
             value += c;
         }
     }
-    _store_value(value);
+    _store_value_to(value, result);
     return result;
 }
 
@@ -587,13 +590,6 @@ inline std::vector<std::string>
 _split_to_args(std::string const& str)
 {
     std::vector<std::string> result;
-    auto _store_value = [&result] (std::string& value)
-    {
-        if (!value.empty()) {
-            result.push_back(value);
-            value.clear();
-        }
-    };
     std::string value;
     std::deque<char> quotes;
     for (std::size_t i = 0; i < str.size(); ++i) {
@@ -615,7 +611,7 @@ _split_to_args(std::string const& str)
         if (((c == _space && !skip)
              || (c != _space && std::isspace(static_cast<unsigned char>(c))))
                 && quotes.empty()) {
-            _store_value(value);
+            _store_value_to(value, result);
         } else {
             if (c == '\"' || c == '\'') {
                 if (!quotes.empty()
@@ -635,7 +631,7 @@ _split_to_args(std::string const& str)
             value += c;
         }
     }
-    _store_value(value);
+    _store_value_to(value, result);
     if (!quotes.empty()) {
         std::cerr << "possible incorrect string: '" << str << "'" << std::endl;
     }
@@ -715,21 +711,14 @@ _format_output(std::string const& head, std::string const& body,
                char delimiter = '\n')
 {
     std::vector<std::string> result;
-    auto _store_value = [&result] (std::string& value, bool force = false)
-    {
-        if (!value.empty() || force) {
-            result.push_back(value);
-            value.clear();
-        }
-    };
     std::string value = head;
     if (value.size() + interlayer > indent) {
-        _store_value(value);
+        _store_value_to(value, result);
     }
-    auto _func = [_store_value, indent, limit, &value] (std::string const& str)
+    auto _func = [indent, limit, &result, &value] (std::string const& str)
     {
         if (value.size() > indent && value.size() + 1 + str.size() > limit) {
-            _store_value(value);
+            _store_value_to(value, result);
         }
         if (value.size() < indent) {
             value.resize(indent, _space);
@@ -744,16 +733,16 @@ _format_output(std::string const& head, std::string const& body,
             _func(str);
         } else if (str.empty()) {
             value.resize(indent, _space);
-            _store_value(value, true);
+            _store_value_to(value, result, true);
         } else {
             auto sub_split_str = _split(str, delimiter, true);
             for (auto const& sub : sub_split_str) {
                 _func(sub);
             }
-            _store_value(value);
+            _store_value_to(value, result);
         }
     }
-    _store_value(value);
+    _store_value_to(value, result);
     return _vector_to_string(result, "\n");
 }
 
