@@ -3764,16 +3764,7 @@ public:
                 return detail::_vector_to_string(args.second(), detail::_spaces,
                                                  std::string(), true);
             case Action::BooleanOptionalAction :
-                if (args.second.empty()) {
-                    return detail::_bool_to_string(args.first->m_default());
-                }
-                if (args.second.size() != 1) {
-                    throw TypeError("trying to get data from array argument '"
-                                    + key + "'");
-                }
-                return args.second.front() == args.first->m_const()
-                        ? detail::_bool_to_string(args.second.front())
-                        : args.second.front();
+                return boolean_option_to_args(key, args);
             default :
                 throw ValueError("action not supported");
         }
@@ -3800,25 +3791,11 @@ public:
                     throw TypeError("trying to get data from array argument '"
                                     + key + "'");
                 }
-                return "'" + args.second.front() + "'";
+                return quotes + args.second.front() + quotes;
             case Action::store_true :
             case Action::store_false :
             case Action::BooleanOptionalAction :
-                if (args.second.empty()) {
-                    if (args.first->m_action == Action::BooleanOptionalAction) {
-                        return std::string("None");
-                    } else {
-                        return detail::_bool_to_string(args.first->m_default());
-                    }
-                }
-                if (args.second.size() != 1) {
-                    throw TypeError("trying to get data from array argument '"
-                                    + key + "'");
-                }
-                if (args.second.is_default()) {
-                    return "'" + args.second.front() + "'";
-                }
-                return detail::_bool_to_string(args.second.front());
+                return boolean_option_to_string(key, args, quotes);
             case Action::count :
                 if (args.second.empty()) {
                     return std::string("None");
@@ -3828,33 +3805,7 @@ public:
             case Action::append :
             case Action::append_const :
             case Action::extend :
-                if ((args.first->m_action == Action::store
-                     && (args.first->m_nargs
-                         & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE)))
-                        || (!args.second.exists()
-                            && args.first->m_type == Argument::Optional)
-                        || args.second.is_default()) {
-                    return detail::_vector_to_string(args.second(), ", ",
-                                                     quotes, false, "None");
-                }
-                if (args.first->m_action != Action::append
-                        || (args.first->m_nargs
-                            & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))) {
-                    std::string none
-                            = args.first->m_nargs == Argument::ZERO_OR_MORE
-                            || (args.first->m_action == Action::extend
-                                && args.first->m_nargs == Argument::ZERO_OR_ONE)
-                            ? "" : "None";
-                    return detail::_vector_to_string(args.second(), ", ",
-                                                     quotes, false, none,
-                                                     "[", "]");
-                } else {
-                    std::string none = args.first->m_nargs
-                                        == Argument::ZERO_OR_MORE ? "" : "None";
-                    return detail::_matrix_to_string(args.second.matrix(), ", ",
-                                                     quotes, false, none,
-                                                     "[", "]");
-                }
+                return store_actions_to_string(args, quotes);
             default :
                 throw ValueError("action not supported");
         }
@@ -4262,6 +4213,75 @@ public:
     }
 
 private:
+    inline std::string
+    boolean_option_to_args(std::string const& key,
+                           Storage::value_type const& args) const
+    {
+        if (args.second.empty()) {
+            return detail::_bool_to_string(args.first->m_default());
+        }
+        if (args.second.size() != 1) {
+            throw
+            TypeError("trying to get data from array argument '" + key + "'");
+        }
+        return args.second.front() == args.first->m_const()
+                ? detail::_bool_to_string(args.second.front())
+                : args.second.front();
+    }
+
+    inline std::string
+    boolean_option_to_string(std::string const& key,
+                             Storage::value_type const& args,
+                             std::string const& quotes) const
+    {
+        if (args.second.empty()) {
+            if (args.first->m_action == Action::BooleanOptionalAction) {
+                return std::string("None");
+            } else {
+                return detail::_bool_to_string(args.first->m_default());
+            }
+        }
+        if (args.second.size() != 1) {
+            throw
+            TypeError("trying to get data from array argument '" + key + "'");
+        }
+        if (args.second.is_default()) {
+            return quotes + args.second.front() + quotes;
+        }
+        return detail::_bool_to_string(args.second.front());
+    }
+
+    inline std::string
+    store_actions_to_string(Storage::value_type const& args,
+                            std::string const& quotes) const
+    {
+        if ((args.first->m_action == Action::store
+             && (args.first->m_nargs
+                 & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE)))
+                || (!args.second.exists()
+                    && args.first->m_type == Argument::Optional)
+                || args.second.is_default()) {
+            return detail::_vector_to_string(args.second(), ", ",
+                                             quotes, false, "None");
+        }
+        if (args.first->m_action != Action::append
+                || (args.first->m_nargs
+                    & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))) {
+            std::string none
+                    = args.first->m_nargs == Argument::ZERO_OR_MORE
+                    || (args.first->m_action == Action::extend
+                        && args.first->m_nargs == Argument::ZERO_OR_ONE)
+                    ? "" : "None";
+            return detail::_vector_to_string(args.second(), ", ",
+                                             quotes, false, none, "[", "]");
+        } else {
+            std::string none = args.first->m_nargs
+                                == Argument::ZERO_OR_MORE ? "" : "None";
+            return detail::_matrix_to_string(args.second.matrix(), ", ",
+                                             quotes, false, none, "[", "]");
+        }
+    }
+
     Storage::value_type const& data(std::string const& key) const
     {
         if (m_storage.exists(key)) {
