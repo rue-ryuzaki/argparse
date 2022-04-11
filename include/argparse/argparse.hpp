@@ -6129,7 +6129,12 @@ private:
                 }
             }
         };
-        auto _try_capture_parser = [&] (std::deque<std::string>& args)
+        auto _try_capture_parser
+                = [this, _match_positionals, _negative_numbers_presented,
+                &have_negative_args, &pos, &positional, &storage, &subparser,
+                &subparser_arg, &subparser_dest, &sub_optional, &sub_storage,
+                &unrecognized_args]
+                (std::deque<std::string>& args, Parser*& parser)
         {
             std::size_t finish = pos;
             std::size_t min_args = 0;
@@ -6654,7 +6659,7 @@ private:
                     }
                 } else {
                     if (subparser.first && !parser) {
-                        _try_capture_parser(args);
+                        _try_capture_parser(args, parser);
                         if (parser) {
                             i -= (i == parsed_arguments.size());
                             i -= args.size();
