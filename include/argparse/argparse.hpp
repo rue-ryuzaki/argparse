@@ -793,6 +793,16 @@ _raw_text_formatter(HelpFormatter formatter, std::string const& text)
     return res;
 }
 
+inline void
+_print_raw_text_formatter(HelpFormatter formatter, std::string const& text,
+                          std::ostream& os)
+{
+    auto formatted_text = _raw_text_formatter(formatter, text);
+    if (!formatted_text.empty()) {
+        os << "\n" << formatted_text << std::endl;
+    }
+}
+
 template <class T>
 std::string
 _type_name()
@@ -4929,9 +4939,6 @@ public:
                 os << "  " << description() << "\n\n";
             }
             os << print(formatter, limit, width) << std::endl;
-            for (auto const& arg : m_parsers) {
-                os << arg.print(formatter, limit, width) << std::endl;
-            }
         }
 
         inline std::string usage() const
@@ -4957,10 +4964,14 @@ public:
         inline std::string print(HelpFormatter formatter,
                                  std::size_t limit, std::size_t width) const
         {
-            return detail::_format_output(
+            auto res = detail::_format_output(
                         "  " + flags_to_string(),
                         detail::_help_formatter(formatter, help()),
                         2, limit, width, detail::_space);
+            for (auto const& arg : m_parsers) {
+                res += "\n" + arg.print(formatter, limit, width);
+            }
+            return res;
         }
 
         std::string m_prog;
@@ -7052,6 +7063,30 @@ private:
         return sub && sub->title().empty() && sub->description().empty();
     }
 
+    static void
+    print_subparser(bool need_print, SubparserInfo const& subparser,
+                    std::size_t index, HelpFormatter formatter,
+                    std::size_t size, std::size_t width, std::ostream& os)
+    {
+        if (need_print && subparser.second == index) {
+            os << subparser.first->print(formatter, size, width) << std::endl;
+        }
+    }
+
+    static void
+    print_group(pGroup const& group, std::shared_ptr<Subparser>const& subparser,
+                bool sub_positional, bool suppress_default,
+                detail::Value<std::string> const& argument_default,
+                HelpFormatter formatter, std::size_t size, std::size_t width,
+                std::ostream& os)
+    {
+        if ((subparser && (group != subparser || !sub_positional))
+                || (!subparser && group != subparser)) {
+            group->print_help(os, suppress_default, argument_default,
+                              formatter, size, width);
+        }
+    }
+
     void
     print_custom_help(std::vector<pArgument> const& positional_all,
                       std::vector<pArgument> const& optional_all,
@@ -7073,11 +7108,7 @@ private:
             print_custom_usage(positional_all, optional_all,
                                mutex_groups, subparser_info, prog, os);
         }
-        auto formatter_description
-                = detail::_raw_text_formatter(m_formatter_class, description);
-        if (!formatter_description.empty()) {
-            os << "\n" << formatter_description << std::endl;
-        }
+        detail::_print_raw_text_formatter(m_formatter_class, description, os);
         std::size_t size = 0;
         auto _update_size = [&size] (std::size_t value)
         {
@@ -7106,21 +7137,15 @@ private:
         if (!positional.empty() || sub_positional) {
             os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
-                if (sub_positional && subparser_info.second == i) {
-                    os << subparser->print(m_formatter_class, size, width)
-                       << "\n";
-                }
+                print_subparser(sub_positional, subparser_info, i,
+                                m_formatter_class, size, width, os);
                 os << positional.at(i)->print(suppress_default,
                                               m_argument_default,
                                               m_formatter_class,
                                               size, width) << std::endl;
             }
-            if (sub_positional && subparser_info.second == positional.size()) {
-                os << subparser->print(m_formatter_class, size, width) << "\n";
-                for (auto const& arg : subparser->m_parsers) {
-                    os << arg.print(m_formatter_class, size, width)<< std::endl;
-                }
-            }
+            print_subparser(sub_positional, subparser_info, positional.size(),
+                            m_formatter_class, size, width, os);
         }
         if (!optional.empty()) {
             os << "\noptional arguments:\n";
@@ -7132,17 +7157,10 @@ private:
             }
         }
         for (auto const& group : groups) {
-            if ((subparser && (group != subparser || !sub_positional))
-                    || (!subparser && group != subparser)) {
-                group->print_help(os, suppress_default, m_argument_default,
-                                  m_formatter_class, size, width);
-            }
+            print_group(group, subparser, sub_positional, suppress_default,
+                        m_argument_default, m_formatter_class, size, width, os);
         }
-        auto formatter_epilog
-                = detail::_raw_text_formatter(m_formatter_class, epilog);
-        if (!formatter_epilog.empty()) {
-            os << "\n" << formatter_epilog << std::endl;
-        }
+        detail::_print_raw_text_formatter(m_formatter_class, epilog, os);
     }
 
     std::string m_prog;
