@@ -51,6 +51,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <numeric>
 #include <queue>
 #include <set>
 #include <sstream>
@@ -4993,10 +4994,10 @@ public:
                         "  " + flags_to_string(),
                         detail::_help_formatter(formatter, help()),
                         2, limit, width, detail::_space);
-            for (auto const& arg : m_parsers) {
-                res += "\n" + arg.print(formatter, limit, width);
-            }
-            return res;
+            return std::accumulate(std::begin(m_parsers), std::end(m_parsers),
+                                   res, [formatter, limit, width]
+                                   (std::string const& str, Parser const& p)
+            { return str + "\n" + p.print(formatter, limit, width); });
         }
 
         std::string m_prog;
