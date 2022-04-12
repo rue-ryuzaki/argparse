@@ -5918,12 +5918,6 @@ private:
         {
             _custom_error(parser, error, os);
         };
-        auto _validate_arguments = [] (std::vector<pArgument> const& arguments)
-        {
-            for (auto const& arg : arguments) {
-                arg->validate();
-            }
-        };
         auto _validate_argument_value = [_throw_error]
                 (Argument const& arg, std::string const& value)
         {
@@ -5961,19 +5955,9 @@ private:
         std::string subparser_dest;
         std::vector<std::string> subparser_flags;
 
-        _validate_arguments(positional);
-        _validate_arguments(optional);
-        if (subparser.first) {
-            for (auto const& p : subparser.first->m_parsers) {
-                for (auto const& arg : p.m_data.m_arguments) {
-                    arg->validate();
-                }
-            }
-            subparser_dest = subparser.first->m_dest;
-            if (!subparser_dest.empty()) {
-                subparser_flags.push_back(subparser_dest);
-            }
-        }
+        validate_arguments(positional);
+        validate_arguments(optional);
+        validate_subparser(subparser.first, subparser_dest, subparser_flags);
 
         bool have_negative_args
                 = _negative_numbers_presented(optional, m_prefix_chars);
@@ -6404,22 +6388,6 @@ private:
                 temp.push_back(arg);
             }
         };
-        auto _check_load_args
-                = [this] (std::vector<std::string>& arguments, std::size_t i)
-        {
-            while (!arguments.at(i).empty()
-                   && detail::_is_value_exists(arguments.at(i).front(),
-                                               m_fromfile_prefix_chars)) {
-                auto args = convert_arg_line_to_args(arguments.at(i).substr(1));
-                using dtype = std::vector<std::string>::difference_type;
-                arguments.erase(std::next(std::begin(arguments),
-                                          static_cast<dtype>(i)));
-                arguments.insert(std::next(std::begin(arguments),
-                                           static_cast<dtype>(i)),
-                                 std::make_move_iterator(std::begin(args)),
-                                 std::make_move_iterator(std::end(args)));
-            }
-        };
         auto _check_abbreviations
                 = [this, _separate_arg_abbrev, _throw_error, _prefix_chars,
                 &storage, &have_negative_args, &was_pseudo_arg]
@@ -6484,52 +6452,13 @@ private:
                                  std::make_move_iterator(std::end(temp)));
             }
         };
-        auto _print_help_and_exit = [this, &parser] ()
-        {
-            if (parser) {
-                bool add_help = false;
-                auto opt_all = parser->m_data.get_optional(true);
-                auto opt = parser->m_data.get_optional(false);
-                if (m_add_help) {
-                    auto help_flags
-                            = detail::_help_flags(parser->m_prefix_chars);
-                    if (m_data.m_conflict_handler == "resolve") {
-                        for (auto const& arg : opt_all) {
-                            detail::_resolve_conflict(arg->flags(), help_flags);
-                        }
-                    }
-                    if (!help_flags.empty()) {
-                        auto help = Argument::make_argument(
-                                    std::move(help_flags),
-                                    "help", Argument::Optional);
-                        help->help("show this help message and exit")
-                                .action(Action::help);
-                        opt_all.insert(std::begin(opt_all), help);
-                        opt.insert(std::begin(opt), help);
-                        add_help = true;
-                    }
-                }
-                print_custom_help(parser->m_data.get_positional(true), opt_all,
-                                  parser->m_data.get_positional(false), opt,
-                                  add_help, parser->m_groups,
-                                  parser->m_mutex_groups,
-                                  std::make_pair(nullptr, 0),
-                                  parser->m_prog, parser->usage(),
-                                  parser->description(), parser->epilog());
-            } else {
-                print_help();
-            }
-            ::exit(0);
-        };
         for (std::size_t i = 0; i < parsed_arguments.size(); ++i) {
             if (parsed_arguments.at(i) == detail::_pseudo_argument
                     && !was_pseudo_arg) {
                 was_pseudo_arg = true;
                 continue;
             }
-            if (!m_fromfile_prefix_chars.empty() && !was_pseudo_arg) {
-                _check_load_args(parsed_arguments, i);
-            }
+            check_load_args(parsed_arguments, i, was_pseudo_arg);
             _check_abbreviations(parsed_arguments, i, parser ? sub_optional
                                                              : optional);
             auto arg = parsed_arguments.at(i);
@@ -6656,7 +6585,7 @@ private:
                         break;
                     case Action::help :
                         if (splitted.size() == 1) {
-                            _print_help_and_exit();
+                            print_help_and_exit(parser);
                         } else {
                             _throw_error(detail::_ignore_explicit(
                                              arg, splitted.back()));
@@ -6810,10 +6739,110 @@ private:
                 throw_error("the following arguments are required: " + args);
             }
         }
-        if (!only_known && !unrecognized_args.empty()) {
-            throw_error("unrecognized arguments: "
-                        + detail::_vector_to_string(unrecognized_args));
+        check_unrecognized_args(only_known, unrecognized_args);
+        default_values_post_trigger(storage);
+        parser_post_trigger(parser, sub_storage, storage);
+        if (only_known) {
+            return argparse::Namespace(std::move(storage),
+                                       std::move(unrecognized_args));
+        } else {
+            return argparse::Namespace(std::move(storage));
         }
+    }
+
+    static void validate_arguments(std::vector<pArgument> const& args)
+    {
+        for (auto const& arg : args) {
+            arg->validate();
+        }
+    }
+
+    static void validate_subparser(std::shared_ptr<Subparser> const& subparser,
+                                   std::string& subparser_dest,
+                                   std::vector<std::string>& subparser_flags)
+    {
+        if (subparser) {
+            for (auto const& p : subparser->m_parsers) {
+                for (auto const& arg : p.m_data.m_arguments) {
+                    arg->validate();
+                }
+            }
+            subparser_dest = subparser->m_dest;
+            if (!subparser_dest.empty()) {
+                subparser_flags.push_back(subparser_dest);
+            }
+        }
+    }
+
+    inline void check_load_args(std::vector<std::string>& arguments,
+                                std::size_t i, bool was_pseudo_arg) const
+    {
+        if (!m_fromfile_prefix_chars.empty() && !was_pseudo_arg) {
+            while (!arguments.at(i).empty()
+                   && detail::_is_value_exists(arguments.at(i).front(),
+                                               m_fromfile_prefix_chars)) {
+                auto args = convert_arg_line_to_args(arguments.at(i).substr(1));
+                using dtype = std::vector<std::string>::difference_type;
+                arguments.erase(std::next(std::begin(arguments),
+                                          static_cast<dtype>(i)));
+                arguments.insert(std::next(std::begin(arguments),
+                                           static_cast<dtype>(i)),
+                                 std::make_move_iterator(std::begin(args)),
+                                 std::make_move_iterator(std::end(args)));
+            }
+        }
+    }
+
+    void print_help_and_exit(Parser const* parser) const
+    {
+        if (parser) {
+            bool add_help = false;
+            auto opt_all = parser->m_data.get_optional(true);
+            auto opt = parser->m_data.get_optional(false);
+            if (m_add_help) {
+                auto help_flags
+                        = detail::_help_flags(parser->m_prefix_chars);
+                if (m_data.m_conflict_handler == "resolve") {
+                    for (auto const& arg : opt_all) {
+                        detail::_resolve_conflict(arg->flags(), help_flags);
+                    }
+                }
+                if (!help_flags.empty()) {
+                    auto help = Argument::make_argument(
+                                std::move(help_flags),
+                                "help", Argument::Optional);
+                    help->help("show this help message and exit")
+                            .action(Action::help);
+                    opt_all.insert(std::begin(opt_all), help);
+                    opt.insert(std::begin(opt), help);
+                    add_help = true;
+                }
+            }
+            print_custom_help(parser->m_data.get_positional(true), opt_all,
+                              parser->m_data.get_positional(false), opt,
+                              add_help, parser->m_groups,
+                              parser->m_mutex_groups,
+                              std::make_pair(nullptr, 0),
+                              parser->m_prog, parser->usage(),
+                              parser->description(), parser->epilog());
+        } else {
+            print_help();
+        }
+        ::exit(0);
+    }
+
+    inline void check_unrecognized_args(
+            bool only_known, std::vector<std::string> const& args) const
+    {
+        if (!only_known && !args.empty()) {
+            throw_error("unrecognized arguments: "
+                        + detail::_vector_to_string(args));
+        }
+    }
+
+    inline void
+    default_values_post_trigger(argparse::Namespace::Storage& storage) const
+    {
         bool suppress_default = m_argument_default_type == SUPPRESS;
         for (auto it = storage.begin(); it != storage.end(); ) {
             if (!it->second.exists() && it->first->m_action != Action::count
@@ -6841,6 +6870,13 @@ private:
                 storage.create(arg, { true, { pair.second } });
             }
         }
+    }
+
+    static void
+    parser_post_trigger(Parser* parser,
+                        argparse::Namespace::Storage& sub_storage,
+                        argparse::Namespace::Storage const& storage)
+    {
         if (parser && parser->m_parse_handle) {
             for (auto it = sub_storage.begin(); it != sub_storage.end(); ) {
                 if (storage.exists(it->first)) {
@@ -6851,12 +6887,6 @@ private:
                 }
             }
             parser->m_parse_handle(argparse::Namespace(sub_storage));
-        }
-        if (only_known) {
-            return argparse::Namespace(std::move(storage),
-                                       std::move(unrecognized_args));
-        } else {
-            return argparse::Namespace(std::move(storage));
         }
     }
 
