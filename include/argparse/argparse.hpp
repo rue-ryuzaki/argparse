@@ -469,6 +469,24 @@ _is_value_exists(char value, std::string const& str) _ARGPARSE_NOEXCEPT
 
 template <class T>
 void
+_insert_vector_to_end(std::deque<T> const& from, std::deque<T>& to)
+{
+    if (!from.empty()) {
+        to.insert(std::end(to), std::begin(from), std::end(from));
+    }
+}
+
+template <class T>
+void
+_insert_vector_to_end(std::deque<T> const& from, std::vector<T>& to)
+{
+    if (!from.empty()) {
+        to.insert(std::end(to), std::begin(from), std::end(from));
+    }
+}
+
+template <class T>
+void
 _insert_vector_to_end(std::vector<T> const& from, std::vector<T>& to)
 {
     if (!from.empty()) {
@@ -6357,6 +6375,9 @@ private:
                            std::size_t one_args,
                            bool more_args) const
     {
+        if (finish == pos) {
+            return;
+        }
         auto _store_first_value = [this, &p, &storage]
                 (pArgument const& arg, std::deque<std::string>& arguments)
         {
@@ -6486,6 +6507,38 @@ private:
         }
     }
 
+    static bool
+    finish_analyze_positional(pArgument const& arg,
+                               std::deque<std::string> const& args,
+                               std::size_t& one_args,
+                               bool& more_args,
+                               std::size_t& min_args)
+    {
+        if (!(arg->m_action & detail::_store_action)) {
+            return false;
+        }
+        std::size_t min_amount = 0;
+        switch (arg->m_nargs) {
+            case Argument::ZERO_OR_ONE :
+                ++one_args;
+                break;
+            case Argument::ONE_OR_MORE :
+                ++min_amount;
+                // fallthrough
+            case Argument::ZERO_OR_MORE :
+                more_args = true;
+                break;
+            default :
+                min_amount += arg->m_num_args;
+                break;
+        }
+        if (min_args + min_amount > args.size()) {
+            return true;
+        }
+        min_args += min_amount;
+        return false;
+    }
+
     void match_args_partial(Parser const* parser, std::size_t& pos,
                             std::vector<pArgument> const& positional,
                             argparse::Namespace::Storage& storage,
@@ -6498,34 +6551,13 @@ private:
             std::size_t one_args = 0;
             bool more_args = false;
             for ( ; finish < positional.size(); ++finish) {
-                auto const& arg = positional.at(finish);
-                if (!(arg->m_action & detail::_store_action)) {
-                    continue;
-                }
-                std::size_t min_amount = 0;
-                switch (arg->m_nargs) {
-                    case Argument::ZERO_OR_ONE :
-                        ++one_args;
-                        break;
-                    case Argument::ONE_OR_MORE :
-                        ++min_amount;
-                        // fallthrough
-                    case Argument::ZERO_OR_MORE :
-                        more_args = true;
-                        break;
-                    default :
-                        min_amount += arg->m_num_args;
-                        break;
-                }
-                if (min_args + min_amount > args.size()) {
+                if (finish_analyze_positional(positional.at(finish), args,
+                                              one_args, more_args, min_args)) {
                     break;
                 }
-                min_args += min_amount;
             }
-            if (finish != pos) {
-                match_positionals(parser, storage, pos, positional, args,
-                                  finish, min_args, one_args, more_args);
-            }
+            match_positionals(parser, storage, pos, positional, args,
+                              finish, min_args, one_args, more_args);
         }
         if (!args.empty()) {
             unrecognized_args.insert(std::end(unrecognized_args),
@@ -6559,40 +6591,16 @@ private:
                 capture_need = true;
                 break;
             }
-            auto const& arg = positional.at(finish);
-            if (!(arg->m_action & detail::_store_action)) {
-                continue;
-            }
-            std::size_t min_amount = 0;
-            switch (arg->m_nargs) {
-                case Argument::ZERO_OR_ONE :
-                    ++one_args;
-                    break;
-                case Argument::ONE_OR_MORE :
-                    ++min_amount;
-                    // fallthrough
-                case Argument::ZERO_OR_MORE :
-                    more_args = true;
-                    break;
-                default :
-                    min_amount += arg->m_num_args;
-                    break;
-            }
-            if (min_args + min_amount > args.size()) {
+            if (finish_analyze_positional(positional.at(finish), args,
+                                          one_args, more_args, min_args)) {
                 break;
             }
-            min_args += min_amount;
         }
         if (!capture_need && (finish != positional.size()
                               || min_args >= args.size())) {
-            if (finish != pos) {
-                match_positionals(parser, storage, pos, positional, args,
-                                  finish, min_args, one_args, more_args);
-            }
-            if (!args.empty()) {
-                unrecognized_args.insert(std::end(unrecognized_args),
-                                         std::begin(args), std::end(args));
-            }
+            match_positionals(parser, storage, pos, positional, args,
+                              finish, min_args, one_args, more_args);
+            detail::_insert_vector_to_end(args, unrecognized_args);
             return;
         }
         match_positionals(parser, storage, pos, positional, args, finish,
@@ -6600,10 +6608,7 @@ private:
         auto const& name = args.front();
         std::string choices;
         for (auto& p : subparser.first->m_parsers) {
-            if (!choices.empty()) {
-                choices += ", ";
-            }
-            choices += "'" + p.m_name + "'";
+            detail::_append_value_to("'" + p.m_name + "'", choices, ", ");
             if (p.m_name == name) {
                 parser = &p;
                 if (!subparser_dest.empty()) {
@@ -6639,9 +6644,7 @@ private:
                     break;
                 }
                 auto str = positionals.at(i)->usage(m_formatter_class);
-                if (!str.empty()) {
-                    program += detail::_spaces + str;
-                }
+                detail::_append_value_to(str, program);
             }
             parser->m_prog = program + detail::_spaces + parser->m_name;
             parser->handle(parser->m_name);
@@ -6765,8 +6768,7 @@ private:
             auto opt_all = parser->m_data.get_optional(true);
             auto opt = parser->m_data.get_optional(false);
             if (m_add_help) {
-                auto help_flags
-                        = detail::_help_flags(parser->m_prefix_chars);
+                auto help_flags = detail::_help_flags(parser->m_prefix_chars);
                 if (m_data.m_conflict_handler == "resolve") {
                     for (auto const& arg : opt_all) {
                         detail::_resolve_conflict(arg->flags(), help_flags);
@@ -6796,6 +6798,48 @@ private:
         ::exit(0);
     }
 
+    static bool
+    process_separate_arg_abbrev(std::string const& name,
+                                std::size_t i,
+                                std::vector<std::string>& flags,
+                                std::string const& arg,
+                                std::vector<pArgument> const& args)
+    {
+        if (name.at(i) == detail::_equal) {
+            if (flags.empty()) {
+                flags.emplace_back(std::string());
+            }
+            flags.back() += name.substr(i);
+            return false;
+        }
+        Argument const* argument = nullptr;
+        for (auto const& opt : args) {
+            for (auto const& flag : opt->flags()) {
+                if (flag.size() == 2 && flag.back() == name.at(i)) {
+                    flags.push_back(flag);
+                    argument = opt.get();
+                    break;
+                }
+            }
+        }
+        if (!argument && flags.empty()) {
+            flags.push_back(arg);
+            return false;
+        } else if ((!argument && !flags.empty())
+                   || (argument && (argument->m_action
+                                    & detail::_store_action))) {
+            auto str = name.substr(i + bool(argument));
+            if (!str.empty()) {
+                if (!detail::_starts_with(str, detail::_equals)) {
+                    flags.back() += detail::_equals;
+                }
+                flags.back() += str;
+            }
+            return false;
+        }
+        return true;
+    }
+
     void separate_arg_abbrev(Parser const* parser,
                              std::vector<pArgument> const& optional,
                              std::vector<pArgument> const& sub_optional,
@@ -6816,36 +6860,7 @@ private:
             std::vector<std::string> flags;
             flags.reserve(8);
             for (std::size_t i = 0; i < name.size(); ++i) {
-                if (name.at(i) == detail::_equal) {
-                    if (flags.empty()) {
-                        flags.emplace_back(std::string());
-                    }
-                    flags.back() += name.substr(i);
-                    break;
-                }
-                Argument const* argument = nullptr;
-                for (auto const& opt : args) {
-                    for (auto const& flag : opt->flags()) {
-                        if (flag.size() == 2 && flag.back() == name.at(i)) {
-                            flags.push_back(flag);
-                            argument = opt.get();
-                            break;
-                        }
-                    }
-                }
-                if (!argument && flags.empty()) {
-                    flags.push_back(arg);
-                    break;
-                } else if ((!argument && !flags.empty())
-                           || (argument && (argument->m_action
-                                            & detail::_store_action))) {
-                    auto str = name.substr(i + bool(argument));
-                    if (!str.empty()) {
-                        if (!detail::_starts_with(str, detail::_equals)) {
-                            flags.back() += detail::_equals;
-                        }
-                        flags.back() += str;
-                    }
+                if (!process_separate_arg_abbrev(name, i, flags, arg, args)) {
                     break;
                 }
             }
@@ -6896,11 +6911,7 @@ private:
             }
         }
         if (intermixed) {
-            if (!args.empty()) {
-                intermixed_args.insert(std::end(intermixed_args),
-                                       std::begin(args),
-                                       std::end(args));
-            }
+            detail::_insert_vector_to_end(args, intermixed_args);
         } else {
             if (subparser.first && !parser) {
                 try_capture_parser(have_negative_args, pos, positional,
@@ -6956,6 +6967,35 @@ private:
         }
     }
 
+    static void
+    process_optionals_required(std::vector<std::string>& required_args,
+                               std::vector<pArgument> const& optional,
+                               argparse::Namespace::Storage const& storage)
+    {
+        for (auto const& arg : optional) {
+            if (arg->required() && storage.at(arg).empty()) {
+                auto args = detail::_vector_to_string(arg->flags(), "/");
+                required_args.emplace_back(std::move(args));
+            }
+        }
+    }
+
+    static bool
+    is_subparser_required(Parser const* parser, SubparserInfo const& subparser)
+    {
+        return subparser.first && !parser && subparser.first->required();
+    }
+
+    static void
+    process_subparser_required(bool required, std::size_t pos,
+                               SubparserInfo const& subparser, std::string& res)
+    {
+        if (required && pos == subparser.second) {
+            detail::_append_value_to(
+                        subparser.first->flags_to_string(), res, ", ");
+        }
+    }
+
     void
     check_required_args(Parser const* parser,
                         argparse::Namespace::Storage& storage,
@@ -6965,22 +7005,12 @@ private:
                         std::vector<pArgument> const& positional) const
     {
         std::vector<std::string> required_args;
-        for (auto const& arg : optional) {
-            if (arg->required() && storage.at(arg).empty()) {
-                auto args = detail::_vector_to_string(arg->flags(), "/");
-                required_args.emplace_back(std::move(args));
-            }
-        }
-        bool subparser_required
-                = subparser.first && !parser && subparser.first->required();
-        if (!required_args.empty()
-                || pos < positional.size() || subparser_required) {
+        process_optionals_required(required_args, optional, storage);
+        bool sub_required = is_subparser_required(parser, subparser);
+        if (!required_args.empty() || pos < positional.size() || sub_required) {
             std::string args;
             for ( ; pos < positional.size(); ++pos) {
-                if (subparser_required && pos == subparser.second) {
-                    detail::_append_value_to(subparser.first->flags_to_string(),
-                                             args, ", ");
-                }
+                process_subparser_required(sub_required, pos, subparser, args);
                 auto const& arg = positional.at(pos);
                 if (args.empty()) {
                     if (storage_is_positional_arg_stored(parser, storage, arg)){
@@ -6999,10 +7029,7 @@ private:
                 }
                 detail::_append_value_to(arg->m_flags.front(), args, ", ");
             }
-            if (subparser_required && pos == subparser.second) {
-                detail::_append_value_to(subparser.first->flags_to_string(),
-                                         args, ", ");
-            }
+            process_subparser_required(sub_required, pos, subparser, args);
             for (auto const& arg : required_args) {
                 detail::_append_value_to(arg, args, ", ");
             }
