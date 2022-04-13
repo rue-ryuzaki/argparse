@@ -5957,10 +5957,8 @@ private:
         detail::_insert_vector_to_end(space.unrecognized_args(),
                                       parsed_arguments);
         auto const subparser = subpurser_info();
-        if (intermixed && subparser.first) {
-            throw
-            TypeError("parse_intermixed_args: positional arg with nargs=A...");
-        }
+        check_intermixed_subparser(intermixed, subparser.first);
+
         Parser* parser = nullptr;
         auto positional = positional_arguments(true, true);
         auto const optional = optional_arguments(true, true).second;
@@ -6006,13 +6004,7 @@ private:
                                 have_negative_args, was_pseudo_arg,
                                 parsed_arguments, i);
             auto arg = parsed_arguments.at(i);
-            auto splitted = detail::_split_equal(arg,
-                                                 custom_prefix_chars(parser));
-            if (splitted.size() == 2 && !splitted.front().empty()) {
-                arg = splitted.front();
-            } else {
-                splitted.resize(1);
-            }
+            auto splitted = process_split_arg(arg, parser);
             auto const tmp
                     = get_optional_arg_by_flag(was_pseudo_arg, parser,
                                                optional, sub_optional, arg);
@@ -6028,15 +6020,6 @@ private:
                                                was_pseudo_arg,
                                                parser, storage, arg, tmp);
                         break;
-                    case Action::store_const :
-                    case Action::store_true :
-                    case Action::store_false :
-                    case Action::append_const :
-                    case Action::count :
-                    case Action::BooleanOptionalAction :
-                        storage_optional_store_const(splitted, parser, storage,
-                                                     arg, tmp);
-                        break;
                     case Action::help :
                         process_optional_help(splitted, parser, arg);
                         break;
@@ -6044,7 +6027,14 @@ private:
                         process_optional_version(splitted, parser, arg, tmp);
                         break;
                     default :
-                        custom_error(parser, "action not supported");
+                        // Action::store_const :
+                        // Action::store_true :
+                        // Action::store_false :
+                        // Action::append_const :
+                        // Action::count :
+                        // Action::BooleanOptionalAction :
+                        storage_optional_store_const(splitted, parser, storage,
+                                                     arg, tmp);
                         break;
                 }
             } else if (!arg.empty()
@@ -6073,6 +6063,38 @@ private:
         check_unrecognized_args(only_known, unrecognized_args);
         default_values_post_trigger(storage);
         parser_post_trigger(parser, sub_storage, storage);
+        return create_namespace(only_known, std::move(storage),
+                                std::move(unrecognized_args));
+    }
+
+    static void
+    check_intermixed_subparser(bool intermixed,
+                               std::shared_ptr<Subparser> const& subparser)
+    {
+        if (intermixed && subparser) {
+            throw
+            TypeError("parse_intermixed_args: positional arg with nargs=A...");
+        }
+    }
+
+    inline std::vector<std::string>
+    process_split_arg(std::string& arg, Parser const* parser) const
+    {
+        auto splitted = detail::_split_equal(arg,
+                                             custom_prefix_chars(parser));
+        if (splitted.size() == 2 && !splitted.front().empty()) {
+            arg = splitted.front();
+        } else {
+            splitted.resize(1);
+        }
+        return splitted;
+    }
+
+    static argparse::Namespace
+    create_namespace(bool only_known,
+                     argparse::Namespace::Storage&& storage,
+                     std::vector<std::string>&& unrecognized_args)
+    {
         if (only_known) {
             return argparse::Namespace(std::move(storage),
                                        std::move(unrecognized_args));
