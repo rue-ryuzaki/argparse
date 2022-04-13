@@ -6365,6 +6365,177 @@ private:
         }
     }
 
+    void match_positional_minimum(Parser const* p,
+                                  argparse::Namespace::Storage& storage,
+                                  std::deque<std::string>& arguments,
+                                  pArgument const& arg) const
+    {
+        if (storage_is_positional_arg_stored(p, storage, arg)) {
+            return;
+        }
+        if (arg->m_action == Action::BooleanOptionalAction) {
+            storage_store_default_value(storage, arg);
+            return;
+        }
+        auto _store_n_values = [this, &p, &storage] (pArgument const& arg,
+                std::deque<std::string>& arguments, std::size_t n)
+        {
+            std::vector<std::string> values;
+            values.reserve(n);
+            for (std::size_t i = 0; i < n; ++i) {
+                values.push_back(arguments.front());
+                arguments.pop_front();
+            }
+            storage_store_values(p, storage, arg, values);
+        };
+        switch (arg->m_nargs) {
+            case Argument::NARGS_DEF :
+            case Argument::ONE_OR_MORE :
+                storage_store_value(p, storage, arg, arguments.front());
+                arguments.pop_front();
+                break;
+            case Argument::ZERO_OR_ONE :
+            case Argument::ZERO_OR_MORE :
+                storage_store_default_value(storage, arg);
+                break;
+            case Argument::NARGS_NUM :
+                _store_n_values(arg, arguments, arg->m_num_args);
+                break;
+            default :
+                break;
+        }
+    }
+
+    void match_positional_more_zero(Parser const* p,
+                                    argparse::Namespace::Storage& storage,
+                                    std::deque<std::string>& arguments,
+                                    pArgument const& arg,
+                                    std::size_t& over_args) const
+    {
+        if (storage_is_positional_arg_stored(p, storage, arg)) {
+            return;
+        }
+        if (arg->m_action == Action::BooleanOptionalAction) {
+            storage_store_default_value(storage, arg);
+            return;
+        }
+        auto _store_n_values = [this, &p, &storage] (pArgument const& arg,
+                std::deque<std::string>& arguments, std::size_t n)
+        {
+            std::vector<std::string> values;
+            values.reserve(n);
+            for (std::size_t i = 0; i < n; ++i) {
+                values.push_back(arguments.front());
+                arguments.pop_front();
+            }
+            storage_store_values(p, storage, arg, values);
+        };
+        switch (arg->m_nargs) {
+            case Argument::NARGS_DEF :
+                storage_store_value(p, storage, arg, arguments.front());
+                arguments.pop_front();
+                break;
+            case Argument::ONE_OR_MORE :
+                _store_n_values(arg, arguments, 1 + over_args);
+                over_args = 0;
+                break;
+            case Argument::ZERO_OR_ONE :
+                storage_store_default_value(storage, arg);
+                break;
+            case Argument::ZERO_OR_MORE :
+                if (over_args > 0) {
+                    _store_n_values(arg, arguments, over_args);
+                    over_args = 0;
+                } else {
+                    storage_store_default_value(storage, arg);
+                }
+                break;
+            case Argument::NARGS_NUM :
+                _store_n_values(arg, arguments, arg->m_num_args);
+                break;
+            default :
+                break;
+        }
+    }
+
+    void match_positional_optional(Parser const* p,
+                                   argparse::Namespace::Storage& storage,
+                                   std::deque<std::string>& arguments,
+                                   pArgument const& arg,
+                                   std::size_t& over_args,
+                                   std::size_t one_args) const
+    {
+        if (storage_is_positional_arg_stored(p, storage, arg)) {
+            return;
+        }
+        if (arg->m_action == Action::BooleanOptionalAction) {
+            storage_store_default_value(storage, arg);
+            return;
+        }
+        auto _store_n_values = [this, &p, &storage] (pArgument const& arg,
+                std::deque<std::string>& arguments, std::size_t n)
+        {
+            std::vector<std::string> values;
+            values.reserve(n);
+            for (std::size_t i = 0; i < n; ++i) {
+                values.push_back(arguments.front());
+                arguments.pop_front();
+            }
+            storage_store_values(p, storage, arg, values);
+        };
+        switch (arg->m_nargs) {
+            case Argument::NARGS_DEF :
+                storage_store_value(p, storage, arg, arguments.front());
+                arguments.pop_front();
+                break;
+            case Argument::ZERO_OR_ONE :
+                if (over_args < one_args) {
+                    storage_store_value(p, storage, arg, arguments.front());
+                    arguments.pop_front();
+                    ++over_args;
+                } else {
+                    storage_store_default_value(storage, arg);
+                }
+                break;
+            case Argument::NARGS_NUM :
+                _store_n_values(arg, arguments, arg->m_num_args);
+                break;
+            default :
+                break;
+        }
+    }
+
+    void match_positional_default(Parser const* p,
+                                  argparse::Namespace::Storage& storage,
+                                  std::deque<std::string>& arguments,
+                                  pArgument const& arg) const
+    {
+        if (storage_is_positional_arg_stored(p, storage, arg)) {
+            return;
+        }
+        if (arg->m_action == Action::BooleanOptionalAction) {
+            storage_store_default_value(storage, arg);
+            return;
+        }
+        auto _store_n_values = [this, &p, &storage] (pArgument const& arg,
+                std::deque<std::string>& arguments, std::size_t n)
+        {
+            std::vector<std::string> values;
+            values.reserve(n);
+            for (std::size_t i = 0; i < n; ++i) {
+                values.push_back(arguments.front());
+                arguments.pop_front();
+            }
+            storage_store_values(p, storage, arg, values);
+        };
+        if (arg->m_nargs == Argument::NARGS_DEF) {
+            storage_store_value(p, storage, arg, arguments.front());
+            arguments.pop_front();
+        } else {
+            _store_n_values(arg, arguments, arg->m_num_args);
+        }
+    }
+
     void match_positionals(Parser const* p,
                            argparse::Namespace::Storage& storage,
                            std::size_t& pos,
@@ -6378,131 +6549,28 @@ private:
         if (finish == pos) {
             return;
         }
-        auto _store_first_value = [this, &p, &storage]
-                (pArgument const& arg, std::deque<std::string>& arguments)
-        {
-            storage_store_value(p, storage, arg, arguments.front());
-            arguments.pop_front();
-        };
-        auto _store_n_values = [this, &p, &storage] (pArgument const& arg,
-                std::deque<std::string>& arguments, std::size_t n)
-        {
-            std::vector<std::string> values;
-            values.reserve(n);
-            for (std::size_t i = 0; i < n; ++i) {
-                values.push_back(arguments.front());
-                arguments.pop_front();
-            }
-            storage_store_values(p, storage, arg, values);
-        };
         if (min_args == arguments.size()) {
             for ( ; pos < finish; ++pos) {
-                auto const& arg = positional.at(pos);
-                if (storage_is_positional_arg_stored(p, storage, arg)) {
-                    continue;
-                }
-                if (arg->m_action == Action::BooleanOptionalAction) {
-                    storage_store_default_value(storage, arg);
-                    continue;
-                }
-                switch (arg->m_nargs) {
-                    case Argument::NARGS_DEF :
-                    case Argument::ONE_OR_MORE :
-                        _store_first_value(arg, arguments);
-                        break;
-                    case Argument::ZERO_OR_ONE :
-                    case Argument::ZERO_OR_MORE :
-                        storage_store_default_value(storage, arg);
-                        break;
-                    case Argument::NARGS_NUM :
-                        _store_n_values(arg, arguments, arg->m_num_args);
-                        break;
-                    default :
-                        break;
-                }
+                match_positional_minimum(p, storage, arguments,
+                                         positional.at(pos));
             }
         } else if (more_args) {
             std::size_t over_args = arguments.size() - min_args;
             for ( ; pos < finish; ++pos) {
-                auto const& arg = positional.at(pos);
-                if (storage_is_positional_arg_stored(p, storage, arg)) {
-                    continue;
-                }
-                if (arg->m_action == Action::BooleanOptionalAction) {
-                    storage_store_default_value(storage, arg);
-                    continue;
-                }
-                switch (arg->m_nargs) {
-                    case Argument::NARGS_DEF :
-                        _store_first_value(arg, arguments);
-                        break;
-                    case Argument::ONE_OR_MORE :
-                        _store_n_values(arg, arguments, 1 + over_args);
-                        over_args = 0;
-                        break;
-                    case Argument::ZERO_OR_ONE :
-                        storage_store_default_value(storage, arg);
-                        break;
-                    case Argument::ZERO_OR_MORE :
-                        if (over_args > 0) {
-                            _store_n_values(arg, arguments, over_args);
-                            over_args = 0;
-                        } else {
-                            storage_store_default_value(storage, arg);
-                        }
-                        break;
-                    case Argument::NARGS_NUM :
-                        _store_n_values(arg, arguments, arg->m_num_args);
-                        break;
-                    default :
-                        break;
-                }
+                match_positional_more_zero(p, storage, arguments,
+                                           positional.at(pos), over_args);
             }
         } else if (min_args + one_args >= arguments.size()) {
             std::size_t over_args = min_args + one_args - arguments.size();
             for ( ; pos < finish; ++pos) {
-                auto const& arg = positional.at(pos);
-                if (storage_is_positional_arg_stored(p, storage, arg)) {
-                    continue;
-                }
-                if (arg->m_action == Action::BooleanOptionalAction) {
-                    storage_store_default_value(storage, arg);
-                    continue;
-                }
-                switch (arg->m_nargs) {
-                    case Argument::NARGS_DEF :
-                        _store_first_value(arg, arguments);
-                        break;
-                    case Argument::ZERO_OR_ONE :
-                        if (over_args < one_args) {
-                            _store_first_value(arg, arguments);
-                            ++over_args;
-                        } else {
-                            storage_store_default_value(storage, arg);
-                        }
-                        break;
-                    case Argument::NARGS_NUM :
-                        _store_n_values(arg, arguments, arg->m_num_args);
-                        break;
-                    default :
-                        break;
-                }
+                match_positional_optional(p, storage, arguments,
+                                          positional.at(pos), over_args,
+                                          one_args);
             }
         } else {
             for ( ; pos < finish; ++pos) {
-                auto const& arg = positional.at(pos);
-                if (storage_is_positional_arg_stored(p, storage, arg)) {
-                    continue;
-                }
-                if (arg->m_action == Action::BooleanOptionalAction) {
-                    storage_store_default_value(storage, arg);
-                    continue;
-                }
-                if (arg->m_nargs == Argument::NARGS_DEF) {
-                    _store_first_value(arg, arguments);
-                } else {
-                    _store_n_values(arg, arguments, arg->m_num_args);
-                }
+                match_positional_default(p, storage, arguments,
+                                         positional.at(pos));
             }
         }
     }
