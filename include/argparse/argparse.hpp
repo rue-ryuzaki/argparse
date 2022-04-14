@@ -470,25 +470,17 @@ _starts_with(std::string const& s, std::string const& value)
 
 template <class T>
 bool
-_is_value_exists(T const& value, std::vector<T> const& vec) _ARGPARSE_NOEXCEPT
+_is_value_exists(T const& value, std::vector<T> const& vec)
 {
-    for (auto const& el : vec) {
-        if (el == value) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(std::begin(vec), std::end(vec),
+                       [&value] (T const& el) { return el == value; });
 }
 
 inline bool
-_is_value_exists(char value, std::string const& str) _ARGPARSE_NOEXCEPT
+_is_value_exists(char value, std::string const& str)
 {
-    for (auto const& el : str) {
-        if (el == value) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(std::begin(str), std::end(str),
+                       [&value] (char el) { return el == value; });
 }
 
 template <class T>
@@ -847,8 +839,7 @@ _format_output(std::string const& head, std::string const& body,
 }
 
 inline std::string
-_help_formatter(HelpFormatter formatter,
-                std::string const& help)
+_help_formatter(HelpFormatter formatter, std::string const& help)
 {
     if (help.empty()) {
         return std::string();
@@ -2224,7 +2215,7 @@ private:
                 && dest() == rhs.dest();
     }
 
-    inline bool operator ==(std::string const& rhs) const _ARGPARSE_NOEXCEPT
+    inline bool operator ==(std::string const& rhs) const
     {
         return !dest().empty() ? dest() == rhs
                                : detail::_is_value_exists(rhs, m_flags);
@@ -3368,7 +3359,7 @@ _ARGPARSE_EXPORT class Namespace
         }
 
         std::string const&
-        conflict_arg(key_type const& arg) const _ARGPARSE_NOEXCEPT
+        conflict_arg(key_type const& arg) const
         {
             auto const& arg_flags = arg->get_argument_flags();
             for (auto const& pair : m_data) {
