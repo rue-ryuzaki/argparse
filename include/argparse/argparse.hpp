@@ -32,6 +32,7 @@
 #define _ARGPARSE_VERSION_PATCH 0
 
 #undef _ARGPARSE_CONSTEXPR
+#undef _ARGPARSE_EXPERIMENTAL_OPTIONAL
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
@@ -101,6 +102,7 @@ using experimental::optional;
 using experimental::fundamentals_v1::nullopt;
 } // std
 
+#define _ARGPARSE_EXPERIMENTAL_OPTIONAL 1
 #define _ARGPARSE_USE_OPTIONAL 1
 #endif // __GNUC__
 #endif // C++14+
@@ -3994,6 +3996,9 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         std::is_constructible<std::string, T>::value
         || std::is_floating_point<T>::value
@@ -4023,6 +4028,9 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<std::is_integral<T>::value
                                           && !std::is_same<bool, T>::value
                                           && !is_byte_type<T>::value, T>::type>
@@ -4053,6 +4061,9 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_array<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -4094,6 +4105,9 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value, T>::type>
@@ -4125,6 +4139,9 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_map<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -4161,6 +4178,9 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_matrix<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -4199,6 +4219,9 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_pair<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -4242,6 +4265,9 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_queue<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -4273,6 +4299,9 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -4307,6 +4336,9 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         !std::is_constructible<std::string, T>::value
         && !std::is_floating_point<T>::value
@@ -7606,6 +7638,7 @@ private:
 } // argparse
 
 #undef _ARGPARSE_CONSTEXPR
+#undef _ARGPARSE_EXPERIMENTAL_OPTIONAL
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
