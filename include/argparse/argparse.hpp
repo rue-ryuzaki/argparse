@@ -6314,6 +6314,21 @@ private:
     }
 
     inline void
+    storage_store_n_values(argparse::Namespace::Storage& storage,
+                           pArgument const& arg,
+                           std::deque<std::string>& arguments,
+                           std::size_t n) const
+    {
+        std::vector<std::string> values;
+        values.reserve(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            values.push_back(arguments.front());
+            arguments.pop_front();
+        }
+        storage.store_values(arg, values);
+    }
+
+    inline void
     storage_store_default_value(argparse::Namespace::Storage& storage,
                                 pArgument const& arg) const
     {
@@ -6501,17 +6516,6 @@ private:
             storage_store_default_value(storage, arg);
             return;
         }
-        auto _store_n_values = [this, &p, &storage] (pArgument const& arg,
-                std::deque<std::string>& arguments, std::size_t n)
-        {
-            std::vector<std::string> values;
-            values.reserve(n);
-            for (std::size_t i = 0; i < n; ++i) {
-                values.push_back(arguments.front());
-                arguments.pop_front();
-            }
-            storage.store_values(arg, values);
-        };
         switch (arg->m_nargs) {
             case Argument::NARGS_DEF :
             case Argument::ONE_OR_MORE :
@@ -6523,7 +6527,7 @@ private:
                 storage_store_default_value(storage, arg);
                 break;
             case Argument::NARGS_NUM :
-                _store_n_values(arg, arguments, arg->m_num_args);
+                storage_store_n_values(storage, arg, arguments,arg->m_num_args);
                 break;
             default :
                 break;
@@ -6543,24 +6547,13 @@ private:
             storage_store_default_value(storage, arg);
             return;
         }
-        auto _store_n_values = [this, &p, &storage] (pArgument const& arg,
-                std::deque<std::string>& arguments, std::size_t n)
-        {
-            std::vector<std::string> values;
-            values.reserve(n);
-            for (std::size_t i = 0; i < n; ++i) {
-                values.push_back(arguments.front());
-                arguments.pop_front();
-            }
-            storage.store_values(arg, values);
-        };
         switch (arg->m_nargs) {
             case Argument::NARGS_DEF :
                 storage.store_value(arg, arguments.front());
                 arguments.pop_front();
                 break;
             case Argument::ONE_OR_MORE :
-                _store_n_values(arg, arguments, 1 + over_args);
+                storage_store_n_values(storage, arg, arguments, 1 + over_args);
                 over_args = 0;
                 break;
             case Argument::ZERO_OR_ONE :
@@ -6568,14 +6561,14 @@ private:
                 break;
             case Argument::ZERO_OR_MORE :
                 if (over_args > 0) {
-                    _store_n_values(arg, arguments, over_args);
+                    storage_store_n_values(storage, arg, arguments, over_args);
                     over_args = 0;
                 } else {
                     storage_store_default_value(storage, arg);
                 }
                 break;
             case Argument::NARGS_NUM :
-                _store_n_values(arg, arguments, arg->m_num_args);
+                storage_store_n_values(storage, arg, arguments,arg->m_num_args);
                 break;
             default :
                 break;
@@ -6596,17 +6589,6 @@ private:
             storage_store_default_value(storage, arg);
             return;
         }
-        auto _store_n_values = [this, &p, &storage] (pArgument const& arg,
-                std::deque<std::string>& arguments, std::size_t n)
-        {
-            std::vector<std::string> values;
-            values.reserve(n);
-            for (std::size_t i = 0; i < n; ++i) {
-                values.push_back(arguments.front());
-                arguments.pop_front();
-            }
-            storage.store_values(arg, values);
-        };
         switch (arg->m_nargs) {
             case Argument::NARGS_DEF :
                 storage.store_value(arg, arguments.front());
@@ -6622,7 +6604,7 @@ private:
                 }
                 break;
             case Argument::NARGS_NUM :
-                _store_n_values(arg, arguments, arg->m_num_args);
+                storage_store_n_values(storage, arg, arguments,arg->m_num_args);
                 break;
             default :
                 break;
@@ -6641,22 +6623,11 @@ private:
             storage_store_default_value(storage, arg);
             return;
         }
-        auto _store_n_values = [this, &p, &storage] (pArgument const& arg,
-                std::deque<std::string>& arguments, std::size_t n)
-        {
-            std::vector<std::string> values;
-            values.reserve(n);
-            for (std::size_t i = 0; i < n; ++i) {
-                values.push_back(arguments.front());
-                arguments.pop_front();
-            }
-            storage.store_values(arg, values);
-        };
         if (arg->m_nargs == Argument::NARGS_DEF) {
             storage.store_value(arg, arguments.front());
             arguments.pop_front();
         } else {
-            _store_n_values(arg, arguments, arg->m_num_args);
+            storage_store_n_values(storage, arg, arguments, arg->m_num_args);
         }
     }
 
