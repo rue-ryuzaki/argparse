@@ -3162,15 +3162,8 @@ _ARGPARSE_EXPORT class Namespace
         explicit
         Storage()
             : m_data(),
-              m_validator(),
               m_conflict_arg()
         { }
-
-        void set_validator(std::function<void(Argument const&,
-                                              std::string const&)> validator)
-        {
-            m_validator = validator;
-        }
 
         void
         force_add(key_type const& key, mapped_type const& value = mapped_type())
@@ -3240,7 +3233,6 @@ _ARGPARSE_EXPORT class Namespace
 
         inline void have_value(key_type const& arg)
         {
-            m_validator(*arg, std::string());
             if (arg->implicit_value().empty()) {
                 at(arg).push_values({ });
             } else {
@@ -3251,7 +3243,6 @@ _ARGPARSE_EXPORT class Namespace
 
         inline void store_value(key_type const& arg, std::string const& value)
         {
-            m_validator(*arg, value);
             at(arg).push_back(value);
             arg->handle(value);
         }
@@ -3259,9 +3250,6 @@ _ARGPARSE_EXPORT class Namespace
         inline void store_values(key_type const& arg,
                                  std::vector<std::string> const& values)
         {
-            for (auto const& value : values) {
-                m_validator(*arg, value);
-            }
             at(arg).push_values(values);
             for (auto const& value : values) {
                 arg->handle(value);
@@ -3385,7 +3373,6 @@ _ARGPARSE_EXPORT class Namespace
         }
 
         map_type m_data;
-        std::function<void(Argument const&, std::string const&)> m_validator;
         std::string m_conflict_arg;
     };
 
@@ -6107,11 +6094,6 @@ private:
                                                      std::move(subparser_name),
                                                      Argument::Positional);
         argparse::Namespace::Storage storage = space.storage();
-        storage.set_validator([this, &parser]
-                              (Argument const& arg, std::string const& value)
-        {
-            validate_argument_value(parser, arg, value);
-        });
         if (space.m_storage.m_data.empty()) {
             storage.force_add(positional);
             storage.create(optional);
@@ -6314,7 +6296,39 @@ private:
     }
 
     inline void
-    storage_store_n_values(argparse::Namespace::Storage& storage,
+    storage_have_value(Parser const* p,
+                       argparse::Namespace::Storage& storage,
+                       pArgument const& arg) const
+    {
+        validate_argument_value(p, *arg, std::string());
+        storage.have_value(arg);
+    }
+
+    inline void
+    storage_store_value(Parser const* p,
+                        argparse::Namespace::Storage& storage,
+                        pArgument const& arg,
+                        std::string const& val) const
+    {
+        validate_argument_value(p, *arg, val);
+        storage.store_value(arg, val);
+    }
+
+    inline void
+    storage_store_values(Parser const* p,
+                         argparse::Namespace::Storage& storage,
+                         pArgument const& arg,
+                         std::vector<std::string> const& values) const
+    {
+        for (auto const& val : values) {
+            validate_argument_value(p, *arg, val);
+        }
+        storage.store_values(arg, values);
+    }
+
+    inline void
+    storage_store_n_values(Parser const* p,
+                           argparse::Namespace::Storage& storage,
                            pArgument const& arg,
                            std::deque<std::string>& arguments,
                            std::size_t n) const
@@ -6325,7 +6339,7 @@ private:
             values.push_back(arguments.front());
             arguments.pop_front();
         }
-        storage.store_values(arg, values);
+        storage_store_values(p, storage, arg, values);
     }
 
     inline void
@@ -6368,7 +6382,7 @@ private:
                     if (tmp->m_const.has_value()) {
                         if (tmp->m_action == Action::extend) {
                             if (tmp->m_const().empty()) {
-                                storage.have_value(tmp);
+                                storage_have_value(parser, storage, tmp);
                             } else {
                                 std::vector<std::string> values;
                                 values.reserve(tmp->m_const().size());
@@ -6377,19 +6391,21 @@ private:
                                                std::back_inserter(values),
                                                [] (char c)
                                 { return std::string(1, c); });
-                                storage.store_values(tmp, values);
+                                storage_store_values(parser, storage,
+                                                     tmp, values);
                             }
                         } else {
-                            storage.store_value(tmp, tmp->const_value());
+                            storage_store_value(parser, storage,
+                                                tmp, tmp->const_value());
                         }
                     } else if (tmp->m_action == Action::extend) {
                         throw TypeError("'NoneType' object is not iterable");
                     } else {
-                        storage.have_value(tmp);
+                        storage_have_value(parser, storage, tmp);
                     }
                     break;
                 default :
-                    storage.have_value(tmp);
+                    storage_have_value(parser, storage, tmp);
                     break;
             }
         } else if (tmp->m_nargs == Argument::NARGS_NUM && n < tmp->m_num_args) {
@@ -6436,13 +6452,13 @@ private:
                       && (tmp->m_nargs != Argument::NARGS_NUM
                           || n != tmp->m_num_args)));
             if (!values.empty()) {
-                storage.store_values(tmp, values);
+                storage_store_values(parser, storage, tmp, values);
             }
         } else {
             if (tmp->m_nargs != Argument::NARGS_DEF && tmp->m_num_args > 1) {
                 custom_error(parser, tmp->error_nargs(arg));
             }
-            storage.store_value(tmp, splitted.back());
+            storage_store_value(parser, storage, tmp, splitted.back());
         }
     }
 
@@ -6462,7 +6478,8 @@ private:
             if (tmp->m_action == Action::BooleanOptionalAction){
                 bool exist = detail::_is_value_exists(splitted.front(),
                                                       tmp->m_flags);
-                storage.store_value(tmp, exist ? tmp->m_const() :std::string());
+                storage_store_value(parser, storage, tmp,
+                                    exist ? tmp->m_const() : std::string());
             } else {
                 storage.self_value_stored(tmp);
             }
@@ -6519,7 +6536,7 @@ private:
         switch (arg->m_nargs) {
             case Argument::NARGS_DEF :
             case Argument::ONE_OR_MORE :
-                storage.store_value(arg, arguments.front());
+                storage_store_value(p, storage, arg, arguments.front());
                 arguments.pop_front();
                 break;
             case Argument::ZERO_OR_ONE :
@@ -6527,7 +6544,8 @@ private:
                 storage_store_default_value(storage, arg);
                 break;
             case Argument::NARGS_NUM :
-                storage_store_n_values(storage, arg, arguments,arg->m_num_args);
+                storage_store_n_values(p, storage, arg, arguments,
+                                       arg->m_num_args);
                 break;
             default :
                 break;
@@ -6549,11 +6567,12 @@ private:
         }
         switch (arg->m_nargs) {
             case Argument::NARGS_DEF :
-                storage.store_value(arg, arguments.front());
+                storage_store_value(p, storage, arg, arguments.front());
                 arguments.pop_front();
                 break;
             case Argument::ONE_OR_MORE :
-                storage_store_n_values(storage, arg, arguments, 1 + over_args);
+                storage_store_n_values(p, storage, arg, arguments,
+                                       1 + over_args);
                 over_args = 0;
                 break;
             case Argument::ZERO_OR_ONE :
@@ -6561,14 +6580,16 @@ private:
                 break;
             case Argument::ZERO_OR_MORE :
                 if (over_args > 0) {
-                    storage_store_n_values(storage, arg, arguments, over_args);
+                    storage_store_n_values(p, storage, arg, arguments,
+                                           over_args);
                     over_args = 0;
                 } else {
                     storage_store_default_value(storage, arg);
                 }
                 break;
             case Argument::NARGS_NUM :
-                storage_store_n_values(storage, arg, arguments,arg->m_num_args);
+                storage_store_n_values(p, storage, arg, arguments,
+                                       arg->m_num_args);
                 break;
             default :
                 break;
@@ -6591,12 +6612,12 @@ private:
         }
         switch (arg->m_nargs) {
             case Argument::NARGS_DEF :
-                storage.store_value(arg, arguments.front());
+                storage_store_value(p, storage, arg, arguments.front());
                 arguments.pop_front();
                 break;
             case Argument::ZERO_OR_ONE :
                 if (over_args < one_args) {
-                    storage.store_value(arg, arguments.front());
+                    storage_store_value(p, storage, arg, arguments.front());
                     arguments.pop_front();
                     ++over_args;
                 } else {
@@ -6604,7 +6625,8 @@ private:
                 }
                 break;
             case Argument::NARGS_NUM :
-                storage_store_n_values(storage, arg, arguments,arg->m_num_args);
+                storage_store_n_values(p, storage, arg, arguments,
+                                       arg->m_num_args);
                 break;
             default :
                 break;
@@ -6624,10 +6646,10 @@ private:
             return;
         }
         if (arg->m_nargs == Argument::NARGS_DEF) {
-            storage.store_value(arg, arguments.front());
+            storage_store_value(p, storage, arg, arguments.front());
             arguments.pop_front();
         } else {
-            storage_store_n_values(storage, arg, arguments, arg->m_num_args);
+            storage_store_n_values(p, storage, arg, arguments, arg->m_num_args);
         }
     }
 
@@ -6672,10 +6694,10 @@ private:
 
     static bool
     finish_analyze_positional(pArgument const& arg,
-                               std::deque<std::string> const& args,
-                               std::size_t& one_args,
-                               bool& more_args,
-                               std::size_t& min_args)
+                              std::deque<std::string> const& args,
+                              std::size_t& one_args,
+                              bool& more_args,
+                              std::size_t& min_args)
     {
         if (!(arg->m_action & detail::_store_action)) {
             return false;
