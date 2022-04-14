@@ -6958,12 +6958,18 @@ private:
         }
         Argument const* argument = nullptr;
         for (auto const& opt : args) {
-            for (auto const& flag : opt->flags()) {
-                if (flag.size() == 2 && flag.back() == name.at(i)) {
-                    flags.push_back(flag);
-                    argument = opt.get();
-                    break;
-                }
+            auto it = std::find_if(std::begin(opt->flags()),
+                                   std::end(opt->flags()),
+                                   [&name, &arg, i] (std::string const& flag)
+            {
+                return flag.size() == 2
+                        && flag.back() == name.at(i)
+                        && flag.front() == arg.front();
+            });
+            if (it != std::end(opt->flags())) {
+                flags.push_back(*it);
+                argument = opt.get();
+                break;
             }
         }
         if (!argument && flags.empty()) {
