@@ -6119,7 +6119,7 @@ private:
                                 have_negative_args, was_pseudo_arg,
                                 parsed_arguments, i);
             auto arg = parsed_arguments.at(i);
-            auto splitted = process_split_arg(arg, parser);
+            auto equals = process_split_equal(arg, parser);
             auto const tmp
                     = get_optional_arg_by_flag(was_pseudo_arg, parser,
                                                optional, sub_optional, arg);
@@ -6130,16 +6130,16 @@ private:
                         // fallthrough
                     case Action::append :
                     case Action::extend :
-                        storage_optional_store(splitted, parsed_arguments, i,
+                        storage_optional_store(equals, parsed_arguments, i,
                                                have_negative_args,
                                                was_pseudo_arg,
                                                parser, storage, arg, tmp);
                         break;
                     case Action::help :
-                        process_optional_help(splitted, parser, arg);
+                        process_optional_help(equals, parser, arg);
                         break;
                     case Action::version :
-                        process_optional_version(splitted, parser, arg, tmp);
+                        process_optional_version(equals, parser, arg, tmp);
                         break;
                     default :
                         // Action::store_const :
@@ -6148,7 +6148,7 @@ private:
                         // Action::append_const :
                         // Action::count :
                         // Action::BooleanOptionalAction :
-                        storage_optional_store_const(splitted, parser, storage,
+                        storage_optional_store_const(equals, parser, storage,
                                                      arg, tmp);
                         break;
                 }
@@ -6193,16 +6193,15 @@ private:
     }
 
     inline std::vector<std::string>
-    process_split_arg(std::string& arg, Parser const* parser) const
+    process_split_equal(std::string& arg, Parser const* parser) const
     {
-        auto splitted = detail::_split_equal(arg,
-                                             custom_prefix_chars(parser));
-        if (splitted.size() == 2 && !splitted.front().empty()) {
-            arg = splitted.front();
+        auto equals = detail::_split_equal(arg, custom_prefix_chars(parser));
+        if (equals.size() == 2 && !equals.front().empty()) {
+            arg = equals.front();
         } else {
-            splitted.resize(1);
+            equals.resize(1);
         }
-        return splitted;
+        return equals;
     }
 
     static argparse::Namespace
@@ -6413,7 +6412,7 @@ private:
         }
     }
 
-    void storage_optional_store(std::vector<std::string> const& splitted,
+    void storage_optional_store(std::vector<std::string> const& equals,
                                 std::vector<std::string> const& arguments,
                                 std::size_t& i,
                                 bool have_negative_args,
@@ -6423,7 +6422,7 @@ private:
                                 std::string const& arg,
                                 pArgument const& tmp) const
     {
-        if (splitted.size() == 1) {
+        if (equals.size() == 1) {
             uint32_t n = 0;
             std::vector<std::string> values;
             do {
@@ -6458,25 +6457,24 @@ private:
             if (tmp->m_nargs != Argument::NARGS_DEF && tmp->m_num_args > 1) {
                 custom_error(parser, tmp->error_nargs(arg));
             }
-            storage_store_value(parser, storage, tmp, splitted.back());
+            storage_store_value(parser, storage, tmp, equals.back());
         }
     }
 
-    void storage_optional_store_const(std::vector<std::string> const& splitted,
+    void storage_optional_store_const(std::vector<std::string> const& equals,
                                       Parser const* parser,
                                       argparse::Namespace::Storage& storage,
                                       std::string const& arg,
                                       pArgument const& tmp) const
     {
-        if (splitted.size() == 1) {
+        if (equals.size() == 1) {
             if (tmp->m_action == Action::append_const
                     && !tmp->m_default().empty()) {
                 custom_error(parser, detail::_ignore_default(
-                                 tmp->m_flags.front(),
-                                 tmp->m_default()));
+                                 tmp->m_flags.front(), tmp->m_default()));
             }
             if (tmp->m_action == Action::BooleanOptionalAction){
-                bool exist = detail::_is_value_exists(splitted.front(),
+                bool exist = detail::_is_value_exists(equals.front(),
                                                       tmp->m_flags);
                 storage_store_value(parser, storage, tmp,
                                     exist ? tmp->m_const() : std::string());
@@ -6484,30 +6482,29 @@ private:
                 storage.self_value_stored(tmp);
             }
         } else {
-            custom_error(parser,detail::_ignore_explicit(arg, splitted.back()));
+            custom_error(parser, detail::_ignore_explicit(arg, equals.back()));
         }
     }
 
     inline void
-    process_optional_help(std::vector<std::string> const& splitted,
+    process_optional_help(std::vector<std::string> const& equals,
                           Parser const* parser,
                           std::string const& arg) const
     {
-        if (splitted.size() == 1) {
+        if (equals.size() == 1) {
             print_help_and_exit(parser);
         } else {
-            custom_error(parser, detail::_ignore_explicit(
-                             arg, splitted.back()));
+            custom_error(parser, detail::_ignore_explicit(arg, equals.back()));
         }
     }
 
     inline void
-    process_optional_version(std::vector<std::string> const& splitted,
+    process_optional_version(std::vector<std::string> const& equals,
                              Parser const* parser,
                              std::string const& arg,
                              pArgument const& tmp) const
     {
-        if (splitted.size() == 1) {
+        if (equals.size() == 1) {
             if (!tmp->m_version.has_value()) {
                 throw
                 AttributeError("'ArgumentParser' object has no "
@@ -6516,8 +6513,7 @@ private:
             std::cout << tmp->version() << std::endl;
             ::exit(0);
         } else {
-            custom_error(parser, detail::_ignore_explicit(
-                             arg, splitted.back()));
+            custom_error(parser, detail::_ignore_explicit(arg, equals.back()));
         }
     }
 
