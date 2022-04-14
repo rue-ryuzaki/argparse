@@ -1716,9 +1716,9 @@ public:
         }
         std::vector<std::string> values;
         values.reserve(value.size());
-        for (auto const& c : value) {
-            values.emplace_back(std::string(1, c));
-        }
+        std::transform(std::begin(value), std::end(value),
+                       std::back_inserter(values),
+                       [] (char c) { return std::string(1, c); });
         m_choices = std::move(values);
         return *this;
     }
@@ -3555,11 +3555,12 @@ public:
         for (auto const& pair : m_storage) {
             if (pair.first->m_type == Argument::Optional
                     && pair.first->dest().empty()) {
-                for (auto const& flag : pair.first->m_flags) {
-                    if (detail::_flag_name(flag) == key) {
-                        return !pair.second.empty()
-                                || pair.first->m_action == Action::count;
-                    }
+                if (std::any_of(std::begin(pair.first->m_flags),
+                                std::end(pair.first->m_flags),
+                                [&key] (std::string const& flag)
+                { return detail::_flag_name(flag) == key; })) {
+                    return !pair.second.empty()
+                            || pair.first->m_action == Action::count;
                 }
             }
         }
@@ -4478,10 +4479,11 @@ private:
         for (auto const& pair : m_storage) {
             if (pair.first->m_type == Argument::Optional
                     && pair.first->dest().empty()) {
-                for (auto const& flag : pair.first->m_flags) {
-                    if (detail::_flag_name(flag) == key) {
-                        return pair;
-                    }
+                if (std::any_of(std::begin(pair.first->m_flags),
+                                std::end(pair.first->m_flags),
+                                [&key] (std::string const& flag)
+                { return detail::_flag_name(flag) == key; })) {
+                    return pair;
                 }
             }
         }
@@ -4530,9 +4532,9 @@ private:
     {
         std::vector<T> vec;
         vec.reserve(args.size());
-        for (auto const& arg : args) {
-            vec.emplace_back(to_type<T>(arg));
-        }
+        std::transform(std::begin(args), std::end(args),
+                       std::back_inserter(vec), [this] (std::string const& arg)
+        { return to_type<T>(arg); });
         return vec;
     }
 
@@ -4608,10 +4610,11 @@ private:
         for (auto const& pair : m_storage) {
             if (pair.first->m_type == Argument::Optional
                     && pair.first->dest().empty()) {
-                for (auto const& flag : pair.first->m_flags) {
-                    if (detail::_flag_name(flag) == key) {
-                        return pair;
-                    }
+                if (std::any_of(std::begin(pair.first->m_flags),
+                                std::end(pair.first->m_flags),
+                                [&key] (std::string const& flag)
+                { return detail::_flag_name(flag) == key; })) {
+                    return pair;
                 }
             }
         }
@@ -5650,10 +5653,11 @@ public:
     {
         auto const positional = positional_arguments(true, true);
         auto const optional = optional_arguments(true, true).second;
-        for (auto const& arg : positional) {
-            if (detail::_is_value_exists(dest, arg->m_flags)) {
-                return default_argument_value(*arg)();
-            }
+        auto ip = std::find_if(std::begin(positional), std::end(positional),
+                               [&dest] (pArgument const& arg)
+        { return detail::_is_value_exists(dest, arg->m_flags); });
+        if (ip != std::end(positional)) {
+            return default_argument_value(*(*ip))();
         }
         bool suppress_default = m_argument_default_type == SUPPRESS;
         auto _arg_suppressed = [this, suppress_default] (pArgument const& arg)
@@ -6366,9 +6370,11 @@ private:
                             } else {
                                 std::vector<std::string> values;
                                 values.reserve(tmp->m_const().size());
-                                for (auto c : tmp->m_const()) {
-                                    values.push_back(std::string(1, c));
-                                }
+                                std::transform(std::begin(tmp->m_const()),
+                                               std::end(tmp->m_const()),
+                                               std::back_inserter(values),
+                                               [] (char c)
+                                { return std::string(1, c); });
                                 storage_store_values(parser, storage,
                                                      tmp, values);
                             }
@@ -6860,7 +6866,7 @@ private:
     void check_abbreviations(Parser const* parser,
                              std::vector<pArgument> const& optional,
                              std::vector<pArgument> const& sub_optional,
-                             argparse::Namespace::Storage& storage,
+                             argparse::Namespace::Storage const& storage,
                              bool have_negative_args,
                              bool was_pseudo_arg,
                              std::vector<std::string>& arguments,
@@ -6923,12 +6929,11 @@ private:
                          std::vector<pArgument> const& sub_optional,
                          std::string const& key)
     {
-        for (auto const& arg : (p ? sub_optional : optional)) {
-            if (detail::_is_value_exists(key, arg->flags())) {
-                return arg;
-            }
-        }
-        return nullptr;
+        auto const& args = (p ? sub_optional : optional);
+        auto it = std::find_if(std::begin(args), std::end(args),
+                               [&key] (pArgument const& arg)
+        { return detail::_is_value_exists(key, arg->flags()); });
+        return it != std::end(args) ? *it : nullptr;
     }
 
     static pArgument const
