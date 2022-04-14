@@ -212,12 +212,12 @@ TEST_CASE("2. optional arguments", "[argument_parser]")
         std::string non_exist = "baz";
         REQUIRE(args.exists(non_exist) == false);
         REQUIRE_THROWS(args.get<std::string>(non_exist));
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args.try_get<std::string>("foo").operator bool() == false);
         REQUIRE(args.try_get<std::string>("bar").operator bool() == true);
         REQUIRE(args.try_get<std::string>("bar").value() == bar);
         REQUIRE(args.try_get<std::vector<std::string> >(non_exist).operator bool() == false);
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
     }
 }
 
@@ -624,7 +624,7 @@ TEST_CASE("8. argument actions", "[argument]")
 
         auto args0 = parser.parse_args({ });
 
-        REQUIRE(args0.to_string("bar") ==default_value);
+        REQUIRE(args0.to_string("bar") == default_value);
         REQUIRE(args0.get<bool>("foo") == false);
         REQUIRE(args0.to_string("foo") == "false");
 
@@ -2205,10 +2205,10 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args0.get<std::vector<std::string> >("bar").size() == 0);
         REQUIRE(args0.get<std::map<std::string, std::string> >("foo").size() == 0);
         REQUIRE(args0.get<std::map<std::string, std::string> >("bar").size() == 0);
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
         REQUIRE(args0.try_get<std::string>("bar").operator bool() == false);
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
 
         // delimiter ':'
         auto args1 = parser.parse_args({ "--foo=key:value" });
@@ -2221,7 +2221,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args1.get<std::map<std::string, std::string> >("foo", ':').size() == 1);
         REQUIRE(args1.get<std::map<std::string, std::string> >("bar", ':').size() == 0);
         REQUIRE(args1.get<std::map<std::string, std::string> >("foo", ':').at("key") == "value");
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("bar").operator bool() == false);
         REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
@@ -2229,7 +2229,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args1.try_get<std::vector<std::string> >("bar")->size() == 0);
         REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->size() == 1);
         REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->at("key") == "value");
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
 
         // delimiter '=', std::unordered_map
         auto args2 = parser.parse_args({ "--foo=key=value", "--bar", "key1=value1", "key2=value2" });
@@ -2244,7 +2244,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("foo").at("key") == "value");
         REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key1") == "value1");
         REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key2") == "value2");
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args2.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args2.try_get<std::string>("bar").operator bool() == false);
         REQUIRE(args2.try_get<std::string>("foo").value() == "key=value");
@@ -2255,7 +2255,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("foo")->at("key") == "value");
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key1") == "value1");
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key2") == "value2");
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
 
         // delimiter '=', std::multimap
         auto args3 = parser.parse_args({ "--foo=key=value", "--bar", "key=value1", "key=value2" });
@@ -2271,7 +2271,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").size() == 2);
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("foo").count("key") == 1);
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").count("key") == 2);
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args3.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args3.try_get<std::string>("bar").operator bool() == false);
         REQUIRE(args3.try_get<std::string>("foo").value() == "key=value");
@@ -2283,7 +2283,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->size() == 2);
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("foo")->count("key") == 1);
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->count("key") == 2);
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
     }
 
     SECTION("21.2. paired types") {
@@ -2295,9 +2295,9 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args0.exists("foo") == false);
         REQUIRE(args0.get<std::string>("foo") == "");
         REQUIRE(args0.get<std::vector<std::string> >("foo").size() == 0);
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
 
         // delimiter ':'
         auto args1 = parser.parse_args({ "--foo=key:value" });
@@ -2306,13 +2306,13 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
         REQUIRE(args1.get<std::pair<std::string, std::string> >("foo", ':').first == "key");
         REQUIRE(args1.get<std::pair<std::string, std::string> >("foo", ':').second == "value");
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
         REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
         REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->first == "key");
         REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->second == "value");
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
 
         auto parser2 = argparse::ArgumentParser().exit_on_error(false);
 
@@ -2325,11 +2325,11 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 2);
         REQUIRE(args2.get<std::pair<std::string, std::string> >("foo", ' ').first == "key");
         REQUIRE(args2.get<std::pair<std::string, std::string> >("foo", ' ').second == "value");
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 2);
         REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->first == "key");
         REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->second == "value");
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
     }
 
     SECTION("21.3. tuple") {
@@ -2351,7 +2351,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(std::get<0>(tuple1) == 1);
         REQUIRE(std::get<1>(tuple1) == "value");
         REQUIRE(std::get<2>(tuple1) == 3);
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("foo").value() == "1:value:3");
         REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
@@ -2359,7 +2359,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(std::get<0>(try_tuple1.value()) == 1);
         REQUIRE(std::get<1>(try_tuple1.value()) == "value");
         REQUIRE(std::get<2>(try_tuple1.value()) == 3);
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
 
         auto parser2 = argparse::ArgumentParser().exit_on_error(false);
 
@@ -2374,12 +2374,12 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(std::get<0>(tuple2) == 1);
         REQUIRE(std::get<1>(tuple2) == "value");
         REQUIRE(std::get<2>(tuple2) == 3);
-#ifdef _ARGPARSE_USE_OPTIONAL
+#if __cplusplus >= 201703L // C++17+
         REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 3);
         auto try_tuple2 = args2.try_get<std::tuple<int, std::string, int> >("foo", ' ');
         REQUIRE(std::get<0>(try_tuple2.value()) == 1);
         REQUIRE(std::get<1>(try_tuple2.value()) == "value");
         REQUIRE(std::get<2>(try_tuple2.value()) == 3);
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif // C++17+
     }
 }
