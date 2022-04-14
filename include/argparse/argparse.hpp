@@ -1853,7 +1853,7 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& handle(std::function<void(std::string)> func)
+    inline Argument& handle(std::function<void(std::string const&)> func)
     {
         if (m_action & (Action::version | Action::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
@@ -2241,7 +2241,7 @@ private:
     detail::Value<std::string> m_metavar;
     std::vector<std::string> m_dest;
     detail::Value<std::string> m_version;
-    std::function<void(std::string)> m_handle;
+    std::function<void(std::string const&)> m_handle;
     std::function<void(Argument const*)> m_post_trigger;
 };
 
@@ -4868,7 +4868,7 @@ public:
          *  \return Current parser reference
          */
         inline Parser&
-        handle(std::function<void(std::string)> func) _ARGPARSE_NOEXCEPT
+        handle(std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT
         {
             m_handle = func;
             return *this;
@@ -4950,7 +4950,7 @@ public:
         std::string m_name;
         std::string m_help;
         std::string m_prog;
-        std::function<void(std::string)> m_handle;
+        std::function<void(std::string const&)> m_handle;
         std::function<void(argparse::Namespace const&)> m_parse_handle;
     };
 
