@@ -2877,8 +2877,8 @@ private:
 // compatibility for version v1.3.8 and earlier
 using ExclusiveGroup
 #if __cplusplus >= 201402L // C++14+
-[[deprecated("Use argparse::MutuallyExclusiveGroup instead.")]]
-#endif // C++14
+[[deprecated("use argparse::MutuallyExclusiveGroup instead.")]]
+#endif // C++14+
     = MutuallyExclusiveGroup;
 
 /*!
@@ -4733,8 +4733,8 @@ public:
     // compatibility for version v1.3.3 and earlier
     using Namespace
 #if __cplusplus >= 201402L // C++14+
-    [[deprecated("Use argparse::Namespace instead.")]]
-#endif // C++14
+    [[deprecated("use argparse::Namespace instead.")]]
+#endif // C++14+
         = argparse::Namespace;
 
     /*!
