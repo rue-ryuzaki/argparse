@@ -3275,24 +3275,19 @@ _ARGPARSE_EXPORT class Namespace
 
         inline bool exists(std::string const& key) const
         {
-            return std::find_if(std::begin(m_data), std::end(m_data),
-                                [key] (value_type const& pair) -> bool
-            { return *(pair.first) == key; }) != std::end(m_data);
+            auto it = find(key);
+            return it != std::end(m_data);
         }
 
         inline bool exists(key_type const& key) const
         {
-            auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                   [key] (value_type const& pair) -> bool
-            { return pair.first == key; });
+            auto it = find(key);
             return it != std::end(m_data);
         }
 
-        value_type const& at(std::string const& key) const
+        inline value_type const& at(std::string const& key) const
         {
-            auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                   [key] (value_type const& pair) -> bool
-            { return *(pair.first) == key; });
+            auto it = find(key);
             if (it == std::end(m_data)) {
                 throw std::logic_error("key '" + key + "' not found");
             }
@@ -3301,9 +3296,7 @@ _ARGPARSE_EXPORT class Namespace
 
         inline mapped_type& at(key_type const& key)
         {
-            auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                   [key] (value_type const& pair) -> bool
-            { return pair.first == key; });
+            auto it = find(key);
             if (it == std::end(m_data)) {
                 throw std::logic_error("key '" + key->m_name + "' not found");
             }
@@ -3312,9 +3305,7 @@ _ARGPARSE_EXPORT class Namespace
 
         inline mapped_type const& at(key_type const& key) const
         {
-            auto it = std::find_if(std::begin(m_data), std::end(m_data),
-                                   [key] (value_type const& pair) -> bool
-            { return pair.first == key; });
+            auto it = find(key);
             if (it == std::end(m_data)) {
                 throw std::logic_error("key '" + key->m_name + "' not found");
             }
@@ -3331,6 +3322,27 @@ _ARGPARSE_EXPORT class Namespace
         end()            const _ARGPARSE_NOEXCEPT { return std::end(m_data); }
 
     private:
+        inline const_iterator find(std::string const& key) const
+        {
+            return std::find_if(std::begin(m_data), std::end(m_data),
+                                [&key] (value_type const& pair)
+            { return *(pair.first) == key; });
+        }
+
+        inline const_iterator find(key_type const& key) const
+        {
+            return std::find_if(std::begin(m_data), std::end(m_data),
+                                [&key] (value_type const& pair)
+            { return pair.first == key; });
+        }
+
+        inline iterator find(key_type const& key)
+        {
+            return std::find_if(std::begin(m_data), std::end(m_data),
+                                [&key] (value_type const& pair)
+            { return pair.first == key; });
+        }
+
         std::string const&
         conflict_arg(key_type const& arg) const _ARGPARSE_NOEXCEPT
         {
@@ -5627,9 +5639,9 @@ public:
         }
         auto it = std::find_if(
                     std::begin(m_default_values), std::end(m_default_values),
-                    [dest] (std::pair<std::string, std::string> const& pair)
+                    [&dest] (std::pair<std::string, std::string> const& pair)
         { return pair.first == dest; });
-        return it != std::end(m_default_values) ? it->second :std::string();
+        return it != std::end(m_default_values) ? it->second : std::string();
     }
 
     /*!
