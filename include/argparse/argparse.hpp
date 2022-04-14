@@ -1065,6 +1065,7 @@ _ARGPARSE_EXPORT class Argument
           m_nargs_str("1"),
           m_const(),
           m_default(),
+          m_implicit(),
           m_type_name(),
           m_choices(),
           m_required(),
@@ -1092,6 +1093,7 @@ _ARGPARSE_EXPORT class Argument
           m_nargs_str("1"),
           m_const(),
           m_default(),
+          m_implicit(),
           m_type_name(),
           m_choices(),
           m_required(),
@@ -1168,6 +1170,7 @@ public:
           m_nargs_str("1"),
           m_const(),
           m_default(),
+          m_implicit(),
           m_type_name(),
           m_choices(),
           m_required(),
@@ -1199,6 +1202,7 @@ public:
           m_nargs_str(orig.m_nargs_str),
           m_const(orig.m_const),
           m_default(orig.m_default),
+          m_implicit(orig.m_implicit),
           m_type_name(orig.m_type_name),
           m_choices(orig.m_choices),
           m_required(orig.m_required),
@@ -1230,6 +1234,7 @@ public:
           m_nargs_str(std::move(orig.m_nargs_str)),
           m_const(std::move(orig.m_const)),
           m_default(std::move(orig.m_default)),
+          m_implicit(std::move(orig.m_implicit)),
           m_type_name(std::move(orig.m_type_name)),
           m_choices(std::move(orig.m_choices)),
           m_required(std::move(orig.m_required)),
@@ -1263,6 +1268,7 @@ public:
             this->m_nargs_str   = rhs.m_nargs_str;
             this->m_const       = rhs.m_const;
             this->m_default     = rhs.m_default;
+            this->m_implicit    = rhs.m_implicit;
             this->m_type_name   = rhs.m_type_name;
             this->m_choices     = rhs.m_choices;
             this->m_required    = rhs.m_required;
@@ -1298,6 +1304,7 @@ public:
             this->m_nargs_str   = std::move(rhs.m_nargs_str);
             this->m_const       = std::move(rhs.m_const);
             this->m_default     = std::move(rhs.m_default);
+            this->m_implicit    = std::move(rhs.m_implicit);
             this->m_type_name   = std::move(rhs.m_type_name);
             this->m_choices     = std::move(rhs.m_choices);
             this->m_required    = std::move(rhs.m_required);
@@ -1624,6 +1631,37 @@ public:
     }
 
     /*!
+     *  \brief Set argument 'implicit' value
+     *
+     *  \param value Implicit value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& implicit_value(std::string const& value)
+    {
+        m_implicit = detail::_trim_copy(value);
+        return *this;
+    }
+
+    /*!
+     *  \brief Set custom argument 'implicit' value
+     *
+     *  \param value Implicit value
+     *
+     *  \return Current argument reference
+     */
+    template <class T,
+              class = typename std::enable_if<
+                  !std::is_constructible<std::string, T>::value>::type>
+    Argument& implicit_value(T const& value)
+    {
+        std::stringstream ss;
+        ss << value;
+        m_implicit = ss.str();
+        return *this;
+    }
+
+    /*!
      *  \brief Set argument 'type' name
      *  (for MetavarTypeHelpFormatter and Namespace::get<T> type check)
      *
@@ -1874,6 +1912,16 @@ public:
     inline std::string const& default_value() const _ARGPARSE_NOEXCEPT
     {
         return m_default();
+    }
+
+    /*!
+     *  \brief Get argument 'implicit' value
+     *
+     *  \return Argument 'implicit' value
+     */
+    inline std::string const& implicit_value() const _ARGPARSE_NOEXCEPT
+    {
+        return m_implicit();
     }
 
     /*!
@@ -2170,6 +2218,7 @@ private:
     std::string m_nargs_str;
     detail::Value<std::string> m_const;
     detail::Value<std::string> m_default;
+    detail::Value<std::string> m_implicit;
     detail::Value<std::string> m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
     detail::Value<bool> m_required;
@@ -3169,7 +3218,12 @@ _ARGPARSE_EXPORT class Namespace
 
         inline void have_value(key_type const& arg)
         {
-            at(arg).push_values({ });
+            if (arg->implicit_value().empty()) {
+                at(arg).push_values({ });
+            } else {
+                at(arg).push_back(arg->implicit_value());
+                arg->handle(arg->implicit_value());
+            }
         }
 
         inline void store_value(key_type const& arg, std::string const& value)
