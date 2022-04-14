@@ -3221,7 +3221,8 @@ _ARGPARSE_EXPORT class Namespace
             if (arg->implicit_value().empty()) {
                 at(arg).push_values({ });
             } else {
-                at(arg).push_values({ arg->implicit_value() });
+                at(arg).push_back(arg->implicit_value());
+                arg->handle(arg->implicit_value());
             }
         }
 
