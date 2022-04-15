@@ -212,12 +212,12 @@ TEST_CASE("2. optional arguments", "[argument_parser]")
         std::string non_exist = "baz";
         REQUIRE(args.exists(non_exist) == false);
         REQUIRE_THROWS(args.get<std::string>(non_exist));
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args.try_get<std::string>("foo").operator bool() == false);
         REQUIRE(args.try_get<std::string>("bar").operator bool() == true);
         REQUIRE(args.try_get<std::string>("bar").value() == bar);
         REQUIRE(args.try_get<std::vector<std::string> >(non_exist).operator bool() == false);
-#endif // C++17+
+#endif  // C++17+
     }
 }
 
@@ -443,7 +443,7 @@ TEST_CASE("7. argument dest", "[argument]")
 
 TEST_CASE("8. argument actions", "[argument]")
 {
-    // TODO : with argument_default (store_true, store_false, count) actions are invalid in python
+    // with argument_default (store_true, store_false, count) actions are invalid in python
     std::string const_value = "const";
     std::string new_value = "new";
 
@@ -478,15 +478,16 @@ TEST_CASE("8. argument actions", "[argument]")
         REQUIRE(args1.get<std::vector<std::string> >("--extend").size() == 0);
 
         // all args
-        auto args2 = parser.parse_args({ "--store", new_value, "--store_const", "--store_true", "--store_false", "--append", new_value, "--append_const", "--count", "--extend", new_value });
+        auto args2 = parser.parse_args({ "--store", new_value, "--store_const", "--store_true", "--store_false",
+                                         "--append", new_value, "--append_const", "--count", "--extend", new_value });
         REQUIRE(args2.get<std::string>("--store") == new_value);
         REQUIRE(args2.get<std::string>("--store_const") == const_value);
         REQUIRE(args2.get<bool>("--store_true") == true);
         REQUIRE(args2.get<bool>("--store_false") == false);
-        REQUIRE(args2.get<std::string>("--append") == new_value); // TODO : return array value
-        REQUIRE(args2.get<std::string>("--append_const") == const_value); // TODO : return array value
+        REQUIRE(args2.get<std::string>("--append") == new_value);  // return array value
+        REQUIRE(args2.get<std::string>("--append_const") == const_value);  // return array value
         REQUIRE(args2.get<std::size_t>("--count") == 1);
-        REQUIRE(args2.get<std::string>("--extend") == new_value); // TODO : return array value
+        REQUIRE(args2.get<std::string>("--extend") == new_value);  // return array value
         REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--append").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--append_const").size() == 1);
@@ -520,10 +521,10 @@ TEST_CASE("8. argument actions", "[argument]")
         REQUIRE(args.get<std::string>("store_const") == const_value);
         REQUIRE(args.get<bool>("store_true") == true);
         REQUIRE(args.get<bool>("store_false") == false);
-        REQUIRE(args.get<std::string>("append") == new_value); // TODO : return array value
-        REQUIRE(args.get<std::string>("append_const") == const_value); // TODO : return array value
+        REQUIRE(args.get<std::string>("append") == new_value);  // return array value
+        REQUIRE(args.get<std::string>("append_const") == const_value);  // return array value
         REQUIRE(args.get<std::size_t>("count") == 1);
-        REQUIRE(args.get<std::string>("extend") == new_value); // TODO : return array value
+        REQUIRE(args.get<std::string>("extend") == new_value);  // return array value
         REQUIRE(args.get<std::vector<std::string> >("store").size() == 1);
         REQUIRE(args.get<std::vector<std::string> >("append").size() == 1);
         REQUIRE(args.get<std::vector<std::string> >("append_const").size() == 1);
@@ -566,7 +567,7 @@ TEST_CASE("8. argument actions", "[argument]")
         parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
         parser.add_argument("--no-bar").action(argparse::store_true);
 
-        REQUIRE_THROWS(parser.parse_args("--no-")); // --no-foo or --no-bar?
+        REQUIRE_THROWS(parser.parse_args("--no-"));  // --no-foo or --no-bar?
     }
 
     SECTION("8.5. BooleanOptionalAction conflict options [2]") {
@@ -645,7 +646,7 @@ TEST_CASE("8. argument actions", "[argument]")
 
 TEST_CASE("9. argument nargs", "[argument]")
 {
-    // TODO : with argument_default (store_true, store_false, count) actions are invalid in python
+    // with argument_default (store_true, store_false, count) actions are invalid in python
     std::string default_value = "local";
     std::string const_value = "const";
     std::string new_value = "new";
@@ -724,8 +725,8 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.3. nargs ? optional") {
         parser.add_argument("--store").action(argparse::store).nargs("?").default_value(default_value);
-        parser.add_argument("--append").action(argparse::append).nargs("?"); // TODO: default value are invalid in python if flag used
-        parser.add_argument("--extend").action(argparse::extend).nargs("?"); // TODO: default value are invalid in python if flag used
+        parser.add_argument("--append").action(argparse::append).nargs("?");  // default value are invalid in python if flag used
+        parser.add_argument("--extend").action(argparse::extend).nargs("?");  // default value are invalid in python if flag used
 
         // no args
         auto args1 = parser.parse_args({ });
@@ -741,8 +742,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         // all args
         auto args2 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value });
         REQUIRE(args2.get<std::string>("--store") == new_value);
-        REQUIRE(args2.get<std::string>("--append") == new_value); // TODO : return array value
-        REQUIRE(args2.get<std::string>("--extend") == new_value); // TODO : return array value
+        REQUIRE(args2.get<std::string>("--append") == new_value);  // return array value
+        REQUIRE(args2.get<std::string>("--extend") == new_value);  // return array value
         REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--append").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 1);
@@ -758,23 +759,23 @@ TEST_CASE("9. argument nargs", "[argument]")
     SECTION("9.4. nargs ? positional") {
         parser.add_argument("store").action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument("append").action(argparse::append).nargs("?");
-//        parser.add_argument({ "extend" }).action(argparse::extend).nargs("?"); // TODO : invalid in python without arguments
+//        parser.add_argument({ "extend" }).action(argparse::extend).nargs("?");  // TODO : invalid in python without arguments
 
         auto args1 = parser.parse_args({ });
         REQUIRE(args1.get<std::string>("store") == default_value);
-        REQUIRE(args1.get<std::string>("append") == ""); // TODO : return array value
+        REQUIRE(args1.get<std::string>("append") == "");  // return array value
         REQUIRE(args1.get<std::vector<std::string> >("store").size() == 1);
         REQUIRE(args1.get<std::vector<std::string> >("append").size() == 0);
 
         auto args2 = parser.parse_args({ new_value });
         REQUIRE(args2.get<std::string>("store") == new_value);
-        REQUIRE(args2.get<std::string>("append") == ""); // TODO : return array value
+        REQUIRE(args2.get<std::string>("append") == "");  // return array value
         REQUIRE(args2.get<std::vector<std::string> >("store").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("append").size() == 0);
 
         auto args3 = parser.parse_args({ new_value, new_value });
         REQUIRE(args3.get<std::string>("store") == new_value);
-        REQUIRE(args3.get<std::string>("append") == new_value); // TODO : return array value
+        REQUIRE(args3.get<std::string>("append") == new_value);  // return array value
         REQUIRE(args3.get<std::vector<std::string> >("store").size() == 1);
         REQUIRE(args3.get<std::vector<std::string> >("append").size() == 1);
 
@@ -783,8 +784,8 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.5. nargs * optional") {
         parser.add_argument("--store").action(argparse::store).nargs("*").default_value(default_value);
-        parser.add_argument("--append").action(argparse::append).nargs("*"); // TODO: default value are invalid in python if flag used
-        parser.add_argument("--extend").action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
+        parser.add_argument("--append").action(argparse::append).nargs("*");  // default value are invalid in python if flag used
+        parser.add_argument("--extend").action(argparse::extend).nargs("*");  // default value are invalid in python if flag used
 
         // no args
         auto args1 = parser.parse_args({ });
@@ -798,15 +799,16 @@ TEST_CASE("9. argument nargs", "[argument]")
         // all args
         auto args2 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value });
         REQUIRE(args2.get<std::string>("--store") == new_value);
-        REQUIRE(args2.get<std::string>("--append") == new_value); // TODO : return array value
-        REQUIRE(args2.get<std::string>("--extend") == new_value); // TODO : return array value
+        REQUIRE(args2.get<std::string>("--append") == new_value);  // return array value
+        REQUIRE(args2.get<std::string>("--extend") == new_value);  // return array value
         REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--append").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 1);
 
         // override args
         auto args3 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value,
-                                         "--store", new_value, new_value, "--append", new_value, new_value, "--extend", new_value, new_value });
+                                         "--store", new_value, new_value, "--append", new_value, new_value,
+                                        "--extend", new_value, new_value });
         REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 2);
         REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 3);
         REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
@@ -814,8 +816,8 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.6. nargs * positional") {
         parser.add_argument("store").action(argparse::store).nargs("*").default_value(default_value);
-        parser.add_argument("append").action(argparse::append).nargs("*"); // TODO: default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("*");  // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("*");  // default value are invalid in python if flag used
 
         auto args1 = parser.parse_args({ });
         REQUIRE(args1.get<std::string>("store") == default_value);
@@ -837,8 +839,8 @@ TEST_CASE("9. argument nargs", "[argument]")
     }
 
     SECTION("9.7. nargs * positional [2]") {
-        parser.add_argument("append").action(argparse::append).nargs("*"); // TODO: default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("*");  // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("*");  // default value are invalid in python if flag used
         parser.add_argument("store").action(argparse::store).nargs("*").default_value(default_value);
 
         auto args1 = parser.parse_args({ });
@@ -864,8 +866,8 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.8. nargs + optional") {
         parser.add_argument("--store").action(argparse::store).nargs("+").default_value(default_value);
-        parser.add_argument("--append").action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
-        parser.add_argument("--extend").action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
+        parser.add_argument("--append").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
+        parser.add_argument("--extend").action(argparse::extend).nargs("+");  // default value are invalid in python if flag used
 
         // no args
         auto args1 = parser.parse_args({ });
@@ -879,8 +881,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         // all args
         auto args2 = parser.parse_args({ "--store", new_value, "--append", new_value, "--extend", new_value });
         REQUIRE(args2.get<std::string>("--store") == new_value);
-        REQUIRE(args2.get<std::string>("--append") == new_value); // TODO : return array value
-        REQUIRE(args2.get<std::string>("--extend") == new_value); // TODO : return array value
+        REQUIRE(args2.get<std::string>("--append") == new_value);  // return array value
+        REQUIRE(args2.get<std::string>("--extend") == new_value);  // return array value
         REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--append").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 1);
@@ -895,8 +897,8 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.9. nargs + positional") {
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
-        parser.add_argument("append").action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("+");  // default value are invalid in python if flag used
 
         REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
@@ -922,8 +924,8 @@ TEST_CASE("9. argument nargs", "[argument]")
     }
 
     SECTION("9.10. nargs + positional [2]") {
-        parser.add_argument("append").action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("+"); // TODO: default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("+");  // default value are invalid in python if flag used
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
 
         REQUIRE_THROWS(parser.parse_args({ }));
@@ -950,8 +952,8 @@ TEST_CASE("9. argument nargs", "[argument]")
     }
 
     SECTION("9.11. nargs mixed positional") {
-        parser.add_argument("append").action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("*"); // TODO: default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("*");  // default value are invalid in python if flag used
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
 
         REQUIRE_THROWS(parser.parse_args({ }));
@@ -977,8 +979,8 @@ TEST_CASE("9. argument nargs", "[argument]")
     }
 
     SECTION("9.12. nargs mixed positional [2]") {
-        parser.add_argument("append1").action(argparse::append).nargs("+"); // TODO: default value are invalid in python if flag used
-        parser.add_argument("append2").action(argparse::append).nargs("?"); // TODO: default value are invalid in python if flag used
+        parser.add_argument("append1").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
+        parser.add_argument("append2").action(argparse::append).nargs("?");  // default value are invalid in python if flag used
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
 
         REQUIRE_THROWS(parser.parse_args({ }));
@@ -1175,8 +1177,8 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.17. nargs N optional") {
         parser.add_argument("--store").action(argparse::store).nargs(1).default_value(default_value);
-        parser.add_argument("--append").action(argparse::append).nargs(2); // TODO: default value are invalid in python if flag used
-        parser.add_argument("--extend").action(argparse::extend).nargs(3); // TODO: default value are invalid in python if flag used
+        parser.add_argument("--append").action(argparse::append).nargs(2);  // default value are invalid in python if flag used
+        parser.add_argument("--extend").action(argparse::extend).nargs(3);  // default value are invalid in python if flag used
 
         // no args
         auto args1 = parser.parse_args({ });
@@ -1205,8 +1207,8 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.18. nargs N positional") {
         parser.add_argument("store").action(argparse::store).nargs(1).default_value(default_value);
-        parser.add_argument("append").action(argparse::append).nargs(2); // TODO: default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs(3); // TODO: default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs(2);  // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs(3);  // default value are invalid in python if flag used
 
         REQUIRE_THROWS(parser.parse_args({ }));
         REQUIRE_THROWS(parser.parse_args({ new_value }));
@@ -1225,8 +1227,8 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.19. nargs N optional + positional") {
         parser.add_argument("--store").action(argparse::store).nargs(1).default_value(default_value);
-        parser.add_argument("store").action(argparse::store).nargs(2); // TODO: default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs(2); // TODO: default value are invalid in python if flag used
+        parser.add_argument("store").action(argparse::store).nargs(2);  // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs(2);  // default value are invalid in python if flag used
 
         REQUIRE_THROWS(parser.parse_args({ new_value, "--store", new_value, new_value, new_value, new_value, new_value, new_value }));
 
@@ -2205,10 +2207,10 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args0.get<std::vector<std::string> >("bar").size() == 0);
         REQUIRE(args0.get<std::map<std::string, std::string> >("foo").size() == 0);
         REQUIRE(args0.get<std::map<std::string, std::string> >("bar").size() == 0);
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
         REQUIRE(args0.try_get<std::string>("bar").operator bool() == false);
-#endif // C++17+
+#endif  // C++17+
 
         // delimiter ':'
         auto args1 = parser.parse_args({ "--foo=key:value" });
@@ -2221,7 +2223,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args1.get<std::map<std::string, std::string> >("foo", ':').size() == 1);
         REQUIRE(args1.get<std::map<std::string, std::string> >("bar", ':').size() == 0);
         REQUIRE(args1.get<std::map<std::string, std::string> >("foo", ':').at("key") == "value");
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("bar").operator bool() == false);
         REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
@@ -2229,7 +2231,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args1.try_get<std::vector<std::string> >("bar")->size() == 0);
         REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->size() == 1);
         REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->at("key") == "value");
-#endif // C++17+
+#endif  // C++17+
 
         // delimiter '=', std::unordered_map
         auto args2 = parser.parse_args({ "--foo=key=value", "--bar", "key1=value1", "key2=value2" });
@@ -2244,7 +2246,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("foo").at("key") == "value");
         REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key1") == "value1");
         REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key2") == "value2");
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args2.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args2.try_get<std::string>("bar").operator bool() == false);
         REQUIRE(args2.try_get<std::string>("foo").value() == "key=value");
@@ -2255,7 +2257,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("foo")->at("key") == "value");
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key1") == "value1");
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key2") == "value2");
-#endif // C++17+
+#endif  // C++17+
 
         // delimiter '=', std::multimap
         auto args3 = parser.parse_args({ "--foo=key=value", "--bar", "key=value1", "key=value2" });
@@ -2271,7 +2273,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").size() == 2);
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("foo").count("key") == 1);
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").count("key") == 2);
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args3.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args3.try_get<std::string>("bar").operator bool() == false);
         REQUIRE(args3.try_get<std::string>("foo").value() == "key=value");
@@ -2283,7 +2285,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->size() == 2);
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("foo")->count("key") == 1);
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->count("key") == 2);
-#endif // C++17+
+#endif  // C++17+
     }
 
     SECTION("21.2. paired types") {
@@ -2295,9 +2297,9 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args0.exists("foo") == false);
         REQUIRE(args0.get<std::string>("foo") == "");
         REQUIRE(args0.get<std::vector<std::string> >("foo").size() == 0);
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
-#endif // C++17+
+#endif  // C++17+
 
         // delimiter ':'
         auto args1 = parser.parse_args({ "--foo=key:value" });
@@ -2306,13 +2308,13 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
         REQUIRE(args1.get<std::pair<std::string, std::string> >("foo", ':').first == "key");
         REQUIRE(args1.get<std::pair<std::string, std::string> >("foo", ':').second == "value");
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
         REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
         REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->first == "key");
         REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->second == "value");
-#endif // C++17+
+#endif  // C++17+
 
         auto parser2 = argparse::ArgumentParser().exit_on_error(false);
 
@@ -2325,11 +2327,11 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 2);
         REQUIRE(args2.get<std::pair<std::string, std::string> >("foo", ' ').first == "key");
         REQUIRE(args2.get<std::pair<std::string, std::string> >("foo", ' ').second == "value");
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 2);
         REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->first == "key");
         REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->second == "value");
-#endif // C++17+
+#endif  // C++17+
     }
 
     SECTION("21.3. tuple") {
@@ -2351,7 +2353,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(std::get<0>(tuple1) == 1);
         REQUIRE(std::get<1>(tuple1) == "value");
         REQUIRE(std::get<2>(tuple1) == 3);
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("foo").value() == "1:value:3");
         REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
@@ -2359,7 +2361,7 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(std::get<0>(try_tuple1.value()) == 1);
         REQUIRE(std::get<1>(try_tuple1.value()) == "value");
         REQUIRE(std::get<2>(try_tuple1.value()) == 3);
-#endif // C++17+
+#endif  // C++17+
 
         auto parser2 = argparse::ArgumentParser().exit_on_error(false);
 
@@ -2374,12 +2376,12 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(std::get<0>(tuple2) == 1);
         REQUIRE(std::get<1>(tuple2) == "value");
         REQUIRE(std::get<2>(tuple2) == 3);
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
         REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 3);
         auto try_tuple2 = args2.try_get<std::tuple<int, std::string, int> >("foo", ' ');
         REQUIRE(std::get<0>(try_tuple2.value()) == 1);
         REQUIRE(std::get<1>(try_tuple2.value()) == "value");
         REQUIRE(std::get<2>(try_tuple2.value()) == 3);
-#endif // C++17+
+#endif  // C++17+
     }
 }
