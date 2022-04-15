@@ -1451,7 +1451,7 @@ public:
      */
     Argument& nargs(uint32_t value)
     {
-        switch (m_action) {
+        switch (action()) {
             case Action::store_const :
             case Action::store_true :
             case Action::store_false :
@@ -1475,8 +1475,7 @@ public:
                     throw
                     ValueError("nargs for append actions must be != 0; if arg "
                                "strings are not supplying the value to append, "
-                               "the append const action may be more appropriate"
-                               );
+                             "the append const action may be more appropriate");
                 }
                 break;
             default:
@@ -1497,7 +1496,7 @@ public:
      */
     Argument& nargs(std::string const& value)
     {
-        if (!(m_action & detail::_store_action)) {
+        if (!(action() & detail::_store_action)) {
             throw TypeError("got an unexpected keyword argument 'nargs'");
         }
         auto param = detail::_trim_copy(value);
@@ -1564,12 +1563,12 @@ public:
      */
     Argument& const_value(std::string const& value)
     {
-        if ((m_action & detail::_const_action)
+        if ((action() & detail::_const_action)
                 || (m_nargs == ZERO_OR_ONE
-                    && (m_action & detail::_store_action))) {
+                    && (action() & detail::_store_action))) {
             m_const = detail::_trim_copy(value);
         } else if (m_type == Optional && m_nargs != ZERO_OR_ONE
-                   && (m_action & detail::_store_action)) {
+                   && (action() & detail::_store_action)) {
             throw ValueError("nargs must be '?' to supply const");
         } else {
             throw TypeError("got an unexpected keyword argument 'const'");
@@ -1709,7 +1708,7 @@ public:
      */
     Argument& choices(std::string const& value)
     {
-        if (!(m_action & detail::_store_action)) {
+        if (!(action() & detail::_store_action)) {
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
         std::vector<std::string> values;
@@ -1730,7 +1729,7 @@ public:
      */
     Argument& choices(std::vector<std::string> const& value)
     {
-        if (!(m_action & (detail::_store_action
+        if (!(action() & (detail::_store_action
                           | Action::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
@@ -1802,7 +1801,7 @@ public:
      */
     inline Argument& metavar(std::string const& value)
     {
-        if (!(m_action & (detail::_store_const_action
+        if (!(action() & (detail::_store_const_action
                           | Action::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'metavar'");
         }
@@ -1835,7 +1834,7 @@ public:
      */
     inline Argument& version(std::string const& value)
     {
-        if (m_action == Action::version) {
+        if (action() == Action::version) {
             m_version = detail::_trim_copy(value);
         } else {
             throw TypeError("got an unexpected keyword argument 'version'");
@@ -1853,7 +1852,7 @@ public:
      */
     inline Argument& handle(std::function<void(std::string const&)> func)
     {
-        if (m_action & (Action::version | Action::help)) {
+        if (action() & (Action::version | Action::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
         m_handle = func;
@@ -1870,7 +1869,7 @@ public:
      */
     Argument& handle(std::function<void()> func)
     {
-        if (m_action & (Action::version | Action::help)) {
+        if (action() & (Action::version | Action::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
         m_handle = [func] (std::string const&) { func(); };
@@ -2020,7 +2019,7 @@ private:
         if (m_type == Positional && m_flags.empty() && dest().empty()) {
             throw TypeError("missing 1 required positional argument: 'dest'");
         }
-        if ((m_action & detail::_const_action) && !m_const.has_value()) {
+        if ((action() & detail::_const_action) && !m_const.has_value()) {
             throw TypeError("missing 1 required positional argument: 'const'");
         }
         if (std::any_of(std::begin(m_flags), std::end(m_flags),
@@ -2032,7 +2031,7 @@ private:
 
     inline void prepare_action(Action value)
     {
-        if (m_action & (Action::version | Action::help)) {
+        if (action() & (Action::version | Action::help)) {
             m_handle = nullptr;
         }
         if (!(value & detail::_store_const_action)) {
@@ -2061,7 +2060,7 @@ private:
     {
         std::string res;
         if (m_type == Optional) {
-            if (m_action == Action::BooleanOptionalAction) {
+            if (action() == Action::BooleanOptionalAction) {
                 for (auto const& flag : flags()) {
                     if (!res.empty()) {
                         res += " | ";
@@ -2072,7 +2071,7 @@ private:
                 res += m_flags.front();
             }
         }
-        if (m_action & (detail::_store_action | Action::append_const)) {
+        if (action() & (detail::_store_action | Action::append_const)) {
             res += get_nargs_suffix(formatter);
         }
         return res;
@@ -2087,7 +2086,7 @@ private:
                     res += ", ";
                 }
                 res += flag;
-                if (m_action & (detail::_store_action | Action::append_const)) {
+                if (action() & (detail::_store_action | Action::append_const)) {
                     res += get_nargs_suffix(formatter);
                 }
             }
@@ -2108,13 +2107,13 @@ private:
         if (!formatted.empty()) {
             if (m_type == Optional
                     && (formatter & ArgumentDefaultsHelpFormatter)
-                    && !(m_action & (Action::help | Action::version))) {
+                    && !(action() & (Action::help | Action::version))) {
                 auto const& def = (m_default.has_value()
                                    || !argument_default.has_value())
                         ? m_default : argument_default;
                 if (m_default_type != SUPPRESS
                         && !(suppress_default && !def.has_value())) {
-                    if (!def.has_value() && (m_action & detail::_bool_action)) {
+                    if (!def.has_value() && (action() & detail::_bool_action)) {
                         formatted += " (default: "
                                 + detail::_bool_to_string(def()) + ")";
                     } else {
@@ -2519,7 +2518,7 @@ protected:
                 throw
                 TypeError("missing 1 required positional argument: 'dest'");
             }
-            if (arg.m_action & (Action::version | Action::help)) {
+            if (arg.action() & (Action::version | Action::help)) {
                 // version and help actions cannot be positional
                 throw
                 TypeError("got an unexpected keyword argument 'required'");
@@ -2533,12 +2532,12 @@ protected:
             }
             if (arg.m_const.has_value()
                     && !(arg.m_nargs == Argument::ZERO_OR_ONE
-                         && (arg.m_action & detail::_store_action))
-                    && !(arg.m_action & detail::_const_action)) {
+                         && (arg.action() & detail::_store_action))
+                    && !(arg.action() & detail::_const_action)) {
                 throw TypeError("got an unexpected keyword argument 'const'");
             }
         } else {
-            if (arg.m_action == Action::BooleanOptionalAction) {
+            if (arg.action() == Action::BooleanOptionalAction) {
                 arg.make_no_flags();
             }
             check_conflict_arg(&arg);
@@ -2976,7 +2975,7 @@ public:
      */
     inline Argument& add_argument(std::vector<std::string> const& flags)
     {
-        m_data.create_argument(flags, m_prefix_chars);
+        m_data.create_argument(flags, prefix_chars());
         process_add_argument();
         return *m_data.m_arguments.back();
     }
@@ -3162,7 +3161,7 @@ _ARGPARSE_EXPORT class Namespace
         void
         force_add(key_type const& key, mapped_type const& value = mapped_type())
         {
-            if (key->m_action & (Action::version | Action::help)) {
+            if (key->action() & (Action::version | Action::help)) {
                 return;
             }
             auto const& arg_flags = key->get_argument_flags();
@@ -3183,7 +3182,7 @@ _ARGPARSE_EXPORT class Namespace
         void
         try_add(key_type const& key, mapped_type const& value = mapped_type())
         {
-            if (key->m_action & (Action::version | Action::help)) {
+            if (key->action() & (Action::version | Action::help)) {
                 return;
             }
             auto const& flag = conflict_arg(key);
@@ -3203,7 +3202,7 @@ _ARGPARSE_EXPORT class Namespace
         void
         create(key_type const& key, mapped_type const& value = mapped_type())
         {
-            if (key->m_action & (Action::version | Action::help)) {
+            if (key->action() & (Action::version | Action::help)) {
                 return;
             }
             auto const& flag = conflict_arg(key);
@@ -3252,7 +3251,7 @@ _ARGPARSE_EXPORT class Namespace
 
         void store_default_value(key_type const& arg, std::string const& value)
         {
-            if (arg->m_action
+            if (arg->action()
                     & (Action::store | Action::BooleanOptionalAction)) {
                 auto& arg_data = at(arg);
                 if (arg_data.empty()) {
@@ -3263,18 +3262,18 @@ _ARGPARSE_EXPORT class Namespace
 
         bool self_value_stored(key_type const& arg)
         {
-            if (arg->m_action & (Action::store_const | detail::_bool_action)) {
+            if (arg->action() & (Action::store_const | detail::_bool_action)) {
                 auto& arg_data = at(arg);
                 if (arg_data.empty()) {
-                    arg_data.push_back(arg->m_const());
+                    arg_data.push_back(arg->const_value());
                 }
-                arg->handle(arg->m_const());
+                arg->handle(arg->const_value());
                 return true;
-            } else if (arg->m_action == Action::append_const) {
-                at(arg).push_back(arg->m_const());
-                arg->handle(arg->m_const());
+            } else if (arg->action() == Action::append_const) {
+                at(arg).push_back(arg->const_value());
+                arg->handle(arg->const_value());
                 return true;
-            } else if (arg->m_action == Action::count) {
+            } else if (arg->action() == Action::count) {
                 at(arg).emplace_back(std::string());
                 arg->handle(std::string());
                 return true;
@@ -3544,7 +3543,7 @@ public:
     {
         if (m_storage.exists(key)) {
             return !m_storage.at(key).second.empty()
-                    || m_storage.at(key).first->m_action == Action::count;
+                    || m_storage.at(key).first->action() == Action::count;
         }
         for (auto const& pair : m_storage) {
             if (pair.first->m_type == Argument::Optional
@@ -3554,7 +3553,7 @@ public:
                                 [&key] (std::string const& flag)
                 { return detail::_flag_name(flag) == key; })) {
                     return !pair.second.empty()
-                            || pair.first->m_action == Action::count;
+                            || pair.first->action() == Action::count;
                 }
             }
         }
@@ -3580,7 +3579,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<T>());
-        if (args.first->m_action == Action::count) {
+        if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         if (args.second.empty()) {
@@ -3610,7 +3609,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<T>());
-        if (args.first->m_action == Action::count) {
+        if (args.first->action() == Action::count) {
             return T(args.second.size());
         }
         if (args.second.empty()) {
@@ -3638,7 +3637,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<typename T::value_type>());
-        if (args.first->m_action == Action::count) {
+        if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
@@ -3673,7 +3672,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<typename T::value_type>());
-        if (args.first->m_action == Action::count) {
+        if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
@@ -3696,7 +3695,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<typename T::mapped_type>());
-        if (args.first->m_action == Action::count) {
+        if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         T res{};
@@ -3723,7 +3722,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<typename T::value_type>());
-        if (args.first->m_action != Action::append
+        if (args.first->action() != Action::append
                 || !(args.first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))) {
@@ -3754,7 +3753,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<T>());
-        if (args.first->m_action == Action::count) {
+        if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         if (args.second.empty()) {
@@ -3792,7 +3791,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<typename T::value_type>());
-        if (args.first->m_action == Action::count) {
+        if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
@@ -3816,7 +3815,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<T>());
-        if (args.first->m_action == Action::count) {
+        if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         if (args.second.empty()) {
@@ -3859,7 +3858,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::_type_name<T>());
-        if (args.first->m_action == Action::count) {
+        if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         return to_type<T>(detail::_vector_to_string(args.second()));
@@ -3885,7 +3884,7 @@ public:
     std::string to_args(std::string const& key) const
     {
         auto const& args = data(key);
-        switch (args.first->m_action) {
+        switch (args.first->action()) {
             case Action::store_const :
                 if (args.second.empty()) {
                     return std::string();
@@ -3901,7 +3900,7 @@ public:
             case Action::store_true :
             case Action::store_false :
                 if (args.second.empty()) {
-                    return detail::_bool_to_string(args.first->m_default());
+                    return detail::_bool_to_string(args.first->default_value());
                 }
                 if (args.second.size() != 1) {
                     throw TypeError("trying to get data from array argument '"
@@ -3935,7 +3934,7 @@ public:
                           std::string const& quotes = std::string()) const
     {
         auto const& args = data(key);
-        switch (args.first->m_action) {
+        switch (args.first->action()) {
             case Action::store_const :
                 if (args.second.empty()) {
                     return std::string("None");
@@ -3988,7 +3987,7 @@ public:
             return "Namespace(" + result + ")";
         }
         auto unknown_args
-                = detail::_vector_to_string(m_unrecognized_args(), ", ", "'");
+                = detail::_vector_to_string(unrecognized_args(), ", ", "'");
         return "(Namespace(" + result + "), [" + unknown_args + "])";
     }
 
@@ -4016,7 +4015,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->m_action == Action::count
+                || args->first->action() == Action::count
                 || args->second.empty()
                 || args->second.size() != 1
                 || !detail::_is_type_name_correct(args->first->type_name(),
@@ -4050,7 +4049,7 @@ public:
                                                   detail::_type_name<T>())) {
             return {};
         }
-        if (args->first->m_action == Action::count) {
+        if (args->first->action() == Action::count) {
             return T(args->second.size());
         }
         if (args->second.empty() || args->second.size() != 1) {
@@ -4078,7 +4077,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->m_action == Action::count
+                || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(),
                         detail::_type_name<typename T::value_type>())) {
@@ -4123,7 +4122,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->m_action == Action::count
+                || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(),
                         detail::_type_name<typename T::value_type>())) {
@@ -4156,7 +4155,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->m_action == Action::count
+                || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(),
                         detail::_type_name<typename T::mapped_type>())) {
@@ -4195,7 +4194,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->m_action != Action::append
+                || args->first->action() != Action::append
                 || !(args->first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))
@@ -4236,7 +4235,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->m_action == Action::count
+                || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::_type_name<T>())) {
             return {};
@@ -4282,7 +4281,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->m_action == Action::count
+                || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(),
                         detail::_type_name<typename T::value_type>())) {
@@ -4316,7 +4315,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->m_action == Action::count
+                || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::_type_name<T>())) {
             return {};
@@ -4364,7 +4363,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->m_action == Action::count
+                || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::_type_name<T>())) {
             return {};
@@ -4391,7 +4390,7 @@ public:
      */
     inline std::string unrecognized_args_to_args() const
     {
-        return detail::_vector_to_string(m_unrecognized_args(), detail::_spaces,
+        return detail::_vector_to_string(unrecognized_args(), detail::_spaces,
                                          std::string(), true);
     }
 
@@ -4401,13 +4400,13 @@ private:
                            Storage::value_type const& args) const
     {
         if (args.second.empty()) {
-            return detail::_bool_to_string(args.first->m_default());
+            return detail::_bool_to_string(args.first->default_value());
         }
         if (args.second.size() != 1) {
             throw
             TypeError("trying to get data from array argument '" + key + "'");
         }
-        return args.second.front() == args.first->m_const()
+        return args.second.front() == args.first->const_value()
                 ? detail::_bool_to_string(args.second.front())
                 : args.second.front();
     }
@@ -4418,10 +4417,10 @@ private:
                              std::string const& quotes) const
     {
         if (args.second.empty()) {
-            if (args.first->m_action == Action::BooleanOptionalAction) {
+            if (args.first->action() == Action::BooleanOptionalAction) {
                 return std::string("None");
             } else {
-                return detail::_bool_to_string(args.first->m_default());
+                return detail::_bool_to_string(args.first->default_value());
             }
         }
         if (args.second.size() != 1) {
@@ -4438,7 +4437,7 @@ private:
     store_actions_to_string(Storage::value_type const& args,
                             std::string const& quotes) const
     {
-        if ((args.first->m_action == Action::store
+        if ((args.first->action() == Action::store
              && (args.first->m_nargs
                  & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE)))
                 || (!args.second.exists()
@@ -4447,12 +4446,12 @@ private:
             return detail::_vector_to_string(args.second(), ", ",
                                              quotes, false, "None");
         }
-        if (args.first->m_action != Action::append
+        if (args.first->action() != Action::append
                 || (args.first->m_nargs
                     & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))) {
             std::string none
                     = args.first->m_nargs == Argument::ZERO_OR_MORE
-                    || (args.first->m_action == Action::extend
+                    || (args.first->action() == Action::extend
                         && args.first->m_nargs == Argument::ZERO_OR_ONE)
                     ? "" : "None";
             return detail::_vector_to_string(args.second(), ", ",
@@ -4896,7 +4895,7 @@ public:
         template <typename = void>
         inline Parser& add_argument(Argument const& argument)
         {
-            m_data.validate_argument(Argument(argument), m_prefix_chars);
+            m_data.validate_argument(Argument(argument), prefix_chars());
             process_add_argument();
             return *this;
         }
@@ -5609,7 +5608,7 @@ public:
     template <typename = void>
     inline ArgumentParser& add_argument(Argument const& argument)
     {
-        m_data.validate_argument(Argument(argument), m_prefix_chars);
+        m_data.validate_argument(Argument(argument), prefix_chars());
         process_add_argument();
         return *this;
     }
@@ -5923,7 +5922,7 @@ public:
             auto const positional = positional_arguments(false, true);
             auto const optional = optional_arguments(false, true).second;
             print_custom_usage(positional, optional, m_mutex_groups,
-                               subpurser_info(false), m_prog, os);
+                               subpurser_info(false), prog(), os);
         }
     }
 
@@ -5941,8 +5940,8 @@ public:
         auto const optional = optional_arguments(false, false);
         print_custom_help(positional_all, optional_all, positional,
                           optional.second, optional.first, m_groups,
-                          m_mutex_groups, subpurser_info(false), m_prog,
-                          m_usage, m_description, m_epilog, os);
+                          m_mutex_groups, subpurser_info(false), prog(),
+                          usage(), description(), epilog(), os);
     }
 
     /*!
@@ -5997,7 +5996,7 @@ public:
     inline void error(std::string const& message) const
     {
         print_usage(std::cerr);
-        std::cerr << m_prog << ": error: " << message << std::endl;
+        std::cerr << prog() << ": error: " << message << std::endl;
         ::exit(2);
     }
 
@@ -6032,7 +6031,7 @@ protected:
     throw_error(std::string const& message, std::ostream& os = std::cerr) const
     {
         print_usage(os);
-        throw std::logic_error(m_prog + ": error: " + message);
+        throw std::logic_error(prog() + ": error: " + message);
     }
 
 private:
@@ -6079,7 +6078,7 @@ private:
         validate_subparser(subparser.first, subparser_dest, subparser_flags);
 
         bool have_negative_args
-                = negative_numbers_presented(optional, m_prefix_chars);
+                = negative_numbers_presented(optional, prefix_chars());
         bool was_pseudo_arg = false;
 
         auto subparser_name = subparser_dest;
@@ -6117,7 +6116,7 @@ private:
                     = get_optional_arg_by_flag(was_pseudo_arg, parser,
                                                optional, sub_optional, arg);
             if (tmp) {
-                switch (tmp->m_action) {
+                switch (tmp->action()) {
                     case Action::store :
                         storage.at(tmp).clear();
                         // fallthrough
@@ -6214,12 +6213,12 @@ private:
                              std::ostream& os = std::cerr) const
     {
         if (p) {
-            if (!p->m_usage.empty()) {
-                os << "usage: " << p->m_usage << std::endl;
+            if (!p->usage().empty()) {
+                os << "usage: " << p->usage() << std::endl;
             } else {
                 print_custom_usage(p->m_data.get_positional(true),
                                    p->m_data.get_optional_with_help(
-                                       true, m_add_help, p->m_prefix_chars),
+                                       true, add_help(), p->prefix_chars()),
                                    p->m_mutex_groups,
                                    std::make_pair(nullptr, 0),
                                    p->m_prog, os);
@@ -6263,7 +6262,7 @@ private:
                     arg->validate();
                 }
             }
-            subparser_dest = subparser->m_dest;
+            subparser_dest = subparser->dest();
             if (!subparser_dest.empty()) {
                 subparser_flags.push_back(subparser_dest);
             }
@@ -6348,10 +6347,10 @@ private:
                                      argparse::Namespace::Storage& storage,
                                      pArgument const& arg) const
     {
-        if (arg->m_action == Action::append_const
+        if (arg->action() == Action::append_const
                 && arg->m_default.has_value()) {
             custom_error(p, detail::_ignore_default(
-                             arg->m_flags.front(), arg->m_default()));
+                             arg->m_flags.front(), arg->default_value()));
         }
         return storage.self_value_stored(arg);
     }
@@ -6371,14 +6370,14 @@ private:
                     break;
                 case Argument::ZERO_OR_ONE :
                     if (tmp->m_const.has_value()) {
-                        if (tmp->m_action == Action::extend) {
-                            if (tmp->m_const().empty()) {
+                        if (tmp->action() == Action::extend) {
+                            if (tmp->const_value().empty()) {
                                 storage_have_value(parser, storage, tmp);
                             } else {
                                 std::vector<std::string> values;
-                                values.reserve(tmp->m_const().size());
-                                std::transform(std::begin(tmp->m_const()),
-                                               std::end(tmp->m_const()),
+                                values.reserve(tmp->const_value().size());
+                                std::transform(std::begin(tmp->const_value()),
+                                               std::end(tmp->const_value()),
                                                std::back_inserter(values),
                                                [] (char c)
                                 { return std::string(1, c); });
@@ -6389,7 +6388,7 @@ private:
                             storage_store_value(parser, storage,
                                                 tmp, tmp->const_value());
                         }
-                    } else if (tmp->m_action == Action::extend) {
+                    } else if (tmp->action() == Action::extend) {
                         throw TypeError("'NoneType' object is not iterable");
                     } else {
                         storage_have_value(parser, storage, tmp);
@@ -6460,16 +6459,16 @@ private:
                                       pArgument const& tmp) const
     {
         if (equals.size() == 1) {
-            if (tmp->m_action == Action::append_const
-                    && !tmp->m_default().empty()) {
+            if (tmp->action() == Action::append_const
+                    && !tmp->default_value().empty()) {
                 custom_error(parser, detail::_ignore_default(
-                                 tmp->m_flags.front(), tmp->m_default()));
+                                 tmp->m_flags.front(), tmp->default_value()));
             }
-            if (tmp->m_action == Action::BooleanOptionalAction) {
+            if (tmp->action() == Action::BooleanOptionalAction) {
                 bool exist = detail::_is_value_exists(equals.front(),
                                                       tmp->m_flags);
                 storage_store_value(parser, storage, tmp,
-                                    exist ? tmp->m_const() : std::string());
+                                    exist ? tmp->const_value() : std::string());
             } else {
                 storage.self_value_stored(tmp);
             }
@@ -6517,7 +6516,7 @@ private:
         if (storage_is_positional_arg_stored(p, storage, arg)) {
             return;
         }
-        if (arg->m_action == Action::BooleanOptionalAction) {
+        if (arg->action() == Action::BooleanOptionalAction) {
             storage_store_default_value(storage, arg);
             return;
         }
@@ -6549,7 +6548,7 @@ private:
         if (storage_is_positional_arg_stored(p, storage, arg)) {
             return;
         }
-        if (arg->m_action == Action::BooleanOptionalAction) {
+        if (arg->action() == Action::BooleanOptionalAction) {
             storage_store_default_value(storage, arg);
             return;
         }
@@ -6594,7 +6593,7 @@ private:
         if (storage_is_positional_arg_stored(p, storage, arg)) {
             return;
         }
-        if (arg->m_action == Action::BooleanOptionalAction) {
+        if (arg->action() == Action::BooleanOptionalAction) {
             storage_store_default_value(storage, arg);
             return;
         }
@@ -6629,7 +6628,7 @@ private:
         if (storage_is_positional_arg_stored(p, storage, arg)) {
             return;
         }
-        if (arg->m_action == Action::BooleanOptionalAction) {
+        if (arg->action() == Action::BooleanOptionalAction) {
             storage_store_default_value(storage, arg);
             return;
         }
@@ -6687,7 +6686,7 @@ private:
                               bool& more_args,
                               std::size_t& min_args)
     {
-        if (!(arg->m_action & detail::_store_action)) {
+        if (!(arg->action() & detail::_store_action)) {
             return false;
         }
         std::size_t min_amount = 0;
@@ -6795,21 +6794,21 @@ private:
         if (parser) {
             sub_optional
                     = parser->m_data
-                        .get_optional_with_help(true, m_add_help,
-                                                parser->m_prefix_chars);
+                        .get_optional_with_help(true, add_help(),
+                                                parser->prefix_chars());
             auto sub_positional = parser->m_data.get_positional(true);
             detail::_move_vector_insert_to(sub_positional, positional,
                                            subparser.second);
             args.pop_front();
             have_negative_args
                     = negative_numbers_presented(sub_optional,
-                                                 parser->m_prefix_chars);
+                                                 parser->prefix_chars());
 
             bool add_suppress = false;
             auto info = subpurser_info(add_suppress);
             auto program = m_subparsers->m_prog;
             if (program.empty()) {
-                program = m_prog;
+                program = prog();
             }
             auto const positionals = positional_arguments(add_suppress, true);
             for (std::size_t i = 0; i < positionals.size(); ++i) {
@@ -6917,16 +6916,16 @@ private:
     inline std::string const&
     custom_prefix_chars(Parser const* parser) const _ARGPARSE_NOEXCEPT
     {
-        return parser ? parser->m_prefix_chars : m_prefix_chars;
+        return parser ? parser->prefix_chars() : prefix_chars();
     }
 
     inline void check_load_args(std::vector<std::string>& arguments,
                                 std::size_t i, bool was_pseudo_arg) const
     {
-        if (!m_fromfile_prefix_chars.empty() && !was_pseudo_arg) {
+        if (!fromfile_prefix_chars().empty() && !was_pseudo_arg) {
             while (!arguments.at(i).empty()
                    && detail::_is_value_exists(arguments.at(i).front(),
-                                               m_fromfile_prefix_chars)) {
+                                               fromfile_prefix_chars())) {
                 auto args = convert_arg_line_to_args(arguments.at(i).substr(1));
                 detail::_move_vector_replace_at(args, arguments, i);
             }
@@ -6939,8 +6938,8 @@ private:
             bool help_added = false;
             auto opt_all = parser->m_data.get_optional(true);
             auto opt = parser->m_data.get_optional(false);
-            if (m_add_help) {
-                auto help_flags = detail::_help_flags(parser->m_prefix_chars);
+            if (add_help()) {
+                auto help_flags = detail::_help_flags(parser->prefix_chars());
                 if (m_data.m_conflict_handler == "resolve") {
                     for (auto const& arg : opt_all) {
                         detail::_resolve_conflict(arg->flags(), help_flags);
@@ -7005,7 +7004,7 @@ private:
             return false;
         } else if ((!argument && !flags.empty())
                    || (argument
-                       && (argument->m_action & detail::_store_action))) {
+                       && (argument->action() & detail::_store_action))) {
             auto str = name.substr(i + static_cast<bool>(argument));
             if (!str.empty()) {
                 if (!detail::_starts_with(str, detail::_equals)) {
@@ -7130,7 +7129,7 @@ private:
                         found = flags;
                     }
                 }
-                if (ex.m_required && found.empty()) {
+                if (ex.required() && found.empty()) {
                     if (ex.m_data.m_arguments.empty()) {
                         throw IndexError("list index out of range");
                     }
@@ -7194,13 +7193,13 @@ private:
                     if (storage_is_positional_arg_stored(p, storage, arg)) {
                         continue;
                     }
-                    if (arg->m_action == Action::extend
+                    if (arg->action() == Action::extend
                             && arg->m_nargs == Argument::ZERO_OR_ONE) {
                         throw TypeError("'NoneType' object is not iterable");
                     }
                     if ((arg->m_nargs
                          & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE))
-                            || arg->m_action == Action::BooleanOptionalAction) {
+                            || arg->action() == Action::BooleanOptionalAction) {
                         storage_store_default_value(storage, arg);
                         continue;
                     }
@@ -7231,7 +7230,7 @@ private:
     {
         bool suppress_default = m_argument_default_type == SUPPRESS;
         for (auto it = storage.begin(); it != storage.end(); ) {
-            if (!it->second.exists() && it->first->m_action != Action::count
+            if (!it->second.exists() && it->first->action() != Action::count
                     && it->first->m_type == Argument::Optional) {
                 auto const& value = default_argument_value(*(it->first));
                 if (it->first->m_default_type == SUPPRESS
@@ -7359,8 +7358,8 @@ private:
         bool help_added = false;
         std::vector<pArgument> result;
         result.reserve(m_data.m_optional.size() + 1);
-        if (m_add_help) {
-            auto help_flags = detail::_help_flags(m_prefix_chars);
+        if (add_help()) {
+            auto help_flags = detail::_help_flags(prefix_chars());
             if (m_data.m_conflict_handler == "resolve") {
                 for (auto const& pair : m_data.m_optional) {
                     detail::_resolve_conflict(pair.first->flags(), help_flags);
