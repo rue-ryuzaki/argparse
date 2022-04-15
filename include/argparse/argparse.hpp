@@ -59,13 +59,14 @@
 #include <stack>
 #include <stdexcept>
 #include <string>
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
 #include <string_view>
-#endif // C++17+
+#endif  // C++17+
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #if defined(_WIN32)
@@ -75,93 +76,93 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #define _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#endif // WIN32_LEAN_AND_MEAN
+#endif  // WIN32_LEAN_AND_MEAN
 
 #ifndef VC_EXTRALEAN
 #define VC_EXTRALEAN
 #define _ARGPARSE_DEFINE_VC_EXTRALEAN
-#endif // VC_EXTRALEAN
+#endif  // VC_EXTRALEAN
 
 #include <Windows.h>
 
 #ifdef _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 #undef WIN32_LEAN_AND_MEAN
-#endif // _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#endif  // _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 
 #ifdef _ARGPARSE_DEFINE_VC_EXTRALEAN
 #undef VC_EXTRALEAN
-#endif // _ARGPARSE_DEFINE_VC_EXTRALEAN
+#endif  // _ARGPARSE_DEFINE_VC_EXTRALEAN
 
 #undef _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 #undef _ARGPARSE_DEFINE_VC_EXTRALEAN
-#else // UNIX
+#else  // UNIX
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
-#endif // _WIN32
+#endif  // _WIN32
 
 // filesystem
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
 #if (defined(_MSC_VER) && _MSC_VER >= 1914) \
     || (defined(__clang__) && (__clang_major__ > 8)) \
     || (defined(__GNUC__) && (__GNUC__ > 8))
 #include <filesystem>
 
 #define _ARGPARSE_USE_FILESYSTEM 1
-#endif //
-#endif // C++17+
+#endif  //
+#endif  // C++17+
 
 // optional
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
 #include <optional>
 
 #define _ARGPARSE_USE_OPTIONAL 1
-#elif __cplusplus >= 201402L // C++14
+#elif __cplusplus >= 201402L  // C++14
 #if defined(__GNUC__) && (defined(__linux__) || !defined(__clang__))
 #include <experimental/optional>
 namespace std {
 using experimental::optional;
 using experimental::fundamentals_v1::nullopt;
-} // std
+}  // namespace std
 
 #define _ARGPARSE_EXPERIMENTAL_OPTIONAL 1
 #define _ARGPARSE_USE_OPTIONAL 1
-#endif // __GNUC__
-#endif // C++14+
+#endif  // __GNUC__
+#endif  // C++14+
 
 #define _ARGPARSE_EXPORT
 
-#if __cplusplus >= 201103L // C++11+
+#if __cplusplus >= 201103L  // C++11+
 #define _ARGPARSE_CONSTEXPR constexpr
 #define _ARGPARSE_USE_CONSTEXPR constexpr
 #else
 #define _ARGPARSE_CONSTEXPR
 #define _ARGPARSE_USE_CONSTEXPR const
-#endif // C++11+
+#endif  // C++11+
 
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
 #define _ARGPARSE_INLINE_VARIABLE inline
 #else
 #define _ARGPARSE_INLINE_VARIABLE
-#endif // C++17+
+#endif  // C++17+
 
-#if __cplusplus >= 201103L // C++11+
+#if __cplusplus >= 201103L  // C++11+
 #define _ARGPARSE_NOEXCEPT noexcept
 #else
 #define _ARGPARSE_NOEXCEPT
-#endif // C++11+
+#endif  // C++11+
 
 namespace argparse {
 template <class T>  struct is_byte_type { enum{value = false}; };
 template <>         struct is_byte_type<char> { enum{value = true}; };
 template <>         struct is_byte_type<signed char> { enum{value = true}; };
 template <>         struct is_byte_type<unsigned char> { enum{value = true}; };
-#if __cplusplus >= 201703L // C++17+
+#if __cplusplus >= 201703L  // C++17+
 template <>         struct is_byte_type<std::byte> { enum{value = true}; };
-#endif // C++17+
-#if __cplusplus >= 202002L // C++20+
+#endif  // C++17+
+#if __cplusplus >= 202002L  // C++20+
 template <>         struct is_byte_type<char8_t> { enum{value = true}; };
-#endif // C++20+
+#endif  // C++20+
 
 /*!
  * \brief Action values
@@ -333,7 +334,7 @@ _get_terminal_size()
             width = _minimum_width;
         }
     }
-#else // UNIX
+#else  // UNIX
 #if defined(TIOCGSIZE)
     struct ttysize w;
     if (ioctl(STDOUT_FILENO, TIOCGSIZE, &w) >= 0) {
@@ -352,8 +353,8 @@ _get_terminal_size()
             width = _minimum_width;
         }
     }
-#endif // TIOCGSIZE
-#endif // _WIN32
+#endif  // TIOCGSIZE
+#endif  // _WIN32
     return std::make_pair(width, height);
 }
 
@@ -412,7 +413,7 @@ _file_name(std::string const& path)
     return std::filesystem::path(path.c_str()).filename().string();
 #else
     return path.substr(path.find_last_of("/\\") + 1);
-#endif // _ARGPARSE_USE_FILESYSTEM
+#endif  // _ARGPARSE_USE_FILESYSTEM
 }
 
 inline bool
@@ -461,11 +462,11 @@ _replace(std::string s, char c, std::string const& value)
 inline bool
 _starts_with(std::string const& s, std::string const& value)
 {
-#if __cplusplus >= 202002L // C++20+
+#if __cplusplus >= 202002L  // C++20+
     return s.starts_with(value);
 #else
     return s.compare(0, value.size(), value) == 0;
-#endif // C++20+
+#endif  // C++20+
 }
 
 template <class T>
@@ -908,14 +909,14 @@ _type_name()
     return res.substr(pos, res.find(';', pos) - pos);
 #else
     return std::string();
-#endif // __PRETTY_FUNCTION__
+#endif  // __PRETTY_FUNCTION__
 }
 
 template <class T>
 class Value
 {
 public:
-    explicit Value()
+    Value()
         : m_value(),
           m_has_value(false)
     { }
@@ -1023,7 +1024,7 @@ _check_type_name(Value<std::string> const& expected,
                         + ", received '" + received + "'");
     }
 }
-} // details
+}  // namespace detail
 
 /*!
  * \brief Unspecified values
@@ -1050,11 +1051,11 @@ _ARGPARSE_EXPORT class Argument
 
     enum Nargs : uint8_t
     {
-        NARGS_DEF   = 0x01, // ""
-        NARGS_NUM   = 0x02, // "N"
-        ONE_OR_MORE = 0x04, // "+"
-        ZERO_OR_ONE = 0x08, // "?"
-        ZERO_OR_MORE= 0x10, // "*"
+        NARGS_DEF       = 0x01,  // ""
+        NARGS_NUM       = 0x02,  // "N"
+        ONE_OR_MORE     = 0x04,  // "+"
+        ZERO_OR_ONE     = 0x08,  // "?"
+        ZERO_OR_MORE    = 0x10,  // "*"
     };
 
     enum Type : uint8_t
@@ -1271,28 +1272,28 @@ public:
     Argument& operator =(Argument const& rhs)
     {
         if (this != &rhs) {
-            this->m_flags       = rhs.m_flags;
-            this->m_all_flags   = rhs.m_all_flags;
-            this->m_name        = rhs.m_name;
-            this->m_action      = rhs.m_action;
-            this->m_type        = rhs.m_type;
-            this->m_default_type= rhs.m_default_type;
-            this->m_help_type   = rhs.m_help_type;
-            this->m_nargs       = rhs.m_nargs;
-            this->m_num_args    = rhs.m_num_args;
-            this->m_nargs_str   = rhs.m_nargs_str;
-            this->m_const       = rhs.m_const;
-            this->m_default     = rhs.m_default;
-            this->m_implicit    = rhs.m_implicit;
-            this->m_type_name   = rhs.m_type_name;
-            this->m_choices     = rhs.m_choices;
-            this->m_required    = rhs.m_required;
-            this->m_help        = rhs.m_help;
-            this->m_metavar     = rhs.m_metavar;
-            this->m_dest        = rhs.m_dest;
-            this->m_version     = rhs.m_version;
-            this->m_handle      = rhs.m_handle;
-            this->m_post_trigger= rhs.m_post_trigger;
+            this->m_flags           = rhs.m_flags;
+            this->m_all_flags       = rhs.m_all_flags;
+            this->m_name            = rhs.m_name;
+            this->m_action          = rhs.m_action;
+            this->m_type            = rhs.m_type;
+            this->m_default_type    = rhs.m_default_type;
+            this->m_help_type       = rhs.m_help_type;
+            this->m_nargs           = rhs.m_nargs;
+            this->m_num_args        = rhs.m_num_args;
+            this->m_nargs_str       = rhs.m_nargs_str;
+            this->m_const           = rhs.m_const;
+            this->m_default         = rhs.m_default;
+            this->m_implicit        = rhs.m_implicit;
+            this->m_type_name       = rhs.m_type_name;
+            this->m_choices         = rhs.m_choices;
+            this->m_required        = rhs.m_required;
+            this->m_help            = rhs.m_help;
+            this->m_metavar         = rhs.m_metavar;
+            this->m_dest            = rhs.m_dest;
+            this->m_version         = rhs.m_version;
+            this->m_handle          = rhs.m_handle;
+            this->m_post_trigger    = rhs.m_post_trigger;
         }
         return *this;
     }
@@ -1307,28 +1308,28 @@ public:
     Argument& operator =(Argument&& rhs) _ARGPARSE_NOEXCEPT
     {
         if (this != &rhs) {
-            this->m_flags       = std::move(rhs.m_flags);
-            this->m_all_flags   = std::move(rhs.m_all_flags);
-            this->m_name        = std::move(rhs.m_name);
-            this->m_action      = std::move(rhs.m_action);
-            this->m_type        = std::move(rhs.m_type);
-            this->m_default_type= std::move(rhs.m_default_type);
-            this->m_help_type   = std::move(rhs.m_help_type);
-            this->m_nargs       = std::move(rhs.m_nargs);
-            this->m_num_args    = std::move(rhs.m_num_args);
-            this->m_nargs_str   = std::move(rhs.m_nargs_str);
-            this->m_const       = std::move(rhs.m_const);
-            this->m_default     = std::move(rhs.m_default);
-            this->m_implicit    = std::move(rhs.m_implicit);
-            this->m_type_name   = std::move(rhs.m_type_name);
-            this->m_choices     = std::move(rhs.m_choices);
-            this->m_required    = std::move(rhs.m_required);
-            this->m_help        = std::move(rhs.m_help);
-            this->m_metavar     = std::move(rhs.m_metavar);
-            this->m_dest        = std::move(rhs.m_dest);
-            this->m_version     = std::move(rhs.m_version);
-            this->m_handle      = std::move(rhs.m_handle);
-            this->m_post_trigger= std::move(rhs.m_post_trigger);
+            this->m_flags           = std::move(rhs.m_flags);
+            this->m_all_flags       = std::move(rhs.m_all_flags);
+            this->m_name            = std::move(rhs.m_name);
+            this->m_action          = std::move(rhs.m_action);
+            this->m_type            = std::move(rhs.m_type);
+            this->m_default_type    = std::move(rhs.m_default_type);
+            this->m_help_type       = std::move(rhs.m_help_type);
+            this->m_nargs           = std::move(rhs.m_nargs);
+            this->m_num_args        = std::move(rhs.m_num_args);
+            this->m_nargs_str       = std::move(rhs.m_nargs_str);
+            this->m_const           = std::move(rhs.m_const);
+            this->m_default         = std::move(rhs.m_default);
+            this->m_implicit        = std::move(rhs.m_implicit);
+            this->m_type_name       = std::move(rhs.m_type_name);
+            this->m_choices         = std::move(rhs.m_choices);
+            this->m_required        = std::move(rhs.m_required);
+            this->m_help            = std::move(rhs.m_help);
+            this->m_metavar         = std::move(rhs.m_metavar);
+            this->m_dest            = std::move(rhs.m_dest);
+            this->m_version         = std::move(rhs.m_version);
+            this->m_handle          = std::move(rhs.m_handle);
+            this->m_post_trigger    = std::move(rhs.m_post_trigger);
         }
         return *this;
     }
@@ -1805,7 +1806,7 @@ public:
     inline Argument& metavar(std::string const& value)
     {
         if (!(m_action & (detail::_store_const_action
-                          | Action::BooleanOptionalAction))){
+                          | Action::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'metavar'");
         }
         m_metavar = detail::_trim_copy(value);
@@ -2253,7 +2254,6 @@ class Group
     friend class ArgumentParser;
 
 protected:
-    explicit
     Group()
         : m_title(),
           m_description(),
@@ -2319,7 +2319,6 @@ class ArgumentData
     friend class BaseParser;
     friend class MutuallyExclusiveGroup;
 
-    explicit
     ArgumentData()
         : m_conflict_handler(),
           m_arguments(),
@@ -2601,10 +2600,10 @@ public:
     BaseArgumentGroup& operator =(BaseArgumentGroup const& rhs)
     {
         if (this != &rhs) {
-            m_data          = rhs.m_data;
-            m_prefix_chars  = rhs.m_prefix_chars;
-            m_parent_data   = rhs.m_parent_data;
-            m_is_mutex_group= rhs.m_is_mutex_group;
+            m_data              = rhs.m_data;
+            m_prefix_chars      = rhs.m_prefix_chars;
+            m_parent_data       = rhs.m_parent_data;
+            m_is_mutex_group    = rhs.m_is_mutex_group;
         }
         return *this;
     }
@@ -2889,9 +2888,9 @@ private:
 
 // compatibility for version v1.3.8 and earlier
 using ExclusiveGroup
-#if __cplusplus >= 201402L // C++14+
+#if __cplusplus >= 201402L  // C++14+
 [[deprecated("use argparse::MutuallyExclusiveGroup instead.")]]
-#endif // C++14+
+#endif  // C++14+
     = MutuallyExclusiveGroup;
 
 /*!
@@ -2902,7 +2901,6 @@ class BaseParser
 protected:
     typedef std::shared_ptr<Group> pGroup;
 
-    explicit
     BaseParser()
         : m_data(),
           m_usage(),
@@ -3159,7 +3157,6 @@ _ARGPARSE_EXPORT class Namespace
         typedef map_type::iterator                      iterator;
         typedef map_type::const_iterator                const_iterator;
 
-        explicit
         Storage()
             : m_data(),
               m_conflict_arg()
@@ -3659,7 +3656,7 @@ public:
 #else
         std::copy_n(std::begin(vector),
                     std::min(res.size(), vector.size()), std::begin(res));
-#endif // min
+#endif  // min
         return res;
     }
 
@@ -4012,7 +4009,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         std::is_constructible<std::string, T>::value
         || std::is_floating_point<T>::value
@@ -4044,7 +4041,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<std::is_integral<T>::value
                                           && !std::is_same<bool, T>::value
                                           && !is_byte_type<T>::value, T>::type>
@@ -4077,7 +4074,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_array<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -4105,7 +4102,7 @@ public:
 #else
         std::copy_n(std::begin(vector.value()),
                     std::min(res.size(), vector->size()), std::begin(res));
-#endif // min
+#endif  // min
         return res;
     }
 
@@ -4121,7 +4118,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value, T>::type>
@@ -4155,7 +4152,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_map<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -4194,7 +4191,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_matrix<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -4211,8 +4208,8 @@ public:
             return {};
         }
         T res{};
-        for (auto const& vec : args->second.matrix()) {
-            auto vector= try_to_vector<typename T::value_type::value_type>(vec);
+        for (auto const& v : args->second.matrix()) {
+            auto vector = try_to_vector<typename T::value_type::value_type>(v);
             if (!vector.operator bool()) {
                 return {};
             }
@@ -4235,7 +4232,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_pair<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -4281,7 +4278,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_queue<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -4315,7 +4312,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -4352,7 +4349,7 @@ public:
     template <class T>
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         !std::is_constructible<std::string, T>::value
         && !std::is_floating_point<T>::value
@@ -4377,7 +4374,7 @@ public:
         }
         return try_to_type<T>(detail::_vector_to_string(args->second()));
     }
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif  // _ARGPARSE_USE_OPTIONAL
 
     /*!
      *  \brief Get unrecognized arguments
@@ -4726,7 +4723,7 @@ private:
         }
         return result;
     }
-#endif // _ARGPARSE_USE_OPTIONAL
+#endif  // _ARGPARSE_USE_OPTIONAL
 
     Storage m_storage;
     detail::Value<std::vector<std::string> > m_unrecognized_args;
@@ -4748,9 +4745,9 @@ public:
 
     // compatibility for version v1.3.3 and earlier
     using Namespace
-#if __cplusplus >= 201402L // C++14+
+#if __cplusplus >= 201402L  // C++14+
     [[deprecated("use argparse::Namespace instead.")]]
-#endif // C++14+
+#endif  // C++14+
         = argparse::Namespace;
 
     /*!
@@ -4948,7 +4945,6 @@ public:
     {
         friend class ArgumentParser;
 
-        explicit
         Subparser()
             : Group(),
               m_prog(),
@@ -6473,7 +6469,7 @@ private:
                 custom_error(parser, detail::_ignore_default(
                                  tmp->m_flags.front(), tmp->m_default()));
             }
-            if (tmp->m_action == Action::BooleanOptionalAction){
+            if (tmp->m_action == Action::BooleanOptionalAction) {
                 bool exist = detail::_is_value_exists(equals.front(),
                                                       tmp->m_flags);
                 storage_store_value(parser, storage, tmp,
@@ -6891,7 +6887,7 @@ private:
                 }
             } else {
                 separate_arg_abbrev(parser, optional, sub_optional, temp,
-                                    arg, detail::_flag_name(arg),optionals);
+                                    arg, detail::_flag_name(arg), optionals);
             }
             detail::_move_vector_replace_at(temp, arguments, i);
         }
@@ -7012,9 +7008,9 @@ private:
             flags.push_back(arg);
             return false;
         } else if ((!argument && !flags.empty())
-                   || (argument && (argument->m_action
-                                    & detail::_store_action))) {
-            auto str = name.substr(i + bool(argument));
+                   || (argument
+                       && (argument->m_action & detail::_store_action))) {
+            auto str = name.substr(i + static_cast<bool>(argument));
             if (!str.empty()) {
                 if (!detail::_starts_with(str, detail::_equals)) {
                     flags.back() += detail::_equals;
@@ -7183,7 +7179,7 @@ private:
     }
 
     void
-    check_required_args(Parser const* parser,
+    check_required_args(Parser const* p,
                         argparse::Namespace::Storage& storage,
                         std::vector<pArgument> const& optional,
                         SubparserInfo const& subparser,
@@ -7192,14 +7188,14 @@ private:
     {
         std::vector<std::string> required_args;
         process_optionals_required(required_args, optional, storage);
-        bool sub_required = is_subparser_required(parser, subparser);
+        bool sub_required = is_subparser_required(p, subparser);
         if (!required_args.empty() || pos < positional.size() || sub_required) {
             std::string args;
             for ( ; pos < positional.size(); ++pos) {
                 process_subparser_required(sub_required, pos, subparser, args);
                 auto const& arg = positional.at(pos);
                 if (args.empty()) {
-                    if (storage_is_positional_arg_stored(parser, storage, arg)){
+                    if (storage_is_positional_arg_stored(p, storage, arg)) {
                         continue;
                     }
                     if (arg->m_action == Action::extend
@@ -7267,7 +7263,7 @@ private:
     }
 
     static void
-    parser_post_trigger(Parser* parser,
+    parser_post_trigger(Parser const* parser,
                         argparse::Namespace::Storage& sub_storage,
                         argparse::Namespace::Storage const& storage)
     {
@@ -7411,7 +7407,7 @@ private:
 #else
             std::size_t size = std::min(parser.m_subparsers->m_position,
                                         parser.m_data.m_positional.size());
-#endif // min
+#endif  // min
             for (std::size_t i = 0; i < size; ++i) {
                 res.second
                         += (add_suppress
@@ -7583,7 +7579,7 @@ private:
         size = min(size + 4, argument_name_limit());
 #else
         size = std::min(size + 4, argument_name_limit());
-#endif // min
+#endif  // min
         if (!positional.empty() || sub_positional) {
             os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
@@ -7627,7 +7623,7 @@ private:
     std::vector<std::string> m_parsed_arguments;
     std::shared_ptr<Subparser> m_subparsers;
 };
-} // argparse
+}  // namespace argparse
 
 #undef _ARGPARSE_CONSTEXPR
 #undef _ARGPARSE_EXPERIMENTAL_OPTIONAL
@@ -7638,4 +7634,4 @@ private:
 #undef _ARGPARSE_USE_FILESYSTEM
 #undef _ARGPARSE_USE_OPTIONAL
 
-#endif // _ARGPARSE_ARGUMENT_PARSER_HPP_
+#endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
