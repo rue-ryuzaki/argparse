@@ -153,15 +153,15 @@ using experimental::fundamentals_v1::nullopt;
 #endif  // C++11+
 
 namespace argparse {
-template <class T>  struct is_byte_type { enum{value = false}; };
-template <>         struct is_byte_type<char> { enum{value = true}; };
-template <>         struct is_byte_type<signed char> { enum{value = true}; };
-template <>         struct is_byte_type<unsigned char> { enum{value = true}; };
+template <class T> struct is_byte_type              { enum { value = false }; };
+template <>        struct is_byte_type<char>         { enum { value = true }; };
+template <>        struct is_byte_type<signed char>  { enum { value = true }; };
+template <>        struct is_byte_type<unsigned char>{ enum { value = true }; };
 #if __cplusplus >= 201703L  // C++17+
-template <>         struct is_byte_type<std::byte> { enum{value = true}; };
+template <>        struct is_byte_type<std::byte>    { enum { value = true }; };
 #endif  // C++17+
 #if __cplusplus >= 202002L  // C++20+
-template <>         struct is_byte_type<char8_t> { enum{value = true}; };
+template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
 #endif  // C++20+
 
 /*!
@@ -293,19 +293,14 @@ public:
 };
 
 namespace detail {
-std::size_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _output_width =80;
-std::size_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _minimum_width=33;
-std::size_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _output_height=24;
-std::size_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _help_minwidth=22;
-std::size_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _name_maxwidth=24;
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _default_prefix_char='-';
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
-                                                  _default_prefix_chars[] = "-";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _pseudo_argument[] ="--";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _space = ' ';
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equal = '=';
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _spaces[] = " ";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equals[] = "=";
+std::size_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _min_width = 33;
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _prefix_char     = '-';
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _prefix_chars[]  = "-";
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _pseudo_arg[]    = "--";
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _space           = ' ';
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equal           = '=';
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _spaces[]        = " ";
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equals[]        = "=";
 char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
@@ -319,10 +314,13 @@ uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
 
 inline std::pair<std::size_t, std::size_t>
-_get_terminal_size()
+_get_terminal_size(bool default_values = false)
 {
-    std::size_t width  = _output_width;
-    std::size_t height = _output_height;
+    std::size_t width  = 80;
+    std::size_t height = 24;
+    if (default_values) {
+        return std::make_pair(width, height);
+    }
 #if defined(_WIN32)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
@@ -330,8 +328,8 @@ _get_terminal_size()
                 (csbi.srWindow.Right - csbi.srWindow.Left + 1);
         height = static_cast<std::size_t>
                 (csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
-        if (width < _minimum_width) {
-            width = _minimum_width;
+        if (width < _min_width) {
+            width = _min_width;
         }
     }
 #else  // UNIX
@@ -340,8 +338,8 @@ _get_terminal_size()
     if (ioctl(STDOUT_FILENO, TIOCGSIZE, &w) >= 0) {
         width = static_cast<std::size_t>(w.ts_cols);
         height = static_cast<std::size_t>(w.ts_lines);
-        if (width < _minimum_width) {
-            width = _minimum_width;
+        if (width < _min_width) {
+            width = _min_width;
         }
     }
 #elif defined(TIOCGWINSZ)
@@ -349,8 +347,8 @@ _get_terminal_size()
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) >= 0) {
         width = static_cast<std::size_t>(w.ws_col);
         height = static_cast<std::size_t>(w.ws_row);
-        if (width < _minimum_width) {
-            width = _minimum_width;
+        if (width < _min_width) {
+            width = _min_width;
         }
     }
 #endif  // TIOCGSIZE
@@ -558,9 +556,8 @@ _flag_name(std::string str)
 inline std::vector<std::string>
 _help_flags(std::string const& prefix_chars)
 {
-    auto const& prefix
-            = _is_value_exists(_default_prefix_char, prefix_chars)
-            ? _default_prefix_char : prefix_chars.front();
+    auto const& prefix = _is_value_exists(_prefix_char, prefix_chars)
+            ? _prefix_char : prefix_chars.front();
     return { std::string(1, prefix) + "h", std::string(2, prefix) + "help" };
 }
 
@@ -601,7 +598,7 @@ _make_no_flag(std::string str)
 {
     auto prefix = str.front();
     auto it = std::find_if(std::begin(str), std::end(str),
-                           [prefix] (char c) -> bool { return c != prefix; });
+                           [prefix] (char c) { return c != prefix; });
     if (it != std::end(str)) {
         str.insert(static_cast<std::string::size_type>(
                        std::distance(std::begin(str), it)), "no-");
@@ -1347,7 +1344,7 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'action' value
+     *  \brief Set argument 'action' value (default: "store")
      *
      *  \param value Action value
      *
@@ -1380,7 +1377,7 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'action' value
+     *  \brief Set argument 'action' value (default: argparse::store)
      *
      *  \param value Action value
      *
@@ -1891,7 +1888,7 @@ public:
     }
 
     /*!
-     *  \brief Get argument 'action' value
+     *  \brief Get argument 'action' value (default: argparse::store)
      *
      *  \return Argument 'action' value
      */
@@ -2028,7 +2025,7 @@ private:
         }
         if (std::any_of(std::begin(m_flags), std::end(m_flags),
                         [] (std::string const& flag)
-        { return flag == detail::_pseudo_argument; }) && dest().empty()) {
+        { return flag == detail::_pseudo_arg; }) && dest().empty()) {
             throw ValueError("dest= is required for options like '--'");
         }
     }
@@ -2906,7 +2903,7 @@ protected:
           m_usage(),
           m_description(),
           m_epilog(),
-          m_prefix_chars(detail::_default_prefix_chars),
+          m_prefix_chars(detail::_prefix_chars),
           m_groups(),
           m_mutex_groups()
     { }
@@ -2948,7 +2945,7 @@ public:
     }
 
     /*!
-     *  \brief Get base parser 'prefix_chars' value
+     *  \brief Get base parser 'prefix_chars' value (default: "-")
      *
      *  \return Base parser 'prefix_chars' value
      */
@@ -4814,7 +4811,7 @@ public:
         }
 
         /*!
-         *  \brief Set parser 'prefix_chars' value
+         *  \brief Set parser 'prefix_chars' value (default: "-")
          *
          *  \param param Prefix chars values
          *
@@ -5261,7 +5258,7 @@ public:
     ~ArgumentParser() _ARGPARSE_NOEXCEPT = default;
 
     /*!
-     *  \brief Set argument parser 'prog' value
+     *  \brief Set argument parser 'prog' value (default: argv[0] or "untitled")
      *
      *  \param param Program value
      *
@@ -5390,7 +5387,7 @@ public:
     }
 
     /*!
-     *  \brief Set argument parser 'prefix_chars' value
+     *  \brief Set argument parser 'prefix_chars' value (default: "-")
      *
      *  \param param Prefix chars values
      *
@@ -5467,7 +5464,7 @@ public:
     }
 
     /*!
-     *  \brief Set output width value (default auto-detected or 80, min 33)
+     *  \brief Set output width value (default: auto-detected or 80, min 33)
      *
      *  \param value Output width
      *
@@ -5476,14 +5473,14 @@ public:
     inline ArgumentParser& output_width(std::size_t value) _ARGPARSE_NOEXCEPT
     {
         m_output_width = value;
-        if (m_output_width() < detail::_minimum_width) {
-            m_output_width = detail::_minimum_width;
+        if (m_output_width() < detail::_min_width) {
+            m_output_width = detail::_min_width;
         }
         return *this;
     }
 
     /*!
-     *  \brief Set argument parser 'add_help' value
+     *  \brief Set argument parser 'add_help' value (default: true)
      *
      *  \param value Add help flag
      *
@@ -5496,7 +5493,7 @@ public:
     }
 
     /*!
-     *  \brief Set argument parser 'allow_abbrev' value
+     *  \brief Set argument parser 'allow_abbrev' value (default: true)
      *
      *  \param value Allow abbrev flag
      *
@@ -5509,7 +5506,7 @@ public:
     }
 
     /*!
-     *  \brief Set argument parser 'exit_on_error' value
+     *  \brief Set argument parser 'exit_on_error' value (default: true)
      *
      *  \param value Exit on error flag
      *
@@ -5522,7 +5519,7 @@ public:
     }
 
     /*!
-     *  \brief Get argument parser 'prog' value
+     *  \brief Get argument parser 'prog' value (default: argv[0] or "untitled")
      *
      *  \return Argument parser 'prog' value
      */
@@ -5562,7 +5559,7 @@ public:
     }
 
     /*!
-     *  \brief Get output width value (default auto-detected or 80, min 33)
+     *  \brief Get output width value (default: auto-detected or 80, min 33)
      *
      *  \return Output width value
      */
@@ -5573,7 +5570,7 @@ public:
     }
 
     /*!
-     *  \brief Get argument parser 'add_help' value
+     *  \brief Get argument parser 'add_help' value (default: true)
      *
      *  \return Argument parser 'add_help' value
      */
@@ -5583,7 +5580,7 @@ public:
     }
 
     /*!
-     *  \brief Get argument parser 'allow_abbrev' value
+     *  \brief Get argument parser 'allow_abbrev' value (default: true)
      *
      *  \return Argument parser 'allow_abbrev' value
      */
@@ -5593,7 +5590,7 @@ public:
     }
 
     /*!
-     *  \brief Get argument parser 'exit_on_error' value
+     *  \brief Get argument parser 'exit_on_error' value (default: true)
      *
      *  \return Argument parser 'exit_on_error' value
      */
@@ -6105,7 +6102,7 @@ private:
         std::size_t pos = 0;
 
         for (std::size_t i = 0; i < parsed_arguments.size(); ++i) {
-            if (parsed_arguments.at(i) == detail::_pseudo_argument
+            if (parsed_arguments.at(i) == detail::_pseudo_arg
                     && !was_pseudo_arg) {
                 was_pseudo_arg = true;
                 continue;
@@ -6237,8 +6234,7 @@ private:
     negative_numbers_presented(std::vector<pArgument> const& optionals,
                                std::string const& prefix_chars)
     {
-        if (detail::_is_value_exists(detail::_default_prefix_char,
-                                     prefix_chars)) {
+        if (detail::_is_value_exists(detail::_prefix_char, prefix_chars)) {
             for (auto const& arg : optionals) {
                 for (auto const& flag : arg->flags()) {
                     if (detail::_is_negative_number(flag)) {
@@ -7324,13 +7320,15 @@ private:
     inline std::size_t argument_help_limit() const
     {
         auto width = output_width();
-        if (width >= 2 * detail::_name_maxwidth) {
-            return width - detail::_name_maxwidth;
+        std::size_t const _name_maxwidth = 24;
+        if (width >= 2 * _name_maxwidth) {
+            return width - _name_maxwidth;
         }
-        if (width >= 2 * detail::_help_minwidth) {
+        std::size_t const _help_minwidth = 22;
+        if (width >= 2 * _help_minwidth) {
             return width >> 1;
         }
-        return detail::_help_minwidth;
+        return _help_minwidth;
     }
 
     std::vector<pArgument>
@@ -7495,7 +7493,7 @@ private:
         std::string head = "usage:";
         std::string head_prog = head + " " + prog;
         std::size_t indent
-                = 1 + (w > detail::_minimum_width ? head_prog : head).size();
+                = 1 + (w > detail::_min_width ? head_prog : head).size();
         os << detail::_format_output(
                   head_prog,
                   custom_usage(m_formatter_class, positional, optional,
