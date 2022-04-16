@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 4)
-set(VERSION_PATCH 0)
+set(VERSION_PATCH 1)
 
 project("ArgumentParser"
     DESCRIPTION "C++11 argument parser"
