@@ -1,3 +1,14 @@
+cpp-argparse-dev (1.4.1-0ppa0) focal; urgency=low
+
+  * Fix code style issues
+  * Update terminal size detection on Unix
+  * Add Argument::implicit_value() support #4
+  * Fix separating argument into abbreviations
+  * Mark Namespace::try_get deprecated for C++14
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 16 Apr 2022 21:54:25 +0300
+
 cpp-argparse-dev (1.4.0-0ppa0) focal; urgency=low
 
   * Add 2D containers support for Namespace::get()
