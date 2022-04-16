@@ -2407,10 +2407,9 @@ protected:
             _update_flag_name(flag_name, flag_name, prefixes);
         } else if (flags.size() > 1) {
             // no positional multiflag
-            throw
-            ValueError("invalid option string " + flags.front()
-                       + ": must starts with a character '"
-                       + prefix_chars + "'");
+            throw ValueError("invalid option string " + flags.front()
+                             + ": must starts with a character '"
+                             + prefix_chars + "'");
         }
         for (std::size_t i = 1; i < flags.size(); ++i) {
             // check arguments
@@ -2421,10 +2420,9 @@ protected:
             }
             if (!detail::_is_value_exists(flag.front(), prefix_chars)) {
                 // no positional and optional args
-                throw
-                ValueError("invalid option string " + flag
-                           + ": must starts with a character '"
-                           + prefix_chars + "'");
+                throw ValueError("invalid option string " + flag
+                                 + ": must starts with a character '"
+                                 + prefix_chars + "'");
             }
             _update_flag_name(flag, flag_name, prefixes);
         }
@@ -6499,9 +6497,8 @@ private:
     {
         if (equals.size() == 1) {
             if (!tmp->m_version.has_value()) {
-                throw
-                AttributeError("'ArgumentParser' object has no "
-                               "attribute 'version'");
+                throw AttributeError("'ArgumentParser' object has no "
+                                     "attribute 'version'");
             }
             std::cout << tmp->version() << std::endl;
             ::exit(0);
