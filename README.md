@@ -31,6 +31,7 @@ C++11 support compiler
 - [Features](#features)
   - [handle](#handle)
   - [terminal size auto-detection](#terminal-size-auto-detection)
+  - [Argument::implicit_value](#argumentimplicit_value)
 - Python API support:
   - [ArgumentParser objects](#argumentparser-objects-support)
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
@@ -406,6 +407,43 @@ int main(int argc, char* argv[])
 ```
 ### Terminal size auto-detection
 By default, help output is positioned based on the terminal's width. But you can manually specify the width of the available area using the ArgumentParser::output_width(...) method.
+### Argument::implicit_value
+The implicit_value argument of add_argument() is used to hold implicit values that are not read from the command line (use with nargs = "?" and "*").
+
+This is an alternative for the const_value (for optional arguments it works only for nargs = "?").
+
+example:
+```cpp
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv);
+    parser.add_argument("--foo").nargs("?").implicit_value("bar").default_value("foo");
+
+    auto const args = parser.parse_args();
+
+    std::cout << "  foo = '" << args.get<std::string>("foo") << "'" << std::endl;
+
+    return 0;
+}
+```
+with usage:
+```
+// here will be default value (if presented)
+./a.out
+  foo = 'foo'
+
+// here will be implicit value (if presented)
+./a.out --foo
+  foo = 'bar'
+
+// here will be parsed command line value
+./a.out --foo=baz
+  foo = 'baz'
+```
 ## ArgumentParser objects support
 - [x] prog - The name of the program (default: argv[0] or "untitled")
 - [x] usage - The string describing the program usage (default: generated from arguments added to parser)
