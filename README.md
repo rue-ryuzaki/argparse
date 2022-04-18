@@ -231,7 +231,8 @@ int main(int argc, char* argv[])
 - basic types (bool, integral types, floating point types, std::string, std::string_view (since C++17))
 - byte types (char, signed/unsigned char, int8_t, uint8_t, char8_t, std::byte)
 - containers (std::array, std::deque, std::forward_list, std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset, std::unordered_set)
-- 2 dimensional containers (std::deque, std::list, std::vector with another containers)
+- containers with std::pair/std::tuple
+- 2 dimensional containers (std::deque, std::list, std::vector with another containers or queues)
 - mapped types (std::map, std::multimap, std::unordered_map)
 - std::pair
 - std::tuple
@@ -239,8 +240,13 @@ int main(int argc, char* argv[])
 ### Don't work:
 - pointer and reference types
 - plain C arrays
-- containers with std::pair/std::tuple
 - C++17+ types and containers (std::span)
+### Note:
+For types with std::pair and std::tuple (also for std::map) needs to specify delimiter (by default it '=') between key and value (for std::pair/std::map) / values (for std::tuple). For space delimiter (' ') all values are parsed from separated command line arguments, otherwise from individual command line argument.
+
+For example:
+- ':' : auto args = parser.parse_args("--foo key1:value1 'key2':'value2'"); args.get<std::map<std::string, std::string> >("foo", ':');
+- ' ' : auto args = parser.parse_args("--foo key1 value1 'key2' 'value2'"); args.get<std::vector<std::pair<std::string, std::string> > >("foo", ' ');
 ## Custom type example
 ### Namespace::get<>
 Required std::istream& operator >>(std::istream& is, Type& t).
