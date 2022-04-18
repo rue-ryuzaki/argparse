@@ -4789,19 +4789,13 @@ private:
         return parse_tuple<Ts...>(values, gen_seq<sizeof...(Ts)>());
     }
 
-    template <class... Ts>
-    std::size_t static tuple_size(type_tag<std::tuple<Ts...>>)
-    {
-        return sizeof...(Ts);
-    }
-
     template <class T>
     std::vector<T>
     to_tupled_vector(std::vector<std::string> const& args, char delim) const
     {
         std::vector<T> vec;
         if (std::isspace(static_cast<unsigned char>(delim))) {
-            auto const size = tuple_size(type_tag<T>{});
+            auto const size = std::tuple_size<T>{};
             if (size == 0 || args.size() % size != 0) {
                 throw TypeError("invalid stored argument amount");
             }
@@ -4972,7 +4966,7 @@ private:
     {
         std::vector<T> vec;
         if (std::isspace(static_cast<unsigned char>(delim))) {
-            auto const size = tuple_size(type_tag<T>{});
+            auto const size = std::tuple_size<T>{};
             if (size == 0 || args.size() % size != 0) {
                 return {};
             }
