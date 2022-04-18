@@ -4789,13 +4789,28 @@ private:
         return parse_tuple<Ts...>(values, gen_seq<sizeof...(Ts)>());
     }
 
+    template <class... Ts>
+    std::size_t static tuple_size(type_tag<std::tuple<Ts...>>)
+    {
+        return sizeof...(Ts);
+    }
+
     template <class T>
     std::vector<T>
     to_tupled_vector(std::vector<std::string> const& args, char delim) const
     {
         std::vector<T> vec;
         if (std::isspace(static_cast<unsigned char>(delim))) {
-            throw TypeError("space delimiter not supported");
+            auto const size = tuple_size(type_tag<T>{});
+            if (size == 0 || args.size() % size != 0) {
+                throw TypeError("invalid stored argument amount");
+            }
+            vec.reserve(args.size() / size);
+            for (std::size_t i = 0; i < args.size(); i += size) {
+                std::vector<std::string> temp
+                        = { args.begin() + i, args.begin() + i + size };
+                vec.emplace_back(to_tuple(type_tag<T>{}, temp));
+            }
         } else {
             vec.reserve(args.size());
             std::transform(std::begin(args), std::end(args),
@@ -4957,7 +4972,21 @@ private:
     {
         std::vector<T> vec;
         if (std::isspace(static_cast<unsigned char>(delim))) {
-            throw TypeError("space delimiter not supported");
+            auto const size = tuple_size(type_tag<T>{});
+            if (size == 0 || args.size() % size != 0) {
+                return {};
+            }
+            vec.reserve(args.size() / size);
+            for (std::size_t i = 0; i < args.size(); i += size) {
+                std::vector<std::string> temp
+                        = { args.begin() + i, args.begin() + i + size };
+                auto tuple = try_to_tuple(type_tag<T>{}, temp);
+                if (tuple.operator bool()) {
+                    vec.emplace_back(tuple.value());
+                } else {
+                    return {};
+                }
+            }
         } else {
             vec.reserve(args.size());
             for (auto const& arg : args) {
