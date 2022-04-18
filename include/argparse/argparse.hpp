@@ -4893,13 +4893,29 @@ private:
     try_to_paired_vector(std::vector<std::string> const& args, char delim) const
     {
         std::vector<std::pair<T, U> > vec;
-        vec.reserve(args.size());
-        for (auto const& arg : args) {
-            auto pair = try_to_pair<T, U>(arg, delim);
-            if (pair.operator bool()) {
-                vec.emplace_back(pair.value());
-            } else {
+        if (std::isspace(static_cast<unsigned char>(delim))) {
+            if (args.size() & 1) {
                 return {};
+            }
+            vec.reserve(args.size() / 2);
+            for (std::size_t i = 0; i < args.size(); i += 2) {
+                auto el1 = try_to_type<T>(args.at(i));
+                auto el2 = try_to_type<U>(args.at(i + 1));
+                if (el1.operator bool() && el2.operator bool()) {
+                    vec.emplace_back(std::make_pair(el1.value(), el2.value()));
+                } else {
+                    return {};
+                }
+            }
+        } else {
+            vec.reserve(args.size());
+            for (auto const& arg : args) {
+                auto pair = try_to_pair<T, U>(arg, delim);
+                if (pair.operator bool()) {
+                    vec.emplace_back(pair.value());
+                } else {
+                    return {};
+                }
             }
         }
         return vec;
