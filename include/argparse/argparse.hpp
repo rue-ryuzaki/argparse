@@ -3484,6 +3484,27 @@ _ARGPARSE_EXPORT class Namespace
     struct is_stl_matrix<std::vector<std::unordered_set<Args...> > >
                                                               :std::true_type{};
 
+    template <class T>
+    struct is_stl_matrix_queue:std::false_type{};
+    template <class... Args>
+    struct is_stl_matrix_queue<std::deque<std::stack
+                                                 <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix_queue<std::deque<std::queue
+                                                 <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix_queue<std::list<std::stack
+                                                 <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix_queue<std::list<std::queue
+                                                 <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix_queue<std::vector<std::stack
+                                                 <Args...> > >:std::true_type{};
+    template <class... Args>
+    struct is_stl_matrix_queue<std::vector<std::queue
+                                                 <Args...> > >:std::true_type{};
+
     template <class T, typename U = void>
     struct is_stl_pair:std::false_type{};
     template <class T>
@@ -3674,7 +3695,8 @@ public:
     typename std::enable_if<
         is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_container_paired<typename std::decay<T>::type>::value
-        && !is_stl_matrix<typename std::decay<T>::type>::value, T>::type
+        && !is_stl_matrix<typename std::decay<T>::type>::value
+        && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3741,7 +3763,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for 2D deque, list, vector
+     *  \brief Get parsed argument value for 2D deque, list, vector of not queue
      *
      *  \param key Argument name
      *
@@ -3749,7 +3771,8 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_matrix<typename std::decay<T>::type>::value, T>::type
+        is_stl_matrix<typename std::decay<T>::type>::value
+        && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3766,6 +3789,37 @@ public:
             auto vector = to_vector<typename T::value_type::value_type>(vec);
             res.push_back(typename T::value_type(std::begin(vector),
                                                  std::end(vector)));
+        }
+        return res;
+    }
+
+    /*!
+     *  \brief Get parsed argument value for 2D deque, list, vector of queue
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value
+     */
+    template <class T>
+    typename std::enable_if<
+        is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<typename T::value_type>());
+        if (args.first->action() != Action::append
+                || !(args.first->m_nargs
+                     & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
+                        | Argument::ZERO_OR_MORE))) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        T res{};
+        for (auto const& vec : args.second.matrix()) {
+            auto vector = to_vector<typename T::value_type::value_type>(vec);
+            res.push_back(typename T::value_type(
+                              std::deque<typename T::value_type::value_type>(
+                                  std::begin(vector), std::end(vector))));
         }
         return res;
     }
@@ -3884,6 +3938,7 @@ public:
         && !is_stl_container_paired<typename std::decay<T>::type>::value
         && !is_stl_map<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value
+        && !is_stl_matrix_queue<typename std::decay<T>::type>::value
         && !is_stl_pair<typename std::decay<T>::type>::value
         && !is_stl_queue<typename std::decay<T>::type>::value
         && !is_stl_tuple<typename std::decay<T>::type>::value, T>::type
@@ -4152,7 +4207,8 @@ public:
     std::optional<typename std::enable_if<
         is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_container_paired<typename std::decay<T>::type>::value
-        && !is_stl_matrix<typename std::decay<T>::type>::value, T>::type>
+        && !is_stl_matrix<typename std::decay<T>::type>::value
+        && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -4247,7 +4303,8 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for 2D deque, list, vector.
+     *  \brief Try get parsed argument value for 2D deque, list, vector
+     *  of not queue.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -4260,7 +4317,8 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_matrix<typename std::decay<T>::type>::value, T>::type>
+        is_stl_matrix<typename std::decay<T>::type>::value
+        && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -4282,6 +4340,49 @@ public:
             }
             res.push_back(typename T::value_type(std::begin(vector.value()),
                                                  std::end(vector.value())));
+        }
+        return res;
+    }
+
+    /*!
+     *  \brief Try get parsed argument value for 2D deque, list, vector
+     *  of queue.
+     *  If invalid type, argument not exists, not parsed or can't be parsed,
+     *  returns std::nullopt.
+     *
+     *  \param key Argument name
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    std::optional<typename std::enable_if<
+        is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type>
+    try_get(std::string const& key) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->action() != Action::append
+                || !(args->first->m_nargs
+                     & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
+                        | Argument::ZERO_OR_MORE))
+                || !detail::_is_type_name_correct(
+                        args->first->type_name(),
+                        detail::_type_name<typename T::value_type>())) {
+            return {};
+        }
+        T res{};
+        for (auto const& v : args->second.matrix()) {
+            auto vector = try_to_vector<typename T::value_type::value_type>(v);
+            if (!vector.operator bool()) {
+                return {};
+            }
+            res.push_back(typename T::value_type(
+                              std::deque<typename T::value_type::value_type>(
+                                  std::begin(vector.value()),
+                                  std::end(vector.value()))));
         }
         return res;
     }
@@ -4428,6 +4529,7 @@ public:
         && !is_stl_container_paired<typename std::decay<T>::type>::value
         && !is_stl_map<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value
+        && !is_stl_matrix_queue<typename std::decay<T>::type>::value
         && !is_stl_pair<typename std::decay<T>::type>::value
         && !is_stl_queue<typename std::decay<T>::type>::value
         && !is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
