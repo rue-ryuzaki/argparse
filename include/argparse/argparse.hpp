@@ -3397,6 +3397,13 @@ _ARGPARSE_EXPORT class Namespace
     template <class... Args>
     struct is_stl_container<std::unordered_set     <Args...> >:std::true_type{};
 
+    template <class T, typename U = void>
+    struct is_stl_container_paired:std::false_type{};
+
+    template <class _1st, class _2nd, template <class...> class container>
+    struct is_stl_container_paired<container<std::pair<_1st, _2nd> > >
+                                                              :std::true_type{};
+
     template <class...>
     struct voider { using type = void; };
     template <class... T>
@@ -3482,13 +3489,6 @@ _ARGPARSE_EXPORT class Namespace
     template <class T>
     struct is_stl_pair<T, void_t<typename T::first_type,
                                     typename T::second_type> >:std::true_type{};
-
-    template <class T, typename U = void>
-    struct is_stl_paired_container:std::false_type{};
-
-    template <typename _1st, typename _2nd, template <class...> class container>
-    struct is_stl_paired_container<container<std::pair<_1st, _2nd> > >
-                                                              :std::true_type{};
 
     template <class T>
     struct is_stl_queue:std::false_type{};
@@ -3673,7 +3673,7 @@ public:
     template <class T>
     typename std::enable_if<
         is_stl_container<typename std::decay<T>::type>::value
-        && !is_stl_paired_container<typename std::decay<T>::type>::value
+        && !is_stl_container_paired<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
     {
@@ -3684,6 +3684,31 @@ public:
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
+        return T(std::begin(vector), std::end(vector));
+    }
+
+    /*!
+     *  \brief Get parsed argument value for paired container types
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value
+     */
+    template <class T>
+    typename std::enable_if<
+        is_stl_container_paired<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<typename T::value_type>());
+        if (args.first->action() == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        auto vector = to_paired_vector<
+                typename T::value_type::first_type,
+                typename T::value_type::second_type>(args.second(), delim);
         return T(std::begin(vector), std::end(vector));
     }
 
@@ -3785,31 +3810,6 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for paired container types
-     *
-     *  \param key Argument name
-     *  \param delim Delimiter
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    typename std::enable_if<
-        is_stl_paired_container<typename std::decay<T>::type>::value, T>::type
-    get(std::string const& key, char delim = detail::_equal) const
-    {
-        auto const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::_type_name<typename T::value_type>());
-        if (args.first->action() == Action::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
-        }
-        auto vector = to_paired_vector<
-                typename T::value_type::first_type,
-                typename T::value_type::second_type>(args.second(), delim);
-        return T(std::begin(vector), std::end(vector));
-    }
-
-    /*!
      *  \brief Get parsed argument value for queue types
      *
      *  \param key Argument name
@@ -3881,10 +3881,10 @@ public:
         && !is_byte_type<T>::value
         && !is_stl_array<typename std::decay<T>::type>::value
         && !is_stl_container<typename std::decay<T>::type>::value
+        && !is_stl_container_paired<typename std::decay<T>::type>::value
         && !is_stl_map<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value
         && !is_stl_pair<typename std::decay<T>::type>::value
-        && !is_stl_paired_container<typename std::decay<T>::type>::value
         && !is_stl_queue<typename std::decay<T>::type>::value
         && !is_stl_tuple<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
@@ -4151,7 +4151,7 @@ public:
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         is_stl_container<typename std::decay<T>::type>::value
-        && !is_stl_paired_container<typename std::decay<T>::type>::value
+        && !is_stl_container_paired<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
@@ -4164,6 +4164,42 @@ public:
             return {};
         }
         auto vector = try_to_vector<typename T::value_type>(args->second());
+        if (!vector.operator bool()) {
+            return {};
+        }
+        return T(std::begin(vector.value()), std::end(vector.value()));
+    }
+
+    /*!
+     *  \brief Try get parsed argument value for paired container types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed,
+     *  returns std::nullopt.
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    std::optional<typename std::enable_if<
+        is_stl_container_paired<typename std::decay<T>::type>::value, T>::type>
+    try_get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->action() == Action::count
+                || !detail::_is_type_name_correct(
+                        args->first->type_name(),
+                        detail::_type_name<typename T::value_type>())) {
+            return {};
+        }
+        auto vector
+                = try_to_paired_vector<
+                typename T::value_type::first_type,
+                typename T::value_type::second_type>(args->second(), delim);
         if (!vector.operator bool()) {
             return {};
         }
@@ -4298,42 +4334,6 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for paired container types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument name
-     *  \param delim Delimiter
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    std::optional<typename std::enable_if<
-        is_stl_paired_container<typename std::decay<T>::type>::value, T>::type>
-    try_get(std::string const& key, char delim = detail::_equal) const
-    {
-        auto args = try_get_data(key);
-        if (!args.operator bool()
-                || args->first->action() == Action::count
-                || !detail::_is_type_name_correct(
-                        args->first->type_name(),
-                        detail::_type_name<typename T::value_type>())) {
-            return {};
-        }
-        auto vector
-                = try_to_paired_vector<
-                typename T::value_type::first_type,
-                typename T::value_type::second_type>(args->second(), delim);
-        if (!vector.operator bool()) {
-            return {};
-        }
-        return T(std::begin(vector.value()), std::end(vector.value()));
-    }
-
-    /*!
      *  \brief Try get parsed argument value for queue types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
@@ -4425,10 +4425,10 @@ public:
         && !is_byte_type<T>::value
         && !is_stl_array<typename std::decay<T>::type>::value
         && !is_stl_container<typename std::decay<T>::type>::value
+        && !is_stl_container_paired<typename std::decay<T>::type>::value
         && !is_stl_map<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value
         && !is_stl_pair<typename std::decay<T>::type>::value
-        && !is_stl_paired_container<typename std::decay<T>::type>::value
         && !is_stl_queue<typename std::decay<T>::type>::value
         && !is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
