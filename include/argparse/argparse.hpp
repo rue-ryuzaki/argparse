@@ -3404,6 +3404,13 @@ _ARGPARSE_EXPORT class Namespace
     struct is_stl_container_paired<container<std::pair<_1st, _2nd> > >
                                                               :std::true_type{};
 
+    template <class T, typename U = void>
+    struct is_stl_container_tupled:std::false_type{};
+
+    template <class... Args, template <class...> class container>
+    struct is_stl_container_tupled<container<std::tuple<Args...> > >
+                                                              :std::true_type{};
+
     template <class...>
     struct voider { using type = void; };
     template <class... T>
@@ -3695,6 +3702,7 @@ public:
     typename std::enable_if<
         is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_container_paired<typename std::decay<T>::type>::value
+        && !is_stl_container_tupled<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value
         && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
@@ -3731,6 +3739,30 @@ public:
         auto vector = to_paired_vector<
                 typename T::value_type::first_type,
                 typename T::value_type::second_type>(args.second(), delim);
+        return T(std::begin(vector), std::end(vector));
+    }
+
+    /*!
+     *  \brief Get parsed argument value for tupled container types
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value
+     */
+    template <class T>
+    typename std::enable_if<
+        is_stl_container_tupled<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto const& args = data(key);
+        detail::_check_type_name(args.first->m_type_name,
+                                 detail::_type_name<typename T::value_type>());
+        if (args.first->action() == Action::count) {
+            throw TypeError("invalid get type for argument '" + key + "'");
+        }
+        auto vector = to_tupled_vector<
+                typename T::value_type>(args.second(), delim);
         return T(std::begin(vector), std::end(vector));
     }
 
@@ -3936,6 +3968,7 @@ public:
         && !is_stl_array<typename std::decay<T>::type>::value
         && !is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_container_paired<typename std::decay<T>::type>::value
+        && !is_stl_container_tupled<typename std::decay<T>::type>::value
         && !is_stl_map<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value
         && !is_stl_matrix_queue<typename std::decay<T>::type>::value
@@ -4207,6 +4240,7 @@ public:
     std::optional<typename std::enable_if<
         is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_container_paired<typename std::decay<T>::type>::value
+        && !is_stl_container_tupled<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value
         && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -4256,6 +4290,40 @@ public:
                 = try_to_paired_vector<
                 typename T::value_type::first_type,
                 typename T::value_type::second_type>(args->second(), delim);
+        if (!vector.operator bool()) {
+            return {};
+        }
+        return T(std::begin(vector.value()), std::end(vector.value()));
+    }
+
+    /*!
+     *  \brief Try get parsed argument value for tupled container types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed,
+     *  returns std::nullopt.
+     *
+     *  \param key Argument name
+     *  \param delim Delimiter
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T>
+#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    [[deprecated("std::optional support is experimental, use C++17 or later")]]
+#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
+    std::optional<typename std::enable_if<
+        is_stl_container_tupled<typename std::decay<T>::type>::value, T>::type>
+    try_get(std::string const& key, char delim = detail::_equal) const
+    {
+        auto args = try_get_data(key);
+        if (!args.operator bool()
+                || args->first->action() == Action::count
+                || !detail::_is_type_name_correct(
+                        args->first->type_name(),
+                        detail::_type_name<typename T::value_type>())) {
+            return {};
+        }
+        auto vector = try_to_tupled_vector<
+                typename T::value_type>(args->second(), delim);
         if (!vector.operator bool()) {
             return {};
         }
@@ -4527,6 +4595,7 @@ public:
         && !is_stl_array<typename std::decay<T>::type>::value
         && !is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_container_paired<typename std::decay<T>::type>::value
+        && !is_stl_container_tupled<typename std::decay<T>::type>::value
         && !is_stl_map<typename std::decay<T>::type>::value
         && !is_stl_matrix<typename std::decay<T>::type>::value
         && !is_stl_matrix_queue<typename std::decay<T>::type>::value
@@ -4721,6 +4790,23 @@ private:
     }
 
     template <class T>
+    std::vector<T>
+    to_tupled_vector(std::vector<std::string> const& args, char delim) const
+    {
+        std::vector<T> vec;
+        if (std::isspace(static_cast<unsigned char>(delim))) {
+            throw TypeError("space delimiter not supported");
+        } else {
+            vec.reserve(args.size());
+            std::transform(std::begin(args), std::end(args),
+                           std::back_inserter(vec),
+                           [this, delim] (std::string const& a)
+            { return to_tuple(type_tag<T>{}, detail::_split(a, delim)); });
+        }
+        return vec;
+    }
+
+    template <class T>
     typename std::enable_if<
         std::is_constructible<std::string, T>::value, T>::type
     to_type(std::string const& data) const
@@ -4847,6 +4933,28 @@ private:
         } catch (...) {
             return {};
         }
+    }
+
+    template <class T>
+    std::optional<std::vector<T> >
+    try_to_tupled_vector(std::vector<std::string> const& args, char delim) const
+    {
+        std::vector<T> vec;
+        if (std::isspace(static_cast<unsigned char>(delim))) {
+            throw TypeError("space delimiter not supported");
+        } else {
+            vec.reserve(args.size());
+            for (auto const& arg : args) {
+                auto tuple = try_to_tuple(type_tag<T>{},
+                                          detail::_split(arg, delim));
+                if (tuple.operator bool()) {
+                    vec.emplace_back(tuple.value());
+                } else {
+                    return {};
+                }
+            }
+        }
+        return vec;
     }
 
     template <class T>
