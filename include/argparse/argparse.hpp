@@ -1041,7 +1041,7 @@ _print_raw_text_formatter(HelpFormatter formatter, std::string const& text,
 
 template <class T>
 std::string
-_type_name()
+_get_type_name()
 {
 #if !defined(__PRETTY_FUNCTION__) && !defined(__GNUC__)
     std::string res = __FUNCSIG__;
@@ -1058,6 +1058,98 @@ _type_name()
 #else
     return std::string();
 #endif  // __PRETTY_FUNCTION__
+}
+
+template <class T, typename std::enable_if<
+              std::is_same<std::string, T>::value>::type* = nullptr>
+std::string
+_type_name()
+{
+    return "std::string";
+}
+
+template <class T, typename std::enable_if<
+              !std::is_same<std::string, T>::value
+              && !is_stl_container<T>::value
+              && !is_stl_map<T>::value
+              && !is_stl_pair<T>::value>::type* = nullptr>
+std::string
+_type_name()
+{
+    return _get_type_name<T>();
+}
+
+template <class T, typename std::enable_if<
+              is_stl_map<T>::value>::type* = nullptr>
+std::string
+_type_name()
+{
+    return "std::map<" + _type_name<typename T::key_type>()
+            + ", " + _type_name<typename T::mapped_type>() + ">";
+}
+
+template <class T, typename std::enable_if<
+              is_stl_pair<T>::value>::type* = nullptr>
+std::string
+_type_name()
+{
+    return "std::pair<" + _type_name<typename T::first_type>()
+            + ", " + _type_name<typename T::second_type>() + ">";
+}
+
+template <class T, typename std::enable_if<
+              is_stl_container<T>::value>::type* = nullptr>
+std::string
+_type_name()
+{
+    auto str = _get_type_name<T>();
+    return str.substr(0, str.find('<'))
+            + "<" + _type_name<typename T::value_type>() + ">";
+}
+
+template <class T, typename std::enable_if<
+              std::is_same<std::string, T>::value>::type* = nullptr>
+std::string
+_basic_type()
+{
+    return "std::string";
+}
+
+template <class T, typename std::enable_if<
+              !std::is_same<std::string, T>::value
+              && !is_stl_container<T>::value
+              && !is_stl_map<T>::value
+              && !is_stl_pair<T>::value>::type* = nullptr>
+std::string
+_basic_type()
+{
+    return _get_type_name<T>();
+}
+
+template <class T, typename std::enable_if<
+              is_stl_map<T>::value>::type* = nullptr>
+std::string
+_basic_type()
+{
+    return "std::pair<" + _type_name<typename T::key_type>()
+            + ", " + _type_name<typename T::mapped_type>() + ">";
+}
+
+template <class T, typename std::enable_if<
+              is_stl_pair<T>::value>::type* = nullptr>
+std::string
+_basic_type()
+{
+    return "std::pair<" + _type_name<typename T::first_type>()
+            + ", " + _type_name<typename T::second_type>() + ">";
+}
+
+template <class T, typename std::enable_if<
+              is_stl_container<T>::value>::type* = nullptr>
+std::string
+_basic_type()
+{
+    return _basic_type<typename T::value_type>();
 }
 
 template <class T>
@@ -1833,7 +1925,7 @@ public:
     template <class T>
     Argument& type()
     {
-        m_type_name = detail::_type_name<T>();
+        m_type_name = detail::_basic_type<T>();
         return *this;
     }
 
@@ -3662,7 +3754,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
-                                 detail::_type_name<typename T::value_type>());
+                                 detail::_basic_type<T>());
         if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3701,7 +3793,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
-                                 detail::_type_name<typename T::value_type>());
+                                 detail::_basic_type<T>());
         if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3725,7 +3817,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
-                                 detail::_type_name<typename T::value_type>());
+                                 detail::_basic_type<T>());
         if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3751,7 +3843,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
-                                 detail::_type_name<typename T::value_type>());
+                                 detail::_basic_type<T>());
         if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3775,7 +3867,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
-                                 detail::_type_name<typename T::mapped_type>());
+                                 detail::_basic_type<T>());
         if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -3804,7 +3896,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
-                                 detail::_type_name<typename T::value_type>());
+                                 detail::_basic_type<T>());
         if (args.first->action() != Action::append
                 || !(args.first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
@@ -3835,7 +3927,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
-                                 detail::_type_name<typename T::value_type>());
+                                 detail::_basic_type<T>());
         if (args.first->action() != Action::append
                 || !(args.first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
@@ -3905,7 +3997,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
-                                 detail::_type_name<typename T::value_type>());
+                                 detail::_basic_type<T>());
         if (args.first->action() == Action::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
@@ -4198,8 +4290,7 @@ public:
         if (!args.operator bool()
                 || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
-                        args->first->type_name(),
-                        detail::_type_name<typename T::value_type>())) {
+                        args->first->type_name(), detail::_basic_type<T>())) {
             return {};
         }
         auto vector = try_to_vector<typename T::value_type>(args->second());
@@ -4247,8 +4338,7 @@ public:
         if (!args.operator bool()
                 || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
-                        args->first->type_name(),
-                        detail::_type_name<typename T::value_type>())) {
+                        args->first->type_name(), detail::_basic_type<T>())) {
             return {};
         }
         auto vector = try_to_vector<typename T::value_type>(args->second());
@@ -4281,8 +4371,7 @@ public:
         if (!args.operator bool()
                 || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
-                        args->first->type_name(),
-                        detail::_type_name<typename T::value_type>())) {
+                        args->first->type_name(), detail::_basic_type<T>())) {
             return {};
         }
         auto vector
@@ -4318,8 +4407,7 @@ public:
         if (!args.operator bool()
                 || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
-                        args->first->type_name(),
-                        detail::_type_name<typename T::value_type>())) {
+                        args->first->type_name(), detail::_basic_type<T>())) {
             return {};
         }
         auto vector = try_to_tupled_vector<
@@ -4352,8 +4440,7 @@ public:
         if (!args.operator bool()
                 || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
-                        args->first->type_name(),
-                        detail::_type_name<typename T::mapped_type>())) {
+                        args->first->type_name(), detail::_basic_type<T>())) {
             return {};
         }
         T res{};
@@ -4397,8 +4484,7 @@ public:
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))
                 || !detail::_is_type_name_correct(
-                        args->first->type_name(),
-                        detail::_type_name<typename T::value_type>())) {
+                        args->first->type_name(), detail::_basic_type<T>())) {
             return {};
         }
         T res{};
@@ -4439,8 +4525,7 @@ public:
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))
                 || !detail::_is_type_name_correct(
-                        args->first->type_name(),
-                        detail::_type_name<typename T::value_type>())) {
+                        args->first->type_name(), detail::_basic_type<T>())) {
             return {};
         }
         T res{};
@@ -4525,8 +4610,7 @@ public:
         if (!args.operator bool()
                 || args->first->action() == Action::count
                 || !detail::_is_type_name_correct(
-                        args->first->type_name(),
-                        detail::_type_name<typename T::value_type>())) {
+                        args->first->type_name(), detail::_basic_type<T>())) {
             return {};
         }
         auto vector = try_to_vector<typename T::value_type>(args->second());
