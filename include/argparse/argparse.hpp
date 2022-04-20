@@ -3256,6 +3256,7 @@ _ARGPARSE_EXPORT class Namespace
                 auto& arg_data = at(arg);
                 if (arg_data.empty()) {
                     arg_data.push_default(value);
+                    arg->handle(value);
                 }
             }
         }
@@ -3266,8 +3267,8 @@ _ARGPARSE_EXPORT class Namespace
                 auto& arg_data = at(arg);
                 if (arg_data.empty()) {
                     arg_data.push_back(arg->const_value());
+                    arg->handle(arg->const_value());
                 }
-                arg->handle(arg->const_value());
                 return true;
             } else if (arg->action() == Action::append_const) {
                 at(arg).push_back(arg->const_value());
