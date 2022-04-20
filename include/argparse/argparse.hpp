@@ -155,17 +155,6 @@ using experimental::fundamentals_v1::nullopt;
 #endif  // C++11+
 
 namespace argparse {
-template <class T> struct is_byte_type              { enum { value = false }; };
-template <>        struct is_byte_type<char>         { enum { value = true }; };
-template <>        struct is_byte_type<signed char>  { enum { value = true }; };
-template <>        struct is_byte_type<unsigned char>{ enum { value = true }; };
-#if __cplusplus >= 201703L  // C++17+
-template <>        struct is_byte_type<std::byte>    { enum { value = true }; };
-#endif  // C++17+
-#if __cplusplus >= 202002L  // C++20+
-template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
-#endif  // C++20+
-
 /*!
  * \brief Action values
  *
@@ -314,6 +303,17 @@ std::uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
 _const_action = Action::store_const | Action::append_const;
 std::uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
+
+template <class T> struct is_byte_type              { enum { value = false }; };
+template <>        struct is_byte_type<char>         { enum { value = true }; };
+template <>        struct is_byte_type<signed char>  { enum { value = true }; };
+template <>        struct is_byte_type<unsigned char>{ enum { value = true }; };
+#if __cplusplus >= 201703L  // C++17+
+template <>        struct is_byte_type<std::byte>    { enum { value = true }; };
+#endif  // C++17+
+#if __cplusplus >= 202002L  // C++20+
+template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
+#endif  // C++20+
 
 inline std::pair<std::size_t, std::size_t>
 _get_terminal_size(bool default_values = false)
@@ -3609,7 +3609,7 @@ public:
     typename std::enable_if<std::is_constructible<std::string, T>::value
                             || std::is_floating_point<T>::value
                             || std::is_same<bool, T>::value
-                            || is_byte_type<T>::value, T>::type
+                            || detail::is_byte_type<T>::value, T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3639,7 +3639,7 @@ public:
     template <class T>
     typename std::enable_if<std::is_integral<T>::value
                             && !std::is_same<bool, T>::value
-                            && !is_byte_type<T>::value, T>::type
+                            && !detail::is_byte_type<T>::value, T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3965,7 +3965,7 @@ public:
         && !std::is_floating_point<T>::value
         && !std::is_integral<T>::value
         && !std::is_same<bool, T>::value
-        && !is_byte_type<T>::value
+        && !detail::is_byte_type<T>::value
         && !is_stl_array<typename std::decay<T>::type>::value
         && !is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_container_paired<typename std::decay<T>::type>::value
@@ -4133,7 +4133,7 @@ public:
         std::is_constructible<std::string, T>::value
         || std::is_floating_point<T>::value
         || std::is_same<bool, T>::value
-        || is_byte_type<T>::value, T>::type>
+        || detail::is_byte_type<T>::value, T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -4161,9 +4161,10 @@ public:
 #ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    std::optional<typename std::enable_if<std::is_integral<T>::value
-                                          && !std::is_same<bool, T>::value
-                                          && !is_byte_type<T>::value, T>::type>
+    std::optional<typename std::enable_if<
+        std::is_integral<T>::value
+        && !std::is_same<bool, T>::value
+        && !detail::is_byte_type<T>::value, T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -4592,7 +4593,7 @@ public:
         && !std::is_floating_point<T>::value
         && !std::is_integral<T>::value
         && !std::is_same<bool, T>::value
-        && !is_byte_type<T>::value
+        && !detail::is_byte_type<T>::value
         && !is_stl_array<typename std::decay<T>::type>::value
         && !is_stl_container<typename std::decay<T>::type>::value
         && !is_stl_container_paired<typename std::decay<T>::type>::value
@@ -4832,7 +4833,7 @@ private:
     }
 
     template <class T>
-    typename std::enable_if<is_byte_type<T>::value, T>::type
+    typename std::enable_if<detail::is_byte_type<T>::value, T>::type
     to_type(std::string const& data) const
     {
         if (data.empty()) {
@@ -4848,7 +4849,7 @@ private:
     template <class T>
     typename std::enable_if<!std::is_constructible<std::string, T>::value
                             && !std::is_same<bool, T>::value
-                            && !is_byte_type<T>::value, T>::type
+                            && !detail::is_byte_type<T>::value, T>::type
     to_type(std::string const& data) const
     {
         if (data.empty()) {
@@ -5015,7 +5016,8 @@ private:
     }
 
     template <class T>
-    std::optional<typename std::enable_if<is_byte_type<T>::value, T>::type>
+    std::optional<typename std::enable_if<
+        detail::is_byte_type<T>::value, T>::type>
     try_to_type(std::string const& data) const _ARGPARSE_NOEXCEPT
     {
         if (data.empty() || data.size() != 1) {
@@ -5028,7 +5030,7 @@ private:
     std::optional<typename std::enable_if<
         !std::is_constructible<std::string, T>::value
         && !std::is_same<bool, T>::value
-        && !is_byte_type<T>::value, T>::type>
+        && !detail::is_byte_type<T>::value, T>::type>
     try_to_type(std::string const& data) const
     {
         if (data.empty()) {
