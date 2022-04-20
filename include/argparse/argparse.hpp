@@ -4857,7 +4857,8 @@ private:
         std::stringstream ss(detail::_remove_quotes(data));
         ss >> result;
         if (ss.fail() || !ss.eof()) {
-            throw TypeError("can't convert value '" + data + "'");
+            throw TypeError("can't convert value '" + data + "'"
+                            + " to type " + detail::_type_name<T>());
         }
         return result;
     }
