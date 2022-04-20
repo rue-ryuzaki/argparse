@@ -5514,14 +5514,14 @@ public:
     /*!
      *  \brief Construct argument parser with concrete program name
      *
-     *  \param prog Program value
+     *  \param prog Program name
      *
      *  \return Argument parser object
      */
     explicit
     ArgumentParser(std::string const& prog = "untitled")
         : BaseParser(),
-          m_prog(prog),
+          m_prog("untitled"),
           m_parents(),
           m_formatter_class(),
           m_fromfile_prefix_chars(),
@@ -5534,7 +5534,9 @@ public:
           m_default_values(),
           m_parsed_arguments(),
           m_subparsers(nullptr)
-    { }
+    {
+        this->prog(prog);
+    }
 
     /*!
      *  \brief Construct argument parser from command line arguments
@@ -5574,6 +5576,38 @@ public:
     }
 
     /*!
+     *  \brief Construct argument parser from command line arguments
+     *  with concrete program name
+     *
+     *  \param argc Number of command line arguments
+     *  \param argv Command line arguments data
+     *  \param prog Program name
+     *
+     *  \return Argument parser object
+     */
+    explicit
+    ArgumentParser(int argc, char* argv[], std::string const& prog)
+        : ArgumentParser(argc, const_cast<char const**>(argv), prog)
+    { }
+
+    /*!
+     *  \brief Construct argument parser from command line arguments
+     *  with concrete program name
+     *
+     *  \param argc Number of command line arguments
+     *  \param argv Command line arguments data
+     *  \param prog Program name
+     *
+     *  \return Argument parser object
+     */
+    explicit
+    ArgumentParser(int argc, char const* argv[], std::string const& prog)
+        : ArgumentParser(argc, argv)
+    {
+        this->prog(prog);
+    }
+
+    /*!
      *  \brief Destroy argument parser
      */
     ~ArgumentParser() _ARGPARSE_NOEXCEPT = default;
@@ -5581,7 +5615,7 @@ public:
     /*!
      *  \brief Set argument parser 'prog' value (default: argv[0] or "untitled")
      *
-     *  \param param Program value
+     *  \param param Program name
      *
      *  \return Current argument parser reference
      */
