@@ -315,6 +315,155 @@ template <>        struct is_byte_type<std::byte>    { enum { value = true }; };
 template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
 #endif  // C++20+
 
+template <class T>
+struct is_stl_array:std::false_type{};
+template <class T, std::size_t N>
+struct is_stl_array<std::array                     <T, N> >   :std::true_type{};
+
+template <class T>
+struct is_stl_container:std::false_type{};
+template <class... Args>
+struct is_stl_container<std::deque                 <Args...> >:std::true_type{};
+template <class... Args>
+struct is_stl_container<std::forward_list          <Args...> >:std::true_type{};
+template <class... Args>
+struct is_stl_container<std::list                  <Args...> >:std::true_type{};
+template <class... Args>
+struct is_stl_container<std::multiset              <Args...> >:std::true_type{};
+template <class... Args>
+struct is_stl_container<std::priority_queue        <Args...> >:std::true_type{};
+template <class... Args>
+struct is_stl_container<std::set                   <Args...> >:std::true_type{};
+template <class... Args>
+struct is_stl_container<std::vector                <Args...> >:std::true_type{};
+template <class... Args>
+struct is_stl_container<std::unordered_multiset    <Args...> >:std::true_type{};
+template <class... Args>
+struct is_stl_container<std::unordered_set         <Args...> >:std::true_type{};
+
+template <class T, typename U = void>
+struct is_stl_container_paired:std::false_type{};
+
+template <class _1st, class _2nd, template <class...> class container>
+struct is_stl_container_paired<container<std::pair<_1st, _2nd> > >
+                                                              :std::true_type{};
+
+template <class T, typename U = void>
+struct is_stl_container_tupled:std::false_type{};
+
+template <class... Args, template <class...> class container>
+struct is_stl_container_tupled<container<std::tuple<Args...> > >
+                                                              :std::true_type{};
+
+template <class...>
+struct voider { using type = void; };
+template <class... T>
+using void_t = typename voider<T...>::type;
+template <class T, typename U = void>
+struct is_stl_map:std::false_type{};
+template <class T>
+struct is_stl_map<T, void_t<typename T::key_type,
+                                    typename T::mapped_type> >:std::true_type{};
+
+template <class T>
+struct is_stl_matrix:std::false_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::deque       <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::forward_list<Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::list        <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::multiset    <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::priority_queue<Args...> > >
+                                                              :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::set         <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::vector      <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::unordered_multiset<Args...> > >
+                                                              :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::unordered_set<Args...> > >
+                                                              :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::deque        <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::forward_list<Args...> > > :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::list         <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::multiset     <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::priority_queue<Args...> > >
+                                                              :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::set          <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::vector       <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::unordered_multiset<Args...> > >
+                                                              :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::unordered_set<Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::deque      <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::forward_list<Args...> > >
+                                                              :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::list       <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::multiset<Args...> > >   :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::priority_queue<Args...> > >
+                                                              :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::set        <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::vector     <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::unordered_multiset<Args...> > >
+                                                              :std::true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::unordered_set<Args...> > >
+                                                              :std::true_type{};
+
+template <class T>
+struct is_stl_matrix_queue:std::false_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::deque<std::stack <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::deque<std::queue <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::list<std::stack  <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::list<std::queue  <Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::vector<std::stack<Args...> > >:std::true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::vector<std::queue<Args...> > >:std::true_type{};
+
+template <class T, typename U = void>
+struct is_stl_pair:std::false_type{};
+template <class T>
+struct is_stl_pair<T, void_t<typename T::first_type,
+                                    typename T::second_type> >:std::true_type{};
+
+template <class T>
+struct is_stl_queue:std::false_type{};
+template <class... Args>
+struct is_stl_queue<std::stack                     <Args...> >:std::true_type{};
+template <class... Args>
+struct is_stl_queue<std::queue                     <Args...> >:std::true_type{};
+
+template <class T>
+struct is_stl_tuple:std::false_type{};
+template <class... Args>
+struct is_stl_tuple<std::tuple                     <Args...> >:std::true_type{};
+
 inline std::pair<std::size_t, std::size_t>
 _get_terminal_size(bool default_values = false)
 {
@@ -3372,165 +3521,6 @@ _ARGPARSE_EXPORT class Namespace
 
     friend class ArgumentParser;
 
-    template <class T>
-    struct is_stl_array:std::false_type{};
-    template <class T, std::size_t N>
-    struct is_stl_array<std::array                 <T, N> >   :std::true_type{};
-
-    template <class T>
-    struct is_stl_container:std::false_type{};
-    template <class... Args>
-    struct is_stl_container<std::deque             <Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_container<std::forward_list      <Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_container<std::list              <Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_container<std::multiset          <Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_container<std::priority_queue    <Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_container<std::set               <Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_container<std::vector            <Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_container<std::unordered_multiset<Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_container<std::unordered_set     <Args...> >:std::true_type{};
-
-    template <class T, typename U = void>
-    struct is_stl_container_paired:std::false_type{};
-
-    template <class _1st, class _2nd, template <class...> class container>
-    struct is_stl_container_paired<container<std::pair<_1st, _2nd> > >
-                                                              :std::true_type{};
-
-    template <class T, typename U = void>
-    struct is_stl_container_tupled:std::false_type{};
-
-    template <class... Args, template <class...> class container>
-    struct is_stl_container_tupled<container<std::tuple<Args...> > >
-                                                              :std::true_type{};
-
-    template <class...>
-    struct voider { using type = void; };
-    template <class... T>
-    using void_t = typename voider<T...>::type;
-    template <class T, typename U = void>
-    struct is_stl_map:std::false_type{};
-    template <class T>
-    struct is_stl_map<T, void_t<typename T::key_type,
-                                    typename T::mapped_type> >:std::true_type{};
-
-    template <class T>
-    struct is_stl_matrix:std::false_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::deque<std::deque   <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::deque<std::forward_list<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::deque<std::list    <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::deque<std::multiset<Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::deque<std::priority_queue<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::deque<std::set     <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::deque<std::vector  <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::deque<std::unordered_multiset<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::deque<std::unordered_set<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::list<std::deque    <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::list<std::forward_list<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::list<std::list     <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::list<std::multiset <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::list<std::priority_queue<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::list<std::set      <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::list<std::vector   <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::list<std::unordered_multiset<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::list<std::unordered_set<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::vector<std::deque  <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::vector<std::forward_list<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::vector<std::list   <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::vector<std::multiset<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::vector<std::priority_queue<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::vector<std::set    <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::vector<std::vector <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::vector<std::unordered_multiset<Args...> > >
-                                                              :std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix<std::vector<std::unordered_set<Args...> > >
-                                                              :std::true_type{};
-
-    template <class T>
-    struct is_stl_matrix_queue:std::false_type{};
-    template <class... Args>
-    struct is_stl_matrix_queue<std::deque<std::stack
-                                                 <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix_queue<std::deque<std::queue
-                                                 <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix_queue<std::list<std::stack
-                                                 <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix_queue<std::list<std::queue
-                                                 <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix_queue<std::vector<std::stack
-                                                 <Args...> > >:std::true_type{};
-    template <class... Args>
-    struct is_stl_matrix_queue<std::vector<std::queue
-                                                 <Args...> > >:std::true_type{};
-
-    template <class T, typename U = void>
-    struct is_stl_pair:std::false_type{};
-    template <class T>
-    struct is_stl_pair<T, void_t<typename T::first_type,
-                                    typename T::second_type> >:std::true_type{};
-
-    template <class T>
-    struct is_stl_queue:std::false_type{};
-    template <class... Args>
-    struct is_stl_queue<std::stack                 <Args...> >:std::true_type{};
-    template <class... Args>
-    struct is_stl_queue<std::queue                 <Args...> >:std::true_type{};
-
-    template <class T>
-    struct is_stl_tuple:std::false_type{};
-    template <class... Args>
-    struct is_stl_tuple<std::tuple                 <Args...> >:std::true_type{};
-
     template <class T> struct type_tag {};
 
     template <std::size_t... Is>
@@ -3667,7 +3657,7 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_array<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_array<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3701,11 +3691,12 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_container<typename std::decay<T>::type>::value
-        && !is_stl_container_paired<typename std::decay<T>::type>::value
-        && !is_stl_container_tupled<typename std::decay<T>::type>::value
-        && !is_stl_matrix<typename std::decay<T>::type>::value
-        && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_container<typename std::decay<T>::type>::value
+        && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
+        && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
+    T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3728,7 +3719,8 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_container_paired<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_container_paired<typename std::decay<T>::type>::value,
+    T>::type
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
@@ -3753,7 +3745,8 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_container_tupled<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_container_tupled<typename std::decay<T>::type>::value,
+    T>::type
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
@@ -3777,7 +3770,7 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_map<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_map<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
@@ -3804,8 +3797,9 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_matrix<typename std::decay<T>::type>::value
-        && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_matrix<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
+    T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3835,7 +3829,8 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
+    T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3867,7 +3862,7 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_pair<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_pair<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
@@ -3905,7 +3900,7 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_queue<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_queue<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -3929,7 +3924,7 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        is_stl_tuple<typename std::decay<T>::type>::value, T>::type
+        detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
@@ -3966,16 +3961,16 @@ public:
         && !std::is_integral<T>::value
         && !std::is_same<bool, T>::value
         && !detail::is_byte_type<T>::value
-        && !is_stl_array<typename std::decay<T>::type>::value
-        && !is_stl_container<typename std::decay<T>::type>::value
-        && !is_stl_container_paired<typename std::decay<T>::type>::value
-        && !is_stl_container_tupled<typename std::decay<T>::type>::value
-        && !is_stl_map<typename std::decay<T>::type>::value
-        && !is_stl_matrix<typename std::decay<T>::type>::value
-        && !is_stl_matrix_queue<typename std::decay<T>::type>::value
-        && !is_stl_pair<typename std::decay<T>::type>::value
-        && !is_stl_queue<typename std::decay<T>::type>::value
-        && !is_stl_tuple<typename std::decay<T>::type>::value, T>::type
+        && !detail::is_stl_array<typename std::decay<T>::type>::value
+        && !detail::is_stl_container<typename std::decay<T>::type>::value
+        && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
+        && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
+        && !detail::is_stl_map<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value
+        && !detail::is_stl_pair<typename std::decay<T>::type>::value
+        && !detail::is_stl_queue<typename std::decay<T>::type>::value
+        && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -4196,7 +4191,7 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_array<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_array<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -4240,11 +4235,12 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_container<typename std::decay<T>::type>::value
-        && !is_stl_container_paired<typename std::decay<T>::type>::value
-        && !is_stl_container_tupled<typename std::decay<T>::type>::value
-        && !is_stl_matrix<typename std::decay<T>::type>::value
-        && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_container<typename std::decay<T>::type>::value
+        && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
+        && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
+    T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -4277,7 +4273,8 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_container_paired<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_container_paired<typename std::decay<T>::type>::value,
+    T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
     {
         auto args = try_get_data(key);
@@ -4313,7 +4310,8 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_container_tupled<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_container_tupled<typename std::decay<T>::type>::value,
+    T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
     {
         auto args = try_get_data(key);
@@ -4347,7 +4345,7 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_map<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_map<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
     {
         auto args = try_get_data(key);
@@ -4387,8 +4385,9 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_matrix<typename std::decay<T>::type>::value
-        && !is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_matrix<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
+    T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -4429,7 +4428,8 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_matrix_queue<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
+    T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -4472,7 +4472,7 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_pair<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_pair<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
     {
         auto args = try_get_data(key);
@@ -4518,7 +4518,7 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_queue<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_queue<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
@@ -4552,7 +4552,7 @@ public:
     [[deprecated("std::optional support is experimental, use C++17 or later")]]
 #endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
-        is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
+        detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
     {
         auto args = try_get_data(key);
@@ -4594,16 +4594,16 @@ public:
         && !std::is_integral<T>::value
         && !std::is_same<bool, T>::value
         && !detail::is_byte_type<T>::value
-        && !is_stl_array<typename std::decay<T>::type>::value
-        && !is_stl_container<typename std::decay<T>::type>::value
-        && !is_stl_container_paired<typename std::decay<T>::type>::value
-        && !is_stl_container_tupled<typename std::decay<T>::type>::value
-        && !is_stl_map<typename std::decay<T>::type>::value
-        && !is_stl_matrix<typename std::decay<T>::type>::value
-        && !is_stl_matrix_queue<typename std::decay<T>::type>::value
-        && !is_stl_pair<typename std::decay<T>::type>::value
-        && !is_stl_queue<typename std::decay<T>::type>::value
-        && !is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
+        && !detail::is_stl_array<typename std::decay<T>::type>::value
+        && !detail::is_stl_container<typename std::decay<T>::type>::value
+        && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
+        && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
+        && !detail::is_stl_map<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value
+        && !detail::is_stl_pair<typename std::decay<T>::type>::value
+        && !detail::is_stl_queue<typename std::decay<T>::type>::value
+        && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
