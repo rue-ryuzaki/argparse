@@ -1072,7 +1072,8 @@ template <class T, typename std::enable_if<
               !std::is_same<std::string, T>::value
               && !is_stl_container<T>::value
               && !is_stl_map<T>::value
-              && !is_stl_pair<T>::value>::type* = nullptr>
+              && !is_stl_pair<T>::value
+              && !is_stl_tuple<T>::value>::type* = nullptr>
 std::string
 _type_name()
 {
@@ -1098,6 +1099,14 @@ _type_name()
 }
 
 template <class T, typename std::enable_if<
+              is_stl_tuple<T>::value>::type* = nullptr>
+std::string
+_type_name()
+{
+    return "std::tuple<>";
+}
+
+template <class T, typename std::enable_if<
               is_stl_container<T>::value>::type* = nullptr>
 std::string
 _type_name()
@@ -1119,7 +1128,8 @@ template <class T, typename std::enable_if<
               !std::is_same<std::string, T>::value
               && !is_stl_container<T>::value
               && !is_stl_map<T>::value
-              && !is_stl_pair<T>::value>::type* = nullptr>
+              && !is_stl_pair<T>::value
+              && !is_stl_tuple<T>::value>::type* = nullptr>
 std::string
 _basic_type()
 {
@@ -1142,6 +1152,14 @@ _basic_type()
 {
     return "std::pair<" + _type_name<typename T::first_type>()
             + ", " + _type_name<typename T::second_type>() + ">";
+}
+
+template <class T, typename std::enable_if<
+              is_stl_tuple<T>::value>::type* = nullptr>
+std::string
+_basic_type()
+{
+    return "std::tuple<>";
 }
 
 template <class T, typename std::enable_if<
