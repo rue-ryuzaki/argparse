@@ -625,12 +625,23 @@ _remove_quotes(std::string const& s)
 }
 
 inline std::string
-_replace(std::string s, char c, std::string const& value)
+_replace(std::string s, char old, std::string const& value)
 {
-    auto pos = s.find(c);
+    auto pos = s.find(old);
     while (pos != std::string::npos) {
         s.replace(pos, 1, value);
-        pos = s.find(c, pos + value.size());
+        pos = s.find(old, pos + value.size());
+    }
+    return s;
+}
+
+inline std::string
+_replace(std::string s, std::string const& old, std::string const& value)
+{
+    auto pos = s.find(old);
+    while (pos != std::string::npos) {
+        s.replace(pos, old.length(), value);
+        pos = s.find(old, pos + value.size());
     }
     return s;
 }
@@ -1138,7 +1149,7 @@ template <class T, typename std::enable_if<
 std::string
 _type_name()
 {
-    auto str = _get_type_name<T>();
+    auto str = _replace(_get_type_name<T>(), "__cxx11::", "");
     return str.substr(0, str.find('<'))
             + "<" + _type_name<typename T::value_type>() + ">";
 }
@@ -1173,20 +1184,11 @@ _basic_type()
 }
 
 template <class T, typename std::enable_if<
-              is_stl_pair<T>::value>::type* = nullptr>
+              is_stl_pair<T>::value || is_stl_tuple<T>::value>::type* = nullptr>
 std::string
 _basic_type()
 {
-    return "std::pair<" + _type_name<typename T::first_type>()
-            + ", " + _type_name<typename T::second_type>() + ">";
-}
-
-template <class T, typename std::enable_if<
-              is_stl_tuple<T>::value>::type* = nullptr>
-std::string
-_basic_type()
-{
-    return "std::tuple<>";
+    return _type_name<T>();
 }
 
 template <class T, typename std::enable_if<
