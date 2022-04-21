@@ -1070,11 +1070,12 @@ template <class T>
 std::string
 _get_type_name()
 {
-#if !defined(__PRETTY_FUNCTION__) && !defined(__GNUC__)
+#if !defined(__PRETTY_FUNCTION__) && !defined(__GNUC__) && defined(__FUNCSIG__)
     std::string res = __FUNCSIG__;
     auto pos = res.find("__cdecl");
     return res.substr(pos + 27, res.size() - pos - 27 - 7);
-#elif defined(__clang__)
+#elif defined(__PRETTY_FUNCTION__)
+#if defined(__clang__)
     std::string res = __PRETTY_FUNCTION__;
     auto pos = res.find('=') + 2;
     return res.substr(pos, res.size() - pos - 1);
@@ -1082,6 +1083,9 @@ _get_type_name()
     std::string res = __PRETTY_FUNCTION__;
     auto pos = res.find('=') + 2;
     return res.substr(pos, res.find(';', pos) - pos);
+#else  // !__clang__ && !__GNUC__
+    return std::string();
+#endif  // __PRETTY_FUNCTION__ && (__clang__ || __GNUC__)
 #else
     return std::string();
 #endif  // __PRETTY_FUNCTION__
