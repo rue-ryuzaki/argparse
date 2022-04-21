@@ -6549,13 +6549,30 @@ private:
         ::exit(1);
     }
 
+    std::vector<std::string>
+    read_args_from_file(std::vector<std::string> const& arguments) const
+    {
+        std::vector<std::string> res = arguments;
+        if (!fromfile_prefix_chars().empty()) {
+            for (std::size_t i = 0; i < res.size(); ++i) {
+                while (!res.at(i).empty()
+                       && detail::_is_value_exists(res.at(i).front(),
+                                                   fromfile_prefix_chars())) {
+                    auto args = convert_arg_line_to_args(res.at(i).substr(1));
+                    detail::_move_vector_replace_at(args, res, i);
+                }
+            }
+        }
+        return res;
+    }
+
     argparse::Namespace
     parse_arguments(std::vector<std::string> const& in_parsed_arguments,
                     bool only_known,
                     bool intermixed,
                     argparse::Namespace const& space) const
     {
-        auto parsed_arguments = in_parsed_arguments;
+        auto parsed_arguments = read_args_from_file(in_parsed_arguments);
         detail::_insert_vector_to_end(space.unrecognized_args(),
                                       parsed_arguments);
         auto const subparser = subpurser_info();
@@ -6601,7 +6618,6 @@ private:
                 was_pseudo_arg = true;
                 continue;
             }
-            check_load_args(parsed_arguments, i, was_pseudo_arg);
             check_abbreviations(parser, optional, sub_optional, storage,
                                 have_negative_args, was_pseudo_arg,
                                 parsed_arguments, i);
@@ -7423,19 +7439,6 @@ private:
     custom_prefix_chars(Parser const* parser) const _ARGPARSE_NOEXCEPT
     {
         return parser ? parser->prefix_chars() : prefix_chars();
-    }
-
-    inline void check_load_args(std::vector<std::string>& arguments,
-                                std::size_t i, bool was_pseudo_arg) const
-    {
-        if (!fromfile_prefix_chars().empty() && !was_pseudo_arg) {
-            while (!arguments.at(i).empty()
-                   && detail::_is_value_exists(arguments.at(i).front(),
-                                               fromfile_prefix_chars())) {
-                auto args = convert_arg_line_to_args(arguments.at(i).substr(1));
-                detail::_move_vector_replace_at(args, arguments, i);
-            }
-        }
     }
 
     void print_help_and_exit(Parser const* parser) const
