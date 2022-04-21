@@ -3455,10 +3455,17 @@ _ARGPARSE_EXPORT class Namespace
                 return;
             }
             auto const& arg_flags = key->get_argument_flags();
+            bool have_key = false;
             for (auto& pair : m_data) {
-                pair.first->resolve_conflict_flags(arg_flags);
+                if (key != pair.first) {
+                    pair.first->resolve_conflict_flags(arg_flags);
+                } else {
+                    have_key = true;
+                }
             }
-            m_data.push_back(std::make_pair(key, value));
+            if (!have_key) {
+                m_data.push_back(std::make_pair(key, value));
+            }
         }
 
         template <class T>
@@ -6575,7 +6582,7 @@ private:
                                                      Argument::Positional);
         argparse::Namespace::Storage storage = space.storage();
         if (space.m_storage.m_data.empty()) {
-            storage.force_add(positional);
+            storage.create(positional);
             storage.create(optional);
         } else {
             storage.force_add(positional);
@@ -7007,6 +7014,9 @@ private:
             storage_store_default_value(storage, arg);
             return;
         }
+        if (arg->action() == Action::store) {
+            storage.at(arg).clear();
+        }
         switch (arg->m_nargs) {
             case Argument::NARGS_DEF :
             case Argument::ONE_OR_MORE :
@@ -7038,6 +7048,9 @@ private:
         if (arg->action() == Action::BooleanOptionalAction) {
             storage_store_default_value(storage, arg);
             return;
+        }
+        if (arg->action() == Action::store) {
+            storage.at(arg).clear();
         }
         switch (arg->m_nargs) {
             case Argument::NARGS_DEF :
@@ -7084,6 +7097,9 @@ private:
             storage_store_default_value(storage, arg);
             return;
         }
+        if (arg->action() == Action::store) {
+            storage.at(arg).clear();
+        }
         switch (arg->m_nargs) {
             case Argument::NARGS_DEF :
                 storage_store_value(p, storage, arg, arguments.front());
@@ -7118,6 +7134,9 @@ private:
         if (arg->action() == Action::BooleanOptionalAction) {
             storage_store_default_value(storage, arg);
             return;
+        }
+        if (arg->action() == Action::store) {
+            storage.at(arg).clear();
         }
         if (arg->m_nargs == Argument::NARGS_DEF) {
             storage_store_value(p, storage, arg, arguments.front());
