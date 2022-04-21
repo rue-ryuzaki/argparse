@@ -464,6 +464,33 @@ struct is_stl_tuple:std::false_type{};
 template <class... Args>
 struct is_stl_tuple<std::tuple                     <Args...> >:std::true_type{};
 
+template <class T>
+struct type_tag{};
+
+template <class T, T... Ints>
+struct integer_sequence{};
+
+template <class T, T N, typename = void>
+struct make_integer_sequence_impl
+{
+    template <class>
+    struct tmp;
+
+    template <T... Prev>
+    struct tmp<integer_sequence<T, Prev...>>
+    { using type = integer_sequence<T, Prev..., N-1>; };
+
+    using type
+      = typename tmp<typename make_integer_sequence_impl<T, N - 1>::type>::type;
+};
+
+template <class T, T N>
+struct make_integer_sequence_impl<T, N, typename std::enable_if<N == 0>::type>
+{ using type = integer_sequence<T>; };
+
+template <class T, T N>
+using make_integer_sequence = typename make_integer_sequence_impl<T, N>::type;
+
 inline std::pair<std::size_t, std::size_t>
 _get_terminal_size(bool default_values = false)
 {
@@ -3631,17 +3658,6 @@ _ARGPARSE_EXPORT class Namespace
 
     friend class ArgumentParser;
 
-    template <class T> struct type_tag {};
-
-    template <std::size_t... Is>
-    struct seq{};
-
-    template <std::size_t N, std::size_t... Is>
-    struct gen_seq:gen_seq<N - 1, N - 1, Is...>{};
-
-    template <std::size_t... Is>
-    struct gen_seq<0, Is...>:seq<Is...>{};
-
     explicit
     Namespace(Storage const& storage = Storage())
         : m_storage(storage),
@@ -4047,13 +4063,13 @@ public:
             return T();
         }
         if (std::isspace(static_cast<unsigned char>(delim))) {
-            return to_tuple(type_tag<T>{}, args.second());
+            return to_tuple(detail::type_tag<T>{}, args.second());
         }
         if (args.second.size() != 1) {
             throw
             TypeError("trying to get data from array argument '" + key + "'");
         }
-        return to_tuple(type_tag<T>{},
+        return to_tuple(detail::type_tag<T>{},
                         detail::_split(args.second.front(), delim));
     }
 
@@ -4668,12 +4684,12 @@ public:
             return T();
         }
         if (std::isspace(static_cast<unsigned char>(delim))) {
-            return try_to_tuple(type_tag<T>{}, args->second());
+            return try_to_tuple(detail::type_tag<T>{}, args->second());
         }
         if (args->second.size() != 1) {
             return {};
         }
-        return try_to_tuple(type_tag<T>{},
+        return try_to_tuple(detail::type_tag<T>{},
                             detail::_split(args->second.front(), delim));
     }
 
@@ -4880,17 +4896,20 @@ private:
 
     template <class... Ts, std::size_t... Idxs>
     std::tuple<Ts...>
-    parse_tuple(std::vector<std::string> const& values, seq<Idxs...>) const
+    parse_tuple(std::vector<std::string> const& values,
+                detail::integer_sequence<std::size_t, Idxs...>) const
     {
         return std::make_tuple(to_type<Ts>(values[Idxs])...);
     }
 
     template <class... Ts>
     std::tuple<Ts...>
-    to_tuple(type_tag<std::tuple<Ts...>>,
+    to_tuple(detail::type_tag<std::tuple<Ts...>>,
              std::vector<std::string> const& values) const
     {
-        return parse_tuple<Ts...>(values, gen_seq<sizeof...(Ts)>());
+        return parse_tuple<Ts...>(
+                    values, detail::make_integer_sequence<std::size_t,
+                                                              sizeof...(Ts)>());
     }
 
     template <class T>
@@ -4907,14 +4926,15 @@ private:
             for (std::size_t i = 0; i < args.size(); i += size) {
                 std::vector<std::string> temp
                         = { args.begin() + i, args.begin() + i + size };
-                vec.emplace_back(to_tuple(type_tag<T>{}, temp));
+                vec.emplace_back(to_tuple(detail::type_tag<T>{}, temp));
             }
         } else {
             vec.reserve(args.size());
             std::transform(std::begin(args), std::end(args),
                            std::back_inserter(vec),
                            [this, delim] (std::string const& a)
-            { return to_tuple(type_tag<T>{}, detail::_split(a, delim)); });
+            { return to_tuple(detail::type_tag<T>{},
+                              detail::_split(a, delim)); });
         }
         return vec;
     }
@@ -5054,11 +5074,14 @@ private:
 
     template <class... Ts>
     std::optional<std::tuple<Ts...> >
-    try_to_tuple(type_tag<std::tuple<Ts...>>,
+    try_to_tuple(detail::type_tag<std::tuple<Ts...>>,
                  std::vector<std::string> const& values) const
     {
         try {
-            auto res = parse_tuple<Ts...>(values, gen_seq<sizeof...(Ts)>());
+            auto res = parse_tuple<Ts...>(
+                        values,
+                        detail::make_integer_sequence<std::size_t,
+                                                              sizeof...(Ts)>());
             return res;
         } catch (...) {
             return {};
@@ -5079,7 +5102,7 @@ private:
             for (std::size_t i = 0; i < args.size(); i += size) {
                 std::vector<std::string> temp
                         = { args.begin() + i, args.begin() + i + size };
-                auto tuple = try_to_tuple(type_tag<T>{}, temp);
+                auto tuple = try_to_tuple(detail::type_tag<T>{}, temp);
                 if (tuple.operator bool()) {
                     vec.emplace_back(tuple.value());
                 } else {
@@ -5089,7 +5112,7 @@ private:
         } else {
             vec.reserve(args.size());
             for (auto const& arg : args) {
-                auto tuple = try_to_tuple(type_tag<T>{},
+                auto tuple = try_to_tuple(detail::type_tag<T>{},
                                           detail::_split(arg, delim));
                 if (tuple.operator bool()) {
                     vec.emplace_back(tuple.value());
