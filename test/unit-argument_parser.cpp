@@ -759,7 +759,7 @@ TEST_CASE("9. argument nargs", "[argument]")
     SECTION("9.4. nargs ? positional") {
         parser.add_argument("store").action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument("append").action(argparse::append).nargs("?");
-//        parser.add_argument({ "extend" }).action(argparse::extend).nargs("?");  // TODO : invalid in python without arguments
+//        parser.add_argument({ "extend" }).action(argparse::extend).nargs("?");  // invalid in python without arguments
 
         auto args1 = parser.parse_args({ });
         REQUIRE(args1.get<std::string>("store") == default_value);
@@ -2112,14 +2112,16 @@ TEST_CASE("20. namespace", "[argument_parser]")
     std::string local_default = "local";
 
     auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+    parser.add_argument({ "pos" });
     parser.add_argument({ "-f", "--foo" });
     parser.add_argument({ "-b", "--bar" }).default_value(local_default);
 
     std::string foo = "foo";
     std::string bar = "bar";
+    std::string pos = "pos";
 
     SECTION("20.1. simple example") {
-        auto args0 = parser.parse_args({ });
+        auto args0 = parser.parse_args({ pos });
         REQUIRE(args0.get<std::string>("-f") == global_default);
         REQUIRE(args0.get<std::string>("-b") == local_default);
         REQUIRE(args0.get<std::string>("--foo") == global_default);
@@ -2128,8 +2130,9 @@ TEST_CASE("20. namespace", "[argument_parser]")
         REQUIRE(args0.get<std::string>("b") == local_default);
         REQUIRE(args0.get<std::string>("foo") == global_default);
         REQUIRE(args0.get<std::string>("bar") == local_default);
+        REQUIRE(args0.get<std::string>("pos") == pos);
 
-        auto args1 = parser.parse_args({ "-f", foo });
+        auto args1 = parser.parse_args({ pos, "-f", foo });
         REQUIRE(args1.get<std::string>("-f") == foo);
         REQUIRE(args1.get<std::string>("-b") == local_default);
         REQUIRE(args1.get<std::string>("--foo") == foo);
@@ -2138,8 +2141,9 @@ TEST_CASE("20. namespace", "[argument_parser]")
         REQUIRE(args1.get<std::string>("b") == local_default);
         REQUIRE(args1.get<std::string>("foo") == foo);
         REQUIRE(args1.get<std::string>("bar") == local_default);
+        REQUIRE(args1.get<std::string>("pos") == pos);
 
-        auto args2 = parser.parse_args({ "--bar", bar }, args1);
+        auto args2 = parser.parse_args({ foo, "--bar", bar }, args1);
         REQUIRE(args2.get<std::string>("-f") == foo);
         REQUIRE(args2.get<std::string>("-b") == bar);
         REQUIRE(args2.get<std::string>("--foo") == foo);
@@ -2148,10 +2152,22 @@ TEST_CASE("20. namespace", "[argument_parser]")
         REQUIRE(args2.get<std::string>("b") == bar);
         REQUIRE(args2.get<std::string>("foo") == foo);
         REQUIRE(args2.get<std::string>("bar") == bar);
+        REQUIRE(args2.get<std::string>("pos") == foo);
+
+        auto args3 = parser.parse_args({ bar, "--foo", bar, "--bar", bar }, args1);
+        REQUIRE(args3.get<std::string>("-f") == bar);
+        REQUIRE(args3.get<std::string>("-b") == bar);
+        REQUIRE(args3.get<std::string>("--foo") == bar);
+        REQUIRE(args3.get<std::string>("--bar") == bar);
+        REQUIRE(args3.get<std::string>("f") == bar);
+        REQUIRE(args3.get<std::string>("b") == bar);
+        REQUIRE(args3.get<std::string>("foo") == bar);
+        REQUIRE(args3.get<std::string>("bar") == bar);
+        REQUIRE(args3.get<std::string>("pos") == bar);
     }
 
     SECTION("20.2. intermixed parsing") {
-        auto args1 = parser.parse_args({ "-f", foo, "--bar", bar });
+        auto args1 = parser.parse_args({ pos, "-f", foo, "--bar", bar });
         REQUIRE(args1.get<std::string>("-f") == foo);
         REQUIRE(args1.get<std::string>("-b") == bar);
         REQUIRE(args1.get<std::string>("--foo") == foo);
@@ -2160,10 +2176,11 @@ TEST_CASE("20. namespace", "[argument_parser]")
         REQUIRE(args1.get<std::string>("b") == bar);
         REQUIRE(args1.get<std::string>("foo") == foo);
         REQUIRE(args1.get<std::string>("bar") == bar);
+        REQUIRE(args1.get<std::string>("pos") == pos);
 
         std::string baz = "baz";
 
-        auto args2 = parser.parse_known_args({ "-f", foo, "--bar", bar, "--baz", baz });
+        auto args2 = parser.parse_args({ pos, "-f", foo, "--bar", bar });
         REQUIRE(args2.get<std::string>("-f") == foo);
         REQUIRE(args2.get<std::string>("-b") == bar);
         REQUIRE(args2.get<std::string>("--foo") == foo);
@@ -2172,21 +2189,39 @@ TEST_CASE("20. namespace", "[argument_parser]")
         REQUIRE(args2.get<std::string>("b") == bar);
         REQUIRE(args2.get<std::string>("foo") == foo);
         REQUIRE(args2.get<std::string>("bar") == bar);
+        REQUIRE(args2.get<std::string>("pos") == pos);
 
-        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
         parser2.add_argument({ "--baz" });
 
-        auto args3 = parser2.parse_args(args2);
+        // in python there are error: AttributeError: 'tuple' object has no attribute
+//        REQUIRE_THROWS(parser2.parse_args(""), parser.parse_known_args({ pos, "-f", foo, "--bar", bar, "--baz", baz }));
+
+        auto args3 = parser2.parse_args("", args2);
         REQUIRE(args3.get<std::string>("-f") == foo);
         REQUIRE(args3.get<std::string>("-b") == bar);
         REQUIRE(args3.get<std::string>("--foo") == foo);
         REQUIRE(args3.get<std::string>("--bar") == bar);
-        REQUIRE(args3.get<std::string>("--baz") == baz);
         REQUIRE(args3.get<std::string>("f") == foo);
         REQUIRE(args3.get<std::string>("b") == bar);
         REQUIRE(args3.get<std::string>("foo") == foo);
         REQUIRE(args3.get<std::string>("bar") == bar);
-        REQUIRE(args3.get<std::string>("baz") == baz);
+        REQUIRE(args3.get<std::string>("pos") == pos);
+        REQUIRE(args3.get<std::string>("--baz") == "");
+        REQUIRE(args3.get<std::string>("baz") == "");
+
+        auto args4 = parser2.parse_args({ "--baz", baz }, args2);
+        REQUIRE(args4.get<std::string>("-f") == foo);
+        REQUIRE(args4.get<std::string>("-b") == bar);
+        REQUIRE(args4.get<std::string>("--foo") == foo);
+        REQUIRE(args4.get<std::string>("--bar") == bar);
+        REQUIRE(args4.get<std::string>("f") == foo);
+        REQUIRE(args4.get<std::string>("b") == bar);
+        REQUIRE(args4.get<std::string>("foo") == foo);
+        REQUIRE(args4.get<std::string>("bar") == bar);
+        REQUIRE(args4.get<std::string>("pos") == pos);
+        REQUIRE(args4.get<std::string>("--baz") == baz);
+        REQUIRE(args4.get<std::string>("baz") == baz);
     }
 }
 
