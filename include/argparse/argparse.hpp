@@ -5388,6 +5388,20 @@ public:
         }
 
         /*!
+         *  \brief Set parser 'parents' value
+         *
+         *  \param param Parent value
+         *  \param args Parents values
+         *
+         *  \return Current parser reference
+         */
+        template <class... Args>
+        Parser& parents(ArgumentParser const& param, Args... args)
+        {
+            return parents(std::vector<ArgumentParser>{ param, args... });
+        }
+
+        /*!
          *  \brief Add argument
          *
          *  \param argument Argument
@@ -5924,6 +5938,20 @@ public:
     {
         m_parents = param;
         return *this;
+    }
+
+    /*!
+     *  \brief Set argument parser 'parents' value
+     *
+     *  \param param Parent value
+     *  \param args Parents values
+     *
+     *  \return Current argument parser reference
+     */
+    template <class... Args>
+    ArgumentParser& parents(ArgumentParser const& param, Args... args)
+    {
+        return parents(std::vector<ArgumentParser>{ param, args... });
     }
 
     /*!
