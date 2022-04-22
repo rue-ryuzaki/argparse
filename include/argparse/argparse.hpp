@@ -1081,7 +1081,7 @@ template <class T>
 std::string
 _get_type_name()
 {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
     std::string res = __FUNCSIG__;
     auto pos = res.find("__cdecl") + 8;
     return _replace(
