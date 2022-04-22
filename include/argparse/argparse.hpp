@@ -478,7 +478,7 @@ struct make_integer_sequence_impl
 
     template <T... Prev>
     struct tmp<integer_sequence<T, Prev...>>
-    { using type = integer_sequence<T, Prev..., N-1>; };
+    { using type = integer_sequence<T, Prev..., N - 1>; };
 
     using type
       = typename tmp<typename make_integer_sequence_impl<T, N - 1>::type>::type;
@@ -1105,62 +1105,6 @@ public:
     template <class T, typename std::enable_if<
                   std::is_same<std::string, T>::value>::type* = nullptr>
     std::string static
-    name()
-    {
-        return "std::string";
-    }
-
-    template <class T, typename std::enable_if<
-                  is_stl_container<T>::value>::type* = nullptr>
-    std::string static
-    name()
-    {
-        auto str = _replace(_get_type_name<T>(), "__cxx11::", "");
-        return str.substr(0, str.find('<'))
-                + "<" + name<typename T::value_type>() + ">";
-    }
-
-    template <class T, typename std::enable_if<
-                  is_stl_map<T>::value>::type* = nullptr>
-    std::string static
-    name()
-    {
-        return "std::map<" + name<typename T::key_type>()
-                + ", " + name<typename T::mapped_type>() + ">";
-    }
-
-    template <class T, typename std::enable_if<
-                  is_stl_pair<T>::value>::type* = nullptr>
-    std::string static
-    name()
-    {
-        return "std::pair<" + name<typename T::first_type>()
-                + ", " + name<typename T::second_type>() + ">";
-    }
-
-    template <class T, typename std::enable_if<
-                  is_stl_tuple<T>::value>::type* = nullptr>
-    std::string static
-    name()
-    {
-        return "std::tuple<>";
-    }
-
-    template <class T, typename std::enable_if<
-                  !std::is_same<std::string, T>::value
-                  && !is_stl_container<T>::value
-                  && !is_stl_map<T>::value
-                  && !is_stl_pair<T>::value
-                  && !is_stl_tuple<T>::value>::type* = nullptr>
-    std::string static
-    name()
-    {
-        return _get_type_name<T>();
-    }
-
-    template <class T, typename std::enable_if<
-                  std::is_same<std::string, T>::value>::type* = nullptr>
-    std::string static
     basic()
     {
         return "std::string";
@@ -1202,6 +1146,90 @@ public:
     basic()
     {
         return _get_type_name<T>();
+    }
+
+    template <class T, typename std::enable_if<
+                  std::is_same<std::string, T>::value>::type* = nullptr>
+    std::string static
+    name()
+    {
+        return "std::string";
+    }
+
+    template <class T, typename std::enable_if<
+                  is_stl_container<T>::value>::type* = nullptr>
+    std::string static
+    name()
+    {
+        auto str = _replace(_get_type_name<T>(), "__cxx11::", "");
+        return str.substr(0, str.find('<'))
+                + "<" + name<typename T::value_type>() + ">";
+    }
+
+    template <class T, typename std::enable_if<
+                  is_stl_map<T>::value>::type* = nullptr>
+    std::string static
+    name()
+    {
+        return "std::map<" + name<typename T::key_type>()
+                + ", " + name<typename T::mapped_type>() + ">";
+    }
+
+    template <class T, typename std::enable_if<
+                  is_stl_pair<T>::value>::type* = nullptr>
+    std::string static
+    name()
+    {
+        return "std::pair<" + name<typename T::first_type>()
+                + ", " + name<typename T::second_type>() + ">";
+    }
+
+    template <class T, typename std::enable_if<
+                  is_stl_tuple<T>::value>::type* = nullptr>
+    std::string static
+    name()
+    {
+        return tuple_as_string(type_tag<T>{});
+    }
+
+    template <class T, typename std::enable_if<
+                  !std::is_same<std::string, T>::value
+                  && !is_stl_container<T>::value
+                  && !is_stl_map<T>::value
+                  && !is_stl_pair<T>::value
+                  && !is_stl_tuple<T>::value>::type* = nullptr>
+    std::string static
+    name()
+    {
+        return _get_type_name<T>();
+    }
+
+private:
+    template <std::size_t N>
+    std::string static&
+    tuple_type(std::string& s)
+    {
+        return s;
+    }
+
+    template <std::size_t N, class T, class... Ts>
+    std::string static&
+    tuple_type(std::string& s)
+    {
+        if (!s.empty()) {
+            s += ", ";
+        }
+        s += name<T>();
+        return tuple_type<N - 1, Ts...>(s);
+    }
+
+    template <class... Ts>
+    std::string static
+    tuple_as_string(type_tag<std::tuple<Ts...>>)
+    {
+        std::string result;
+        tuple_type<sizeof...(Ts), Ts...>(result);
+        return "std::tuple<" + result + ">";
     }
 };
 
