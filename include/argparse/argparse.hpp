@@ -6429,8 +6429,7 @@ public:
     }
 
     /*!
-     *  \brief Print a brief description of how the ArgumentParser
-     *  should be invoked on the command line
+     *  \brief Print a program usage to output stream (default: std::cout)
      *
      *  \param os Output stream
      */
@@ -6447,8 +6446,7 @@ public:
     }
 
     /*!
-     *  \brief Print a help message, including the program usage and information
-     *  about the arguments registered with the ArgumentParser
+     *  \brief Print a help message to output stream (default: std::cout)
      *
      *  \param os Output stream
      */
@@ -6465,10 +6463,9 @@ public:
     }
 
     /*!
-     *  \brief Return a string containing a brief description of how
-     *  the ArgumentParser should be invoked on the command line
+     *  \brief Return a string containing a program usage
      *
-     *  \return Usage format
+     *  \return Program usage
      */
     inline std::string format_usage() const
     {
@@ -6478,11 +6475,9 @@ public:
     }
 
     /*!
-     *  \brief Return a string containing a help message, including the program
-     *  usage and information about the arguments registered with the
-     *  ArgumentParser
+     *  \brief Return a string containing a help message
      *
-     *  \return Help format
+     *  \return Help message
      */
     inline std::string format_help() const
     {
@@ -6492,8 +6487,8 @@ public:
     }
 
     /*!
-     *  \brief This method terminates the program, exiting with the specified
-     *  status and, if given, it prints a message before that
+     *  \brief Terminates the program, exiting with the specified status and,
+     *  if given, prints a message before that
      *
      *  \param status Status code
      *  \param message Error message
@@ -6508,7 +6503,7 @@ public:
     }
 
     /*!
-     *  \brief This method prints a usage message including the message to the
+     *  \brief Prints a usage message including the message to the
      *  standard error and terminates the program with a status code of 2
      *
      *  \param message Error message
