@@ -5246,7 +5246,8 @@ public:
               m_help(),
               m_prog(),
               m_handle(),
-              m_parse_handle()
+              m_parse_handle(),
+              m_parents()
         { }
 
     public:
@@ -5372,6 +5373,19 @@ public:
         }
 
         /*!
+         *  \brief Set parser 'parents' value
+         *
+         *  \param param Parents values
+         *
+         *  \return Current parser reference
+         */
+        inline Parser& parents(std::vector<ArgumentParser> const& param)
+        {
+            m_parents = param;
+            return *this;
+        }
+
+        /*!
          *  \brief Add argument
          *
          *  \param argument Argument
@@ -5413,11 +5427,77 @@ public:
                         2, limit, width, detail::_space);
         }
 
+        inline std::vector<pArgument> get_optional(bool add_group) const
+        {
+            std::vector<pArgument> result;
+            for (auto const& parent : m_parents) {
+                auto args = parent.m_data.get_optional(add_group);
+                if (!args.empty()) {
+                    result.insert(std::end(result),
+                                  std::make_move_iterator(std::begin(args)),
+                                  std::make_move_iterator(std::end(args)));
+                }
+            }
+            auto curr = m_data.get_optional(add_group);
+            if (!curr.empty()) {
+                result.insert(std::end(result),
+                              std::make_move_iterator(std::begin(curr)),
+                              std::make_move_iterator(std::end(curr)));
+            }
+            return result;
+        }
+
+        inline std::vector<pArgument>
+        get_optional_with_help(bool add_group,
+                               bool add_help,
+                               std::string const& prefix_chars) const
+        {
+            std::vector<pArgument> result;
+            for (auto const& parent : m_parents) {
+                auto args = parent.m_data.get_optional_with_help(
+                                                add_group, false, prefix_chars);
+                if (!args.empty()) {
+                    result.insert(std::end(result),
+                                  std::make_move_iterator(std::begin(args)),
+                                  std::make_move_iterator(std::end(args)));
+                }
+            }
+            auto curr = m_data.get_optional_with_help(add_group, add_help,
+                                                      prefix_chars);
+            if (!curr.empty()) {
+                result.insert(std::end(result),
+                              std::make_move_iterator(std::begin(curr)),
+                              std::make_move_iterator(std::end(curr)));
+            }
+            return result;
+        }
+
+        inline std::vector<pArgument> get_positional(bool add_group) const
+        {
+            std::vector<pArgument> result;
+            for (auto const& parent : m_parents) {
+                auto args = parent.m_data.get_positional(add_group);
+                if (!args.empty()) {
+                    result.insert(std::end(result),
+                                  std::make_move_iterator(std::begin(args)),
+                                  std::make_move_iterator(std::end(args)));
+                }
+            }
+            auto curr = m_data.get_positional(add_group);
+            if (!curr.empty()) {
+                result.insert(std::end(result),
+                              std::make_move_iterator(std::begin(curr)),
+                              std::make_move_iterator(std::end(curr)));
+            }
+            return result;
+        }
+
         std::string m_name;
         std::string m_help;
         std::string m_prog;
         std::function<void(std::string const&)> m_handle;
         std::function<void(argparse::Namespace const&)> m_parse_handle;
+        std::vector<ArgumentParser> m_parents;
     };
 
     /*!
@@ -6769,8 +6849,8 @@ private:
             if (!p->usage().empty()) {
                 os << "usage: " << p->usage() << std::endl;
             } else {
-                print_custom_usage(p->m_data.get_positional(true),
-                                   p->m_data.get_optional_with_help(
+                print_custom_usage(p->get_positional(true),
+                                   p->get_optional_with_help(
                                        true, add_help(), p->prefix_chars()),
                                    p->m_mutex_groups,
                                    std::make_pair(nullptr, 0),
@@ -7357,10 +7437,10 @@ private:
         }
         if (parser) {
             sub_optional
-                    = parser->m_data
-                        .get_optional_with_help(true, add_help(),
-                                                parser->prefix_chars());
-            auto sub_positional = parser->m_data.get_positional(true);
+                    = parser->
+                        get_optional_with_help(true, add_help(),
+                                               parser->prefix_chars());
+            auto sub_positional = parser->get_positional(true);
             detail::_move_vector_insert_to(sub_positional, positional,
                                            subparser.second);
             args.pop_front();
@@ -7384,6 +7464,10 @@ private:
             }
             parser->m_prog = program + detail::_spaces + parser->m_name;
             parser->handle(parser->m_name);
+            for (auto const& parent : parser->m_parents) {
+                storage.force_add(parent.m_data.m_arguments);
+                sub_storage.force_add(parent.m_data.m_arguments);
+            }
             storage.force_add(parser->m_data.m_arguments);
             sub_storage.force_add(parser->m_data.m_arguments);
         } else {
@@ -7487,8 +7571,8 @@ private:
     {
         if (parser) {
             bool help_added = false;
-            auto opt_all = parser->m_data.get_optional(true);
-            auto opt = parser->m_data.get_optional(false);
+            auto opt_all = parser->get_optional(true);
+            auto opt = parser->get_optional(false);
             if (add_help()) {
                 auto help_flags = detail::_help_flags(parser->prefix_chars());
                 if (m_data.m_conflict_handler == "resolve") {
@@ -7507,8 +7591,8 @@ private:
                     help_added = true;
                 }
             }
-            print_custom_help(parser->m_data.get_positional(true), opt_all,
-                              parser->m_data.get_positional(false), opt,
+            print_custom_help(parser->get_positional(true), opt_all,
+                              parser->get_positional(false), opt,
                               help_added, parser->m_groups,
                               parser->m_mutex_groups,
                               std::make_pair(nullptr, 0),
