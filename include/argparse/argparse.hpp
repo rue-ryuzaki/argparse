@@ -3209,6 +3209,8 @@ using ExclusiveGroup
  */
 class BaseParser
 {
+    friend class ArgumentParser;
+
 protected:
     typedef std::shared_ptr<Group> pGroup;
 
