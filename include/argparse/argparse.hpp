@@ -6571,9 +6571,8 @@ private:
                     bool intermixed,
                     argparse::Namespace const& space) const
     {
+        check_namespace(space);
         auto parsed_arguments = read_args_from_file(in_parsed_arguments);
-        detail::_insert_vector_to_end(space.unrecognized_args(),
-                                      parsed_arguments);
         auto const subparser = subpurser_info();
         check_intermixed_subparser(intermixed, subparser.first);
 
@@ -6602,7 +6601,7 @@ private:
             storage.create(optional);
         } else {
             storage.force_add(positional);
-            storage.try_add(optional);
+            storage.force_add(optional);
         }
         argparse::Namespace::Storage sub_storage;
 
@@ -6682,6 +6681,29 @@ private:
         parser_post_trigger(parser, sub_storage, storage);
         return create_namespace(only_known, std::move(storage),
                                 std::move(unrecognized_args));
+    }
+
+    void
+    check_namespace(argparse::Namespace const& space) const
+    {
+        if (space.m_unrecognized_args.has_value()) {
+            for (auto const& parent : m_parents) {
+                if (!parent.m_data.m_arguments.empty()) {
+                    auto const& arg = parent.m_data.m_arguments.front();
+                    auto const& name = !arg->dest().empty() ? arg->dest()
+                                                            : arg->m_name;
+                    throw AttributeError(
+                              "'tuple' object has no attribute '" + name + "'");
+                }
+            }
+            if (!m_data.m_arguments.empty()) {
+                auto const& arg = m_data.m_arguments.front();
+                auto const& name = !arg->dest().empty() ? arg->dest()
+                                                        : arg->m_name;
+                throw AttributeError(
+                              "'tuple' object has no attribute '" + name + "'");
+            }
+        }
     }
 
     static void
