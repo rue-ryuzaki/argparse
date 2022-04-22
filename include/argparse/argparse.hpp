@@ -1083,8 +1083,9 @@ _get_type_name()
 {
 #if defined(_MSC_VER)
     std::string res = __FUNCSIG__;
-    auto pos = res.find("__cdecl");
-    return res.substr(pos + 27, res.size() - pos - 27 - 7);
+    auto pos = res.find("__cdecl") + 8;
+    return _replace(
+                res.substr(pos + 33, res.size() - pos - 33 - 7), "class ", "");
 #elif defined(__clang__)
     std::string res = __PRETTY_FUNCTION__;
     auto pos = res.find('=') + 2;
