@@ -2194,8 +2194,9 @@ TEST_CASE("20. namespace", "[argument_parser]")
         auto parser2 = argparse::ArgumentParser().exit_on_error(false);
         parser2.add_argument({ "--baz" });
 
-        // in python there are error: AttributeError: 'tuple' object has no attribute
-//        REQUIRE_THROWS(parser2.parse_args(""), parser.parse_known_args({ pos, "-f", foo, "--bar", bar, "--baz", baz }));
+        // if parser2 have arguments in python there are error: AttributeError: 'tuple' object has no attribute 'baz'
+        REQUIRE_THROWS(parser2.parse_args("", parser.parse_known_args({ pos, "-f", foo, "--bar", bar })));
+        REQUIRE_THROWS(parser2.parse_args("", parser.parse_known_args({ pos, "-f", foo, "--bar", bar, "--baz", baz })));
 
         auto args3 = parser2.parse_args("", args2);
         REQUIRE(args3.get<std::string>("-f") == foo);
