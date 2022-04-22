@@ -1103,11 +1103,13 @@ class Type
 {
 public:
     template <class T, typename std::enable_if<
-                  std::is_same<std::string, T>::value>::type* = nullptr>
+                  std::is_same<std::string, T>::value
+                  || is_stl_pair<T>::value
+                  || is_stl_tuple<T>::value>::type* = nullptr>
     std::string static
     basic()
     {
-        return "std::string";
+        return name<T>();
     }
 
     template <class T, typename std::enable_if<
@@ -1125,15 +1127,6 @@ public:
     {
         return "std::pair<" + name<typename T::key_type>()
                 + ", " + name<typename T::mapped_type>() + ">";
-    }
-
-    template <class T, typename std::enable_if<
-                  is_stl_pair<T>::value
-                  || is_stl_tuple<T>::value>::type* = nullptr>
-    std::string static
-    basic()
-    {
-        return name<T>();
     }
 
     template <class T, typename std::enable_if<
