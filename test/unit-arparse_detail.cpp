@@ -4,7 +4,7 @@
 
 TEST_CASE("1. split to args", "[detail]")
 {
-    SECTION("without quotes") {
+    SECTION("1.1. without quotes") {
         REQUIRE(argparse::detail::_split_to_args("").empty());
         REQUIRE(argparse::detail::_split_to_args("abc").size() == 1);
         REQUIRE(argparse::detail::_split_to_args("abc xyz").size() == 2);
@@ -12,7 +12,7 @@ TEST_CASE("1. split to args", "[detail]")
         REQUIRE(argparse::detail::_split_to_args("-f=abc xyz").size() == 2);
     }
 
-    SECTION("with quotes") {
+    SECTION("1.2. with quotes") {
         REQUIRE(argparse::detail::_split_to_args("Homer's dog").size() == 2);
         REQUIRE(argparse::detail::_split_to_args("Homer's\\ dog").size() == 1);
         REQUIRE(argparse::detail::_split_to_args("'Homer's dog'").size() == 1);
@@ -22,7 +22,7 @@ TEST_CASE("1. split to args", "[detail]")
 
 TEST_CASE("2. type name", "[detail]")
 {
-    SECTION("current type") {
+    SECTION("2.1. current type") {
         REQUIRE(argparse::detail::_type_name<int>() == "int");
         REQUIRE(argparse::detail::_type_name<char>() == "char");
         REQUIRE(argparse::detail::_type_name<float>() == "float");
@@ -46,7 +46,7 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::_type_name<std::vector<std::vector<int>>>() == "std::vector<std::vector<int>>");
     }
 
-    SECTION("basic type") {
+    SECTION("2.2. basic type") {
         REQUIRE(argparse::detail::_basic_type<int>() == "int");
         REQUIRE(argparse::detail::_basic_type<char>() == "char");
         REQUIRE(argparse::detail::_basic_type<float>() == "float");
