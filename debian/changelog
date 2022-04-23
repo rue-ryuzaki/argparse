@@ -1,3 +1,16 @@
+cpp-argparse-dev (1.4.2-0ppa0) focal; urgency=low
+
+  * Add paired containers support to Namespace::get()
+  * Add tupled containers support to Namespace::get()
+  * Add 2D containers of queue support to Namespace::get()
+  * Update type check
+  * Fix parseing if Namespace exists
+  * Fix read args from file implementation
+  * Fix type name determine on windows
+  * Add base support for Parser's parents
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 23 Apr 2022 17:21:31 +0300
+
 cpp-argparse-dev (1.4.1-0ppa0) focal; urgency=low
 
   * Fix code style issues
