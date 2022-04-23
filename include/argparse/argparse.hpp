@@ -1113,7 +1113,8 @@ public:
     }
 
     template <class T, typename std::enable_if<
-                  is_stl_container<T>::value>::type* = nullptr>
+                  is_stl_container<T>::value
+                  || is_stl_queue<T>::value>::type* = nullptr>
     std::string static
     basic()
     {
@@ -1134,6 +1135,7 @@ public:
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
                   && !is_stl_pair<T>::value
+                  && !is_stl_queue<T>::value
                   && !is_stl_tuple<T>::value>::type* = nullptr>
     std::string static
     basic()
@@ -1150,7 +1152,8 @@ public:
     }
 
     template <class T, typename std::enable_if<
-                  is_stl_container<T>::value>::type* = nullptr>
+                  is_stl_container<T>::value
+                  || is_stl_queue<T>::value>::type* = nullptr>
     std::string static
     name()
     {
@@ -1164,7 +1167,8 @@ public:
     std::string static
     name()
     {
-        return "std::map<" + name<typename T::key_type>()
+        auto str = _get_type_name<T>();
+        return str.substr(0, str.find('<')) + "<" + name<typename T::key_type>()
                 + ", " + name<typename T::mapped_type>() + ">";
     }
 
@@ -1190,6 +1194,7 @@ public:
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
                   && !is_stl_pair<T>::value
+                  && !is_stl_queue<T>::value
                   && !is_stl_tuple<T>::value>::type* = nullptr>
     std::string static
     name()
