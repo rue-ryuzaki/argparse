@@ -6290,7 +6290,7 @@ public:
     std::string get_default(std::string const& dest) const
     {
         auto const positional = positional_arguments(true, true);
-        auto const optional = optional_arguments(true, true).second;
+        auto const optional = optional_arguments(true, true);
         auto ip = std::find_if(std::begin(positional), std::end(positional),
                                [&dest] (pArgument const& arg)
         { return detail::_is_value_exists(dest, arg->m_flags); });
@@ -6565,7 +6565,7 @@ public:
             os << "usage: " << usage() << std::endl;
         } else {
             auto const positional = positional_arguments(false, true);
-            auto const optional = optional_arguments(false, true).second;
+            auto const optional = optional_arguments(false, true);
             print_custom_usage(positional, optional, m_mutex_groups,
                                subpurser_info(false), prog(), os);
         }
@@ -6579,13 +6579,12 @@ public:
     void print_help(std::ostream& os = std::cout) const
     {
         auto const positional_all = positional_arguments(false, true);
-        auto const optional_all = optional_arguments(false, true).second;
+        auto const optional_all = optional_arguments(false, true);
         auto const positional = positional_arguments(false, false);
         auto const optional = optional_arguments(false, false);
-        print_custom_help(positional_all, optional_all, positional,
-                          optional.second, optional.first, m_groups,
-                          m_mutex_groups, subpurser_info(false), prog(),
-                          usage(), description(), epilog(), os);
+        print_custom_help(positional_all, optional_all,  positional, optional,
+                          m_groups, m_mutex_groups, subpurser_info(false),
+                          prog(), usage(), description(), epilog(), os);
     }
 
     /*!
@@ -6725,7 +6724,7 @@ private:
 
         Parser* parser = nullptr;
         auto positional = positional_arguments(true, true);
-        auto const optional = optional_arguments(true, true).second;
+        auto const optional = optional_arguments(true, true);
         std::vector<pArgument> sub_optional;
         std::string subparser_dest;
         std::vector<std::string> subparser_flags;
@@ -7616,7 +7615,6 @@ private:
     void print_help_and_exit(Parser const* parser) const
     {
         if (parser) {
-            bool help_added = false;
             auto opt_all = parser->get_optional(true);
             auto opt = parser->get_optional(false);
             if (add_help()) {
@@ -7634,13 +7632,11 @@ private:
                             .action(Action::help);
                     opt_all.insert(std::begin(opt_all), help);
                     opt.insert(std::begin(opt), help);
-                    help_added = true;
                 }
             }
             print_custom_help(parser->get_positional(true), opt_all,
                               parser->get_positional(false), opt,
-                              help_added, parser->m_groups,
-                              parser->m_mutex_groups,
+                              parser->m_groups, parser->m_mutex_groups,
                               std::make_pair(nullptr, 0),
                               parser->m_prog, parser->usage(),
                               parser->description(), parser->epilog());
@@ -8033,10 +8029,9 @@ private:
         return result;
     }
 
-    std::pair<bool, std::vector<pArgument> >
+    std::vector<pArgument>
     optional_arguments(bool add_suppress = true, bool add_groups = true) const
     {
-        bool help_added = false;
         std::vector<pArgument> result;
         result.reserve(m_data.m_optional.size() + 1);
         if (add_help()) {
@@ -8052,12 +8047,10 @@ private:
                 help->help("show this help message and exit")
                         .action(Action::help);
                 result.emplace_back(std::move(help));
-                help_added = true;
             }
         }
         for (auto const& parent : m_parents) {
-            auto args
-                   = parent.optional_arguments(add_suppress, add_groups).second;
+            auto args = parent.optional_arguments(add_suppress, add_groups);
             if (!args.empty()) {
                 result.insert(std::end(result),
                               std::make_move_iterator(std::begin(args)),
@@ -8071,7 +8064,7 @@ private:
                 result.push_back(arg.first);
             }
         }
-        return std::make_pair(help_added, result);
+        return result;
     }
 
     SubparserInfo subpurser_info(bool add_suppress = true) const
@@ -8216,7 +8209,6 @@ private:
                       std::vector<pArgument> const& optional_all,
                       std::vector<pArgument> const& positional,
                       std::vector<pArgument> const& optional,
-                      bool help_added,
                       std::deque<pGroup> const& groups,
                       std::deque<MutuallyExclusiveGroup> const& mutex_groups,
                       SubparserInfo const& subparser_info,
@@ -8273,11 +8265,9 @@ private:
         }
         if (!optional.empty()) {
             os << "\noptional arguments:\n";
-            for (auto i = std::begin(optional); i != std::end(optional); ++i) {
-                os << (*i)->print(suppress_default
-                                  && !(help_added && i == std::begin(optional)),
-                                  m_argument_default,
-                                  m_formatter_class, size, width) << std::endl;
+            for (auto const& arg : optional) {
+                os << arg->print(suppress_default, m_argument_default,
+                                 m_formatter_class, size, width) << std::endl;
             }
         }
         for (auto const& group : groups) {
