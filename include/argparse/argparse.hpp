@@ -2755,8 +2755,11 @@ protected:
         }
     }
 
-    inline void check_conflict_arg(Argument const* arg)
+    void check_conflicting_option(Argument const* arg, pArgument& option) const
     {
+        if (option.get() == arg) {
+            return;
+        }
         auto _check_conflict = [this, &arg]
                 (std::string const& flag, std::vector<std::string>& flags)
         {
@@ -2764,22 +2767,30 @@ protected:
             if (it != std::end(flags)) {
                 if (m_conflict_handler == "resolve") {
                     flags.erase(it);
+                } else if (flags.size() == 1) {
+                    throw ArgumentError(
+                                "argument "
+                                + detail::_vector_to_string(arg->flags(), "/")
+                                + ": conflicting option string: " + flag);
                 } else {
-                    throw
-                    ArgumentError("argument "
-                                  + detail::_vector_to_string(arg->flags(), "/")
-                                  + ": conflicting option string: " + flag);
+                    throw ArgumentError(
+                                "argument "
+                               + detail::_vector_to_string(arg->flags(), "/")
+                               + ": conflicting option strings: "
+                               + detail::_vector_to_string(arg->flags(), ", "));
                 }
             }
         };
         for (auto const& flag : arg->flags()) {
-            for (auto& opt : m_optional) {
-                if (opt.first.get() == arg) {
-                    continue;
-                }
-                _check_conflict(flag, opt.first->m_flags);
-                _check_conflict(flag, opt.first->m_all_flags);
-            }
+            _check_conflict(flag, option->m_flags);
+            _check_conflict(flag, option->m_all_flags);
+        }
+    }
+
+    inline void check_conflict_arg(Argument const* arg)
+    {
+        for (auto& opt : m_optional) {
+            check_conflicting_option(arg, opt.first);
         }
     }
 
