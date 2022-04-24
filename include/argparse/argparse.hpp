@@ -3109,9 +3109,11 @@ private:
                     std::size_t width) const override
     {
         if (!description().empty() || !m_data.m_arguments.empty()) {
-            os << "\n" << title() << ":" << std::endl;
+            if (!title().empty()) {
+                os << "\n" << title() << ":";
+            }
             if (!description().empty()) {
-                os << "  " << description() << std::endl;
+                os << "\n  " << description() << std::endl;
             }
             if (!m_data.m_arguments.empty()) {
                 os << std::endl;
@@ -8165,7 +8167,7 @@ private:
                             m_formatter_class, size, width, os);
         }
         if (!optional.empty()) {
-            os << "\noptional arguments:\n";
+            os << "\noptions:\n";
             for (auto const& arg : optional) {
                 os << arg->print(suppress_default, m_argument_default,
                                  m_formatter_class, size, width) << std::endl;

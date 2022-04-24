@@ -79,7 +79,7 @@ foo description
 positional arguments:
   baz                BAZ help
 
-optional arguments:
+optionals:
   -h, --help         show this help message and exit
   -f FOO, --foo FOO  FOO help
   -b BAR, --bar BAR  BAR help
