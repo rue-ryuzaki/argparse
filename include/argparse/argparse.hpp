@@ -2641,7 +2641,9 @@ class ArgumentData
         : m_conflict_handler(),
           m_arguments(),
           m_optional(),
-          m_positional()
+          m_positional(),
+          m_add_help(false),
+          m_help_added(false)
     { }
 
 protected:
@@ -2654,26 +2656,15 @@ public:
     virtual ~ArgumentData() _ARGPARSE_NOEXCEPT = default;
 
 protected:
-    std::vector<pArgument> get_optional(bool add_group) const
+    void update_help(bool add_help, std::string const& prefix_chars)
     {
-        std::vector<pArgument> result;
-        result.reserve(m_optional.size());
-        for (auto const& pair : m_optional) {
-            if (add_group || !pair.second) {
-                result.push_back(pair.first);
-            }
+        m_add_help = add_help;
+        if (m_help_added) {
+            m_arguments.pop_front();
+            m_optional.pop_front();
+            m_help_added = false;
         }
-        return result;
-    }
-
-    std::vector<pArgument>
-    get_optional_with_help(bool add_group,
-                           bool add_help,
-                           std::string const& prefix_chars) const
-    {
-        std::vector<pArgument> result;
-        result.reserve(m_optional.size() + add_help);
-        if (add_help) {
+        if (m_add_help) {
             auto help_flags = detail::_help_flags(prefix_chars);
             if (m_conflict_handler == "resolve") {
                 for (auto const& pair : m_optional) {
@@ -2685,9 +2676,18 @@ protected:
                             std::move(help_flags), "help", Argument::Optional);
                 help->help("show this help message and exit")
                         .action(Action::help);
-                result.emplace_back(std::move(help));
+                m_arguments.push_front(std::move(help));
+                m_optional
+                        .push_front(std::make_pair(m_arguments.front(), false));
+                m_help_added = true;
             }
         }
+    }
+
+    std::vector<pArgument> get_optional(bool add_group) const
+    {
+        std::vector<pArgument> result;
+        result.reserve(m_optional.size());
         for (auto const& pair : m_optional) {
             if (add_group || !pair.second) {
                 result.push_back(pair.first);
@@ -2794,6 +2794,22 @@ protected:
         }
     }
 
+    void merge_arguments(ArgumentData const& data)
+    {
+        for (auto const& arg : data.m_optional) {
+            for (auto& opt : m_optional) {
+                check_conflicting_option(arg.first.get(), opt.first);
+            }
+            m_optional.push_back(arg);
+        }
+        for (auto const& arg : data.m_positional) {
+            m_positional.push_back(arg);
+        }
+        for (auto const& arg : data.m_arguments) {
+            m_arguments.push_back(arg);
+        }
+    }
+
     void create_argument(std::vector<std::string> flags,
                          std::string const& prefix_chars)
     {
@@ -2880,6 +2896,8 @@ protected:
     std::deque<pArgument> m_arguments;
     std::deque<std::pair<pArgument, bool> > m_optional;
     std::deque<std::pair<pArgument, bool> > m_positional;
+    bool m_add_help;
+    bool m_help_added;
 };
 
 /*!
@@ -3238,7 +3256,9 @@ protected:
           m_prefix_chars(detail::_prefix_chars),
           m_groups(),
           m_mutex_groups()
-    { }
+    {
+        m_data.update_help(true, m_prefix_chars);
+    }
 
 public:
     /*!
@@ -3284,6 +3304,16 @@ public:
     inline std::string const& prefix_chars() const _ARGPARSE_NOEXCEPT
     {
         return m_prefix_chars;
+    }
+
+    /*!
+     *  \brief Get base parser 'add_help' value (default: true)
+     *
+     *  \return Base parser 'add_help' value
+     */
+    inline bool add_help() const _ARGPARSE_NOEXCEPT
+    {
+        return m_data.m_add_help;
     }
 
     /*!
@@ -5237,11 +5267,12 @@ _ARGPARSE_EXPORT class ArgumentParser : public BaseParser
     typedef std::shared_ptr<Argument> pArgument;
 
 public:
-    using BaseParser::usage;
+    using BaseParser::add_argument;
+    using BaseParser::add_help;
     using BaseParser::description;
     using BaseParser::epilog;
     using BaseParser::prefix_chars;
-    using BaseParser::add_argument;
+    using BaseParser::usage;
 
     // compatibility for version v1.3.3 and earlier
     using Namespace
@@ -5264,16 +5295,16 @@ public:
               m_help(),
               m_prog(),
               m_handle(),
-              m_parse_handle(),
-              m_parents()
+              m_parse_handle()
         { }
 
     public:
-        using BaseParser::usage;
+        using BaseParser::add_argument;
+        using BaseParser::add_help;
         using BaseParser::description;
         using BaseParser::epilog;
         using BaseParser::prefix_chars;
-        using BaseParser::add_argument;
+        using BaseParser::usage;
 
         /*!
          *  \brief Set parser 'usage' value
@@ -5326,6 +5357,7 @@ public:
             auto value = detail::_trim_copy(param);
             if (!value.empty()) {
                 m_prefix_chars = std::move(value);
+                m_data.update_help(m_data.m_add_help, m_prefix_chars);
             }
             return *this;
         }
@@ -5340,6 +5372,19 @@ public:
         inline Parser& help(std::string const& value)
         {
             m_help = value;
+            return *this;
+        }
+
+        /*!
+         *  \brief Set parser 'add_help' value (default: true)
+         *
+         *  \param value Add help flag
+         *
+         *  \return Current parser reference
+         */
+        inline Parser& add_help(bool value)
+        {
+            m_data.update_help(value, m_prefix_chars);
             return *this;
         }
 
@@ -5399,7 +5444,15 @@ public:
          */
         inline Parser& parents(std::vector<ArgumentParser> const& param)
         {
-            m_parents = param;
+            for (auto const& parent : param) {
+                m_data.merge_arguments(parent.m_data);
+                for (auto const& group : parent.m_groups) {
+                    m_groups.push_back(group);
+                }
+                for (auto const& group : parent.m_mutex_groups) {
+                    m_mutex_groups.push_back(group);
+                }
+            }
             return *this;
         }
 
@@ -5459,77 +5512,11 @@ public:
                         2, limit, width, detail::_space);
         }
 
-        inline std::vector<pArgument> get_optional(bool add_group) const
-        {
-            std::vector<pArgument> result;
-            for (auto const& parent : m_parents) {
-                auto args = parent.m_data.get_optional(add_group);
-                if (!args.empty()) {
-                    result.insert(std::end(result),
-                                  std::make_move_iterator(std::begin(args)),
-                                  std::make_move_iterator(std::end(args)));
-                }
-            }
-            auto curr = m_data.get_optional(add_group);
-            if (!curr.empty()) {
-                result.insert(std::end(result),
-                              std::make_move_iterator(std::begin(curr)),
-                              std::make_move_iterator(std::end(curr)));
-            }
-            return result;
-        }
-
-        inline std::vector<pArgument>
-        get_optional_with_help(bool add_group,
-                               bool add_help,
-                               std::string const& prefix_chars) const
-        {
-            std::vector<pArgument> result;
-            for (auto const& parent : m_parents) {
-                auto args = parent.m_data.get_optional_with_help(
-                                                add_group, false, prefix_chars);
-                if (!args.empty()) {
-                    result.insert(std::end(result),
-                                  std::make_move_iterator(std::begin(args)),
-                                  std::make_move_iterator(std::end(args)));
-                }
-            }
-            auto curr = m_data.get_optional_with_help(add_group, add_help,
-                                                      prefix_chars);
-            if (!curr.empty()) {
-                result.insert(std::end(result),
-                              std::make_move_iterator(std::begin(curr)),
-                              std::make_move_iterator(std::end(curr)));
-            }
-            return result;
-        }
-
-        inline std::vector<pArgument> get_positional(bool add_group) const
-        {
-            std::vector<pArgument> result;
-            for (auto const& parent : m_parents) {
-                auto args = parent.m_data.get_positional(add_group);
-                if (!args.empty()) {
-                    result.insert(std::end(result),
-                                  std::make_move_iterator(std::begin(args)),
-                                  std::make_move_iterator(std::end(args)));
-                }
-            }
-            auto curr = m_data.get_positional(add_group);
-            if (!curr.empty()) {
-                result.insert(std::end(result),
-                              std::make_move_iterator(std::begin(curr)),
-                              std::make_move_iterator(std::end(curr)));
-            }
-            return result;
-        }
-
         std::string m_name;
         std::string m_help;
         std::string m_prog;
         std::function<void(std::string const&)> m_handle;
         std::function<void(argparse::Namespace const&)> m_parse_handle;
-        std::vector<ArgumentParser> m_parents;
     };
 
     /*!
@@ -5798,13 +5785,11 @@ public:
     ArgumentParser(std::string const& prog = "untitled")
         : BaseParser(),
           m_prog("untitled"),
-          m_parents(),
           m_formatter_class(),
           m_fromfile_prefix_chars(),
           m_argument_default(),
           m_argument_default_type(),
           m_output_width(),
-          m_add_help(true),
           m_allow_abbrev(true),
           m_exit_on_error(true),
           m_default_values(),
@@ -5952,7 +5937,22 @@ public:
      */
     inline ArgumentParser& parents(std::vector<ArgumentParser> const& param)
     {
-        m_parents = param;
+        for (auto const& parent : param) {
+            if (parent.m_subparsers) {
+                if (m_subparsers) {
+                    throw_error("cannot have multiple subparser arguments");
+                }
+                m_subparsers = parent.m_subparsers;
+                m_subparsers->m_position += m_data.m_positional.size();
+            }
+            m_data.merge_arguments(parent.m_data);
+            for (auto const& group : parent.m_groups) {
+                m_groups.push_back(group);
+            }
+            for (auto const& group : parent.m_mutex_groups) {
+                m_mutex_groups.push_back(group);
+            }
+        }
         return *this;
     }
 
@@ -6043,6 +6043,7 @@ public:
         auto value = detail::_trim_copy(param);
         if (!value.empty()) {
             m_prefix_chars = std::move(value);
+            m_data.update_help(m_data.m_add_help, m_prefix_chars);
         }
         return *this;
     }
@@ -6131,9 +6132,9 @@ public:
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& add_help(bool value) _ARGPARSE_NOEXCEPT
+    inline ArgumentParser& add_help(bool value)
     {
-        m_add_help = value;
+        m_data.update_help(value, m_prefix_chars);
         return *this;
     }
 
@@ -6215,16 +6216,6 @@ public:
     }
 
     /*!
-     *  \brief Get argument parser 'add_help' value (default: true)
-     *
-     *  \return Argument parser 'add_help' value
-     */
-    inline bool add_help() const _ARGPARSE_NOEXCEPT
-    {
-        return m_add_help;
-    }
-
-    /*!
      *  \brief Get argument parser 'allow_abbrev' value (default: true)
      *
      *  \return Argument parser 'allow_abbrev' value
@@ -6268,11 +6259,6 @@ public:
     {
         if (m_subparsers) {
             throw_error("cannot have multiple subparser arguments");
-        }
-        for (auto const& parent : m_parents) {
-            if (parent.m_subparsers) {
-                throw_error("cannot have multiple subparser arguments");
-            }
         }
         m_subparsers = Subparser::make_subparser();
         m_subparsers->m_position = m_data.m_positional.size();
@@ -6345,13 +6331,7 @@ public:
                 continue;
             }
             auto value = detail::_trim_copy(pair.second);
-            auto it = std::begin(m_parents);
-            for ( ; it != std::end(m_parents)
-                  && !is_default_stored(it->m_data.m_arguments, dest, value);
-                  ++it) {
-            }
-            if (it == std::end(m_parents)
-                    && !is_default_stored(m_data.m_arguments, dest, value)) {
+            if (!is_default_stored(m_data.m_arguments, dest, value)) {
                 m_default_values.push_back(std::make_pair(dest, value));
             }
         }
@@ -6582,9 +6562,10 @@ public:
         auto const optional_all = optional_arguments(false, true);
         auto const positional = positional_arguments(false, false);
         auto const optional = optional_arguments(false, false);
-        print_custom_help(positional_all, optional_all,  positional, optional,
-                          m_groups, m_mutex_groups, subpurser_info(false),
-                          prog(), usage(), description(), epilog(), os);
+        print_custom_help(positional_all, optional_all,
+                          positional, optional, m_groups,
+                          m_mutex_groups, subpurser_info(false), prog(),
+                          usage(), description(), epilog(), os);
     }
 
     /*!
@@ -6833,15 +6814,6 @@ private:
     check_namespace(argparse::Namespace const& space) const
     {
         if (space.m_unrecognized_args.has_value()) {
-            for (auto const& parent : m_parents) {
-                if (!parent.m_data.m_arguments.empty()) {
-                    auto const& arg = parent.m_data.m_arguments.front();
-                    auto const& name = !arg->dest().empty() ? arg->dest()
-                                                            : arg->m_name;
-                    throw AttributeError(
-                              "'tuple' object has no attribute '" + name + "'");
-                }
-            }
             if (!m_data.m_arguments.empty()) {
                 auto const& arg = m_data.m_arguments.front();
                 auto const& name = !arg->dest().empty() ? arg->dest()
@@ -6894,9 +6866,8 @@ private:
             if (!p->usage().empty()) {
                 os << "usage: " << p->usage() << std::endl;
             } else {
-                print_custom_usage(p->get_positional(true),
-                                   p->get_optional_with_help(
-                                       true, add_help(), p->prefix_chars()),
+                print_custom_usage(p->m_data.get_positional(true),
+                                   p->m_data.get_optional(true),
                                    p->m_mutex_groups,
                                    std::make_pair(nullptr, 0),
                                    p->m_prog, os);
@@ -7481,11 +7452,8 @@ private:
             }
         }
         if (parser) {
-            sub_optional
-                    = parser->
-                        get_optional_with_help(true, add_help(),
-                                               parser->prefix_chars());
-            auto sub_positional = parser->get_positional(true);
+            sub_optional = parser->m_data.get_optional(true);
+            auto sub_positional = parser->m_data.get_positional(true);
             detail::_move_vector_insert_to(sub_positional, positional,
                                            subparser.second);
             args.pop_front();
@@ -7509,10 +7477,6 @@ private:
             }
             parser->m_prog = program + detail::_spaces + parser->m_name;
             parser->handle(parser->m_name);
-            for (auto const& parent : parser->m_parents) {
-                storage.force_add(parent.m_data.m_arguments);
-                sub_storage.force_add(parent.m_data.m_arguments);
-            }
             storage.force_add(parser->m_data.m_arguments);
             sub_storage.force_add(parser->m_data.m_arguments);
         } else {
@@ -7615,27 +7579,10 @@ private:
     void print_help_and_exit(Parser const* parser) const
     {
         if (parser) {
-            auto opt_all = parser->get_optional(true);
-            auto opt = parser->get_optional(false);
-            if (add_help()) {
-                auto help_flags = detail::_help_flags(parser->prefix_chars());
-                if (m_data.m_conflict_handler == "resolve") {
-                    for (auto const& arg : opt_all) {
-                        detail::_resolve_conflict(arg->flags(), help_flags);
-                    }
-                }
-                if (!help_flags.empty()) {
-                    auto help = Argument::make_argument(
-                                std::move(help_flags),
-                                "help", Argument::Optional);
-                    help->help("show this help message and exit")
-                            .action(Action::help);
-                    opt_all.insert(std::begin(opt_all), help);
-                    opt.insert(std::begin(opt), help);
-                }
-            }
-            print_custom_help(parser->get_positional(true), opt_all,
-                              parser->get_positional(false), opt,
+            auto opt_all = parser->m_data.get_optional(true);
+            auto opt = parser->m_data.get_optional(false);
+            print_custom_help(parser->m_data.get_positional(true), opt_all,
+                              parser->m_data.get_positional(false), opt,
                               parser->m_groups, parser->m_mutex_groups,
                               std::make_pair(nullptr, 0),
                               parser->m_prog, parser->usage(),
@@ -8012,14 +7959,6 @@ private:
     {
         std::vector<pArgument> result;
         result.reserve(m_data.m_positional.size());
-        for (auto const& parent : m_parents) {
-            auto args = parent.positional_arguments(add_suppress, add_groups);
-            if (!args.empty()) {
-                result.insert(std::end(result),
-                              std::make_move_iterator(std::begin(args)),
-                              std::make_move_iterator(std::end(args)));
-            }
-        }
         for (auto const& arg : m_data.m_positional) {
             if ((add_suppress || !arg.first->m_help_type.has_value())
                     && (add_groups || !arg.second)) {
@@ -8033,30 +7972,6 @@ private:
     optional_arguments(bool add_suppress = true, bool add_groups = true) const
     {
         std::vector<pArgument> result;
-        result.reserve(m_data.m_optional.size() + 1);
-        if (add_help()) {
-            auto help_flags = detail::_help_flags(prefix_chars());
-            if (m_data.m_conflict_handler == "resolve") {
-                for (auto const& pair : m_data.m_optional) {
-                    detail::_resolve_conflict(pair.first->flags(), help_flags);
-                }
-            }
-            if (!help_flags.empty()) {
-                auto help = Argument::make_argument(
-                            std::move(help_flags), "help", Argument::Optional);
-                help->help("show this help message and exit")
-                        .action(Action::help);
-                result.emplace_back(std::move(help));
-            }
-        }
-        for (auto const& parent : m_parents) {
-            auto args = parent.optional_arguments(add_suppress, add_groups);
-            if (!args.empty()) {
-                result.insert(std::end(result),
-                              std::make_move_iterator(std::begin(args)),
-                              std::make_move_iterator(std::end(args)));
-            }
-        }
         for (auto const& arg : m_data.m_optional) {
             if ((add_suppress || !arg.first->m_help_type.has_value())
                     && (add_groups || !arg.second)
@@ -8087,24 +8002,7 @@ private:
             }
         };
         if (m_subparsers) {
-            for (auto const& parent : m_parents) {
-                res.second
-                      += parent.positional_arguments(add_suppress, true).size();
-            }
             _func(*this);
-        } else {
-            for (std::size_t i = 0; i < m_parents.size(); ++i) {
-                auto const& parent = m_parents.at(i);
-                if (parent.m_subparsers) {
-                    res.first = parent.m_subparsers;
-                    for (std::size_t j = 0; j < i; ++j) {
-                        res.second += m_parents.at(j)
-                               .positional_arguments(add_suppress, true).size();
-                    }
-                    _func(parent);
-                    break;
-                }
-            }
         }
         return res;
     }
@@ -8278,13 +8176,11 @@ private:
     }
 
     std::string m_prog;
-    std::vector<ArgumentParser> m_parents;
     HelpFormatter m_formatter_class;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
     detail::Value<Enum> m_argument_default_type;
     detail::Value<std::size_t> m_output_width;
-    bool m_add_help;
     bool m_allow_abbrev;
     bool m_exit_on_error;
     std::vector<std::pair<std::string, std::string> > m_default_values;
