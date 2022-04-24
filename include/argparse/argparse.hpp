@@ -2998,9 +2998,11 @@ protected:
         }
         m_parent_data.m_arguments.push_back(m_data.m_arguments.back());
         (optional ? m_data.m_optional : m_data.m_positional)
-                .push_back(std::make_pair(m_data.m_arguments.back(), true));
+                .push_back(std::make_pair(m_data.m_arguments.back(),
+                                          !m_is_mutex_group));
         (optional ? m_parent_data.m_optional : m_parent_data.m_positional)
-                .push_back(std::make_pair(m_data.m_arguments.back(), true));
+                .push_back(std::make_pair(m_data.m_arguments.back(),
+                                          !m_is_mutex_group));
     }
 
     ArgumentData m_data;
@@ -3225,7 +3227,8 @@ private:
             }
             res += arg->usage(formatter);
         }
-        return res.empty() ? res : "(" + res + ")";
+        return res.empty() ? res
+                           : (m_required ? "(" + res + ")" : "[" + res + "]");
     }
 
     bool m_required;
