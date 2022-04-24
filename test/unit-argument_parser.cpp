@@ -459,8 +459,9 @@ TEST_CASE("8. argument actions", "[argument]")
         parser.add_argument("--count").action(argparse::count);
         parser.add_argument("--extend").action(argparse::extend);
 
-        parser.add_argument(argparse::Argument({ "--help" }).action(argparse::help));
-        parser.add_argument(argparse::Argument({ "--version" }).action(argparse::version));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--help").action(argparse::help)));
+        parser.add_argument(argparse::Argument("--my_help").action(argparse::help));
+        parser.add_argument(argparse::Argument("--version").action(argparse::version));
 
         // no args
         auto args1 = parser.parse_args({ });
@@ -2419,5 +2420,33 @@ TEST_CASE("21. value types check", "[namespace]")
         REQUIRE(std::get<1>(try_tuple2.value()) == "value");
         REQUIRE(std::get<2>(try_tuple2.value()) == 3);
 #endif  // C++17+
+    }
+}
+
+TEST_CASE("22. parents", "[argument_parser]")
+{
+    SECTION("22.1. ArgumentParser help conflict") {
+        auto parent1 = argparse::ArgumentParser();
+        auto parent2 = argparse::ArgumentParser().add_help(false);
+        auto parent3 = argparse::ArgumentParser().prefix_chars("+");
+
+        REQUIRE_THROWS(argparse::ArgumentParser().parents(parent1));
+        REQUIRE_NOTHROW(argparse::ArgumentParser().add_help(false).parents(parent1));
+        REQUIRE_NOTHROW(argparse::ArgumentParser().parents(parent2));
+        REQUIRE_NOTHROW(argparse::ArgumentParser().parents(parent3));
+    }
+
+    SECTION("22.2. Parser help conflict") {
+        auto parent1 = argparse::ArgumentParser();
+        auto parent2 = argparse::ArgumentParser().add_help(false);
+        auto parent3 = argparse::ArgumentParser().prefix_chars("+");
+
+        auto parser = argparse::ArgumentParser();
+        auto& subparser = parser.add_subparsers();
+
+        REQUIRE_THROWS(subparser.add_parser("1").parents(parent1));
+        REQUIRE_NOTHROW(subparser.add_parser("2").add_help(false).parents(parent1));
+        REQUIRE_NOTHROW(subparser.add_parser("3").parents(parent2));
+        REQUIRE_NOTHROW(subparser.add_parser("4").parents(parent3));
     }
 }
