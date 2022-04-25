@@ -1360,11 +1360,11 @@ _ARGPARSE_EXPORT enum Enum : std::uint8_t
  */
 _ARGPARSE_EXPORT class Argument
 {
-    friend class ArgumentData;
+    friend class _ArgumentData;
     friend class ArgumentGroup;
     friend class ArgumentParser;
-    friend class BaseArgumentGroup;
-    friend class BaseParser;
+    friend class _BaseArgumentGroup;
+    friend class _BaseParser;
     friend class MutuallyExclusiveGroup;
     friend class Namespace;
 
@@ -2567,19 +2567,19 @@ private:
 /*!
  * \brief Group class
  */
-class Group
+class _Group
 {
     friend class ArgumentParser;
 
 protected:
-    Group()
+    _Group()
         : m_title(),
           m_description(),
           m_position()
     { }
 
     explicit
-    Group(std::string const& title, std::string const& description)
+    _Group(std::string const& title, std::string const& description)
         : m_title(title),
           m_description(description),
           m_position()
@@ -2589,7 +2589,7 @@ public:
     /*!
      *  \brief Destroy group
      */
-    virtual ~Group() _ARGPARSE_NOEXCEPT = default;
+    virtual ~_Group() _ARGPARSE_NOEXCEPT = default;
 
     /*!
      *  \brief Get group 'title' value
@@ -2629,15 +2629,15 @@ protected:
 /*!
  * \brief ArgumentData class
  */
-class ArgumentData
+class _ArgumentData
 {
     friend class ArgumentGroup;
     friend class ArgumentParser;
-    friend class BaseArgumentGroup;
-    friend class BaseParser;
+    friend class _BaseArgumentGroup;
+    friend class _BaseParser;
     friend class MutuallyExclusiveGroup;
 
-    ArgumentData()
+    _ArgumentData()
         : m_conflict_handler(),
           m_arguments(),
           m_optional(),
@@ -2653,7 +2653,7 @@ public:
     /*!
      *  \brief Destroy argument data
      */
-    virtual ~ArgumentData() _ARGPARSE_NOEXCEPT = default;
+    virtual ~_ArgumentData() _ARGPARSE_NOEXCEPT = default;
 
 protected:
     void update_help(bool add_help, std::string const& prefix_chars)
@@ -2794,7 +2794,7 @@ protected:
         }
     }
 
-    void merge_arguments(ArgumentData const& data)
+    void merge_arguments(_ArgumentData const& data)
     {
         for (auto const& arg : data.m_optional) {
             for (auto& opt : m_optional) {
@@ -2903,11 +2903,11 @@ protected:
 /*!
  * \brief BaseArgumentGroup class
  */
-class BaseArgumentGroup
+class _BaseArgumentGroup
 {
 protected:
-    BaseArgumentGroup(std::string& prefix_chars,
-                      ArgumentData& parent_data,
+    _BaseArgumentGroup(std::string& prefix_chars,
+                      _ArgumentData& parent_data,
                       bool is_mutex_group)
         : m_data(),
           m_prefix_chars(prefix_chars),
@@ -2923,7 +2923,7 @@ public:
      *
      *  \return Base rgument group object
      */
-    BaseArgumentGroup(BaseArgumentGroup const& orig)
+    _BaseArgumentGroup(_BaseArgumentGroup const& orig)
         : m_data(orig.m_data),
           m_prefix_chars(orig.m_prefix_chars),
           m_parent_data(orig.m_parent_data),
@@ -2933,7 +2933,7 @@ public:
     /*!
      *  \brief Destroy basea argument group object
      */
-    virtual ~BaseArgumentGroup() _ARGPARSE_NOEXCEPT = default;
+    virtual ~_BaseArgumentGroup() _ARGPARSE_NOEXCEPT = default;
 
     /*!
      *  \brief Copy base argument group object from another argument group
@@ -2942,7 +2942,7 @@ public:
      *
      *  \return Current base argument group reference
      */
-    BaseArgumentGroup& operator =(BaseArgumentGroup const& rhs)
+    _BaseArgumentGroup& operator =(_BaseArgumentGroup const& rhs)
     {
         if (this != &rhs) {
             m_data              = rhs.m_data;
@@ -3005,9 +3005,9 @@ protected:
                                           !m_is_mutex_group));
     }
 
-    ArgumentData m_data;
+    _ArgumentData m_data;
     std::string& m_prefix_chars;
-    ArgumentData& m_parent_data;
+    _ArgumentData& m_parent_data;
 
 private:
     bool m_is_mutex_group;
@@ -3016,31 +3016,31 @@ private:
 /*!
  * \brief ArgumentGroup class
  */
-_ARGPARSE_EXPORT class ArgumentGroup : public Group, public BaseArgumentGroup
+_ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _BaseArgumentGroup
 {
-    friend class BaseParser;
+    friend class _BaseParser;
 
     explicit
     ArgumentGroup(std::string const& title,
                   std::string const& description,
                   std::string& prefix_chars,
-                  ArgumentData& parent_data)
-        : Group(title, description),
-          BaseArgumentGroup(prefix_chars, parent_data, false)
+                  _ArgumentData& parent_data)
+        : _Group(title, description),
+          _BaseArgumentGroup(prefix_chars, parent_data, false)
     { }
 
     static inline std::shared_ptr<ArgumentGroup>
     make_argument_group(std::string const& title,
                         std::string const& description,
                         std::string& prefix_chars,
-                        ArgumentData& parent_data)
+                        _ArgumentData& parent_data)
     {
         return std::make_shared<ArgumentGroup>
                 (ArgumentGroup(title, description, prefix_chars, parent_data));
     }
 
 public:
-    using BaseArgumentGroup::add_argument;
+    using _BaseArgumentGroup::add_argument;
 
     /*!
      *  \brief Create argument group object from another argument group
@@ -3050,8 +3050,8 @@ public:
      *  \return Argument group object
      */
     ArgumentGroup(ArgumentGroup const& orig)
-        : Group(orig),
-          BaseArgumentGroup(orig)
+        : _Group(orig),
+          _BaseArgumentGroup(orig)
     { }
 
     /*!
@@ -3129,25 +3129,25 @@ private:
 /*!
  * \brief MutuallyExclusiveGroup class
  */
-_ARGPARSE_EXPORT class MutuallyExclusiveGroup : public BaseArgumentGroup
+_ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _BaseArgumentGroup
 {
     friend class ArgumentParser;
-    friend class BaseParser;
+    friend class _BaseParser;
 
     explicit
-    MutuallyExclusiveGroup(std::string& prefix_chars, ArgumentData& parent_data)
-        : BaseArgumentGroup(prefix_chars, parent_data, true),
+    MutuallyExclusiveGroup(std::string& prefix_chars, _ArgumentData& parent_data)
+        : _BaseArgumentGroup(prefix_chars, parent_data, true),
           m_required(false)
     { }
 
     static inline MutuallyExclusiveGroup
-    make_mutex_group(std::string& prefix_chars, ArgumentData& parent_data)
+    make_mutex_group(std::string& prefix_chars, _ArgumentData& parent_data)
     {
         return MutuallyExclusiveGroup(prefix_chars, parent_data);
     }
 
 public:
-    using BaseArgumentGroup::add_argument;
+    using _BaseArgumentGroup::add_argument;
 
     /*!
      *  \brief Create mutually exclusive group object from another
@@ -3158,7 +3158,7 @@ public:
      *  \return Mutually exclusive group object
      */
     MutuallyExclusiveGroup(MutuallyExclusiveGroup const& orig)
-        : BaseArgumentGroup(orig),
+        : _BaseArgumentGroup(orig),
           m_required(orig.m_required)
     { }
 
@@ -3246,14 +3246,14 @@ using ExclusiveGroup
 /*!
  * \brief BaseParser class
  */
-class BaseParser
+class _BaseParser
 {
     friend class ArgumentParser;
 
 protected:
-    typedef std::shared_ptr<Group> pGroup;
+    typedef std::shared_ptr<_Group> pGroup;
 
-    BaseParser()
+    _BaseParser()
         : m_data(),
           m_prog(),
           m_usage(),
@@ -3271,7 +3271,7 @@ public:
     /*!
      *  \brief Destroy base parser
      */
-    virtual ~BaseParser() _ARGPARSE_NOEXCEPT = default;
+    virtual ~_BaseParser() _ARGPARSE_NOEXCEPT = default;
 
     /*!
      *  \brief Get base parser 'usage' value
@@ -3388,7 +3388,7 @@ protected:
                 .push_back(std::make_pair(m_data.m_arguments.back(), false));
     }
 
-    ArgumentData m_data;
+    _ArgumentData m_data;
     std::string m_prog;
     std::string m_usage;
     std::string m_description;
@@ -5271,17 +5271,17 @@ private:
 /*!
  * \brief ArgumentParser objects
  */
-_ARGPARSE_EXPORT class ArgumentParser : public BaseParser
+_ARGPARSE_EXPORT class ArgumentParser : public _BaseParser
 {
     typedef std::shared_ptr<Argument> pArgument;
 
 public:
-    using BaseParser::add_argument;
-    using BaseParser::add_help;
-    using BaseParser::description;
-    using BaseParser::epilog;
-    using BaseParser::prefix_chars;
-    using BaseParser::usage;
+    using _BaseParser::add_argument;
+    using _BaseParser::add_help;
+    using _BaseParser::description;
+    using _BaseParser::epilog;
+    using _BaseParser::prefix_chars;
+    using _BaseParser::usage;
 
     // compatibility for version v1.3.3 and earlier
     using Namespace
@@ -5293,13 +5293,13 @@ public:
     /*!
      * \brief Parser class
      */
-    class Parser : public BaseParser
+    class Parser : public _BaseParser
     {
         friend class ArgumentParser;
 
         explicit
         Parser(std::string const& name)
-            : BaseParser(),
+            : _BaseParser(),
               m_name(name),
               m_help(),
               m_handle(),
@@ -5307,12 +5307,12 @@ public:
         { }
 
     public:
-        using BaseParser::add_argument;
-        using BaseParser::add_help;
-        using BaseParser::description;
-        using BaseParser::epilog;
-        using BaseParser::prefix_chars;
-        using BaseParser::usage;
+        using _BaseParser::add_argument;
+        using _BaseParser::add_help;
+        using _BaseParser::description;
+        using _BaseParser::epilog;
+        using _BaseParser::prefix_chars;
+        using _BaseParser::usage;
 
         /*!
          *  \brief Set parser 'usage' value
@@ -5597,12 +5597,12 @@ public:
     /*!
      * \brief Subparser class
      */
-    class Subparser : public Group
+    class Subparser : public _Group
     {
         friend class ArgumentParser;
 
         Subparser()
-            : Group(),
+            : _Group(),
               m_parent_prog(),
               m_prog(),
               m_dest(),
@@ -5619,8 +5619,8 @@ public:
         }
 
     public:
-        using Group::title;
-        using Group::description;
+        using _Group::title;
+        using _Group::description;
 
         /*!
          *  \brief Set subparser 'title' value
@@ -5879,7 +5879,7 @@ public:
      */
     explicit
     ArgumentParser(std::string const& prog = "untitled")
-        : BaseParser(),
+        : _BaseParser(),
           m_fromfile_prefix_chars(),
           m_argument_default(),
           m_argument_default_type(),
