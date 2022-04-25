@@ -3255,10 +3255,12 @@ protected:
 
     BaseParser()
         : m_data(),
+          m_prog(),
           m_usage(),
           m_description(),
           m_epilog(),
           m_prefix_chars(detail::_prefix_chars),
+          m_formatter_class(),
           m_groups(),
           m_mutex_groups()
     {
@@ -3387,10 +3389,12 @@ protected:
     }
 
     ArgumentData m_data;
+    std::string m_prog;
     std::string m_usage;
     std::string m_description;
     std::string m_epilog;
     std::string m_prefix_chars;
+    HelpFormatter m_formatter_class;
     std::deque<pGroup> m_groups;
     std::deque<MutuallyExclusiveGroup> m_mutex_groups;
 };
@@ -5298,7 +5302,6 @@ public:
             : BaseParser(),
               m_name(name),
               m_help(),
-              m_prog(),
               m_handle(),
               m_parse_handle()
         { }
@@ -5503,6 +5506,11 @@ public:
         }
 
     private:
+        void update_prog(std::string const& parent_prog)
+        {
+            m_prog = parent_prog + detail::_spaces + m_name;
+        }
+
         inline void handle(std::string const& str) const
         {
             if (m_handle) {
@@ -5521,7 +5529,6 @@ public:
 
         std::string m_name;
         std::string m_help;
-        std::string m_prog;
         std::function<void(std::string const&)> m_handle;
         std::function<void(argparse::Namespace const&)> m_parse_handle;
     };
@@ -5535,6 +5542,7 @@ public:
 
         Subparser()
             : Group(),
+              m_parent_prog(),
               m_prog(),
               m_dest(),
               m_required(false),
@@ -5589,6 +5597,7 @@ public:
         inline Subparser& prog(std::string const& value)
         {
             m_prog = detail::_trim_copy(value);
+            update_prog(m_parent_prog);
             return *this;
         }
 
@@ -5704,10 +5713,28 @@ public:
         inline Parser& add_parser(std::string const& name)
         {
             m_parsers.emplace_back(Parser(name));
+            m_parsers.back().update_prog(prog_name());
             return m_parsers.back();
         }
 
     private:
+        inline std::string const& prog_name() const _ARGPARSE_NOEXCEPT
+        {
+            return m_prog.empty() ? m_parent_prog : m_prog;
+        }
+
+        void update_prog(std::string const& parent_prog)
+        {
+            m_parent_prog = parent_prog;
+            auto program = m_prog;
+            if (program.empty()) {
+                program = m_parent_prog;
+            }
+            for (auto& parser : m_parsers) {
+                parser.update_prog(program);
+            }
+        }
+
         void limit_help_flags(HelpFormatter, std::size_t& limit) const override
         {
             auto size = flags_to_string().size();
@@ -5769,6 +5796,7 @@ public:
             { return str + "\n" + p.print(formatter, limit, width); });
         }
 
+        std::string m_parent_prog;
         std::string m_prog;
         std::string m_dest;
         bool        m_required;
@@ -5791,8 +5819,6 @@ public:
     explicit
     ArgumentParser(std::string const& prog = "untitled")
         : BaseParser(),
-          m_prog("untitled"),
-          m_formatter_class(),
           m_fromfile_prefix_chars(),
           m_argument_default(),
           m_argument_default_type(),
@@ -5803,6 +5829,7 @@ public:
           m_parsed_arguments(),
           m_subparsers(nullptr)
     {
+        m_prog = "untitled";
         this->prog(prog);
     }
 
@@ -5892,6 +5919,9 @@ public:
         auto value = detail::_trim_copy(param);
         if (!value.empty()) {
             m_prog = value;
+            if (m_subparsers) {
+                m_subparsers->update_prog(prog());
+            }
         }
         return *this;
     }
@@ -5954,6 +5984,7 @@ public:
                 }
                 m_subparsers = parent.m_subparsers;
                 m_subparsers->m_position += m_data.m_positional.size();
+                m_subparsers->update_prog(prog());
             }
             m_data.merge_arguments(parent.m_data);
             for (auto const& group : parent.m_groups) {
@@ -6272,6 +6303,7 @@ public:
         }
         m_subparsers = Subparser::make_subparser();
         m_subparsers->m_position = m_data.m_positional.size();
+        m_subparsers->update_prog(prog());
         m_groups.push_back(m_subparsers);
         return *m_subparsers;
     }
@@ -8185,8 +8217,6 @@ private:
         detail::_print_raw_text_formatter(m_formatter_class, epilog, os);
     }
 
-    std::string m_prog;
-    HelpFormatter m_formatter_class;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
     detail::Value<Enum> m_argument_default_type;
