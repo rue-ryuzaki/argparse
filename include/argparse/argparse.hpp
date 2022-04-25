@@ -5945,6 +5945,9 @@ public:
     inline ArgumentParser& parents(std::vector<ArgumentParser> const& param)
     {
         for (auto const& parent : param) {
+            if (this == &parent) {
+                continue;
+            }
             if (parent.m_subparsers) {
                 if (m_subparsers) {
                     throw_error("cannot have multiple subparser arguments");
