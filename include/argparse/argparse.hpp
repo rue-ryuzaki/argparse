@@ -5452,7 +5452,9 @@ public:
             for (auto const& parent : param) {
                 m_data.merge_arguments(parent.m_data);
                 for (auto const& group : parent.m_groups) {
-                    m_groups.push_back(group);
+                    if (group != parent.m_subparsers) {
+                        m_groups.push_back(group);
+                    }
                 }
                 for (auto const& group : parent.m_mutex_groups) {
                     m_mutex_groups.push_back(group);
