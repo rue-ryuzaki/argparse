@@ -5481,6 +5481,67 @@ public:
         }
 
         /*!
+         *  \brief Set parser 'formatter_class' value
+         *
+         *  \param param HelpFormatter value
+         *
+         *  \return Current parser reference
+         */
+        inline Parser&
+        formatter_class(HelpFormatter param) _ARGPARSE_NOEXCEPT
+        {
+            m_formatter_class = param;
+            return *this;
+        }
+
+        /*!
+         *  \brief Set parser 'formatter_class' value
+         *
+         *  \param param HelpFormatter value
+         *  \param args HelpFormatter values
+         *
+         *  \return Current parser reference
+         */
+        template <class... Args>
+        Parser&
+        formatter_class(HelpFormatter param, Args... args) _ARGPARSE_NOEXCEPT
+        {
+            formatter_class(param);
+            return add_formatter_class(args...);
+        }
+
+        /*!
+         *  \brief Add parser 'formatter_class' value
+         *
+         *  \param param HelpFormatter value
+         *
+         *  \return Current parser reference
+         */
+        inline Parser&
+        add_formatter_class(HelpFormatter param) _ARGPARSE_NOEXCEPT
+        {
+            m_formatter_class
+                    = static_cast<HelpFormatter>(m_formatter_class | param);
+            return *this;
+        }
+
+        /*!
+         *  \brief Add parser 'formatter_class' value
+         *
+         *  \param param HelpFormatter value
+         *  \param args HelpFormatter values
+         *
+         *  \return Current parser reference
+         */
+        template <class... Args>
+        Parser&
+        add_formatter_class(HelpFormatter param, Args... args)_ARGPARSE_NOEXCEPT
+        {
+            add_formatter_class(param);
+            return add_formatter_class(args...);
+        }
+
+        /*!
          *  \brief Add argument
          *
          *  \param argument Argument
