@@ -3023,7 +3023,7 @@ private:
  */
 _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _BaseArgumentGroup
 {
-    friend class _BaseParser;
+    friend class ArgumentParser;
 
     explicit
     ArgumentGroup(std::string const& title,
@@ -3247,162 +3247,6 @@ using ExclusiveGroup
 [[deprecated("use argparse::MutuallyExclusiveGroup instead.")]]
 #endif  // C++14+
     = MutuallyExclusiveGroup;
-
-/*!
- * \brief BaseParser class
- */
-class _BaseParser
-{
-    friend class ArgumentParser;
-
-protected:
-    typedef std::shared_ptr<_Group> pGroup;
-
-    _BaseParser()
-        : m_data(),
-          m_prog(),
-          m_usage(),
-          m_description(),
-          m_epilog(),
-          m_prefix_chars(detail::_prefix_chars),
-          m_formatter_class(),
-          m_groups(),
-          m_mutex_groups()
-    {
-        m_data.update_help(true, m_prefix_chars);
-    }
-
-public:
-    /*!
-     *  \brief Destroy base parser
-     */
-    virtual ~_BaseParser() _ARGPARSE_NOEXCEPT = default;
-
-    /*!
-     *  \brief Get base parser 'usage' value
-     *
-     *  \return Base parser 'usage' value
-     */
-    inline std::string const& usage() const _ARGPARSE_NOEXCEPT
-    {
-        return m_usage;
-    }
-
-    /*!
-     *  \brief Get base parser 'description' value
-     *
-     *  \return Base parser 'description' value
-     */
-    inline std::string const& description() const _ARGPARSE_NOEXCEPT
-    {
-        return m_description;
-    }
-
-    /*!
-     *  \brief Get base parser 'epilog' value
-     *
-     *  \return Base parser 'epilog' value
-     */
-    inline std::string const& epilog() const _ARGPARSE_NOEXCEPT
-    {
-        return m_epilog;
-    }
-
-    /*!
-     *  \brief Get base parser 'prefix_chars' value (default: "-")
-     *
-     *  \return Base parser 'prefix_chars' value
-     */
-    inline std::string const& prefix_chars() const _ARGPARSE_NOEXCEPT
-    {
-        return m_prefix_chars;
-    }
-
-    /*!
-     *  \brief Get base parser 'add_help' value (default: true)
-     *
-     *  \return Base parser 'add_help' value
-     */
-    inline bool add_help() const _ARGPARSE_NOEXCEPT
-    {
-        return m_data.m_add_help;
-    }
-
-    /*!
-     *  \brief Add argument with flags
-     *
-     *  \param args Flag values
-     *
-     *  \return Current argument reference
-     */
-    template <class... Args>
-    Argument& add_argument(Args... args)
-    {
-        return add_argument(std::vector<std::string>{ args... });
-    }
-
-    /*!
-     *  \brief Add argument with flags
-     *
-     *  \param flags Flags values
-     *
-     *  \return Current argument reference
-     */
-    inline Argument& add_argument(std::vector<std::string> const& flags)
-    {
-        m_data.create_argument(flags, prefix_chars());
-        process_add_argument();
-        return *m_data.m_arguments.back();
-    }
-
-    /*!
-     *  \brief Add argument group
-     *
-     *  \param title Group title
-     *  \param description Group description
-     *
-     *  \return Current argument group reference
-     */
-    inline ArgumentGroup&
-    add_argument_group(std::string const& title = std::string(),
-                       std::string const& description = std::string())
-    {
-        auto group = ArgumentGroup::make_argument_group(title, description,
-                                                        m_prefix_chars, m_data);
-        m_groups.push_back(group);
-        return *group;
-    }
-
-    /*!
-     *  \brief Add mutually exclusive group
-     *
-     *  \return Current mutually exclusive group reference
-     */
-    inline MutuallyExclusiveGroup& add_mutually_exclusive_group()
-    {
-        m_mutex_groups.emplace_back(
-              MutuallyExclusiveGroup::make_mutex_group(m_prefix_chars, m_data));
-        return m_mutex_groups.back();
-    }
-
-protected:
-    inline void process_add_argument()
-    {
-        bool optional = m_data.m_arguments.back()->m_type == Argument::Optional;
-        (optional ? m_data.m_optional : m_data.m_positional)
-                .push_back(std::make_pair(m_data.m_arguments.back(), false));
-    }
-
-    _ArgumentData m_data;
-    std::string m_prog;
-    std::string m_usage;
-    std::string m_description;
-    std::string m_epilog;
-    std::string m_prefix_chars;
-    HelpFormatter m_formatter_class;
-    std::deque<pGroup> m_groups;
-    std::deque<MutuallyExclusiveGroup> m_mutex_groups;
-};
 
 /*!
  * \brief Object with parsed arguments
@@ -5276,18 +5120,13 @@ private:
 /*!
  * \brief ArgumentParser objects
  */
-_ARGPARSE_EXPORT class ArgumentParser : public _BaseParser
+_ARGPARSE_EXPORT class ArgumentParser
 {
     typedef std::shared_ptr<Argument> pArgument;
+    typedef std::shared_ptr<_Group> pGroup;
+    typedef std::shared_ptr<ArgumentParser> pParser;
 
 public:
-    using _BaseParser::add_argument;
-    using _BaseParser::add_help;
-    using _BaseParser::description;
-    using _BaseParser::epilog;
-    using _BaseParser::prefix_chars;
-    using _BaseParser::usage;
-
     // compatibility for version v1.3.3 and earlier
     using Namespace
 #if __cplusplus >= 201402L  // C++14+
@@ -5295,322 +5134,10 @@ public:
 #endif  // C++14+
         = argparse::Namespace;
 
-    // forward declaration
-    class Subparser;
-
     /*!
      * \brief Parser class
      */
-    class Parser : public _BaseParser
-    {
-        friend class ArgumentParser;
-
-        explicit
-        Parser(std::string const& name)
-            : _BaseParser(),
-              m_name(name),
-              m_help(),
-              m_handle(),
-              m_parse_handle()
-        { }
-
-    public:
-        using _BaseParser::add_argument;
-        using _BaseParser::add_help;
-        using _BaseParser::description;
-        using _BaseParser::epilog;
-        using _BaseParser::prefix_chars;
-        using _BaseParser::usage;
-
-        /*!
-         *  \brief Set parser 'usage' value
-         *
-         *  \param param Usage value
-         *
-         *  \return Current parser reference
-         */
-        inline Parser& usage(std::string const& param)
-        {
-            m_usage = detail::_trim_copy(param);
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'description' value
-         *
-         *  \param param Description value
-         *
-         *  \return Current parser reference
-         */
-        inline Parser& description(std::string const& param)
-        {
-            m_description = param;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'epilog' value
-         *
-         *  \param param Epilog value
-         *
-         *  \return Current parser reference
-         */
-        inline Parser& epilog(std::string const& param)
-        {
-            m_epilog = param;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'prefix_chars' value (default: "-")
-         *
-         *  \param param Prefix chars values
-         *
-         *  \return Current parser reference
-         */
-        inline Parser& prefix_chars(std::string const& param)
-        {
-            auto value = detail::_trim_copy(param);
-            if (!value.empty()) {
-                m_prefix_chars = std::move(value);
-                m_data.update_help(m_data.m_add_help, m_prefix_chars);
-            }
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'help' message
-         *
-         *  \param value Help message
-         *
-         *  \return Current parser reference
-         */
-        inline Parser& help(std::string const& value)
-        {
-            m_help = value;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'add_help' value (default: true)
-         *
-         *  \param value Add help flag
-         *
-         *  \return Current parser reference
-         */
-        inline Parser& add_help(bool value)
-        {
-            m_data.update_help(value, m_prefix_chars);
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'handle' function.
-         *  Called when the parser is executed and passed the value of the
-         *  parser
-         *
-         *  \param func Handle function
-         *
-         *  \return Current parser reference
-         */
-        inline Parser&
-        handle(std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT
-        {
-            m_handle = func;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'handle' function.
-         *  Called when the parser is executed.
-         *
-         *  \param func Handle function
-         *
-         *  \return Current parser reference
-         */
-        inline Parser& handle(std::function<void()> func) _ARGPARSE_NOEXCEPT
-        {
-            m_handle = [func] (std::string const&) { func(); };
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'handle' function.
-         *  Called when the parser is executed and passed the namespace
-         *  of the parser
-         *
-         *  \param func Parse handle function
-         *
-         *  \return Current parser reference
-         */
-        inline Parser&
-        handle(std::function<void(argparse::Namespace const&)> func)
-                                                              _ARGPARSE_NOEXCEPT
-        {
-            m_parse_handle = func;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'parents' value
-         *
-         *  \param param Parents values
-         *
-         *  \return Current parser reference
-         */
-        inline Parser& parents(std::vector<ArgumentParser> const& param)
-        {
-            for (auto const& parent : param) {
-                m_data.merge_arguments(parent.m_data);
-                for (auto const& group : parent.m_groups) {
-                    if (group != parent.m_subparsers) {
-                        m_groups.push_back(group);
-                    }
-                }
-                for (auto const& group : parent.m_mutex_groups) {
-                    m_mutex_groups.push_back(group);
-                }
-            }
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'parents' value
-         *
-         *  \param param Parent value
-         *  \param args Parents values
-         *
-         *  \return Current parser reference
-         */
-        template <class... Args>
-        Parser& parents(ArgumentParser const& param, Args... args)
-        {
-            return parents(std::vector<ArgumentParser>{ param, args... });
-        }
-
-        /*!
-         *  \brief Set parser 'formatter_class' value
-         *
-         *  \param param HelpFormatter value
-         *
-         *  \return Current parser reference
-         */
-        inline Parser&
-        formatter_class(HelpFormatter param) _ARGPARSE_NOEXCEPT
-        {
-            m_formatter_class = param;
-            return *this;
-        }
-
-        /*!
-         *  \brief Set parser 'formatter_class' value
-         *
-         *  \param param HelpFormatter value
-         *  \param args HelpFormatter values
-         *
-         *  \return Current parser reference
-         */
-        template <class... Args>
-        Parser&
-        formatter_class(HelpFormatter param, Args... args) _ARGPARSE_NOEXCEPT
-        {
-            formatter_class(param);
-            return add_formatter_class(args...);
-        }
-
-        /*!
-         *  \brief Add parser 'formatter_class' value
-         *
-         *  \param param HelpFormatter value
-         *
-         *  \return Current parser reference
-         */
-        inline Parser&
-        add_formatter_class(HelpFormatter param) _ARGPARSE_NOEXCEPT
-        {
-            m_formatter_class
-                    = static_cast<HelpFormatter>(m_formatter_class | param);
-            return *this;
-        }
-
-        /*!
-         *  \brief Add parser 'formatter_class' value
-         *
-         *  \param param HelpFormatter value
-         *  \param args HelpFormatter values
-         *
-         *  \return Current parser reference
-         */
-        template <class... Args>
-        Parser&
-        add_formatter_class(HelpFormatter param, Args... args)_ARGPARSE_NOEXCEPT
-        {
-            add_formatter_class(param);
-            return add_formatter_class(args...);
-        }
-
-        /*!
-         *  \brief Add argument
-         *
-         *  \param argument Argument
-         *
-         *  \return Current parser reference
-         */
-        template <typename = void>
-        inline Parser& add_argument(Argument const& argument)
-        {
-            m_data.validate_argument(Argument(argument), prefix_chars());
-            process_add_argument();
-            return *this;
-        }
-
-        /*!
-         *  \brief Add subparsers
-         *
-         *  \return Current subparser reference
-         */
-        Subparser& add_subparsers()
-        {
-            throw std::logic_error("Parser::add_subparsers() not implemented");
-        }
-
-        /*!
-         *  \brief Get parser 'help' message
-         *
-         *  \return Parser 'help' message
-         */
-        inline std::string const& help() const _ARGPARSE_NOEXCEPT
-        {
-            return m_help;
-        }
-
-    private:
-        void update_prog(std::string const& parent_prog)
-        {
-            m_prog = parent_prog + detail::_spaces + m_name;
-        }
-
-        inline void handle(std::string const& str) const
-        {
-            if (m_handle) {
-                m_handle(detail::_remove_quotes(str));
-            }
-        }
-
-        inline std::string print(HelpFormatter formatter,
-                                 std::size_t limit, std::size_t width) const
-        {
-            return detail::_format_output(
-                        "    " + m_name,
-                        detail::_help_formatter(formatter, help()),
-                        2, limit, width, detail::_space);
-        }
-
-        std::string m_name;
-        std::string m_help;
-        std::function<void(std::string const&)> m_handle;
-        std::function<void(argparse::Namespace const&)> m_parse_handle;
-    };
+    using Parser = ArgumentParser;
 
     /*!
      * \brief Subparser class
@@ -5792,9 +5319,9 @@ public:
          */
         inline Parser& add_parser(std::string const& name)
         {
-            m_parsers.emplace_back(Parser(name));
-            m_parsers.back().update_prog(prog_name());
-            return m_parsers.back();
+            m_parsers.emplace_back(make_parser(name));
+            m_parsers.back()->update_prog(prog_name());
+            return *m_parsers.back();
         }
 
     private:
@@ -5814,7 +5341,7 @@ public:
             m_parent_args = parent_args;
             auto program = prog_name();
             for (auto& parser : m_parsers) {
-                parser.update_prog(program);
+                parser->update_prog(program);
             }
         }
 
@@ -5825,7 +5352,7 @@ public:
                 limit = size;
             }
             for (auto const& arg : m_parsers) {
-                auto s = arg.m_name.size() + 2;
+                auto s = arg->m_name.size() + 2;
                 if (limit < s) {
                     limit = s;
                 }
@@ -5861,7 +5388,7 @@ public:
                 if (!res.empty()) {
                     res += ",";
                 }
-                res += parser.m_name;
+                res += parser->m_name;
             }
             return "{" + res + "}";
         }
@@ -5875,8 +5402,8 @@ public:
                         2, limit, width, detail::_space);
             return std::accumulate(std::begin(m_parsers), std::end(m_parsers),
                                    res, [formatter, limit, width]
-                                   (std::string const& str, Parser const& p)
-            { return str + "\n" + p.print(formatter, limit, width); });
+                                   (std::string const& str, pParser const& p)
+            { return str + "\n" + p->print(formatter, limit, width); });
         }
 
         std::string m_parent_prog;
@@ -5886,7 +5413,7 @@ public:
         bool        m_required;
         std::string m_help;
         detail::Value<std::string> m_metavar;
-        std::deque<Parser> m_parsers;
+        std::deque<pParser> m_parsers;
     };
 
 private:
@@ -5902,19 +5429,32 @@ public:
      */
     explicit
     ArgumentParser(std::string const& prog = "untitled")
-        : _BaseParser(),
+        : m_data(),
+          m_name(),
+          m_prog(),
+          m_usage(),
+          m_description(),
+          m_epilog(),
+          m_help(),
+          m_formatter_class(),
+          m_prefix_chars(detail::_prefix_chars),
           m_fromfile_prefix_chars(),
           m_argument_default(),
           m_argument_default_type(),
-          m_output_width(),
           m_allow_abbrev(true),
           m_exit_on_error(true),
+          m_output_width(),
+          m_groups(),
+          m_mutex_groups(),
           m_default_values(),
           m_parsed_arguments(),
-          m_subparsers(nullptr)
+          m_subparsers(nullptr),
+          m_handle(nullptr),
+          m_parse_handle(nullptr)
     {
         m_prog = "untitled";
         this->prog(prog);
+        m_data.update_help(true, m_prefix_chars);
     }
 
     /*!
@@ -5989,8 +5529,18 @@ public:
     /*!
      *  \brief Destroy argument parser
      */
-    ~ArgumentParser() _ARGPARSE_NOEXCEPT = default;
+    virtual ~ArgumentParser() _ARGPARSE_NOEXCEPT = default;
 
+private:
+    pParser static make_parser(std::string const& name)
+    {
+        pParser result =std::make_shared<ArgumentParser>(ArgumentParser());
+        result->m_prog = "";
+        result->m_name = name;
+        return result;
+    }
+
+public:
     /*!
      *  \brief Set argument parser 'prog' value (default: argv[0] or "untitled")
      *
@@ -6046,6 +5596,19 @@ public:
     inline ArgumentParser& epilog(std::string const& param)
     {
         m_epilog = param;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument parser 'help' message
+     *
+     *  \param value Help message
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& help(std::string const& value)
+    {
+        m_help = value;
         return *this;
     }
 
@@ -6235,22 +5798,6 @@ public:
     }
 
     /*!
-     *  \brief Set output width value (default: auto-detected or 80, min 33)
-     *
-     *  \param value Output width
-     *
-     *  \return Current argument parser reference
-     */
-    inline ArgumentParser& output_width(std::size_t value) _ARGPARSE_NOEXCEPT
-    {
-        m_output_width = value;
-        if (m_output_width() < detail::_min_width) {
-            m_output_width = detail::_min_width;
-        }
-        return *this;
-    }
-
-    /*!
      *  \brief Set argument parser 'add_help' value (default: true)
      *
      *  \param value Add help flag
@@ -6290,6 +5837,22 @@ public:
     }
 
     /*!
+     *  \brief Set output width value (default: auto-detected or 80, min 33)
+     *
+     *  \param value Output width
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& output_width(std::size_t value) _ARGPARSE_NOEXCEPT
+    {
+        m_output_width = value;
+        if (m_output_width() < detail::_min_width) {
+            m_output_width = detail::_min_width;
+        }
+        return *this;
+    }
+
+    /*!
      *  \brief Get argument parser 'prog' value (default: argv[0] or "untitled")
      *
      *  \return Argument parser 'prog' value
@@ -6297,6 +5860,56 @@ public:
     inline std::string const& prog() const _ARGPARSE_NOEXCEPT
     {
         return m_prog;
+    }
+
+    /*!
+     *  \brief Get argument parser 'usage' value
+     *
+     *  \return Argument parser 'usage' value
+     */
+    inline std::string const& usage() const _ARGPARSE_NOEXCEPT
+    {
+        return m_usage;
+    }
+
+    /*!
+     *  \brief Get argument parser 'description' value
+     *
+     *  \return Argument parser 'description' value
+     */
+    inline std::string const& description() const _ARGPARSE_NOEXCEPT
+    {
+        return m_description;
+    }
+
+    /*!
+     *  \brief Get argument parser 'epilog' value
+     *
+     *  \return Argument parser 'epilog' value
+     */
+    inline std::string const& epilog() const _ARGPARSE_NOEXCEPT
+    {
+        return m_epilog;
+    }
+
+    /*!
+     *  \brief Get argument parser 'help' message
+     *
+     *  \return Argument parser 'help' message
+     */
+    inline std::string const& help() const _ARGPARSE_NOEXCEPT
+    {
+        return m_help;
+    }
+
+    /*!
+     *  \brief Get argument parser 'prefix_chars' value (default: "-")
+     *
+     *  \return Argument parser 'prefix_chars' value
+     */
+    inline std::string const& prefix_chars() const _ARGPARSE_NOEXCEPT
+    {
+        return m_prefix_chars;
     }
 
     /*!
@@ -6330,14 +5943,13 @@ public:
     }
 
     /*!
-     *  \brief Get output width value (default: auto-detected or 80, min 33)
+     *  \brief Get argument parser 'add_help' value (default: true)
      *
-     *  \return Output width value
+     *  \return Argument parser 'add_help' value
      */
-    inline std::size_t output_width() const
+    inline bool add_help() const _ARGPARSE_NOEXCEPT
     {
-        return m_output_width.has_value() ? m_output_width()
-                                          : detail::_get_terminal_size().first;
+        return m_data.m_add_help;
     }
 
     /*!
@@ -6361,6 +5973,44 @@ public:
     }
 
     /*!
+     *  \brief Get output width value (default: auto-detected or 80, min 33)
+     *
+     *  \return Output width value
+     */
+    inline std::size_t output_width() const
+    {
+        return m_output_width.has_value() ? m_output_width()
+                                          : detail::_get_terminal_size().first;
+    }
+
+    /*!
+     *  \brief Add argument with flags
+     *
+     *  \param args Flag values
+     *
+     *  \return Current argument reference
+     */
+    template <class... Args>
+    Argument& add_argument(Args... args)
+    {
+        return add_argument(std::vector<std::string>{ args... });
+    }
+
+    /*!
+     *  \brief Add argument with flags
+     *
+     *  \param flags Flags values
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& add_argument(std::vector<std::string> const& flags)
+    {
+        m_data.create_argument(flags, prefix_chars());
+        process_add_argument();
+        return *m_data.m_arguments.back();
+    }
+
+    /*!
      *  \brief Add argument
      *
      *  \param argument Argument
@@ -6373,6 +6023,36 @@ public:
         m_data.validate_argument(Argument(argument), prefix_chars());
         process_add_argument();
         return *this;
+    }
+
+    /*!
+     *  \brief Add argument group
+     *
+     *  \param title Group title
+     *  \param description Group description
+     *
+     *  \return Current argument group reference
+     */
+    inline ArgumentGroup&
+    add_argument_group(std::string const& title = std::string(),
+                       std::string const& description = std::string())
+    {
+        auto group = ArgumentGroup::make_argument_group(title, description,
+                                                        m_prefix_chars, m_data);
+        m_groups.push_back(group);
+        return *group;
+    }
+
+    /*!
+     *  \brief Add mutually exclusive group
+     *
+     *  \return Current mutually exclusive group reference
+     */
+    inline MutuallyExclusiveGroup& add_mutually_exclusive_group()
+    {
+        m_mutex_groups.emplace_back(
+              MutuallyExclusiveGroup::make_mutex_group(m_prefix_chars, m_data));
+        return m_mutex_groups.back();
     }
 
     /*!
@@ -6390,6 +6070,53 @@ public:
         m_subparsers->update_prog(prog(), subparser_prog_args());
         m_groups.push_back(m_subparsers);
         return *m_subparsers;
+    }
+
+    /*!
+     *  \brief Set argument parser 'handle' function.
+     *  Called when the parser is executed and passed the value of the
+     *  parser
+     *
+     *  \param func Handle function
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser&
+    handle(std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT
+    {
+        m_handle = func;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument parser 'handle' function.
+     *  Called when the parser is executed.
+     *
+     *  \param func Handle function
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& handle(std::function<void()> func) _ARGPARSE_NOEXCEPT
+    {
+        m_handle = [func] (std::string const&) { func(); };
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument parser 'handle' function.
+     *  Called when the parser is executed and passed the namespace
+     *  of the parser
+     *
+     *  \param func Parse handle function
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser&
+    handle(std::function<void(argparse::Namespace const&)> func)
+                                                              _ARGPARSE_NOEXCEPT
+    {
+        m_parse_handle = func;
+        return *this;
     }
 
     /*!
@@ -6773,7 +6500,7 @@ public:
         return res;
     }
 
-protected:
+private:
     inline void
     throw_error(std::string const& message, std::ostream& os = std::cerr) const
     {
@@ -6781,7 +6508,13 @@ protected:
         throw std::logic_error(prog() + ": error: " + message);
     }
 
-private:
+    inline void process_add_argument()
+    {
+        bool optional = m_data.m_arguments.back()->m_type == Argument::Optional;
+        (optional ? m_data.m_optional : m_data.m_positional)
+                .push_back(std::make_pair(m_data.m_arguments.back(), false));
+    }
+
     argparse::Namespace
     on_parse_arguments(std::vector<std::string> const& args,
                        bool only_known,
@@ -7033,7 +6766,7 @@ private:
     {
         if (subparser) {
             for (auto const& p : subparser->m_parsers) {
-                for (auto const& arg : p.m_data.m_arguments) {
+                for (auto const& arg : p->m_data.m_arguments) {
                     arg->validate();
                 }
             }
@@ -7566,9 +7299,9 @@ private:
         auto const& name = args.front();
         std::string choices;
         for (auto& p : subparser.first->m_parsers) {
-            detail::_append_value_to("'" + p.m_name + "'", choices, ", ");
-            if (p.m_name == name) {
-                parser = &p;
+            detail::_append_value_to("'" + p->m_name + "'", choices, ", ");
+            if (p->m_name == name) {
+                parser = p.get();
                 if (!subparser_dest.empty()) {
                     storage.force_add(subparser_arg);
                     storage.at(subparser_arg).push_back(name);
@@ -8273,15 +8006,51 @@ private:
         detail::_print_raw_text_formatter(m_formatter_class, epilog, os);
     }
 
+    void update_prog(std::string const& parent_prog)
+    {
+        m_prog = parent_prog + detail::_spaces + m_name;
+    }
+
+    inline void handle(std::string const& str) const
+    {
+        if (m_handle) {
+            m_handle(detail::_remove_quotes(str));
+        }
+    }
+
+    inline std::string print(HelpFormatter formatter,
+                             std::size_t limit, std::size_t width) const
+    {
+        return detail::_format_output(
+                    "    " + m_name,
+                    detail::_help_formatter(formatter, help()),
+                    2, limit, width, detail::_space);
+    }
+
+    _ArgumentData m_data;
+    std::string m_name;
+    std::string m_prog;
+    std::string m_usage;
+    std::string m_description;
+    std::string m_epilog;
+    std::string m_help;
+    HelpFormatter m_formatter_class;
+    std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
     detail::Value<Enum> m_argument_default_type;
-    detail::Value<std::size_t> m_output_width;
     bool m_allow_abbrev;
     bool m_exit_on_error;
+
+    detail::Value<std::size_t> m_output_width;
+    std::deque<pGroup> m_groups;
+    std::deque<MutuallyExclusiveGroup> m_mutex_groups;
     std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
     std::shared_ptr<Subparser> m_subparsers;
+
+    std::function<void(std::string const&)> m_handle;
+    std::function<void(argparse::Namespace const&)> m_parse_handle;
 };
 }  // namespace argparse
 
