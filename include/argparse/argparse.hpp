@@ -5290,6 +5290,9 @@ public:
 #endif  // C++14+
         = argparse::Namespace;
 
+    // forward declaration
+    class Subparser;
+
     /*!
      * \brief Parser class
      */
