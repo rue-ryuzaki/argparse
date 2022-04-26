@@ -5557,6 +5557,16 @@ public:
         }
 
         /*!
+         *  \brief Add subparsers
+         *
+         *  \return Current subparser reference
+         */
+        Subparser& add_subparsers()
+        {
+            throw std::logic_error("Parser::add_subparsers() not implemented");
+        }
+
+        /*!
          *  \brief Get parser 'help' message
          *
          *  \return Parser 'help' message
