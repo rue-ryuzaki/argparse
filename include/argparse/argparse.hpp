@@ -5622,6 +5622,7 @@ public:
         Subparser()
             : _Group(),
               m_parent_prog(),
+              m_parent_args(),
               m_prog(),
               m_dest(),
               m_required(false),
@@ -5676,7 +5677,7 @@ public:
         inline Subparser& prog(std::string const& value)
         {
             m_prog = detail::_trim_copy(value);
-            update_prog(m_parent_prog);
+            update_prog(m_parent_prog, m_parent_args);
             return *this;
         }
 
@@ -5797,18 +5798,21 @@ public:
         }
 
     private:
-        inline std::string const& prog_name() const _ARGPARSE_NOEXCEPT
+        inline std::string prog_name() const
         {
-            return m_prog.empty() ? m_parent_prog : m_prog;
+            std::string program = m_prog.empty() ? m_parent_prog : m_prog;
+            if (!m_parent_args.empty()) {
+                program += " " + m_parent_args;
+            }
+            return program;
         }
 
-        void update_prog(std::string const& parent_prog)
+        void update_prog(std::string const& parent_prog,
+                         std::string const& parent_args)
         {
             m_parent_prog = parent_prog;
-            auto program = m_prog;
-            if (program.empty()) {
-                program = m_parent_prog;
-            }
+            m_parent_args = parent_args;
+            auto program = prog_name();
             for (auto& parser : m_parsers) {
                 parser.update_prog(program);
             }
@@ -5876,6 +5880,7 @@ public:
         }
 
         std::string m_parent_prog;
+        std::string m_parent_args;
         std::string m_prog;
         std::string m_dest;
         bool        m_required;
@@ -5999,7 +6004,7 @@ public:
         if (!value.empty()) {
             m_prog = value;
             if (m_subparsers) {
-                m_subparsers->update_prog(prog());
+                m_subparsers->update_prog(prog(), subparser_prog_args());
             }
         }
         return *this;
@@ -6063,7 +6068,7 @@ public:
                 }
                 m_subparsers = parent.m_subparsers;
                 m_subparsers->m_position += m_data.m_positional.size();
-                m_subparsers->update_prog(prog());
+                m_subparsers->update_prog(prog(), subparser_prog_args());
             }
             m_data.merge_arguments(parent.m_data);
             for (auto const& group : parent.m_groups) {
@@ -6382,7 +6387,7 @@ public:
         }
         m_subparsers = Subparser::make_subparser();
         m_subparsers->m_position = m_data.m_positional.size();
-        m_subparsers->update_prog(prog());
+        m_subparsers->update_prog(prog(), subparser_prog_args());
         m_groups.push_back(m_subparsers);
         return *m_subparsers;
     }
@@ -7581,22 +7586,6 @@ private:
             have_negative_args
                     = negative_numbers_presented(sub_optional,
                                                  parser->prefix_chars());
-
-            bool add_suppress = false;
-            auto info = subpurser_info(add_suppress);
-            auto program = m_subparsers->m_prog;
-            if (program.empty()) {
-                program = prog();
-            }
-            auto const positionals = m_data.get_positional(add_suppress, true);
-            for (std::size_t i = 0; i < positionals.size(); ++i) {
-                if (info.second == i) {
-                    break;
-                }
-                auto str = positionals.at(i)->usage(m_formatter_class);
-                detail::_append_value_to(str, program);
-            }
-            parser->m_prog = program + detail::_spaces + parser->m_name;
             parser->handle(parser->m_name);
             storage.force_add(parser->m_data.m_arguments);
             sub_storage.force_add(parser->m_data.m_arguments);
@@ -8098,6 +8087,22 @@ private:
             _func(*this);
         }
         return res;
+    }
+
+    std::string subparser_prog_args() const
+    {
+        std::string result;
+        bool add_suppress = false;
+        auto info = subpurser_info(add_suppress);
+        auto const pos = m_data.get_positional(add_suppress, true);
+        for (std::size_t i = 0; i < pos.size(); ++i) {
+            if (info.second == i) {
+                break;
+            }
+            auto str = pos.at(i)->usage(m_formatter_class);
+            detail::_append_value_to(str, result);
+        }
+        return result;
     }
 
     static std::string
