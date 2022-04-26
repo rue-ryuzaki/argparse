@@ -2684,24 +2684,29 @@ protected:
         }
     }
 
-    std::vector<pArgument> get_optional(bool add_group) const
+    std::vector<pArgument>
+    get_optional(bool add_suppress, bool add_group) const
     {
         std::vector<pArgument> result;
         result.reserve(m_optional.size());
         for (auto const& pair : m_optional) {
-            if (add_group || !pair.second) {
+            if ((add_suppress || !pair.first->m_help_type.has_value())
+                    && (add_group || !pair.second)
+                    && !pair.first->flags().empty()) {
                 result.push_back(pair.first);
             }
         }
         return result;
     }
 
-    std::vector<pArgument> get_positional(bool add_group) const
+    std::vector<pArgument>
+    get_positional(bool add_suppress, bool add_group) const
     {
         std::vector<pArgument> result;
         result.reserve(m_positional.size());
         for (auto const& pair : m_positional) {
-            if (add_group || !pair.second) {
+            if ((add_suppress || !pair.first->m_help_type.has_value())
+                    && (add_group || !pair.second)) {
                 result.push_back(pair.first);
             }
         }
@@ -6391,8 +6396,8 @@ public:
      */
     std::string get_default(std::string const& dest) const
     {
-        auto const positional = positional_arguments(true, true);
-        auto const optional = optional_arguments(true, true);
+        auto const positional = m_data.get_positional(true, true);
+        auto const optional = m_data.get_optional(true, true);
         auto ip = std::find_if(std::begin(positional), std::end(positional),
                                [&dest] (pArgument const& arg)
         { return detail::_is_value_exists(dest, arg->m_flags); });
@@ -6660,8 +6665,8 @@ public:
         if (!usage().empty()) {
             os << "usage: " << usage() << std::endl;
         } else {
-            auto const positional = positional_arguments(false, true);
-            auto const optional = optional_arguments(false, true);
+            auto const positional = m_data.get_positional(false, true);
+            auto const optional = m_data.get_optional(false, true);
             print_custom_usage(positional, optional, m_mutex_groups,
                                subpurser_info(false), prog(), os);
         }
@@ -6674,10 +6679,10 @@ public:
      */
     void print_help(std::ostream& os = std::cout) const
     {
-        auto const positional_all = positional_arguments(false, true);
-        auto const optional_all = optional_arguments(false, true);
-        auto const positional = positional_arguments(false, false);
-        auto const optional = optional_arguments(false, false);
+        auto const positional_all = m_data.get_positional(false, true);
+        auto const optional_all = m_data.get_optional(false, true);
+        auto const positional = m_data.get_positional(false, false);
+        auto const optional = m_data.get_optional(false, false);
         print_custom_help(positional_all, optional_all,
                           positional, optional, m_groups,
                           m_mutex_groups, subpurser_info(false), prog(),
@@ -6820,8 +6825,8 @@ private:
         check_intermixed_subparser(intermixed, subparser.first);
 
         Parser* parser = nullptr;
-        auto positional = positional_arguments(true, true);
-        auto const optional = optional_arguments(true, true);
+        auto positional = m_data.get_positional(true, true);
+        auto const optional = m_data.get_optional(true, true);
         std::vector<pArgument> sub_optional;
         std::string subparser_dest;
         std::vector<std::string> subparser_flags;
@@ -6982,8 +6987,8 @@ private:
             if (!p->usage().empty()) {
                 os << "usage: " << p->usage() << std::endl;
             } else {
-                print_custom_usage(p->m_data.get_positional(true),
-                                   p->m_data.get_optional(true),
+                print_custom_usage(p->m_data.get_positional(false, true),
+                                   p->m_data.get_optional(false, true),
                                    p->m_mutex_groups,
                                    std::make_pair(nullptr, 0),
                                    p->m_prog, os);
@@ -7568,8 +7573,8 @@ private:
             }
         }
         if (parser) {
-            sub_optional = parser->m_data.get_optional(true);
-            auto sub_positional = parser->m_data.get_positional(true);
+            sub_optional = parser->m_data.get_optional(true, true);
+            auto sub_positional = parser->m_data.get_positional(true, true);
             detail::_move_vector_insert_to(sub_positional, positional,
                                            subparser.second);
             args.pop_front();
@@ -7583,7 +7588,7 @@ private:
             if (program.empty()) {
                 program = prog();
             }
-            auto const positionals = positional_arguments(add_suppress, true);
+            auto const positionals = m_data.get_positional(add_suppress, true);
             for (std::size_t i = 0; i < positionals.size(); ++i) {
                 if (info.second == i) {
                     break;
@@ -7695,10 +7700,10 @@ private:
     void print_help_and_exit(Parser const* parser) const
     {
         if (parser) {
-            auto opt_all = parser->m_data.get_optional(true);
-            auto opt = parser->m_data.get_optional(false);
-            print_custom_help(parser->m_data.get_positional(true), opt_all,
-                              parser->m_data.get_positional(false), opt,
+            print_custom_help(parser->m_data.get_positional(false, true),
+                              parser->m_data.get_optional(false, true),
+                              parser->m_data.get_positional(false, false),
+                              parser->m_data.get_optional(false, false),
                               parser->m_groups, parser->m_mutex_groups,
                               std::make_pair(nullptr, 0),
                               parser->m_prog, parser->usage(),
@@ -8068,34 +8073,6 @@ private:
             return width >> 1;
         }
         return _help_minwidth;
-    }
-
-    std::vector<pArgument>
-    positional_arguments(bool add_suppress = true, bool add_groups = true) const
-    {
-        std::vector<pArgument> result;
-        result.reserve(m_data.m_positional.size());
-        for (auto const& arg : m_data.m_positional) {
-            if ((add_suppress || !arg.first->m_help_type.has_value())
-                    && (add_groups || !arg.second)) {
-                result.push_back(arg.first);
-            }
-        }
-        return result;
-    }
-
-    std::vector<pArgument>
-    optional_arguments(bool add_suppress = true, bool add_groups = true) const
-    {
-        std::vector<pArgument> result;
-        for (auto const& arg : m_data.m_optional) {
-            if ((add_suppress || !arg.first->m_help_type.has_value())
-                    && (add_groups || !arg.second)
-                    && !arg.first->flags().empty()) {
-                result.push_back(arg.first);
-            }
-        }
-        return result;
     }
 
     SubparserInfo subpurser_info(bool add_suppress = true) const
