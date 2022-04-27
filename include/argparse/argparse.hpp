@@ -7793,24 +7793,19 @@ private:
     SubparserInfo subpurser_info(bool add_suppress = true) const
     {
         SubparserInfo res = std::make_pair(m_subparsers, 0);
-        auto _func = [&res, add_suppress] (ArgumentParser const& parser)
-        {
+        if (m_subparsers) {
 #ifdef min
-            std::size_t size = min(parser.m_subparsers->m_position,
-                                   parser.m_data.m_positional.size());
+            std::size_t size = min(m_subparsers->m_position,
+                                   m_data.m_positional.size());
 #else
-            std::size_t size = std::min(parser.m_subparsers->m_position,
-                                        parser.m_data.m_positional.size());
+            std::size_t size = std::min(m_subparsers->m_position,
+                                        m_data.m_positional.size());
 #endif  // min
             for (std::size_t i = 0; i < size; ++i) {
-                res.second
-                        += (add_suppress
-                            || !parser.m_data.m_positional.at(i)
+                res.second += (add_suppress
+                               || !m_data.m_positional.at(i)
                                                .first->m_help_type.has_value());
             }
-        };
-        if (m_subparsers) {
-            _func(*this);
         }
         return res;
     }
