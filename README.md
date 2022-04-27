@@ -298,7 +298,7 @@ int main(int argc, char* argv[])
 ```
 ## Features
 ### Handle
-#### Parser::handle(std::function<void(argparse::Namespace)> func)
+#### ArgumentParser::handle(std::function<void(argparse::Namespace)> func)
 Called when the parser is executed and passed the namespace of the parser.
 ```cpp
 #include <iostream>
@@ -333,9 +333,9 @@ int main(int argc, char* argv[])
     return 0;
 }
 ```
-#### Parser::handle(std::function<void()> func)
+#### ArgumentParser::handle(std::function<void()> func)
 Called when the parser is executed.
-#### Parser::handle(std::function<void(std::string)> func)
+#### ArgumentParser::handle(std::function<void(std::string)> func)
 Called when the parser is executed and passed the value of the parser.
 ```cpp
 #include <iostream>
