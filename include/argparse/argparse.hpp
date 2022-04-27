@@ -3140,8 +3140,8 @@ _ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _BaseArgumentGroup
     friend class _BaseParser;
 
     explicit
-    MutuallyExclusiveGroup(std::string& prefix_chars, _ArgumentData& parent_data)
-        : _BaseArgumentGroup(prefix_chars, parent_data, true),
+    MutuallyExclusiveGroup(std::string& prefix_chars, _ArgumentData& parent)
+        : _BaseArgumentGroup(prefix_chars, parent, true),
           m_required(false)
     { }
 
@@ -5134,10 +5134,12 @@ public:
 #endif  // C++14+
         = argparse::Namespace;
 
-    /*!
-     * \brief Parser class
-     */
-    using Parser = ArgumentParser;
+    // compatibility for version v1.4.2 and earlier
+    using Parser
+#if __cplusplus >= 201402L  // C++14+
+    [[deprecated("use argparse::ArgumentParser instead.")]]
+#endif  // C++14+
+        = ArgumentParser;
 
     /*!
      * \brief Subparser class
@@ -5311,13 +5313,13 @@ public:
         }
 
         /*!
-         *  \brief Add parser with name
+         *  \brief Add argument parser with name
          *
          *  \param name Parser name
          *
-         *  \return Current parser reference
+         *  \return Current argument parser reference
          */
-        inline Parser& add_parser(std::string const& name)
+        inline ArgumentParser& add_parser(std::string const& name)
         {
             m_parsers.emplace_back(make_parser(name));
             m_parsers.back()->update_prog(prog_name());
@@ -6563,7 +6565,7 @@ private:
         auto const subparser = subpurser_info();
         check_intermixed_subparser(intermixed, subparser.first);
 
-        Parser* parser = nullptr;
+        pParser parser = nullptr;
         auto positional = m_data.get_positional(true, true);
         auto const optional = m_data.get_optional(true, true);
         std::vector<pArgument> sub_optional;
@@ -6696,7 +6698,7 @@ private:
     }
 
     inline std::vector<std::string>
-    process_split_equal(std::string& arg, Parser const* parser) const
+    process_split_equal(std::string& arg, pParser const& parser) const
     {
         auto equals = detail::_split_equal(arg, custom_prefix_chars(parser));
         if (equals.size() == 2 && !equals.front().empty()) {
@@ -6720,7 +6722,7 @@ private:
         }
     }
 
-    inline void custom_error(Parser const* p, std::string const& err,
+    inline void custom_error(pParser const& p, std::string const& err,
                              std::ostream& os = std::cerr) const
     {
         if (p) {
@@ -6779,7 +6781,7 @@ private:
         }
     }
 
-    inline void validate_argument_value(Parser const* p,
+    inline void validate_argument_value(pParser const& p,
                                         Argument const& arg,
                                         std::string const& value) const
     {
@@ -6796,7 +6798,7 @@ private:
     }
 
     inline void
-    storage_have_value(Parser const* p,
+    storage_have_value(pParser const& p,
                        argparse::Namespace::Storage& storage,
                        pArgument const& arg) const
     {
@@ -6805,7 +6807,7 @@ private:
     }
 
     inline void
-    storage_store_value(Parser const* p,
+    storage_store_value(pParser const& p,
                         argparse::Namespace::Storage& storage,
                         pArgument const& arg,
                         std::string const& val) const
@@ -6815,7 +6817,7 @@ private:
     }
 
     inline void
-    storage_store_values(Parser const* p,
+    storage_store_values(pParser const& p,
                          argparse::Namespace::Storage& storage,
                          pArgument const& arg,
                          std::vector<std::string> const& values) const
@@ -6827,7 +6829,7 @@ private:
     }
 
     inline void
-    storage_store_n_values(Parser const* p,
+    storage_store_n_values(pParser const& p,
                            argparse::Namespace::Storage& storage,
                            pArgument const& arg,
                            std::deque<std::string>& arguments,
@@ -6853,7 +6855,7 @@ private:
     }
 
     inline bool
-    storage_is_positional_arg_stored(Parser const* p,
+    storage_is_positional_arg_stored(pParser const& p,
                                      argparse::Namespace::Storage& storage,
                                      pArgument const& arg) const
     {
@@ -6865,7 +6867,7 @@ private:
         return storage.self_value_stored(arg);
     }
 
-    void storage_optional_store_func(Parser const* parser,
+    void storage_optional_store_func(pParser const& parser,
                                      argparse::Namespace::Storage& storage,
                                      std::string const& arg,
                                      pArgument const& tmp,
@@ -6918,7 +6920,7 @@ private:
                                 std::size_t& i,
                                 bool have_negative_args,
                                 bool was_pseudo_arg,
-                                Parser const* parser,
+                                pParser const& parser,
                                 argparse::Namespace::Storage& storage,
                                 std::string const& arg,
                                 pArgument const& tmp) const
@@ -6963,7 +6965,7 @@ private:
     }
 
     void storage_optional_store_const(std::vector<std::string> const& equals,
-                                      Parser const* parser,
+                                      pParser const& parser,
                                       argparse::Namespace::Storage& storage,
                                       std::string const& arg,
                                       pArgument const& tmp) const
@@ -6989,7 +6991,7 @@ private:
 
     inline void
     process_optional_help(std::vector<std::string> const& equals,
-                          Parser const* parser,
+                          pParser const& parser,
                           std::string const& arg) const
     {
         if (equals.size() == 1) {
@@ -7001,7 +7003,7 @@ private:
 
     inline void
     process_optional_version(std::vector<std::string> const& equals,
-                             Parser const* parser,
+                             pParser const& parser,
                              std::string const& arg,
                              pArgument const& tmp) const
     {
@@ -7017,7 +7019,7 @@ private:
         }
     }
 
-    void match_positional_minimum(Parser const* p,
+    void match_positional_minimum(pParser const& p,
                                   argparse::Namespace::Storage& storage,
                                   std::deque<std::string>& arguments,
                                   pArgument const& arg) const
@@ -7051,7 +7053,7 @@ private:
         }
     }
 
-    void match_positional_more_zero(Parser const* p,
+    void match_positional_more_zero(pParser const& p,
                                     argparse::Namespace::Storage& storage,
                                     std::deque<std::string>& arguments,
                                     pArgument const& arg,
@@ -7098,7 +7100,7 @@ private:
         }
     }
 
-    void match_positional_optional(Parser const* p,
+    void match_positional_optional(pParser const& p,
                                    argparse::Namespace::Storage& storage,
                                    std::deque<std::string>& arguments,
                                    pArgument const& arg,
@@ -7138,7 +7140,7 @@ private:
         }
     }
 
-    void match_positional_default(Parser const* p,
+    void match_positional_default(pParser const& p,
                                   argparse::Namespace::Storage& storage,
                                   std::deque<std::string>& arguments,
                                   pArgument const& arg) const
@@ -7161,7 +7163,7 @@ private:
         }
     }
 
-    void match_positionals(Parser const* p,
+    void match_positionals(pParser const& p,
                            argparse::Namespace::Storage& storage,
                            std::size_t& pos,
                            std::vector<pArgument> const& positional,
@@ -7232,7 +7234,7 @@ private:
         return false;
     }
 
-    void match_args_partial(Parser const* parser, std::size_t& pos,
+    void match_args_partial(pParser const& parser, std::size_t& pos,
                             std::vector<pArgument> const& positional,
                             argparse::Namespace::Storage& storage,
                             std::vector<std::string>& unrecognized_args,
@@ -7269,7 +7271,7 @@ private:
                             argparse::Namespace::Storage& sub_storage,
                             std::vector<std::string>& unrecognized_args,
                             std::deque<std::string>& args,
-                            Parser*& parser) const
+                            pParser& parser) const
     {
         std::size_t finish = pos;
         std::size_t min_args = 0;
@@ -7303,7 +7305,7 @@ private:
         for (auto& p : subparser.first->m_parsers) {
             detail::_append_value_to("'" + p->m_name + "'", choices, ", ");
             if (p->m_name == name) {
-                parser = p.get();
+                parser = p;
                 if (!subparser_dest.empty()) {
                     storage.force_add(subparser_arg);
                     storage.at(subparser_arg).push_back(name);
@@ -7330,7 +7332,7 @@ private:
         }
     }
 
-    void check_abbreviations(Parser const* parser,
+    void check_abbreviations(pParser const& parser,
                              std::vector<pArgument> const& optional,
                              std::vector<pArgument> const& sub_optional,
                              argparse::Namespace::Storage const& storage,
@@ -7391,7 +7393,7 @@ private:
     }
 
     static pArgument const
-    optional_arg_by_flag(Parser const* p,
+    optional_arg_by_flag(pParser const& p,
                          std::vector<pArgument> const& optional,
                          std::vector<pArgument> const& sub_optional,
                          std::string const& key)
@@ -7405,7 +7407,7 @@ private:
 
     static pArgument const
     get_optional_arg_by_flag(bool was_pseudo_arg,
-                             Parser const* parser,
+                             pParser const& parser,
                              std::vector<pArgument> const& optional,
                              std::vector<pArgument> const& sub_optional,
                              std::string const& key)
@@ -7416,12 +7418,12 @@ private:
     }
 
     inline std::string const&
-    custom_prefix_chars(Parser const* parser) const _ARGPARSE_NOEXCEPT
+    custom_prefix_chars(pParser const& parser) const _ARGPARSE_NOEXCEPT
     {
         return parser ? parser->prefix_chars() : prefix_chars();
     }
 
-    void print_help_and_exit(Parser const* parser) const
+    void print_help_and_exit(pParser const& parser) const
     {
         if (parser) {
             print_custom_help(parser->m_data.get_positional(false, true),
@@ -7486,7 +7488,7 @@ private:
         return true;
     }
 
-    void separate_arg_abbrev(Parser const* parser,
+    void separate_arg_abbrev(pParser const& parser,
                              std::vector<pArgument> const& optional,
                              std::vector<pArgument> const& sub_optional,
                              std::vector<std::string>& temp,
@@ -7521,7 +7523,7 @@ private:
     void
     process_positional_args(std::vector<std::string> const& parsed_arguments,
                             std::size_t& i,
-                            Parser*& parser,
+                            pParser& parser,
                             bool& have_negative_args,
                             bool was_pseudo_arg,
                             bool intermixed,
@@ -7577,11 +7579,11 @@ private:
     }
 
     inline void
-    check_mutex_groups(Parser const* p,
+    check_mutex_groups(pParser const& p,
                        argparse::Namespace::Storage const& storage) const
     {
         auto _check_mutex_groups = [this, &storage]
-             (Parser const* p, std::deque<MutuallyExclusiveGroup> const& groups)
+            (pParser const& p, std::deque<MutuallyExclusiveGroup> const& groups)
         {
             for (auto const& ex : groups) {
                 std::string args;
@@ -7627,7 +7629,7 @@ private:
     }
 
     static bool
-    is_subparser_required(Parser const* parser, SubparserInfo const& subparser)
+    is_subparser_required(pParser const& parser, SubparserInfo const& subparser)
     {
         return subparser.first && !parser && subparser.first->required();
     }
@@ -7643,7 +7645,7 @@ private:
     }
 
     void
-    check_required_args(Parser const* p,
+    check_required_args(pParser const& p,
                         argparse::Namespace::Storage& storage,
                         std::vector<pArgument> const& optional,
                         SubparserInfo const& subparser,
@@ -7727,7 +7729,7 @@ private:
     }
 
     static void
-    namespace_post_trigger(Parser const* parser,
+    namespace_post_trigger(pParser const& parser,
                            argparse::Namespace::Storage& sub_storage,
                            ArgumentParser const* current,
                            argparse::Namespace::Storage const& storage,
