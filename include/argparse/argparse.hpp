@@ -6995,7 +6995,9 @@ private:
                           std::string const& arg) const
     {
         if (equals.size() == 1) {
-            print_help_and_exit(parser);
+            // print help and exit
+            (parser ? parser.get() : this)->print_help();
+            ::exit(0);
         } else {
             custom_error(parser, detail::_ignore_explicit(arg, equals.back()));
         }
@@ -7421,23 +7423,6 @@ private:
     custom_prefix_chars(pParser const& parser) const _ARGPARSE_NOEXCEPT
     {
         return parser ? parser->prefix_chars() : prefix_chars();
-    }
-
-    void print_help_and_exit(pParser const& parser) const
-    {
-        if (parser) {
-            print_custom_help(parser->m_data.get_positional(false, true),
-                              parser->m_data.get_optional(false, true),
-                              parser->m_data.get_positional(false, false),
-                              parser->m_data.get_optional(false, false),
-                              parser->m_groups, parser->m_mutex_groups,
-                              std::make_pair(nullptr, 0),
-                              parser->m_prog, parser->usage(),
-                              parser->description(), parser->epilog());
-        } else {
-            print_help();
-        }
-        ::exit(0);
     }
 
     static bool
