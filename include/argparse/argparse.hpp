@@ -6557,6 +6557,7 @@ private:
                     bool intermixed,
                     argparse::Namespace const& space) const
     {
+        handle(prog());
         check_namespace(space);
         auto parsed_arguments = read_args_from_file(in_parsed_arguments);
         auto const subparser = subpurser_info();
@@ -6664,7 +6665,8 @@ private:
                             positional);
         check_unrecognized_args(only_known, unrecognized_args);
         default_values_post_trigger(storage);
-        parser_post_trigger(parser, sub_storage, storage);
+        namespace_post_trigger(parser, sub_storage, this, storage,
+                               only_known, unrecognized_args);
         return create_namespace(only_known, std::move(storage),
                                 std::move(unrecognized_args));
     }
@@ -7725,9 +7727,12 @@ private:
     }
 
     static void
-    parser_post_trigger(Parser const* parser,
-                        argparse::Namespace::Storage& sub_storage,
-                        argparse::Namespace::Storage const& storage)
+    namespace_post_trigger(Parser const* parser,
+                           argparse::Namespace::Storage& sub_storage,
+                           ArgumentParser const* current,
+                           argparse::Namespace::Storage const& storage,
+                           bool only_known,
+                           std::vector<std::string> const& unrecognized_args)
     {
         if (parser && parser->m_parse_handle) {
             for (auto it = sub_storage.begin(); it != sub_storage.end(); ) {
@@ -7738,8 +7743,9 @@ private:
                     it = sub_storage.erase(it);
                 }
             }
-            parser->m_parse_handle(argparse::Namespace(sub_storage));
+            parser->parse_handle(only_known, sub_storage, unrecognized_args);
         }
+        current->parse_handle(only_known, storage, unrecognized_args);
     }
 
     inline detail::Value<std::string> const&
@@ -8015,6 +8021,20 @@ private:
     {
         if (m_handle) {
             m_handle(detail::_remove_quotes(str));
+        }
+    }
+
+    inline void
+    parse_handle(bool only_known,
+                 argparse::Namespace::Storage const& storage,
+                 std::vector<std::string> const& unrecognized_args) const
+    {
+        if (m_parse_handle) {
+            if (only_known) {
+                m_parse_handle(argparse::Namespace(storage, unrecognized_args));
+            } else {
+                m_parse_handle(argparse::Namespace(storage));
+            }
         }
     }
 
