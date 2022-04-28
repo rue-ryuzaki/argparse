@@ -6726,16 +6726,7 @@ private:
                              std::ostream& os = std::cerr) const
     {
         if (p) {
-            if (!p->usage().empty()) {
-                os << "usage: " << p->usage() << std::endl;
-            } else {
-                print_custom_usage(p->m_data.get_positional(false, true),
-                                   p->m_data.get_optional(false, true),
-                                   p->m_mutex_groups,
-                                   std::make_pair(nullptr, 0),
-                                   p->m_prog, os);
-            }
-            throw std::logic_error(p->m_prog + ": error: " + err);
+            p->throw_error(err, os);
         } else {
             throw_error(err, os);
         }
