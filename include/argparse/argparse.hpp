@@ -7712,6 +7712,7 @@ private:
                            bool only_known,
                            std::vector<std::string> const& unrecognized_args)
     {
+        current->parse_handle(only_known, storage, unrecognized_args);
         if (parser && parser->m_parse_handle) {
             for (auto it = sub_storage.begin(); it != sub_storage.end(); ) {
                 if (storage.exists(it->first)) {
@@ -7723,7 +7724,6 @@ private:
             }
             parser->parse_handle(only_known, sub_storage, unrecognized_args);
         }
-        current->parse_handle(only_known, storage, unrecognized_args);
     }
 
     inline detail::Value<std::string> const&
