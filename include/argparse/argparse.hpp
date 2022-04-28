@@ -2574,15 +2574,13 @@ class _Group
 protected:
     _Group()
         : m_title(),
-          m_description(),
-          m_position()
+          m_description()
     { }
 
     explicit
     _Group(std::string const& title, std::string const& description)
         : m_title(title),
-          m_description(description),
-          m_position()
+          m_description(description)
     { }
 
 public:
@@ -2623,7 +2621,6 @@ protected:
 
     std::string m_title;
     std::string m_description;
-    std::size_t m_position;
 };
 
 /*!
@@ -3071,7 +3068,6 @@ public:
         if (this != &rhs) {
             m_title         = rhs.m_title;
             m_description   = rhs.m_description;
-            m_position      = rhs.m_position;
             m_data          = rhs.m_data;
             m_prefix_chars  = rhs.m_prefix_chars;
             m_parent_data   = rhs.m_parent_data;
@@ -5451,6 +5447,7 @@ public:
           m_default_values(),
           m_parsed_arguments(),
           m_subparsers(nullptr),
+          m_subparsers_position(),
           m_handle(nullptr),
           m_parse_handle(nullptr)
     {
@@ -5631,8 +5628,9 @@ public:
                 if (m_subparsers) {
                     throw_error("cannot have multiple subparser arguments");
                 }
+                m_subparsers_position
+                    = parent.m_subparsers_position + m_data.m_positional.size();
                 m_subparsers = parent.m_subparsers;
-                m_subparsers->m_position += m_data.m_positional.size();
                 m_subparsers->update_prog(prog(), subparser_prog_args());
             }
             m_data.merge_arguments(parent.m_data);
@@ -6067,8 +6065,8 @@ public:
         if (m_subparsers) {
             throw_error("cannot have multiple subparser arguments");
         }
+        m_subparsers_position = m_data.m_positional.size();
         m_subparsers = Subparser::make_subparser();
-        m_subparsers->m_position = m_data.m_positional.size();
         m_subparsers->update_prog(prog(), subparser_prog_args());
         m_groups.push_back(m_subparsers);
         return *m_subparsers;
@@ -7783,19 +7781,10 @@ private:
     SubparserInfo subpurser_info(bool add_suppress = true) const
     {
         SubparserInfo res = std::make_pair(m_subparsers, 0);
-        if (m_subparsers) {
-#ifdef min
-            std::size_t size = min(m_subparsers->m_position,
-                                   m_data.m_positional.size());
-#else
-            std::size_t size = std::min(m_subparsers->m_position,
-                                        m_data.m_positional.size());
-#endif  // min
-            for (std::size_t i = 0; i < size; ++i) {
-                res.second += (add_suppress
-                               || !m_data.m_positional.at(i)
+        for (std::size_t i = 0; i < m_subparsers_position; ++i) {
+            res.second += (add_suppress
+                           || !m_data.m_positional.at(i)
                                                .first->m_help_type.has_value());
-            }
         }
         return res;
     }
@@ -8040,6 +8029,7 @@ private:
     std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
     std::shared_ptr<Subparser> m_subparsers;
+    std::size_t m_subparsers_position;
 
     std::function<void(std::string const&)> m_handle;
     std::function<void(argparse::Namespace const&)> m_parse_handle;
