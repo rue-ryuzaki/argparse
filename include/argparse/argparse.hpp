@@ -6722,16 +6722,6 @@ private:
         }
     }
 
-    inline void custom_error(pParser const& p, std::string const& err,
-                             std::ostream& os = std::cerr) const
-    {
-        if (p) {
-            p->throw_error(err, os);
-        } else {
-            throw_error(err, os);
-        }
-    }
-
     static bool
     negative_numbers_presented(std::vector<pArgument> const& optionals,
                                std::string const& prefix_chars)
@@ -6781,9 +6771,10 @@ private:
             auto str = detail::_remove_quotes(value);
             if (!str.empty() && !detail::_is_value_exists(str, choices())) {
                 auto values = detail::_vector_to_string(choices(), ", ", "'");
-                custom_error(p, "argument " + arg.m_flags.front()
-                             + ": invalid choice: '" + str
-                             + "' (choose from " + values + ")");
+                (p ? p.get() : this)->throw_error(
+                            "argument " + arg.m_flags.front()
+                            + ": invalid choice: '" + str
+                            + "' (choose from " + values + ")");
             }
         }
     }
@@ -6852,8 +6843,9 @@ private:
     {
         if (arg->action() == Action::append_const
                 && arg->m_default.has_value()) {
-            custom_error(p, detail::_ignore_default(
-                             arg->m_flags.front(), arg->default_value()));
+            (p ? p.get() : this)->throw_error(
+                        detail::_ignore_default(
+                            arg->m_flags.front(), arg->default_value()));
         }
         return storage.self_value_stored(arg);
     }
@@ -6869,7 +6861,8 @@ private:
                 case Argument::NARGS_DEF :
                 case Argument::NARGS_NUM :
                 case Argument::ONE_OR_MORE :
-                    custom_error(parser, tmp->error_nargs(arg));
+                    (parser ? parser.get() : this)->throw_error(
+                                tmp->error_nargs(arg));
                     break;
                 case Argument::ZERO_OR_ONE :
                     if (tmp->m_const.has_value()) {
@@ -6902,7 +6895,7 @@ private:
                     break;
             }
         } else if (tmp->m_nargs == Argument::NARGS_NUM && n < tmp->m_num_args) {
-            custom_error(parser, tmp->error_nargs(arg));
+            (parser ? parser.get() : this)->throw_error(tmp->error_nargs(arg));
         }
     }
 
@@ -6949,7 +6942,8 @@ private:
             }
         } else {
             if (tmp->m_nargs != Argument::NARGS_DEF && tmp->m_num_args > 1) {
-                custom_error(parser, tmp->error_nargs(arg));
+                (parser ? parser.get() : this)->throw_error(
+                            tmp->error_nargs(arg));
             }
             storage_store_value(parser, storage, tmp, equals.back());
         }
@@ -6964,8 +6958,9 @@ private:
         if (equals.size() == 1) {
             if (tmp->action() == Action::append_const
                     && !tmp->default_value().empty()) {
-                custom_error(parser, detail::_ignore_default(
-                                 tmp->m_flags.front(), tmp->default_value()));
+                (parser ? parser.get() : this)->throw_error(
+                            detail::_ignore_default(
+                                tmp->m_flags.front(), tmp->default_value()));
             }
             if (tmp->action() == Action::BooleanOptionalAction) {
                 bool exist = detail::_is_value_exists(equals.front(),
@@ -6976,7 +6971,8 @@ private:
                 storage.self_value_stored(tmp);
             }
         } else {
-            custom_error(parser, detail::_ignore_explicit(arg, equals.back()));
+            (parser ? parser.get() : this)->throw_error(
+                        detail::_ignore_explicit(arg, equals.back()));
         }
     }
 
@@ -6990,7 +6986,8 @@ private:
             (parser ? parser.get() : this)->print_help();
             ::exit(0);
         } else {
-            custom_error(parser, detail::_ignore_explicit(arg, equals.back()));
+            (parser ? parser.get() : this)->throw_error(
+                        detail::_ignore_explicit(arg, equals.back()));
         }
     }
 
@@ -7008,7 +7005,8 @@ private:
             std::cout << tmp->version() << std::endl;
             ::exit(0);
         } else {
-            custom_error(parser, detail::_ignore_explicit(arg, equals.back()));
+            (parser ? parser.get() : this)->throw_error(
+                        detail::_ignore_explicit(arg, equals.back()));
         }
     }
 
@@ -7366,8 +7364,9 @@ private:
                     }
                 }
                 if (keys.size() > 1) {
-                    custom_error(parser, "ambiguous option: '" + arg
-                                 + "' could match" + args);
+                    (parser ? parser.get() : this)->throw_error(
+                                "ambiguous option: '" + arg
+                                + "' could match" + args);
                 }
                 auto const& flag = keys.empty() ? arg : keys.front();
                 if (is_flag_added) {
@@ -7559,9 +7558,9 @@ private:
                        argparse::Namespace::Storage const& storage) const
     {
         auto _check_mutex_groups = [this, &storage]
-            (pParser const& p, std::deque<MutuallyExclusiveGroup> const& groups)
+                (ArgumentParser const* parser)
         {
-            for (auto const& ex : groups) {
+            for (auto const& ex : parser->m_mutex_groups) {
                 std::string args;
                 std::string found;
                 for (auto const& arg : ex.m_data.m_arguments) {
@@ -7569,9 +7568,9 @@ private:
                     args += detail::_spaces + flags;
                     if (!storage.at(arg).empty()) {
                         if (!found.empty()) {
-                            custom_error(p, "argument " + flags
-                                         + ": not allowed with argument "
-                                         + found);
+                            parser->throw_error("argument " + flags
+                                                + ": not allowed with argument "
+                                                + found);
                         }
                         found = flags;
                     }
@@ -7580,14 +7579,14 @@ private:
                     if (ex.m_data.m_arguments.empty()) {
                         throw IndexError("list index out of range");
                     }
-                    custom_error(p, "one of the arguments"
-                                 + args + " is required");
+                    parser->throw_error("one of the arguments"
+                                        + args + " is required");
                 }
             }
         };
-        _check_mutex_groups(nullptr, m_mutex_groups);
+        _check_mutex_groups(this);
         if (p) {
-            _check_mutex_groups(p, p->m_mutex_groups);
+            _check_mutex_groups(p.get());
         }
     }
 
