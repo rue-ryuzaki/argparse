@@ -6582,21 +6582,14 @@ private:
         auto positional = m_data.get_positional(true, true);
         auto const optional = m_data.get_optional(true, true);
         std::vector<pArgument> sub_optional;
-        std::string subparser_dest;
-        std::vector<std::string> subparser_flags;
 
         validate_arguments(positional);
         validate_arguments(optional);
-        validate_subparser(subparser.first, subparser_dest, subparser_flags);
 
         bool have_negative_args
                 = negative_numbers_presented(optional, prefix_chars());
         bool was_pseudo_arg = false;
 
-        auto subparser_name = subparser_dest;
-        auto subparser_arg = Argument::make_argument(std::move(subparser_flags),
-                                                     std::move(subparser_name),
-                                                     Argument::Positional);
         argparse::Namespace::Storage storage = space.storage();
         if (space.m_storage.m_data.empty()) {
             storage.create(m_data.get_arguments(true));
@@ -6664,8 +6657,7 @@ private:
                                         have_negative_args, was_pseudo_arg,
                                         intermixed, intermixed_args,
                                         pos, positional, storage,
-                                        subparser, subparser_arg,
-                                        subparser_dest, sub_optional,
+                                        subparser, sub_optional,
                                         sub_storage, unrecognized_args);
             }
         }
@@ -6753,23 +6745,6 @@ private:
     {
         for (auto const& arg : args) {
             arg->validate();
-        }
-    }
-
-    static void validate_subparser(std::shared_ptr<Subparser> const& subparser,
-                                   std::string& subparser_dest,
-                                   std::vector<std::string>& subparser_flags)
-    {
-        if (subparser) {
-            for (auto const& p : subparser->m_parsers) {
-                for (auto const& arg : p->m_data.m_arguments) {
-                    arg->validate();
-                }
-            }
-            subparser_dest = subparser->dest();
-            if (!subparser_dest.empty()) {
-                subparser_flags.push_back(subparser_dest);
-            }
         }
     }
 
@@ -7267,8 +7242,6 @@ private:
                             std::vector<pArgument>& positional,
                             argparse::Namespace::Storage& storage,
                             SubparserInfo const& subparser,
-                            pArgument const& subparser_arg,
-                            std::string const& subparser_dest,
                             std::vector<pArgument>& sub_optional,
                             argparse::Namespace::Storage& sub_storage,
                             std::vector<std::string>& unrecognized_args,
@@ -7308,7 +7281,11 @@ private:
             detail::_append_value_to("'" + p->m_name + "'", choices, ", ");
             if (p->m_name == name) {
                 parser = p;
-                if (!subparser_dest.empty()) {
+                auto dest = subparser.first->dest();
+                if (!dest.empty()) {
+                    auto subparser_arg
+                            = Argument::make_argument({ dest }, dest,
+                                                      Argument::Positional);
                     storage.force_add(subparser_arg);
                     storage.at(subparser_arg).push_back(name);
                     sub_storage.force_add(subparser_arg);
@@ -7317,6 +7294,7 @@ private:
             }
         }
         if (parser) {
+            validate_arguments(parser->m_data.get_arguments(true));
             sub_optional = parser->m_data.get_optional(true, true);
             auto sub_positional = parser->m_data.get_positional(true, true);
             detail::_move_vector_insert_to(sub_positional, positional,
@@ -7518,8 +7496,6 @@ private:
                             std::vector<pArgument>& positional,
                             argparse::Namespace::Storage& storage,
                             SubparserInfo const& subparser,
-                            pArgument const& subparser_arg,
-                            std::string const& subparser_dest,
                             std::vector<pArgument>& sub_optional,
                             argparse::Namespace::Storage& sub_storage,
                             std::vector<std::string>& unrecognized_args) const
@@ -7549,8 +7525,7 @@ private:
         } else {
             if (subparser.first && !parser) {
                 try_capture_parser(have_negative_args, pos, positional,
-                                   storage, subparser, subparser_arg,
-                                   subparser_dest, sub_optional,
+                                   storage, subparser, sub_optional,
                                    sub_storage, unrecognized_args, args,
                                    parser);
                 if (parser) {
