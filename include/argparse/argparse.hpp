@@ -2682,6 +2682,21 @@ protected:
     }
 
     std::vector<pArgument>
+    get_arguments(bool add_suppress) const
+    {
+        std::vector<pArgument> result;
+        result.reserve(m_arguments.size());
+        for (auto const& arg : m_arguments) {
+            if ((add_suppress || !arg->m_help_type.has_value())
+                    && (arg->m_type != Argument::Optional
+                        || !arg->flags().empty())) {
+                result.push_back(arg);
+            }
+        }
+        return result;
+    }
+
+    std::vector<pArgument>
     get_optional(bool add_suppress, bool add_group) const
     {
         std::vector<pArgument> result;
@@ -6584,11 +6599,9 @@ private:
                                                      Argument::Positional);
         argparse::Namespace::Storage storage = space.storage();
         if (space.m_storage.m_data.empty()) {
-            storage.create(positional);
-            storage.create(optional);
+            storage.create(m_data.get_arguments(true));
         } else {
-            storage.force_add(positional);
-            storage.force_add(optional);
+            storage.force_add(m_data.get_arguments(true));
         }
         argparse::Namespace::Storage sub_storage;
 
