@@ -44,6 +44,7 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::name<std::unordered_set<int>>() == "std::unordered_set<int>");
         REQUIRE(argparse::detail::Type::name<std::stack<int>>() == "std::stack<int>");
         REQUIRE(argparse::detail::Type::name<std::queue<int>>() == "std::queue<int>");
+        REQUIRE(argparse::detail::Type::name<std::array<int, 1>>() == "std::array<int, 1>");
 
         REQUIRE(argparse::detail::Type::name<std::tuple<std::string, std::string>>() == "std::tuple<std::string, std::string>");
         REQUIRE(argparse::detail::Type::name<std::pair<std::string, std::string>>() == "std::pair<std::string, std::string>");
@@ -60,6 +61,7 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::name<std::unordered_set<std::string>>() == "std::unordered_set<std::string>");
         REQUIRE(argparse::detail::Type::name<std::stack<std::string>>() == "std::stack<std::string>");
         REQUIRE(argparse::detail::Type::name<std::queue<std::string>>() == "std::queue<std::string>");
+        REQUIRE(argparse::detail::Type::name<std::array<std::string, 1>>() == "std::array<std::string, 1>");
 
         REQUIRE(argparse::detail::Type::name<std::vector<std::pair<int, int>>>() == "std::vector<std::pair<int, int>>");
         REQUIRE(argparse::detail::Type::name<std::vector<std::vector<int>>>() == "std::vector<std::vector<int>>");
@@ -87,6 +89,7 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::basic<std::unordered_set<int>>() == "int");
         REQUIRE(argparse::detail::Type::basic<std::stack<int>>() == "int");
         REQUIRE(argparse::detail::Type::basic<std::queue<int>>() == "int");
+        REQUIRE(argparse::detail::Type::basic<std::array<int, 1>>() == "int");
 
         REQUIRE(argparse::detail::Type::basic<std::tuple<std::string, std::string>>() == "std::tuple<std::string, std::string>");
         REQUIRE(argparse::detail::Type::basic<std::pair<std::string, std::string>>() == "std::pair<std::string, std::string>");
@@ -103,6 +106,7 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::basic<std::unordered_set<std::string>>() == "std::string");
         REQUIRE(argparse::detail::Type::basic<std::stack<std::string>>() == "std::string");
         REQUIRE(argparse::detail::Type::basic<std::queue<std::string>>() == "std::string");
+        REQUIRE(argparse::detail::Type::basic<std::array<std::string, 1>>() == "std::string");
 
         REQUIRE(argparse::detail::Type::basic<std::vector<std::pair<int, int>>>() == "std::pair<int, int>");
         REQUIRE(argparse::detail::Type::basic<std::vector<std::vector<int>>>() == "int");
