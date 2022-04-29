@@ -1154,8 +1154,18 @@ public:
     }
 
     template <class T, typename std::enable_if<
-                  is_stl_array<T>::value
-                  || is_stl_container<T>::value
+                  is_stl_array<T>::value>::type* = nullptr>
+    std::string static
+    name()
+    {
+        auto str = _replace(_get_type_name<T>(), "__cxx11::", "");
+        return str.substr(0, str.find('<'))
+                + "<" + name<typename T::value_type>()
+                + ", " + std::to_string(std::tuple_size<T>::value) + ">";
+    }
+
+    template <class T, typename std::enable_if<
+                  is_stl_container<T>::value
                   || is_stl_queue<T>::value>::type* = nullptr>
     std::string static
     name()
