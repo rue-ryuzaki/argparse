@@ -3751,13 +3751,11 @@ public:
             std::cerr << "error: array size mismatch: " << res.size()
                       << ", expected " << vector.size() << std::endl;
         }
-#ifdef min
-        std::copy_n(std::begin(vector),
-                    min(res.size(), vector.size()), std::begin(res));
-#else
-        std::copy_n(std::begin(vector),
-                    std::min(res.size(), vector.size()), std::begin(res));
-#endif  // min
+        auto size = res.size();
+        if (size > vector.size()) {
+            size = vector.size();
+        }
+        std::copy_n(std::begin(vector), size, std::begin(res));
         return res;
     }
 
@@ -7897,11 +7895,11 @@ private:
         for (auto const& group : groups) {
             group->limit_help_flags(m_formatter_class, size);
         }
-#ifdef min
-        size = min(size + 4, argument_name_limit());
-#else
-        size = std::min(size + 4, argument_name_limit());
-#endif  // min
+        size += 4;
+        auto const name_limit = argument_name_limit();
+        if (size > name_limit) {
+            size = name_limit;
+        }
         if (!positional.empty() || sub_positional) {
             os << "\npositional arguments:\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
