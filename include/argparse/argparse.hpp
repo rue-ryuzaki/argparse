@@ -7591,12 +7591,11 @@ private:
                         std::size_t& pos,
                         std::vector<pArgument> const& positional) const
     {
+        auto it = parsers.rbegin();
         std::vector<std::string> required_args;
-        for (auto const& info : parsers) {
-            process_optionals_required(required_args, info.optional,
-                                       parsers.front().storage);
-        }
-        auto const& subparser = parsers.back().subparser;
+        process_optionals_required(required_args, it->optional,
+                                   parsers.front().storage);
+        auto const& subparser = it->subparser;
         bool sub_required = subparser.first && subparser.first->required();
         if (!required_args.empty() || pos < positional.size() || sub_required) {
             std::string args;
@@ -7625,7 +7624,20 @@ private:
                 detail::_append_value_to(arg, args, ", ");
             }
             if (!args.empty()) {
-                throw_error("the following arguments are required: " + args);
+                it->parser->throw_error(
+                            "the following arguments are required: " + args);
+            }
+        }
+        while (++it != parsers.rend()) {
+            process_optionals_required(required_args, it->optional,
+                                       parsers.front().storage);
+            std::string args;
+            for (auto const& arg : required_args) {
+                detail::_append_value_to(arg, args, ", ");
+            }
+            if (!args.empty()) {
+                it->parser->throw_error(
+                            "the following arguments are required: " + args);
             }
         }
     }
