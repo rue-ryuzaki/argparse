@@ -5444,7 +5444,7 @@ public:
     ArgumentParser(std::string const& prog = "untitled")
         : m_data(),
           m_name(),
-          m_prog(),
+          m_prog("untitled"),
           m_usage(),
           m_description(),
           m_epilog(),
@@ -5466,7 +5466,6 @@ public:
           m_handle(nullptr),
           m_parse_handle(nullptr)
     {
-        m_prog = "untitled";
         this->prog(prog);
         m_data.update_help(true, m_prefix_chars);
     }
@@ -5548,7 +5547,7 @@ public:
 private:
     pParser static make_parser(std::string const& name)
     {
-        pParser result =std::make_shared<ArgumentParser>(ArgumentParser());
+        pParser result = std::make_shared<ArgumentParser>(ArgumentParser());
         result->m_prog = "";
         result->m_name = name;
         return result;
