@@ -7561,12 +7561,6 @@ private:
         }
     }
 
-    static bool
-    is_subparser_required(SubparserInfo const& subparser, bool have_parser)
-    {
-        return subparser.first && !have_parser && subparser.first->required();
-    }
-
     static void
     process_subparser_required(bool required, std::size_t pos,
                                SubparserInfo const& subparser, std::string& res)
@@ -7587,13 +7581,12 @@ private:
             process_optionals_required(required_args, info.optional,
                                        parsers.front().storage);
         }
-        bool sub_required = is_subparser_required(
-                    parsers.front().subparser, parsers.size() > 1);
+        auto const& subparser = parsers.back().subparser;
+        bool sub_required = subparser.first && subparser.first->required();
         if (!required_args.empty() || pos < positional.size() || sub_required) {
             std::string args;
             for ( ; pos < positional.size(); ++pos) {
-                process_subparser_required(sub_required, pos,
-                                           parsers.front().subparser, args);
+                process_subparser_required(sub_required, pos, subparser, args);
                 auto const& arg = positional.at(pos);
                 if (args.empty()) {
                     if (storage_is_positional_arg_stored(parsers, arg)) {
@@ -7612,8 +7605,7 @@ private:
                 }
                 detail::_append_value_to(arg->m_flags.front(), args, ", ");
             }
-            process_subparser_required(sub_required, pos,
-                                       parsers.front().subparser, args);
+            process_subparser_required(sub_required, pos, subparser, args);
             for (auto const& arg : required_args) {
                 detail::_append_value_to(arg, args, ", ");
             }
