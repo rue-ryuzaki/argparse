@@ -1113,7 +1113,8 @@ public:
     }
 
     template <class T, typename std::enable_if<
-                  is_stl_container<T>::value
+                  is_stl_array<T>::value
+                  || is_stl_container<T>::value
                   || is_stl_queue<T>::value>::type* = nullptr>
     std::string static
     basic()
@@ -1132,6 +1133,7 @@ public:
 
     template <class T, typename std::enable_if<
                   !std::is_same<std::string, T>::value
+                  && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
                   && !is_stl_pair<T>::value
@@ -1152,7 +1154,8 @@ public:
     }
 
     template <class T, typename std::enable_if<
-                  is_stl_container<T>::value
+                  is_stl_array<T>::value
+                  || is_stl_container<T>::value
                   || is_stl_queue<T>::value>::type* = nullptr>
     std::string static
     name()
@@ -1191,6 +1194,7 @@ public:
 
     template <class T, typename std::enable_if<
                   !std::is_same<std::string, T>::value
+                  && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
                   && !is_stl_pair<T>::value
