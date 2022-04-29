@@ -7286,10 +7286,6 @@ private:
                 parsers.back().parser->handle(parsers.back().parser->m_name);
                 parsers.back().validate();
 
-                parsers.front().storage.force_add(
-                            parsers.back().parser->m_data.get_arguments(true));
-                parsers.back().create_storage(true);
-
                 if (!dest.empty()) {
                     auto subparser_arg
                             = Argument::make_argument({ dest }, dest,
@@ -7298,6 +7294,11 @@ private:
                         info.storage.force_add(subparser_arg);
                     }
                     parsers.front().storage.at(subparser_arg).push_back(name);
+                }
+
+                for (auto& info : parsers) {
+                    info.storage.force_add(
+                             parsers.back().parser->m_data.get_arguments(true));
                 }
 
                 auto sub_positional = parsers.back()
