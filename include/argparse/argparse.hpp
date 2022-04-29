@@ -7577,8 +7577,12 @@ private:
                                SubparserInfo const& subparser, std::string& res)
     {
         if (required && pos == subparser.second) {
-            detail::_append_value_to(
-                        subparser.first->flags_to_string(), res, ", ");
+            if (!subparser.first->dest().empty()) {
+                detail::_append_value_to(subparser.first->dest(), res, ", ");
+            } else {
+                detail::_append_value_to(
+                            subparser.first->flags_to_string(), res, ", ");
+            }
         }
     }
 
