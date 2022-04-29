@@ -7238,7 +7238,7 @@ private:
         }
     }
 
-    void try_capture_parser(bool& have_negative_args, std::size_t& pos,
+    bool try_capture_parser(bool& have_negative_args, std::size_t& pos,
                             std::vector<pArgument>& positional,
                             argparse::Namespace::Storage& storage,
                             SubparserInfo const& subparser,
@@ -7271,7 +7271,7 @@ private:
             match_positionals(parser, storage, pos, positional, args,
                               finish, min_args, one_args, more_args);
             detail::_insert_vector_to_end(args, unrecognized_args);
-            return;
+            return false;
         }
         match_positionals(parser, storage, pos, positional, args, finish,
                           ++min_args, one_args, more_args);
@@ -7306,9 +7306,11 @@ private:
             parser->handle(parser->m_name);
             storage.force_add(parser->m_data.m_arguments);
             sub_storage.force_add(parser->m_data.m_arguments);
+            return true;
         } else {
             throw_error("invalid choice: '" + name
                         + "' (choose from " + choices + ")");
+            return false;
         }
     }
 
@@ -7524,11 +7526,10 @@ private:
             detail::_insert_vector_to_end(args, intermixed_args);
         } else {
             if (subparser.first && !parser) {
-                try_capture_parser(have_negative_args, pos, positional,
-                                   storage, subparser, sub_optional,
-                                   sub_storage, unrecognized_args, args,
-                                   parser);
-                if (parser) {
+                if (try_capture_parser(have_negative_args, pos, positional,
+                                       storage, subparser, sub_optional,
+                                       sub_storage, unrecognized_args, args,
+                                       parser)) {
                     i -= (i == parsed_arguments.size());
                     i -= args.size();
                 }
@@ -7543,8 +7544,7 @@ private:
     check_mutex_groups(pParser const& p,
                        argparse::Namespace::Storage const& storage) const
     {
-        auto _check_mutex_groups = [this, &storage]
-                (ArgumentParser const* parser)
+        auto _check_mutex_groups = [&storage] (ArgumentParser const* parser)
         {
             for (auto const& ex : parser->m_mutex_groups) {
                 std::string args;
