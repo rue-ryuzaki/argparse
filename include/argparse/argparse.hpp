@@ -7294,9 +7294,10 @@ private:
                     auto subparser_arg
                             = Argument::make_argument({ dest }, dest,
                                                       Argument::Positional);
-                    parsers.front().storage.force_add(subparser_arg);
+                    for (auto& info : parsers) {
+                        info.storage.force_add(subparser_arg);
+                    }
                     parsers.front().storage.at(subparser_arg).push_back(name);
-                    parsers.back().storage.force_add(subparser_arg);
                 }
 
                 auto sub_positional = parsers.back()
