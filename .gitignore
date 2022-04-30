@@ -24,6 +24,9 @@ x86/
 [Oo]bj*/
 [Ll]og*/
 
+# Shell
+*.sh
+
 # Visual Studio
 .vs/
 
