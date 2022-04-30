@@ -1,3 +1,18 @@
+cpp-argparse-dev (1.5.0-0ppa0) focal; urgency=low
+
+  * Rewrite parents support implementation
+  * Rewrite parser's prog name generation
+  * Use ArgumentParser as Subparser's parser
+  * Mark ArgumentParser::Parser deprecated
+  * Fix: conflicting option error
+  * Fix: mutually exclusive group help
+  * Fix: arguments order in Namespace
+  * Fix: subparsers required error message
+  * Fix: required args check
+  * Add: title, description ArgumentGroup setters
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 30 Apr 2022 17:41:21 +0300
+
 cpp-argparse-dev (1.4.2-0ppa0) focal; urgency=low
 
   * Add paired containers support to Namespace::get()
