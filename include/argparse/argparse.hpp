@@ -3072,6 +3072,8 @@ _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _BaseArgumentGroup
 
 public:
     using _BaseArgumentGroup::add_argument;
+    using _Group::title;
+    using _Group::description;
 
     /*!
      *  \brief Create argument group object from another argument group
@@ -3101,6 +3103,32 @@ public:
             m_prefix_chars  = rhs.m_prefix_chars;
             m_parent_data   = rhs.m_parent_data;
         }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument group 'title' value
+     *
+     *  \param value Title value
+     *
+     *  \return Current argument group reference
+     */
+    inline ArgumentGroup& title(std::string const& value)
+    {
+        m_title = detail::_trim_copy(value);
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument group 'description' value
+     *
+     *  \param param Description value
+     *
+     *  \return Current argument group reference
+     */
+    inline ArgumentGroup& description(std::string const& param)
+    {
+        m_description = detail::_trim_copy(param);
         return *this;
     }
 
