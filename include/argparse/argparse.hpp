@@ -7614,6 +7614,22 @@ private:
         }
     }
 
+    static void
+    process_required_check(ParserInfo const& parser,
+                           argparse::Namespace::Storage const& storage)
+    {
+        std::vector<std::string> required_args;
+        process_optionals_required(required_args, parser.optional, storage);
+        std::string args;
+        for (auto const& arg : required_args) {
+            detail::_append_value_to(arg, args, ", ");
+        }
+        if (!args.empty()) {
+            parser.parser->throw_error(
+                        "the following arguments are required: " + args);
+        }
+    }
+
     void
     check_required_args(Parsers& parsers,
                         std::size_t& pos,
@@ -7657,16 +7673,7 @@ private:
             }
         }
         while (++it != parsers.rend()) {
-            process_optionals_required(required_args, it->optional,
-                                       parsers.front().storage);
-            std::string args;
-            for (auto const& arg : required_args) {
-                detail::_append_value_to(arg, args, ", ");
-            }
-            if (!args.empty()) {
-                it->parser->throw_error(
-                            "the following arguments are required: " + args);
-            }
+            process_required_check(*it, parsers.front().storage);
         }
     }
 
