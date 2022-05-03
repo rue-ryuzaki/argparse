@@ -2789,31 +2789,35 @@ protected:
         if (option.get() == arg) {
             return;
         }
-        auto _check_conflict = [this, &arg]
-                (std::string const& flag, std::vector<std::string>& flags)
+        auto _check_conflict = [this, &arg] (std::vector<std::string>& flags)
         {
-            auto it = std::find(std::begin(flags), std::end(flags), flag);
-            if (it != std::end(flags)) {
-                if (m_conflict_handler == "resolve") {
-                    flags.erase(it);
-                } else if (flags.size() == 1) {
-                    throw ArgumentError(
-                                "argument "
-                                + detail::_vector_to_string(arg->flags(), "/")
-                                + ": conflicting option string: " + flag);
-                } else {
-                    throw ArgumentError(
-                                "argument "
-                               + detail::_vector_to_string(arg->flags(), "/")
-                               + ": conflicting option strings: "
-                               + detail::_vector_to_string(arg->flags(), ", "));
+            std::vector<std::string> conflict_options;
+            for (auto const& flag : arg->flags()) {
+                auto it = std::find(std::begin(flags), std::end(flags), flag);
+                if (it != std::end(flags)) {
+                    if (m_conflict_handler == "resolve") {
+                        flags.erase(it);
+                    } else {
+                        conflict_options.push_back(flag);
+                    }
                 }
             }
+            if (conflict_options.size() == 1) {
+                throw ArgumentError(
+                            "argument "
+                            + detail::_vector_to_string(arg->flags(), "/")
+                            + ": conflicting option string: "
+                            + conflict_options.front());
+            } else if (conflict_options.size() > 1) {
+                throw ArgumentError(
+                            "argument "
+                           + detail::_vector_to_string(arg->flags(), "/")
+                           + ": conflicting option strings: "
+                           + detail::_vector_to_string(conflict_options, ", "));
+            }
         };
-        for (auto const& flag : arg->flags()) {
-            _check_conflict(flag, option->m_flags);
-            _check_conflict(flag, option->m_all_flags);
-        }
+        _check_conflict(option->m_all_flags);
+        _check_conflict(option->m_flags);
     }
 
     inline void check_conflict_arg(Argument const* arg)
