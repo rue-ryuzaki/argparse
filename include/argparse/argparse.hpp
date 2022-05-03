@@ -2936,8 +2936,8 @@ class _BaseArgumentGroup
 {
 protected:
     _BaseArgumentGroup(std::string& prefix_chars,
-                      _ArgumentData& parent_data,
-                      bool is_mutex_group)
+                       _ArgumentData& parent_data,
+                       bool is_mutex_group)
         : m_data(),
           m_prefix_chars(prefix_chars),
           m_parent_data(parent_data),
