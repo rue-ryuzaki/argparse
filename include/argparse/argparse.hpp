@@ -4321,13 +4321,11 @@ public:
             std::cerr << "error: array size mismatch: " << res.size()
                       << ", expected " << vector->size() << std::endl;
         }
-#ifdef min
-        std::copy_n(std::begin(vector.value()),
-                    min(res.size(), vector->size()), std::begin(res));
-#else
-        std::copy_n(std::begin(vector.value()),
-                    std::min(res.size(), vector->size()), std::begin(res));
-#endif  // min
+        auto size = res.size();
+        if (size > vector->size()) {
+            size = vector->size();
+        }
+        std::copy_n(std::begin(vector.value()), size, std::begin(res));
         return res;
     }
 
