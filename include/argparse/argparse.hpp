@@ -4319,7 +4319,7 @@ public:
         T res{};
         if (res.size() != vector->size()) {
             std::cerr << "error: array size mismatch: " << res.size()
-                      << ", expected " << vector.size() << std::endl;
+                      << ", expected " << vector->size() << std::endl;
         }
 #ifdef min
         std::copy_n(std::begin(vector.value()),
