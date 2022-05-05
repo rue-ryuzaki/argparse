@@ -2353,9 +2353,6 @@ private:
         if (m_type == Positional && m_flags.empty() && dest().empty()) {
             throw TypeError("missing 1 required positional argument: 'dest'");
         }
-        if ((action() & detail::_const_action) && !m_const.has_value()) {
-            throw TypeError("missing 1 required positional argument: 'const'");
-        }
         if (std::any_of(std::begin(m_flags), std::end(m_flags),
                         [] (std::string const& flag)
         { return flag == detail::_pseudo_arg; }) && dest().empty()) {
