@@ -1248,11 +1248,54 @@ TEST_CASE("9. argument nargs", "[argument]")
     }
 }
 
-TEST_CASE("10. abbreviations", "[argument]")
+TEST_CASE("10. argument const", "[argument]")
+{
+    std::string const_value = "const";
+
+    auto parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("10.1. optional arguments") {
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo1").action("store").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo2").action("store_true").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo3").action("store_false").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo4").action("store_const").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo5").action("append").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo6").action("append_const").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo7").action("extend").const_value(const_value)));
+
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo1?").action("store").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo2?").action("store_true").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo3?").action("store_false").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo4?").action("store_const").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo5?").action("append").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo6?").action("append_const").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo7?").action("extend").nargs("?").const_value(const_value)));
+    }
+
+    SECTION("10.2. optional arguments") {
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo1").action("store").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo2").action("store_true").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo3").action("store_false").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo4").action("store_const").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo5").action("append").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo6").action("append_const").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo7").action("extend").const_value(const_value)));
+
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo1?").action("store").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo2?").action("store_true").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo3?").action("store_false").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo4?").action("store_const").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo5?").action("append").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo6?").action("append_const").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo7?").action("extend").nargs("?").const_value(const_value)));
+    }
+}
+
+TEST_CASE("11. abbreviations", "[argument]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("10.1. simple count test") {
+    SECTION("11.1. simple count test") {
         parser.add_argument("-c").action(argparse::count);
 
         auto args1 = parser.parse_args({ });
@@ -1271,7 +1314,7 @@ TEST_CASE("10. abbreviations", "[argument]")
         REQUIRE(args5.get<uint32_t>("-c") == 5);
     }
 
-    SECTION("10.2. multiargument test") {
+    SECTION("11.2. multiargument test") {
         parser.add_argument("-c").action(argparse::count);
         parser.add_argument("-d").action(argparse::count);
         parser.add_argument("-e").action(argparse::count);
@@ -1308,7 +1351,7 @@ TEST_CASE("10. abbreviations", "[argument]")
         REQUIRE(args5.get<bool>("-f") == true);
     }
 
-    SECTION("10.3. multiargument store test") {
+    SECTION("11.3. multiargument store test") {
         parser.add_argument("-c").action(argparse::count);
         parser.add_argument("-d").action(argparse::store);
 
@@ -1331,7 +1374,7 @@ TEST_CASE("10. abbreviations", "[argument]")
         REQUIRE_THROWS(parser.parse_args({ "-cccd" }));
     }
 
-    SECTION("10.4. same prefix store test") {
+    SECTION("11.4. same prefix store test") {
         parser.add_argument("-f").action(argparse::store);
         parser.add_argument("-foo").action(argparse::store);
 
@@ -1351,7 +1394,7 @@ TEST_CASE("10. abbreviations", "[argument]")
         REQUIRE(args5.get<std::string>("-foo") == "1");
     }
 
-    SECTION("10.5. same name test (allow_abbrev=true)") {
+    SECTION("11.5. same name test (allow_abbrev=true)") {
         parser.add_argument("-c").action(argparse::count);
         parser.add_argument("-ccc").action(argparse::store_true);
 
@@ -1374,7 +1417,7 @@ TEST_CASE("10. abbreviations", "[argument]")
         REQUIRE(args5.get<bool>("-ccc") == false);
     }
 
-    SECTION("10.6. same name test (allow_abbrev=false)") {
+    SECTION("11.6. same name test (allow_abbrev=false)") {
         parser.allow_abbrev(false);
 
         parser.add_argument("-c").action(argparse::count);
@@ -1402,11 +1445,11 @@ TEST_CASE("10. abbreviations", "[argument]")
     }
 }
 
-TEST_CASE("11. subparsers", "[argument_parser]")
+TEST_CASE("12. subparsers", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("11.1. main parser without positional arguments (required=false)") {
+    SECTION("12.1. main parser without positional arguments (required=false)") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
         auto& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
@@ -1444,7 +1487,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ "--foo", "a", "12", "b", "--baz", "Z" }));
     }
 
-    SECTION("11.2. main parser with store positional arguments") {
+    SECTION("12.2. main parser with store positional arguments") {
         parser.add_argument("--foo").action("store_true").help("foo help");
         parser.add_argument("boo").action("store").help("boo help");
 
@@ -1511,7 +1554,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         REQUIRE(args5.get<std::string>("cmd") == "b");
     }
 
-    SECTION("11.3. main parser with store_const positional arguments") {
+    SECTION("12.3. main parser with store_const positional arguments") {
         std::string const_value = "const";
 
         parser.add_argument("--foo").action("store_true").help("foo help");
@@ -1582,7 +1625,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         REQUIRE(args4.get<std::string>("cmd") == "b");
     }
 
-    SECTION("11.4. main parser with negative number options present") {
+    SECTION("12.4. main parser with negative number options present") {
         parser.add_argument("-1").dest("one").help("one help");
         parser.add_argument("--foo").action("store_true").help("foo help");
 
@@ -1627,7 +1670,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ "-1", "-1" }));
     }
 
-    SECTION("11.5. subparser with negative number options present") {
+    SECTION("12.5. subparser with negative number options present") {
         parser.add_argument("--foo").action("store_true").help("foo help");
         parser.add_argument("--boo").action("store").help("boo help");
 
@@ -1665,7 +1708,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ "a", "-1", "-1" }));
     }
 
-    SECTION("11.6. subparser required=true") {
+    SECTION("12.6. subparser required=true") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
         auto& subparsers = parser.add_subparsers().required(true).dest("cmd").help("sub-command help");
@@ -1680,7 +1723,7 @@ TEST_CASE("11. subparsers", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ "--foo" }));
     }
 
-    SECTION("11.7. subparser namespace handle") {
+    SECTION("12.7. subparser namespace handle") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
         auto& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
@@ -1709,13 +1752,13 @@ TEST_CASE("11. subparsers", "[argument_parser]")
     }
 }
 
-TEST_CASE("12. default values", "[argument_parser]")
+TEST_CASE("13. default values", "[argument_parser]")
 {
     std::string global_default = "global";
     std::string local_default = "local";
     std::string new_default = "new";
 
-    SECTION("12.1. have global value") {
+    SECTION("13.1. have global value") {
         auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -1747,7 +1790,7 @@ TEST_CASE("12. default values", "[argument_parser]")
         REQUIRE(args2.get<std::string>("foobaz") == new_default);
     }
 
-    SECTION("12.2. no global value") {
+    SECTION("13.2. no global value") {
         auto parser = argparse::ArgumentParser().exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -1779,7 +1822,7 @@ TEST_CASE("12. default values", "[argument_parser]")
         REQUIRE(args2.get<std::string>("foobaz") == new_default);
     }
 
-    SECTION("12.3. suppress global value") {
+    SECTION("13.3. suppress global value") {
         auto parser = argparse::ArgumentParser().argument_default(argparse::SUPPRESS).exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -1806,7 +1849,7 @@ TEST_CASE("12. default values", "[argument_parser]")
         REQUIRE(args2.get<std::string>("bar") == local_default);
     }
 
-    SECTION("12.4. suppress local value") {
+    SECTION("13.4. suppress local value") {
         auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -1834,14 +1877,14 @@ TEST_CASE("12. default values", "[argument_parser]")
     }
 }
 
-TEST_CASE("13. value exists check", "[namespace]")
+TEST_CASE("14. value exists check", "[namespace]")
 {
     std::string global_default = "global";
     std::string local_default = "local";
     std::string new_default = "default";
     std::string new_value = "new";
 
-    SECTION("13.1. have default value") {
+    SECTION("14.1. have default value") {
         auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -1855,7 +1898,7 @@ TEST_CASE("13. value exists check", "[namespace]")
         REQUIRE(args0.get<std::string>("bar") == local_default);
     }
 
-    SECTION("13.2. no default value") {
+    SECTION("14.2. no default value") {
         auto parser = argparse::ArgumentParser().exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -1879,11 +1922,11 @@ TEST_CASE("13. value exists check", "[namespace]")
     }
 }
 
-TEST_CASE("14. pseudo-argument '--'", "[argument_parser]")
+TEST_CASE("15. pseudo-argument '--'", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("14.1. options like '--' [fail]") {
+    SECTION("15.1. options like '--' [fail]") {
         parser.add_argument("--").action("store").help("-- help");
 
         // dest= is required for options like '--'
@@ -1891,7 +1934,7 @@ TEST_CASE("14. pseudo-argument '--'", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ "--=1" }));
     }
 
-    SECTION("14.2. options like '--' [ ok ]") {
+    SECTION("15.2. options like '--' [ ok ]") {
         // better don't use dest='--'
         parser.add_argument("--").action("store").dest("--").help("-- help");
         REQUIRE_THROWS(parser.add_argument("--").action("store").dest("foo").help("foo help"));
@@ -1903,7 +1946,7 @@ TEST_CASE("14. pseudo-argument '--'", "[argument_parser]")
         REQUIRE(args1.get<std::string>("--") == "1");
     }
 
-    SECTION("14.3. store arguments like optional") {
+    SECTION("15.3. store arguments like optional") {
         parser.add_argument("store1").action("store").help("store1 help");
         parser.add_argument("--store2").action("store").help("store2 help");
 
@@ -1918,7 +1961,7 @@ TEST_CASE("14. pseudo-argument '--'", "[argument_parser]")
         REQUIRE(args1.get<std::string>("store2") == "--store2");
     }
 
-    SECTION("14.4. prefix chars '+'") {
+    SECTION("15.4. prefix chars '+'") {
         parser.prefix_chars("+");
 
         parser.add_argument("store1").action("store").help("store1 help");
@@ -1936,11 +1979,11 @@ TEST_CASE("14. pseudo-argument '--'", "[argument_parser]")
     }
 }
 
-TEST_CASE("15. prefix chars '='", "[argument_parser]")
+TEST_CASE("16. prefix chars '='", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().prefix_chars("=").exit_on_error(false);
 
-    SECTION("15.1. without store actions") {
+    SECTION("16.1. without store actions") {
         parser.add_argument({ "=f", "==foo" }).action("store_true").help("foo help");
         parser.add_argument("==bar").action("store_false").help("bar help");
 
@@ -1955,7 +1998,7 @@ TEST_CASE("15. prefix chars '='", "[argument_parser]")
         REQUIRE(args1.get<bool>("bar") == false);
     }
 
-    SECTION("15.2. with store actions") {
+    SECTION("16.2. with store actions") {
         parser.add_argument({ "=f", "==foo" }).action("store").help("foo help");
         parser.add_argument("==bar").action("store").help("bar help");
 
@@ -1971,14 +2014,14 @@ TEST_CASE("15. prefix chars '='", "[argument_parser]")
     }
 }
 
-TEST_CASE("16. parse known arguments", "[argument_parser]")
+TEST_CASE("17. parse known arguments", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
     parser.add_argument("--foo").action("store_true");
     parser.add_argument("bar");
 
-    SECTION("16.1. all known arguments") {
+    SECTION("17.1. all known arguments") {
         auto args0 = parser.parse_args({ "--foo", "bar" });
         REQUIRE(args0.get<bool>("foo") == true);
         REQUIRE(args0.get<std::string>("bar") == "bar");
@@ -1988,7 +2031,7 @@ TEST_CASE("16. parse known arguments", "[argument_parser]")
         REQUIRE(args1.get<std::string>("bar") == "bar");
     }
 
-    SECTION("16.2. have unknown arguments") {
+    SECTION("17.2. have unknown arguments") {
         REQUIRE_THROWS(parser.parse_args({ "--foo", "--boo", "bar", "baz" }));
 
         auto args = parser.parse_known_args({ "--foo", "--boo", "bar", "baz" });
@@ -1999,7 +2042,7 @@ TEST_CASE("16. parse known arguments", "[argument_parser]")
     }
 }
 
-TEST_CASE("17. argument groups", "[argument_parser]")
+TEST_CASE("18. argument groups", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
@@ -2025,11 +2068,11 @@ TEST_CASE("17. argument groups", "[argument_parser]")
     REQUIRE(args1.get<std::string>("group2") == "2");
 }
 
-TEST_CASE("18. mutual exclusion", "[argument_parser]")
+TEST_CASE("19. mutual exclusion", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("18.1. required=false") {
+    SECTION("19.1. required=false") {
         auto& group = parser.add_mutually_exclusive_group();
         group.add_argument("--foo").action("store_true");
         group.add_argument("--bar").action("store_false");
@@ -2050,7 +2093,7 @@ TEST_CASE("18. mutual exclusion", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args({ "--foo", "--bar" }));
     }
 
-    SECTION("18.2. required=true") {
+    SECTION("19.2. required=true") {
         auto& group = parser.add_mutually_exclusive_group().required(true);
         group.add_argument("--foo").action("store_true");
         group.add_argument("--bar").action("store_false");
@@ -2068,11 +2111,11 @@ TEST_CASE("18. mutual exclusion", "[argument_parser]")
     }
 }
 
-TEST_CASE("19. intermixed parsing", "[argument_parser]")
+TEST_CASE("20. intermixed parsing", "[argument_parser]")
 {
     auto parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("19.1. simple example") {
+    SECTION("20.1. simple example") {
         parser.add_argument("--foo");
         parser.add_argument("cmd");
         parser.add_argument("rest").nargs("*");
@@ -2090,7 +2133,7 @@ TEST_CASE("19. intermixed parsing", "[argument_parser]")
         REQUIRE(args1.to_string("rest") == "[1, 2, 3]");
     }
 
-    SECTION("19.2. subparsers") {
+    SECTION("20.2. subparsers") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
         auto& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
@@ -2107,7 +2150,7 @@ TEST_CASE("19. intermixed parsing", "[argument_parser]")
     }
 }
 
-TEST_CASE("20. namespace", "[argument_parser]")
+TEST_CASE("21. namespace", "[argument_parser]")
 {
     std::string global_default = "global";
     std::string local_default = "local";
@@ -2121,7 +2164,7 @@ TEST_CASE("20. namespace", "[argument_parser]")
     std::string bar = "bar";
     std::string pos = "pos";
 
-    SECTION("20.1. simple example") {
+    SECTION("21.1. simple example") {
         auto args0 = parser.parse_args({ pos });
         REQUIRE(args0.get<std::string>("-f") == global_default);
         REQUIRE(args0.get<std::string>("-b") == local_default);
@@ -2167,7 +2210,7 @@ TEST_CASE("20. namespace", "[argument_parser]")
         REQUIRE(args3.get<std::string>("pos") == bar);
     }
 
-    SECTION("20.2. intermixed parsing") {
+    SECTION("21.2. intermixed parsing") {
         auto args1 = parser.parse_args({ pos, "-f", foo, "--bar", bar });
         REQUIRE(args1.get<std::string>("-f") == foo);
         REQUIRE(args1.get<std::string>("-b") == bar);
@@ -2227,9 +2270,9 @@ TEST_CASE("20. namespace", "[argument_parser]")
     }
 }
 
-TEST_CASE("21. value types check", "[namespace]")
+TEST_CASE("22. value types check", "[namespace]")
 {
-    SECTION("21.1. mapped types") {
+    SECTION("22.1. mapped types") {
         auto parser = argparse::ArgumentParser().exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -2325,7 +2368,7 @@ TEST_CASE("21. value types check", "[namespace]")
 #endif  // C++17+
     }
 
-    SECTION("21.2. paired types") {
+    SECTION("22.2. paired types") {
         auto parser = argparse::ArgumentParser().exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -2371,7 +2414,7 @@ TEST_CASE("21. value types check", "[namespace]")
 #endif  // C++17+
     }
 
-    SECTION("21.3. tuple") {
+    SECTION("22.3. tuple") {
         auto parser = argparse::ArgumentParser().exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
@@ -2423,9 +2466,9 @@ TEST_CASE("21. value types check", "[namespace]")
     }
 }
 
-TEST_CASE("22. parents", "[argument_parser]")
+TEST_CASE("23. parents", "[argument_parser]")
 {
-    SECTION("22.1. ArgumentParser help conflict") {
+    SECTION("23.1. ArgumentParser help conflict") {
         auto parent1 = argparse::ArgumentParser();
         auto parent2 = argparse::ArgumentParser().add_help(false);
         auto parent3 = argparse::ArgumentParser().prefix_chars("+");
@@ -2436,7 +2479,7 @@ TEST_CASE("22. parents", "[argument_parser]")
         REQUIRE_NOTHROW(argparse::ArgumentParser().parents(parent3));
     }
 
-    SECTION("22.2. Parser help conflict") {
+    SECTION("23.2. Parser help conflict") {
         auto parent1 = argparse::ArgumentParser();
         auto parent2 = argparse::ArgumentParser().add_help(false);
         auto parent3 = argparse::ArgumentParser().prefix_chars("+");
