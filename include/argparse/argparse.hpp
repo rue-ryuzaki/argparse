@@ -972,12 +972,6 @@ _matrix_to_string(std::vector<std::vector<std::string> > const& matrix,
 }
 
 inline std::string
-_ignore_default(std::string const& arg, std::string const& value)
-{
-    return "argument " + arg + ": ignored default value '" + value + "'";
-}
-
-inline std::string
 _ignore_explicit(std::string const& arg, std::string const& value)
 {
     return "argument " + arg + ": ignored explicit argument '" + value + "'";
@@ -6925,12 +6919,6 @@ private:
     storage_is_positional_arg_stored(Parsers& parsers,
                                      pArgument const& arg) const
     {
-        if (arg->action() == Action::append_const
-                && arg->m_default.has_value()) {
-            parsers.back().parser->throw_error(
-                        detail::_ignore_default(
-                            arg->m_flags.front(), arg->default_value()));
-        }
         return parsers.front().storage.self_value_stored(arg);
     }
 
@@ -7032,12 +7020,6 @@ private:
                                       pArgument const& tmp) const
     {
         if (equals.size() == 1) {
-            if (tmp->action() == Action::append_const
-                    && !tmp->default_value().empty()) {
-                parsers.back().parser->throw_error(
-                            detail::_ignore_default(
-                                tmp->m_flags.front(), tmp->default_value()));
-            }
             if (tmp->action() == Action::BooleanOptionalAction) {
                 bool exist = detail::_is_value_exists(equals.front(),
                                                       tmp->m_flags);
