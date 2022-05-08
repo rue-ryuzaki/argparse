@@ -1,3 +1,13 @@
+cpp-argparse-dev (1.5.1-0ppa0) focal; urgency=low
+
+  * Fix: conflicting option string error
+  * Fix: Namespace::try_get for std::array type
+  * Remove: required const value for *_const actions
+  * Remove: default value check for append_const actions
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sun, 08 May 2022 18:14:22 +0300
+
 cpp-argparse-dev (1.5.0-0ppa0) focal; urgency=low
 
   * Rewrite parents support implementation
