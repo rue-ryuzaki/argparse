@@ -2034,7 +2034,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& choices(std::string const& value)
+    template <typename = void>
+    Argument& choices(std::string const& value)
     {
         if (!(action() & detail::_store_action)) {
             throw TypeError("got an unexpected keyword argument 'choices'");
