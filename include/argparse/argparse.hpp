@@ -1963,7 +1963,7 @@ public:
      */
     inline Argument& default_value(Enum value)
     {
-        if (value != SUPPRESS) {
+        if (value != argparse::SUPPRESS) {
             throw TypeError("got an unexpected keyword argument 'default'");
         }
         m_default_type = value;
@@ -2114,7 +2114,7 @@ public:
      */
     inline Argument& help(Enum value)
     {
-        if (value != SUPPRESS) {
+        if (value != argparse::SUPPRESS) {
             throw TypeError("got an unexpected keyword argument 'help'");
         }
         m_help_type = value;
@@ -2437,7 +2437,7 @@ private:
                 auto const& def = (m_default.has_value()
                                    || !argument_default.has_value())
                         ? m_default : argument_default;
-                if (m_default_type != SUPPRESS
+                if (m_default_type != argparse::SUPPRESS
                         && !(suppress_default && !def.has_value())) {
                     if (!def.has_value() && (action() & detail::_bool_action)) {
                         formatted += " (default: "
@@ -5809,7 +5809,7 @@ public:
      */
     inline ArgumentParser& argument_default(Enum value)
     {
-        if (value != SUPPRESS) {
+        if (value != argparse::SUPPRESS) {
             throw
             TypeError("got an unexpected keyword argument 'argument_default'");
         }
@@ -6173,7 +6173,7 @@ public:
         if (ip != std::end(positional)) {
             return default_argument_value(*(*ip))();
         }
-        bool suppress_default = m_argument_default_type == SUPPRESS;
+        bool suppress_default = m_argument_default_type == argparse::SUPPRESS;
         auto _arg_suppressed = [this, suppress_default] (pArgument const& arg)
         {
             return arg->m_default_type == argparse::SUPPRESS
@@ -6468,7 +6468,7 @@ public:
             }
         };
         std::size_t width = output_width();
-        bool suppress_default = m_argument_default_type == SUPPRESS;
+        bool suppress_default = m_argument_default_type == argparse::SUPPRESS;
         auto subparser = sub_info.first;
         bool sub_positional = is_subparser_positional(subparser);
         for (auto const& arg : positional) {
@@ -7709,12 +7709,12 @@ private:
     inline void
     default_values_post_trigger(argparse::Namespace::Storage& storage) const
     {
-        bool suppress_default = m_argument_default_type == SUPPRESS;
+        bool suppress_default = m_argument_default_type == argparse::SUPPRESS;
         for (auto it = storage.begin(); it != storage.end(); ) {
             if (!it->second.exists() && it->first->action() != Action::count
                     && it->first->m_type == Argument::Optional) {
                 auto const& value = default_argument_value(*(it->first));
-                if (it->first->m_default_type == SUPPRESS
+                if (it->first->m_default_type == argparse::SUPPRESS
                         || (suppress_default && !value.has_value())) {
                     it = storage.erase(it);
                     continue;
