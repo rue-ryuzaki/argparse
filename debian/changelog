@@ -1,3 +1,9 @@
+cpp-argparse-dev (1.5.2-0ppa0) focal; urgency=low
+
+  * Fix: Argument::choices({ A, B }) with 2 choices
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Fri, 13 May 2022 19:40:57 +0300
+
 cpp-argparse-dev (1.5.1-0ppa0) focal; urgency=low
 
   * Fix: conflicting option string error
