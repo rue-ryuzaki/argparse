@@ -1096,6 +1096,9 @@ class Type
 public:
     template <class T, typename std::enable_if<
                   std::is_same<std::string, T>::value
+#if __cplusplus >= 201703L  // C++17+
+                  || std::is_same<std::string_view, T>::value
+#endif  //C++17+
                   || is_stl_pair<T>::value
                   || is_stl_tuple<T>::value>::type* = nullptr>
     std::string static
@@ -1125,6 +1128,9 @@ public:
 
     template <class T, typename std::enable_if<
                   !std::is_same<std::string, T>::value
+#if __cplusplus >= 201703L  // C++17+
+                  && !std::is_same<std::string_view, T>::value
+#endif  //C++17+
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
@@ -1138,6 +1144,9 @@ public:
     }
 
     template <class T, typename std::enable_if<
+#if __cplusplus >= 201703L  // C++17+
+                  std::is_same<std::string_view, T>::value ||
+#endif  //C++17+
                   std::is_same<std::string, T>::value>::type* = nullptr>
     std::string static
     name()
@@ -1196,6 +1205,9 @@ public:
 
     template <class T, typename std::enable_if<
                   !std::is_same<std::string, T>::value
+#if __cplusplus >= 201703L  // C++17+
+                  && !std::is_same<std::string_view, T>::value
+#endif  //C++17+
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
@@ -5657,6 +5669,7 @@ public:
      */
     inline ArgumentParser& parents(std::vector<ArgumentParser> const& param)
     {
+        std::vector<std::pair<std::string, std::vector<pGroup> > > merge_groups;
         for (auto const& parent : param) {
             if (this == &parent) {
                 continue;
