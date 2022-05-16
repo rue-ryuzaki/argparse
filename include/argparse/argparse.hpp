@@ -7902,31 +7902,31 @@ private:
                              std::end(ex_opt));
             }
         }
-        auto _arg_usage = [&res] (std::string const& str, bool bkt)
+        auto _arg_usage = [&res] (std::string const& str, bool required)
         {
             if (!res.empty()) {
                 res += '\n';
             }
-            res += (bkt ? "[" + str + "]" : str);
+            res += (required ? str : "[" + str + "]");
         };
         for (auto const& arg : ex_opt) {
-            _arg_usage(arg->usage(m_formatter_class), true);
+            _arg_usage(arg->usage(m_formatter_class), arg->required());
         }
         for (auto const& ex : mutex_groups) {
-            _arg_usage(ex.usage(m_formatter_class), false);
+            _arg_usage(ex.usage(m_formatter_class), true);
         }
         for (std::size_t i = 0; i < positional.size(); ++i) {
             if (subparser.first && subparser.second == i) {
-                _arg_usage(subparser.first->usage(), false);
+                _arg_usage(subparser.first->usage(), true);
             }
             auto const str = positional.at(i)->usage(m_formatter_class);
             if (str.empty()) {
                 continue;
             }
-            _arg_usage(str, false);
+            _arg_usage(str, true);
         }
         if (subparser.first && subparser.second == positional.size()) {
-            _arg_usage(subparser.first->usage(), false);
+            _arg_usage(subparser.first->usage(), true);
         }
         os << detail::_format_output(head_prog, res, 1, indent, w) << std::endl;
     }
