@@ -5648,7 +5648,7 @@ public:
     }
 
     /*!
-     *  \brief Set argument parser 'help' message
+     *  \brief Set argument parser 'help' message (for subparsers)
      *
      *  \param value Help message
      *
@@ -5943,7 +5943,7 @@ public:
     }
 
     /*!
-     *  \brief Get argument parser 'help' message
+     *  \brief Get argument parser 'help' message (for subparsers)
      *
      *  \return Argument parser 'help' message
      */
