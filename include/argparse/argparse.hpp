@@ -5163,6 +5163,20 @@ private:
 };
 
 /*!
+ *  \brief Output stream overload for Namespace
+ *
+ *  \param os Output stream
+ *  \param obj Namespace object
+ *
+ *  \return Output stream reference
+ */
+inline std::ostream& operator <<(std::ostream& os, Namespace const& obj)
+{
+    os << obj.to_string();
+    return os;
+}
+
+/*!
  * \brief ArgumentParser objects
  */
 _ARGPARSE_EXPORT class ArgumentParser
