@@ -6735,6 +6735,7 @@ private:
         parsers.push_back(
                     ParserInfo(this, space.storage(), subparser_info(true)));
 
+        check_mutex_arguments();
         check_intermixed_subparser(intermixed, parsers.back().subparser.first);
 
         auto positional = m_data.get_positional(true, true);
@@ -6821,6 +6822,18 @@ private:
             auto const& name = !arg->dest().empty() ? arg->dest() : arg->m_name;
             throw
             AttributeError("'tuple' object has no attribute '" + name + "'");
+        }
+    }
+
+    inline void check_mutex_arguments() const
+    {
+        for (auto const& group : m_mutex_groups) {
+            for (auto const& arg : group.m_data.m_arguments) {
+                if (arg->required()) {
+                    throw
+                    ValueError("mutually exclusive arguments must be optional");
+                }
+            }
         }
     }
 
