@@ -3571,6 +3571,12 @@ _ARGPARSE_EXPORT class Namespace
             return false;
         }
 
+        inline bool exists_arg(std::string const& key) const
+        {
+            auto it = find_arg(key);
+            return it != std::end(m_data);
+        }
+
         inline bool exists(std::string const& key) const
         {
             auto it = find(key);
@@ -3620,6 +3626,26 @@ _ARGPARSE_EXPORT class Namespace
         end()            const _ARGPARSE_NOEXCEPT { return std::end(m_data); }
 
     private:
+        inline const_iterator find_arg(std::string const& key) const
+        {
+            auto it = find(key);
+            if (it != end()) {
+                return it;
+            }
+            for (it = begin(); it != end(); ++it) {
+                if (it->first->m_type == Argument::Optional
+                        && it->first->dest().empty()) {
+                    if (std::any_of(std::begin(it->first->m_flags),
+                                    std::end(it->first->m_flags),
+                                    [&key] (std::string const& flag)
+                    { return detail::_flag_name(flag) == key; })) {
+                        return it;
+                    }
+                }
+            }
+            return end();
+        }
+
         inline const_iterator find(std::string const& key) const
         {
             return std::find_if(std::begin(m_data), std::end(m_data),
@@ -3696,7 +3722,7 @@ public:
      */
     inline bool exists(std::string const& key) const
     {
-        auto it = find_if(key);
+        auto it = storage().find_arg(key);
         if (it != storage().end()) {
             return !it->second.empty() || it->first->action() == Action::count;
         }
@@ -4816,7 +4842,7 @@ private:
 
     inline Storage::value_type const& data(std::string const& key) const
     {
-        auto it = find_if(key);
+        auto it = storage().find_arg(key);
         if (it != storage().end()) {
             return *it;
         }
@@ -4827,26 +4853,6 @@ private:
     inline Storage const& storage() const _ARGPARSE_NOEXCEPT
     {
         return m_storage;
-    }
-
-    inline Storage::const_iterator find_if(std::string const& key) const
-    {
-        auto it = storage().find(key);
-        if (it != storage().end()) {
-            return it;
-        }
-        for (it = storage().begin(); it != storage().end(); ++it) {
-            if (it->first->m_type == Argument::Optional
-                    && it->first->dest().empty()) {
-                if (std::any_of(std::begin(it->first->m_flags),
-                                std::end(it->first->m_flags),
-                                [&key] (std::string const& flag)
-                { return detail::_flag_name(flag) == key; })) {
-                    return it;
-                }
-            }
-        }
-        return storage().end();
     }
 
     template <class T, class U>
@@ -4988,7 +4994,7 @@ private:
     inline std::optional<Storage::value_type>
     try_get_data(std::string const& key) const
     {
-        auto it = find_if(key);
+        auto it = storage().find_arg(key);
         if (it != storage().end()) {
             return *it;
         }
@@ -5703,6 +5709,9 @@ public:
             }
             for (auto const& group : parent.m_mutex_groups) {
                 m_mutex_groups.push_back(group);
+            }
+            for (auto const& pair : parent.m_default_values) {
+                m_default_values.push_back(pair);
             }
         }
         return *this;
@@ -7755,7 +7764,7 @@ private:
             ++it;
         }
         for (auto const& pair : m_default_values) {
-            if (!storage.exists(pair.first)) {
+            if (!storage.exists_arg(pair.first)) {
                 auto arg = Argument::make_argument(
                             std::vector<std::string>{ pair.first },
                             pair.first, Argument::Positional);
