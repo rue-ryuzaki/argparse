@@ -836,6 +836,22 @@ _split(std::string const& str, char delim, bool force = false)
     return result;
 }
 
+inline std::vector<std::string>
+_split_whitespace(std::string const& str, bool force = false)
+{
+    std::vector<std::string> result;
+    std::string value;
+    for (auto c : str) {
+        if (std::isspace(static_cast<unsigned char>(c))) {
+            _store_value_to(value, result, force);
+        } else {
+            value += c;
+        }
+    }
+    _store_value_to(value, result);
+    return result;
+}
+
 inline std::pair<std::string, std::string>
 _split_delimiter(std::string const& s, char delim)
 {
@@ -1031,18 +1047,8 @@ _help_formatter(HelpFormatter formatter, std::string const& help)
     if (formatter & RawTextHelpFormatter) {
         return help;
     }
-    std::string help_formatted;
-    auto lines = _split(help, '\n');
-    for (auto& line : lines) {
-        _trim(line);
-        if (!line.empty()) {
-            if (!help_formatted.empty()) {
-                help_formatted += _space;
-            }
-            help_formatted += line;
-        }
-    }
-    return help_formatted;
+    auto lines = _split_whitespace(help);
+    return _vector_to_string(lines);
 }
 
 inline std::string
@@ -1051,16 +1057,8 @@ _raw_text_formatter(HelpFormatter formatter, std::string const& text)
     if (formatter & (RawDescriptionHelpFormatter | RawTextHelpFormatter)) {
         return text;
     }
-    auto res = text;
-    _trim(res);
-    auto lines = _split(res, '\n');
-    if (lines.size() > 1) {
-        for (auto& line : lines) {
-            _trim(line);
-        }
-        return _vector_to_string(lines);
-    }
-    return res;
+    auto lines = _split_whitespace(text);
+    return _vector_to_string(lines);
 }
 
 inline void
