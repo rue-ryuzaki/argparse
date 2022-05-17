@@ -2445,8 +2445,7 @@ private:
         std::string res = "  " + flags_to_string(formatter);
         auto formatted = detail::_help_formatter(formatter, help());
         if (!formatted.empty()) {
-            if (m_type == Optional
-                    && (formatter & ArgumentDefaultsHelpFormatter)
+            if ((formatter & ArgumentDefaultsHelpFormatter)
                     && !(action() & (Action::help | Action::version))) {
                 auto const& def = (m_default.has_value()
                                    || !argument_default.has_value())
