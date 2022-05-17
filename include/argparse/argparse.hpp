@@ -2752,7 +2752,10 @@ protected:
         {
             auto name = detail::_flag_name(arg);
             std::size_t count_prefixes = arg.size() - name.size();
-            if (count < count_prefixes) {
+            if (count < count_prefixes
+                    || (count == count_prefixes
+                        && count > 1
+                        && flag.size() < name.size())) {
                 count = count_prefixes;
                 flag = std::move(name);
             }
