@@ -7760,18 +7760,20 @@ private:
     {
         bool suppress_default = m_argument_default_type == argparse::SUPPRESS;
         for (auto it = storage.begin(); it != storage.end(); ) {
-            if (!it->second.exists() && it->first->action() != Action::count
-                    && it->first->m_type == Argument::Optional) {
+            if (!it->second.exists()) {
                 auto const& value = default_argument_value(*(it->first));
                 if (it->first->m_default_type == argparse::SUPPRESS
                         || (suppress_default && !value.has_value())) {
                     it = storage.erase(it);
                     continue;
                 }
-                if (value.has_value()) {
-                    it->second.push_default(value());
-                } else if (it->first->action() & detail::_bool_action) {
-                    it->second.push_back(value());
+                if (it->first->action() != Action::count
+                        && it->first->m_type == Argument::Optional) {
+                    if (value.has_value()) {
+                        it->second.push_default(value());
+                    } else if (it->first->action() & detail::_bool_action) {
+                        it->second.push_back(value());
+                    }
                 }
             }
             ++it;
