@@ -2142,13 +2142,35 @@ public:
      *
      *  \return Current argument reference
      */
+    template <typename = void>
     inline Argument& metavar(std::string const& value)
     {
         if (!(action() & (detail::_store_const_action
                           | Action::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'metavar'");
         }
-        m_metavar = detail::_trim_copy(value);
+        m_metavar = { detail::_trim_copy(value) };
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument 'metavar' value
+     *
+     *  \param value Metavar value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& metavar(std::vector<std::string> const& values)
+    {
+        if (!(action() & (detail::_store_const_action
+                          | Action::BooleanOptionalAction))) {
+            throw TypeError("got an unexpected keyword argument 'metavar'");
+        }
+        auto _values = values;
+        for (auto& value : _values) {
+            detail::_trim(value);
+        }
+        m_metavar = std::move(_values);
         return *this;
     }
 
@@ -2324,9 +2346,9 @@ public:
      *
      *  \return Argument 'metavar' value
      */
-    inline std::string const& metavar() const _ARGPARSE_NOEXCEPT
+    inline std::string metavar() const
     {
-        return m_metavar();
+        return detail::_vector_to_string(m_metavar());
     }
 
     /*!
@@ -2431,7 +2453,7 @@ private:
                 }
             }
         } else {
-            res += get_argument_name(formatter);
+            res += detail::_vector_to_string(get_argument_name(formatter));
         }
         return res;
     }
@@ -2469,28 +2491,32 @@ private:
 
     std::string get_nargs_suffix(HelpFormatter formatter) const
     {
-        auto const name = get_argument_name(formatter);
+        auto names = get_argument_name(formatter);
+        if (names.size() > 1
+                && (m_nargs != NARGS_NUM || names.size() != m_num_args)) {
+            throw TypeError("length of metavar tuple does not match nargs");
+        }
+        if (names.size() == 1
+                && m_nargs == NARGS_NUM && names.size() != m_num_args) {
+            names.resize(m_num_args, names.front());
+        }
+        auto const name = detail::_vector_to_string(names);
         std::string res;
         if (m_type == Optional && !name.empty()) {
             res += detail::_spaces;
         }
         switch (m_nargs) {
             case ZERO_OR_ONE :
-                res += "[" +  name + "]";
+                res += "[" + name + "]";
                 break;
             case ONE_OR_MORE :
                 res += name + detail::_spaces;
                 // fallthrough
             case ZERO_OR_MORE :
-                res += "[" +  name + " ...]";
+                res += "[" + name + " ...]";
                 break;
             case NARGS_NUM :
-                for (std::size_t i = 0; i < m_num_args; ++i) {
-                    if (i != 0) {
-                        res += detail::_spaces;
-                    }
-                    res += name;
-                }
+                res += name;
                 break;
             default :
                 res += name;
@@ -2499,19 +2525,20 @@ private:
         return res;
     }
 
-    inline std::string get_argument_name(HelpFormatter formatter) const
+    inline std::vector<std::string>
+    get_argument_name(HelpFormatter formatter) const
     {
         if ((formatter & MetavarTypeHelpFormatter) && !type_name().empty()) {
-            return type_name();
+            return { type_name() };
         }
         if (m_metavar.has_value()) {
-            return metavar();
+            return m_metavar();
         }
         if (m_choices.has_value()) {
-            return "{" + detail::_vector_to_string(choices(), ",") + "}";
+            return { "{" + detail::_vector_to_string(choices(), ",") + "}" };
         }
         auto const& res = dest().empty() ? m_name : dest();
-        return m_type == Optional ? detail::_to_upper(res) : res;
+        return { m_type == Optional ? detail::_to_upper(res) : res };
     }
 
     inline std::vector<std::string> const&
@@ -2574,7 +2601,7 @@ private:
     detail::Value<std::vector<std::string> > m_choices;
     detail::Value<bool> m_required;
     std::string m_help;
-    detail::Value<std::string> m_metavar;
+    detail::Value<std::vector<std::string> > m_metavar;
     std::vector<std::string> m_dest;
     detail::Value<std::string> m_version;
     std::function<void(std::string const&)> m_handle;
