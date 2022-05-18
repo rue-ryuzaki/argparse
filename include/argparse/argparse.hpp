@@ -2627,11 +2627,6 @@ class _Group
     friend class ArgumentParser;
 
 protected:
-    _Group()
-        : m_title(),
-          m_description()
-    { }
-
     explicit
     _Group(std::string const& title, std::string const& description)
         : m_title(title),
@@ -5255,8 +5250,9 @@ public:
     {
         friend class ArgumentParser;
 
-        Subparser()
-            : _Group(),
+        Subparser(std::string const& title,
+                  std::string const& description)
+            : _Group(title, description),
               m_parent_prog(),
               m_parent_args(),
               m_prog(),
@@ -5268,9 +5264,10 @@ public:
         { }
 
         static inline std::shared_ptr<Subparser>
-        make_subparser()
+        make_subparser(std::string const& title,
+                       std::string const& description)
         {
-            return std::make_shared<Subparser>(Subparser());
+            return std::make_shared<Subparser>(Subparser(title, description));
         }
 
     public:
@@ -6178,13 +6175,15 @@ public:
      *
      *  \return Current subparser reference
      */
-    inline Subparser& add_subparsers()
+    inline Subparser&
+    add_subparsers(std::string const& title = std::string(),
+                   std::string const& description = std::string())
     {
         if (m_subparsers) {
             throw_error("cannot have multiple subparser arguments");
         }
         m_subparsers_position = m_data.m_positional.size();
-        m_subparsers = Subparser::make_subparser();
+        m_subparsers = Subparser::make_subparser(title, description);
         m_subparsers->update_prog(prog(), subparser_prog_args());
         m_groups.push_back(m_subparsers);
         return *m_subparsers;
