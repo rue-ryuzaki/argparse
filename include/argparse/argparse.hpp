@@ -2489,6 +2489,16 @@ private:
         return res;
     }
 
+    inline std::string
+    get_default(detail::Value<std::string> const& def) const
+    {
+        if (!def.has_value() && (action() & detail::_bool_action)) {
+            return detail::_bool_to_string(def());
+        } else {
+            return (def.has_value() || !def().empty()) ? def() : "None";
+        }
+    }
+
     std::string print(bool suppress_default,
                       detail::Value<std::string> const& argument_default,
                       HelpFormatter formatter,
@@ -2496,23 +2506,17 @@ private:
                       std::size_t width) const
     {
         std::string res = "  " + flags_to_string(formatter);
-        auto formatted = detail::_help_formatter(formatter, help());
+        auto const& def = (m_default.has_value()
+                           || !argument_default.has_value())
+                ? m_default : argument_default;
+        auto formatted = detail::_help_formatter(
+          formatter, detail::_replace(help(), "%(default)s", get_default(def)));
         if (!formatted.empty()) {
             if ((formatter & ArgumentDefaultsHelpFormatter)
                     && !(action() & (Action::help | Action::version))) {
-                auto const& def = (m_default.has_value()
-                                   || !argument_default.has_value())
-                        ? m_default : argument_default;
                 if (m_default_type != argparse::SUPPRESS
                         && !(suppress_default && !def.has_value())) {
-                    if (!def.has_value() && (action() & detail::_bool_action)) {
-                        formatted += " (default: "
-                                + detail::_bool_to_string(def()) + ")";
-                    } else {
-                        formatted += " (default: "
-                                + ((def.has_value() || !def().empty())
-                                   ? def() : "None") + ")";
-                    }
+                    formatted += " (default: " + get_default(def) + ")";
                 }
             }
         }
