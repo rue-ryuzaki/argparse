@@ -5804,7 +5804,6 @@ public:
      */
     inline ArgumentParser& parents(std::vector<ArgumentParser> const& param)
     {
-        std::vector<std::pair<std::string, std::vector<pGroup> > > merge_groups;
         for (auto const& parent : param) {
             if (this == &parent) {
                 continue;
@@ -7862,6 +7861,28 @@ private:
         }
     }
 
+    inline bool
+    skip_positional_required_check(Parsers& parsers, pArgument const& arg) const
+    {
+        if (storage_is_positional_arg_stored(parsers, arg)) {
+            return true;
+        }
+        if (arg->action() == Action::extend
+                && arg->m_nargs == Argument::ZERO_OR_ONE) {
+            throw TypeError("'NoneType' object is not iterable");
+        }
+        if ((arg->m_nargs
+             & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE))
+                || arg->action() == Action::BooleanOptionalAction) {
+            storage_store_default_value(parsers, arg);
+            return true;
+        }
+        if (arg->m_nargs == Argument::REMAINDER) {
+            return true;
+        }
+        return false;
+    }
+
     void
     check_required_args(Parsers& parsers,
                         std::size_t& pos,
@@ -7878,23 +7899,9 @@ private:
             for ( ; pos < positional.size(); ++pos) {
                 process_subparser_required(sub_required, pos, subparser, args);
                 auto const& arg = positional.at(pos);
-                if (args.empty()) {
-                    if (storage_is_positional_arg_stored(parsers, arg)) {
-                        continue;
-                    }
-                    if (arg->action() == Action::extend
-                            && arg->m_nargs == Argument::ZERO_OR_ONE) {
-                        throw TypeError("'NoneType' object is not iterable");
-                    }
-                    if ((arg->m_nargs
-                         & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE))
-                            || arg->action() == Action::BooleanOptionalAction) {
-                        storage_store_default_value(parsers, arg);
-                        continue;
-                    }
-                    if (arg->m_nargs == Argument::REMAINDER) {
-                        continue;
-                    }
+                if (args.empty()
+                        && skip_positional_required_check(parsers, arg)) {
+                    continue;
                 }
                 detail::_append_value_to(arg->m_flags.front(), args, ", ");
             }
