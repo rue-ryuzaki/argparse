@@ -1406,6 +1406,7 @@ _ARGPARSE_EXPORT class Argument
         ONE_OR_MORE     = 0x04,  // "+"
         ZERO_OR_ONE     = 0x08,  // "?"
         ZERO_OR_MORE    = 0x10,  // "*"
+        REMAINDER       = 0x20,  // argparse::REMAINDER
     };
 
     enum Type : std::uint8_t
@@ -1905,6 +1906,25 @@ public:
     inline Argument& one_or_more()
     {
         return nargs("+");
+    }
+
+    /*!
+     *  \brief Set argument 'nargs' argparse::REMAINDER value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& remainder()
+    {
+        if (!(action() & detail::_store_action)) {
+            throw TypeError("got an unexpected keyword argument 'nargs'");
+        }
+        if (m_type != Optional) {
+            throw ArgumentError("'remainder' not fully work for positionals");
+        }
+        m_nargs = REMAINDER;
+        m_nargs_str = "0";
+        m_num_args = 0;
+        return *this;
     }
 
     /*!
@@ -2528,6 +2548,9 @@ private:
                 break;
             case NARGS_NUM :
                 res += name;
+                break;
+            case REMAINDER :
+                res += "...";
                 break;
             default :
                 res += name;
@@ -4863,15 +4886,17 @@ private:
                 || (args.first->m_nargs
                     & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))) {
             std::string none
-                    = args.first->m_nargs == Argument::ZERO_OR_MORE
+                    = (args.first->m_nargs
+                       & (Argument::ZERO_OR_MORE | Argument::REMAINDER))
                     || (args.first->action() == Action::extend
                         && args.first->m_nargs == Argument::ZERO_OR_ONE)
                     ? "" : "None";
             return detail::_vector_to_string(args.second(), ", ",
                                              quotes, false, none, "[", "]");
         } else {
-            std::string none = args.first->m_nargs
-                                == Argument::ZERO_OR_MORE ? "" : "None";
+            std::string none = (args.first->m_nargs
+                               & (Argument::ZERO_OR_MORE | Argument::REMAINDER))
+                    ? "" : "None";
             return detail::_matrix_to_string(args.second.matrix(), ", ",
                                              quotes, false, none, "[", "]");
         }
@@ -6842,6 +6867,7 @@ private:
         check_intermixed_subparser(intermixed, parsers.back().subparser.first);
 
         auto positional = m_data.get_positional(true, true);
+        check_intermixed_remainder(intermixed, positional);
 
         bool was_pseudo_arg = false;
 
@@ -6947,6 +6973,19 @@ private:
         if (intermixed && subparser) {
             throw
             TypeError("parse_intermixed_args: positional arg with nargs=A...");
+        }
+    }
+
+    static void
+    check_intermixed_remainder(bool intermixed,
+                               std::vector<pArgument> const& positional)
+    {
+        if (intermixed
+                && std::any_of(std::begin(positional), std::end(positional),
+                               [] (pArgument const& arg)
+        { return arg->m_nargs == Argument::REMAINDER; })) {
+            throw
+            TypeError("parse_intermixed_args: positional arg with nargs=...");
         }
     }
 
@@ -7139,6 +7178,7 @@ private:
                 } else {
                     auto const& next = arguments.at(i);
                     if (next.empty()
+                            || tmp->m_nargs == Argument::REMAINDER
                             || detail::_not_optional(
                                 next,
                                 parsers.back().parser->prefix_chars(),
@@ -7834,6 +7874,9 @@ private:
                          & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE))
                             || arg->action() == Action::BooleanOptionalAction) {
                         storage_store_default_value(parsers, arg);
+                        continue;
+                    }
+                    if (arg->m_nargs == Argument::REMAINDER) {
                         continue;
                     }
                 }
