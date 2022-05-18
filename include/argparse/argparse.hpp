@@ -7320,10 +7320,11 @@ private:
                 storage_store_default_value(parsers, arg);
                 break;
             case Argument::ZERO_OR_MORE :
+            case Argument::REMAINDER :
                 if (over_args > 0) {
                     storage_store_n_values(parsers, arg, arguments, over_args);
                     over_args = 0;
-                } else {
+                } else if (arg->m_nargs == Argument::ZERO_OR_MORE) {
                     storage_store_default_value(parsers, arg);
                 }
                 break;
@@ -7456,6 +7457,9 @@ private:
             case Argument::ZERO_OR_MORE :
                 more_args = true;
                 break;
+            case Argument::REMAINDER :
+                more_args = true;
+                break;
             default :
                 min_amount += arg->m_num_args;
                 break;
@@ -7467,7 +7471,8 @@ private:
         return false;
     }
 
-    void match_args_partial(Parsers& parsers, std::size_t& pos,
+    void match_args_partial(Parsers& parsers,
+                            std::size_t& pos,
                             std::vector<pArgument> const& positional,
                             std::vector<std::string>& unrecognized_args,
                             std::deque<std::string>& args) const
