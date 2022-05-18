@@ -5491,11 +5491,11 @@ public:
                 return metavar();
             }
             std::string res;
-            for (auto const& parser : m_parsers) {
-                if (!res.empty()) {
-                    res += ",";
+            for (auto const& p : m_parsers) {
+                detail::_append_value_to(p->m_name, res, ",");
+                for (auto const& alias : p->aliases()) {
+                    detail::_append_value_to(alias, res, ",");
                 }
-                res += parser->m_name;
             }
             return "{" + res + "}";
         }
@@ -5513,9 +5513,13 @@ public:
             {
                 auto help = detail::_help_formatter(formatter, p->help());
                 if (!help.empty()) {
+                    auto name = "    " + p->m_name;
+                    auto alias = detail::_vector_to_string(p->aliases(), ", ");
+                    if (!alias.empty()) {
+                        name += " (" + alias + ")";
+                    }
                     return str + "\n" + detail::_format_output(
-                                "    " + p->m_name, help, 2,
-                                limit, width, detail::_space);
+                                name, help, 2, limit, width, detail::_space);
                 }
                 return str;
             });
@@ -7487,7 +7491,11 @@ private:
         auto const& dest = parsers.back().subparser.first->dest();
         for (auto& p : parsers.back().subparser.first->m_parsers) {
             detail::_append_value_to("'" + p->m_name + "'", choices, ", ");
-            if (p->m_name == name) {
+            for (auto const& alias : p->aliases()) {
+                detail::_append_value_to("'" + alias + "'", choices, ", ");
+            }
+            if (p->m_name == name
+                    || detail::_is_value_exists(name, p->aliases())) {
                 parsers.push_back(ParserInfo(p.get(),
                                              argparse::Namespace::Storage(),
                                              p->subparser_info(true, pos)));
