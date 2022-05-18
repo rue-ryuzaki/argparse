@@ -5511,9 +5511,11 @@ public:
                                    res, [formatter, limit, width]
                                    (std::string const& str, pParser const& p)
             {
-                if (p->m_data.m_arguments.size()
-                        > (p->m_data.m_help_added ? 1 : 0)) {
-                    return str + "\n" + p->print(formatter, limit, width);
+                auto help = detail::_help_formatter(formatter, p->help());
+                if (!help.empty()) {
+                    return str + "\n" + detail::_format_output(
+                                "    " + p->m_name, help, 2,
+                                limit, width, detail::_space);
                 }
                 return str;
             });
@@ -8096,15 +8098,6 @@ private:
                 m_parse_handle(argparse::Namespace(storage));
             }
         }
-    }
-
-    inline std::string print(HelpFormatter formatter,
-                             std::size_t limit, std::size_t width) const
-    {
-        return detail::_format_output(
-                    "    " + m_name,
-                    detail::_help_formatter(formatter, help()),
-                    2, limit, width, detail::_space);
     }
 
     _ArgumentData m_data;
