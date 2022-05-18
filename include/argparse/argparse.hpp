@@ -6594,7 +6594,8 @@ public:
     inline void print_usage(std::ostream& os = std::cout) const
     {
         if (!usage().empty()) {
-            os << "usage: " << usage() << std::endl;
+            os << "usage: " << detail::_replace(usage(), "%(prog)s", prog())
+               << std::endl;
         } else {
             auto const positional = m_data.get_positional(false, true);
             auto const optional = m_data.get_optional(false, true);
@@ -6616,7 +6617,8 @@ public:
         auto const optional = m_data.get_optional(false, false);
         auto const sub_info = subparser_info(false);
         if (!usage().empty()) {
-            os << "usage: " << usage() << std::endl;
+            os << "usage: " << detail::_replace(usage(), "%(prog)s", prog())
+               << std::endl;
         } else {
             print_custom_usage(positional_all, optional_all,
                                m_mutex_groups, sub_info, prog(), os);
@@ -6652,10 +6654,12 @@ public:
             for (std::size_t i = 0; i < positional.size(); ++i) {
                 print_subparser(sub_positional, sub_info, i,
                                 m_formatter_class, size, width, os);
-                os << positional.at(i)->print(suppress_default,
-                                              m_argument_default,
-                                              m_formatter_class,
-                                              size, width) << std::endl;
+                os << detail::_replace(
+                          positional.at(i)->print(suppress_default,
+                                                  m_argument_default,
+                                                  m_formatter_class,
+                                                  size, width),
+                          "%(prog)s", prog()) << std::endl;
             }
             print_subparser(sub_positional, sub_info, positional.size(),
                             m_formatter_class, size, width, os);
@@ -6663,8 +6667,10 @@ public:
         if (!optional.empty()) {
             os << "\noptions:\n";
             for (auto const& arg : optional) {
-                os << arg->print(suppress_default, m_argument_default,
-                                 m_formatter_class, size, width) << std::endl;
+                os << detail::_replace(
+                          arg->print(suppress_default, m_argument_default,
+                                     m_formatter_class, size, width),
+                          "%(prog)s", prog()) << std::endl;
             }
         }
         for (auto const& group : m_groups) {
@@ -7255,7 +7261,8 @@ private:
             throw AttributeError("'ArgumentParser' object has no "
                                  "attribute 'version'");
         }
-        std::cout << tmp->version() << std::endl;
+        std::cout << detail::_replace(tmp->version(), "%(prog)s", prog())
+                  << std::endl;
         ::exit(0);
     }
 
