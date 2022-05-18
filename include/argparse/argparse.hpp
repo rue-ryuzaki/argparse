@@ -6161,13 +6161,16 @@ public:
     /*!
      *  \brief Add mutually exclusive group
      *
+     *  \param required Required flag
+     *
      *  \return Current mutually exclusive group reference
      */
-    inline MutuallyExclusiveGroup& add_mutually_exclusive_group()
+    inline MutuallyExclusiveGroup&
+    add_mutually_exclusive_group(bool required = false)
     {
         m_mutex_groups.emplace_back(
               MutuallyExclusiveGroup::make_mutex_group(m_prefix_chars, m_data));
-        return m_mutex_groups.back();
+        return m_mutex_groups.back().required(required);
     }
 
     /*!
