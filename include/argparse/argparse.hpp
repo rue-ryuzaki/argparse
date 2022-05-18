@@ -5510,7 +5510,13 @@ public:
             return std::accumulate(std::begin(m_parsers), std::end(m_parsers),
                                    res, [formatter, limit, width]
                                    (std::string const& str, pParser const& p)
-            { return str + "\n" + p->print(formatter, limit, width); });
+            {
+                if (p->m_data.m_arguments.size()
+                        > (p->m_data.m_help_added ? 1 : 0)) {
+                    return str + "\n" + p->print(formatter, limit, width);
+                }
+                return str;
+            });
         }
 
         std::string m_parent_prog;
