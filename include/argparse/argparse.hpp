@@ -5549,6 +5549,7 @@ public:
           m_description(),
           m_epilog(),
           m_help(),
+          m_aliases(),
           m_formatter_class(),
           m_prefix_chars(detail::_prefix_chars),
           m_fromfile_prefix_chars(),
@@ -5723,6 +5724,40 @@ public:
     {
         m_help = value;
         return *this;
+    }
+
+    /*!
+     *  \brief Set argument parser 'aliases' value (for subparsers)
+     *
+     *  \param values Aliases value
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& aliases(std::vector<std::string> const& value)
+    {
+        m_aliases.clear();
+        auto values = value;
+        for (auto& v : values) {
+            detail::_trim(v);
+            if (!v.empty()) {
+                m_aliases.push_back(v);
+            }
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set argument parser 'aliases' value (for subparsers)
+     *
+     *  \param param First value
+     *  \param args Other values
+     *
+     *  \return Current argument parser reference
+     */
+    template <class... Args>
+    ArgumentParser& aliases(std::string const& param, Args... args)
+    {
+        return aliases(std::vector<std::string>{ param, args... });
     }
 
     /*!
@@ -6018,6 +6053,16 @@ public:
     inline std::string const& help() const _ARGPARSE_NOEXCEPT
     {
         return m_help;
+    }
+
+    /*!
+     *  \brief Get argument parser 'aliases' value (for subparsers)
+     *
+     *  \return Argument parser 'aliases' value
+     */
+    inline std::vector<std::string> const& aliases() const _ARGPARSE_NOEXCEPT
+    {
+        return m_aliases;
     }
 
     /*!
@@ -8069,6 +8114,7 @@ private:
     std::string m_description;
     std::string m_epilog;
     std::string m_help;
+    std::vector<std::string> m_aliases;
     HelpFormatter m_formatter_class;
     std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
