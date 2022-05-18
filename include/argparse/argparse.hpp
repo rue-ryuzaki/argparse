@@ -715,6 +715,17 @@ _move_vector_insert_to_end(std::deque<T>& from, std::vector<T>& to)
 
 template <class T>
 void
+_move_vector_insert_to_end(std::vector<T>& from, std::vector<T>& to)
+{
+    if (!from.empty()) {
+        to.insert(std::end(to),
+                  std::make_move_iterator(std::begin(from)),
+                  std::make_move_iterator(std::end(from)));
+    }
+}
+
+template <class T>
+void
 _move_vector_insert_to(std::vector<T>& from, std::vector<T>& to, std::size_t i)
 {
     if (!from.empty()) {
@@ -6638,24 +6649,14 @@ public:
      *  are read one argument per line.
      *  convert_arg_line_to_args() can be overridden for fancier reading
      *
-     *  \param file File name
+     *  \param arg_line Line with arguments
      *
      *  \return Arguments to parse
      */
     virtual inline std::vector<std::string>
-    convert_arg_line_to_args(std::string const& file) const
+    convert_arg_line_to_args(std::string const& arg_line) const
     {
-        std::ifstream is(file);
-        if (!is.is_open()) {
-            throw_error("[Errno 2] No such file or directory: '" + file + "'");
-        }
-        std::vector<std::string> res;
-        std::string line;
-        while (std::getline(is, line)) {
-            res.push_back(line);
-        }
-        is.close();
-        return res;
+        return { arg_line };
     }
 
 private:
@@ -6701,7 +6702,19 @@ private:
                 while (!res.at(i).empty()
                        && detail::_is_value_exists(res.at(i).front(),
                                                    fromfile_prefix_chars())) {
-                    auto args = convert_arg_line_to_args(res.at(i).substr(1));
+                    auto file = res.at(i).substr(1);
+                    std::ifstream is(file);
+                    if (!is.is_open()) {
+                        throw_error("[Errno 2] No such file or directory: '"
+                                    + file + "'");
+                    }
+                    std::vector<std::string> args;
+                    std::string line;
+                    while (std::getline(is, line)) {
+                        auto line_args = convert_arg_line_to_args(line);
+                        detail::_move_vector_insert_to_end(line_args, args);
+                    }
+                    is.close();
                     detail::_move_vector_replace_at(args, res, i);
                 }
             }
