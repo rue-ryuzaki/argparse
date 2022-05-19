@@ -158,9 +158,9 @@ using experimental::fundamentals_v1::nullopt;
 
 namespace argparse {
 /*!
- * \brief Action values
+ *  \brief Action values
  *
- * \enum Action
+ *  \enum Action
  */
 _ARGPARSE_EXPORT enum Action : std::uint16_t
 {
@@ -178,9 +178,9 @@ _ARGPARSE_EXPORT enum Action : std::uint16_t
 };
 
 /*!
- * \brief Help formatter values
+ *  \brief Help formatter values
  *
- * \enum HelpFormatter
+ *  \enum HelpFormatter
  */
 _ARGPARSE_EXPORT enum HelpFormatter
 {
@@ -191,7 +191,7 @@ _ARGPARSE_EXPORT enum HelpFormatter
 };
 
 /*!
- * \brief ArgumentError handler
+ *  \brief ArgumentError handler
  */
 _ARGPARSE_EXPORT class ArgumentError : public std::invalid_argument
 {
@@ -210,7 +210,7 @@ public:
 };
 
 /*!
- * \brief AttributeError handler
+ *  \brief AttributeError handler
  */
 _ARGPARSE_EXPORT class AttributeError : public std::invalid_argument
 {
@@ -229,7 +229,7 @@ public:
 };
 
 /*!
- * \brief ValueError handler
+ *  \brief ValueError handler
  */
 _ARGPARSE_EXPORT class ValueError : public std::invalid_argument
 {
@@ -248,7 +248,7 @@ public:
 };
 
 /*!
- * \brief IndexError handler
+ *  \brief IndexError handler
  */
 _ARGPARSE_EXPORT class IndexError : public std::logic_error
 {
@@ -267,7 +267,7 @@ public:
 };
 
 /*!
- * \brief TypeError handler
+ *  \brief TypeError handler
  */
 _ARGPARSE_EXPORT class TypeError : public std::logic_error
 {
@@ -1377,18 +1377,26 @@ _check_type_name(Value<std::string> const& expected,
 }  // namespace detail
 
 /*!
- * \brief Unspecified values
+ *  \brief Unspecified values. Don't use this enum name!
+ *  use argparse::SUPPRESS, argparse::REMAINDER values directly
  *
- * \enum Enum
+ *  \enum _Enum
  */
-_ARGPARSE_EXPORT enum Enum : std::uint8_t
+_ARGPARSE_EXPORT enum _Enum : std::uint8_t
 {
     SUPPRESS,
     REMAINDER,
 };
 
+// compatibility for version v1.5.2 and earlier
+using Enum
+#if __cplusplus >= 201402L  // C++14+
+[[deprecated("use argparse::SUPPRESS, argparse::REMAINDER values directly.")]]
+#endif  // C++14+
+    = argparse::_Enum;
+
 /*!
- * \brief Argument class
+ *  \brief Argument class
  */
 _ARGPARSE_EXPORT class Argument
 {
@@ -1874,7 +1882,7 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& nargs(Enum value)
+    inline Argument& nargs(_Enum value)
     {
         if (!(action() & detail::_store_action)
                 || value != argparse::REMAINDER) {
@@ -2016,7 +2024,7 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& default_value(Enum value)
+    inline Argument& default_value(_Enum value)
     {
         if (value != argparse::SUPPRESS) {
             throw TypeError("got an unexpected keyword argument 'default'");
@@ -2167,7 +2175,7 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& help(Enum value)
+    inline Argument& help(_Enum value)
     {
         if (value != argparse::SUPPRESS) {
             throw TypeError("got an unexpected keyword argument 'help'");
@@ -2637,8 +2645,8 @@ private:
     std::string m_name;
     Action      m_action;
     Type        m_type;
-    detail::Value<Enum> m_default_type;
-    detail::Value<Enum> m_help_type;
+    detail::Value<_Enum> m_default_type;
+    detail::Value<_Enum> m_help_type;
     Nargs       m_nargs;
     std::size_t m_num_args;
     std::string m_nargs_str;
@@ -2657,7 +2665,7 @@ private:
 };
 
 /*!
- * \brief Group class
+ *  \brief Group class
  */
 class _Group
 {
@@ -2711,7 +2719,7 @@ protected:
 };
 
 /*!
- * \brief ArgumentData class
+ *  \brief ArgumentData class
  */
 class _ArgumentData
 {
@@ -3012,7 +3020,7 @@ protected:
 };
 
 /*!
- * \brief BaseArgumentGroup class
+ *  \brief BaseArgumentGroup class
  */
 class _BaseArgumentGroup
 {
@@ -3125,7 +3133,7 @@ private:
 };
 
 /*!
- * \brief ArgumentGroup class
+ *  \brief ArgumentGroup class
  */
 _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _BaseArgumentGroup
 {
@@ -3265,7 +3273,7 @@ private:
 };
 
 /*!
- * \brief MutuallyExclusiveGroup class
+ *  \brief MutuallyExclusiveGroup class
  */
 _ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _BaseArgumentGroup
 {
@@ -3382,7 +3390,7 @@ using ExclusiveGroup
     = MutuallyExclusiveGroup;
 
 /*!
- * \brief Object with parsed arguments
+ *  \brief Object with parsed arguments
  */
 _ARGPARSE_EXPORT class Namespace
 {
@@ -5259,7 +5267,7 @@ inline std::ostream& operator <<(std::ostream& os, Namespace const& obj)
 }
 
 /*!
- * \brief ArgumentParser objects
+ *  \brief ArgumentParser objects
  */
 _ARGPARSE_EXPORT class ArgumentParser
 {
@@ -5283,7 +5291,7 @@ public:
         = ArgumentParser;
 
     /*!
-     * \brief Subparser class
+     *  \brief Subparser class
      */
     class Subparser : public _Group
     {
@@ -5967,7 +5975,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& argument_default(Enum value)
+    inline ArgumentParser& argument_default(_Enum value)
     {
         if (value != argparse::SUPPRESS) {
             throw
@@ -8224,7 +8232,7 @@ private:
     std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
-    detail::Value<Enum> m_argument_default_type;
+    detail::Value<_Enum> m_argument_default_type;
     bool m_allow_abbrev;
     bool m_exit_on_error;
 
