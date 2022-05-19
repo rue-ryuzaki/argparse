@@ -1918,9 +1918,6 @@ public:
         if (!(action() & detail::_store_action)) {
             throw TypeError("got an unexpected keyword argument 'nargs'");
         }
-        if (m_type != Optional) {
-            throw ArgumentError("'remainder' not fully work for positionals");
-        }
         m_nargs = REMAINDER;
         m_nargs_str = "0";
         m_num_args = 0;
@@ -6895,11 +6892,13 @@ private:
                 continue;
             }
             check_abbreviations(parsers, was_pseudo_arg, parsed_arguments, i);
+            bool remainder = i != 0 && pos < positional.size()
+                    && positional.at(pos)->m_nargs == Argument::REMAINDER;
             auto arg = parsed_arguments.at(i);
             auto equals = process_split_equal(arg, parsers);
             auto const tmp
                     = get_optional_arg_by_flag(was_pseudo_arg, parsers, arg);
-            if (tmp) {
+            if (tmp && !remainder) {
                 switch (tmp->action()) {
                     case Action::store :
                         parsers.front().storage.at(tmp).clear();
@@ -6927,6 +6926,7 @@ private:
                         break;
                 }
             } else if (!arg.empty()
+                       && !remainder
                        && detail::_is_optional(
                            arg, parsers.back().parser->prefix_chars(),
                            parsers.back().have_negative_args, was_pseudo_arg)) {
@@ -7451,6 +7451,7 @@ private:
                               std::deque<std::string> const& args,
                               std::size_t& one_args,
                               bool& more_args,
+                              bool& remainder,
                               std::size_t& min_args)
     {
         if (!(arg->action() & detail::_store_action)) {
@@ -7469,6 +7470,7 @@ private:
                 break;
             case Argument::REMAINDER :
                 more_args = true;
+                remainder = true;
                 break;
             default :
                 min_amount += arg->m_num_args;
@@ -7485,7 +7487,8 @@ private:
                             std::size_t& pos,
                             std::vector<pArgument> const& positional,
                             std::vector<std::string>& unrecognized_args,
-                            std::deque<std::string>& args) const
+                            std::deque<std::string>& args,
+                            bool read_all_args = true) const
     {
         if (pos < positional.size()) {
             std::size_t finish = pos;
@@ -7493,8 +7496,11 @@ private:
             std::size_t one_args = 0;
             bool more_args = false;
             for ( ; finish < positional.size(); ++finish) {
+                bool remainder = false;
                 if (finish_analyze_positional(positional.at(finish), args,
-                                              one_args, more_args, min_args)) {
+                                              one_args, more_args,
+                                              remainder, min_args)
+                        || (remainder && finish != pos && !read_all_args)) {
                     break;
                 }
             }
@@ -7512,7 +7518,8 @@ private:
                             std::size_t& pos,
                             std::vector<pArgument>& positional,
                             std::vector<std::string>& unrecognized_args,
-                            std::deque<std::string>& args) const
+                            std::deque<std::string>& args,
+                            bool read_all_args = true) const
     {
         std::size_t finish = pos;
         std::size_t min_args = 0;
@@ -7527,8 +7534,10 @@ private:
                 capture_need = true;
                 break;
             }
-            if (finish_analyze_positional(positional.at(finish), args,
-                                          one_args, more_args, min_args)) {
+            bool remainder = false;
+            if (finish_analyze_positional(positional.at(finish), args, one_args,
+                                          more_args, remainder, min_args)
+                    || (remainder && finish != pos && !read_all_args)) {
                 break;
             }
         }
@@ -7750,12 +7759,15 @@ private:
     {
         std::deque<std::string> args;
         args.push_back(parsed_arguments.at(i));
+        bool remainder = pos < positional.size()
+                && positional.at(pos)->m_nargs == Argument::REMAINDER;
         while (true) {
             if (++i == parsed_arguments.size()) {
                 break;
             } else {
                 auto const& next = parsed_arguments.at(i);
                 if (next.empty()
+                        || remainder
                         || detail::_not_optional(
                             next,
                             parsers.back().parser->prefix_chars(),
@@ -7773,13 +7785,14 @@ private:
         } else {
             if (parsers.back().subparser.first) {
                 if (try_capture_parser(parsers, pos, positional,
-                                       unrecognized_args, args)) {
+                                       unrecognized_args, args,
+                                       i == parsed_arguments.size())) {
                     i -= (i == parsed_arguments.size());
                     i -= args.size();
                 }
             } else {
-                match_args_partial(parsers, pos, positional,
-                                   unrecognized_args, args);
+                match_args_partial(parsers, pos, positional, unrecognized_args,
+                                   args, i == parsed_arguments.size());
             }
         }
     }
