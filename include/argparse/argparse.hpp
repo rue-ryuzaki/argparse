@@ -3380,13 +3380,6 @@ private:
     bool m_required;
 };
 
-// compatibility for version v1.3.8 and earlier
-using ExclusiveGroup
-#if __cplusplus >= 201402L  // C++14+
-[[deprecated("use argparse::MutuallyExclusiveGroup instead.")]]
-#endif  // C++14+
-    = MutuallyExclusiveGroup;
-
 /*!
  *  \brief Object with parsed arguments
  */
@@ -5274,20 +5267,6 @@ _ARGPARSE_EXPORT class ArgumentParser
     typedef std::shared_ptr<ArgumentParser> pParser;
 
 public:
-    // compatibility for version v1.3.3 and earlier
-    using Namespace
-#if __cplusplus >= 201402L  // C++14+
-    [[deprecated("use argparse::Namespace instead.")]]
-#endif  // C++14+
-        = argparse::Namespace;
-
-    // compatibility for version v1.4.2 and earlier
-    using Parser
-#if __cplusplus >= 201402L  // C++14+
-    [[deprecated("use argparse::ArgumentParser instead.")]]
-#endif  // C++14+
-        = ArgumentParser;
-
     /*!
      *  \brief Subparser class
      */
@@ -6330,8 +6309,7 @@ public:
      *  \return Current argument parser reference
      */
     inline ArgumentParser&
-    handle(std::function<void(argparse::Namespace const&)> func)
-                                                              _ARGPARSE_NOEXCEPT
+    handle(std::function<void(Namespace const&)> func) _ARGPARSE_NOEXCEPT
     {
         m_parse_handle = func;
         return *this;
@@ -6416,8 +6394,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <typename = void>
-    argparse::Namespace
-    parse_args(argparse::Namespace const& space = argparse::Namespace()) const
+    Namespace parse_args(Namespace const& space = Namespace()) const
     {
         return parse_args(m_parsed_arguments, space);
     }
@@ -6433,9 +6410,8 @@ public:
     template <class T,
               class = typename std::enable_if<
                   std::is_constructible<std::string, T>::value>::type>
-    argparse::Namespace
-    parse_args(T const& args,
-               argparse::Namespace const& space = argparse::Namespace()) const
+    Namespace parse_args(T const& args,
+                         Namespace const& space = Namespace()) const
     {
         return parse_args(detail::_split_to_args(args), space);
     }
@@ -6448,9 +6424,8 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    inline argparse::Namespace
-    parse_args(std::vector<std::string> const& args,
-               argparse::Namespace const& space = argparse::Namespace()) const
+    inline Namespace parse_args(std::vector<std::string> const& args,
+                                Namespace const& space = Namespace()) const
     {
         return on_parse_arguments(args, false, false, space);
     }
@@ -6463,9 +6438,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <typename = void>
-    argparse::Namespace
-    parse_known_args(
-            argparse::Namespace const& space = argparse::Namespace()) const
+    Namespace parse_known_args(Namespace const& space = Namespace()) const
     {
         return parse_known_args(m_parsed_arguments, space);
     }
@@ -6481,10 +6454,8 @@ public:
     template <class T,
               class = typename std::enable_if<
                   std::is_constructible<std::string, T>::value>::type>
-    argparse::Namespace
-    parse_known_args(
-            T const& args,
-            argparse::Namespace const& space = argparse::Namespace()) const
+    Namespace parse_known_args(T const& args,
+                               Namespace const& space = Namespace()) const
     {
         return parse_known_args(detail::_split_to_args(args), space);
     }
@@ -6497,10 +6468,9 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    inline argparse::Namespace
-    parse_known_args(
-            std::vector<std::string> const& args,
-            argparse::Namespace const& space = argparse::Namespace()) const
+    inline Namespace
+    parse_known_args(std::vector<std::string> const& args,
+                     Namespace const& space = Namespace()) const
     {
         return on_parse_arguments(args, true, false, space);
     }
@@ -6513,9 +6483,7 @@ public:
      *  \return Object with parsed arguments
      */
     template <typename = void>
-    argparse::Namespace
-    parse_intermixed_args(
-            argparse::Namespace const& space = argparse::Namespace()) const
+    Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(m_parsed_arguments, space);
     }
@@ -6531,10 +6499,8 @@ public:
     template <class T,
               class = typename std::enable_if<
                   std::is_constructible<std::string, T>::value>::type>
-    argparse::Namespace
-    parse_intermixed_args(
-            T const& args,
-            argparse::Namespace const& space = argparse::Namespace()) const
+    Namespace parse_intermixed_args(T const& args,
+                                    Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(detail::_split_to_args(args), space);
     }
@@ -6547,10 +6513,9 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    inline argparse::Namespace
-    parse_intermixed_args(
-            std::vector<std::string> const& args,
-            argparse::Namespace const& space = argparse::Namespace()) const
+    inline Namespace
+    parse_intermixed_args(std::vector<std::string> const& args,
+                          Namespace const& space = Namespace()) const
     {
         return on_parse_arguments(args, false, true, space);
     }
@@ -6563,9 +6528,8 @@ public:
      *  \return Object with parsed arguments
      */
     template <typename = void>
-    argparse::Namespace
-    parse_known_intermixed_args(
-            argparse::Namespace const& space = argparse::Namespace()) const
+    Namespace
+    parse_known_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(m_parsed_arguments, space);
     }
@@ -6581,10 +6545,9 @@ public:
     template <class T,
               class = typename std::enable_if<
                   std::is_constructible<std::string, T>::value>::type>
-    argparse::Namespace
-    parse_known_intermixed_args(
-            T const& args,
-            argparse::Namespace const& space = argparse::Namespace()) const
+    Namespace
+    parse_known_intermixed_args(T const& args,
+                                Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(detail::_split_to_args(args), space);
     }
@@ -6597,10 +6560,9 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    inline argparse::Namespace
-    parse_known_intermixed_args(
-            std::vector<std::string> const& args,
-            argparse::Namespace const& space = argparse::Namespace()) const
+    inline Namespace
+    parse_known_intermixed_args(std::vector<std::string> const& args,
+                                Namespace const& space = Namespace()) const
     {
         return on_parse_arguments(args, true, true, space);
     }
@@ -6787,11 +6749,10 @@ private:
                 .push_back(std::make_pair(m_data.m_arguments.back(), false));
     }
 
-    inline argparse::Namespace
-    on_parse_arguments(std::vector<std::string> const& args,
-                       bool only_known,
-                       bool intermixed,
-                       argparse::Namespace const& space) const
+    inline Namespace on_parse_arguments(std::vector<std::string> const& args,
+                                        bool only_known,
+                                        bool intermixed,
+                                        Namespace const& space) const
     {
         if (!m_exit_on_error) {
             return parse_arguments(args, only_known, intermixed, space);
@@ -6839,7 +6800,7 @@ private:
     {
         explicit
         ParserInfo(ArgumentParser const* parser,
-                   argparse::Namespace::Storage const& storage,
+                   Namespace::Storage const& storage,
                    SubparserInfo const& subparser)
             : parser(parser),
               optional(),
@@ -6871,18 +6832,18 @@ private:
 
         ArgumentParser const* parser;
         std::vector<pArgument> optional;
-        argparse::Namespace::Storage storage;
+        Namespace::Storage storage;
         SubparserInfo subparser;
         bool have_negative_args;
     };
 
     using Parsers = std::deque<ParserInfo>;
 
-    argparse::Namespace
+    Namespace
     parse_arguments(std::vector<std::string> const& in_parsed_arguments,
                     bool only_known,
                     bool intermixed,
-                    argparse::Namespace const& space) const
+                    Namespace const& space) const
     {
         handle(prog());
         check_namespace(space);
@@ -6974,7 +6935,7 @@ private:
     }
 
     inline void
-    check_namespace(argparse::Namespace const& space) const
+    check_namespace(Namespace const& space) const
     {
         if (space.m_unrecognized_args.has_value()
                 && !m_data.m_arguments.empty()) {
@@ -7033,16 +6994,15 @@ private:
         return equals;
     }
 
-    static argparse::Namespace
+    static Namespace
     create_namespace(bool only_known,
-                     argparse::Namespace::Storage&& storage,
+                     Namespace::Storage&& storage,
                      std::vector<std::string>&& unrecognized_args)
     {
         if (only_known) {
-            return argparse::Namespace(std::move(storage),
-                                       std::move(unrecognized_args));
+            return Namespace(std::move(storage), std::move(unrecognized_args));
         } else {
-            return argparse::Namespace(std::move(storage));
+            return Namespace(std::move(storage));
         }
     }
 
@@ -7583,7 +7543,7 @@ private:
             if (p->m_name == name
                     || detail::_is_value_exists(name, p->aliases())) {
                 parsers.push_back(ParserInfo(p.get(),
-                                             argparse::Namespace::Storage(),
+                                             Namespace::Storage(),
                                              p->subparser_info(true, pos)));
                 parsers.back().parser->handle(parsers.back().parser->m_name);
                 parsers.back().validate();
@@ -7830,8 +7790,8 @@ private:
 
     static void check_mutex_groups(Parsers const& parsers)
     {
-        auto _check_mutex_groups = [] (ArgumentParser const* parser,
-                argparse::Namespace::Storage const& storage)
+        auto _check_mutex_groups = []
+               (ArgumentParser const* parser, Namespace::Storage const& storage)
         {
             for (auto const& ex : parser->m_mutex_groups) {
                 std::string args;
@@ -7865,7 +7825,7 @@ private:
     static void
     process_optionals_required(std::vector<std::string>& required_args,
                                std::vector<pArgument> const& optional,
-                               argparse::Namespace::Storage const& storage)
+                               Namespace::Storage const& storage)
     {
         for (auto const& arg : optional) {
             if (arg->required() && storage.at(arg).empty()) {
@@ -7891,7 +7851,7 @@ private:
 
     static void
     process_required_check(ParserInfo const& parser,
-                           argparse::Namespace::Storage const& storage)
+                           Namespace::Storage const& storage)
     {
         std::vector<std::string> required_args;
         process_optionals_required(required_args, parser.optional, storage);
@@ -7973,7 +7933,7 @@ private:
     }
 
     inline void
-    default_values_post_trigger(argparse::Namespace::Storage& storage) const
+    default_values_post_trigger(Namespace::Storage& storage) const
     {
         bool suppress_default = m_argument_default_type == argparse::SUPPRESS;
         for (auto it = storage.begin(); it != storage.end(); ) {
@@ -8206,14 +8166,14 @@ private:
 
     inline void
     parse_handle(bool only_known,
-                 argparse::Namespace::Storage const& storage,
+                 Namespace::Storage const& storage,
                  std::vector<std::string> const& unrecognized_args) const
     {
         if (m_parse_handle) {
             if (only_known) {
-                m_parse_handle(argparse::Namespace(storage, unrecognized_args));
+                m_parse_handle(Namespace(storage, unrecognized_args));
             } else {
-                m_parse_handle(argparse::Namespace(storage));
+                m_parse_handle(Namespace(storage));
             }
         }
     }
@@ -8243,7 +8203,7 @@ private:
     std::size_t m_subparsers_position;
 
     std::function<void(std::string const&)> m_handle;
-    std::function<void(argparse::Namespace const&)> m_parse_handle;
+    std::function<void(Namespace const&)> m_parse_handle;
 };
 }  // namespace argparse
 
