@@ -36,6 +36,8 @@ C++11 support compiler
   - [ArgumentParser objects](#argumentparser-objects-support)
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
   - [add_argument() actions](#the-add_argumentname-or-flags-method-support)
+
+Additional documentation can be found on the [argparse Wiki](https://github.com/rue-ryuzaki/argparse/wiki)
 ## Code example
 - create parser: auto parser = argparse::ArgumentParser(...);
 - add arguments: parser.add_argument(...);
