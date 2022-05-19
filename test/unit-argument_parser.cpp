@@ -1246,6 +1246,32 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args2.get<std::vector<std::string> >("store").size() == 2);
         REQUIRE(args2.get<std::vector<std::string> >("extend").size() == 2);
     }
+
+    SECTION("9.20. optional * remainder") {
+        parser.add_argument("baz").nargs("*").default_value("123");
+        parser.add_argument("args").remainder().default_value("12345");
+        parser.add_argument("--bar");
+
+        REQUIRE(parser.parse_args("").to_string()          == "Namespace(baz='123', args=[], bar=None)");
+        REQUIRE(parser.parse_args("a b c d e").to_string() == "Namespace(baz=['a', 'b', 'c', 'd', 'e'], args=[], bar=None)");
+        REQUIRE(parser.parse_args("--bar c").to_string()   == "Namespace(baz='123', args=[], bar='c')");
+        REQUIRE(parser.parse_args("--bar c d").to_string() == "Namespace(baz=['d'], args=[], bar='c')");
+
+        // in original argparse will be - "Namespace(baz=['a'], args=['--bar', 'c'], bar=None)"
+        REQUIRE(parser.parse_args("a --bar c").to_string() == "Namespace(baz=['a'], args=[], bar='c')");
+    }
+
+    SECTION("9.21. optional remainder *") {
+        parser.add_argument("args").remainder().default_value("12345");
+        parser.add_argument("baz").nargs("*").default_value("123");
+        parser.add_argument("--bar");
+
+        REQUIRE(parser.parse_args("").to_string()          == "Namespace(args=[], baz='123', bar=None)");
+        REQUIRE(parser.parse_args("a b c d e").to_string() == "Namespace(args=['a', 'b', 'c', 'd', 'e'], baz='123', bar=None)");
+        REQUIRE(parser.parse_args("--bar c").to_string()   == "Namespace(args=[], baz='123', bar='c')");
+        REQUIRE(parser.parse_args("--bar c d").to_string() == "Namespace(args=['d'], baz='123', bar='c')");
+        REQUIRE(parser.parse_args("a --bar c").to_string() == "Namespace(args=['a', '--bar', 'c'], baz='123', bar=None)");
+    }
 }
 
 TEST_CASE("10. argument const", "[argument]")
