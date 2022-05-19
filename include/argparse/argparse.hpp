@@ -6636,7 +6636,9 @@ public:
             print_custom_usage(positional_all, optional_all,
                                m_mutex_groups, sub_info, prog(), os);
         }
-        detail::_print_raw_text_formatter(m_formatter_class, description(), os);
+        detail::_print_raw_text_formatter(
+                    m_formatter_class,
+                    detail::_replace(description(), "%(prog)s", prog()), os);
         std::size_t size = 0;
         auto _update_size = [&size] (std::size_t value)
         {
@@ -6690,7 +6692,9 @@ public:
             print_group(group, subparser, sub_positional, suppress_default,
                         m_argument_default, m_formatter_class, size, width, os);
         }
-        detail::_print_raw_text_formatter(m_formatter_class, epilog(), os);
+        detail::_print_raw_text_formatter(
+                    m_formatter_class,
+                    detail::_replace(epilog(), "%(prog)s", prog()), os);
     }
 
     /*!
