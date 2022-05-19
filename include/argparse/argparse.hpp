@@ -1377,23 +1377,18 @@ _check_type_name(Value<std::string> const& expected,
 }  // namespace detail
 
 /*!
- *  \brief Unspecified values. Don't use this enum name!
- *  use argparse::SUPPRESS, argparse::REMAINDER values directly
+ *  \brief Don't use this enum name! use argparse::SUPPRESS value directly
  *
- *  \enum _Enum
+ *  \enum _SUPPRESS
  */
-_ARGPARSE_EXPORT enum _Enum : std::uint8_t
-{
-    SUPPRESS,
-    REMAINDER,
-};
+_ARGPARSE_EXPORT static enum class _SUPPRESS : uint8_t { } SUPPRESS;
 
-// compatibility for version v1.5.2 and earlier
-using Enum
-#if __cplusplus >= 201402L  // C++14+
-[[deprecated("use argparse::SUPPRESS, argparse::REMAINDER values directly.")]]
-#endif  // C++14+
-    = argparse::_Enum;
+/*!
+ *  \brief Don't use this enum name! use argparse::REMAINDER value directly
+ *
+ *  \enum _REMAINDER
+ */
+_ARGPARSE_EXPORT static enum class _REMAINDER : uint8_t { } REMAINDER;
 
 /*!
  *  \brief Argument class
@@ -1882,7 +1877,7 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& nargs(_Enum value)
+    inline Argument& nargs(_REMAINDER value)
     {
         if (!(action() & detail::_store_action)
                 || value != argparse::REMAINDER) {
@@ -2024,7 +2019,7 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& default_value(_Enum value)
+    inline Argument& default_value(_SUPPRESS value)
     {
         if (value != argparse::SUPPRESS) {
             throw TypeError("got an unexpected keyword argument 'default'");
@@ -2175,7 +2170,7 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& help(_Enum value)
+    inline Argument& help(_SUPPRESS value)
     {
         if (value != argparse::SUPPRESS) {
             throw TypeError("got an unexpected keyword argument 'help'");
@@ -2645,8 +2640,8 @@ private:
     std::string m_name;
     Action      m_action;
     Type        m_type;
-    detail::Value<_Enum> m_default_type;
-    detail::Value<_Enum> m_help_type;
+    detail::Value<_SUPPRESS> m_default_type;
+    detail::Value<_SUPPRESS> m_help_type;
     Nargs       m_nargs;
     std::size_t m_num_args;
     std::string m_nargs_str;
@@ -5975,7 +5970,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& argument_default(_Enum value)
+    inline ArgumentParser& argument_default(_SUPPRESS value)
     {
         if (value != argparse::SUPPRESS) {
             throw
@@ -8232,7 +8227,7 @@ private:
     std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
-    detail::Value<_Enum> m_argument_default_type;
+    detail::Value<_SUPPRESS> m_argument_default_type;
     bool m_allow_abbrev;
     bool m_exit_on_error;
 
