@@ -6892,8 +6892,9 @@ private:
                 continue;
             }
             check_abbreviations(parsers, was_pseudo_arg, parsed_arguments, i);
-            bool remainder = i != 0 && pos < positional.size()
-                    && positional.at(pos)->m_nargs == Argument::REMAINDER;
+            bool remainder = pos < positional.size()
+                    && positional.at(pos)->m_nargs == Argument::REMAINDER
+                    && !parsers.front().storage.at(positional.at(pos)).empty();
             auto arg = parsed_arguments.at(i);
             auto equals = process_split_equal(arg, parsers);
             auto const tmp
