@@ -1384,6 +1384,7 @@ _check_type_name(Value<std::string> const& expected,
 _ARGPARSE_EXPORT enum Enum : std::uint8_t
 {
     SUPPRESS,
+    REMAINDER,
 };
 
 /*!
@@ -1869,6 +1870,23 @@ public:
     }
 
     /*!
+     *  \brief Set argument 'nargs' argparse::REMAINDER value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& nargs(Enum value)
+    {
+        if (!(action() & detail::_store_action)
+                || value != argparse::REMAINDER) {
+            throw TypeError("got an unexpected keyword argument 'nargs'");
+        }
+        m_nargs = REMAINDER;
+        m_nargs_str = "0";
+        m_num_args = 0;
+        return *this;
+    }
+
+    /*!
      *  \brief Set argument 'nargs' optional ("?") value
      *
      *  \return Current argument reference
@@ -1915,13 +1933,7 @@ public:
      */
     inline Argument& remainder()
     {
-        if (!(action() & detail::_store_action)) {
-            throw TypeError("got an unexpected keyword argument 'nargs'");
-        }
-        m_nargs = REMAINDER;
-        m_nargs_str = "0";
-        m_num_args = 0;
-        return *this;
+        return nargs(argparse::REMAINDER);
     }
 
     /*!
