@@ -147,7 +147,7 @@ using experimental::fundamentals_v1::nullopt;
 #if __cplusplus >= 201703L  // C++17+
 #define _ARGPARSE_INLINE_VARIABLE inline
 #else
-#define _ARGPARSE_INLINE_VARIABLE
+#define _ARGPARSE_INLINE_VARIABLE static
 #endif  // C++17+
 
 #if __cplusplus >= 201103L  // C++11+
@@ -1111,7 +1111,7 @@ public:
                   std::is_same<std::string, T>::value
 #if __cplusplus >= 201703L  // C++17+
                   || std::is_same<std::string_view, T>::value
-#endif  //C++17+
+#endif  // C++17+
                   || is_stl_pair<T>::value
                   || is_stl_tuple<T>::value>::type* = nullptr>
     std::string static
@@ -1143,7 +1143,7 @@ public:
                   !std::is_same<std::string, T>::value
 #if __cplusplus >= 201703L  // C++17+
                   && !std::is_same<std::string_view, T>::value
-#endif  //C++17+
+#endif  // C++17+
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
@@ -1159,7 +1159,7 @@ public:
     template <class T, typename std::enable_if<
 #if __cplusplus >= 201703L  // C++17+
                   std::is_same<std::string_view, T>::value ||
-#endif  //C++17+
+#endif  // C++17+
                   std::is_same<std::string, T>::value>::type* = nullptr>
     std::string static
     name()
@@ -1220,7 +1220,7 @@ public:
                   !std::is_same<std::string, T>::value
 #if __cplusplus >= 201703L  // C++17+
                   && !std::is_same<std::string_view, T>::value
-#endif  //C++17+
+#endif  // C++17+
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
@@ -1381,14 +1381,14 @@ _check_type_name(Value<std::string> const& expected,
  *
  *  \enum _SUPPRESS
  */
-_ARGPARSE_EXPORT static enum class _SUPPRESS : uint8_t { } SUPPRESS;
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _SUPPRESS : uint8_t {} SUPPRESS;
 
 /*!
  *  \brief Don't use this enum name! use argparse::REMAINDER value directly
  *
  *  \enum _REMAINDER
  */
-_ARGPARSE_EXPORT static enum class _REMAINDER : uint8_t { } REMAINDER;
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _REMAINDER:uint8_t {} REMAINDER;
 
 /*!
  *  \brief Argument class
@@ -1976,7 +1976,8 @@ public:
         std::stringstream ss;
         ss << value;
         const_value(ss.str());
-        return type<T>();
+        m_type_name = detail::Type::basic<T>();
+        return *this;
     }
 
     /*!
@@ -2009,7 +2010,8 @@ public:
         ss << value;
         m_default = ss.str();
         m_default_type.clear();
-        return type<T>();
+        m_type_name = detail::Type::basic<T>();
+        return *this;
     }
 
     /*!
@@ -2056,7 +2058,8 @@ public:
         std::stringstream ss;
         ss << value;
         m_implicit = ss.str();
-        return type<T>();
+        m_type_name = detail::Type::basic<T>();
+        return *this;
     }
 
     /*!
