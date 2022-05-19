@@ -1972,7 +1972,8 @@ public:
     {
         std::stringstream ss;
         ss << value;
-        return const_value(ss.str());
+        const_value(ss.str());
+        return type<T>();
     }
 
     /*!
@@ -2005,7 +2006,7 @@ public:
         ss << value;
         m_default = ss.str();
         m_default_type.clear();
-        return *this;
+        return type<T>();
     }
 
     /*!
@@ -2052,7 +2053,7 @@ public:
         std::stringstream ss;
         ss << value;
         m_implicit = ss.str();
-        return *this;
+        return type<T>();
     }
 
     /*!
