@@ -1074,11 +1074,13 @@ _raw_text_formatter(HelpFormatter formatter, std::string const& text)
 
 inline void
 _print_raw_text_formatter(HelpFormatter formatter, std::string const& text,
-                          std::ostream& os)
+                          std::ostream& os,
+                          std::string const& begin = "\n",
+                          std::string const& end = std::string())
 {
     auto formatted_text = _raw_text_formatter(formatter, text);
     if (!formatted_text.empty()) {
-        os << "\n" << formatted_text << std::endl;
+        os << begin << formatted_text << end << std::endl;
     }
 }
 
@@ -2709,6 +2711,7 @@ protected:
                             bool show_default_value,
                             detail::Value<std::string> const& argument_default,
                             HelpFormatter formatter,
+                            std::string const& prog,
                             std::size_t limit,
                             std::size_t width)                        const = 0;
 
@@ -3249,6 +3252,7 @@ private:
                            bool suppress_default,
                            detail::Value<std::string> const& argument_default,
                            HelpFormatter formatter,
+                           std::string const& prog,
                            std::size_t limit,
                            std::size_t width) const override
     {
@@ -3256,9 +3260,10 @@ private:
             if (!title().empty()) {
                 os << "\n" << title() << ":";
             }
-            if (!description().empty()) {
-                os << "\n  " << description() << std::endl;
-            }
+            detail::_print_raw_text_formatter(
+                        formatter,
+                        detail::_replace(
+                            description(), "%(prog)s", prog), os, "\n  ");
             if (!m_data.m_arguments.empty()) {
                 os << std::endl;
             }
@@ -5494,13 +5499,15 @@ public:
                                bool,
                                detail::Value<std::string> const&,
                                HelpFormatter formatter,
+                               std::string const& prog,
                                std::size_t limit,
                                std::size_t width) const override
         {
             os << "\n" << (title().empty() ? "subcommands" : title()) << ":\n";
-            if (!description().empty()) {
-                os << "  " << description() << "\n\n";
-            }
+            detail::_print_raw_text_formatter(
+                        formatter,
+                        detail::_replace(
+                            description(), "%(prog)s", prog), os, "  ", "\n");
             os << print(formatter, limit, width) << std::endl;
         }
 
@@ -6658,7 +6665,8 @@ public:
         }
         for (auto const& group : m_groups) {
             print_group(group, subparser, sub_positional, suppress_default,
-                        m_argument_default, m_formatter_class, size, width, os);
+                        m_argument_default, m_formatter_class, prog(), size,
+                        width, os);
         }
         detail::_print_raw_text_formatter(
                     m_formatter_class,
@@ -8142,13 +8150,14 @@ private:
                             std::shared_ptr<Subparser> const& subparser,
                             bool is_positional, bool suppress_default,
                             detail::Value<std::string> const& argument_default,
-                            HelpFormatter formatter, std::size_t size,
-                            std::size_t width, std::ostream& os)
+                            HelpFormatter formatter, std::string const& prog,
+                            std::size_t size, std::size_t width,
+                            std::ostream& os)
     {
         if ((subparser && (group != subparser || !is_positional))
                 || (!subparser && group != subparser)) {
             group->print_help(os, suppress_default, argument_default,
-                              formatter, size, width);
+                              formatter, prog, size, width);
         }
     }
 
