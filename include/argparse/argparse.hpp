@@ -671,7 +671,6 @@ _format_name(std::string s)
     s = _replace(s, [] (unsigned char c) { return std::iscntrl(c); }, "");
     s = _replace(s, [] (unsigned char c) { return std::isspace(c); }, "");
     _trim(s);
-    s = _replace(s, [] (unsigned char c) { return std::ispunct(c); }, "_");
     s = _replace(s, [] (unsigned char c) { return std::isblank(c); }, "_");
     return s;
 }
@@ -2261,7 +2260,7 @@ public:
         if (m_type == Positional && !m_flags.empty()) {
             throw ValueError("dest supplied twice for positional argument");
         }
-        m_dest.front() = detail::_trim_copy(value);
+        m_dest.front() = detail::_format_name(value);
         return *this;
     }
 
@@ -2876,7 +2875,7 @@ protected:
         for (std::size_t i = 1; i < flags.size(); ++i) {
             // check arguments
             auto& flag = flags.at(i);
-            detail::_trim(flag);
+            flag = detail::_format_name(flag);
             if (flag.empty()) {
                 throw IndexError("string index out of range");
             }
@@ -2967,7 +2966,7 @@ protected:
             m_arguments.emplace_back(std::move(arg));
             return;
         }
-        detail::_trim(flags.front());
+        flags.front() = detail::_format_name(flags.front());
         auto flag = flags.front();
         check_flag_name(flag);
         std::size_t prefixes = 0;
@@ -2996,7 +2995,7 @@ protected:
         if (flags.empty()) {
             arg.m_name = arg.dest();
         } else {
-            detail::_trim(flags.front());
+            flags.front() = detail::_format_name(flags.front());
             auto flag = flags.front();
             check_flag_name(flag);
             std::size_t prefixes = 0;
@@ -5378,7 +5377,7 @@ public:
          */
         inline Subparser& dest(std::string const& value)
         {
-            m_dest = detail::_trim_copy(value);
+            m_dest = detail::_format_name(value);
             return *this;
         }
 
@@ -5805,7 +5804,7 @@ public:
         m_aliases.clear();
         auto values = value;
         for (auto& v : values) {
-            detail::_trim(v);
+            v = detail::_format_name(v);
             if (!v.empty()) {
                 m_aliases.push_back(v);
             }
@@ -6412,7 +6411,7 @@ public:
     set_defaults(std::vector<std::pair<std::string, std::string> > const& pairs)
     {
         for (auto const& pair : pairs) {
-            auto dest = detail::_trim_copy(pair.first);
+            auto dest = detail::_format_name(pair.first);
             if (dest.empty()) {
                 continue;
             }
