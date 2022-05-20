@@ -1408,14 +1408,14 @@ _check_type_name(Value<std::string> const& expected,
  *
  *  \enum _SUPPRESS
  */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _SUPPRESS : uint8_t {} SUPPRESS;
+_ARGPARSE_EXPORT enum _SUPPRESS : uint8_t {} _ARGPARSE_INLINE_VARIABLE SUPPRESS;
 
 /*!
  *  \brief Don't use this enum name! use argparse::REMAINDER value directly
  *
  *  \enum _REMAINDER
  */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _REMAINDER:uint8_t {} REMAINDER;
+_ARGPARSE_EXPORT enum _REMAINDER:uint8_t {} _ARGPARSE_INLINE_VARIABLE REMAINDER;
 
 /*!
  *  \brief Argument class
