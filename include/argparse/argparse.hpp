@@ -651,7 +651,7 @@ _replace(std::string s, std::string const& old, std::string const& value)
 }
 
 inline std::string
-_replace(std::string s,
+_replace(std::string const& s,
          std::function<bool(unsigned char)> func, std::string const& value)
 {
     std::string res;
@@ -666,13 +666,13 @@ _replace(std::string s,
 }
 
 inline std::string
-_format_name(std::string s)
+_format_name(std::string const& s)
 {
-    s = _replace(s, [] (unsigned char c) { return std::iscntrl(c); }, "");
-    s = _replace(s, [] (unsigned char c) { return std::isspace(c); }, "");
-    _trim(s);
-    s = _replace(s, [] (unsigned char c) { return std::isblank(c); }, "_");
-    return s;
+    auto res = _replace(s, [] (unsigned char c) { return std::iscntrl(c)
+                                                   || std::isspace(c); }, "");
+    _trim(res);
+    res = _replace(res, [] (unsigned char c) { return std::isblank(c); }, "_");
+    return res;
 }
 
 inline bool
