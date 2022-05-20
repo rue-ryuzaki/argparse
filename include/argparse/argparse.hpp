@@ -650,6 +650,32 @@ _replace(std::string s, std::string const& old, std::string const& value)
     return s;
 }
 
+inline std::string
+_replace(std::string s,
+         std::function<bool(unsigned char)> func, std::string const& value)
+{
+    std::string res;
+    for (auto c : s) {
+        if (func(static_cast<unsigned char>(c))) {
+            res += value;
+        } else {
+            res += c;
+        }
+    }
+    return res;
+}
+
+inline std::string
+_format_name(std::string s)
+{
+    s = _replace(s, [] (unsigned char c) { return std::iscntrl(c); }, "");
+    s = _replace(s, [] (unsigned char c) { return std::isspace(c); }, "");
+    _trim(s);
+    s = _replace(s, [] (unsigned char c) { return std::ispunct(c); }, "_");
+    s = _replace(s, [] (unsigned char c) { return std::isblank(c); }, "_");
+    return s;
+}
+
 inline bool
 _starts_with(std::string const& s, std::string const& value)
 {
@@ -5454,7 +5480,11 @@ public:
          */
         inline ArgumentParser& add_parser(std::string const& name)
         {
-            m_parsers.emplace_back(make_parser(name));
+            auto value = detail::_format_name(name);
+            if (value.empty()) {
+                throw ValueError("parser name can't be empty");
+            }
+            m_parsers.emplace_back(make_parser(value));
             m_parsers.back()->update_prog(prog_name());
             return *m_parsers.back();
         }
