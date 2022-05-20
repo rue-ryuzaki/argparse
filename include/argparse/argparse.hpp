@@ -2555,7 +2555,8 @@ private:
         auto formatted = detail::_help_formatter(
           formatter, detail::_replace(help(), "%(default)s", get_default(def)));
         if (!formatted.empty()) {
-            if ((formatter & ArgumentDefaultsHelpFormatter)
+            if ((m_type == Optional || (m_nargs & (ZERO_OR_ONE | ZERO_OR_MORE)))
+                    && (formatter & ArgumentDefaultsHelpFormatter)
                     && !(action() & (Action::help | Action::version))) {
                 if (m_default_type != argparse::SUPPRESS
                         && !(suppress_default && !def.has_value())) {
