@@ -1,3 +1,30 @@
+cpp-argparse-dev (1.6.0-0ppa0) focal; urgency=low
+
+  * Set: std::string as basic type for std::string_view
+  * Add: std::ostream& operator << overload for Namespace
+  * Fix: copy default values from parents
+  * Fix: usage generation for required options
+  * Add: check for optional mutex arguments
+  * Fix: argparse::SUPPRESS for positional arguments
+  * Add: ARGPARSE_NO_AUTODETECT to disable terminal size auto-detection
+  * Fix: help auto-formatting
+  * Fix: show default value
+  * Fix: optional argument flag name generation
+  * Add: allow providing a tuple to metavar
+  * Fix: customizing file parsing
+  * Add: required flag to add_mutually_exclusive_group
+  * Add: title and description to add_subparsers
+  * Fix: don't show help for subparsers without help
+  * Add: support for subparser aliases
+  * Add: nargs(arparse::REMAINDER) or remainder() support
+  * Add: %(prog)s format specifier for usage and help
+  * Add: %(default)s format specifier for argument help
+  * Add: set argument type if calling Argument::*_value<T>(T)
+  * Remove: deprecated code
+  * Add: argument flags, dest, parser name formatting
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Fri, 20 May 2022 20:57:42 +0300
+
 cpp-argparse-dev (1.5.2-0ppa0) focal; urgency=low
 
   * Fix: Argument::choices({ A, B }) with 2 choices
