@@ -2612,14 +2612,14 @@ private:
     inline std::vector<std::string>
     get_argument_name(HelpFormatter formatter) const
     {
-        if ((formatter & MetavarTypeHelpFormatter) && !type_name().empty()) {
-            return { type_name() };
-        }
         if (m_metavar.has_value()) {
             return m_metavar();
         }
         if (m_choices.has_value()) {
             return { "{" + detail::_vector_to_string(choices(), ",") + "}" };
+        }
+        if ((formatter & MetavarTypeHelpFormatter) && !type_name().empty()) {
+            return { type_name() };
         }
         auto const& res = dest().empty() ? m_name : dest();
         return { m_type == Optional ? detail::_to_upper(res) : res };
