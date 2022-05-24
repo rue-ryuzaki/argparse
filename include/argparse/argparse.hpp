@@ -1043,7 +1043,7 @@ _ignore_explicit(std::string const& arg, std::string const& value)
 
 inline std::string
 _format_output(std::string const& head, std::string const& body,
-               std::size_t interlayer, std::size_t indent, std::size_t limit,
+               std::size_t interlayer, std::size_t indent, std::size_t width,
                char delimiter = '\n')
 {
     std::vector<std::string> result;
@@ -1051,9 +1051,9 @@ _format_output(std::string const& head, std::string const& body,
     if (value.size() + interlayer > indent) {
         _store_value_to(value, result);
     }
-    auto _func = [indent, limit, &result, &value] (std::string const& str)
+    auto _func = [indent, width, &result, &value] (std::string const& str)
     {
-        if (value.size() > indent && value.size() + 1 + str.size() > limit) {
+        if (value.size() > indent && value.size() + 1 + str.size() > width) {
             _store_value_to(value, result);
         }
         if (value.size() < indent) {
@@ -1082,17 +1082,83 @@ _format_output(std::string const& head, std::string const& body,
     return _vector_to_string(result, "\n");
 }
 
-inline std::string
-_help_formatter(HelpFormatter formatter, std::string const& help)
+inline std::vector<std::string>
+_split_lines(std::string const& text, std::size_t width)
 {
-    if (help.empty()) {
-        return std::string();
+    std::string value;
+    std::vector<std::string> result;
+    auto _func = [width, &result, &value] (std::string const& str)
+    {
+        if (value.size() + 1 + str.size() > width) {
+            _store_value_to(value, result);
+        }
+        value += _spaces + str;
+    };
+    auto split_str = _split_whitespace(text);
+    for (auto const& str : split_str) {
+        _func(str);
     }
-    if (formatter & RawTextHelpFormatter) {
-        return help;
+    _store_value_to(value, result);
+    return result;
+}
+
+inline std::vector<std::string>
+_split_raw_lines(std::string const& text, std::size_t width)
+{
+    auto body = _replace(text, '\t', " ");
+    std::string value;
+    std::vector<std::string> result;
+    auto _func = [width, &result, &value] (std::string const& str)
+    {
+        if (value.size() + 1 + str.size() > width) {
+            _store_value_to(value, result);
+        }
+        value += _spaces + str;
+    };
+    auto split_str = _split(body, '\n', true);
+    for (auto const& str : split_str) {
+        if (str.empty()) {
+            _store_value_to(value, result, true);
+        } else {
+            auto sub_split_str = _split(str, _space, true);
+            for (auto const& sub : sub_split_str) {
+                _func(sub);
+            }
+            _store_value_to(value, result);
+        }
     }
-    auto lines = _split_whitespace(help);
-    return _vector_to_string(lines);
+    _store_value_to(value, result);
+    return result;
+}
+
+inline std::string
+_help_formatter(std::string const& head,
+                HelpFormatter formatter,
+                std::string const& help,
+                std::size_t width,
+                std::string const& indent = std::string())
+{
+    std::size_t const interlayer = 2;
+
+    std::vector<std::string> result;
+    std::string value = head;
+    if (value.size() + interlayer > indent.size()) {
+        _store_value_to(value, result);
+    }
+    if (!help.empty()) {
+        auto lines = (formatter & RawTextHelpFormatter)
+                ? _split_raw_lines(help, width - indent.size())
+                : _split_lines(help, width - indent.size());
+        for (auto const& line : lines) {
+            if (value.size() < indent.size()) {
+                value.resize(indent.size(), _space);
+            }
+            value += line;
+            _store_value_to(value, result, true);
+        }
+    }
+    _store_value_to(value, result);
+    return _vector_to_string(result, "\n");
 }
 
 inline std::string
@@ -2572,10 +2638,12 @@ private:
                 formatted += " (default: %(default)s)";
             }
         }
-        formatted = detail::_help_formatter(
-          formatter, detail::_replace(formatted, "%(default)s", get_default()));
-        return detail::_format_output(res, formatted, 2, limit,
-                                      width, detail::_space);
+        return detail::_help_formatter(
+                    res,
+                    formatter,
+                    detail::_replace(formatted, "%(default)s", get_default()),
+                    width,
+                    std::string(limit, detail::_space));
     }
 
     std::string get_nargs_suffix(HelpFormatter formatter) const
@@ -5608,23 +5676,28 @@ public:
         inline std::string print(HelpFormatter formatter,
                                  std::size_t limit, std::size_t width) const
         {
-            auto res = detail::_format_output(
+            auto res = detail::_help_formatter(
                         "  " + flags_to_string(),
-                        detail::_help_formatter(formatter, help()),
-                        2, limit, width, detail::_space);
+                        formatter,
+                        help(),
+                        width,
+                        std::string(limit, detail::_space));
             return std::accumulate(std::begin(m_parsers), std::end(m_parsers),
-                                   res, [formatter, limit, width]
+                                   res, [&formatter, limit, width]
                                    (std::string const& str, pParser const& p)
             {
-                auto help = detail::_help_formatter(formatter, p->help());
-                if (!help.empty()) {
+                if (!p->help().empty()) {
                     auto name = "    " + p->m_name;
                     auto alias = detail::_vector_to_string(p->aliases(), ", ");
                     if (!alias.empty()) {
                         name += " (" + alias + ")";
                     }
-                    return str + "\n" + detail::_format_output(
-                                name, help, 2, limit, width, detail::_space);
+                    return str + "\n" + detail::_help_formatter(
+                                name,
+                                formatter,
+                                p->help(),
+                                width,
+                                std::string(limit, detail::_space));
                 }
                 return str;
             });
