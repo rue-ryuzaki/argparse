@@ -628,6 +628,14 @@ _remove_quotes(std::string const& s)
     return _have_quotes(s) ? T(s).substr(1, s.size() - 2) : T(s);
 }
 
+inline bool
+_contains_substr(std::string const& str, std::string const& substr)
+{
+    //  C++23+
+    //  return str.contains(substr);
+    return str.find(substr) != std::string::npos;
+}
+
 inline std::string
 _replace(std::string s, char old, std::string const& value)
 {
@@ -2555,13 +2563,13 @@ private:
     {
         std::string res = "  " + flags_to_string(formatter);
         auto formatted = help();
-        if (!formatted.empty()) {
+        if (!formatted.empty()
+                && !detail::_contains_substr(formatted, "%(default)s")
+                && !is_suppressed()) {
             if ((m_type == Optional || (m_nargs & (ZERO_OR_ONE | ZERO_OR_MORE)))
                     && (formatter & ArgumentDefaultsHelpFormatter)
                     && !(action() & (Action::help | Action::version))) {
-                if (!is_suppressed()) {
-                    formatted += " (default: %(default)s)";
-                }
+                formatted += " (default: %(default)s)";
             }
         }
         formatted = detail::_help_formatter(
