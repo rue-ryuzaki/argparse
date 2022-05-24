@@ -178,19 +178,6 @@ _ARGPARSE_EXPORT enum Action : std::uint16_t
 };
 
 /*!
- *  \brief Help formatter values
- *
- *  \enum HelpFormatter
- */
-_ARGPARSE_EXPORT enum HelpFormatter
-{
-    RawDescriptionHelpFormatter     = 0x00000001,
-    RawTextHelpFormatter            = 0x00000002,
-    ArgumentDefaultsHelpFormatter   = 0x00000004,
-    MetavarTypeHelpFormatter        = 0x00000008,
-};
-
-/*!
  *  \brief ArgumentError handler
  */
 _ARGPARSE_EXPORT class ArgumentError : public std::invalid_argument
@@ -283,6 +270,23 @@ public:
     TypeError(std::string const& error)
         : std::logic_error("TypeError: " + error)
     { }
+};
+
+//  Forward declaration
+class Argument;
+
+/*!
+ *  \brief _HelpFormatter class
+ */
+struct _HelpFormatter
+{
+    std::string (*_fill_text)(std::string const& text, std::size_t width,
+                              std::string const& indent);
+    std::string (*_get_default_metavar_for_optional)(Argument const* action);
+    std::string (*_get_default_metavar_for_positional)(Argument const* action);
+    std::string (*_get_help_string)(Argument const* action);
+    std::vector<std::string> (*_split_lines)(std::string const& text,
+                                             std::size_t width);
 };
 
 namespace detail {
@@ -865,13 +869,18 @@ _store_value_to(std::string& value, std::vector<std::string>& result,
 }
 
 inline std::vector<std::string>
-_split(std::string const& str, char delim, bool force = false)
+_split(std::string const& str, char delim,
+       bool force = false, bool add_delim = false)
 {
     std::vector<std::string> result;
     std::string value;
     for (auto c : str) {
         if (c == delim) {
             _store_value_to(value, result, force);
+            if (add_delim) {
+                value = std::string(1, delim);
+                _store_value_to(value, result, true);
+            }
         } else {
             value += c;
         }
@@ -1082,58 +1091,9 @@ _format_output(std::string const& head, std::string const& body,
     return _vector_to_string(result, "\n");
 }
 
-inline std::vector<std::string>
-_split_lines(std::string const& text, std::size_t width)
-{
-    std::string value;
-    std::vector<std::string> result;
-    auto _func = [width, &result, &value] (std::string const& str)
-    {
-        if (value.size() + 1 + str.size() > width) {
-            _store_value_to(value, result);
-        }
-        value += _spaces + str;
-    };
-    auto split_str = _split_whitespace(text);
-    for (auto const& str : split_str) {
-        _func(str);
-    }
-    _store_value_to(value, result);
-    return result;
-}
-
-inline std::vector<std::string>
-_split_raw_lines(std::string const& text, std::size_t width)
-{
-    auto body = _replace(text, '\t', " ");
-    std::string value;
-    std::vector<std::string> result;
-    auto _func = [width, &result, &value] (std::string const& str)
-    {
-        if (value.size() + 1 + str.size() > width) {
-            _store_value_to(value, result);
-        }
-        value += _spaces + str;
-    };
-    auto split_str = _split(body, '\n', true);
-    for (auto const& str : split_str) {
-        if (str.empty()) {
-            _store_value_to(value, result, true);
-        } else {
-            auto sub_split_str = _split(str, _space, true);
-            for (auto const& sub : sub_split_str) {
-                _func(sub);
-            }
-            _store_value_to(value, result);
-        }
-    }
-    _store_value_to(value, result);
-    return result;
-}
-
 inline std::string
 _help_formatter(std::string const& head,
-                HelpFormatter formatter,
+                _HelpFormatter const& formatter,
                 std::string const& help,
                 std::size_t width,
                 std::string const& indent = std::string())
@@ -1146,9 +1106,7 @@ _help_formatter(std::string const& head,
         _store_value_to(value, result);
     }
     if (!help.empty()) {
-        auto lines = (formatter & RawTextHelpFormatter)
-                ? _split_raw_lines(help, width - indent.size())
-                : _split_lines(help, width - indent.size());
+        auto lines = formatter._split_lines(help, width - indent.size());
         for (auto const& line : lines) {
             if (value.size() < indent.size()) {
                 value.resize(indent.size(), _space);
@@ -1161,25 +1119,18 @@ _help_formatter(std::string const& head,
     return _vector_to_string(result, "\n");
 }
 
-inline std::string
-_raw_text_formatter(HelpFormatter formatter, std::string const& text)
-{
-    if (formatter & (RawDescriptionHelpFormatter | RawTextHelpFormatter)) {
-        return text;
-    }
-    auto lines = _split_whitespace(text);
-    return _vector_to_string(lines);
-}
-
 inline void
-_print_raw_text_formatter(HelpFormatter formatter, std::string const& text,
+_print_raw_text_formatter(_HelpFormatter const& formatter,
+                          std::string const& text,
+                          std::size_t width,
                           std::ostream& os,
                           std::string const& begin = "\n",
+                          std::string const& indent = std::string(),
                           std::string const& end = std::string())
 {
-    auto formatted_text = _raw_text_formatter(formatter, text);
-    if (!formatted_text.empty()) {
-        os << begin << formatted_text << end << std::endl;
+    if (!text.empty()) {
+        os << begin
+           << formatter._fill_text(text, width, indent) << end << std::endl;
     }
 }
 
@@ -1497,10 +1448,12 @@ _ARGPARSE_EXPORT enum _REMAINDER:uint8_t {} _ARGPARSE_INLINE_VARIABLE REMAINDER;
 _ARGPARSE_EXPORT class Argument
 {
     friend class _ArgumentData;
+    friend class _ArgumentDefaultsHelpFormatter;
     friend class ArgumentGroup;
     friend class ArgumentParser;
     friend class _BaseArgumentGroup;
     friend class _BaseParser;
+    friend class HelpFormatter;
     friend class MutuallyExclusiveGroup;
     friend class Namespace;
 
@@ -2573,7 +2526,7 @@ private:
         }
     }
 
-    inline std::string usage(HelpFormatter formatter) const
+    inline std::string usage(_HelpFormatter const& formatter) const
     {
         std::string res;
         if (m_type == Optional) {
@@ -2594,7 +2547,7 @@ private:
         return res;
     }
 
-    inline std::string flags_to_string(HelpFormatter formatter) const
+    inline std::string flags_to_string(_HelpFormatter const& formatter) const
     {
         std::string res;
         if (m_type == Optional) {
@@ -2623,30 +2576,20 @@ private:
         }
     }
 
-    std::string print(HelpFormatter formatter,
-                      std::size_t limit,
-                      std::size_t width) const
+    inline std::string print(_HelpFormatter const& formatter,
+                             std::size_t limit,
+                             std::size_t width) const
     {
-        std::string res = "  " + flags_to_string(formatter);
-        auto formatted = help();
-        if (!formatted.empty()
-                && !detail::_contains_substr(formatted, "%(default)s")
-                && !is_suppressed()) {
-            if ((m_type == Optional || (m_nargs & (ZERO_OR_ONE | ZERO_OR_MORE)))
-                    && (formatter & ArgumentDefaultsHelpFormatter)
-                    && !(action() & (Action::help | Action::version))) {
-                formatted += " (default: %(default)s)";
-            }
-        }
         return detail::_help_formatter(
-                    res,
-                    formatter,
-                    detail::_replace(formatted, "%(default)s", get_default()),
-                    width,
-                    std::string(limit, detail::_space));
+                            "  " + flags_to_string(formatter),
+                            formatter,
+                            detail::_replace(formatter._get_help_string(this),
+                                             "%(default)s", get_default()),
+                            width,
+                            std::string(limit, detail::_space));
     }
 
-    std::string get_nargs_suffix(HelpFormatter formatter) const
+    std::string get_nargs_suffix(_HelpFormatter const& formatter) const
     {
         auto names = get_argument_name(formatter);
         if (names.size() > 1
@@ -2686,7 +2629,7 @@ private:
     }
 
     inline std::vector<std::string>
-    get_argument_name(HelpFormatter formatter) const
+    get_argument_name(_HelpFormatter const& formatter) const
     {
         if (m_metavar.has_value()) {
             return m_metavar();
@@ -2694,11 +2637,9 @@ private:
         if (m_choices.has_value()) {
             return { "{" + detail::_vector_to_string(choices(), ",") + "}" };
         }
-        if ((formatter & MetavarTypeHelpFormatter) && !type_name().empty()) {
-            return { type_name() };
-        }
-        auto const& res = dest().empty() ? m_name : dest();
-        return { m_type == Optional ? detail::_to_upper(res) : res };
+        return { m_type == Optional
+                    ? formatter._get_default_metavar_for_optional(this)
+                    : formatter._get_default_metavar_for_positional(this) };
     }
 
     inline std::vector<std::string> const&
@@ -2774,6 +2715,251 @@ private:
 };
 
 /*!
+ *  \brief Default help formatter class
+ */
+_ARGPARSE_EXPORT class HelpFormatter
+{
+public:
+    virtual ~HelpFormatter() = default;
+
+    virtual std::string
+    (*_fill_text() const) (std::string const&, std::size_t, std::string const&)
+    {
+        return _fill_text_s;
+    }
+
+    virtual std::string
+    (*_get_default_metavar_for_optional() const) (Argument const*)
+    {
+        return _get_default_metavar_for_optional_s;
+    }
+
+    virtual std::string
+    (*_get_default_metavar_for_positional() const) (Argument const*)
+    {
+        return _get_default_metavar_for_positional_s;
+    }
+
+    virtual std::string
+    (*_get_help_string() const) (Argument const*)
+    {
+        return _get_help_string_s;
+    }
+
+    virtual std::vector<std::string>
+    (*_split_lines() const) (std::string const&, std::size_t)
+    {
+        return _split_lines_s;
+    }
+
+protected:
+    static std::string
+    _fill_text_s(std::string const& text, std::size_t width,
+                 std::string const& indent)
+    {
+        std::vector<std::string> result;
+        std::string value;
+        auto lines = _split_lines_s(text, width - indent.size());
+        for (auto const& line : lines) {
+            if (value.size() < indent.size()) {
+                value.resize(indent.size(), detail::_space);
+            }
+            value += line;
+            detail::_store_value_to(value, result, true);
+        }
+        detail::_store_value_to(value, result);
+        return detail::_vector_to_string(result, "\n");
+    }
+
+    static std::string
+    _get_default_metavar_for_optional_s(Argument const* action)
+    {
+        return detail::_to_upper(action->dest().empty() ? action->m_name
+                                                        : action->dest());
+    }
+
+    static std::string
+    _get_default_metavar_for_positional_s(Argument const* action)
+    {
+        return action->dest().empty() ? action->m_name : action->dest();
+    }
+
+    static std::string
+    _get_help_string_s(Argument const* action)
+    {
+        return action->help();
+    }
+
+    static std::vector<std::string>
+    _split_lines_s(std::string const& text, std::size_t width)
+    {
+        std::string value;
+        std::vector<std::string> result;
+        auto _func = [width, &result, &value] (std::string const& str)
+        {
+            if (value.size() + 1 + str.size() > width) {
+                detail::_store_value_to(value, result);
+            }
+            if (!value.empty()) {
+                value += detail::_spaces;
+            }
+            value += str;
+        };
+        auto split_str = detail::_split_whitespace(text);
+        for (auto const& str : split_str) {
+            _func(str);
+        }
+        detail::_store_value_to(value, result);
+        return result;
+    }
+};
+
+_ARGPARSE_EXPORT
+class _RawDescriptionHelpFormatter : public HelpFormatter
+{
+public:
+    virtual ~_RawDescriptionHelpFormatter() = default;
+
+    virtual std::string
+    (*_fill_text() const) (std::string const&, std::size_t,
+                           std::string const&) override
+    {
+        return _fill_text_s;
+    }
+
+protected:
+    static std::string
+    _fill_text_s(std::string const& text, std::size_t width,
+                 std::string const& indent)
+    {
+        std::vector<std::string> result;
+        std::string value;
+        auto lines = _split_lines_s(text, width - indent.size());
+        for (auto const& line : lines) {
+            if (value.size() < indent.size()) {
+                value.resize(indent.size(), detail::_space);
+            }
+            value += line;
+            detail::_store_value_to(value, result, true);
+        }
+        detail::_store_value_to(value, result);
+        return detail::_vector_to_string(result, "\n");
+    }
+
+    static std::vector<std::string>
+    _split_lines_s(std::string const& text, std::size_t width)
+    {
+        auto body = detail::_replace(text, '\t', " ");
+        std::string value;
+        std::vector<std::string> result;
+        auto _func = [width, &result, &value] (std::string const& str)
+        {
+            if (value.size() + 1 + str.size() > width) {
+                detail::_store_value_to(value, result);
+            }
+            value += str;
+        };
+        auto split_str = detail::_split(body, '\n', true);
+        for (auto const& str : split_str) {
+            if (str.empty()) {
+                detail::_store_value_to(value, result, true);
+            } else {
+                auto sub_split_str = detail::_split(str, detail::_space,
+                                                    true, true);
+                for (auto const& sub : sub_split_str) {
+                    _func(sub);
+                }
+                detail::_store_value_to(value, result);
+            }
+        }
+        detail::_store_value_to(value, result);
+        return result;
+    }
+} _ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
+
+_ARGPARSE_EXPORT
+class _RawTextHelpFormatter : public _RawDescriptionHelpFormatter
+{
+public:
+    virtual ~_RawTextHelpFormatter() = default;
+
+    virtual std::vector<std::string>
+    (*_split_lines() const) (std::string const&, std::size_t) override
+    {
+        return _RawDescriptionHelpFormatter::_split_lines_s;
+    }
+} _ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
+
+_ARGPARSE_EXPORT
+class _ArgumentDefaultsHelpFormatter : public HelpFormatter
+{
+public:
+    virtual ~_ArgumentDefaultsHelpFormatter() = default;
+
+    virtual std::string
+    (*_get_help_string() const) (Argument const*) override
+    {
+        return _get_help_string_s;
+    }
+
+protected:
+    static std::string
+    _get_help_string_s(Argument const* action)
+    {
+        auto help = action->help();
+        if (!help.empty()
+                && !detail::_contains_substr(help, "%(default)s")
+                && !action->is_suppressed()) {
+            if ((action->m_type == Argument::Optional
+                 || (action->m_nargs & (Argument::ZERO_OR_ONE
+                                        | Argument::ZERO_OR_MORE)))
+                    && !(action->action() & (Action::help | Action::version))) {
+                help += " (default: %(default)s)";
+            }
+        }
+        return help;
+    }
+} _ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
+
+_ARGPARSE_EXPORT
+class _MetavarTypeHelpFormatter : public HelpFormatter
+{
+public:
+    virtual ~_MetavarTypeHelpFormatter() = default;
+
+    virtual std::string
+    (*_get_default_metavar_for_optional() const) (Argument const*) override
+    {
+        return _get_default_metavar_for_optional_s;
+    }
+
+    virtual std::string
+    (*_get_default_metavar_for_positional() const) (Argument const*) override
+    {
+        return _get_default_metavar_for_positional_s;
+    }
+
+protected:
+    static std::string
+    _get_default_metavar_for_optional_s(Argument const* action)
+    {
+        if (!action->type_name().empty()) {
+            return action->type_name();
+        }
+        return HelpFormatter::_get_default_metavar_for_optional_s(action);
+    }
+
+    static std::string
+    _get_default_metavar_for_positional_s(Argument const* action)
+    {
+        if (!action->type_name().empty()) {
+            return action->type_name();
+        }
+        return HelpFormatter::_get_default_metavar_for_positional_s(action);
+    }
+} _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
+
+/*!
  *  \brief Group class
  */
 class _Group
@@ -2814,10 +3000,10 @@ public:
     }
 
 protected:
-    virtual void limit_help_flags(HelpFormatter formatter,
+    virtual void limit_help_flags(_HelpFormatter const& formatter,
                                   std::size_t& limit)                 const = 0;
     virtual void print_help(std::ostream& os,
-                            HelpFormatter formatter,
+                            _HelpFormatter const& formatter,
                             std::string const& prog,
                             std::size_t limit,
                             std::size_t width)                        const = 0;
@@ -3371,7 +3557,8 @@ public:
 
 private:
     inline void
-    limit_help_flags(HelpFormatter formatter, std::size_t& limit) const override
+    limit_help_flags(_HelpFormatter const& formatter,
+                     std::size_t& limit) const override
     {
         for (auto const& arg : m_data.m_arguments) {
             auto size = arg->flags_to_string(formatter).size();
@@ -3382,7 +3569,7 @@ private:
     }
 
     inline void print_help(std::ostream& os,
-                           HelpFormatter formatter,
+                           _HelpFormatter const& formatter,
                            std::string const& prog,
                            std::size_t limit,
                            std::size_t width) const override
@@ -3394,7 +3581,8 @@ private:
             detail::_print_raw_text_formatter(
                         formatter,
                         detail::_replace(
-                            description(), "%(prog)s", prog), os, "\n  ");
+                            description(), "%(prog)s", prog),
+                        width, os, "\n", "  ");
             if (!m_data.m_arguments.empty()) {
                 os << std::endl;
             }
@@ -3509,7 +3697,7 @@ public:
     }
 
 private:
-    inline std::string usage(HelpFormatter formatter) const
+    inline std::string usage(_HelpFormatter const& formatter) const
     {
         std::string res;
         for (auto const& arg : m_data.m_arguments) {
@@ -5625,7 +5813,8 @@ public:
         }
 
         inline void
-        limit_help_flags(HelpFormatter, std::size_t& limit) const override
+        limit_help_flags(_HelpFormatter const&,
+                         std::size_t& limit) const override
         {
             auto size = flags_to_string().size();
             if (limit < size) {
@@ -5640,7 +5829,7 @@ public:
         }
 
         inline void print_help(std::ostream& os,
-                               HelpFormatter formatter,
+                               _HelpFormatter const& formatter,
                                std::string const& prog,
                                std::size_t limit,
                                std::size_t width) const override
@@ -5649,7 +5838,8 @@ public:
             detail::_print_raw_text_formatter(
                         formatter,
                         detail::_replace(
-                            description(), "%(prog)s", prog), os, "  ", "\n");
+                            description(), "%(prog)s", prog),
+                        width, os, "", "  ", "\n");
             os << print(formatter, limit, width) << std::endl;
         }
 
@@ -5673,7 +5863,7 @@ public:
             return "{" + res + "}";
         }
 
-        inline std::string print(HelpFormatter formatter,
+        inline std::string print(_HelpFormatter const& formatter,
                                  std::size_t limit, std::size_t width) const
         {
             auto res = detail::_help_formatter(
@@ -5683,7 +5873,7 @@ public:
                         width,
                         std::string(limit, detail::_space));
             return std::accumulate(std::begin(m_parsers), std::end(m_parsers),
-                                   res, [&formatter, limit, width]
+                                   res, [formatter, limit, width]
                                    (std::string const& str, pParser const& p)
             {
                 if (!p->help().empty()) {
@@ -5715,6 +5905,35 @@ public:
 
 private:
     typedef std::pair<std::shared_ptr<Subparser>, std::size_t> SubparserInfo;
+
+    inline void apply_formatter_class(HelpFormatter const& param)
+    {
+        HelpFormatter sample;
+        if (!m_formatter_class._fill_text
+                || sample._fill_text() != param._fill_text()) {
+            m_formatter_class._fill_text = param._fill_text();
+        }
+        if (!m_formatter_class._get_default_metavar_for_optional
+                || sample._get_default_metavar_for_optional()
+                    != param._get_default_metavar_for_optional()) {
+            m_formatter_class._get_default_metavar_for_optional
+                    =  param._get_default_metavar_for_optional();
+        }
+        if (!m_formatter_class._get_default_metavar_for_positional
+                || sample._get_default_metavar_for_positional()
+                    != param._get_default_metavar_for_positional()) {
+            m_formatter_class._get_default_metavar_for_positional
+                    = param._get_default_metavar_for_positional();
+        }
+        if (!m_formatter_class._get_help_string
+                || sample._get_help_string() != param._get_help_string()) {
+            m_formatter_class._get_help_string = param._get_help_string();
+        }
+        if (!m_formatter_class._split_lines
+                || sample._split_lines() != param._split_lines()) {
+            m_formatter_class._split_lines = param._split_lines();
+        }
+    }
 
 public:
     /*!
@@ -5751,6 +5970,7 @@ public:
           m_handle(nullptr),
           m_parse_handle(nullptr)
     {
+        apply_formatter_class(HelpFormatter());
         this->prog(prog);
         m_data.update_help(true, m_prefix_chars);
     }
@@ -6002,9 +6222,9 @@ public:
      *  \return Current argument parser reference
      */
     inline ArgumentParser&
-    formatter_class(HelpFormatter param) _ARGPARSE_NOEXCEPT
+    formatter_class(HelpFormatter const& param)
     {
-        m_formatter_class = param;
+        apply_formatter_class(param);
         return *this;
     }
 
@@ -6018,7 +6238,7 @@ public:
      */
     template <class... Args>
     ArgumentParser&
-    formatter_class(HelpFormatter param, Args... args) _ARGPARSE_NOEXCEPT
+    formatter_class(HelpFormatter const& param, Args... args)
     {
         formatter_class(param);
         return add_formatter_class(args...);
@@ -6032,10 +6252,9 @@ public:
      *  \return Current argument parser reference
      */
     inline ArgumentParser&
-    add_formatter_class(HelpFormatter param) _ARGPARSE_NOEXCEPT
+    add_formatter_class(HelpFormatter const& param)
     {
-        m_formatter_class
-                = static_cast<HelpFormatter>(m_formatter_class | param);
+        apply_formatter_class(param);
         return *this;
     }
 
@@ -6049,7 +6268,7 @@ public:
      */
     template <class... Args>
     ArgumentParser&
-    add_formatter_class(HelpFormatter param, Args... args) _ARGPARSE_NOEXCEPT
+    add_formatter_class(HelpFormatter const& param, Args... args)
     {
         add_formatter_class(param);
         return add_formatter_class(args...);
@@ -6753,9 +6972,11 @@ public:
             print_custom_usage(positional_all, optional_all,
                                m_mutex_groups, sub_info, prog(), os);
         }
+        std::size_t width = output_width();
         detail::_print_raw_text_formatter(
                     m_formatter_class,
-                    detail::_replace(description(), "%(prog)s", prog()), os);
+                    detail::_replace(description(), "%(prog)s", prog()),
+                    width, os);
         std::size_t size = 0;
         auto _update_size = [&size] (std::size_t value)
         {
@@ -6763,7 +6984,6 @@ public:
                 size = value;
             }
         };
-        std::size_t width = output_width();
         auto subparser = sub_info.first;
         bool sub_positional = is_subparser_positional(subparser);
         for (auto const& arg : positional) {
@@ -6807,7 +7027,8 @@ public:
         }
         detail::_print_raw_text_formatter(
                     m_formatter_class,
-                    detail::_replace(epilog(), "%(prog)s", prog()), os);
+                    detail::_replace(epilog(), "%(prog)s", prog()),
+                    width, os);
     }
 
     /*!
@@ -8273,7 +8494,7 @@ private:
 
     static void
     print_subparser(bool need_print, SubparserInfo const& subparser,
-                    std::size_t index, HelpFormatter formatter,
+                    std::size_t index, _HelpFormatter const& formatter,
                     std::size_t size, std::size_t width, std::ostream& os)
     {
         if (need_print && subparser.second == index) {
@@ -8283,7 +8504,8 @@ private:
 
     static void print_group(pGroup const& group,
                             std::shared_ptr<Subparser> const& subparser,
-                            bool is_positional, HelpFormatter formatter,
+                            bool is_positional,
+                            _HelpFormatter const& formatter,
                             std::string const& prog, std::size_t size,
                             std::size_t width, std::ostream& os)
     {
@@ -8327,7 +8549,7 @@ private:
     std::string m_epilog;
     std::string m_help;
     std::vector<std::string> m_aliases;
-    HelpFormatter m_formatter_class;
+    _HelpFormatter m_formatter_class;
     std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
