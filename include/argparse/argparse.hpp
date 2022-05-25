@@ -5919,30 +5919,36 @@ public:
 private:
     typedef std::pair<std::shared_ptr<Subparser>, std::size_t> SubparserInfo;
 
-    inline void apply_formatter_class(HelpFormatter const& param)
+    inline void
+    apply_formatter_class(HelpFormatter const& param, bool force = false)
     {
         HelpFormatter sample;
         if (!m_formatter_class._fill_text
+                || force
                 || sample._fill_text() != param._fill_text()) {
             m_formatter_class._fill_text = param._fill_text();
         }
         if (!m_formatter_class._get_default_metavar_for_optional
+                || force
                 || sample._get_default_metavar_for_optional()
                     != param._get_default_metavar_for_optional()) {
             m_formatter_class._get_default_metavar_for_optional
                     =  param._get_default_metavar_for_optional();
         }
         if (!m_formatter_class._get_default_metavar_for_positional
+                || force
                 || sample._get_default_metavar_for_positional()
                     != param._get_default_metavar_for_positional()) {
             m_formatter_class._get_default_metavar_for_positional
                     = param._get_default_metavar_for_positional();
         }
         if (!m_formatter_class._get_help_string
+                || force
                 || sample._get_help_string() != param._get_help_string()) {
             m_formatter_class._get_help_string = param._get_help_string();
         }
         if (!m_formatter_class._split_lines
+                || force
                 || sample._split_lines() != param._split_lines()) {
             m_formatter_class._split_lines = param._split_lines();
         }
@@ -6237,7 +6243,7 @@ public:
     inline ArgumentParser&
     formatter_class(HelpFormatter const& param)
     {
-        apply_formatter_class(param);
+        apply_formatter_class(param, true);
         return *this;
     }
 
