@@ -1,3 +1,12 @@
+cpp-argparse-dev (1.6.1-0ppa0) focal; urgency=low
+
+  * Fix: Argument default value using algorithm
+  * Fix: MetavarTypeHelpFormatter using
+  * Fix: avoid to add default to help if it exists
+  * Update: Help formatting
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 28 May 2022 18:50:07 +0300
+
 cpp-argparse-dev (1.6.0-0ppa0) focal; urgency=low
 
   * Set: std::string as basic type for std::string_view
