@@ -7,6 +7,7 @@ set(VERSION_PATCH 1)
 project("ArgumentParser"
     DESCRIPTION "C++11 argument parser"
     VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+    LANGUAGES CXX
 )
 
 if (MSVC)
@@ -19,11 +20,13 @@ if (NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 11)
 endif()
 
-add_library(argparse INTERFACE)
+set(ARGPARSE_HEADER include/argparse/argparse.hpp)
+
+add_library(argparse INTERFACE ${ARGPARSE_HEADER})
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set_target_properties(argparse PROPERTIES
-        PUBLIC_HEADER include/argparse/argparse.hpp
+        PUBLIC_HEADER ${ARGPARSE_HEADER}
     )
 
     include(GNUInstallDirs)
