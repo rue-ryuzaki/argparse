@@ -291,13 +291,13 @@ struct _HelpFormatter
 
 namespace detail {
 std::size_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _min_width = 33;
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _prefix_char     = '-';
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _prefix_chars[]  = "-";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _pseudo_arg[]    = "--";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _space           = ' ';
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equal           = '=';
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _spaces[]        = " ";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equals[]        = "=";
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _prefix_char      = '-';
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _prefix_chars[]   = "-";
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _pseudo_arg[]     = "--";
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _space            = ' ';
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equal            = '=';
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _spaces[]         = " ";
+char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equals[]         = "=";
 char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
@@ -382,60 +382,60 @@ struct is_stl_matrix<std::deque<std::list        <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::deque<std::multiset    <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::deque<std::priority_queue<Args...> > >
-                                                              :std::true_type{};
+struct is_stl_matrix<std::deque<std::priority_queue
+                                                 <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::deque<std::set         <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::deque<std::vector      <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::deque<std::unordered_multiset<Args...> > >
-                                                              :std::true_type{};
+struct is_stl_matrix<std::deque<std::unordered_multiset
+                                                 <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::deque<std::unordered_set<Args...> > >
-                                                              :std::true_type{};
+struct is_stl_matrix<std::deque<std::unordered_set
+                                                 <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::list<std::deque        <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::list<std::forward_list<Args...> > > :std::true_type{};
+struct is_stl_matrix<std::list<std::forward_list <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::list<std::list         <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::list<std::multiset     <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::list<std::priority_queue<Args...> > >
-                                                              :std::true_type{};
+struct is_stl_matrix<std::list<std::priority_queue
+                                                 <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::list<std::set          <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::list<std::vector       <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::list<std::unordered_multiset<Args...> > >
-                                                              :std::true_type{};
+struct is_stl_matrix<std::list<std::unordered_multiset
+                                                 <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::list<std::unordered_set<Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::vector<std::deque      <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::vector<std::forward_list<Args...> > >
-                                                              :std::true_type{};
+struct is_stl_matrix<std::vector<std::forward_list
+                                                 <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::vector<std::list       <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::vector<std::multiset<Args...> > >   :std::true_type{};
+struct is_stl_matrix<std::vector<std::multiset   <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::vector<std::priority_queue<Args...> > >
-                                                              :std::true_type{};
+struct is_stl_matrix<std::vector<std::priority_queue
+                                                 <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::vector<std::set        <Args...> > >:std::true_type{};
 template <class... Args>
 struct is_stl_matrix<std::vector<std::vector     <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::vector<std::unordered_multiset<Args...> > >
-                                                              :std::true_type{};
+struct is_stl_matrix<std::vector<std::unordered_multiset
+                                                 <Args...> > >:std::true_type{};
 template <class... Args>
-struct is_stl_matrix<std::vector<std::unordered_set<Args...> > >
-                                                              :std::true_type{};
+struct is_stl_matrix<std::vector<std::unordered_set
+                                                 <Args...> > >:std::true_type{};
 
 template <class T>
 struct is_stl_matrix_queue:std::false_type{};
@@ -1142,7 +1142,7 @@ _get_type_name()
     std::string res = __FUNCSIG__;
     auto pos = res.find("__cdecl") + 8;
     return _replace(
-                res.substr(pos + 33, res.size() - pos - 33 - 7), "class ", "");
+      res.substr(pos + 33, res.size() - pos - 33 - 7), "class ", std::string());
 #elif defined(__clang__)
     std::string res = __PRETTY_FUNCTION__;
     auto pos = res.find('=') + 2;
@@ -1224,7 +1224,7 @@ public:
     std::string static
     name()
     {
-        auto str = _replace(_get_type_name<T>(), "__cxx11::", "");
+        auto str = _replace(_get_type_name<T>(), "__cxx11::", std::string());
         return str.substr(0, str.find('<'))
                 + "<" + name<typename T::value_type>()
                 + ", " + std::to_string(std::tuple_size<T>::value) + ">";
@@ -1236,7 +1236,7 @@ public:
     std::string static
     name()
     {
-        auto str = _replace(_get_type_name<T>(), "__cxx11::", "");
+        auto str = _replace(_get_type_name<T>(), "__cxx11::", std::string());
         return str.substr(0, str.find('<'))
                 + "<" + name<typename T::value_type>() + ">";
     }
@@ -5249,13 +5249,13 @@ private:
                        & (Argument::ZERO_OR_MORE | Argument::REMAINDER))
                     || (args.first->action() == Action::extend
                         && args.first->m_nargs == Argument::ZERO_OR_ONE)
-                    ? "" : "None";
+                    ? std::string() : "None";
             return detail::_vector_to_string(args.second(), ", ",
                                              quotes, false, none, "[", "]");
         } else {
             std::string none = (args.first->m_nargs
                                & (Argument::ZERO_OR_MORE | Argument::REMAINDER))
-                    ? "" : "None";
+                    ? std::string() : "None";
             return detail::_matrix_to_string(args.second.matrix(), ", ",
                                              quotes, false, none, "[", "]");
         }
@@ -5852,7 +5852,7 @@ public:
                         formatter,
                         detail::_replace(
                             description(), "%(prog)s", prog),
-                        width, os, "", "  ", "\n");
+                        width, os, std::string(), "  ", "\n");
             os << print(formatter, limit, width) << std::endl;
         }
 
@@ -6072,7 +6072,7 @@ private:
     pParser static make_parser(std::string const& name)
     {
         pParser result = std::make_shared<ArgumentParser>(ArgumentParser());
-        result->m_prog = "";
+        result->m_prog.clear();
         result->m_name = name;
         return result;
     }
