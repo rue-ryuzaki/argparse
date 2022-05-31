@@ -19,10 +19,15 @@ endif()
 if (NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 11)
 endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(ARGPARSE_HEADER include/argparse/argparse.hpp)
 
-add_library(argparse INTERFACE ${ARGPARSE_HEADER})
+if (${CMAKE_VERSION} VERSION_LESS "3.19.0")
+    add_library(argparse INTERFACE)
+else()
+    add_library(argparse INTERFACE ${ARGPARSE_HEADER})
+endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set_target_properties(argparse PROPERTIES
