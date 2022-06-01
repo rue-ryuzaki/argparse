@@ -4,11 +4,18 @@ set(VERSION_MAJOR 1)
 set(VERSION_MINOR 6)
 set(VERSION_PATCH 1)
 
-project("ArgumentParser"
-    DESCRIPTION "C++11 argument parser"
-    VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-    LANGUAGES CXX
-)
+if (${CMAKE_VERSION} VERSION_LESS "3.8.0")
+    project("ArgumentParser"
+        VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+        LANGUAGES CXX
+    )
+else()
+    project("ArgumentParser"
+        DESCRIPTION "C++11 argument parser"
+        VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+        LANGUAGES CXX
+    )
+endif()
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /EHsc")
@@ -30,17 +37,23 @@ else()
 endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set_target_properties(argparse PROPERTIES
-        PUBLIC_HEADER ${ARGPARSE_HEADER}
+    include(GNUInstallDirs)
+
+    target_include_directories(
+        argparse INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
 
-    include(GNUInstallDirs)
-    install(TARGETS argparse PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
+    install(FILES ${ARGPARSE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
 
     set(CPACK_GENERATOR "DEB")
     set(CPACK_PACKAGE_NAME "cpp-argparse-dev")
     set(CPACK_PACKAGE_MAINTAINER "Mikhail Golubchikov")
     set(CMAKE_PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
+    if (${CMAKE_VERSION} VERSION_LESS "3.12.0")
+        set(CPACK_PACKAGE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+    endif()
     set(CPACK_DEBIAN_PACKAGE_NAME "${CPACK_PACKAGE_NAME}")
     set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Python-like header-only C++11 argument parser")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_MAINTAINER}")
