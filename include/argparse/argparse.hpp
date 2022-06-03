@@ -566,10 +566,11 @@ _trim(std::string& str)
 }
 
 inline std::string
-_trim_copy(std::string str)
+_trim_copy(std::string const& str)
 {
-    _trim(str);
-    return str;
+    auto res = str;
+    _trim(res);
+    return res;
 }
 
 inline std::string
@@ -785,13 +786,14 @@ _move_vector_replace_at(std::vector<T>& from, std::vector<T>& to, std::size_t i)
 }
 
 inline std::string
-_flag_name(std::string str)
+_flag_name(std::string const& str)
 {
-    auto prefix = str.front();
-    str.erase(std::begin(str),
-              std::find_if(std::begin(str), std::end(str),
+    auto res = str;
+    auto prefix = res.front();
+    res.erase(std::begin(res),
+              std::find_if(std::begin(res), std::end(res),
                            [prefix] (char c) { return c != prefix; }));
-    return str;
+    return res;
 }
 
 inline std::vector<std::string>
@@ -835,17 +837,18 @@ _not_optional(std::string const& arg,
 }
 
 inline std::string
-_make_no_flag(std::string str)
+_make_no_flag(std::string const& str)
 {
-    auto prefix = str.front();
-    auto it = std::find_if(std::begin(str), std::end(str),
+    auto res = str;
+    auto prefix = res.front();
+    auto it = std::find_if(std::begin(res), std::end(res),
                            [prefix] (char c) { return c != prefix; });
-    if (it == std::end(str)) {
+    if (it == std::end(res)) {
         throw ValueError("can't create no- boolean option");
     }
-    str.insert(static_cast<std::string::size_type>(
-                   std::distance(std::begin(str), it)), "no-");
-    return str;
+    res.insert(static_cast<std::string::size_type>(
+                   std::distance(std::begin(res), it)), "no-");
+    return res;
 }
 
 inline void
@@ -1433,14 +1436,14 @@ _check_type_name(Value<std::string> const& expected,
  *
  *  \enum _SUPPRESS
  */
-_ARGPARSE_EXPORT enum _SUPPRESS : uint8_t {} _ARGPARSE_INLINE_VARIABLE SUPPRESS;
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _SUPPRESS : uint8_t {} SUPPRESS;
 
 /*!
  *  \brief Don't use this enum name! use argparse::REMAINDER value directly
  *
  *  \enum _REMAINDER
  */
-_ARGPARSE_EXPORT enum _REMAINDER:uint8_t {} _ARGPARSE_INLINE_VARIABLE REMAINDER;
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _REMAINDER:uint8_t {} REMAINDER;
 
 /*!
  *  \brief Argument class
@@ -1828,11 +1831,7 @@ public:
                 help("show program's version number and exit");
                 // fallthrough
             case Action::help :
-                if (m_type == Positional) {
-                    // version and help actions cannot be positional
-                    throw
-                    TypeError("got an unexpected keyword argument 'required'");
-                }
+                check_required();
                 // fallthrough
             case Action::count :
                 m_const.clear();
@@ -2499,6 +2498,14 @@ private:
         }
     }
 
+    inline void check_required() const
+    {
+        if (m_type == Positional) {
+            // version and help actions cannot be positional
+            throw TypeError("got an unexpected keyword argument 'required'");
+        }
+    }
+
     inline void prepare_action(Action value)
     {
         if (action() & (Action::version | Action::help)) {
@@ -2823,7 +2830,7 @@ class _RawDescriptionHelpFormatter : public HelpFormatter
 public:
     virtual ~_RawDescriptionHelpFormatter() = default;
 
-    virtual std::string
+    std::string
     (*_fill_text() const) (std::string const&, std::size_t,
                            std::string const&) override
     {
@@ -2889,7 +2896,7 @@ class _RawTextHelpFormatter : public _RawDescriptionHelpFormatter
 public:
     virtual ~_RawTextHelpFormatter() = default;
 
-    virtual std::vector<std::string>
+    std::vector<std::string>
     (*_split_lines() const) (std::string const&, std::size_t) override
     {
         return _RawDescriptionHelpFormatter::_split_lines_s;
@@ -2905,7 +2912,7 @@ class _ArgumentDefaultsHelpFormatter : public HelpFormatter
 public:
     virtual ~_ArgumentDefaultsHelpFormatter() = default;
 
-    virtual std::string
+    std::string
     (*_get_help_string() const) (Argument const*) override
     {
         return _get_help_string_s;
@@ -2940,13 +2947,13 @@ class _MetavarTypeHelpFormatter : public HelpFormatter
 public:
     virtual ~_MetavarTypeHelpFormatter() = default;
 
-    virtual std::string
+    std::string
     (*_get_default_metavar_for_optional() const) (Argument const*) override
     {
         return _get_default_metavar_for_optional_s;
     }
 
-    virtual std::string
+    std::string
     (*_get_default_metavar_for_positional() const) (Argument const*) override
     {
         return _get_default_metavar_for_positional_s;
@@ -3236,9 +3243,10 @@ protected:
         }
     }
 
-    void create_argument(std::vector<std::string> flags,
+    void create_argument(std::vector<std::string> const& in_flags,
                          std::string const& prefix_chars)
     {
+        auto flags = in_flags;
         if (flags.empty()) {
             auto flag = std::string();
             auto arg = Argument::make_argument(std::move(flags),
@@ -3867,10 +3875,9 @@ _ARGPARSE_EXPORT class Namespace
             auto const& arg_flags = key->get_argument_flags();
             bool have_key = false;
             for (auto& pair : m_data) {
+                have_key |= (key == pair.first);
                 if (key != pair.first) {
                     pair.first->resolve_conflict_flags(arg_flags);
-                } else {
-                    have_key = true;
                 }
             }
             if (!have_key) {
@@ -5920,38 +5927,45 @@ private:
     typedef std::pair<std::shared_ptr<Subparser>, std::size_t> SubparserInfo;
 
     inline void
-    apply_formatter_class(HelpFormatter const& value, bool force = false)
+    apply_formatter_class(HelpFormatter const& value)
     {
         HelpFormatter sample;
         if (!m_formatter_class._fill_text
-                || force
                 || sample._fill_text() != value._fill_text()) {
             m_formatter_class._fill_text = value._fill_text();
         }
         if (!m_formatter_class._get_default_metavar_for_optional
-                || force
                 || sample._get_default_metavar_for_optional()
                     != value._get_default_metavar_for_optional()) {
             m_formatter_class._get_default_metavar_for_optional
-                    =  value._get_default_metavar_for_optional();
+                    = value._get_default_metavar_for_optional();
         }
         if (!m_formatter_class._get_default_metavar_for_positional
-                || force
                 || sample._get_default_metavar_for_positional()
                     != value._get_default_metavar_for_positional()) {
             m_formatter_class._get_default_metavar_for_positional
                     = value._get_default_metavar_for_positional();
         }
         if (!m_formatter_class._get_help_string
-                || force
                 || sample._get_help_string() != value._get_help_string()) {
             m_formatter_class._get_help_string = value._get_help_string();
         }
         if (!m_formatter_class._split_lines
-                || force
                 || sample._split_lines() != value._split_lines()) {
             m_formatter_class._split_lines = value._split_lines();
         }
+    }
+
+    inline void
+    set_formatter_class(HelpFormatter const& value)
+    {
+        m_formatter_class._fill_text = value._fill_text();
+        m_formatter_class._get_default_metavar_for_optional
+                = value._get_default_metavar_for_optional();
+        m_formatter_class._get_default_metavar_for_positional
+                = value._get_default_metavar_for_positional();
+        m_formatter_class._get_help_string = value._get_help_string();
+        m_formatter_class._split_lines = value._split_lines();
     }
 
 public:
@@ -5989,7 +6003,7 @@ public:
           m_handle(nullptr),
           m_parse_handle(nullptr)
     {
-        apply_formatter_class(HelpFormatter());
+        set_formatter_class(HelpFormatter());
         this->prog(prog);
         m_data.update_help(true, m_prefix_chars);
     }
@@ -6243,7 +6257,7 @@ public:
     inline ArgumentParser&
     formatter_class(HelpFormatter const& value)
     {
-        apply_formatter_class(value, true);
+        set_formatter_class(value);
         return *this;
     }
 
