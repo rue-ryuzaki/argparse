@@ -543,51 +543,51 @@ _get_terminal_size(bool default_values = false)
 }
 
 inline void
-_ltrim(std::string& s)
+_ltrim(std::string& str)
 {
-    s.erase(std::begin(s),
-            std::find_if(std::begin(s), std::end(s),
-                         [] (unsigned char c) { return !std::isspace(c); }));
+    str.erase(std::begin(str),
+              std::find_if(std::begin(str), std::end(str),
+                           [] (unsigned char c) { return !std::isspace(c); }));
 }
 
 inline void
-_rtrim(std::string& s)
+_rtrim(std::string& str)
 {
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-                         [] (unsigned char c)
-    { return !std::isspace(c); }).base(), s.end());
+    str.erase(std::find_if(str.rbegin(), str.rend(),
+                           [] (unsigned char c)
+    { return !std::isspace(c); }).base(), str.end());
 }
 
 inline void
-_trim(std::string& s)
+_trim(std::string& str)
 {
-    _ltrim(s);
-    _rtrim(s);
+    _ltrim(str);
+    _rtrim(str);
 }
 
 inline std::string
-_trim_copy(std::string s)
+_trim_copy(std::string str)
 {
-    _trim(s);
-    return s;
+    _trim(str);
+    return str;
 }
 
 inline std::string
-_to_lower(std::string s)
+_to_lower(std::string str)
 {
-    std::transform(std::begin(s), std::end(s), std::begin(s),
+    std::transform(std::begin(str), std::end(str), std::begin(str),
                    [] (unsigned char c)
     { return static_cast<char>(std::tolower(c)); });
-    return s;
+    return str;
 }
 
 inline std::string
-_to_upper(std::string s)
+_to_upper(std::string str)
 {
-    std::transform(std::begin(s), std::end(s), std::begin(s),
+    std::transform(std::begin(str), std::end(str), std::begin(str),
                    [] (unsigned char c)
     { return static_cast<char>(std::toupper(c)); });
-    return s;
+    return str;
 }
 
 inline std::string
@@ -608,9 +608,9 @@ _have_quotes(std::string const& str)
 }
 
 inline void
-_resolve_conflict(std::string const& s, std::vector<std::string>& values)
+_resolve_conflict(std::string const& str, std::vector<std::string>& values)
 {
-    auto it = std::find(std::begin(values), std::end(values), s);
+    auto it = std::find(std::begin(values), std::end(values), str);
     if (it != std::end(values)) {
         values.erase(it);
     }
@@ -620,16 +620,16 @@ inline void
 _resolve_conflict(std::vector<std::string> const& vec,
                   std::vector<std::string>& values)
 {
-    for (auto const& s : vec) {
-        _resolve_conflict(s, values);
+    for (auto const& str : vec) {
+        _resolve_conflict(str, values);
     }
 }
 
 template <class T = std::string>
 typename std::enable_if<std::is_constructible<std::string, T>::value, T>::type
-_remove_quotes(std::string const& s)
+_remove_quotes(std::string const& str)
 {
-    return _have_quotes(s) ? T(s).substr(1, s.size() - 2) : T(s);
+    return _have_quotes(str) ? T(str).substr(1, str.size() - 2) : T(str);
 }
 
 inline bool
@@ -641,33 +641,33 @@ _contains_substr(std::string const& str, std::string const& substr)
 }
 
 inline std::string
-_replace(std::string s, char old, std::string const& value)
+_replace(std::string str, char old, std::string const& value)
 {
-    auto pos = s.find(old);
+    auto pos = str.find(old);
     while (pos != std::string::npos) {
-        s.replace(pos, 1, value);
-        pos = s.find(old, pos + value.size());
+        str.replace(pos, 1, value);
+        pos = str.find(old, pos + value.size());
     }
-    return s;
+    return str;
 }
 
 inline std::string
-_replace(std::string s, std::string const& old, std::string const& value)
+_replace(std::string str, std::string const& old, std::string const& value)
 {
-    auto pos = s.find(old);
+    auto pos = str.find(old);
     while (pos != std::string::npos) {
-        s.replace(pos, old.length(), value);
-        pos = s.find(old, pos + value.size());
+        str.replace(pos, old.length(), value);
+        pos = str.find(old, pos + value.size());
     }
-    return s;
+    return str;
 }
 
 inline std::string
-_replace(std::string const& s,
+_replace(std::string const& str,
          std::function<bool(unsigned char)> func, std::string const& value)
 {
     std::string res;
-    for (auto c : s) {
+    for (auto c : str) {
         if (func(static_cast<unsigned char>(c))) {
             res += value;
         } else {
@@ -678,22 +678,22 @@ _replace(std::string const& s,
 }
 
 inline std::string
-_format_name(std::string const& s)
+_format_name(std::string const& str)
 {
-    auto res = _replace(s, [] (unsigned char c) { return std::iscntrl(c)
-                                                   || std::isspace(c); }, "");
+    auto res = _replace(str, [] (unsigned char c) { return std::iscntrl(c)
+                                                    || std::isspace(c); }, "");
     _trim(res);
     res = _replace(res, [] (unsigned char c) { return std::isblank(c); }, "_");
     return res;
 }
 
 inline bool
-_starts_with(std::string const& s, std::string const& value)
+_starts_with(std::string const& str, std::string const& value)
 {
 #if __cplusplus >= 202002L  // C++20+
-    return s.starts_with(value);
+    return str.starts_with(value);
 #else
-    return s.compare(0, value.size(), value) == 0;
+    return str.compare(0, value.size(), value) == 0;
 #endif  // C++20+
 }
 
@@ -906,30 +906,30 @@ _split_whitespace(std::string const& str, bool force = false)
 }
 
 inline std::pair<std::string, std::string>
-_split_delimiter(std::string const& s, char delim)
+_split_delimiter(std::string const& str, char delim)
 {
-    auto pos = s.find(delim);
+    auto pos = str.find(delim);
     if (pos != std::string::npos) {
-        return std::make_pair(s.substr(0, pos), s.substr(pos + 1));
+        return std::make_pair(str.substr(0, pos), str.substr(pos + 1));
     } else {
-        return std::make_pair(s, std::string());
+        return std::make_pair(str, std::string());
     }
 }
 
 inline std::vector<std::string>
-_split_equal(std::string const& s, std::string const& prefix)
+_split_equal(std::string const& str, std::string const& prefix)
 {
     auto pos = _is_value_exists(_equal, prefix)
-            ? s.find(_equal, static_cast<std::string::size_type>(
-                         std::distance(std::begin(s),
-                                       std::find_if(std::begin(s), std::end(s),
-                                                    [] (char c)
+            ? str.find(_equal, static_cast<std::string::size_type>(
+                         std::distance(std::begin(str),
+                                       std::find_if(std::begin(str),
+                                                    std::end(str), [] (char c)
     { return c != _equal; }))))
-            : s.find(_equal);
+            : str.find(_equal);
     if (pos != std::string::npos) {
-        return { s.substr(0, pos), s.substr(pos + 1) };
+        return { str.substr(0, pos), str.substr(pos + 1) };
     } else {
-        return { s };
+        return { str };
     }
 }
 
@@ -1915,17 +1915,17 @@ public:
         if (!(action() & detail::_store_action)) {
             throw TypeError("got an unexpected keyword argument 'nargs'");
         }
-        auto param = detail::_trim_copy(value);
-        if (param == "?") {
+        auto val = detail::_trim_copy(value);
+        if (val == "?") {
             m_nargs = ZERO_OR_ONE;
-        } else if (param == "*") {
+        } else if (val == "*") {
             m_nargs = ZERO_OR_MORE;
-        } else if (param == "+") {
+        } else if (val == "+") {
             m_nargs = ONE_OR_MORE;
         } else {
-            throw ValueError("invalid nargs value '" + param + "'");
+            throw ValueError("invalid nargs value '" + val + "'");
         }
-        m_nargs_str = std::move(param);
+        m_nargs_str = std::move(val);
         m_num_args = 1;
         return *this;
     }
@@ -2187,9 +2187,9 @@ public:
         std::vector<std::string> values;
         values.reserve(value.size());
         for (auto const& str : value) {
-            auto param = detail::_trim_copy(str);
-            if (!param.empty()) {
-                values.emplace_back(std::move(param));
+            auto val = detail::_trim_copy(str);
+            if (!val.empty()) {
+                values.emplace_back(std::move(val));
             }
         }
         m_choices = std::move(values);
@@ -2264,19 +2264,19 @@ public:
     /*!
      *  \brief Set argument 'metavar' value
      *
-     *  \param value Metavar value
+     *  \param value Metavar values
      *
      *  \return Current argument reference
      */
-    inline Argument& metavar(std::vector<std::string> const& values)
+    inline Argument& metavar(std::vector<std::string> const& value)
     {
         if (!(action() & (detail::_store_const_action
                           | Action::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'metavar'");
         }
-        auto _values = values;
-        for (auto& value : _values) {
-            detail::_trim(value);
+        auto _values = value;
+        for (auto& val : _values) {
+            detail::_trim(val);
         }
         m_metavar = std::move(_values);
         return *this;
@@ -3543,13 +3543,13 @@ public:
     /*!
      *  \brief Set argument group 'description' value
      *
-     *  \param param Description value
+     *  \param value Description value
      *
      *  \return Current argument group reference
      */
-    inline ArgumentGroup& description(std::string const& param)
+    inline ArgumentGroup& description(std::string const& value)
     {
-        m_description = detail::_trim_copy(param);
+        m_description = detail::_trim_copy(value);
         return *this;
     }
 
@@ -5660,13 +5660,13 @@ public:
         /*!
          *  \brief Set subparser 'description' value
          *
-         *  \param param Description value
+         *  \param value Description value
          *
          *  \return Current subparser reference
          */
-        inline Subparser& description(std::string const& param)
+        inline Subparser& description(std::string const& value)
         {
-            m_description = detail::_trim_copy(param);
+            m_description = detail::_trim_copy(value);
             return *this;
         }
 
@@ -5920,37 +5920,37 @@ private:
     typedef std::pair<std::shared_ptr<Subparser>, std::size_t> SubparserInfo;
 
     inline void
-    apply_formatter_class(HelpFormatter const& param, bool force = false)
+    apply_formatter_class(HelpFormatter const& value, bool force = false)
     {
         HelpFormatter sample;
         if (!m_formatter_class._fill_text
                 || force
-                || sample._fill_text() != param._fill_text()) {
-            m_formatter_class._fill_text = param._fill_text();
+                || sample._fill_text() != value._fill_text()) {
+            m_formatter_class._fill_text = value._fill_text();
         }
         if (!m_formatter_class._get_default_metavar_for_optional
                 || force
                 || sample._get_default_metavar_for_optional()
-                    != param._get_default_metavar_for_optional()) {
+                    != value._get_default_metavar_for_optional()) {
             m_formatter_class._get_default_metavar_for_optional
-                    =  param._get_default_metavar_for_optional();
+                    =  value._get_default_metavar_for_optional();
         }
         if (!m_formatter_class._get_default_metavar_for_positional
                 || force
                 || sample._get_default_metavar_for_positional()
-                    != param._get_default_metavar_for_positional()) {
+                    != value._get_default_metavar_for_positional()) {
             m_formatter_class._get_default_metavar_for_positional
-                    = param._get_default_metavar_for_positional();
+                    = value._get_default_metavar_for_positional();
         }
         if (!m_formatter_class._get_help_string
                 || force
-                || sample._get_help_string() != param._get_help_string()) {
-            m_formatter_class._get_help_string = param._get_help_string();
+                || sample._get_help_string() != value._get_help_string()) {
+            m_formatter_class._get_help_string = value._get_help_string();
         }
         if (!m_formatter_class._split_lines
                 || force
-                || sample._split_lines() != param._split_lines()) {
-            m_formatter_class._split_lines = param._split_lines();
+                || sample._split_lines() != value._split_lines()) {
+            m_formatter_class._split_lines = value._split_lines();
         }
     }
 
@@ -6081,15 +6081,15 @@ public:
     /*!
      *  \brief Set argument parser 'prog' value (default: argv[0] or "untitled")
      *
-     *  \param param Program name
+     *  \param value Program name
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& prog(std::string const& param)
+    inline ArgumentParser& prog(std::string const& value)
     {
-        auto value = detail::_trim_copy(param);
-        if (!value.empty()) {
-            m_prog = value;
+        auto val = detail::_trim_copy(value);
+        if (!val.empty()) {
+            m_prog = val;
             if (m_subparsers) {
                 m_subparsers->update_prog(prog(), subparser_prog_args());
             }
@@ -6100,39 +6100,39 @@ public:
     /*!
      *  \brief Set argument parser 'usage' value
      *
-     *  \param param Usage value
+     *  \param value Usage value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& usage(std::string const& param)
+    inline ArgumentParser& usage(std::string const& value)
     {
-        m_usage = detail::_trim_copy(param);
+        m_usage = detail::_trim_copy(value);
         return *this;
     }
 
     /*!
      *  \brief Set argument parser 'description' value
      *
-     *  \param param Description value
+     *  \param value Description value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& description(std::string const& param)
+    inline ArgumentParser& description(std::string const& value)
     {
-        m_description = param;
+        m_description = value;
         return *this;
     }
 
     /*!
      *  \brief Set argument parser 'epilog' value
      *
-     *  \param param Epilog value
+     *  \param value Epilog value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& epilog(std::string const& param)
+    inline ArgumentParser& epilog(std::string const& value)
     {
-        m_epilog = param;
+        m_epilog = value;
         return *this;
     }
 
@@ -6152,7 +6152,7 @@ public:
     /*!
      *  \brief Set argument parser 'aliases' value (for subparsers)
      *
-     *  \param values Aliases value
+     *  \param value Aliases values
      *
      *  \return Current argument parser reference
      */
@@ -6160,10 +6160,10 @@ public:
     {
         m_aliases.clear();
         auto values = value;
-        for (auto& v : values) {
-            v = detail::_format_name(v);
-            if (!v.empty()) {
-                m_aliases.push_back(v);
+        for (auto& val : values) {
+            val = detail::_format_name(val);
+            if (!val.empty()) {
+                m_aliases.push_back(val);
             }
         }
         return *this;
@@ -6172,27 +6172,27 @@ public:
     /*!
      *  \brief Set argument parser 'aliases' value (for subparsers)
      *
-     *  \param param First value
+     *  \param value First value
      *  \param args Other values
      *
      *  \return Current argument parser reference
      */
     template <class... Args>
-    ArgumentParser& aliases(std::string const& param, Args... args)
+    ArgumentParser& aliases(std::string const& value, Args... args)
     {
-        return aliases(std::vector<std::string>{ param, args... });
+        return aliases(std::vector<std::string>{ value, args... });
     }
 
     /*!
      *  \brief Set argument parser 'parents' value
      *
-     *  \param param Parents values
+     *  \param value Parents values
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& parents(std::vector<ArgumentParser> const& param)
+    inline ArgumentParser& parents(std::vector<ArgumentParser> const& value)
     {
-        for (auto const& parent : param) {
+        for (auto const& parent : value) {
             if (this == &parent) {
                 continue;
             }
@@ -6222,89 +6222,89 @@ public:
     /*!
      *  \brief Set argument parser 'parents' value
      *
-     *  \param param Parent value
+     *  \param value Parent value
      *  \param args Parents values
      *
      *  \return Current argument parser reference
      */
     template <class... Args>
-    ArgumentParser& parents(ArgumentParser const& param, Args... args)
+    ArgumentParser& parents(ArgumentParser const& value, Args... args)
     {
-        return parents(std::vector<ArgumentParser>{ param, args... });
+        return parents(std::vector<ArgumentParser>{ value, args... });
     }
 
     /*!
      *  \brief Set argument parser 'formatter_class' value
      *
-     *  \param param HelpFormatter value
+     *  \param value HelpFormatter value
      *
      *  \return Current argument parser reference
      */
     inline ArgumentParser&
-    formatter_class(HelpFormatter const& param)
+    formatter_class(HelpFormatter const& value)
     {
-        apply_formatter_class(param, true);
+        apply_formatter_class(value, true);
         return *this;
     }
 
     /*!
      *  \brief Set argument parser 'formatter_class' value
      *
-     *  \param param HelpFormatter value
+     *  \param value HelpFormatter value
      *  \param args HelpFormatter values
      *
      *  \return Current argument parser reference
      */
     template <class... Args>
     ArgumentParser&
-    formatter_class(HelpFormatter const& param, Args... args)
+    formatter_class(HelpFormatter const& value, Args... args)
     {
-        formatter_class(param);
+        formatter_class(value);
         return add_formatter_class(args...);
     }
 
     /*!
      *  \brief Add argument parser 'formatter_class' value
      *
-     *  \param param HelpFormatter value
+     *  \param value HelpFormatter value
      *
      *  \return Current argument parser reference
      */
     inline ArgumentParser&
-    add_formatter_class(HelpFormatter const& param)
+    add_formatter_class(HelpFormatter const& value)
     {
-        apply_formatter_class(param);
+        apply_formatter_class(value);
         return *this;
     }
 
     /*!
      *  \brief Add argument parser 'formatter_class' value
      *
-     *  \param param HelpFormatter value
+     *  \param value HelpFormatter value
      *  \param args HelpFormatter values
      *
      *  \return Current argument parser reference
      */
     template <class... Args>
     ArgumentParser&
-    add_formatter_class(HelpFormatter const& param, Args... args)
+    add_formatter_class(HelpFormatter const& value, Args... args)
     {
-        add_formatter_class(param);
+        add_formatter_class(value);
         return add_formatter_class(args...);
     }
 
     /*!
      *  \brief Set argument parser 'prefix_chars' value (default: "-")
      *
-     *  \param param Prefix chars values
+     *  \param value Prefix chars values
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& prefix_chars(std::string const& param)
+    inline ArgumentParser& prefix_chars(std::string const& value)
     {
-        auto value = detail::_trim_copy(param);
-        if (!value.empty()) {
-            m_prefix_chars = std::move(value);
+        auto val = detail::_trim_copy(value);
+        if (!val.empty()) {
+            m_prefix_chars = std::move(val);
             m_data.update_help(m_data.m_add_help, m_prefix_chars);
         }
         return *this;
@@ -6313,26 +6313,26 @@ public:
     /*!
      *  \brief Set argument parser 'fromfile_prefix_chars' value
      *
-     *  \param param Fromfile prefix chars values
+     *  \param value Fromfile prefix chars values
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& fromfile_prefix_chars(std::string const& param)
+    inline ArgumentParser& fromfile_prefix_chars(std::string const& value)
     {
-        m_fromfile_prefix_chars = detail::_trim_copy(param);
+        m_fromfile_prefix_chars = detail::_trim_copy(value);
         return *this;
     }
 
     /*!
      *  \brief Set argument parser 'argument_default' value
      *
-     *  \param param Argument default value
+     *  \param value Argument default value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& argument_default(std::string const& param)
+    inline ArgumentParser& argument_default(std::string const& value)
     {
-        m_argument_default = detail::_trim_copy(param);
+        m_argument_default = detail::_trim_copy(value);
         return *this;
     }
 
@@ -6356,17 +6356,17 @@ public:
     /*!
      *  \brief Set argument parser 'conflict_handler' value
      *
-     *  \param param Argument default value
+     *  \param value Argument default value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& conflict_handler(std::string const& param)
+    inline ArgumentParser& conflict_handler(std::string const& value)
     {
-        if (param != "resolve") {
+        if (value != "resolve") {
             throw AttributeError("'ArgumentParser' object has no attribute "
-                                 "'_handle_conflict_" + param + "'");
+                                 "'_handle_conflict_" + value + "'");
         }
-        m_data.m_conflict_handler = param;
+        m_data.m_conflict_handler = value;
         return *this;
     }
 
