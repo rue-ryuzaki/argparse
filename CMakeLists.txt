@@ -72,5 +72,17 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     include(CPack)
 endif()
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    include(GNUInstallDirs)
+
+    target_include_directories(
+        argparse INTERFACE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
+
+    install(FILES ${ARGPARSE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
+endif()
+
 enable_testing()
 add_subdirectory(test)
