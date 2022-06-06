@@ -562,8 +562,8 @@ _get_terminal_size(bool default_values = false)
 inline void
 _ltrim(std::string& str)
 {
-    str.erase(std::begin(str),
-              std::find_if(std::begin(str), std::end(str),
+    str.erase(str.begin(),
+              std::find_if(str.begin(), str.end(),
                            [] (unsigned char c) { return !std::isspace(c); }));
 }
 
@@ -593,7 +593,7 @@ _trim_copy(std::string const& str)
 inline std::string
 _to_lower(std::string str)
 {
-    std::transform(std::begin(str), std::end(str), std::begin(str),
+    std::transform(str.begin(), str.end(), str.begin(),
                    [] (unsigned char c)
     { return static_cast<char>(std::tolower(c)); });
     return str;
@@ -602,7 +602,7 @@ _to_lower(std::string str)
 inline std::string
 _to_upper(std::string str)
 {
-    std::transform(std::begin(str), std::end(str), std::begin(str),
+    std::transform(str.begin(), str.end(), str.begin(),
                    [] (unsigned char c)
     { return static_cast<char>(std::toupper(c)); });
     return str;
@@ -628,8 +628,8 @@ _have_quotes(std::string const& str)
 inline void
 _resolve_conflict(std::string const& str, std::vector<std::string>& values)
 {
-    auto it = std::find(std::begin(values), std::end(values), str);
-    if (it != std::end(values)) {
+    auto it = std::find(values.begin(), values.end(), str);
+    if (it != values.end()) {
         values.erase(it);
     }
 }
@@ -719,14 +719,14 @@ template <class T>
 bool
 _is_value_exists(T const& value, std::vector<T> const& vec)
 {
-    return std::any_of(std::begin(vec), std::end(vec),
+    return std::any_of(vec.begin(), vec.end(),
                        [&value] (T const& el) { return el == value; });
 }
 
 inline bool
 _is_value_exists(char value, std::string const& str)
 {
-    return std::any_of(std::begin(str), std::end(str),
+    return std::any_of(str.begin(), str.end(),
                        [&value] (char el) { return el == value; });
 }
 
@@ -735,7 +735,7 @@ void
 _insert_vector_to_end(std::deque<T> const& from, std::deque<T>& to)
 {
     if (!from.empty()) {
-        to.insert(std::end(to), std::begin(from), std::end(from));
+        to.insert(to.end(), from.begin(), from.end());
     }
 }
 
@@ -744,7 +744,7 @@ void
 _insert_vector_to_end(std::deque<T> const& from, std::vector<T>& to)
 {
     if (!from.empty()) {
-        to.insert(std::end(to), std::begin(from), std::end(from));
+        to.insert(to.end(), from.begin(), from.end());
     }
 }
 
@@ -753,7 +753,7 @@ void
 _insert_vector_to_end(std::vector<T> const& from, std::vector<T>& to)
 {
     if (!from.empty()) {
-        to.insert(std::end(to), std::begin(from), std::end(from));
+        to.insert(to.end(), from.begin(), from.end());
     }
 }
 
@@ -762,9 +762,9 @@ void
 _move_vector_insert_to_end(std::deque<T>& from, std::vector<T>& to)
 {
     if (!from.empty()) {
-        to.insert(std::end(to),
-                  std::make_move_iterator(std::begin(from)),
-                  std::make_move_iterator(std::end(from)));
+        to.insert(to.end(),
+                  std::make_move_iterator(from.begin()),
+                  std::make_move_iterator(from.end()));
     }
 }
 
@@ -773,9 +773,9 @@ void
 _move_vector_insert_to_end(std::vector<T>& from, std::vector<T>& to)
 {
     if (!from.empty()) {
-        to.insert(std::end(to),
-                  std::make_move_iterator(std::begin(from)),
-                  std::make_move_iterator(std::end(from)));
+        to.insert(to.end(),
+                  std::make_move_iterator(from.begin()),
+                  std::make_move_iterator(from.end()));
     }
 }
 
@@ -785,9 +785,9 @@ _move_vector_insert_to(std::vector<T>& from, std::vector<T>& to, std::size_t i)
 {
     if (!from.empty()) {
         using dtype = typename std::vector<T>::difference_type;
-        to.insert(std::next(std::begin(to), static_cast<dtype>(i)),
-                  std::make_move_iterator(std::begin(from)),
-                  std::make_move_iterator(std::end(from)));
+        to.insert(std::next(to.begin(), static_cast<dtype>(i)),
+                  std::make_move_iterator(from.begin()),
+                  std::make_move_iterator(from.end()));
     }
 }
 
@@ -796,10 +796,10 @@ void
 _move_vector_replace_at(std::vector<T>& from, std::vector<T>& to, std::size_t i)
 {
     using dtype = typename std::vector<T>::difference_type;
-    to.erase(std::next(std::begin(to), static_cast<dtype>(i)));
-    to.insert(std::next(std::begin(to), static_cast<dtype>(i)),
-              std::make_move_iterator(std::begin(from)),
-              std::make_move_iterator(std::end(from)));
+    to.erase(std::next(to.begin(), static_cast<dtype>(i)));
+    to.insert(std::next(to.begin(), static_cast<dtype>(i)),
+              std::make_move_iterator(from.begin()),
+              std::make_move_iterator(from.end()));
 }
 
 inline std::string
@@ -807,8 +807,8 @@ _flag_name(std::string const& str)
 {
     auto res = str;
     auto prefix = res.front();
-    res.erase(std::begin(res),
-              std::find_if(std::begin(res), std::end(res),
+    res.erase(res.begin(),
+              std::find_if(res.begin(), res.end(),
                            [prefix] (char c) { return c != prefix; }));
     return res;
 }
@@ -858,13 +858,13 @@ _make_no_flag(std::string const& str)
 {
     auto res = str;
     auto prefix = res.front();
-    auto it = std::find_if(std::begin(res), std::end(res),
+    auto it = std::find_if(res.begin(), res.end(),
                            [prefix] (char c) { return c != prefix; });
-    if (it == std::end(res)) {
+    if (it == res.end()) {
         throw ValueError("can't create no- boolean option");
     }
     res.insert(static_cast<std::string::size_type>(
-                   std::distance(std::begin(res), it)), "no-");
+                   std::distance(res.begin(), it)), "no-");
     return res;
 }
 
@@ -941,9 +941,9 @@ _split_equal(std::string const& str, std::string const& prefix)
 {
     auto pos = _is_value_exists(_equal, prefix)
             ? str.find(_equal, static_cast<std::string::size_type>(
-                         std::distance(std::begin(str),
-                                       std::find_if(std::begin(str),
-                                                    std::end(str), [] (char c)
+                         std::distance(str.begin(),
+                                       std::find_if(str.begin(),
+                                                    str.end(), [] (char c)
     { return c != _equal; }))))
             : str.find(_equal);
     if (pos != std::string::npos) {
@@ -2180,8 +2180,7 @@ public:
         }
         std::vector<std::string> values;
         values.reserve(value.size());
-        std::transform(std::begin(value), std::end(value),
-                       std::back_inserter(values),
+        std::transform(value.begin(), value.end(), std::back_inserter(values),
                        [] (char c) { return std::string(1, c); });
         m_choices = std::move(values);
         return *this;
@@ -2508,7 +2507,7 @@ private:
         if (m_type == Positional && m_flags.empty() && dest().empty()) {
             throw TypeError("missing 1 required positional argument: 'dest'");
         }
-        if (std::any_of(std::begin(m_flags), std::end(m_flags),
+        if (std::any_of(m_flags.begin(), m_flags.end(),
                         [] (std::string const& flag)
         { return flag == detail::_pseudo_arg; }) && dest().empty()) {
             throw ValueError("dest= is required for options like '--'");
@@ -3210,8 +3209,8 @@ protected:
         {
             std::vector<std::string> conflict_options;
             for (auto const& flag : arg->flags()) {
-                auto it = std::find(std::begin(flags), std::end(flags), flag);
-                if (it != std::end(flags)) {
+                auto it = std::find(flags.begin(), flags.end(), flag);
+                if (it != flags.end()) {
                     if (m_conflict_handler == "resolve") {
                         flags.erase(it);
                     } else {
@@ -3849,8 +3848,7 @@ _ARGPARSE_EXPORT class Namespace
             {
                 m_exists = true;
                 m_values.reserve(m_values.size() + values.size());
-                m_values.insert(std::end(m_values),
-                                std::begin(values), std::end(values));
+                m_values.insert(m_values.end(), values.begin(), values.end());
                 m_matrix.push_back(values);
             }
 
@@ -4017,25 +4015,25 @@ _ARGPARSE_EXPORT class Namespace
         inline bool exists_arg(std::string const& key) const
         {
             auto it = find_arg(key);
-            return it != std::end(m_data);
+            return it != end();
         }
 
         inline bool exists(std::string const& key) const
         {
             auto it = find(key);
-            return it != std::end(m_data);
+            return it != end();
         }
 
         inline bool exists(key_type const& key) const
         {
             auto it = find(key);
-            return it != std::end(m_data);
+            return it != end();
         }
 
         inline value_type const& at(std::string const& key) const
         {
             auto it = find(key);
-            if (it == std::end(m_data)) {
+            if (it == end()) {
                 throw std::logic_error("key '" + key + "' not found");
             }
             return *it;
@@ -4044,7 +4042,7 @@ _ARGPARSE_EXPORT class Namespace
         inline mapped_type& at(key_type const& key)
         {
             auto it = find(key);
-            if (it == std::end(m_data)) {
+            if (it == end()) {
                 throw std::logic_error("key '" + key->m_name + "' not found");
             }
             return it->second;
@@ -4053,20 +4051,20 @@ _ARGPARSE_EXPORT class Namespace
         inline mapped_type const& at(key_type const& key) const
         {
             auto it = find(key);
-            if (it == std::end(m_data)) {
+            if (it == end()) {
                 throw std::logic_error("key '" + key->m_name + "' not found");
             }
             return it->second;
         }
 
-        inline iterator erase(iterator i)         { return m_data.erase(i); }
+        inline iterator erase(iterator i)          { return m_data.erase(i); }
 
-        inline iterator begin()_ARGPARSE_NOEXCEPT { return std::begin(m_data); }
-        inline iterator end()  _ARGPARSE_NOEXCEPT { return std::end(m_data); }
+        inline iterator begin() _ARGPARSE_NOEXCEPT { return m_data.begin(); }
+        inline iterator end()   _ARGPARSE_NOEXCEPT { return m_data.end(); }
         inline const_iterator
-        begin()          const _ARGPARSE_NOEXCEPT { return std::begin(m_data); }
+        begin()          const  _ARGPARSE_NOEXCEPT { return m_data.begin(); }
         inline const_iterator
-        end()            const _ARGPARSE_NOEXCEPT { return std::end(m_data); }
+        end()            const  _ARGPARSE_NOEXCEPT { return m_data.end(); }
 
     private:
         inline const_iterator find_arg(std::string const& key) const
@@ -4078,8 +4076,8 @@ _ARGPARSE_EXPORT class Namespace
             for (it = begin(); it != end(); ++it) {
                 if (it->first->m_type == Argument::Optional
                         && it->first->dest().empty()) {
-                    if (std::any_of(std::begin(it->first->m_flags),
-                                    std::end(it->first->m_flags),
+                    if (std::any_of(it->first->m_flags.begin(),
+                                    it->first->m_flags.end(),
                                     [&key] (std::string const& flag)
                     { return detail::_flag_name(flag) == key; })) {
                         return it;
@@ -4091,22 +4089,19 @@ _ARGPARSE_EXPORT class Namespace
 
         inline const_iterator find(std::string const& key) const
         {
-            return std::find_if(std::begin(m_data), std::end(m_data),
-                                [&key] (value_type const& pair)
+            return std::find_if(begin(), end(), [&key] (value_type const& pair)
             { return *(pair.first) == key; });
         }
 
         inline const_iterator find(key_type const& key) const
         {
-            return std::find_if(std::begin(m_data), std::end(m_data),
-                                [&key] (value_type const& pair)
+            return std::find_if(begin(), end(), [&key] (value_type const& pair)
             { return pair.first == key; });
         }
 
         inline iterator find(key_type const& key)
         {
-            return std::find_if(std::begin(m_data), std::end(m_data),
-                                [&key] (value_type const& pair)
+            return std::find_if(begin(), end(), [&key] (value_type const& pair)
             { return pair.first == key; });
         }
 
@@ -4262,7 +4257,7 @@ public:
         if (size > vector.size()) {
             size = vector.size();
         }
-        std::copy_n(std::begin(vector), size, std::begin(res));
+        std::copy_n(vector.begin(), size, res.begin());
         return res;
     }
 
@@ -4290,7 +4285,7 @@ public:
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
-        return T(std::begin(vector), std::end(vector));
+        return T(vector.begin(), vector.end());
     }
 
     /*!
@@ -4316,7 +4311,7 @@ public:
         auto vector = to_paired_vector<
                 typename T::value_type::first_type,
                 typename T::value_type::second_type>(args.second(), delim);
-        return T(std::begin(vector), std::end(vector));
+        return T(vector.begin(), vector.end());
     }
 
     /*!
@@ -4341,7 +4336,7 @@ public:
         }
         auto vector = to_tupled_vector<
                 typename T::value_type>(args.second(), delim);
-        return T(std::begin(vector), std::end(vector));
+        return T(vector.begin(), vector.end());
     }
 
     /*!
@@ -4398,8 +4393,7 @@ public:
         T res{};
         for (auto const& vec : args.second.matrix()) {
             auto vector = to_vector<typename T::value_type::value_type>(vec);
-            res.push_back(typename T::value_type(std::begin(vector),
-                                                 std::end(vector)));
+            res.push_back(typename T::value_type(vector.begin(), vector.end()));
         }
         return res;
     }
@@ -4431,7 +4425,7 @@ public:
             auto vector = to_vector<typename T::value_type::value_type>(vec);
             res.push_back(typename T::value_type(
                               std::deque<typename T::value_type::value_type>(
-                                  std::begin(vector), std::end(vector))));
+                                  vector.begin(), vector.end())));
         }
         return res;
     }
@@ -4494,8 +4488,8 @@ public:
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
-        return T(std::deque<typename T::value_type>(std::begin(vector),
-                                                    std::end(vector)));
+        return T(std::deque<typename T::value_type>(vector.begin(),
+                                                    vector.end()));
     }
 
     /*!
@@ -4798,7 +4792,7 @@ public:
         if (size > vector->size()) {
             size = vector->size();
         }
-        std::copy_n(std::begin(vector.value()), size, std::begin(res));
+        std::copy_n(vector.value().begin(), size, res.begin());
         return res;
     }
 
@@ -4835,7 +4829,7 @@ public:
         if (!vector.operator bool()) {
             return {};
         }
-        return T(std::begin(vector.value()), std::end(vector.value()));
+        return T(vector.value().begin(), vector.value().end());
     }
 
     /*!
@@ -4871,7 +4865,7 @@ public:
         if (!vector.operator bool()) {
             return {};
         }
-        return T(std::begin(vector.value()), std::end(vector.value()));
+        return T(vector.value().begin(), vector.value().end());
     }
 
     /*!
@@ -4905,7 +4899,7 @@ public:
         if (!vector.operator bool()) {
             return {};
         }
-        return T(std::begin(vector.value()), std::end(vector.value()));
+        return T(vector.value().begin(), vector.value().end());
     }
 
     /*!
@@ -4983,8 +4977,8 @@ public:
             if (!vector.operator bool()) {
                 return {};
             }
-            res.push_back(typename T::value_type(std::begin(vector.value()),
-                                                 std::end(vector.value())));
+            res.push_back(typename T::value_type(vector.value().begin(),
+                                                 vector.value().end()));
         }
         return res;
     }
@@ -5026,8 +5020,8 @@ public:
             }
             res.push_back(typename T::value_type(
                               std::deque<typename T::value_type::value_type>(
-                                  std::begin(vector.value()),
-                                  std::end(vector.value()))));
+                                  vector.value().begin(),
+                                  vector.value().end())));
         }
         return res;
     }
@@ -5107,8 +5101,8 @@ public:
         if (!vector.operator bool()) {
             return {};
         }
-        return T(std::deque<typename T::value_type>(std::begin(vector.value()),
-                                                    std::end(vector.value())));
+        return T(std::deque<typename T::value_type>(vector.value().begin(),
+                                                    vector.value().end()));
     }
 
     /*!
@@ -5323,8 +5317,7 @@ private:
             }
         } else {
             vec.reserve(args.size());
-            std::transform(std::begin(args), std::end(args),
-                           std::back_inserter(vec),
+            std::transform(args.begin(), args.end(), std::back_inserter(vec),
                            [this, delim] (std::string const& a)
             { return to_pair<T, U>(a, delim); });
         }
@@ -5336,8 +5329,8 @@ private:
     {
         std::vector<T> vec;
         vec.reserve(args.size());
-        std::transform(std::begin(args), std::end(args),
-                       std::back_inserter(vec), [this] (std::string const& arg)
+        std::transform(args.begin(), args.end(), std::back_inserter(vec),
+                       [this] (std::string const& arg)
         { return to_type<T>(arg); });
         return vec;
     }
@@ -5378,8 +5371,7 @@ private:
             }
         } else {
             vec.reserve(args.size());
-            std::transform(std::begin(args), std::end(args),
-                           std::back_inserter(vec),
+            std::transform(args.begin(), args.end(), std::back_inserter(vec),
                            [this, delim] (std::string const& a)
             { return to_tuple(detail::type_tag<T>{},
                               detail::_split(a, delim)); });
@@ -5909,7 +5901,7 @@ public:
                         help(),
                         width,
                         std::string(limit, detail::_space));
-            return std::accumulate(std::begin(m_parsers), std::end(m_parsers),
+            return std::accumulate(m_parsers.begin(), m_parsers.end(),
                                    res, [formatter, limit, width]
                                    (std::string const& str, pParser const& p)
             {
@@ -6751,10 +6743,10 @@ public:
     {
         auto const positional = m_data.get_positional(true, true);
         auto const optional = m_data.get_optional(true, true);
-        auto ip = std::find_if(std::begin(positional), std::end(positional),
+        auto ip = std::find_if(positional.begin(), positional.end(),
                                [&dest] (pArgument const& arg)
         { return detail::_is_value_exists(dest, arg->m_flags); });
-        if (ip != std::end(positional)) {
+        if (ip != positional.end()) {
             return (*ip)->m_default();
         }
         for (auto const& arg : optional) {
@@ -6778,10 +6770,10 @@ public:
             }
         }
         auto it = std::find_if(
-                    std::begin(m_default_values), std::end(m_default_values),
+                    m_default_values.begin(), m_default_values.end(),
                     [&dest] (std::pair<std::string, std::string> const& pair)
         { return pair.first == dest; });
-        return it != std::end(m_default_values) ? it->second : std::string();
+        return it != m_default_values.end() ? it->second : std::string();
     }
 
     /*!
@@ -7397,7 +7389,7 @@ private:
                                std::vector<pArgument> const& positional)
     {
         if (intermixed
-                && std::any_of(std::begin(positional), std::end(positional),
+                && std::any_of(positional.begin(), positional.end(),
                                [] (pArgument const& arg)
         { return arg->m_nargs == Argument::REMAINDER; })) {
             throw
@@ -7549,8 +7541,8 @@ private:
                             } else {
                                 std::vector<std::string> values;
                                 values.reserve(tmp->const_value().size());
-                                std::transform(std::begin(tmp->const_value()),
-                                               std::end(tmp->const_value()),
+                                std::transform(tmp->const_value().begin(),
+                                               tmp->const_value().end(),
                                                std::back_inserter(values),
                                                [] (char c)
                                 { return std::string(1, c); });
@@ -7915,9 +7907,9 @@ private:
                               finish, min_args, one_args, more_args);
         }
         if (!args.empty()) {
-            unrecognized_args.insert(std::end(unrecognized_args),
-                                     std::make_move_iterator(std::begin(args)),
-                                     std::make_move_iterator(std::end(args)));
+            unrecognized_args.insert(unrecognized_args.end(),
+                                     std::make_move_iterator(args.begin()),
+                                     std::make_move_iterator(args.end()));
         }
     }
 
@@ -8069,10 +8061,10 @@ private:
     optional_arg_by_flag(Parsers const& parsers, std::string const& key)
     {
         auto const& args = parsers.back().optional;
-        auto it = std::find_if(std::begin(args), std::end(args),
+        auto it = std::find_if(args.begin(), args.end(),
                                [&key] (pArgument const& arg)
         { return detail::_is_value_exists(key, arg->flags()); });
-        return it != std::end(args) ? *it : nullptr;
+        return it != args.end() ? *it : nullptr;
     }
 
     static pArgument const
@@ -8099,15 +8091,14 @@ private:
         }
         Argument const* argument = nullptr;
         for (auto const& opt : args) {
-            auto it = std::find_if(std::begin(opt->flags()),
-                                   std::end(opt->flags()),
+            auto it = std::find_if(opt->flags().begin(), opt->flags().end(),
                                    [&name, &arg, i] (std::string const& flag)
             {
                 return flag.size() == 2
                         && flag.back() == name.at(i)
                         && flag.front() == arg.front();
             });
-            if (it != std::end(opt->flags())) {
+            if (it != opt->flags().end()) {
                 flags.push_back(*it);
                 argument = opt.get();
                 break;
@@ -8153,9 +8144,9 @@ private:
                     break;
                 }
             }
-            temp.insert(std::end(temp),
-                        std::make_move_iterator(std::begin(flags)),
-                        std::make_move_iterator(std::end(flags)));
+            temp.insert(temp.end(),
+                        std::make_move_iterator(flags.begin()),
+                        std::make_move_iterator(flags.end()));
         } else {
             temp.push_back(arg);
         }
@@ -8503,9 +8494,8 @@ private:
         auto ex_opt = optional;
         for (auto const& ex : mutex_groups) {
             for (auto arg : ex.m_data.m_arguments) {
-                ex_opt.erase(std::remove(std::begin(ex_opt),
-                                         std::end(ex_opt), arg),
-                             std::end(ex_opt));
+                ex_opt.erase(std::remove(ex_opt.begin(), ex_opt.end(), arg),
+                             ex_opt.end());
             }
         }
         auto _arg_usage = [&res] (std::string const& str, bool required)
