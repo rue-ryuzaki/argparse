@@ -61,7 +61,6 @@
 #include <array>
 #include <cctype>
 #include <cstddef>
-#include <cstdint>
 #include <deque>
 #include <forward_list>
 #include <fstream>
@@ -87,6 +86,12 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#if __cplusplus >= _ARGPARSE_CXX_11
+#include <cstdint>
+#else
+#include <stdint.h>
+#endif  // C++11+
 
 #ifndef ARGPARSE_NO_AUTODETECT
 #if defined(_WIN32)
@@ -179,7 +184,10 @@ namespace argparse {
  *
  *  \enum Action
  */
-_ARGPARSE_EXPORT enum Action : std::uint16_t
+_ARGPARSE_EXPORT enum Action
+#if __cplusplus >= _ARGPARSE_CXX_11
+        : uint16_t
+#endif  // _ARGPARSE_CXX_11
 {
     store                   = 0x0001,
     store_const             = 0x0002,
@@ -318,13 +326,13 @@ char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equals[]         = "=";
 char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
-std::uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
-_bool_action = Action::store_true | Action::store_false;
-std::uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
-_store_action = Action::store | Action::append | Action::extend;
-std::uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
-_const_action = Action::store_const | Action::append_const;
-std::uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_bool_action = store_true | store_false;
+uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_store_action = store | append | extend;
+uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_const_action = store_const | append_const;
+uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
 
 template <class T> struct is_byte_type              { enum { value = false }; };
@@ -1453,14 +1461,22 @@ _check_type_name(Value<std::string> const& expected,
  *
  *  \enum _SUPPRESS
  */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _SUPPRESS : uint8_t {} SUPPRESS;
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _SUPPRESS
+#if __cplusplus >= _ARGPARSE_CXX_11
+        : uint8_t
+#endif  // _ARGPARSE_CXX_11
+{} SUPPRESS;
 
 /*!
  *  \brief Don't use this enum name! use argparse::REMAINDER value directly
  *
  *  \enum _REMAINDER
  */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _REMAINDER:uint8_t {} REMAINDER;
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _REMAINDER
+#if __cplusplus >= _ARGPARSE_CXX_11
+        : uint8_t
+#endif  // _ARGPARSE_CXX_11
+{} REMAINDER;
 
 /*!
  *  \brief Argument class
@@ -1477,7 +1493,10 @@ _ARGPARSE_EXPORT class Argument
     friend class MutuallyExclusiveGroup;
     friend class Namespace;
 
-    enum Nargs : std::uint8_t
+    enum Nargs
+#if __cplusplus >= _ARGPARSE_CXX_11
+            : uint8_t
+#endif  // _ARGPARSE_CXX_11
     {
         NARGS_DEF       = 0x01,  // ""
         NARGS_NUM       = 0x02,  // "N"
@@ -1487,7 +1506,10 @@ _ARGPARSE_EXPORT class Argument
         REMAINDER       = 0x20,  // argparse::REMAINDER
     };
 
-    enum Type : std::uint8_t
+    enum Type
+#if __cplusplus >= _ARGPARSE_CXX_11
+            : uint8_t
+#endif  // _ARGPARSE_CXX_11
     {
         NoType,
         Positional,
