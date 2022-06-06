@@ -53,10 +53,18 @@
 #define _ARGPARSE_VERSION_MINOR 6
 #define _ARGPARSE_VERSION_PATCH 1
 
-#define _ARGPARSE_CXX_11 201103L
-#define _ARGPARSE_CXX_14 201402L
-#define _ARGPARSE_CXX_17 201703L
-#define _ARGPARSE_CXX_20 202002L
+#if __cplusplus >= 201103L
+#define _ARGPARSE_CXX_11
+#endif  // C++11+
+#if __cplusplus >= 201402L
+#define _ARGPARSE_CXX_14
+#endif  // C++14+
+#if __cplusplus >= 201703L
+#define _ARGPARSE_CXX_17
+#endif  // C++17+
+#if __cplusplus >= 202002L
+#define _ARGPARSE_CXX_20
+#endif  // C++20+
 
 #include <algorithm>
 #include <array>
@@ -78,7 +86,7 @@
 #include <stack>
 #include <stdexcept>
 #include <string>
-#if __cplusplus >= _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_CXX_17
 #include <string_view>
 #endif  // C++17+
 #include <tuple>
@@ -88,7 +96,7 @@
 #include <utility>
 #include <vector>
 
-#if __cplusplus >= _ARGPARSE_CXX_11
+#ifdef _ARGPARSE_CXX_11
 #include <cstdint>
 #else
 #include <stdint.h>
@@ -129,7 +137,7 @@
 #endif  // ARGPARSE_NO_AUTODETECT
 
 // filesystem
-#if __cplusplus >= _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_CXX_17
 #if (defined(_MSC_VER) && _MSC_VER >= 1914) \
     || (defined(__clang__) && (__clang_major__ > 8)) \
     || (defined(__GNUC__) && (__GNUC__ > 8))
@@ -140,11 +148,11 @@
 #endif  // C++17+
 
 // optional
-#if __cplusplus >= _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_CXX_17
 #include <optional>
 
 #define _ARGPARSE_USE_OPTIONAL 1
-#elif __cplusplus >= _ARGPARSE_CXX_14
+#elif defined _ARGPARSE_CXX_14
 #if defined(__GNUC__) && (defined(__linux__) || !defined(__clang__))
 #include <experimental/optional>
 namespace std {
@@ -159,7 +167,7 @@ using experimental::fundamentals_v1::nullopt;
 
 #define _ARGPARSE_EXPORT
 
-#if __cplusplus >= _ARGPARSE_CXX_11
+#ifdef _ARGPARSE_CXX_11
 #define _ARGPARSE_CONSTEXPR constexpr
 #define _ARGPARSE_USE_CONSTEXPR constexpr
 #else
@@ -167,13 +175,13 @@ using experimental::fundamentals_v1::nullopt;
 #define _ARGPARSE_USE_CONSTEXPR const
 #endif  // C++11+
 
-#if __cplusplus >= _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_CXX_17
 #define _ARGPARSE_INLINE_VARIABLE inline
 #else
 #define _ARGPARSE_INLINE_VARIABLE static
 #endif  // C++17+
 
-#if __cplusplus >= _ARGPARSE_CXX_11
+#ifdef _ARGPARSE_CXX_11
 #define _ARGPARSE_NOEXCEPT noexcept
 #define _ARGPARSE_OVERRIDE override
 #else
@@ -188,7 +196,7 @@ namespace argparse {
  *  \enum Action
  */
 _ARGPARSE_EXPORT enum Action
-#if __cplusplus >= _ARGPARSE_CXX_11
+#ifdef _ARGPARSE_CXX_11
         : uint16_t
 #endif  // _ARGPARSE_CXX_11
 {
@@ -342,10 +350,10 @@ template <class T> struct is_byte_type              { enum { value = false }; };
 template <>        struct is_byte_type<char>         { enum { value = true }; };
 template <>        struct is_byte_type<signed char>  { enum { value = true }; };
 template <>        struct is_byte_type<unsigned char>{ enum { value = true }; };
-#if __cplusplus >= _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_CXX_17
 template <>        struct is_byte_type<std::byte>    { enum { value = true }; };
 #endif  // C++17+
-#if __cplusplus >= _ARGPARSE_CXX_20
+#ifdef _ARGPARSE_CXX_20
 template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
 #endif  // C++20+
 
@@ -719,7 +727,7 @@ _format_name(std::string const& str)
 inline bool
 _starts_with(std::string const& str, std::string const& value)
 {
-#if __cplusplus >= _ARGPARSE_CXX_20
+#ifdef _ARGPARSE_CXX_20
     return str.starts_with(value);
 #else
     return str.compare(0, value.size(), value) == 0;
@@ -1192,7 +1200,7 @@ class Type
 public:
     template <class T, typename std::enable_if<
                   std::is_same<std::string, T>::value
-#if __cplusplus >= _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_CXX_17
                   || std::is_same<std::string_view, T>::value
 #endif  // C++17+
                   || is_stl_pair<T>::value
@@ -1224,7 +1232,7 @@ public:
 
     template <class T, typename std::enable_if<
                   !std::is_same<std::string, T>::value
-#if __cplusplus >= _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_CXX_17
                   && !std::is_same<std::string_view, T>::value
 #endif  // C++17+
                   && !is_stl_array<T>::value
@@ -1240,7 +1248,7 @@ public:
     }
 
     template <class T, typename std::enable_if<
-#if __cplusplus >= _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_CXX_17
                   std::is_same<std::string_view, T>::value ||
 #endif  // C++17+
                   std::is_same<std::string, T>::value>::type* = nullptr>
@@ -1301,7 +1309,7 @@ public:
 
     template <class T, typename std::enable_if<
                   !std::is_same<std::string, T>::value
-#if __cplusplus >= _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_CXX_17
                   && !std::is_same<std::string_view, T>::value
 #endif  // C++17+
                   && !is_stl_array<T>::value
@@ -1465,7 +1473,7 @@ _check_type_name(Value<std::string> const& expected,
  *  \enum _SUPPRESS
  */
 _ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _SUPPRESS
-#if __cplusplus >= _ARGPARSE_CXX_11
+#ifdef _ARGPARSE_CXX_11
         : uint8_t
 #endif  // _ARGPARSE_CXX_11
 {} SUPPRESS;
@@ -1476,7 +1484,7 @@ _ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _SUPPRESS
  *  \enum _REMAINDER
  */
 _ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _REMAINDER
-#if __cplusplus >= _ARGPARSE_CXX_11
+#ifdef _ARGPARSE_CXX_11
         : uint8_t
 #endif  // _ARGPARSE_CXX_11
 {} REMAINDER;
@@ -1497,7 +1505,7 @@ _ARGPARSE_EXPORT class Argument
     friend class Namespace;
 
     enum Nargs
-#if __cplusplus >= _ARGPARSE_CXX_11
+#ifdef _ARGPARSE_CXX_11
             : uint8_t
 #endif  // _ARGPARSE_CXX_11
     {
@@ -1510,7 +1518,7 @@ _ARGPARSE_EXPORT class Argument
     };
 
     enum Type
-#if __cplusplus >= _ARGPARSE_CXX_11
+#ifdef _ARGPARSE_CXX_11
             : uint8_t
 #endif  // _ARGPARSE_CXX_11
     {
