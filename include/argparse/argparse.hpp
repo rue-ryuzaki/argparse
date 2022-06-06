@@ -32,6 +32,7 @@
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
+#undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
 #undef _ARGPARSE_USE_FILESYSTEM
 #undef _ARGPARSE_USE_OPTIONAL
@@ -174,8 +175,10 @@ using experimental::fundamentals_v1::nullopt;
 
 #if __cplusplus >= _ARGPARSE_CXX_11
 #define _ARGPARSE_NOEXCEPT noexcept
+#define _ARGPARSE_OVERRIDE override
 #else
 #define _ARGPARSE_NOEXCEPT
+#define _ARGPARSE_OVERRIDE
 #endif  // C++11+
 
 namespace argparse {
@@ -2870,7 +2873,7 @@ public:
 
     std::string
     (*_fill_text() const) (std::string const&, std::size_t,
-                           std::string const&) override
+                           std::string const&) _ARGPARSE_OVERRIDE
     {
         return _fill_text_s;
     }
@@ -2935,7 +2938,7 @@ public:
     virtual ~_RawTextHelpFormatter() = default;
 
     std::vector<std::string>
-    (*_split_lines() const) (std::string const&, std::size_t) override
+    (*_split_lines() const) (std::string const&, std::size_t) _ARGPARSE_OVERRIDE
     {
         return _RawDescriptionHelpFormatter::_split_lines_s;
     }
@@ -2951,7 +2954,7 @@ public:
     virtual ~_ArgumentDefaultsHelpFormatter() = default;
 
     std::string
-    (*_get_help_string() const) (Argument const*) override
+    (*_get_help_string() const) (Argument const*) _ARGPARSE_OVERRIDE
     {
         return _get_help_string_s;
     }
@@ -2986,13 +2989,15 @@ public:
     virtual ~_MetavarTypeHelpFormatter() = default;
 
     std::string
-    (*_get_default_metavar_for_optional() const) (Argument const*) override
+    (*_get_default_metavar_for_optional() const)
+    (Argument const*) _ARGPARSE_OVERRIDE
     {
         return _get_default_metavar_for_optional_s;
     }
 
     std::string
-    (*_get_default_metavar_for_positional() const) (Argument const*) override
+    (*_get_default_metavar_for_positional() const)
+    (Argument const*) _ARGPARSE_OVERRIDE
     {
         return _get_default_metavar_for_positional_s;
     }
@@ -3617,7 +3622,7 @@ public:
 private:
     inline void
     limit_help_flags(_HelpFormatter const& formatter,
-                     std::size_t& limit) const override
+                     std::size_t& limit) const _ARGPARSE_OVERRIDE
     {
         for (auto const& arg : m_data.m_arguments) {
             auto size = arg->flags_to_string(formatter).size();
@@ -3631,7 +3636,7 @@ private:
                            _HelpFormatter const& formatter,
                            std::string const& prog,
                            std::size_t limit,
-                           std::size_t width) const override
+                           std::size_t width) const _ARGPARSE_OVERRIDE
     {
         if (!description().empty() || !m_data.m_arguments.empty()) {
             if (!title().empty()) {
@@ -5865,7 +5870,7 @@ public:
 
         inline void
         limit_help_flags(_HelpFormatter const&,
-                         std::size_t& limit) const override
+                         std::size_t& limit) const _ARGPARSE_OVERRIDE
         {
             auto size = flags_to_string().size();
             if (limit < size) {
@@ -5883,7 +5888,7 @@ public:
                                _HelpFormatter const& formatter,
                                std::string const& prog,
                                std::size_t limit,
-                               std::size_t width) const override
+                               std::size_t width) const _ARGPARSE_OVERRIDE
         {
             os << "\n" << (title().empty() ? "subcommands" : title()) << ":\n";
             detail::_print_raw_text_formatter(
@@ -8637,6 +8642,7 @@ private:
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
+#undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
 #undef _ARGPARSE_USE_FILESYSTEM
 #undef _ARGPARSE_USE_OPTIONAL
