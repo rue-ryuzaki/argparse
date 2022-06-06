@@ -27,10 +27,6 @@
 #ifndef _ARGPARSE_ARGUMENT_PARSER_HPP_
 #define _ARGPARSE_ARGUMENT_PARSER_HPP_
 
-#define _ARGPARSE_VERSION_MAJOR 1
-#define _ARGPARSE_VERSION_MINOR 6
-#define _ARGPARSE_VERSION_PATCH 1
-
 #undef _ARGPARSE_CONSTEXPR
 #undef _ARGPARSE_EXPERIMENTAL_OPTIONAL
 #undef _ARGPARSE_EXPORT
@@ -39,6 +35,27 @@
 #undef _ARGPARSE_USE_CONSTEXPR
 #undef _ARGPARSE_USE_FILESYSTEM
 #undef _ARGPARSE_USE_OPTIONAL
+
+#undef _ARGPARSE_VERSION_MAJOR
+#undef _ARGPARSE_VERSION_MINOR
+#undef _ARGPARSE_VERSION_PATCH
+#undef _ARGPARSE_VERSION_TWEAK
+
+#undef _ARGPARSE_CXX_98
+#undef _ARGPARSE_CXX_11
+#undef _ARGPARSE_CXX_14
+#undef _ARGPARSE_CXX_17
+#undef _ARGPARSE_CXX_20
+#undef _ARGPARSE_CXX_23
+
+#define _ARGPARSE_VERSION_MAJOR 1
+#define _ARGPARSE_VERSION_MINOR 6
+#define _ARGPARSE_VERSION_PATCH 1
+
+#define _ARGPARSE_CXX_11 201103L
+#define _ARGPARSE_CXX_14 201402L
+#define _ARGPARSE_CXX_17 201703L
+#define _ARGPARSE_CXX_20 202002L
 
 #include <algorithm>
 #include <array>
@@ -61,7 +78,7 @@
 #include <stack>
 #include <stdexcept>
 #include <string>
-#if __cplusplus >= 201703L  // C++17+
+#if __cplusplus >= _ARGPARSE_CXX_17
 #include <string_view>
 #endif  // C++17+
 #include <tuple>
@@ -106,7 +123,7 @@
 #endif  // ARGPARSE_NO_AUTODETECT
 
 // filesystem
-#if __cplusplus >= 201703L  // C++17+
+#if __cplusplus >= _ARGPARSE_CXX_17
 #if (defined(_MSC_VER) && _MSC_VER >= 1914) \
     || (defined(__clang__) && (__clang_major__ > 8)) \
     || (defined(__GNUC__) && (__GNUC__ > 8))
@@ -117,11 +134,11 @@
 #endif  // C++17+
 
 // optional
-#if __cplusplus >= 201703L  // C++17+
+#if __cplusplus >= _ARGPARSE_CXX_17
 #include <optional>
 
 #define _ARGPARSE_USE_OPTIONAL 1
-#elif __cplusplus >= 201402L  // C++14
+#elif __cplusplus >= _ARGPARSE_CXX_14
 #if defined(__GNUC__) && (defined(__linux__) || !defined(__clang__))
 #include <experimental/optional>
 namespace std {
@@ -136,7 +153,7 @@ using experimental::fundamentals_v1::nullopt;
 
 #define _ARGPARSE_EXPORT
 
-#if __cplusplus >= 201103L  // C++11+
+#if __cplusplus >= _ARGPARSE_CXX_11
 #define _ARGPARSE_CONSTEXPR constexpr
 #define _ARGPARSE_USE_CONSTEXPR constexpr
 #else
@@ -144,13 +161,13 @@ using experimental::fundamentals_v1::nullopt;
 #define _ARGPARSE_USE_CONSTEXPR const
 #endif  // C++11+
 
-#if __cplusplus >= 201703L  // C++17+
+#if __cplusplus >= _ARGPARSE_CXX_17
 #define _ARGPARSE_INLINE_VARIABLE inline
 #else
 #define _ARGPARSE_INLINE_VARIABLE static
 #endif  // C++17+
 
-#if __cplusplus >= 201103L  // C++11+
+#if __cplusplus >= _ARGPARSE_CXX_11
 #define _ARGPARSE_NOEXCEPT noexcept
 #else
 #define _ARGPARSE_NOEXCEPT
@@ -314,10 +331,10 @@ template <class T> struct is_byte_type              { enum { value = false }; };
 template <>        struct is_byte_type<char>         { enum { value = true }; };
 template <>        struct is_byte_type<signed char>  { enum { value = true }; };
 template <>        struct is_byte_type<unsigned char>{ enum { value = true }; };
-#if __cplusplus >= 201703L  // C++17+
+#if __cplusplus >= _ARGPARSE_CXX_17
 template <>        struct is_byte_type<std::byte>    { enum { value = true }; };
 #endif  // C++17+
-#if __cplusplus >= 202002L  // C++20+
+#if __cplusplus >= _ARGPARSE_CXX_20
 template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
 #endif  // C++20+
 
@@ -691,7 +708,7 @@ _format_name(std::string const& str)
 inline bool
 _starts_with(std::string const& str, std::string const& value)
 {
-#if __cplusplus >= 202002L  // C++20+
+#if __cplusplus >= _ARGPARSE_CXX_20
     return str.starts_with(value);
 #else
     return str.compare(0, value.size(), value) == 0;
@@ -1164,7 +1181,7 @@ class Type
 public:
     template <class T, typename std::enable_if<
                   std::is_same<std::string, T>::value
-#if __cplusplus >= 201703L  // C++17+
+#if __cplusplus >= _ARGPARSE_CXX_17
                   || std::is_same<std::string_view, T>::value
 #endif  // C++17+
                   || is_stl_pair<T>::value
@@ -1196,7 +1213,7 @@ public:
 
     template <class T, typename std::enable_if<
                   !std::is_same<std::string, T>::value
-#if __cplusplus >= 201703L  // C++17+
+#if __cplusplus >= _ARGPARSE_CXX_17
                   && !std::is_same<std::string_view, T>::value
 #endif  // C++17+
                   && !is_stl_array<T>::value
@@ -1212,7 +1229,7 @@ public:
     }
 
     template <class T, typename std::enable_if<
-#if __cplusplus >= 201703L  // C++17+
+#if __cplusplus >= _ARGPARSE_CXX_17
                   std::is_same<std::string_view, T>::value ||
 #endif  // C++17+
                   std::is_same<std::string, T>::value>::type* = nullptr>
@@ -1273,7 +1290,7 @@ public:
 
     template <class T, typename std::enable_if<
                   !std::is_same<std::string, T>::value
-#if __cplusplus >= 201703L  // C++17+
+#if __cplusplus >= _ARGPARSE_CXX_17
                   && !std::is_same<std::string_view, T>::value
 #endif  // C++17+
                   && !is_stl_array<T>::value
@@ -8611,5 +8628,12 @@ private:
 #undef _ARGPARSE_USE_CONSTEXPR
 #undef _ARGPARSE_USE_FILESYSTEM
 #undef _ARGPARSE_USE_OPTIONAL
+
+#undef _ARGPARSE_CXX_98
+#undef _ARGPARSE_CXX_11
+#undef _ARGPARSE_CXX_14
+#undef _ARGPARSE_CXX_17
+#undef _ARGPARSE_CXX_20
+#undef _ARGPARSE_CXX_23
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
