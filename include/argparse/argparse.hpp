@@ -337,13 +337,13 @@ char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equals[]         = "=";
 char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
-uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
-_bool_action = store_true | store_false;
-uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
-_store_action = store | append | extend;
-uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
-_const_action = store_const | append_const;
-uint32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_bool_action = argparse::store_true | argparse::store_false;
+int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_store_action = argparse::store | argparse::append | argparse::extend;
+int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_const_action = argparse::store_const | argparse::append_const;
+int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
 
 template <class T> struct is_byte_type              { enum { value = false }; };
@@ -1534,7 +1534,7 @@ _ARGPARSE_EXPORT class Argument
         : m_flags(flags),
           m_all_flags(m_flags),
           m_name(name),
-          m_action(Action::store),
+          m_action(argparse::store),
           m_type(type),
           m_default_type(),
           m_help_type(),
@@ -1562,7 +1562,7 @@ _ARGPARSE_EXPORT class Argument
         : m_flags(std::move(flags)),
           m_all_flags(m_flags),
           m_name(std::move(name)),
-          m_action(Action::store),
+          m_action(argparse::store),
           m_type(type),
           m_default_type(),
           m_help_type(),
@@ -1639,7 +1639,7 @@ public:
         : m_flags(flags),
           m_all_flags(m_flags),
           m_name(),
-          m_action(Action::store),
+          m_action(argparse::store),
           m_type(NoType),
           m_default_type(),
           m_help_type(),
@@ -1818,25 +1818,25 @@ public:
     Argument& action(std::string const& value)
     {
         if (value == "store") {
-            return action(Action::store);
+            return action(argparse::store);
         } else if (value == "store_const") {
-            return action(Action::store_const);
+            return action(argparse::store_const);
         } else if (value == "store_true") {
-            return action(Action::store_true);
+            return action(argparse::store_true);
         } else if (value == "store_false") {
-            return action(Action::store_false);
+            return action(argparse::store_false);
         } else if (value == "append") {
-            return action(Action::append);
+            return action(argparse::append);
         } else if (value == "append_const") {
-            return action(Action::append_const);
+            return action(argparse::append_const);
         } else if (value == "count") {
-            return action(Action::count);
+            return action(argparse::count);
         } else if (value == "help") {
-            return action(Action::help);
+            return action(argparse::help);
         } else if (value == "version") {
-            return action(Action::version);
+            return action(argparse::version);
         } else if (value == "extend") {
-            return action(Action::extend);
+            return action(argparse::extend);
         }
         throw ValueError("unknown action '" + value + "'");
     }
@@ -1852,47 +1852,47 @@ public:
     {
         prepare_action(value);
         switch (value) {
-            case Action::store_true :
+            case argparse::store_true :
                 if (!m_default.has_value()) {
                     m_default.clear();
                 }
                 // fallthrough
-            case Action::BooleanOptionalAction :
+            case argparse::BooleanOptionalAction :
                 m_const.clear("1");
                 m_nargs = NARGS_NUM;
                 m_nargs_str = "0";
                 m_num_args = 0;
                 m_choices.clear();
                 break;
-            case Action::store_false :
+            case argparse::store_false :
                 if (!m_default.has_value()) {
                     m_default.clear("1");
                 }
                 // fallthrough
-            case Action::store_const :
-            case Action::append_const :
+            case argparse::store_const :
+            case argparse::append_const :
                 m_const.clear();
                 m_nargs = NARGS_NUM;
                 m_nargs_str = "0";
                 m_num_args = 0;
                 m_choices.clear();
                 break;
-            case Action::version :
+            case argparse::version :
                 help("show program's version number and exit");
                 // fallthrough
-            case Action::help :
+            case argparse::help :
                 check_required();
                 // fallthrough
-            case Action::count :
+            case argparse::count :
                 m_const.clear();
                 m_nargs = NARGS_NUM;
                 m_nargs_str = "0";
                 m_num_args = 0;
                 m_choices.clear();
                 break;
-            case Action::store :
-            case Action::append :
-            case Action::extend :
+            case argparse::store :
+            case argparse::append :
+            case argparse::extend :
                 m_const.clear();
                 if (m_num_args == 0) {
                     m_nargs = NARGS_DEF;
@@ -1917,16 +1917,16 @@ public:
     inline Argument& nargs(std::size_t value)
     {
         switch (action()) {
-            case Action::store_const :
-            case Action::store_true :
-            case Action::store_false :
-            case Action::append_const :
-            case Action::help :
-            case Action::version :
-            case Action::count :
-            case Action::BooleanOptionalAction :
+            case argparse::store_const :
+            case argparse::store_true :
+            case argparse::store_false :
+            case argparse::append_const :
+            case argparse::help :
+            case argparse::version :
+            case argparse::count :
+            case argparse::BooleanOptionalAction :
                 throw TypeError("got an unexpected keyword argument 'nargs'");
-            case Action::store :
+            case argparse::store :
                 if (value == 0) {
                     throw
                     ValueError("nargs for store actions must be != 0; if you "
@@ -1934,8 +1934,8 @@ public:
                                "true or store const may be more appropriate");
                 }
                 break;
-            case Action::append :
-            case Action::extend :
+            case argparse::append :
+            case argparse::extend :
                 if (value == 0) {
                     throw
                     ValueError("nargs for append actions must be != 0; if arg "
@@ -2131,7 +2131,7 @@ public:
         if (value != argparse::SUPPRESS) {
             throw TypeError("got an unexpected keyword argument 'default'");
         }
-        if (action() == Action::store_false) {
+        if (action() == argparse::store_false) {
             m_default.clear("1");
         } else {
             m_default.clear();
@@ -2229,7 +2229,7 @@ public:
     inline Argument& choices(std::vector<std::string> const& value)
     {
         if (!(action() & (detail::_store_action
-                          | Action::BooleanOptionalAction))) {
+                          | argparse::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
         std::vector<std::string> values;
@@ -2302,7 +2302,7 @@ public:
     inline Argument& metavar(std::string const& value)
     {
         if (!(action() & (detail::_store_const_action
-                          | Action::BooleanOptionalAction))) {
+                          | argparse::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'metavar'");
         }
         m_metavar = { detail::_trim_copy(value) };
@@ -2319,7 +2319,7 @@ public:
     inline Argument& metavar(std::vector<std::string> const& value)
     {
         if (!(action() & (detail::_store_const_action
-                          | Action::BooleanOptionalAction))) {
+                          | argparse::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'metavar'");
         }
         auto _values = value;
@@ -2355,7 +2355,7 @@ public:
      */
     inline Argument& version(std::string const& value)
     {
-        if (action() == Action::version) {
+        if (action() == argparse::version) {
             m_version = detail::_trim_copy(value);
         } else {
             throw TypeError("got an unexpected keyword argument 'version'");
@@ -2373,7 +2373,7 @@ public:
      */
     inline Argument& handle(std::function<void(std::string const&)> func)
     {
-        if (action() & (Action::version | Action::help)) {
+        if (action() & (argparse::version | argparse::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
         m_handle = func;
@@ -2390,7 +2390,7 @@ public:
      */
     inline Argument& handle(std::function<void()> func)
     {
-        if (action() & (Action::version | Action::help)) {
+        if (action() & (argparse::version | argparse::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
         m_handle = [func] (std::string const&) { func(); };
@@ -2557,13 +2557,13 @@ private:
 
     inline void prepare_action(Action value)
     {
-        if (action() & (Action::version | Action::help)) {
+        if (action() & (argparse::version | argparse::help)) {
             m_handle = nullptr;
         }
         if (!(value & detail::_store_const_action)) {
             m_metavar.clear();
         }
-        if (m_type == Optional && value == Action::BooleanOptionalAction) {
+        if (m_type == Optional && value == argparse::BooleanOptionalAction) {
             make_no_flags();
             if (m_post_trigger) {
                 m_post_trigger(this);
@@ -2586,7 +2586,7 @@ private:
     {
         std::string res;
         if (m_type == Optional) {
-            if (action() == Action::BooleanOptionalAction) {
+            if (action() == argparse::BooleanOptionalAction) {
                 for (auto const& flag : flags()) {
                     if (!res.empty()) {
                         res += " | ";
@@ -2597,7 +2597,7 @@ private:
                 res += m_flags.front();
             }
         }
-        if (action() & (detail::_store_action | Action::append_const)) {
+        if (action() & (detail::_store_action | argparse::append_const)) {
             res += get_nargs_suffix(formatter);
         }
         return res;
@@ -2612,7 +2612,8 @@ private:
                     res += ", ";
                 }
                 res += flag;
-                if (action() & (detail::_store_action | Action::append_const)) {
+                if (action() & (detail::_store_action
+                                | argparse::append_const)) {
                     res += get_nargs_suffix(formatter);
                 }
             }
@@ -2978,7 +2979,8 @@ protected:
             if ((action->m_type == Argument::Optional
                  || (action->m_nargs & (Argument::ZERO_OR_ONE
                                         | Argument::ZERO_OR_MORE)))
-                    && !(action->action() & (Action::help | Action::version))) {
+                    && !(action->action()
+                         & (argparse::help | argparse::version))) {
                 help += " (default: %(default)s)";
             }
         }
@@ -3132,7 +3134,7 @@ protected:
                 auto help = Argument::make_argument(
                             std::move(help_flags), "help", Argument::Optional);
                 help->help("show this help message and exit")
-                        .action(Action::help);
+                        .action(argparse::help);
                 m_arguments.push_front(std::move(help));
                 m_optional
                         .push_front(std::make_pair(m_arguments.front(), false));
@@ -3350,7 +3352,7 @@ protected:
                 throw
                 TypeError("missing 1 required positional argument: 'dest'");
             }
-            if (arg.action() & (Action::version | Action::help)) {
+            if (arg.action() & (argparse::version | argparse::help)) {
                 // version and help actions cannot be positional
                 throw
                 TypeError("got an unexpected keyword argument 'required'");
@@ -3369,7 +3371,7 @@ protected:
                 throw TypeError("got an unexpected keyword argument 'const'");
             }
         } else {
-            if (arg.action() == Action::BooleanOptionalAction) {
+            if (arg.action() == argparse::BooleanOptionalAction) {
                 arg.make_no_flags();
             }
             check_conflict_arg(&arg);
@@ -3919,7 +3921,7 @@ _ARGPARSE_EXPORT class Namespace
         inline void
         force_add(key_type const& key, mapped_type const& value = mapped_type())
         {
-            if (key->action() & (Action::version | Action::help)) {
+            if (key->action() & (argparse::version | argparse::help)) {
                 return;
             }
             auto const& arg_flags = key->get_argument_flags();
@@ -3946,7 +3948,7 @@ _ARGPARSE_EXPORT class Namespace
         inline void
         try_add(key_type const& key, mapped_type const& value = mapped_type())
         {
-            if (key->action() & (Action::version | Action::help)) {
+            if (key->action() & (argparse::version | argparse::help)) {
                 return;
             }
             auto const& flag = conflict_arg(key);
@@ -3966,7 +3968,7 @@ _ARGPARSE_EXPORT class Namespace
         inline void
         create(key_type const& key, mapped_type const& value = mapped_type())
         {
-            if (key->action() & (Action::version | Action::help)) {
+            if (key->action() & (argparse::version | argparse::help)) {
                 return;
             }
             auto const& flag = conflict_arg(key);
@@ -4017,7 +4019,7 @@ _ARGPARSE_EXPORT class Namespace
                                         std::string const& value)
         {
             if (arg->action()
-                    & (Action::store | Action::BooleanOptionalAction)) {
+                    & (argparse::store | argparse::BooleanOptionalAction)) {
                 auto& arg_data = at(arg);
                 if (arg_data.empty()) {
                     arg_data.push_default(value);
@@ -4028,18 +4030,19 @@ _ARGPARSE_EXPORT class Namespace
 
         inline bool self_value_stored(key_type const& arg)
         {
-            if (arg->action() & (Action::store_const | detail::_bool_action)) {
+            if (arg->action()
+                    & (argparse::store_const | detail::_bool_action)) {
                 auto& arg_data = at(arg);
                 if (arg_data.empty()) {
                     arg_data.push_back(arg->const_value());
                     arg->handle(arg->const_value());
                 }
                 return true;
-            } else if (arg->action() == Action::append_const) {
+            } else if (arg->action() == argparse::append_const) {
                 at(arg).push_back(arg->const_value());
                 arg->handle(arg->const_value());
                 return true;
-            } else if (arg->action() == Action::count) {
+            } else if (arg->action() == argparse::count) {
                 at(arg).emplace_back(std::string());
                 arg->handle(std::string());
                 return true;
@@ -4197,7 +4200,8 @@ public:
     {
         auto it = storage().find_arg(key);
         if (it != storage().end()) {
-            return !it->second.empty() || it->first->action() == Action::count;
+            return !it->second.empty()
+                    || it->first->action() == argparse::count;
         }
         return false;
     }
@@ -4221,7 +4225,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         if (args.second.empty()) {
@@ -4251,7 +4255,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             return T(args.second.size());
         }
         if (args.second.empty()) {
@@ -4279,7 +4283,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
@@ -4316,7 +4320,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
@@ -4340,7 +4344,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_paired_vector<
@@ -4366,7 +4370,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_tupled_vector<
@@ -4390,7 +4394,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         T res{};
@@ -4419,7 +4423,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
-        if (args.first->action() != Action::append
+        if (args.first->action() != argparse::append
                 || !(args.first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))) {
@@ -4449,7 +4453,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
-        if (args.first->action() != Action::append
+        if (args.first->action() != argparse::append
                 || !(args.first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))) {
@@ -4481,7 +4485,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         if (args.second.empty()) {
@@ -4519,7 +4523,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
@@ -4543,7 +4547,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         if (args.second.empty()) {
@@ -4589,7 +4593,7 @@ public:
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
-        if (args.first->action() == Action::count) {
+        if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         return to_type<T>(detail::_vector_to_string(args.second()));
@@ -4616,7 +4620,7 @@ public:
     {
         auto const& args = data(key);
         switch (args.first->action()) {
-            case Action::store_const :
+            case argparse::store_const :
                 if (args.second.empty()) {
                     return std::string();
                 }
@@ -4628,8 +4632,8 @@ public:
                         ? args.second.front()
                         : detail::_replace(args.second.front(),
                                            detail::_space, "\\ ");
-            case Action::store_true :
-            case Action::store_false :
+            case argparse::store_true :
+            case argparse::store_false :
                 if (args.second.empty()) {
                     return detail::_bool_to_string(args.first->default_value());
                 }
@@ -4638,15 +4642,15 @@ public:
                                     + key + "'");
                 }
                 return detail::_bool_to_string(args.second.front());
-            case Action::count :
+            case argparse::count :
                 return std::to_string(args.second.size());
-            case Action::store :
-            case Action::append :
-            case Action::append_const :
-            case Action::extend :
+            case argparse::store :
+            case argparse::append :
+            case argparse::append_const :
+            case argparse::extend :
                 return detail::_vector_to_string(args.second(), detail::_spaces,
                                                  std::string(), true);
-            case Action::BooleanOptionalAction :
+            case argparse::BooleanOptionalAction :
                 return boolean_option_to_args(key, args);
             default :
                 throw ValueError("action not supported");
@@ -4666,7 +4670,7 @@ public:
     {
         auto const& args = data(key);
         switch (args.first->action()) {
-            case Action::store_const :
+            case argparse::store_const :
                 if (args.second.empty()) {
                     return std::string("None");
                 }
@@ -4675,19 +4679,19 @@ public:
                                     + key + "'");
                 }
                 return quotes + args.second.front() + quotes;
-            case Action::store_true :
-            case Action::store_false :
-            case Action::BooleanOptionalAction :
+            case argparse::store_true :
+            case argparse::store_false :
+            case argparse::BooleanOptionalAction :
                 return boolean_option_to_string(key, args, quotes);
-            case Action::count :
+            case argparse::count :
                 if (args.second.empty()) {
                     return std::string("None");
                 }
                 return std::to_string(args.second.size());
-            case Action::store :
-            case Action::append :
-            case Action::append_const :
-            case Action::extend :
+            case argparse::store :
+            case argparse::append :
+            case argparse::append_const :
+            case argparse::extend :
                 return store_actions_to_string(args, quotes);
             default :
                 throw ValueError("action not supported");
@@ -4746,7 +4750,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || args->second.empty()
                 || args->second.size() != 1
                 || !detail::_is_type_name_correct(args->first->type_name(),
@@ -4781,7 +4785,7 @@ public:
                                                   detail::Type::name<T>())) {
             return {};
         }
-        if (args->first->action() == Action::count) {
+        if (args->first->action() == argparse::count) {
             return T(args->second.size());
         }
         if (args->second.empty() || args->second.size() != 1) {
@@ -4809,7 +4813,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
@@ -4855,7 +4859,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
@@ -4888,7 +4892,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
@@ -4924,7 +4928,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
@@ -4957,7 +4961,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
@@ -4998,7 +5002,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() != Action::append
+                || args->first->action() != argparse::append
                 || !(args->first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))
@@ -5039,7 +5043,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() != Action::append
+                || args->first->action() != argparse::append
                 || !(args->first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))
@@ -5081,7 +5085,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
             return {};
@@ -5127,7 +5131,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
@@ -5160,7 +5164,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
             return {};
@@ -5211,7 +5215,7 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
-                || args->first->action() == Action::count
+                || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
             return {};
@@ -5265,7 +5269,7 @@ private:
                              std::string const& quotes) const
     {
         if (args.second.empty()) {
-            if (args.first->action() == Action::BooleanOptionalAction) {
+            if (args.first->action() == argparse::BooleanOptionalAction) {
                 return std::string("None");
             } else {
                 return detail::_bool_to_string(args.first->default_value());
@@ -5285,7 +5289,7 @@ private:
     store_actions_to_string(Storage::value_type const& args,
                             std::string const& quotes) const
     {
-        if ((args.first->action() == Action::store
+        if ((args.first->action() == argparse::store
              && (args.first->m_nargs
                  & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE)))
                 || (!args.second.exists()
@@ -5294,13 +5298,13 @@ private:
             return detail::_vector_to_string(args.second(), ", ",
                                              quotes, false, "None");
         }
-        if (args.first->action() != Action::append
+        if (args.first->action() != argparse::append
                 || (args.first->m_nargs
                     & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))) {
             std::string none
                     = (args.first->m_nargs
                        & (Argument::ZERO_OR_MORE | Argument::REMAINDER))
-                    || (args.first->action() == Action::extend
+                    || (args.first->action() == argparse::extend
                         && args.first->m_nargs == Argument::ZERO_OR_ONE)
                     ? std::string() : "None";
             return detail::_vector_to_string(args.second(), ", ",
@@ -7334,28 +7338,28 @@ private:
                     = get_optional_arg_by_flag(was_pseudo_arg, parsers, arg);
             if (tmp && !remainder) {
                 switch (tmp->action()) {
-                    case Action::store :
+                    case argparse::store :
                         parsers.front().storage.at(tmp).clear();
                         // fallthrough
-                    case Action::append :
-                    case Action::extend :
+                    case argparse::append :
+                    case argparse::extend :
                         storage_optional_store(parsers, equals,
                                                parsed_arguments, i,
                                                was_pseudo_arg, arg, tmp);
                         break;
-                    case Action::help :
+                    case argparse::help :
                         process_optional_help(parsers, equals, arg);
                         break;
-                    case Action::version :
+                    case argparse::version :
                         process_optional_version(parsers, equals, arg, tmp);
                         break;
                     default :
-                        // Action::store_const :
-                        // Action::store_true :
-                        // Action::store_false :
-                        // Action::append_const :
-                        // Action::count :
-                        // Action::BooleanOptionalAction :
+                        // argparse::store_const :
+                        // argparse::store_true :
+                        // argparse::store_false :
+                        // argparse::append_const :
+                        // argparse::count :
+                        // argparse::BooleanOptionalAction :
                         storage_optional_store_const(parsers, equals, arg, tmp);
                         break;
                 }
@@ -7570,7 +7574,7 @@ private:
                     break;
                 case Argument::ZERO_OR_ONE :
                     if (tmp->m_const.has_value()) {
-                        if (tmp->action() == Action::extend) {
+                        if (tmp->action() == argparse::extend) {
                             if (tmp->const_value().empty()) {
                                 storage_have_value(parsers, tmp);
                             } else {
@@ -7587,7 +7591,7 @@ private:
                             storage_store_value(parsers,
                                                 tmp, tmp->const_value());
                         }
-                    } else if (tmp->action() == Action::extend) {
+                    } else if (tmp->action() == argparse::extend) {
                         throw TypeError("'NoneType' object is not iterable");
                     } else {
                         storage_have_value(parsers, tmp);
@@ -7655,7 +7659,7 @@ private:
                                       pArgument const& tmp) const
     {
         if (equals.size() == 1) {
-            if (tmp->action() == Action::BooleanOptionalAction) {
+            if (tmp->action() == argparse::BooleanOptionalAction) {
                 bool exist = detail::_is_value_exists(equals.front(),
                                                       tmp->m_flags);
                 storage_store_value(parsers, tmp,
@@ -7709,11 +7713,11 @@ private:
         if (storage_is_positional_arg_stored(parsers, arg)) {
             return;
         }
-        if (arg->action() == Action::BooleanOptionalAction) {
+        if (arg->action() == argparse::BooleanOptionalAction) {
             storage_store_default_value(parsers, arg);
             return;
         }
-        if (arg->action() == Action::store) {
+        if (arg->action() == argparse::store) {
             parsers.front().storage.at(arg).clear();
         }
         switch (arg->m_nargs) {
@@ -7743,11 +7747,11 @@ private:
         if (storage_is_positional_arg_stored(parsers, arg)) {
             return;
         }
-        if (arg->action() == Action::BooleanOptionalAction) {
+        if (arg->action() == argparse::BooleanOptionalAction) {
             storage_store_default_value(parsers, arg);
             return;
         }
-        if (arg->action() == Action::store) {
+        if (arg->action() == argparse::store) {
             parsers.front().storage.at(arg).clear();
         }
         switch (arg->m_nargs) {
@@ -7789,11 +7793,11 @@ private:
         if (storage_is_positional_arg_stored(parsers, arg)) {
             return;
         }
-        if (arg->action() == Action::BooleanOptionalAction) {
+        if (arg->action() == argparse::BooleanOptionalAction) {
             storage_store_default_value(parsers, arg);
             return;
         }
-        if (arg->action() == Action::store) {
+        if (arg->action() == argparse::store) {
             parsers.front().storage.at(arg).clear();
         }
         switch (arg->m_nargs) {
@@ -7826,11 +7830,11 @@ private:
         if (storage_is_positional_arg_stored(parsers, arg)) {
             return;
         }
-        if (arg->action() == Action::BooleanOptionalAction) {
+        if (arg->action() == argparse::BooleanOptionalAction) {
             storage_store_default_value(parsers, arg);
             return;
         }
-        if (arg->action() == Action::store) {
+        if (arg->action() == argparse::store) {
             parsers.front().storage.at(arg).clear();
         }
         if (arg->m_nargs == Argument::NARGS_DEF) {
@@ -8321,13 +8325,13 @@ private:
         if (storage_is_positional_arg_stored(parsers, arg)) {
             return true;
         }
-        if (arg->action() == Action::extend
+        if (arg->action() == argparse::extend
                 && arg->m_nargs == Argument::ZERO_OR_ONE) {
             throw TypeError("'NoneType' object is not iterable");
         }
         if ((arg->m_nargs
              & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE))
-                || arg->action() == Action::BooleanOptionalAction) {
+                || arg->action() == argparse::BooleanOptionalAction) {
             storage_store_default_value(parsers, arg);
             return true;
         }
@@ -8392,7 +8396,7 @@ private:
                     it = storage.erase(it);
                     continue;
                 }
-                if (it->first->action() != Action::count
+                if (it->first->action() != argparse::count
                         && it->first->m_type == Argument::Optional) {
                     if (value.has_value()) {
                         it->second.push_default(value());
