@@ -1382,20 +1382,24 @@ public:
           m_has_value(orig.m_has_value)
     { }
 
+#ifdef _ARGPARSE_CXX_11
     Value(Value&& orig) _ARGPARSE_NOEXCEPT
         : m_value(std::move(orig.m_value)),
           m_has_value(std::move(orig.m_has_value))
     { }
+#endif  // C++11+
 
     explicit Value(T const& orig)
         : m_value(orig),
           m_has_value(true)
     { }
 
+#ifdef _ARGPARSE_CXX_11
     explicit Value(T&& orig) _ARGPARSE_NOEXCEPT
         : m_value(std::move(orig)),
           m_has_value(true)
     { }
+#endif  // C++11+
 
     inline Value& operator =(Value const& rhs)
     {
@@ -1406,6 +1410,7 @@ public:
         return *this;
     }
 
+#ifdef _ARGPARSE_CXX_11
     inline Value& operator =(Value&& rhs) _ARGPARSE_NOEXCEPT
     {
         if (this != &rhs) {
@@ -1414,6 +1419,7 @@ public:
         }
         return *this;
     }
+#endif  // C++11+
 
     inline Value& operator =(T const& rhs)
     {
@@ -1422,12 +1428,14 @@ public:
         return *this;
     }
 
+#ifdef _ARGPARSE_CXX_11
     inline Value& operator =(T&& rhs) _ARGPARSE_NOEXCEPT
     {
         m_value     = std::move(rhs);
         m_has_value = true;
         return *this;
     }
+#endif  // C++11+
 
     inline bool operator ==(Value const& rhs) const _ARGPARSE_NOEXCEPT
     {
@@ -1572,6 +1580,7 @@ _ARGPARSE_EXPORT class Argument
           m_post_trigger(nullptr)
     { }
 
+#ifdef _ARGPARSE_CXX_11
     explicit
     Argument(std::vector<std::string>&& flags,
              std::string&& name,
@@ -1596,11 +1605,10 @@ _ARGPARSE_EXPORT class Argument
           m_metavar(),
           m_dest(std::vector<std::string>{ std::string() }),
           m_version(),
-#ifdef _ARGPARSE_CXX_11
           m_handle(nullptr),
-#endif  // C++11+
           m_post_trigger(nullptr)
     { }
+#endif  // C++11+
 
     static inline std::shared_ptr<Argument>
     make_argument(std::vector<std::string> const& flags,
@@ -1610,6 +1618,7 @@ _ARGPARSE_EXPORT class Argument
         return std::make_shared<Argument>(Argument(flags, name, type));
     }
 
+#ifdef _ARGPARSE_CXX_11
     static inline std::shared_ptr<Argument>
     make_argument(std::vector<std::string>&& flags,
                   std::string&& name,
@@ -1618,6 +1627,7 @@ _ARGPARSE_EXPORT class Argument
         return std::make_shared<Argument>(
                     Argument(std::move(flags), std::move(name), type));
     }
+#endif  // C++11+
 
 public:
     /*!
@@ -1715,6 +1725,7 @@ public:
           m_post_trigger(orig.m_post_trigger)
     { }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Construct argument object from another argument
      *
@@ -1743,11 +1754,10 @@ public:
           m_metavar(std::move(orig.m_metavar)),
           m_dest(std::move(orig.m_dest)),
           m_version(std::move(orig.m_version)),
-#ifdef _ARGPARSE_CXX_11
           m_handle(std::move(orig.m_handle)),
-#endif  // C++11+
           m_post_trigger(std::move(orig.m_post_trigger))
     { }
+#endif  // C++11+
 
     /*!
      *  \brief Copy argument object from another argument
@@ -1787,6 +1797,7 @@ public:
         return *this;
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Move argument object from another argument
      *
@@ -1817,13 +1828,12 @@ public:
             this->m_metavar         = std::move(rhs.m_metavar);
             this->m_dest            = std::move(rhs.m_dest);
             this->m_version         = std::move(rhs.m_version);
-#ifdef _ARGPARSE_CXX_11
             this->m_handle          = std::move(rhs.m_handle);
-#endif  // C++11+
             this->m_post_trigger    = std::move(rhs.m_post_trigger);
         }
         return *this;
     }
+#endif  // C++11+
 
     /*!
      *  \brief Compare current argument with another one
@@ -2003,7 +2013,11 @@ public:
         } else {
             throw ValueError("invalid nargs value '" + val + "'");
         }
+#ifdef _ARGPARSE_CXX_11
         m_nargs_str = std::move(val);
+#else
+        m_nargs_str = val;
+#endif  // C++11+
         m_num_args = 1;
         return *this;
     }
@@ -2244,7 +2258,11 @@ public:
         values.reserve(value.size());
         std::transform(value.begin(), value.end(), std::back_inserter(values),
                        [] (char c) { return std::string(1, c); });
+#ifdef _ARGPARSE_CXX_11
         m_choices = std::move(values);
+#else
+        m_choices = values;
+#endif  // C++11+
         return *this;
     }
 
@@ -2266,10 +2284,18 @@ public:
         for (auto const& str : value) {
             auto val = detail::_trim_copy(str);
             if (!val.empty()) {
+#ifdef _ARGPARSE_CXX_11
                 values.emplace_back(std::move(val));
+#else
+                values.push_back(val);
+#endif  // C++11+
             }
         }
+#ifdef _ARGPARSE_CXX_11
         m_choices = std::move(values);
+#else
+        m_choices = values;
+#endif  // C++11+
         return *this;
     }
 
@@ -2355,7 +2381,11 @@ public:
         for (auto& val : _values) {
             detail::_trim(val);
         }
+#ifdef _ARGPARSE_CXX_11
         m_metavar = std::move(_values);
+#else
+        m_metavar = _values;
+#endif  // C++11+
         return *this;
     }
 
@@ -3168,11 +3198,20 @@ protected:
                 }
             }
             if (!help_flags.empty()) {
+#ifdef _ARGPARSE_CXX_11
                 auto help = Argument::make_argument(
                             std::move(help_flags), "help", Argument::Optional);
+#else
+                auto help = Argument::make_argument(
+                            help_flags, "help", Argument::Optional);
+#endif  // C++11+
                 help->help("show this help message and exit")
                         .action(argparse::help);
+#ifdef _ARGPARSE_CXX_11
                 m_arguments.push_front(std::move(help));
+#else
+                m_arguments.push_front(help);
+#endif  // C++11+
                 m_optional
                         .push_front(std::make_pair(m_arguments.front(), false));
                 m_help_added = true;
@@ -3239,7 +3278,11 @@ protected:
                         && count > 1
                         && flag.size() < name.size())) {
                 count = count_prefixes;
+#ifdef _ARGPARSE_CXX_11
                 flag = std::move(name);
+#else
+                flag = name;
+#endif  // C++11+
             }
         };
         if (is_optional) {
@@ -3339,10 +3382,16 @@ protected:
         auto flags = in_flags;
         if (flags.empty()) {
             auto flag = std::string();
+#ifdef _ARGPARSE_CXX_11
             auto arg = Argument::make_argument(std::move(flags),
                                                std::move(flag),
                                                Argument::Positional);
             m_arguments.emplace_back(std::move(arg));
+#else
+            auto arg = Argument::make_argument(flags, flag,
+                                               Argument::Positional);
+            m_arguments.push_back(arg);
+#endif  // C++11+
             return;
         }
         flags.front() = detail::_format_name(flags.front());
@@ -3351,13 +3400,23 @@ protected:
         std::size_t prefixes = 0;
         bool is_optional = detail::_is_value_exists(flag.front(), prefix_chars);
         update_flag_name(flags, prefix_chars, is_optional, flag, prefixes);
+#ifdef _ARGPARSE_CXX_11
         auto arg = Argument::make_argument(
                     std::move(flags), std::move(flag),
                     is_optional ? Argument::Optional : Argument::Positional);
+#else
+        auto arg = Argument::make_argument(
+                    flags, flag,
+                    is_optional ? Argument::Optional : Argument::Positional);
+#endif  // C++11+
         if (is_optional) {
             check_conflict_arg(arg.get());
         }
+#ifdef _ARGPARSE_CXX_11
         m_arguments.emplace_back(std::move(arg));
+#else
+        m_arguments.push_back(arg);
+#endif  // C++11+
         if (is_optional) {
             m_arguments.back()->m_post_trigger = [this] (Argument const* arg)
             {
@@ -3413,7 +3472,11 @@ protected:
             }
             check_conflict_arg(&arg);
         }
+#ifdef _ARGPARSE_CXX_11
         m_arguments.emplace_back(std::make_shared<Argument>(arg));
+#else
+        m_arguments.push_back(std::make_shared<Argument>(arg));
+#endif  // C++11+
     }
 
     std::string m_conflict_handler;
@@ -3904,12 +3967,14 @@ _ARGPARSE_EXPORT class Namespace
                 return m_values.at(i);
             }
 
+#ifdef _ARGPARSE_CXX_11
             inline void emplace_back(std::string&& value)
             {
                 m_exists = true;
                 m_values.emplace_back(std::move(value));
                 push_to_matrix();
             }
+#endif  // C++11+
 
             inline void push_back(std::string const& value)
             {
@@ -4092,9 +4157,11 @@ _ARGPARSE_EXPORT class Namespace
 #endif  // C++11+
                 return true;
             } else if (arg->action() == argparse::count) {
-                at(arg).emplace_back(std::string());
 #ifdef _ARGPARSE_CXX_11
+                at(arg).emplace_back(std::string());
                 arg->handle(std::string());
+#else
+                at(arg).push_back(std::string());
 #endif  // C++11+
                 return true;
             }
@@ -4226,6 +4293,7 @@ _ARGPARSE_EXPORT class Namespace
           m_unrecognized_args(args)
     { }
 
+#ifdef _ARGPARSE_CXX_11
     explicit
     Namespace(Storage&& storage) _ARGPARSE_NOEXCEPT
         : m_storage(std::move(storage)),
@@ -4238,6 +4306,7 @@ _ARGPARSE_EXPORT class Namespace
         : m_storage(std::move(storage)),
           m_unrecognized_args(std::move(args))
     { }
+#endif  // C++11+
 
 public:
     /*!
@@ -5402,8 +5471,13 @@ private:
             }
             vec.reserve(args.size() / 2);
             for (std::size_t i = 0; i < args.size(); i += 2) {
+#ifdef _ARGPARSE_CXX_11
                 vec.emplace_back(std::make_pair(to_type<T>(args.at(i)),
                                                 to_type<U>(args.at(i + 1))));
+#else
+                vec.push_back(std::make_pair(to_type<T>(args.at(i)),
+                                             to_type<U>(args.at(i + 1))));
+#endif  // C++11+
             }
         } else {
             vec.reserve(args.size());
@@ -5457,7 +5531,11 @@ private:
             for (std::size_t i = 0; i < args.size(); i += size) {
                 std::vector<std::string> temp
                         = { args.begin() + i, args.begin() + i + size };
+#ifdef _ARGPARSE_CXX_11
                 vec.emplace_back(to_tuple(detail::type_tag<T>{}, temp));
+#else
+                vec.push_back(to_tuple(detail::type_tag<T>{}, temp));
+#endif  // C++11+
             }
         } else {
             vec.reserve(args.size());
@@ -5905,7 +5983,11 @@ public:
             if (value.empty()) {
                 throw ValueError("parser name can't be empty");
             }
+#ifdef _ARGPARSE_CXX_11
             m_parsers.emplace_back(make_parser(value));
+#else
+            m_parsers.push_back(make_parser(value));
+#endif  // C++11+
             m_parsers.back()->update_prog(prog_name());
             return *m_parsers.back();
         }
@@ -6134,14 +6216,18 @@ public:
     ArgumentParser(int argc, char const* argv[])
         : ArgumentParser("untitled")
     {
-        if (argc > 0 && argv != nullptr && argv[0] != nullptr) {
+        if (argc > 0 && argv && argv[0]) {
             m_prog = detail::_file_name(argv[0]);
             m_parsed_arguments.reserve(std::size_t(argc - 1));
             for (int i = 1; i < argc; ++i) {
-                if (argv[i] == nullptr) {
+                if (!argv[i]) {
                     break;
                 }
+#ifdef _ARGPARSE_CXX_11
                 m_parsed_arguments.emplace_back(std::string(argv[i]));
+#else
+                m_parsed_arguments.push_back(std::string(argv[i]));
+#endif  // C++11+
             }
         }
     }
@@ -6419,7 +6505,11 @@ public:
     {
         auto val = detail::_trim_copy(value);
         if (!val.empty()) {
+#ifdef _ARGPARSE_CXX_11
             m_prefix_chars = std::move(val);
+#else
+            m_prefix_chars = val;
+#endif  // C++11+
             m_data.update_help(m_data.m_add_help, m_prefix_chars);
         }
         return *this;
@@ -6752,10 +6842,17 @@ public:
     inline MutuallyExclusiveGroup&
     add_mutually_exclusive_group(bool required = false)
     {
+#ifdef _ARGPARSE_CXX_11
         m_mutex_groups.emplace_back(
               MutuallyExclusiveGroup::make_mutex_group(
                         m_prefix_chars, m_data,
                         m_argument_default, m_argument_default_type));
+#else
+        m_mutex_groups.push_back(
+              MutuallyExclusiveGroup::make_mutex_group(
+                        m_prefix_chars, m_data,
+                        m_argument_default, m_argument_default_type));
+#endif  // C++11+
         return m_mutex_groups.back().required(required);
     }
 
@@ -7443,9 +7540,12 @@ private:
         default_values_post_trigger(parsers.front().storage);
 #ifdef _ARGPARSE_CXX_11
         namespace_post_trigger(parsers, only_known, unrecognized_args);
-#endif  // C++11+
         return create_namespace(only_known, std::move(parsers.front().storage),
                                 std::move(unrecognized_args));
+#else
+        return create_namespace(only_known, parsers.front().storage,
+                                unrecognized_args);
+#endif  // C++11+
     }
 
     inline void
@@ -7508,6 +7608,7 @@ private:
         return equals;
     }
 
+#ifdef _ARGPARSE_CXX_11
     static Namespace
     create_namespace(bool only_known,
                      Namespace::Storage&& storage,
@@ -7519,6 +7620,19 @@ private:
             return Namespace(std::move(storage));
         }
     }
+#else
+    static Namespace
+    create_namespace(bool only_known,
+                     Namespace::Storage const& storage,
+                     std::vector<std::string> const& unrecognized_args)
+    {
+        if (only_known) {
+            return Namespace(storage, unrecognized_args);
+        } else {
+            return Namespace(storage);
+        }
+    }
+#endif  // C++11+
 
     static bool
     negative_numbers_presented(std::vector<pArgument> const& optionals,
@@ -8184,7 +8298,11 @@ private:
     {
         if (name.at(i) == detail::_equal) {
             if (flags.empty()) {
+#ifdef _ARGPARSE_CXX_11
                 flags.emplace_back(std::string());
+#else
+                flags.push_back(std::string());
+#endif  // C++11+
             }
             flags.back() += name.substr(i);
             return false;
@@ -8345,7 +8463,11 @@ private:
         for (auto const& arg : optional) {
             if (arg->required() && storage.at(arg).empty()) {
                 auto args = detail::_vector_to_string(arg->flags(), "/");
+#ifdef _ARGPARSE_CXX_11
                 required_args.emplace_back(std::move(args));
+#else
+                required_args.push_back(args);
+#endif  // C++11+
             }
         }
     }
