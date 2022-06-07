@@ -776,33 +776,23 @@ template <class T>
 bool
 _is_value_exists(T const& value, std::vector<T> const& vec)
 {
-#ifdef _ARGPARSE_CXX_11
-    return std::any_of(vec.begin(), vec.end(),
-                       [&value] (T const& el) { return el == value; });
-#else
     for (std::size_t i = 0; i < vec.size(); ++i) {
         if (vec.at(i) == value) {
             return true;
         }
     }
     return false;
-#endif  // C++11+
 }
 
 inline bool
 _is_value_exists(char value, std::string const& str)
 {
-#ifdef _ARGPARSE_CXX_11
-    return std::any_of(str.begin(), str.end(),
-                       [&value] (char el) { return el == value; });
-#else
     for (std::size_t i = 0; i < str.size(); ++i) {
         if (str.at(i) == value) {
             return true;
         }
     }
     return false;
-#endif  // C++11+
 }
 
 template <class T>
@@ -1093,7 +1083,7 @@ _split_to_args(std::string const& str)
                 if (str.at(i) != _space) {
                     value += c;
                 }
-                c = str.at(i);
+                c = str[i];
             }
         }
         if (((c == _space && !skip)
@@ -2991,7 +2981,7 @@ protected:
             if (value.size() < indent.size()) {
                 value.resize(indent.size(), detail::_space);
             }
-            value += lines.at(i);
+            value += lines[i];
             detail::_store_value_to(value, result, true);
         }
         detail::_store_value_to(value, result);
@@ -3443,9 +3433,9 @@ protected:
         } else if (conflict_options.size() > 1) {
             throw ArgumentError(
                         "argument "
-                       + detail::_vector_to_string(arg->flags(), "/")
-                       + ": conflicting option strings: "
-                       + detail::_vector_to_string(conflict_options, ", "));
+                        + detail::_vector_to_string(arg->flags(), "/")
+                        + ": conflicting option strings: "
+                        + detail::_vector_to_string(conflict_options, ", "));
         }
     }
 
@@ -4354,22 +4344,33 @@ _ARGPARSE_EXPORT class Namespace
 
         inline const_iterator find(std::string const& key) const
         {
-            return std::find_if(begin(), end(), [&key] (value_type const& pair)
-            { return *(pair.first) == key; });
+            for (const_iterator it = begin(); it != end(); ++it) {
+                if (*(it->first) == key) {
+                    return it;
+                }
+            }
+            return end();
         }
 
         inline const_iterator find(key_type const& key) const
         {
-            return std::find_if(begin(), end(), [&key] (value_type const& pair)
-            { return pair.first == key; });
+            for (const_iterator it = begin(); it != end(); ++it) {
+                if (it->first == key) {
+                    return it;
+                }
+            }
+            return end();
         }
 
         inline iterator find(key_type const& key)
         {
-            return std::find_if(begin(), end(), [&key] (value_type const& pair)
-            { return pair.first == key; });
+            for (iterator it = begin(); it != end(); ++it) {
+                if (it->first == key) {
+                    return it;
+                }
+            }
+            return end();
         }
-
 
 #ifdef _ARGPARSE_CXX_11
         inline
@@ -7564,7 +7565,7 @@ private:
         bool have_negative_args;
     };
 
-    using Parsers = std::deque<ParserInfo>;
+    typedef std::deque<ParserInfo> Parsers;
 
     Namespace
     parse_arguments(std::vector<std::string> const& in_parsed_arguments,
