@@ -53,6 +53,20 @@
 #define _ARGPARSE_VERSION_MINOR 6
 #define _ARGPARSE_VERSION_PATCH 1
 
+#ifdef _MSVC_LANG
+#if _MSVC_LANG >= 201103L
+#define _ARGPARSE_CXX_11
+#endif  // C++11+
+#if _MSVC_LANG >= 201402L
+#define _ARGPARSE_CXX_14
+#endif  // C++14+
+#if _MSVC_LANG >= 201703L
+#define _ARGPARSE_CXX_17
+#endif  // C++17+
+#if _MSVC_LANG >= 202002L
+#define _ARGPARSE_CXX_20
+#endif  // C++20+
+#else
 #if __cplusplus >= 201103L
 #define _ARGPARSE_CXX_11
 #endif  // C++11+
@@ -65,6 +79,7 @@
 #if __cplusplus >= 202002L
 #define _ARGPARSE_CXX_20
 #endif  // C++20+
+#endif  // _MSVC_LANG
 
 #include <algorithm>
 #include <array>
