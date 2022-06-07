@@ -1566,7 +1566,9 @@ _ARGPARSE_EXPORT class Argument
           m_metavar(),
           m_dest(std::vector<std::string>{ std::string() }),
           m_version(),
+#ifdef _ARGPARSE_CXX_11
           m_handle(nullptr),
+#endif  // C++11+
           m_post_trigger(nullptr)
     { }
 
@@ -1594,7 +1596,9 @@ _ARGPARSE_EXPORT class Argument
           m_metavar(),
           m_dest(std::vector<std::string>{ std::string() }),
           m_version(),
+#ifdef _ARGPARSE_CXX_11
           m_handle(nullptr),
+#endif  // C++11+
           m_post_trigger(nullptr)
     { }
 
@@ -1671,7 +1675,9 @@ public:
           m_metavar(),
           m_dest(std::vector<std::string>{ std::string() }),
           m_version(),
+#ifdef _ARGPARSE_CXX_11
           m_handle(nullptr),
+#endif  // C++11+
           m_post_trigger(nullptr)
     { }
 
@@ -1703,7 +1709,9 @@ public:
           m_metavar(orig.m_metavar),
           m_dest(orig.m_dest),
           m_version(orig.m_version),
+#ifdef _ARGPARSE_CXX_11
           m_handle(orig.m_handle),
+#endif  // C++11+
           m_post_trigger(orig.m_post_trigger)
     { }
 
@@ -1735,7 +1743,9 @@ public:
           m_metavar(std::move(orig.m_metavar)),
           m_dest(std::move(orig.m_dest)),
           m_version(std::move(orig.m_version)),
+#ifdef _ARGPARSE_CXX_11
           m_handle(std::move(orig.m_handle)),
+#endif  // C++11+
           m_post_trigger(std::move(orig.m_post_trigger))
     { }
 
@@ -1769,7 +1779,9 @@ public:
             this->m_metavar         = rhs.m_metavar;
             this->m_dest            = rhs.m_dest;
             this->m_version         = rhs.m_version;
+#ifdef _ARGPARSE_CXX_11
             this->m_handle          = rhs.m_handle;
+#endif  // C++11+
             this->m_post_trigger    = rhs.m_post_trigger;
         }
         return *this;
@@ -1805,7 +1817,9 @@ public:
             this->m_metavar         = std::move(rhs.m_metavar);
             this->m_dest            = std::move(rhs.m_dest);
             this->m_version         = std::move(rhs.m_version);
+#ifdef _ARGPARSE_CXX_11
             this->m_handle          = std::move(rhs.m_handle);
+#endif  // C++11+
             this->m_post_trigger    = std::move(rhs.m_post_trigger);
         }
         return *this;
@@ -2378,6 +2392,7 @@ public:
         return *this;
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set argument 'handle' value.
      *  Called when the argument is present and passed the value of the argument
@@ -2411,6 +2426,7 @@ public:
         m_handle = [func] (std::string const&) { func(); };
         return *this;
     }
+#endif  // C++11+
 
     /*!
      *  \brief Get argument flags values
@@ -2543,12 +2559,14 @@ public:
     }
 
 private:
+#ifdef _ARGPARSE_CXX_11
     inline void handle(std::string const& str) const
     {
         if (m_handle) {
             m_handle(detail::_remove_quotes(str));
         }
     }
+#endif  // C++11+
 
     inline void validate() const
     {
@@ -2572,9 +2590,11 @@ private:
 
     inline void prepare_action(Action value)
     {
+#ifdef _ARGPARSE_CXX_11
         if (action() & (argparse::version | argparse::help)) {
             m_handle = nullptr;
         }
+#endif  // C++11+
         if (!(value & detail::_store_const_action)) {
             m_metavar.clear();
         }
@@ -2782,7 +2802,9 @@ private:
     detail::Value<std::vector<std::string> > m_metavar;
     std::vector<std::string> m_dest;
     detail::Value<std::string> m_version;
+#ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
+#endif  // C++11+
     std::function<void(Argument const*)> m_post_trigger;
 };
 
@@ -4011,23 +4033,29 @@ _ARGPARSE_EXPORT class Namespace
                 at(arg).push_values({ });
             } else {
                 at(arg).push_back(arg->implicit_value());
+#ifdef _ARGPARSE_CXX_11
                 arg->handle(arg->implicit_value());
+#endif  // C++11+
             }
         }
 
         inline void store_value(key_type const& arg, std::string const& value)
         {
             at(arg).push_back(value);
+#ifdef _ARGPARSE_CXX_11
             arg->handle(value);
+#endif  // C++11+
         }
 
         inline void store_values(key_type const& arg,
                                  std::vector<std::string> const& values)
         {
             at(arg).push_values(values);
+#ifdef _ARGPARSE_CXX_11
             for (auto const& value : values) {
                 arg->handle(value);
             }
+#endif  // C++11+
         }
 
         inline void store_default_value(key_type const& arg,
@@ -4038,7 +4066,9 @@ _ARGPARSE_EXPORT class Namespace
                 auto& arg_data = at(arg);
                 if (arg_data.empty()) {
                     arg_data.push_default(value);
+#ifdef _ARGPARSE_CXX_11
                     arg->handle(value);
+#endif  // C++11+
                 }
             }
         }
@@ -4050,16 +4080,22 @@ _ARGPARSE_EXPORT class Namespace
                 auto& arg_data = at(arg);
                 if (arg_data.empty()) {
                     arg_data.push_back(arg->const_value());
+#ifdef _ARGPARSE_CXX_11
                     arg->handle(arg->const_value());
+#endif  // C++11+
                 }
                 return true;
             } else if (arg->action() == argparse::append_const) {
                 at(arg).push_back(arg->const_value());
+#ifdef _ARGPARSE_CXX_11
                 arg->handle(arg->const_value());
+#endif  // C++11+
                 return true;
             } else if (arg->action() == argparse::count) {
                 at(arg).emplace_back(std::string());
+#ifdef _ARGPARSE_CXX_11
                 arg->handle(std::string());
+#endif  // C++11+
                 return true;
             }
             return false;
@@ -6062,9 +6098,11 @@ public:
           m_default_values(),
           m_parsed_arguments(),
           m_subparsers(nullptr),
-          m_subparsers_position(),
-          m_handle(nullptr),
+          m_subparsers_position()
+#ifdef _ARGPARSE_CXX_11
+        , m_handle(nullptr),
           m_parse_handle(nullptr)
+#endif  // C++11+
     {
         set_formatter_class(HelpFormatter());
         this->prog(prog);
@@ -6740,6 +6778,7 @@ public:
         return *m_subparsers;
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set argument parser 'handle' function.
      *  Called when the parser is executed and passed the value of the
@@ -6785,6 +6824,7 @@ public:
         m_parse_handle = func;
         return *this;
     }
+#endif  // C++11+
 
     /*!
      *  \brief Get default value for certain argument
@@ -7315,7 +7355,9 @@ private:
                     bool intermixed,
                     Namespace const& space) const
     {
+#ifdef _ARGPARSE_CXX_11
         handle(prog());
+#endif  // C++11+
         check_namespace(space);
         auto parsed_arguments = read_args_from_file(in_parsed_arguments);
 
@@ -7399,7 +7441,9 @@ private:
         check_required_args(parsers, pos, positional);
         check_unrecognized_args(only_known, unrecognized_args);
         default_values_post_trigger(parsers.front().storage);
+#ifdef _ARGPARSE_CXX_11
         namespace_post_trigger(parsers, only_known, unrecognized_args);
+#endif  // C++11+
         return create_namespace(only_known, std::move(parsers.front().storage),
                                 std::move(unrecognized_args));
     }
@@ -8015,7 +8059,9 @@ private:
                 parsers.push_back(ParserInfo(p.get(),
                                              Namespace::Storage(),
                                              p->subparser_info(true, pos)));
+#ifdef _ARGPARSE_CXX_11
                 parsers.back().parser->handle(parsers.back().parser->m_name);
+#endif  // C++11+
                 parsers.back().validate();
 
                 if (!dest.empty()) {
@@ -8433,6 +8479,7 @@ private:
         }
     }
 
+#ifdef _ARGPARSE_CXX_11
     static void
     namespace_post_trigger(Parsers& parsers,
                            bool only_known,
@@ -8455,6 +8502,7 @@ private:
                         only_known, sub_storage, unrecognized_args);
         }
     }
+#endif  // C++11+
 
     static bool
     is_default_stored(std::deque<pArgument>& arguments,
@@ -8614,6 +8662,7 @@ private:
         m_prog = parent_prog + detail::_spaces + m_name;
     }
 
+#ifdef _ARGPARSE_CXX_11
     inline void handle(std::string const& str) const
     {
         if (m_handle) {
@@ -8634,6 +8683,7 @@ private:
             }
         }
     }
+#endif  // C++11+
 
     _ArgumentData m_data;
     std::string m_name;
@@ -8659,8 +8709,10 @@ private:
     std::shared_ptr<Subparser> m_subparsers;
     std::size_t m_subparsers_position;
 
+#ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
     std::function<void(Namespace const&)> m_parse_handle;
+#endif  // C++11+
 };
 }  // namespace argparse
 
