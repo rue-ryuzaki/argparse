@@ -82,14 +82,11 @@
 #endif  // _MSVC_LANG
 
 #include <algorithm>
-#include <array>
 #include <cctype>
 #include <cstddef>
 #include <deque>
-#include <forward_list>
 #include <fstream>
 #include <functional>
-#include <initializer_list>
 #include <iostream>
 #include <list>
 #include <map>
@@ -104,15 +101,18 @@
 #ifdef _ARGPARSE_CXX_17
 #include <string_view>
 #endif  // C++17+
-#include <tuple>
-#include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
 #ifdef _ARGPARSE_CXX_11
+#include <array>
 #include <cstdint>
+#include <forward_list>
+#include <initializer_list>
+#include <tuple>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
 #else
 #include <stdint.h>
 #endif  // C++11+
