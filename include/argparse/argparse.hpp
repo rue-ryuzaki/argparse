@@ -736,6 +736,7 @@ _replace(std::string str, std::string const& old, std::string const& value)
     return str;
 }
 
+#ifdef _ARGPARSE_CXX_11
 inline std::string
 _replace(std::string const& str,
          std::function<bool(unsigned char)> func, std::string const& value)
@@ -751,14 +752,23 @@ _replace(std::string const& str,
     }
     return res;
 }
+#endif  // C++11+
 
 inline std::string
 _format_name(std::string const& str)
 {
-    std::string res = _replace(str, [] (unsigned char c)
-                           { return std::iscntrl(c) || std::isspace(c); }, "");
+#ifdef _ARGPARSE_CXX_11
+    auto res = _replace(str,
+                        [] (unsigned char c) { return std::iscntrl(c); }, "");
+#else
+    std::string res = _replace(str, '\t', "");
+    res = _replace(res, '\n', "");
+    res = _replace(res, '\v', "");
+    res = _replace(res, '\f', "");
+    res = _replace(res, '\r', "");
+#endif  // C++11+
     _trim(res);
-    res = _replace(res, [] (unsigned char c) { return std::isblank(c); }, "_");
+    res = _replace(res, ' ', "_");
     return res;
 }
 
