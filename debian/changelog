@@ -1,3 +1,12 @@
+cpp-argparse-dev (1.6.2-0ppa0) focal; urgency=low
+
+  * Fix: MSVC standard check
+  * Use: handle as C++11+ feature
+  * Fix: detail::_format_name implementation
+  * Code refactoring and optimizing
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Fri, 10 Jun 2022 19:48:44 +0300
+
 cpp-argparse-dev (1.6.1-0ppa0) focal; urgency=low
 
   * Fix: Argument default value using algorithm
