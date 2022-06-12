@@ -32,6 +32,7 @@
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
+#undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
 #undef _ARGPARSE_USE_FILESYSTEM
@@ -114,6 +115,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #else
+#include <cassert>
 #include <stdint.h>
 #endif  // C++11+
 
@@ -205,6 +207,26 @@ using experimental::fundamentals_v1::nullopt;
 #endif  // C++11+
 
 namespace argparse {
+#ifdef _ARGPARSE_CXX_11
+#define _ARGPARSE_NULLPTR  nullptr
+#else
+const
+class nullptr_t
+{
+public:
+    template <class T>
+    operator T*     () const { return 0; }
+
+    template <class C, class T>
+    operator T C::* () const { return 0; }
+
+private:
+    void operator &() const;
+} _nullptr = {};
+
+#define _ARGPARSE_NULLPTR  _nullptr
+#endif  // _ARGPARSE_CXX_11
+
 /*!
  *  \brief Action values
  *
@@ -360,6 +382,254 @@ int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
 _const_action = argparse::store_const | argparse::append_const;
 int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
+
+#ifdef _ARGPARSE_CXX_11
+using std::shared_ptr;
+using std::make_shared;
+#else
+class _shared_ptr_count
+{
+public:
+    _shared_ptr_count()
+        : pn(NULL)
+    { }
+
+    _shared_ptr_count(_shared_ptr_count const& orig)
+        : pn(orig.pn)
+    { }
+
+    inline void swap(_shared_ptr_count& lhs) throw()
+    {
+        std::swap(pn, lhs.pn);
+    }
+
+    inline std::size_t use_count() const throw()
+    {
+        std::size_t count = 0;
+        if (pn) {
+            count = *pn;
+        }
+        return count;
+    }
+
+    template <class U>
+    void acquire(U*& p)
+    {
+        if (p) {
+            if (!pn) {
+                try {
+                    pn = new std::size_t(1);
+                } catch (std::bad_alloc&) {
+                    delete p;
+                    p = NULL;
+                    throw;
+                }
+            } else {
+                ++(*pn);
+            }
+        }
+    }
+
+    template <class U>
+    void release(U*& p) throw()
+    {
+        if (pn) {
+            --(*pn);
+            if (*pn == 0) {
+                delete p;
+                delete pn;
+                p = NULL;
+            }
+            pn = NULL;
+        }
+    }
+
+public:
+    std::size_t* pn;
+};
+
+class _shared_ptr_base
+{
+protected:
+    _shared_ptr_base()
+        : pn()
+    { }
+
+    _shared_ptr_base(_shared_ptr_base const& orig)
+        : pn(orig.pn)
+    { }
+
+    _shared_ptr_count pn;
+};
+
+template <class T>
+class shared_ptr : public _shared_ptr_base
+{
+public:
+    typedef T element_type;
+
+    shared_ptr() throw()
+        : _shared_ptr_base(),
+          px(NULL)
+    { }
+
+    explicit shared_ptr(T* p)
+        : _shared_ptr_base(),
+          px(NULL)
+    {
+        acquire(p);
+    }
+
+    shared_ptr(nullptr_t)
+        : _shared_ptr_base(),
+          px(NULL)
+    { }
+
+    template <class U>
+    shared_ptr(shared_ptr<U> const& ptr, T* p)
+        : _shared_ptr_base(ptr),
+          px(NULL)
+    {
+        acquire(p);
+    }
+
+    template <class U>
+    shared_ptr(shared_ptr<U> const& orig) throw()
+        : _shared_ptr_base(orig),
+          px(NULL)
+    {
+        assert(!orig.get() || (orig.use_count() != 0));
+        acquire(static_cast<typename shared_ptr<T>::element_type*>(orig.get()));
+    }
+
+    shared_ptr(shared_ptr const& orig) throw()
+        : _shared_ptr_base(orig),
+          px(NULL)
+    {
+        assert(!orig.px || (orig.use_count() != 0));
+        acquire(orig.px);
+    }
+
+    inline shared_ptr& operator =(shared_ptr ptr) throw()
+    {
+        swap(ptr);
+        return *this;
+    }
+
+    ~shared_ptr() throw()
+    {
+        release();
+    }
+
+    inline void reset() throw()
+    {
+        release();
+    }
+
+    inline void reset(T* p)
+    {
+        assert(!p || (px != p));
+        release();
+        acquire(p);
+    }
+
+    inline void swap(shared_ptr& lhs) throw()
+    {
+        std::swap(px, lhs.px);
+        pn.swap(lhs.pn);
+    }
+
+    inline operator bool() const throw()
+    {
+        return use_count() > 0;
+    }
+
+    inline bool unique() const throw()
+    {
+        return use_count() == 1;
+    }
+
+    inline std::size_t use_count() const throw()
+    {
+        return pn.use_count();
+    }
+
+    inline T& operator *() const throw()
+    {
+        assert(NULL != px);
+        return *px;
+    }
+
+    inline T* operator ->() const throw()
+    {
+        assert(px);
+        return px;
+    }
+
+    inline T* get() const throw()
+    {
+        return px;
+    }
+
+private:
+    inline void acquire(T* p)
+    {
+        pn.acquire(p);
+        px = p;
+    }
+
+    inline void release() throw()
+    {
+        pn.release(px);
+    }
+
+private:
+    T* px;
+};
+
+template <class T, class U>
+bool operator ==(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() == r.get());
+}
+
+template <class T, class U>
+bool operator !=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() != r.get());
+}
+
+template <class T, class U>
+bool operator <=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() <= r.get());
+}
+
+template <class T, class U>
+bool operator <(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() < r.get());
+}
+
+template <class T, class U>
+bool operator >=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() >= r.get());
+}
+
+template <class T, class U>
+bool operator >(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() > r.get());
+}
+
+template <class T>
+shared_ptr<T>
+make_shared(T const& t)
+{
+    return shared_ptr<T>(new T(t));
+}
+#endif  // C++11+
 
 template <class T> struct is_byte_type              { enum { value = false }; };
 template <>        struct is_byte_type<char>         { enum { value = true }; };
@@ -1791,21 +2061,21 @@ _ARGPARSE_EXPORT class Argument
     { }
 #endif  // C++11+
 
-    static inline std::shared_ptr<Argument>
+    static inline detail::shared_ptr<Argument>
     make_argument(std::vector<std::string> const& flags,
                   std::string const& name,
                   Type type)
     {
-        return std::make_shared<Argument>(Argument(flags, name, type));
+        return detail::make_shared<Argument>(Argument(flags, name, type));
     }
 
 #ifdef _ARGPARSE_CXX_11
-    static inline std::shared_ptr<Argument>
+    static inline detail::shared_ptr<Argument>
     make_argument(std::vector<std::string>&& flags,
                   std::string&& name,
                   Type type)
     {
-        return std::make_shared<Argument>(
+        return detail::make_shared<Argument>(
                     Argument(std::move(flags), std::move(name), type));
     }
 #endif  // C++11+
@@ -3367,7 +3637,7 @@ class _ArgumentData
     { }
 
 protected:
-    typedef std::shared_ptr<Argument> pArgument;
+    typedef detail::shared_ptr<Argument> pArgument;
 
 public:
     /*!
@@ -3668,7 +3938,7 @@ protected:
 #ifdef _ARGPARSE_CXX_11
         m_arguments.emplace_back(std::make_shared<Argument>(arg));
 #else
-        m_arguments.push_back(std::make_shared<Argument>(arg));
+        m_arguments.push_back(detail::make_shared<Argument>(arg));
 #endif  // C++11+
     }
 
@@ -3830,7 +4100,7 @@ _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _BaseArgumentGroup
                              argument_default, argument_default_type, false)
     { }
 
-    static inline std::shared_ptr<ArgumentGroup>
+    static inline detail::shared_ptr<ArgumentGroup>
     make_argument_group(std::string const& title,
                         std::string const& description,
                         std::string& prefix_chars,
@@ -3838,7 +4108,7 @@ _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _BaseArgumentGroup
                         detail::Value<std::string>& argument_default,
                         detail::Value<_SUPPRESS>& argument_default_type)
     {
-        return std::make_shared<ArgumentGroup>
+        return detail::make_shared<ArgumentGroup>
                 (ArgumentGroup(title, description, prefix_chars, parent_data,
                                argument_default, argument_default_type));
     }
@@ -4085,7 +4355,7 @@ private:
  */
 _ARGPARSE_EXPORT class Namespace
 {
-    typedef std::shared_ptr<Argument> pArgument;
+    typedef detail::shared_ptr<Argument> pArgument;
 
     class Storage
     {
@@ -6014,9 +6284,9 @@ inline std::ostream& operator <<(std::ostream& os, Namespace const& obj)
  */
 _ARGPARSE_EXPORT class ArgumentParser
 {
-    typedef std::shared_ptr<Argument> pArgument;
-    typedef std::shared_ptr<_Group> pGroup;
-    typedef std::shared_ptr<ArgumentParser> pParser;
+    typedef detail::shared_ptr<Argument> pArgument;
+    typedef detail::shared_ptr<_Group> pGroup;
+    typedef detail::shared_ptr<ArgumentParser> pParser;
 
 public:
     /*!
@@ -6039,11 +6309,12 @@ public:
               m_parsers()
         { }
 
-        static inline std::shared_ptr<Subparser>
+        static inline detail::shared_ptr<Subparser>
         make_subparser(std::string const& title,
                        std::string const& description)
         {
-            return std::make_shared<Subparser>(Subparser(title, description));
+            return detail::make_shared<Subparser>(
+                        Subparser(title, description));
         }
 
     public:
@@ -6327,7 +6598,7 @@ public:
     };
 
 private:
-    typedef std::pair<std::shared_ptr<Subparser>, std::size_t> SubparserInfo;
+    typedef std::pair<detail::shared_ptr<Subparser>, std::size_t> SubparserInfo;
 
     inline void
     apply_formatter_class(HelpFormatter const& value)
@@ -6401,7 +6672,7 @@ public:
           m_mutex_groups(),
           m_default_values(),
           m_parsed_arguments(),
-          m_subparsers(nullptr),
+          m_subparsers(_ARGPARSE_NULLPTR),
           m_subparsers_position()
 #ifdef _ARGPARSE_CXX_11
         , m_handle(nullptr),
@@ -6494,7 +6765,7 @@ public:
 private:
     pParser static make_parser(std::string const& name)
     {
-        pParser result = std::make_shared<ArgumentParser>(ArgumentParser());
+        pParser result = detail::make_shared<ArgumentParser>(ArgumentParser());
         result->m_prog.clear();
         result->m_name = name;
         return result;
@@ -7810,7 +8081,7 @@ private:
 
     static void
     check_intermixed_subparser(bool intermixed,
-                               std::shared_ptr<Subparser> const& subparser)
+                               detail::shared_ptr<Subparser> const& subparser)
     {
         if (intermixed && subparser) {
             throw
@@ -8519,7 +8790,7 @@ private:
         auto it = std::find_if(args.begin(), args.end(),
                                [&key] (pArgument const& arg)
         { return detail::_is_value_exists(key, arg->flags()); });
-        return it != args.end() ? *it : nullptr;
+        return it != args.end() ? *it : _ARGPARSE_NULLPTR;
     }
 
     static pArgument const
@@ -8527,7 +8798,8 @@ private:
                              Parsers const& parsers,
                              std::string const& key)
     {
-        return was_pseudo_arg ? nullptr : optional_arg_by_flag(parsers, key);
+        return was_pseudo_arg ? _ARGPARSE_NULLPTR
+                              : optional_arg_by_flag(parsers, key);
     }
 
     static bool
@@ -8988,7 +9260,8 @@ private:
         os << detail::_format_output(head_prog, res, 1, indent, w) << std::endl;
     }
 
-    static bool is_subparser_positional(std::shared_ptr<Subparser> const& sub)
+    static bool
+    is_subparser_positional(detail::shared_ptr<Subparser> const& sub)
     {
         return sub && sub->title().empty() && sub->description().empty();
     }
@@ -9004,7 +9277,7 @@ private:
     }
 
     static void print_group(pGroup const& group,
-                            std::shared_ptr<Subparser> const& subparser,
+                            detail::shared_ptr<Subparser> const& subparser,
                             bool is_positional,
                             _HelpFormatter const& formatter,
                             std::string const& prog, std::size_t size,
@@ -9065,7 +9338,7 @@ private:
     std::deque<MutuallyExclusiveGroup> m_mutex_groups;
     std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
-    std::shared_ptr<Subparser> m_subparsers;
+    detail::shared_ptr<Subparser> m_subparsers;
     std::size_t m_subparsers_position;
 
 #ifdef _ARGPARSE_CXX_11
@@ -9080,6 +9353,7 @@ private:
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
+#undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
 #undef _ARGPARSE_USE_FILESYSTEM
