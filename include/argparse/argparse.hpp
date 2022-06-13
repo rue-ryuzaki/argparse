@@ -4159,6 +4159,36 @@ public:
     {
         return add_argument(std::vector<std::string>{ args... });
     }
+#else
+    /*!
+     *  \brief Add argument with flag
+     *
+     *  \param arg Flag value
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(std::string const& arg)
+    {
+        std::vector<std::string> flags;
+        flags.push_back(arg);
+        return add_argument(flags);
+    }
+
+    /*!
+     *  \brief Add argument with 2 flags
+     *
+     *  \param arg1 First value
+     *  \param arg2 Second value
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(std::string const& arg1, std::string const& arg2)
+    {
+        std::vector<std::string> flags;
+        flags.push_back(arg1);
+        flags.push_back(arg2);
+        return add_argument(flags);
+    }
 #endif  // C++11+
 
     /*!
@@ -7000,8 +7030,8 @@ public:
 #endif  // C++11+
     {
         set_formatter_class(HelpFormatter());
-        m_data.update_help(true, m_prefix_chars);
         this->prog(prog);
+        m_data.update_help(true, m_prefix_chars);
     }
 
     /*!
@@ -7639,6 +7669,36 @@ public:
     Argument& add_argument(Args... args)
     {
         return add_argument(std::vector<std::string>{ args... });
+    }
+#else
+    /*!
+     *  \brief Add argument with flag
+     *
+     *  \param arg Flag value
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(std::string const& arg)
+    {
+        std::vector<std::string> flags;
+        flags.push_back(arg);
+        return add_argument(flags);
+    }
+
+    /*!
+     *  \brief Add argument with 2 flags
+     *
+     *  \param arg1 First value
+     *  \param arg2 Second value
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(std::string const& arg1, std::string const& arg2)
+    {
+        std::vector<std::string> flags;
+        flags.push_back(arg1);
+        flags.push_back(arg2);
+        return add_argument(flags);
     }
 #endif  // C++11+
 
