@@ -8409,10 +8409,25 @@ private:
                  = negative_numbers_presented(optional, parser->prefix_chars());
         }
 
-#ifdef _ARGPARSE_CXX_11
-        ParserInfo(ParserInfo const&) = default;
-        ParserInfo& operator =(ParserInfo const&) = default;
-#endif  // C++11+
+        ParserInfo(ParserInfo const& orig)
+            : parser(orig.parser),
+              optional(orig.optional),
+              storage(orig.storage),
+              subparser(orig.subparser),
+              have_negative_args(orig.have_negative_args)
+        { }
+
+        inline ParserInfo& operator =(ParserInfo const& rhs)
+        {
+            if (this != &rhs) {
+                parser              = rhs.parser;
+                optional            = rhs.optional;
+                storage             = rhs.storage;
+                subparser           = rhs.subparser;
+                have_negative_args  = rhs.have_negative_args;
+            }
+            return *this;
+        }
 
         inline void validate() const
         {
