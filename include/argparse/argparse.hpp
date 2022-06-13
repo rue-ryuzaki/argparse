@@ -6944,6 +6944,24 @@ private:
         m_formatter_class._split_lines = value._split_lines();
     }
 
+    inline void read_args(int argc, char const* argv[])
+    {
+        if (argc > 0 && argv && argv[0]) {
+            m_prog = detail::_file_name(argv[0]);
+            m_parsed_arguments.reserve(std::size_t(argc - 1));
+            for (int i = 1; i < argc; ++i) {
+                if (!argv[i]) {
+                    break;
+                }
+#ifdef _ARGPARSE_CXX_11
+                m_parsed_arguments.emplace_back(std::string(argv[i]));
+#else
+                m_parsed_arguments.push_back(std::string(argv[i]));
+#endif  // C++11+
+            }
+        }
+    }
+
 public:
     /*!
      *  \brief Construct argument parser with concrete program name
@@ -6982,49 +7000,54 @@ public:
 #endif  // C++11+
     {
         set_formatter_class(HelpFormatter());
-        this->prog(prog);
         m_data.update_help(true, m_prefix_chars);
+        this->prog(prog);
     }
 
     /*!
      *  \brief Construct argument parser from command line arguments
+     *  with concrete program name
      *
      *  \param argc Number of command line arguments
      *  \param argv Command line arguments data
+     *  \param prog Program name
      *
      *  \return Argument parser object
      */
     explicit
-    ArgumentParser(int argc, char* argv[])
-        : ArgumentParser(argc, const_cast<char const**>(argv))
-    { }
-
-    /*!
-     *  \brief Construct argument parser from command line arguments
-     *
-     *  \param argc Number of command line arguments
-     *  \param argv Command line arguments data
-     *
-     *  \return Argument parser object
-     */
-    explicit
-    ArgumentParser(int argc, char const* argv[])
-        : ArgumentParser("untitled")
-    {
-        if (argc > 0 && argv && argv[0]) {
-            m_prog = detail::_file_name(argv[0]);
-            m_parsed_arguments.reserve(std::size_t(argc - 1));
-            for (int i = 1; i < argc; ++i) {
-                if (!argv[i]) {
-                    break;
-                }
+    ArgumentParser(int argc, char* argv[],
+                   std::string const& prog = std::string())
+        : m_data(),
+          m_name(),
+          m_prog("untitled"),
+          m_usage(),
+          m_description(),
+          m_epilog(),
+          m_help(),
+          m_aliases(),
+          m_formatter_class(),
+          m_prefix_chars(detail::_prefix_chars),
+          m_fromfile_prefix_chars(),
+          m_argument_default(),
+          m_argument_default_type(),
+          m_allow_abbrev(true),
+          m_exit_on_error(true),
+          m_output_width(),
+          m_groups(),
+          m_mutex_groups(),
+          m_default_values(),
+          m_parsed_arguments(),
+          m_subparsers(_ARGPARSE_NULLPTR),
+          m_subparsers_position()
 #ifdef _ARGPARSE_CXX_11
-                m_parsed_arguments.emplace_back(std::string(argv[i]));
-#else
-                m_parsed_arguments.push_back(std::string(argv[i]));
+        , m_handle(nullptr),
+          m_parse_handle(nullptr)
 #endif  // C++11+
-            }
-        }
+    {
+        set_formatter_class(HelpFormatter());
+        m_data.update_help(true, m_prefix_chars);
+        read_args(argc, const_cast<char const**>(argv));
+        this->prog(prog);
     }
 
     /*!
@@ -7038,24 +7061,38 @@ public:
      *  \return Argument parser object
      */
     explicit
-    ArgumentParser(int argc, char* argv[], std::string const& prog)
-        : ArgumentParser(argc, const_cast<char const**>(argv), prog)
-    { }
-
-    /*!
-     *  \brief Construct argument parser from command line arguments
-     *  with concrete program name
-     *
-     *  \param argc Number of command line arguments
-     *  \param argv Command line arguments data
-     *  \param prog Program name
-     *
-     *  \return Argument parser object
-     */
-    explicit
-    ArgumentParser(int argc, char const* argv[], std::string const& prog)
-        : ArgumentParser(argc, argv)
+    ArgumentParser(int argc, char const* argv[],
+                   std::string const& prog = std::string())
+        : m_data(),
+          m_name(),
+          m_prog("untitled"),
+          m_usage(),
+          m_description(),
+          m_epilog(),
+          m_help(),
+          m_aliases(),
+          m_formatter_class(),
+          m_prefix_chars(detail::_prefix_chars),
+          m_fromfile_prefix_chars(),
+          m_argument_default(),
+          m_argument_default_type(),
+          m_allow_abbrev(true),
+          m_exit_on_error(true),
+          m_output_width(),
+          m_groups(),
+          m_mutex_groups(),
+          m_default_values(),
+          m_parsed_arguments(),
+          m_subparsers(_ARGPARSE_NULLPTR),
+          m_subparsers_position()
+#ifdef _ARGPARSE_CXX_11
+        , m_handle(nullptr),
+          m_parse_handle(nullptr)
+#endif  // C++11+
     {
+        set_formatter_class(HelpFormatter());
+        m_data.update_help(true, m_prefix_chars);
+        read_args(argc, argv);
         this->prog(prog);
     }
 
