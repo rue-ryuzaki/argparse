@@ -2359,14 +2359,14 @@ public:
     /*!
      *  \brief Construct argument object with parsed arguments
      *
-     *  \param args Argument flags
+     *  \param flags Argument flags
      *
      *  \return Argument object
      */
     template <class... Args>
     explicit
-    Argument(Args... args)
-        : Argument(std::vector<std::string>{ args... })
+    Argument(Args... flags)
+        : Argument(std::vector<std::string>{ flags... })
     { }
 
     /*!
@@ -2380,6 +2380,76 @@ public:
     Argument(std::initializer_list<std::string> flags)
         : Argument(std::vector<std::string>{ flags })
     { }
+#else
+    /*!
+     *  \brief Construct argument object with parsed arguments
+     *
+     *  \param flag Argument flag
+     *
+     *  \return Argument object
+     */
+    Argument(std::string const& flag)
+        : m_flags(),
+          m_all_flags(),
+          m_name(),
+          m_action(argparse::store),
+          m_type(NoType),
+          m_default_type(),
+          m_help_type(),
+          m_nargs(NARGS_DEF),
+          m_num_args(1),
+          m_nargs_str("1"),
+          m_const(),
+          m_default(),
+          m_implicit(),
+          m_type_name(),
+          m_choices(),
+          m_required(),
+          m_help(),
+          m_metavar(),
+          m_dest(),
+          m_version()
+    {
+        m_flags.push_back(flag);
+        m_all_flags = m_flags;
+        m_dest.push_back(std::string());
+    }
+
+    /*!
+     *  \brief Construct argument object with parsed arguments
+     *
+     *  \param flag1 First flag
+     *  \param flag2 Second flag
+     *
+     *  \return Argument object
+     */
+    Argument(std::string const& flag1, std::string const& flag2)
+        : m_flags(),
+          m_all_flags(),
+          m_name(),
+          m_action(argparse::store),
+          m_type(NoType),
+          m_default_type(),
+          m_help_type(),
+          m_nargs(NARGS_DEF),
+          m_num_args(1),
+          m_nargs_str("1"),
+          m_const(),
+          m_default(),
+          m_implicit(),
+          m_type_name(),
+          m_choices(),
+          m_required(),
+          m_help(),
+          m_metavar(),
+          m_dest(),
+          m_version()
+    {
+        m_flags.push_back(flag1);
+        m_flags.push_back(flag2);
+        m_all_flags = m_flags;
+        m_dest.push_back(std::string());
+    }
 #endif  // C++11+
 
     /*!
@@ -4401,43 +4471,43 @@ public:
     /*!
      *  \brief Add argument with flags
      *
-     *  \param args Flag values
+     *  \param flags Flag values
      *
      *  \return Current argument reference
      */
     template <class... Args>
-    Argument& add_argument(Args... args)
+    Argument& add_argument(Args... flags)
     {
-        return add_argument(std::vector<std::string>{ args... });
+        return add_argument(std::vector<std::string>{ flags... });
     }
 #else
     /*!
      *  \brief Add argument with flag
      *
-     *  \param arg Flag value
+     *  \param flag Flag value
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::string const& arg)
+    Argument& add_argument(std::string const& flag)
     {
         std::vector<std::string> flags;
-        flags.push_back(arg);
+        flags.push_back(flag);
         return add_argument(flags);
     }
 
     /*!
      *  \brief Add argument with 2 flags
      *
-     *  \param arg1 First value
-     *  \param arg2 Second value
+     *  \param flag1 First value
+     *  \param flag2 Second value
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::string const& arg1, std::string const& arg2)
+    Argument& add_argument(std::string const& flag1, std::string const& flag2)
     {
         std::vector<std::string> flags;
-        flags.push_back(arg1);
-        flags.push_back(arg2);
+        flags.push_back(flag1);
+        flags.push_back(flag2);
         return add_argument(flags);
     }
 #endif  // C++11+
@@ -6567,7 +6637,9 @@ private:
         }
         return vec;
     }
+#endif  // C++11+
 
+#ifdef _ARGPARSE_CXX_11
     template <class T>
     typename std::enable_if<
         std::is_constructible<std::string, T>::value, T>::type
@@ -7912,43 +7984,43 @@ public:
     /*!
      *  \brief Add argument with flags
      *
-     *  \param args Flag values
+     *  \param flags Flag values
      *
      *  \return Current argument reference
      */
     template <class... Args>
-    Argument& add_argument(Args... args)
+    Argument& add_argument(Args... flags)
     {
-        return add_argument(std::vector<std::string>{ args... });
+        return add_argument(std::vector<std::string>{ flags... });
     }
 #else
     /*!
      *  \brief Add argument with flag
      *
-     *  \param arg Flag value
+     *  \param flag Flag value
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::string const& arg)
+    Argument& add_argument(std::string const& flag)
     {
         std::vector<std::string> flags;
-        flags.push_back(arg);
+        flags.push_back(flag);
         return add_argument(flags);
     }
 
     /*!
      *  \brief Add argument with 2 flags
      *
-     *  \param arg1 First value
-     *  \param arg2 Second value
+     *  \param flag1 First value
+     *  \param flag2 Second value
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::string const& arg1, std::string const& arg2)
+    Argument& add_argument(std::string const& flag1, std::string const& flag2)
     {
         std::vector<std::string> flags;
-        flags.push_back(arg1);
-        flags.push_back(arg2);
+        flags.push_back(flag1);
+        flags.push_back(flag2);
         return add_argument(flags);
     }
 #endif  // C++11+
