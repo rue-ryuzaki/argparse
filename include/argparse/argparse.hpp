@@ -878,6 +878,50 @@ struct is_same                                                  : false_type {};
 template <class T>
 struct is_same<T, T>                                            : true_type  {};
 
+
+template <class>
+struct _is_integral_helper                                      : false_type {};
+template<>
+struct _is_integral_helper<bool>                                : true_type  {};
+template<>
+struct _is_integral_helper<char>                                : true_type  {};
+template<>
+struct _is_integral_helper<signed char>                         : true_type  {};
+template<>
+struct _is_integral_helper<unsigned char>                       : true_type  {};
+template<>
+struct _is_integral_helper<short>                               : true_type  {};
+template<>
+struct _is_integral_helper<unsigned short>                      : true_type  {};
+template<>
+struct _is_integral_helper<int>                                 : true_type  {};
+template<>
+struct _is_integral_helper<unsigned int>                        : true_type  {};
+template<>
+struct _is_integral_helper<long>                                : true_type  {};
+template<>
+struct _is_integral_helper<unsigned long>                       : true_type  {};
+template<>
+struct _is_integral_helper<long long>                           : true_type  {};
+template<>
+struct _is_integral_helper<unsigned long long>                  : true_type  {};
+
+template <class T>
+struct is_integral : _is_integral_helper<typename remove_cv<T>::type>::type  {};
+
+template <class>
+struct _is_floating_point_helper                                : false_type {};
+template<>
+struct _is_floating_point_helper<float>                         : true_type  {};
+template<>
+struct _is_floating_point_helper<double>                        : true_type  {};
+template<>
+struct _is_floating_point_helper<long double>                   : true_type  {};
+
+template <class T>
+struct is_floating_point
+             : _is_floating_point_helper<typename remove_cv<T>::type>::type  {};
+
 template <class>
 struct is_array                                                 : false_type {};
 template <class T, std::size_t _Size>
@@ -5385,7 +5429,6 @@ public:
         return false;
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value for boolean, byte, floating point
      *  and string types.
@@ -5396,13 +5439,23 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<std::is_constructible<std::string, T>::value
                             || std::is_floating_point<T>::value
                             || std::is_same<bool, T>::value
                             || detail::is_byte_type<T>::value, T>::type
     get(std::string const& key) const
+#else
+    T get(std::string const& key,
+          typename detail::enable_if<
+              detail::is_constructible<std::string, T>::value
+              || detail::is_char_array<T>::value
+              || detail::is_floating_point<T>::value
+              || detail::is_same<bool, T>::value
+              || detail::is_byte_type<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
@@ -5427,12 +5480,20 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<std::is_integral<T>::value
                             && !std::is_same<bool, T>::value
                             && !detail::is_byte_type<T>::value, T>::type
     get(std::string const& key) const
+#else
+    T get(std::string const& key,
+          typename detail::enable_if<
+              detail::is_integral<T>::value
+              && !detail::is_same<bool, T>::value
+              && !detail::is_byte_type<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
@@ -5448,6 +5509,7 @@ public:
         return to_type<T>(args.second.front());
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value std array type
      *
@@ -5743,6 +5805,7 @@ public:
         return to_tuple(detail::type_tag<T>{},
                         detail::_split(args.second.front(), delim));
     }
+#endif  // C++11+
 
     /*!
      *  \brief Get parsed argument value for custom types
@@ -5752,6 +5815,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         !std::is_constructible<std::string, T>::value
         && !std::is_floating_point<T>::value
@@ -5769,8 +5833,18 @@ public:
         && !detail::is_stl_queue<typename std::decay<T>::type>::value
         && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
+#else
+    T get(std::string const& key,
+          typename detail::enable_if<
+              !detail::is_constructible<std::string, T>::value
+              && !detail::is_char_array<T>::value
+              && !detail::is_integral<T>::value
+              && !detail::is_floating_point<T>::value
+              && !detail::is_same<bool, T>::value
+              && !detail::is_byte_type<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
@@ -5778,31 +5852,6 @@ public:
         }
         return to_type<T>(detail::_vector_to_string(args.second()));
     }
-#else
-    /*!
-     *  \brief Get parsed argument value
-     *
-     *  \param key Argument name
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    T get(std::string const& key) const
-    {
-        Storage::value_type const& args = data(key);
-        if (args.first->action() == argparse::count) {
-            return T(args.second.size());
-        }
-        if (args.second.empty()) {
-            return T();
-        }
-        if (args.second.size() != 1) {
-            throw
-            TypeError("trying to get data from array argument '" + key + "'");
-        }
-        return to_type<T>(args.second.front());
-    }
-#endif  // C++11+
 
     /*!
      *  \brief Print namespace to output stream
@@ -6651,25 +6700,48 @@ private:
     }
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_11
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         std::is_constructible<std::string, T>::value, T>::type
     to_type(std::string const& data) const
+#else
+    T to_type(std::string const& data,
+              typename detail::enable_if<
+                  detail::is_constructible<std::string, T>::value
+                  || detail::is_char_array<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
+#ifdef _ARGPARSE_CXX_11
         return detail::_remove_quotes<T>(data);
+#else
+        return detail::_remove_quotes(data);
+#endif  // C++11+
     }
 
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<std::is_same<bool, T>::value, T>::type
     to_type(std::string const& data) const _ARGPARSE_NOEXCEPT
+#else
+    T to_type(std::string const& data,
+              typename detail::enable_if<
+                  detail::is_same<bool, T>::value, bool>::type = true) const
+                                                              _ARGPARSE_NOEXCEPT
+#endif  // C++11+
     {
         return detail::_string_to_bool(data);
     }
 
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<detail::is_byte_type<T>::value, T>::type
     to_type(std::string const& data) const
+#else
+    T to_type(std::string const& data,
+              typename detail::enable_if<
+                  detail::is_byte_type<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
         if (data.empty()) {
             return T();
@@ -6678,30 +6750,23 @@ private:
             throw TypeError("trying to get data from array argument value '"
                             + data + "'");
         }
-        return T(data.front());
+        return T(data.at(0));
     }
 
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<!std::is_constructible<std::string, T>::value
                             && !std::is_same<bool, T>::value
                             && !detail::is_byte_type<T>::value, T>::type
     to_type(std::string const& data) const
-    {
-        if (data.empty()) {
-            return T();
-        }
-        T result;
-        std::stringstream ss(detail::_remove_quotes(data));
-        ss >> result;
-        if (ss.fail() || !ss.eof()) {
-            throw TypeError("invalid " + detail::Type::name<T>()
-                            + " value: '" + data + "'");
-        }
-        return result;
-    }
 #else
-    template <class T>
-    T to_type(std::string const& data) const
+    T to_type(std::string const& data,
+              typename detail::enable_if<
+                  !detail::is_constructible<std::string, T>::value
+                  && !detail::is_char_array<T>::value
+                  && !detail::is_same<bool, T>::value
+                  && !detail::is_byte_type<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
         if (data.empty()) {
             return T();
@@ -6715,7 +6780,6 @@ private:
         }
         return result;
     }
-#endif  // C++11+
 
 #ifdef _ARGPARSE_USE_OPTIONAL
     inline std::optional<Storage::value_type>
