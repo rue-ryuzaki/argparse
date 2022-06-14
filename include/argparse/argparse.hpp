@@ -873,12 +873,24 @@ struct integral_constant
 typedef integral_constant<bool, true> true_type;
 typedef integral_constant<bool, false> false_type;
 
+template <class T, class U>
+struct is_same                                                  : false_type {};
+template <class T>
+struct is_same<T, T>                                            : true_type  {};
+
 template <class>
 struct is_array                                                 : false_type {};
 template <class T, std::size_t _Size>
 struct is_array<T[_Size]>                                       : true_type  {};
 template <class T>
 struct is_array<T[]>                                            : true_type  {};
+
+template <class>
+struct is_char_array                                            : false_type {};
+template <class T, std::size_t _Size>
+struct is_char_array<T[_Size]>                                  : true_type  {};
+template <class T>
+struct is_char_array<T[]>                                       : true_type  {};
 
 template <class T,
           class AT_1 = void,
@@ -2940,7 +2952,7 @@ public:
             T const& value,
             typename detail::enable_if<
                 !detail::is_constructible<std::string, T>::value
-                && !detail::is_array<T>::value, bool>::type = true)
+                && !detail::is_char_array<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         const_value(detail::_to_string<T>(value));
@@ -2979,7 +2991,7 @@ public:
             T const& value,
             typename detail::enable_if<
                 !detail::is_constructible<std::string, T>::value
-                && !detail::is_array<T>::value, bool>::type = true)
+                && !detail::is_char_array<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         m_default = detail::_to_string<T>(value);
@@ -3039,7 +3051,7 @@ public:
             T const& value,
             typename detail::enable_if<
                 !detail::is_constructible<std::string, T>::value
-                && !detail::is_array<T>::value, bool>::type = true)
+                && !detail::is_char_array<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         m_implicit = detail::_to_string<T>(value);
@@ -8295,7 +8307,7 @@ public:
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
                 detail::is_constructible<std::string, T>::value
-                || detail::is_array<T>::value, bool>::type = true) const
+                || detail::is_char_array<T>::value, bool>::type = true) const
 #endif  // C++11+
     {
         return parse_args(detail::_split_to_args(args), space);
@@ -8350,7 +8362,7 @@ public:
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
                 detail::is_constructible<std::string, T>::value
-                || detail::is_array<T>::value, bool>::type = true) const
+                || detail::is_char_array<T>::value, bool>::type = true) const
 #endif  // C++11+
     {
         return parse_known_args(detail::_split_to_args(args), space);
@@ -8406,7 +8418,7 @@ public:
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
                 detail::is_constructible<std::string, T>::value
-                || detail::is_array<T>::value, bool>::type = true) const
+                || detail::is_char_array<T>::value, bool>::type = true) const
 #endif  // C++11+
     {
         return parse_intermixed_args(detail::_split_to_args(args), space);
@@ -8464,7 +8476,7 @@ public:
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
                 detail::is_constructible<std::string, T>::value
-                || detail::is_array<T>::value, bool>::type = true) const
+                || detail::is_char_array<T>::value, bool>::type = true) const
 #endif  // C++11+
     {
         return parse_known_intermixed_args(detail::_split_to_args(args), space);
