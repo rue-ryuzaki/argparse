@@ -2625,8 +2625,8 @@ public:
      *  \return Current argument reference
      */
     template <class T,
-              class = typename std::enable_if<
-                  !std::is_constructible<std::string, T>::value>::type>
+              typename std::enable_if<
+                !std::is_constructible<std::string, T>::value>::type* = nullptr>
     Argument& const_value(T const& value)
     {
         std::stringstream ss;
@@ -2659,8 +2659,8 @@ public:
      *  \return Current argument reference
      */
     template <class T,
-              class = typename std::enable_if<
-                  !std::is_constructible<std::string, T>::value>::type>
+              typename std::enable_if<
+                !std::is_constructible<std::string, T>::value>::type* = nullptr>
     Argument& default_value(T const& value)
     {
         std::stringstream ss;
@@ -2714,8 +2714,8 @@ public:
      *  \return Current argument reference
      */
     template <class T,
-              class = typename std::enable_if<
-                  !std::is_constructible<std::string, T>::value>::type>
+              typename std::enable_if<
+                !std::is_constructible<std::string, T>::value>::type* = nullptr>
     Argument& implicit_value(T const& value)
     {
         std::stringstream ss;
@@ -7962,8 +7962,8 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T,
-              class = typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type>
+              typename std::enable_if<
+                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     Namespace parse_args(T const& args,
                          Namespace const& space = Namespace()) const
     {
@@ -8010,8 +8010,8 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T,
-              class = typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type>
+              typename std::enable_if<
+                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     Namespace parse_known_args(T const& args,
                                Namespace const& space = Namespace()) const
     {
@@ -8059,8 +8059,8 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T,
-              class = typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type>
+              typename std::enable_if<
+                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     Namespace parse_intermixed_args(T const& args,
                                     Namespace const& space = Namespace()) const
     {
@@ -8109,8 +8109,8 @@ public:
      *  \return Object with parsed arguments
      */
     template <class T,
-              class = typename std::enable_if<
-                  std::is_constructible<std::string, T>::value>::type>
+              typename std::enable_if<
+                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     Namespace
     parse_known_intermixed_args(T const& args,
                                 Namespace const& space = Namespace()) const
