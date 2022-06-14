@@ -2852,7 +2852,6 @@ public:
         return *this;
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set custom argument 'const' value
      *
@@ -2860,18 +2859,24 @@ public:
      *
      *  \return Current argument reference
      */
+#ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                 !std::is_constructible<std::string, T>::value>::type* = nullptr>
     Argument& const_value(T const& value)
+#else
+    template <class T>
+    Argument& const_value(
+            T const& value,
+            typename detail::enable_if<
+                !detail::is_constructible<std::string, T>::value
+                && !detail::is_array<T>::value, bool>::type = true)
+#endif  // C++11+
     {
-        std::stringstream ss;
-        ss << value;
-        const_value(ss.str());
+        const_value(detail::_to_string<T>(value));
         m_type_name = detail::Type::basic<T>();
         return *this;
     }
-#endif  // C++11+
 
     /*!
      *  \brief Set argument 'default' value
@@ -2886,7 +2891,6 @@ public:
         return *this;
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set custom argument 'default' value
      *
@@ -2894,18 +2898,24 @@ public:
      *
      *  \return Current argument reference
      */
+#ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                 !std::is_constructible<std::string, T>::value>::type* = nullptr>
     Argument& default_value(T const& value)
+#else
+    template <class T>
+    Argument& default_value(
+            T const& value,
+            typename detail::enable_if<
+                !detail::is_constructible<std::string, T>::value
+                && !detail::is_array<T>::value, bool>::type = true)
+#endif  // C++11+
     {
-        std::stringstream ss;
-        ss << value;
-        m_default = ss.str();
+        m_default = detail::_to_string<T>(value);
         m_type_name = detail::Type::basic<T>();
         return *this;
     }
-#endif  // C++11+
 
     /*!
      *  \brief Suppress argument 'default' value
@@ -2941,7 +2951,6 @@ public:
         return *this;
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set custom argument 'implicit' value
      *
@@ -2949,18 +2958,24 @@ public:
      *
      *  \return Current argument reference
      */
+#ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                 !std::is_constructible<std::string, T>::value>::type* = nullptr>
     Argument& implicit_value(T const& value)
+#else
+    template <class T>
+    Argument& implicit_value(
+            T const& value,
+            typename detail::enable_if<
+                !detail::is_constructible<std::string, T>::value
+                && !detail::is_array<T>::value, bool>::type = true)
+#endif  // C++11+
     {
-        std::stringstream ss;
-        ss << value;
-        m_implicit = ss.str();
+        m_implicit = detail::_to_string<T>(value);
         m_type_name = detail::Type::basic<T>();
         return *this;
     }
-#endif  // C++11+
 
     /*!
      *  \brief Set argument 'type' name
