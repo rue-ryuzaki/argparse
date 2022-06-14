@@ -8203,7 +8203,6 @@ public:
         return parse_args(m_parsed_arguments, space);
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Parse concrete arguments
      *
@@ -8212,15 +8211,23 @@ public:
      *
      *  \return Object with parsed arguments
      */
+#ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     Namespace parse_args(T const& args,
                          Namespace const& space = Namespace()) const
+#else
+    template <class T>
+    Namespace parse_args(
+            T const& args, Namespace const& space = Namespace(),
+            typename detail::enable_if<
+                detail::is_constructible<std::string, T>::value
+                || detail::is_array<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
         return parse_args(detail::_split_to_args(args), space);
     }
-#endif  // C++11+
 
     /*!
      *  \brief Parse concrete arguments
@@ -8251,7 +8258,6 @@ public:
         return parse_known_args(m_parsed_arguments, space);
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Parse known concrete arguments
      *
@@ -8260,15 +8266,23 @@ public:
      *
      *  \return Object with parsed arguments
      */
+#ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     Namespace parse_known_args(T const& args,
                                Namespace const& space = Namespace()) const
+#else
+    template <class T>
+    Namespace parse_known_args(
+            T const& args, Namespace const& space = Namespace(),
+            typename detail::enable_if<
+                detail::is_constructible<std::string, T>::value
+                || detail::is_array<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
         return parse_known_args(detail::_split_to_args(args), space);
     }
-#endif  // C++11+
 
     /*!
      *  \brief Parse known concrete arguments
@@ -8300,7 +8314,6 @@ public:
         return parse_intermixed_args(m_parsed_arguments, space);
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Parse intermixed concrete arguments
      *
@@ -8309,15 +8322,23 @@ public:
      *
      *  \return Object with parsed arguments
      */
+#ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     Namespace parse_intermixed_args(T const& args,
                                     Namespace const& space = Namespace()) const
+#else
+    template <class T>
+    Namespace parse_intermixed_args(
+            T const& args, Namespace const& space = Namespace(),
+            typename detail::enable_if<
+                detail::is_constructible<std::string, T>::value
+                || detail::is_array<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
         return parse_intermixed_args(detail::_split_to_args(args), space);
     }
-#endif  // C++11+
 
     /*!
      *  \brief Parse intermixed concrete arguments
@@ -8350,7 +8371,6 @@ public:
         return parse_known_intermixed_args(m_parsed_arguments, space);
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Parse known intermixed concrete arguments
      *
@@ -8359,16 +8379,24 @@ public:
      *
      *  \return Object with parsed arguments
      */
+#ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     Namespace
     parse_known_intermixed_args(T const& args,
                                 Namespace const& space = Namespace()) const
+#else
+    template <class T>
+    Namespace parse_known_intermixed_args(
+            T const& args, Namespace const& space = Namespace(),
+            typename detail::enable_if<
+                detail::is_constructible<std::string, T>::value
+                || detail::is_array<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
         return parse_known_intermixed_args(detail::_split_to_args(args), space);
     }
-#endif  // C++11+
 
     /*!
      *  \brief Parse known intermixed concrete arguments
