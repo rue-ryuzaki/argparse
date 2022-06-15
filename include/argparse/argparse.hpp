@@ -2295,6 +2295,11 @@ _ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _REMAINDER
 #endif  // _ARGPARSE_CXX_11
 {} REMAINDER;
 
+#ifndef _ARGPARSE_CXX_11
+// Forward declaration
+class _ArgumentData;
+#endif  // _ARGPARSE_CXX_11
+
 /*!
  *  \brief Argument class
  */
@@ -2360,10 +2365,13 @@ _ARGPARSE_EXPORT class Argument
 #else
           m_dest(),
 #endif  // C++11+
-          m_version()
+          m_version(),
 #ifdef _ARGPARSE_CXX_11
-        , m_handle(nullptr),
+          m_handle(nullptr),
           m_post_trigger(nullptr)
+#else
+          m_data_trigger(NULL),
+          m_post_trigger(NULL)
 #endif  // C++11+
     {
 #ifndef _ARGPARSE_CXX_11
@@ -2474,7 +2482,9 @@ public:
           m_help(),
           m_metavar(),
           m_dest(),
-          m_version()
+          m_version(),
+          m_data_trigger(NULL),
+          m_post_trigger(NULL)
     {
         m_flags.push_back(flag);
         m_all_flags = m_flags;
@@ -2509,7 +2519,9 @@ public:
           m_help(),
           m_metavar(),
           m_dest(),
-          m_version()
+          m_version(),
+          m_data_trigger(NULL),
+          m_post_trigger(NULL)
     {
         m_flags.push_back(flag1);
         m_flags.push_back(flag2);
@@ -2553,10 +2565,13 @@ public:
 #else
           m_dest(),
 #endif  // C++11+
-          m_version()
+          m_version(),
 #ifdef _ARGPARSE_CXX_11
-        , m_handle(nullptr),
+          m_handle(nullptr),
           m_post_trigger(nullptr)
+#else
+          m_data_trigger(NULL),
+          m_post_trigger(NULL)
 #endif  // C++11+
     {
 #ifndef _ARGPARSE_CXX_11
@@ -2591,11 +2606,13 @@ public:
           m_help(orig.m_help),
           m_metavar(orig.m_metavar),
           m_dest(orig.m_dest),
-          m_version(orig.m_version)
+          m_version(orig.m_version),
 #ifdef _ARGPARSE_CXX_11
-        , m_handle(orig.m_handle),
-          m_post_trigger(orig.m_post_trigger)
+          m_handle(orig.m_handle),
+#else
+          m_data_trigger(orig.m_data_trigger),
 #endif  // C++11+
+          m_post_trigger(orig.m_post_trigger)
     { }
 
 #ifdef _ARGPARSE_CXX_11
@@ -2664,8 +2681,10 @@ public:
             this->m_version         = rhs.m_version;
 #ifdef _ARGPARSE_CXX_11
             this->m_handle          = rhs.m_handle;
-            this->m_post_trigger    = rhs.m_post_trigger;
+#else
+            this->m_data_trigger    = rhs.m_data_trigger;
 #endif  // C++11+
+            this->m_post_trigger    = rhs.m_post_trigger;
         }
         return *this;
     }
@@ -3555,6 +3574,10 @@ private:
             if (m_post_trigger) {
                 m_post_trigger(this);
             }
+#else
+            if (m_data_trigger && m_post_trigger) {
+                (m_data_trigger->*(m_post_trigger))(this);
+            }
 #endif  // C++11+
         } else {
             m_all_flags = m_flags;
@@ -3785,6 +3808,9 @@ private:
 #ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
     std::function<void(Argument const*)> m_post_trigger;
+#else
+    _ArgumentData* m_data_trigger;
+    void (_ArgumentData:: *m_post_trigger)(Argument const*);
 #endif  // C++11+
 };
 
@@ -4405,6 +4431,11 @@ protected:
         }
 #else
         m_arguments.push_back(arg);
+        if (is_optional) {
+            m_arguments.back()->m_data_trigger = this;
+            m_arguments.back()->m_post_trigger
+                    = &_ArgumentData::check_conflict_arg;
+        }
 #endif  // C++11+
     }
 
