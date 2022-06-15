@@ -1949,7 +1949,7 @@ _get_type_name()
     std::string::size_type pos = res.find("__cdecl") + 8;
     return _replace(
       res.substr(pos + 33, res.size() - pos - 33 - 7), "class ", std::string());
-#elif defined(__clang__)
+#elif defined(__clang__) || defined(__INTEL_COMPILER)
     std::string res = __PRETTY_FUNCTION__;
     std::string::size_type pos = res.find('=') + 2;
     return res.substr(pos, res.size() - pos - 1);
