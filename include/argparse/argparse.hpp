@@ -878,7 +878,6 @@ struct is_same                                                  : false_type {};
 template <class T>
 struct is_same<T, T>                                            : true_type  {};
 
-
 template <class>
 struct _is_integral_helper                                      : false_type {};
 template<>
@@ -5820,8 +5819,6 @@ public:
         !std::is_constructible<std::string, T>::value
         && !std::is_floating_point<T>::value
         && !std::is_integral<T>::value
-        && !std::is_same<bool, T>::value
-        && !detail::is_byte_type<T>::value
         && !detail::is_stl_array<typename std::decay<T>::type>::value
         && !detail::is_stl_container<typename std::decay<T>::type>::value
         && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
@@ -5838,10 +5835,8 @@ public:
           typename detail::enable_if<
               !detail::is_constructible<std::string, T>::value
               && !detail::is_char_array<T>::value
-              && !detail::is_integral<T>::value
               && !detail::is_floating_point<T>::value
-              && !detail::is_same<bool, T>::value
-              && !detail::is_byte_type<T>::value, bool>::type = true) const
+              && !detail::is_integral<T>::value, bool>::type = true) const
 #endif  // C++11+
     {
         Storage::value_type const& args = data(key);
@@ -6461,8 +6456,6 @@ public:
         !std::is_constructible<std::string, T>::value
         && !std::is_floating_point<T>::value
         && !std::is_integral<T>::value
-        && !std::is_same<bool, T>::value
-        && !detail::is_byte_type<T>::value
         && !detail::is_stl_array<typename std::decay<T>::type>::value
         && !detail::is_stl_container<typename std::decay<T>::type>::value
         && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
