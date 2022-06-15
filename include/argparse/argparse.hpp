@@ -5443,16 +5443,14 @@ public:
                             || std::is_floating_point<T>::value
                             || std::is_same<bool, T>::value
                             || detail::is_byte_type<T>::value, T>::type
-    get(std::string const& key) const
 #else
-    T get(std::string const& key,
-          typename detail::enable_if<
-              detail::is_constructible<std::string, T>::value
-              || detail::is_char_array<T>::value
-              || detail::is_floating_point<T>::value
-              || detail::is_same<bool, T>::value
-              || detail::is_byte_type<T>::value, bool>::type = true) const
+    typename detail::enable_if<detail::is_constructible<std::string, T>::value
+                               || detail::is_char_array<T>::value
+                               || detail::is_floating_point<T>::value
+                               || detail::is_same<bool, T>::value
+                               || detail::is_byte_type<T>::value, T>::type
 #endif  // C++11+
+    get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
@@ -5483,14 +5481,12 @@ public:
     typename std::enable_if<std::is_integral<T>::value
                             && !std::is_same<bool, T>::value
                             && !detail::is_byte_type<T>::value, T>::type
-    get(std::string const& key) const
 #else
-    T get(std::string const& key,
-          typename detail::enable_if<
-              detail::is_integral<T>::value
-              && !detail::is_same<bool, T>::value
-              && !detail::is_byte_type<T>::value, bool>::type = true) const
+    typename detail::enable_if<detail::is_integral<T>::value
+                               && !detail::is_same<bool, T>::value
+                               && !detail::is_byte_type<T>::value, T>::type
 #endif  // C++11+
+    get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
@@ -5829,15 +5825,14 @@ public:
         && !detail::is_stl_pair<typename std::decay<T>::type>::value
         && !detail::is_stl_queue<typename std::decay<T>::type>::value
         && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
-    get(std::string const& key) const
 #else
-    T get(std::string const& key,
-          typename detail::enable_if<
-              !detail::is_constructible<std::string, T>::value
-              && !detail::is_char_array<T>::value
-              && !detail::is_floating_point<T>::value
-              && !detail::is_integral<T>::value, bool>::type = true) const
+    typename detail::enable_if<
+        !detail::is_constructible<std::string, T>::value
+        && !detail::is_char_array<T>::value
+        && !detail::is_floating_point<T>::value
+        && !detail::is_integral<T>::value, T>::type
 #endif  // C++11+
+    get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
@@ -6697,13 +6692,11 @@ private:
 #ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         std::is_constructible<std::string, T>::value, T>::type
-    to_type(std::string const& data) const
 #else
-    T to_type(std::string const& data,
-              typename detail::enable_if<
-                  detail::is_constructible<std::string, T>::value
-                  || detail::is_char_array<T>::value, bool>::type = true) const
+    typename detail::enable_if<detail::is_constructible<std::string, T>::value
+                               || detail::is_char_array<T>::value, T>::type
 #endif  // C++11+
+    to_type(std::string const& data) const
     {
 #ifdef _ARGPARSE_CXX_11
         return detail::_remove_quotes<T>(data);
@@ -6715,13 +6708,10 @@ private:
     template <class T>
 #ifdef _ARGPARSE_CXX_11
     typename std::enable_if<std::is_same<bool, T>::value, T>::type
-    to_type(std::string const& data) const _ARGPARSE_NOEXCEPT
 #else
-    T to_type(std::string const& data,
-              typename detail::enable_if<
-                  detail::is_same<bool, T>::value, bool>::type = true) const
-                                                              _ARGPARSE_NOEXCEPT
+    typename detail::enable_if<detail::is_same<bool, T>::value, T>::type
 #endif  // C++11+
+    to_type(std::string const& data) const _ARGPARSE_NOEXCEPT
     {
         return detail::_string_to_bool(data);
     }
@@ -6729,12 +6719,10 @@ private:
     template <class T>
 #ifdef _ARGPARSE_CXX_11
     typename std::enable_if<detail::is_byte_type<T>::value, T>::type
-    to_type(std::string const& data) const
 #else
-    T to_type(std::string const& data,
-              typename detail::enable_if<
-                  detail::is_byte_type<T>::value, bool>::type = true) const
+    typename detail::enable_if<detail::is_byte_type<T>::value, T>::type
 #endif  // C++11+
+    to_type(std::string const& data) const
     {
         if (data.empty()) {
             return T();
@@ -6751,15 +6739,13 @@ private:
     typename std::enable_if<!std::is_constructible<std::string, T>::value
                             && !std::is_same<bool, T>::value
                             && !detail::is_byte_type<T>::value, T>::type
-    to_type(std::string const& data) const
 #else
-    T to_type(std::string const& data,
-              typename detail::enable_if<
-                  !detail::is_constructible<std::string, T>::value
-                  && !detail::is_char_array<T>::value
-                  && !detail::is_same<bool, T>::value
-                  && !detail::is_byte_type<T>::value, bool>::type = true) const
+    typename detail::enable_if<!detail::is_constructible<std::string, T>::value
+                               && !detail::is_char_array<T>::value
+                               && !detail::is_same<bool, T>::value
+                               && !detail::is_byte_type<T>::value, T>::type
 #endif  // C++11+
+    to_type(std::string const& data) const
     {
         if (data.empty()) {
             return T();
