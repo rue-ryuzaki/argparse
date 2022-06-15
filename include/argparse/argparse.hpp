@@ -1956,7 +1956,11 @@ _get_type_name()
 #elif defined(__GNUC__)
     std::string res = __PRETTY_FUNCTION__;
     std::string::size_type pos = res.find('=') + 2;
+#if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 6))
     return res.substr(pos, res.find(';', pos) - pos);
+#else
+    return res.substr(pos, res.find(',', pos) - pos);
+#endif  // __GNUC__ >= 4.7
 #else
     return std::string();
 #endif  // _MSC_VER
