@@ -2103,7 +2103,14 @@ public:
 #else
     template <class T>
     std::string static
-    name()
+    name(typename enable_if<is_same<std::string, T>::value, bool>::type = true)
+    {
+        return "std::string";
+    }
+
+    template <class T>
+    std::string static
+    name(typename enable_if<!is_same<std::string, T>::value, bool>::type = true)
     {
         return _get_type_name<T>();
     }
