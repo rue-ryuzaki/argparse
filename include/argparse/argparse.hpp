@@ -2462,6 +2462,7 @@ public:
      *
      *  \return Argument object
      */
+    explicit
     Argument(std::string const& flag)
         : m_flags(),
           m_all_flags(),
@@ -2499,6 +2500,7 @@ public:
      *
      *  \return Argument object
      */
+    explicit
     Argument(std::string const& flag1, std::string const& flag2)
         : m_flags(),
           m_all_flags(),
