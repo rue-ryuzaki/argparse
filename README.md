@@ -1,6 +1,6 @@
-[![Argument Parser for C++11+](https://raw.githubusercontent.com/rue-ryuzaki/argparse/master/doc/argparse-logo.png)](https://github.com/rue-ryuzaki/argparse/releases)
+[![Argument Parser for C++](https://raw.githubusercontent.com/rue-ryuzaki/argparse/master/doc/argparse-logo.png)](https://github.com/rue-ryuzaki/argparse/releases)
 
-[![Language](https://img.shields.io/badge/C%2B%2B-11/14/17/20-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
+[![Language](https://img.shields.io/badge/C%2B%2B-98/11/14/17/20-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 [![Ubuntu](https://github.com/rue-ryuzaki/argparse/workflows/Ubuntu/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AUbuntu)
 [![macOS](https://github.com/rue-ryuzaki/argparse/workflows/macOS/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AmacOS)
 [![Windows](https://github.com/rue-ryuzaki/argparse/workflows/Windows/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AWindows)
@@ -13,11 +13,11 @@
 [![GitHub issues](https://img.shields.io/github/issues/rue-ryuzaki/argparse.svg)](https://github.com/rue-ryuzaki/argparse/issues)
 [![Try it on godbolt online](https://img.shields.io/badge/on-godbolt-blue.svg)](https://godbolt.org/z/arcbv6ecv)
 # ArgumentParser
-Python-like argument parser for C++11+ projects (with similar syntax).
+Python-like argument parser for C++ projects (with similar syntax).
 
 This project is a C++ adaptation of Python argparse and supports most of its features (actions, nargs, subparsers, argument groups, help formatting, auto-generated usage and help, and more).
 ## Supported compilers
-C++11 support compiler
+C++ support compiler (C++98 standard support is experimental)
  - Ubuntu: gcc (tested 4.8, 5 up to 10), clang (tested 3.9 up to 12)
  - macOS: clang (tested 13 on macos-11)
  - Windows: mingw (tested 8.1), clang (tested 11 up to 14), msvc (tested 2019, 2022), github legacy: msvc2017
@@ -36,7 +36,7 @@ C++11 support compiler
 - [Namespace::get<> types support](#namespaceget-types-support--try_get-with-stdoptional-since-c17)
   - [custom types](#custom-type-example)
 - [Features](#features)
-  - [handle](#handle)
+  - [handle (for C++11+)](#handle)
   - [terminal size auto-detection](#terminal-size-auto-detection)
   - [Argument::implicit_value](#argumentimplicit_value)
 - Python API support:
@@ -239,13 +239,13 @@ int main(int argc, char* argv[])
 ```
 ## Namespace::get<> types support (+ try_get with std::optional, since C++17)
 - base types (bool, integral types, floating point types, std::string, std::string_view (since C++17))
-- byte types (char, signed/unsigned char, int8_t, uint8_t, char8_t, std::byte)
-- containers (std::array, std::deque, std::forward_list, std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset, std::unordered_set)
-- containers with std::pair/std::tuple
-- 2 dimensional containers (std::deque, std::list, std::vector with another containers or queues)
-- mapped types (std::map, std::multimap, std::unordered_map)
-- std::pair
-- std::tuple
+- byte types (char, signed/unsigned char, int8_t, uint8_t, std::byte (since C++17), char8_t (since C++20))
+- containers (std::array (since C++11), std::deque, std::forward_list (since C++11), std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset (since C++11), std::unordered_set (since C++11)) (for C++11+)
+- containers with std::pair/std::tuple (for C++11+)
+- 2 dimensional containers (std::deque, std::list, std::vector with another containers or queues) (for C++11+)
+- mapped types (std::map, std::multimap, std::unordered_map (since C++11), std::unordered_multimap (since C++11)) (for C++11+)
+- std::pair (for C++11+)
+- std::tuple (since C++11)
 - custom types
 ### Don't work:
 - pointer and reference types
