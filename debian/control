@@ -6,5 +6,5 @@ Build-Depends: cmake, build-essential
 
 Package: cpp-argparse-dev
 Architecture: any
-Description: C++11 Argument Parser
- Python-like header-only C++11 argument parser
+Description: C++ Argument Parser
+ Python-like header-only C++ argument parser
