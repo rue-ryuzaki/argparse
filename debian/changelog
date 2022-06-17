@@ -1,3 +1,10 @@
+cpp-argparse-dev (1.6.3-0ppa0) focal; urgency=low
+
+  * Add: C++98 standard support
+  * Fix: detail::_get_type_name() for GCC 4.6
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Fri, 17 Jun 2022 22:33:32 +0300
+
 cpp-argparse-dev (1.6.2-0ppa0) focal; urgency=low
 
   * Fix: MSVC standard check
