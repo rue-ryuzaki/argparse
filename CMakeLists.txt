@@ -11,7 +11,7 @@ if (${CMAKE_VERSION} VERSION_LESS "3.8.0")
     )
 else()
     project("ArgumentParser"
-        DESCRIPTION "C++11 argument parser"
+        DESCRIPTION "C++ argument parser"
         VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
         LANGUAGES CXX
     )
@@ -55,7 +55,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(CPACK_PACKAGE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
     endif()
     set(CPACK_DEBIAN_PACKAGE_NAME "${CPACK_PACKAGE_NAME}")
-    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Python-like header-only C++11 argument parser")
+    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Python-like header-only C++ argument parser")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_MAINTAINER}")
     set(CPACK_DEBIAN_PACKAGE_SUGGESTS "cmake, build-essential")
     set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
