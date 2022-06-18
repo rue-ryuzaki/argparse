@@ -1168,6 +1168,12 @@ struct is_stl_container<std::set                              <T> >:true_type{};
 template <class T>
 struct is_stl_container<std::vector                           <T> >:true_type{};
 
+template <class T, typename U = void>
+struct is_stl_container_paired                                    :false_type{};
+template <class _1st, class _2nd, template <class T, class U> class container>
+struct is_stl_container_paired<container<std::pair<_1st, _2nd>,
+                         std::allocator<std::pair<_1st, _2nd> > > >:true_type{};
+
 template <class T, class U>
 struct voider { typedef void type; };
 
@@ -5794,7 +5800,8 @@ public:
 #else
     typename detail::enable_if<
         detail::is_stl_container<typename detail::decay<T>::type>::value
-        && !detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
+     && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
+     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
     >::type
 #endif  // C++11+
     get(std::string const& key) const
@@ -5810,7 +5817,6 @@ public:
         return T(vector.begin(), vector.end());
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value for paired container types
      *
@@ -5820,12 +5826,18 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         detail::is_stl_container_paired<typename std::decay<T>::type>::value, T
     >::type
+#else
+    typename detail::enable_if<
+      detail::is_stl_container_paired<typename detail::decay<T>::type>::value, T
+    >::type
+#endif  // C++11+
     get(std::string const& key, char delim = detail::_equal) const
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
@@ -5833,10 +5845,12 @@ public:
         }
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
-        auto vector = to_paired_vector<K, V>(args.second(), delim);
+        std::vector<std::pair<K, V> > vector
+                = to_paired_vector<K, V>(args.second(), delim);
         return T(vector.begin(), vector.end());
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value for tupled container types
      *
