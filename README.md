@@ -240,11 +240,11 @@ int main(int argc, char* argv[])
 ## Namespace::get<> types support (+ try_get with std::optional, since C++17)
 - base types (bool, integral types, floating point types, std::string, std::string_view (since C++17))
 - byte types (char, signed/unsigned char, int8_t, uint8_t, std::byte (since C++17), char8_t (since C++20))
-- containers (std::array (since C++11), std::deque, std::forward_list (since C++11), std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset (since C++11), std::unordered_set (since C++11)) (for C++11+)
-- containers with std::pair/std::tuple (for C++11+)
-- 2 dimensional containers (std::deque, std::list, std::vector with another containers or queues) (for C++11+)
-- mapped types (std::map, std::multimap, std::unordered_map (since C++11), std::unordered_multimap (since C++11)) (for C++11+)
-- std::pair (for C++11+)
+- containers (std::array (since C++11), std::deque, std::forward_list (since C++11), std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset (since C++11), std::unordered_set (since C++11))
+- containers with std::pair/std::tuple (since C++11)
+- 2 dimensional containers (std::deque, std::list, std::vector with another containers or queues)
+- mapped types (std::map, std::multimap, std::unordered_map (since C++11), std::unordered_multimap (since C++11))
+- std::pair
 - std::tuple (since C++11)
 - custom types
 ### Don't work:
