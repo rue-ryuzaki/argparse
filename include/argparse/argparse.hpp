@@ -671,14 +671,12 @@ struct is_stl_container<std::unordered_set         <Args...> >:std::true_type{};
 
 template <class T, typename U = void>
 struct is_stl_container_paired                               :std::false_type{};
-
 template <class _1st, class _2nd, template <class...> class container>
 struct is_stl_container_paired<container<std::pair<_1st, _2nd> > >
                                                               :std::true_type{};
 
 template <class T, typename U = void>
 struct is_stl_container_tupled                               :std::false_type{};
-
 template <class... Args, template <class...> class container>
 struct is_stl_container_tupled<container<std::tuple<Args...> > >
                                                               :std::true_type{};
@@ -1191,6 +1189,60 @@ template <class T>
 struct is_stl_queue<std::stack                                <T> >:true_type{};
 template <class T>
 struct is_stl_queue<std::queue                                <T> >:true_type{};
+
+template <class T>
+struct is_stl_matrix                                              :false_type{};
+template <class T>
+struct is_stl_matrix<std::deque<std::deque                  <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::deque<std::list                   <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::deque<std::multiset               <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::deque<std::priority_queue         <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::deque<std::set                    <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::deque<std::vector                 <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::list<std::deque                   <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::list<std::list                    <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::list<std::multiset                <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::list<std::priority_queue          <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::list<std::set                     <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::list<std::vector                  <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::vector<std::deque                 <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::vector<std::list                  <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::vector<std::multiset              <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::vector<std::priority_queue        <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::vector<std::set                   <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix<std::vector<std::vector                <T> > >:true_type{};
+
+template <class T>
+struct is_stl_matrix_queue                                        :false_type{};
+template <class T>
+struct is_stl_matrix_queue<std::deque<std::stack            <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix_queue<std::deque<std::queue            <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix_queue<std::list<std::stack             <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix_queue<std::list<std::queue             <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix_queue<std::vector<std::stack           <T> > >:true_type{};
+template <class T>
+struct is_stl_matrix_queue<std::vector<std::queue           <T> > >:true_type{};
 #endif  // C++11+
 
 inline std::pair<std::size_t, std::size_t>
@@ -5741,7 +5793,8 @@ public:
     >::type
 #else
     typename detail::enable_if<
-        detail::is_stl_container<typename detail::decay<T>::type>::value, T
+        detail::is_stl_container<typename detail::decay<T>::type>::value
+        && !detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
     >::type
 #endif  // C++11+
     get(std::string const& key) const
@@ -5778,9 +5831,9 @@ public:
         if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        auto vector = to_paired_vector<
-                typename T::value_type::first_type,
-                typename T::value_type::second_type>(args.second(), delim);
+        typedef typename T::value_type::first_type K;
+        typedef typename T::value_type::second_type V;
+        auto vector = to_paired_vector<K, V>(args.second(), delim);
         return T(vector.begin(), vector.end());
     }
 
@@ -5853,7 +5906,6 @@ public:
         return res;
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value for 2D deque, list, vector of not queue
      *
@@ -5862,13 +5914,20 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         detail::is_stl_matrix<typename std::decay<T>::type>::value
         && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value, T
     >::type
+#else
+    typename detail::enable_if<
+        detail::is_stl_matrix<typename detail::decay<T>::type>::value
+     && !detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
+    >::type
+#endif  // C++11+
     get(std::string const& key) const
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() != argparse::append
@@ -5877,10 +5936,12 @@ public:
                         | Argument::ZERO_OR_MORE))) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        T res{};
-        for (auto const& vec : args.second.matrix()) {
-            auto vector = to_vector<typename T::value_type::value_type>(vec);
-            res.push_back(typename T::value_type(vector.begin(), vector.end()));
+        typedef typename T::value_type V;
+        typedef typename T::value_type::value_type VV;
+        T res;
+        for (std::size_t i = 0; i < args.second.matrix().size(); ++i) {
+            std::vector<VV> vector = to_vector<VV>(args.second.matrix().at(i));
+            res.push_back(V(vector.begin(), vector.end()));
         }
         return res;
     }
@@ -5893,12 +5954,18 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         detail::is_stl_matrix_queue<typename std::decay<T>::type>::value, T
     >::type
+#else
+    typename detail::enable_if<
+        detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
+    >::type
+#endif  // C++11+
     get(std::string const& key) const
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() != argparse::append
@@ -5907,16 +5974,15 @@ public:
                         | Argument::ZERO_OR_MORE))) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        T res{};
-        for (auto const& vec : args.second.matrix()) {
-            auto vector = to_vector<typename T::value_type::value_type>(vec);
-            res.push_back(typename T::value_type(
-                              std::deque<typename T::value_type::value_type>(
-                                  vector.begin(), vector.end())));
+        typedef typename T::value_type V;
+        typedef typename T::value_type::value_type VV;
+        T res;
+        for (std::size_t i = 0; i < args.second.matrix().size(); ++i) {
+            std::vector<VV> vector = to_vector<VV>(args.second.matrix().at(i));
+            res.push_back(V(std::deque<VV>(vector.begin(), vector.end())));
         }
         return res;
     }
-#endif  // C++11+
 
     /*!
      *  \brief Get parsed argument value for pair types
@@ -5945,21 +6011,21 @@ public:
         if (args.second.empty()) {
             return T();
         }
+        typedef typename T::first_type K;
+        typedef typename T::second_type V;
         if (std::isspace(static_cast<unsigned char>(delim))) {
             if (args.second.size() != 2) {
                 throw
                 TypeError("invalid data for paired argument '" + key + "'");
             }
-            return std::make_pair(
-                        to_type<typename T::first_type>(args.second.front()),
-                        to_type<typename T::second_type>(args.second.at(1)));
+            return std::make_pair(to_type<K>(args.second.front()),
+                                  to_type<V>(args.second.at(1)));
         }
         if (args.second.size() != 1) {
             throw
             TypeError("trying to get data from array argument '" + key + "'");
         }
-        return to_pair<typename T::first_type,
-                typename T::second_type>(args.second.front(), delim);
+        return to_pair<K, V>(args.second.front(), delim);
     }
 
     /*!
@@ -6040,11 +6106,7 @@ public:
         && !std::is_integral<T>::value
         && !detail::is_stl_array<typename std::decay<T>::type>::value
         && !detail::is_stl_container<typename std::decay<T>::type>::value
-        && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
-        && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
         && !detail::is_stl_map<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value
         && !detail::is_stl_pair<typename std::decay<T>::type>::value
         && !detail::is_stl_queue<typename std::decay<T>::type>::value
         && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
@@ -6376,10 +6438,9 @@ public:
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
         }
-        auto vector
-                = try_to_paired_vector<
-                typename T::value_type::first_type,
-                typename T::value_type::second_type>(args->second(), delim);
+        typedef typename T::value_type::first_type K;
+        typedef typename T::value_type::second_type V;
+        auto vector = try_to_paired_vector<K, V>(args->second(), delim);
         if (!vector.operator bool()) {
             return {};
         }
@@ -6445,11 +6506,10 @@ public:
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
         }
+        typedef typename T::key_type K;
+        typedef typename T::mapped_type V;
         T res{};
-        auto vector
-                = try_to_paired_vector<typename T::key_type,
-                                       typename T::mapped_type>(args->second(),
-                                                                delim);
+        auto vector = try_to_paired_vector<K, V>(args->second(), delim);
         if (!vector.operator bool()) {
             return {};
         }
@@ -6489,14 +6549,15 @@ public:
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
         }
+        typedef typename T::value_type V;
+        typedef typename T::value_type::value_type VV;
         T res{};
         for (auto const& v : args->second.matrix()) {
-            auto vector = try_to_vector<typename T::value_type::value_type>(v);
+            auto vector = try_to_vector<VV>(v);
             if (!vector.operator bool()) {
                 return {};
             }
-            res.push_back(typename T::value_type(vector.value().begin(),
-                                                 vector.value().end()));
+            res.push_back(V(vector.value().begin(), vector.value().end()));
         }
         return res;
     }
@@ -6530,16 +6591,16 @@ public:
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
         }
+        typedef typename T::value_type V;
+        typedef typename T::value_type::value_type VV;
         T res{};
         for (auto const& v : args->second.matrix()) {
-            auto vector = try_to_vector<typename T::value_type::value_type>(v);
+            auto vector = try_to_vector<VV>(v);
             if (!vector.operator bool()) {
                 return {};
             }
-            res.push_back(typename T::value_type(
-                              std::deque<typename T::value_type::value_type>(
-                                  vector.value().begin(),
-                                  vector.value().end())));
+            res.push_back(V(std::deque<VV>(vector.value().begin(),
+                                           vector.value().end())));
         }
         return res;
     }
@@ -6572,12 +6633,14 @@ public:
         if (args->second.empty()) {
             return T();
         }
+        typedef typename T::first_type K;
+        typedef typename T::second_type V;
         if (std::isspace(static_cast<unsigned char>(delim))) {
             if (args->second.size() != 2) {
                 return {};
             }
-            auto el1 = try_to_type<typename T::first_type>(args->second.at(0));
-            auto el2 = try_to_type<typename T::second_type>(args->second.at(1));
+            auto el1 = try_to_type<K>(args->second.at(0));
+            auto el2 = try_to_type<V>(args->second.at(1));
             if (el1.operator bool() && el2.operator bool()) {
                 return std::make_pair(el1.value(), el2.value());
             } else {
@@ -6587,8 +6650,7 @@ public:
         if (args->second.size() != 1) {
             return {};
         }
-        return try_to_pair<typename T::first_type,
-                typename T::second_type>(args->second.front(), delim);
+        return try_to_pair<K, V>(args->second.front(), delim);
     }
 
     /*!
@@ -6615,12 +6677,12 @@ public:
                         args->first->type_name(), detail::Type::basic<T>())) {
             return {};
         }
-        auto vector = try_to_vector<typename T::value_type>(args->second());
+        typedef typename T::value_type V;
+        auto vector = try_to_vector<V>(args->second());
         if (!vector.operator bool()) {
             return {};
         }
-        return T(std::deque<typename T::value_type>(vector.value().begin(),
-                                                    vector.value().end()));
+        return T(std::deque<V>(vector.value().begin(), vector.value().end()));
     }
 
     /*!
@@ -6680,11 +6742,7 @@ public:
         && !std::is_integral<T>::value
         && !detail::is_stl_array<typename std::decay<T>::type>::value
         && !detail::is_stl_container<typename std::decay<T>::type>::value
-        && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
-        && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
         && !detail::is_stl_map<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value
         && !detail::is_stl_pair<typename std::decay<T>::type>::value
         && !detail::is_stl_queue<typename std::decay<T>::type>::value
         && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
