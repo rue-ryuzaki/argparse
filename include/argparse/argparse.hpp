@@ -819,10 +819,22 @@ struct make_integer_sequence_impl<T, N, typename std::enable_if<N == 0>::type>
 template <class T, T N>
 using make_integer_sequence = typename make_integer_sequence_impl<T, N>::type;
 #else
+template <bool B, class T, class F>
+struct conditional                  { typedef T type; };
+template <class T, class F>
+struct conditional<false, T, F>     { typedef F type; };
+
 template <bool, typename T = void>
 struct enable_if { };
 template <class T>
 struct enable_if<true, T>           { typedef T type; };
+
+template<class T>
+struct remove_extent                { typedef T type; };
+template<class T>
+struct remove_extent<T[]>           { typedef T type; };
+template<class T, std::size_t N>
+struct remove_extent<T[N]>          { typedef T type; };
 
 template <class T>
 struct remove_reference             { typedef T type; };
@@ -923,17 +935,20 @@ struct is_floating_point
 
 template <class>
 struct is_array                                                   :false_type{};
-template <class T, std::size_t _Size>
-struct is_array<T[_Size]>                                          :true_type{};
+template <class T, std::size_t N>
+struct is_array<T[N]>                                              :true_type{};
 template <class T>
 struct is_array<T[]>                                               :true_type{};
 
-template <class>
-struct is_char_array                                              :false_type{};
-template <class T, std::size_t _Size>
-struct is_char_array<T[_Size]>                                     :true_type{};
 template <class T>
-struct is_char_array<T[]>                                          :true_type{};
+struct _replace_array_with_pointer
+{
+    typedef typename conditional<
+        is_array<T>::value,
+        typename remove_extent<T>::type*,
+        T
+    >::type type;
+};
 
 template <class T,
           class AT_1 = void,
@@ -942,6 +957,11 @@ template <class T,
           class AT_4 = void>
 class _is_constructible_impl
 {
+    typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
+    typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
+    typedef typename _replace_array_with_pointer<AT_3>::type AU_3;
+    typedef typename _replace_array_with_pointer<AT_4>::type AU_4;
+
 private:
     template <class C_T, class C_AT_1, class C_AT_2, class C_AT_3, class C_AT_4>
     static bool test(
@@ -965,12 +985,16 @@ private:
 
 public:
     static const bool value
-              = (sizeof(test<T, AT_1, AT_2, AT_3, AT_4>(NULL)) == sizeof(bool));
+              = (sizeof(test<T, AU_1, AU_2, AU_3, AU_4>(NULL)) == sizeof(bool));
 };
 
 template <class T, class AT_1, class AT_2, class AT_3>
 class _is_constructible_impl<T, AT_1, AT_2, AT_3, void>
 {
+    typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
+    typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
+    typedef typename _replace_array_with_pointer<AT_3>::type AU_3;
+
 private:
     template <class C_T, class C_AT_1, class C_AT_2, class C_AT_3>
     static bool test(
@@ -992,12 +1016,15 @@ private:
 
 public:
     static const bool value
-                    = (sizeof(test<T, AT_1, AT_2, AT_3>(NULL)) == sizeof(bool));
+                    = (sizeof(test<T, AU_1, AU_2, AU_3>(NULL)) == sizeof(bool));
 };
 
 template <class T, class AT_1, class AT_2>
 class _is_constructible_impl<T, AT_1, AT_2, void, void>
 {
+    typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
+    typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
+
 private:
     template <class C_T, class C_AT_1, class C_AT_2>
     static bool test(
@@ -1017,12 +1044,14 @@ private:
 
 public:
     static const bool value
-                          = (sizeof(test<T, AT_1, AT_2>(NULL)) == sizeof(bool));
+                          = (sizeof(test<T, AU_1, AU_2>(NULL)) == sizeof(bool));
 };
 
 template <class T, class AT_1>
 class _is_constructible_impl<T, AT_1, void, void, void>
 {
+    typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
+
 private:
     template <class C_T, class C_AT_1>
     static bool test(
@@ -1039,7 +1068,7 @@ private:
     static int test(...);
 
 public:
-    static const bool value = (sizeof(test<T, AT_1>(NULL)) == sizeof(bool));
+    static const bool value = (sizeof(test<T, AU_1>(NULL)) == sizeof(bool));
 };
 
 template <class T>
@@ -1102,11 +1131,13 @@ template <class T,
           class AT_4 = void>
 class is_constructible
 {
+    typedef typename _replace_array_with_pointer<T>::type U;
+
 public:
     static const bool value = (
-        is_pointer<typename remove_reference<T>::type>::value
-                ? _is_constructible_impl_ptr<T, AT_1, AT_2, AT_3, AT_4>::value
-                : _is_constructible_impl<T, AT_1, AT_2, AT_3, AT_4>::value
+        is_pointer<typename remove_reference<U>::type>::value
+                ? _is_constructible_impl_ptr<U, AT_1, AT_2, AT_3, AT_4>::value
+                : _is_constructible_impl<U, AT_1, AT_2, AT_3, AT_4>::value
     );
 };
 #endif  // C++11+
@@ -3026,8 +3057,8 @@ public:
     Argument& const_value(
             T const& value,
             typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value
-                && !detail::is_char_array<T>::value, bool>::type = true)
+                !detail::is_constructible<std::string, T>::value, bool
+            >::type = true)
 #endif  // C++11+
     {
         const_value(detail::_to_string<T>(value));
@@ -3065,8 +3096,8 @@ public:
     Argument& default_value(
             T const& value,
             typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value
-                && !detail::is_char_array<T>::value, bool>::type = true)
+                !detail::is_constructible<std::string, T>::value, bool
+            >::type = true)
 #endif  // C++11+
     {
         m_default = detail::_to_string<T>(value);
@@ -3125,8 +3156,8 @@ public:
     Argument& implicit_value(
             T const& value,
             typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value
-                && !detail::is_char_array<T>::value, bool>::type = true)
+                !detail::is_constructible<std::string, T>::value, bool
+            >::type = true)
 #endif  // C++11+
     {
         m_implicit = detail::_to_string<T>(value);
@@ -5489,7 +5520,6 @@ public:
                             || detail::is_byte_type<T>::value, T>::type
 #else
     typename detail::enable_if<detail::is_constructible<std::string, T>::value
-                               || detail::is_char_array<T>::value
                                || detail::is_floating_point<T>::value
                                || detail::is_same<bool, T>::value
                                || detail::is_byte_type<T>::value, T>::type
@@ -5872,7 +5902,6 @@ public:
 #else
     typename detail::enable_if<
         !detail::is_constructible<std::string, T>::value
-        && !detail::is_char_array<T>::value
         && !detail::is_floating_point<T>::value
         && !detail::is_integral<T>::value, T>::type
 #endif  // C++11+
@@ -6737,8 +6766,8 @@ private:
     typename std::enable_if<
         std::is_constructible<std::string, T>::value, T>::type
 #else
-    typename detail::enable_if<detail::is_constructible<std::string, T>::value
-                               || detail::is_char_array<T>::value, T>::type
+    typename detail::enable_if<
+        detail::is_constructible<std::string, T>::value, T>::type
 #endif  // C++11+
     to_type(std::string const& data) const
     {
@@ -6785,7 +6814,6 @@ private:
                             && !detail::is_byte_type<T>::value, T>::type
 #else
     typename detail::enable_if<!detail::is_constructible<std::string, T>::value
-                               && !detail::is_char_array<T>::value
                                && !detail::is_same<bool, T>::value
                                && !detail::is_byte_type<T>::value, T>::type
 #endif  // C++11+
@@ -8393,8 +8421,8 @@ public:
     Namespace parse_args(
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value
-                || detail::is_char_array<T>::value, bool>::type = true) const
+                detail::is_constructible<std::string, T>::value, bool
+            >::type = true) const
 #endif  // C++11+
     {
         return parse_args(detail::_split_to_args(args), space);
@@ -8448,8 +8476,8 @@ public:
     Namespace parse_known_args(
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value
-                || detail::is_char_array<T>::value, bool>::type = true) const
+                detail::is_constructible<std::string, T>::value, bool
+            >::type = true) const
 #endif  // C++11+
     {
         return parse_known_args(detail::_split_to_args(args), space);
@@ -8504,8 +8532,8 @@ public:
     Namespace parse_intermixed_args(
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value
-                || detail::is_char_array<T>::value, bool>::type = true) const
+                detail::is_constructible<std::string, T>::value, bool
+            >::type = true) const
 #endif  // C++11+
     {
         return parse_intermixed_args(detail::_split_to_args(args), space);
@@ -8562,8 +8590,8 @@ public:
     Namespace parse_known_intermixed_args(
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value
-                || detail::is_char_array<T>::value, bool>::type = true) const
+                detail::is_constructible<std::string, T>::value, bool
+            >::type = true) const
 #endif  // C++11+
     {
         return parse_known_intermixed_args(detail::_split_to_args(args), space);
