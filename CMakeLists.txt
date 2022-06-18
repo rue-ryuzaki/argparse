@@ -61,7 +61,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Python-like header-only C++ argument parser")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_MAINTAINER}")
     set(CPACK_DEBIAN_PACKAGE_SUGGESTS "cmake, build-essential")
-    if (NOT ${CMAKE_VERSION} VERSION_LESS "3.6.0")
+    if (NOT ${CMAKE_VERSION} VERSION_LESS "3.6")
         set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
     endif()
     ## RPM
