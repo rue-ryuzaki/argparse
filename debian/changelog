@@ -1,3 +1,10 @@
+cpp-argparse-dev (1.6.4-0ppa0) focal; urgency=low
+
+  * Add: C++98 standard support for Namespace::get
+  * Add: C++98 standard support for detail::Type
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 18 Jun 2022 21:55:33 +0300
+
 cpp-argparse-dev (1.6.3-0ppa0) focal; urgency=low
 
   * Add: C++98 standard support
