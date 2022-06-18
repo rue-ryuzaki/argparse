@@ -1158,6 +1158,12 @@ template <class T, class U>
 struct voider { typedef void type; };
 
 template <class T, typename U = void>
+struct is_stl_map                                                 :false_type{};
+template <class T>
+struct is_stl_map<T, typename voider<typename T::key_type,
+                                   typename T::mapped_type>::type >:true_type{};
+
+template <class T, typename U = void>
 struct is_stl_pair                                                :false_type{};
 template <class T>
 struct is_stl_pair<T, typename voider<typename T::first_type,
@@ -5710,6 +5716,7 @@ public:
                 typename T::value_type>(args.second(), delim);
         return T(vector.begin(), vector.end());
     }
+#endif  // C++11+
 
     /*!
      *  \brief Get parsed argument value for mapped types
@@ -5720,25 +5727,41 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         detail::is_stl_map<typename std::decay<T>::type>::value, T>::type
+#else
+    typename detail::enable_if<
+        detail::is_stl_map<typename detail::decay<T>::type>::value, T>::type
+#endif  // C++11+
     get(std::string const& key, char delim = detail::_equal) const
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
+        typedef typename T::key_type K;
+        typedef typename T::mapped_type V;
+#ifdef _ARGPARSE_CXX_11
         T res{};
-        auto vector = to_paired_vector<typename T::key_type,
-                typename T::mapped_type>(args.second(), delim);
+        auto vector = to_paired_vector<K, V>(args.second(), delim);
         for (auto const& pair : vector) {
             res.emplace(std::make_pair(pair.first, pair.second));
         }
+#else
+        T res;
+        std::vector<std::pair<K, V> > vector
+                = to_paired_vector<K, V>(args.second(), delim);
+        for (std::size_t i = 0; i < vector.size(); ++i) {
+            res.insert(std::make_pair(vector.at(i).first, vector.at(i).second));
+        }
+#endif  // C++11+
         return res;
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value for 2D deque, list, vector of not queue
      *
@@ -5933,6 +5956,7 @@ public:
         !detail::is_constructible<std::string, T>::value
         && !detail::is_floating_point<T>::value
         && !detail::is_integral<T>::value
+        && !detail::is_stl_map<typename detail::decay<T>::type>::value
         && !detail::is_stl_pair<typename detail::decay<T>::type>::value,T>::type
 #endif  // C++11+
     get(std::string const& key) const
