@@ -2098,12 +2098,40 @@ public:
     std::string static
     basic()
     {
-        return _get_type_name<T>();
+        return name<T>();
     }
 #else
     template <class T>
     std::string static
-    basic()
+    basic(typename enable_if<is_same<std::string, T>::value
+                             || is_stl_pair<T>::value, bool>::type = true)
+    {
+        return name<T>();
+    }
+
+    template <class T>
+    std::string static
+    basic(typename enable_if<is_stl_container<T>::value
+                             || is_stl_queue<T>::value, bool>::type = true)
+    {
+        return basic<typename T::value_type>();
+    }
+
+    template <class T>
+    std::string static
+    basic(typename enable_if<is_stl_map<T>::value, bool>::type = true)
+    {
+        return "std::pair<" + name<typename T::key_type>()
+                + ", " + name<typename T::mapped_type>() + ">";
+    }
+
+    template <class T>
+    std::string static
+    basic(typename enable_if<!is_same<std::string, T>::value
+                             && !is_stl_container<T>::value
+                             && !is_stl_map<T>::value
+                             && !is_stl_pair<T>::value
+                             && !is_stl_queue<T>::value, bool>::type = true)
     {
         return name<T>();
     }
@@ -2196,7 +2224,39 @@ public:
 
     template <class T>
     std::string static
-    name(typename enable_if<!is_same<std::string, T>::value, bool>::type = true)
+    name(typename enable_if<is_stl_container<T>::value
+                            || is_stl_queue<T>::value, bool>::type = true)
+    {
+        std::string str
+                = _replace(_get_type_name<T>(), "__cxx11::", std::string());
+        return str.substr(0, str.find('<'))
+                + "<" + name<typename T::value_type>() + ">";
+    }
+
+    template <class T>
+    std::string static
+    name(typename enable_if<is_stl_map<T>::value, bool>::type = true)
+    {
+        std::string str = _get_type_name<T>();
+        return str.substr(0, str.find('<')) + "<" + name<typename T::key_type>()
+                + ", " + name<typename T::mapped_type>() + ">";
+    }
+
+    template <class T>
+    std::string static
+    name(typename enable_if<is_stl_pair<T>::value, bool>::type = true)
+    {
+        return "std::pair<" + name<typename T::first_type>()
+                + ", " + name<typename T::second_type>() + ">";
+    }
+
+    template <class T>
+    std::string static
+    name(typename enable_if<!is_same<std::string, T>::value
+                            && !is_stl_container<T>::value
+                            && !is_stl_map<T>::value
+                            && !is_stl_pair<T>::value
+                            && !is_stl_queue<T>::value, bool>::type = true)
     {
         return _get_type_name<T>();
     }
