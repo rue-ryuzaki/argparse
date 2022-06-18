@@ -874,66 +874,66 @@ typedef integral_constant<bool, true> true_type;
 typedef integral_constant<bool, false> false_type;
 
 template <class T, class U>
-struct is_same                                                  : false_type {};
+struct is_same                                                    :false_type{};
 template <class T>
-struct is_same<T, T>                                            : true_type  {};
+struct is_same<T, T>                                               :true_type{};
 
 template <class>
-struct _is_integral_helper                                      : false_type {};
+struct _is_integral_helper                                        :false_type{};
 template<>
-struct _is_integral_helper<bool>                                : true_type  {};
+struct _is_integral_helper<bool>                                   :true_type{};
 template<>
-struct _is_integral_helper<char>                                : true_type  {};
+struct _is_integral_helper<char>                                   :true_type{};
 template<>
-struct _is_integral_helper<signed char>                         : true_type  {};
+struct _is_integral_helper<signed char>                            :true_type{};
 template<>
-struct _is_integral_helper<unsigned char>                       : true_type  {};
+struct _is_integral_helper<unsigned char>                          :true_type{};
 template<>
-struct _is_integral_helper<short>                               : true_type  {};
+struct _is_integral_helper<short>                                  :true_type{};
 template<>
-struct _is_integral_helper<unsigned short>                      : true_type  {};
+struct _is_integral_helper<unsigned short>                         :true_type{};
 template<>
-struct _is_integral_helper<int>                                 : true_type  {};
+struct _is_integral_helper<int>                                    :true_type{};
 template<>
-struct _is_integral_helper<unsigned int>                        : true_type  {};
+struct _is_integral_helper<unsigned int>                           :true_type{};
 template<>
-struct _is_integral_helper<long>                                : true_type  {};
+struct _is_integral_helper<long>                                   :true_type{};
 template<>
-struct _is_integral_helper<unsigned long>                       : true_type  {};
+struct _is_integral_helper<unsigned long>                          :true_type{};
 template<>
-struct _is_integral_helper<long long>                           : true_type  {};
+struct _is_integral_helper<long long>                              :true_type{};
 template<>
-struct _is_integral_helper<unsigned long long>                  : true_type  {};
+struct _is_integral_helper<unsigned long long>                     :true_type{};
 
 template <class T>
 struct is_integral : _is_integral_helper<typename remove_cv<T>::type>::type  {};
 
 template <class>
-struct _is_floating_point_helper                                : false_type {};
+struct _is_floating_point_helper                                  :false_type{};
 template<>
-struct _is_floating_point_helper<float>                         : true_type  {};
+struct _is_floating_point_helper<float>                            :true_type{};
 template<>
-struct _is_floating_point_helper<double>                        : true_type  {};
+struct _is_floating_point_helper<double>                           :true_type{};
 template<>
-struct _is_floating_point_helper<long double>                   : true_type  {};
+struct _is_floating_point_helper<long double>                      :true_type{};
 
 template <class T>
 struct is_floating_point
              : _is_floating_point_helper<typename remove_cv<T>::type>::type  {};
 
 template <class>
-struct is_array                                                 : false_type {};
+struct is_array                                                   :false_type{};
 template <class T, std::size_t _Size>
-struct is_array<T[_Size]>                                       : true_type  {};
+struct is_array<T[_Size]>                                          :true_type{};
 template <class T>
-struct is_array<T[]>                                            : true_type  {};
+struct is_array<T[]>                                               :true_type{};
 
 template <class>
-struct is_char_array                                            : false_type {};
+struct is_char_array                                              :false_type{};
 template <class T, std::size_t _Size>
-struct is_char_array<T[_Size]>                                  : true_type  {};
+struct is_char_array<T[_Size]>                                     :true_type{};
 template <class T>
-struct is_char_array<T[]>                                       : true_type  {};
+struct is_char_array<T[]>                                          :true_type{};
 
 template <class T,
           class AT_1 = void,
