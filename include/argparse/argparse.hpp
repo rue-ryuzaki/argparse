@@ -941,6 +941,19 @@ template <class T>
 struct is_array<T[]>                                               :true_type{};
 
 template <class T>
+struct decay {
+private:
+    typedef typename remove_reference<T>::type U;
+
+public:
+    typedef typename conditional<
+        is_array<U>::value,
+        typename remove_extent<U>::type*,
+        typename remove_cv<U>::type
+    >::type type;
+};
+
+template <class T>
 struct _replace_array_with_pointer
 {
     typedef typename conditional<
@@ -1140,6 +1153,15 @@ public:
                 : _is_constructible_impl<U, AT_1, AT_2, AT_3, AT_4>::value
     );
 };
+
+template <class T, class U>
+struct voider { typedef void type; };
+
+template <class T, typename U = void>
+struct is_stl_pair                                                :false_type{};
+template <class T>
+struct is_stl_pair<T, typename voider<typename T::first_type,
+                                   typename T::second_type>::type >:true_type{};
 #endif  // C++11+
 
 inline std::pair<std::size_t, std::size_t>
@@ -5779,6 +5801,7 @@ public:
         }
         return res;
     }
+#endif  // C++11+
 
     /*!
      *  \brief Get parsed argument value for pair types
@@ -5789,11 +5812,16 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         detail::is_stl_pair<typename std::decay<T>::type>::value, T>::type
+#else
+    typename detail::enable_if<
+        detail::is_stl_pair<typename detail::decay<T>::type>::value, T>::type
+#endif  // C++11+
     get(std::string const& key, char delim = detail::_equal) const
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
@@ -5819,6 +5847,7 @@ public:
                 typename T::second_type>(args.second.front(), delim);
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value for queue types
      *
@@ -5903,7 +5932,8 @@ public:
     typename detail::enable_if<
         !detail::is_constructible<std::string, T>::value
         && !detail::is_floating_point<T>::value
-        && !detail::is_integral<T>::value, T>::type
+        && !detail::is_integral<T>::value
+        && !detail::is_stl_pair<typename detail::decay<T>::type>::value,T>::type
 #endif  // C++11+
     get(std::string const& key) const
     {
