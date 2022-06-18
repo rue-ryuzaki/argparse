@@ -644,12 +644,12 @@ template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
 
 #ifdef _ARGPARSE_CXX_11
 template <class T>
-struct is_stl_array:std::false_type{};
+struct is_stl_array                                          :std::false_type{};
 template <class T, std::size_t N>
 struct is_stl_array<std::array                     <T, N> >   :std::true_type{};
 
 template <class T>
-struct is_stl_container:std::false_type{};
+struct is_stl_container                                      :std::false_type{};
 template <class... Args>
 struct is_stl_container<std::deque                 <Args...> >:std::true_type{};
 template <class... Args>
@@ -670,14 +670,14 @@ template <class... Args>
 struct is_stl_container<std::unordered_set         <Args...> >:std::true_type{};
 
 template <class T, typename U = void>
-struct is_stl_container_paired:std::false_type{};
+struct is_stl_container_paired                               :std::false_type{};
 
 template <class _1st, class _2nd, template <class...> class container>
 struct is_stl_container_paired<container<std::pair<_1st, _2nd> > >
                                                               :std::true_type{};
 
 template <class T, typename U = void>
-struct is_stl_container_tupled:std::false_type{};
+struct is_stl_container_tupled                               :std::false_type{};
 
 template <class... Args, template <class...> class container>
 struct is_stl_container_tupled<container<std::tuple<Args...> > >
@@ -687,14 +687,15 @@ template <class...>
 struct voider { using type = void; };
 template <class... T>
 using void_t = typename voider<T...>::type;
+
 template <class T, typename U = void>
-struct is_stl_map:std::false_type{};
+struct is_stl_map                                            :std::false_type{};
 template <class T>
 struct is_stl_map<T, void_t<typename T::key_type,
                                     typename T::mapped_type> >:std::true_type{};
 
 template <class T>
-struct is_stl_matrix:std::false_type{};
+struct is_stl_matrix                                         :std::false_type{};
 template <class... Args>
 struct is_stl_matrix<std::deque<std::deque       <Args...> > >:std::true_type{};
 template <class... Args>
@@ -760,7 +761,7 @@ struct is_stl_matrix<std::vector<std::unordered_set
                                                  <Args...> > >:std::true_type{};
 
 template <class T>
-struct is_stl_matrix_queue:std::false_type{};
+struct is_stl_matrix_queue                                   :std::false_type{};
 template <class... Args>
 struct is_stl_matrix_queue<std::deque<std::stack <Args...> > >:std::true_type{};
 template <class... Args>
@@ -775,13 +776,13 @@ template <class... Args>
 struct is_stl_matrix_queue<std::vector<std::queue<Args...> > >:std::true_type{};
 
 template <class T, typename U = void>
-struct is_stl_pair:std::false_type{};
+struct is_stl_pair                                           :std::false_type{};
 template <class T>
 struct is_stl_pair<T, void_t<typename T::first_type,
                                     typename T::second_type> >:std::true_type{};
 
 template <class T>
-struct is_stl_queue:std::false_type{};
+struct is_stl_queue                                          :std::false_type{};
 template <class... Args>
 struct is_stl_queue<std::stack                     <Args...> >:std::true_type{};
 template <class... Args>
@@ -918,7 +919,7 @@ template<>
 struct _is_integral_helper<unsigned long long>                     :true_type{};
 
 template <class T>
-struct is_integral : _is_integral_helper<typename remove_cv<T>::type>::type  {};
+struct is_integral   : _is_integral_helper<typename remove_cv<T>::type>::type{};
 
 template <class>
 struct _is_floating_point_helper                                  :false_type{};
@@ -931,7 +932,7 @@ struct _is_floating_point_helper<long double>                      :true_type{};
 
 template <class T>
 struct is_floating_point
-             : _is_floating_point_helper<typename remove_cv<T>::type>::type  {};
+               : _is_floating_point_helper<typename remove_cv<T>::type>::type{};
 
 template <class>
 struct is_array                                                   :false_type{};
@@ -1154,6 +1155,21 @@ public:
     );
 };
 
+template <class T>
+struct is_stl_container                                           :false_type{};
+template <class T>
+struct is_stl_container<std::deque                            <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::list                             <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::multiset                         <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::priority_queue                   <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::set                              <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::vector                           <T> >:true_type{};
+
 template <class T, class U>
 struct voider { typedef void type; };
 
@@ -1161,13 +1177,20 @@ template <class T, typename U = void>
 struct is_stl_map                                                 :false_type{};
 template <class T>
 struct is_stl_map<T, typename voider<typename T::key_type,
-                                   typename T::mapped_type>::type >:true_type{};
+                                    typename T::mapped_type>::type>:true_type{};
 
 template <class T, typename U = void>
 struct is_stl_pair                                                :false_type{};
 template <class T>
 struct is_stl_pair<T, typename voider<typename T::first_type,
-                                   typename T::second_type>::type >:true_type{};
+                                    typename T::second_type>::type>:true_type{};
+
+template <class T>
+struct is_stl_queue                                               :false_type{};
+template <class T>
+struct is_stl_queue<std::stack                                <T> >:true_type{};
+template <class T>
+struct is_stl_queue<std::queue                                <T> >:true_type{};
 #endif  // C++11+
 
 inline std::pair<std::size_t, std::size_t>
@@ -5638,6 +5661,7 @@ public:
         std::copy_n(vector.begin(), size, res.begin());
         return res;
     }
+#endif  // C++11+
 
     /*!
      *  \brief Get parsed argument value for std containers types
@@ -5647,25 +5671,33 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         detail::is_stl_container<typename std::decay<T>::type>::value
         && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
         && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
         && !detail::is_stl_matrix<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
-    T>::type
+        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value, T
+    >::type
+#else
+    typename detail::enable_if<
+        detail::is_stl_container<typename detail::decay<T>::type>::value, T
+    >::type
+#endif  // C++11+
     get(std::string const& key) const
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        auto vector = to_vector<typename T::value_type>(args.second());
+        typedef typename T::value_type V;
+        std::vector<V> vector = to_vector<V>(args.second());
         return T(vector.begin(), vector.end());
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value for paired container types
      *
@@ -5676,8 +5708,8 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        detail::is_stl_container_paired<typename std::decay<T>::type>::value,
-    T>::type
+        detail::is_stl_container_paired<typename std::decay<T>::type>::value, T
+    >::type
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
@@ -5702,8 +5734,8 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        detail::is_stl_container_tupled<typename std::decay<T>::type>::value,
-    T>::type
+        detail::is_stl_container_tupled<typename std::decay<T>::type>::value, T
+    >::type
     get(std::string const& key, char delim = detail::_equal) const
     {
         auto const& args = data(key);
@@ -5772,8 +5804,8 @@ public:
     template <class T>
     typename std::enable_if<
         detail::is_stl_matrix<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
-    T>::type
+        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value, T
+    >::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -5802,8 +5834,8 @@ public:
      */
     template <class T>
     typename std::enable_if<
-        detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
-    T>::type
+        detail::is_stl_matrix_queue<typename std::decay<T>::type>::value, T
+    >::type
     get(std::string const& key) const
     {
         auto const& args = data(key);
@@ -5870,7 +5902,6 @@ public:
                 typename T::second_type>(args.second.front(), delim);
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value for queue types
      *
@@ -5879,21 +5910,27 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+#ifdef _ARGPARSE_CXX_11
     typename std::enable_if<
         detail::is_stl_queue<typename std::decay<T>::type>::value, T>::type
+#else
+    typename detail::enable_if<
+        detail::is_stl_queue<typename detail::decay<T>::type>::value, T>::type
+#endif  // C++11+
     get(std::string const& key) const
     {
-        auto const& args = data(key);
+        Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        auto vector = to_vector<typename T::value_type>(args.second());
-        return T(std::deque<typename T::value_type>(vector.begin(),
-                                                    vector.end()));
+        typedef typename T::value_type V;
+        std::vector<V> vector = to_vector<V>(args.second());
+        return T(std::deque<V>(vector.begin(), vector.end()));
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value for tuple
      *
@@ -5956,8 +5993,11 @@ public:
         !detail::is_constructible<std::string, T>::value
         && !detail::is_floating_point<T>::value
         && !detail::is_integral<T>::value
+        && !detail::is_stl_container<typename detail::decay<T>::type>::value
         && !detail::is_stl_map<typename detail::decay<T>::type>::value
-        && !detail::is_stl_pair<typename detail::decay<T>::type>::value,T>::type
+        && !detail::is_stl_pair<typename detail::decay<T>::type>::value
+        && !detail::is_stl_queue<typename detail::decay<T>::type>::value, T
+    >::type
 #endif  // C++11+
     get(std::string const& key) const
     {
