@@ -3929,7 +3929,8 @@ private:
 #else
         std::vector<std::string> res;
         if (m_choices.has_value()) {
-            res.push_back("{" + detail::_vector_to_string(choices(), ",") + "}");
+            res.push_back(
+                        "{" + detail::_vector_to_string(choices(), ",") + "}");
             return res;
         }
         res.push_back(m_type == Optional
