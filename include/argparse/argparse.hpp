@@ -4117,7 +4117,7 @@ protected:
 /*!
  *  \brief Help message formatter which retains any formatting in descriptions
  */
-_ARGPARSE_EXPORT const
+_ARGPARSE_EXPORT
 class _RawDescriptionHelpFormatter : public HelpFormatter
 {
 public:
@@ -4177,12 +4177,12 @@ protected:
         detail::_store_value_to(value, result);
         return result;
     }
-} RawDescriptionHelpFormatter;
+} _ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
 
 /*!
  *  \brief Help message formatter which retains formatting of all help text
  */
-_ARGPARSE_EXPORT const
+_ARGPARSE_EXPORT
 class _RawTextHelpFormatter : public _RawDescriptionHelpFormatter
 {
 public:
@@ -4193,12 +4193,12 @@ public:
     {
         return _RawDescriptionHelpFormatter::_split_lines_s;
     }
-} RawTextHelpFormatter;
+} _ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
 
 /*!
  *  \brief Help message formatter which adds default values to argument help
  */
-_ARGPARSE_EXPORT const
+_ARGPARSE_EXPORT
 class _ArgumentDefaultsHelpFormatter : public HelpFormatter
 {
 public:
@@ -4228,13 +4228,13 @@ protected:
         }
         return help;
     }
-} ArgumentDefaultsHelpFormatter;
+} _ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
 
 /*!
  *  \brief Help message formatter which uses the argument 'type' as the default
  *  metavar value (instead of the argument 'dest')
  */
-_ARGPARSE_EXPORT const
+_ARGPARSE_EXPORT
 class _MetavarTypeHelpFormatter : public HelpFormatter
 {
 public:
@@ -4272,7 +4272,7 @@ protected:
         }
         return HelpFormatter::_get_default_metavar_for_positional_s(action);
     }
-} MetavarTypeHelpFormatter;
+} _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
 
 /*!
  *  \brief Group class
