@@ -533,7 +533,7 @@ TEST_CASE("8. argument actions", "[argument]")
     }
 
     SECTION("8.3. BooleanOptionalAction example") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        auto parser = argparse::ArgumentParser().output_width(80).exit_on_error(false);
 
         std::string default_value = "default";
 
@@ -586,28 +586,28 @@ TEST_CASE("8. argument actions", "[argument]")
 //    }
 
     SECTION("8.7. BooleanOptionalAction conflict options resolved [1]") {
-        auto parser1 = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+        auto parser1 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
 
         parser1.add_argument("--foo").action(argparse::BooleanOptionalAction);
         parser1.add_argument("--no-foo").action(argparse::store_true);
 
         REQUIRE(parser1.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
 
-        auto parser2 = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+        auto parser2 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
 
         parser2.add_argument("--no-foo").action(argparse::store_true);
         parser2.add_argument("--foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser2.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
 
-        auto parser3 = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+        auto parser3 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
 
         parser3.add_argument(argparse::Argument({ "--foo" }).action(argparse::BooleanOptionalAction));
         parser3.add_argument(argparse::Argument({ "--no-foo" }).action(argparse::store_true));
 
         REQUIRE(parser3.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
 
-        auto parser4 = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+        auto parser4 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
 
         parser4.add_argument(argparse::Argument({ "--no-foo" }).action(argparse::store_true));
         parser4.add_argument(argparse::Argument({ "--foo" }).action(argparse::BooleanOptionalAction));
