@@ -1267,7 +1267,7 @@ _get_terminal_size(bool default_values = false)
                 (csbi.srWindow.Right - csbi.srWindow.Left + 1);
         height = static_cast<std::size_t>
                 (csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
-        if (width < _min_width) {
+        if (width < _min_width && width != 0) {
             width = _min_width;
         }
     }
@@ -1277,7 +1277,7 @@ _get_terminal_size(bool default_values = false)
     if (ioctl(STDOUT_FILENO, TIOCGSIZE, &w) >= 0) {
         width = static_cast<std::size_t>(w.ts_cols);
         height = static_cast<std::size_t>(w.ts_lines);
-        if (width < _min_width) {
+        if (width < _min_width && width != 0) {
             width = _min_width;
         }
     }
@@ -1286,7 +1286,7 @@ _get_terminal_size(bool default_values = false)
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) >= 0) {
         width = static_cast<std::size_t>(w.ws_col);
         height = static_cast<std::size_t>(w.ws_row);
-        if (width < _min_width) {
+        if (width < _min_width && width != 0) {
             width = _min_width;
         }
     }
