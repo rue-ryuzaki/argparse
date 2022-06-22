@@ -2213,6 +2213,7 @@ public:
     name()
     {
         auto str = _replace(_get_type_name<T>(), "__cxx11::", std::string());
+        str = _replace(str, "__1::", std::string());
         return str.substr(0, str.find('<'))
                 + "<" + name<typename T::value_type>()
                 + ", " + std::to_string(std::tuple_size<T>::value) + ">";
@@ -2225,6 +2226,7 @@ public:
     name()
     {
         auto str = _replace(_get_type_name<T>(), "__cxx11::", std::string());
+        str = _replace(str, "__1::", std::string());
         return str.substr(0, str.find('<'))
                 + "<" + name<typename T::value_type>() + ">";
     }
@@ -2235,6 +2237,7 @@ public:
     name()
     {
         auto str = _get_type_name<T>();
+        str = _replace(str, "__1::", std::string());
         return str.substr(0, str.find('<')) + "<" + name<typename T::key_type>()
                 + ", " + name<typename T::mapped_type>() + ">";
     }
@@ -2287,6 +2290,7 @@ public:
     {
         std::string str
                 = _replace(_get_type_name<T>(), "__cxx11::", std::string());
+        str = _replace(str, "__1::", std::string());
         return str.substr(0, str.find('<'))
                 + "<" + name<typename T::value_type>() + ">";
     }
@@ -2296,6 +2300,7 @@ public:
     name(typename enable_if<is_stl_map<T>::value, bool>::type = true)
     {
         std::string str = _get_type_name<T>();
+        str = _replace(str, "__1::", std::string());
         return str.substr(0, str.find('<')) + "<" + name<typename T::key_type>()
                 + ", " + name<typename T::mapped_type>() + ">";
     }
