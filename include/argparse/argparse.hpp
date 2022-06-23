@@ -2500,10 +2500,18 @@ _ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _REMAINDER
 #endif  // _ARGPARSE_CXX_11
 {} REMAINDER;
 
-#ifndef _ARGPARSE_CXX_11
 // Forward declaration
-class _ArgumentData;
-#endif  // _ARGPARSE_CXX_11
+class Argument;
+
+/*!
+ *  \brief _ConflictResolver class
+ */
+struct _ConflictResolver
+{
+    virtual ~_ConflictResolver() _ARGPARSE_NOEXCEPT { }
+
+    virtual void check_conflict_arg(Argument const* arg) = 0;
+};
 
 /*!
  *  \brief Argument class
@@ -2575,7 +2583,6 @@ _ARGPARSE_EXPORT class Argument
           m_handle(nullptr),
           m_post_trigger(nullptr)
 #else
-          m_data_trigger(NULL),
           m_post_trigger(NULL)
 #endif  // C++11+
     {
@@ -2689,7 +2696,6 @@ public:
           m_metavar(),
           m_dest(),
           m_version(),
-          m_data_trigger(NULL),
           m_post_trigger(NULL)
     {
         m_flags.push_back(flag);
@@ -2727,7 +2733,6 @@ public:
           m_metavar(),
           m_dest(),
           m_version(),
-          m_data_trigger(NULL),
           m_post_trigger(NULL)
     {
         m_flags.push_back(flag1);
@@ -2777,7 +2782,6 @@ public:
           m_handle(nullptr),
           m_post_trigger(nullptr)
 #else
-          m_data_trigger(NULL),
           m_post_trigger(NULL)
 #endif  // C++11+
     {
@@ -2816,8 +2820,6 @@ public:
           m_version(orig.m_version),
 #ifdef _ARGPARSE_CXX_11
           m_handle(orig.m_handle),
-#else
-          m_data_trigger(orig.m_data_trigger),
 #endif  // C++11+
           m_post_trigger(orig.m_post_trigger)
     { }
@@ -2888,8 +2890,6 @@ public:
             this->m_version         = rhs.m_version;
 #ifdef _ARGPARSE_CXX_11
             this->m_handle          = rhs.m_handle;
-#else
-            this->m_data_trigger    = rhs.m_data_trigger;
 #endif  // C++11+
             this->m_post_trigger    = rhs.m_post_trigger;
         }
@@ -3777,15 +3777,9 @@ private:
         }
         if (m_type == Optional && value == argparse::BooleanOptionalAction) {
             make_no_flags();
-#ifdef _ARGPARSE_CXX_11
             if (m_post_trigger) {
-                m_post_trigger(this);
+                m_post_trigger->check_conflict_arg(this);
             }
-#else
-            if (m_data_trigger && m_post_trigger) {
-                (m_data_trigger->*(m_post_trigger))(this);
-            }
-#endif  // C++11+
         } else {
             m_all_flags = m_flags;
         }
@@ -4015,11 +4009,8 @@ private:
     detail::Value<std::string> m_version;
 #ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
-    std::function<void(Argument const*)> m_post_trigger;
-#else
-    _ArgumentData* m_data_trigger;
-    void (_ArgumentData:: *m_post_trigger)(Argument const*);
 #endif  // C++11+
+    _ConflictResolver* m_post_trigger;
 };
 
 /*!
@@ -4335,7 +4326,7 @@ protected:
 /*!
  *  \brief ArgumentData class
  */
-class _ArgumentData
+class _ArgumentData : public _ConflictResolver
 {
     friend class ArgumentGroup;
     friend class ArgumentParser;
@@ -4550,7 +4541,7 @@ protected:
         }
     }
 
-    inline void check_conflict_arg(Argument const* arg)
+    inline void check_conflict_arg(Argument const* arg) _ARGPARSE_OVERRIDE
     {
 #ifdef _ARGPARSE_CXX_11
         for (auto& opt : m_optional) {
@@ -4631,20 +4622,12 @@ protected:
         }
 #ifdef _ARGPARSE_CXX_11
         m_arguments.emplace_back(std::move(arg));
-        if (is_optional) {
-            m_arguments.back()->m_post_trigger = [this] (Argument const* arg)
-            {
-                check_conflict_arg(arg);
-            };
-        }
 #else
         m_arguments.push_back(arg);
-        if (is_optional) {
-            m_arguments.back()->m_data_trigger = this;
-            m_arguments.back()->m_post_trigger
-                    = &_ArgumentData::check_conflict_arg;
-        }
 #endif  // C++11+
+        if (is_optional) {
+            m_arguments.back()->m_post_trigger = this;
+        }
     }
 
     void validate_argument(Argument const& ar, std::string const& prefix_chars)
