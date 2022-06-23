@@ -2520,10 +2520,9 @@ _ARGPARSE_EXPORT class Argument
 {
     friend class _ArgumentData;
     friend class _ArgumentDefaultsHelpFormatter;
+    friend class _ArgumentGroup;
     friend class ArgumentGroup;
     friend class ArgumentParser;
-    friend class _BaseArgumentGroup;
-    friend class _BaseParser;
     friend class HelpFormatter;
     friend class MutuallyExclusiveGroup;
     friend class Namespace;
@@ -4271,7 +4270,7 @@ protected:
 } _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
 
 /*!
- *  \brief Group class
+ *  \brief _Group class
  */
 class _Group
 {
@@ -4324,14 +4323,13 @@ protected:
 };
 
 /*!
- *  \brief ArgumentData class
+ *  \brief _ArgumentData class
  */
 class _ArgumentData : public _ConflictResolver
 {
+    friend class _ArgumentGroup;
     friend class ArgumentGroup;
     friend class ArgumentParser;
-    friend class _BaseArgumentGroup;
-    friend class _BaseParser;
     friend class MutuallyExclusiveGroup;
 
     _ArgumentData()
@@ -4693,18 +4691,18 @@ protected:
 };
 
 /*!
- *  \brief BaseArgumentGroup class
+ *  \brief _ArgumentGroup class
  */
-class _BaseArgumentGroup
+class _ArgumentGroup
 {
 protected:
     typedef detail::shared_ptr<Argument> pArgument;
 
-    _BaseArgumentGroup(std::string& prefix_chars,
-                       _ArgumentData& parent_data,
-                       detail::Value<std::string>& argument_default,
-                       detail::Value<_SUPPRESS>& argument_default_type,
-                       bool is_mutex_group)
+    _ArgumentGroup(std::string& prefix_chars,
+                   _ArgumentData& parent_data,
+                   detail::Value<std::string>& argument_default,
+                   detail::Value<_SUPPRESS>& argument_default_type,
+                   bool is_mutex_group)
         : m_data(),
           m_prefix_chars(prefix_chars),
           m_parent_data(parent_data),
@@ -4715,13 +4713,13 @@ protected:
 
 public:
     /*!
-     *  \brief Create base argument group object from another argument group
+     *  \brief Create argument group object from another argument group
      *
-     *  \param orig Base argument group object to copy
+     *  \param orig Argument group object to copy
      *
-     *  \return Base rgument group object
+     *  \return Argument group object
      */
-    _BaseArgumentGroup(_BaseArgumentGroup const& orig)
+    _ArgumentGroup(_ArgumentGroup const& orig)
         : m_data(orig.m_data),
           m_prefix_chars(orig.m_prefix_chars),
           m_parent_data(orig.m_parent_data),
@@ -4731,18 +4729,18 @@ public:
     { }
 
     /*!
-     *  \brief Destroy basea argument group object
+     *  \brief Destroy argument group object
      */
-    virtual ~_BaseArgumentGroup() _ARGPARSE_NOEXCEPT { }
+    virtual ~_ArgumentGroup() _ARGPARSE_NOEXCEPT { }
 
     /*!
-     *  \brief Copy base argument group object from another argument group
+     *  \brief Copy argument group object from another argument group
      *
-     *  \param rhs Base argument group object to copy
+     *  \param rhs Argument group object to copy
      *
-     *  \return Current base argument group reference
+     *  \return Current argument group reference
      */
-    _BaseArgumentGroup& operator =(_BaseArgumentGroup const& rhs)
+    _ArgumentGroup& operator =(_ArgumentGroup const& rhs)
     {
         if (this != &rhs) {
             m_data                  = rhs.m_data;
@@ -4867,7 +4865,7 @@ private:
 /*!
  *  \brief ArgumentGroup class
  */
-_ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _BaseArgumentGroup
+_ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
 {
     friend class ArgumentParser;
 
@@ -4879,8 +4877,8 @@ _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _BaseArgumentGroup
                   detail::Value<std::string>& argument_default,
                   detail::Value<_SUPPRESS>& argument_default_type)
         : _Group(title, description),
-          _BaseArgumentGroup(prefix_chars, parent_data,
-                             argument_default, argument_default_type, false)
+          _ArgumentGroup(prefix_chars, parent_data,
+                         argument_default, argument_default_type, false)
     { }
 
     static inline detail::shared_ptr<ArgumentGroup>
@@ -4897,7 +4895,7 @@ _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _BaseArgumentGroup
     }
 
 public:
-    using _BaseArgumentGroup::add_argument;
+    using _ArgumentGroup::add_argument;
     using _Group::title;
     using _Group::description;
 
@@ -4910,7 +4908,7 @@ public:
      */
     ArgumentGroup(ArgumentGroup const& orig)
         : _Group(orig),
-          _BaseArgumentGroup(orig)
+          _ArgumentGroup(orig)
     { }
 
     /*!
@@ -5028,18 +5026,17 @@ private:
 /*!
  *  \brief MutuallyExclusiveGroup class
  */
-_ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _BaseArgumentGroup
+_ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
 {
     friend class ArgumentParser;
-    friend class _BaseParser;
 
     explicit
     MutuallyExclusiveGroup(std::string& prefix_chars,
                            _ArgumentData& parent_data,
                            detail::Value<std::string>& argument_default,
                            detail::Value<_SUPPRESS>& argument_default_type)
-        : _BaseArgumentGroup(prefix_chars, parent_data,
-                             argument_default, argument_default_type, true),
+        : _ArgumentGroup(prefix_chars, parent_data,
+                         argument_default, argument_default_type, true),
           m_required(false)
     { }
 
@@ -5054,7 +5051,7 @@ _ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _BaseArgumentGroup
     }
 
 public:
-    using _BaseArgumentGroup::add_argument;
+    using _ArgumentGroup::add_argument;
 
     /*!
      *  \brief Create mutually exclusive group object from another
@@ -5065,7 +5062,7 @@ public:
      *  \return Mutually exclusive group object
      */
     MutuallyExclusiveGroup(MutuallyExclusiveGroup const& orig)
-        : _BaseArgumentGroup(orig),
+        : _ArgumentGroup(orig),
           m_required(orig.m_required)
     { }
 
