@@ -43,6 +43,7 @@ C++ support compiler (C++98 standard support is experimental)
   - [ArgumentParser objects](#argumentparser-objects-support)
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
   - [add_argument() actions](#the-add_argumentname-or-flags-method-support)
+- [License](#license)
 
 Additional documentation can be found on the [argparse Wiki](https://github.com/rue-ryuzaki/argparse/wiki)
 ## Code example
@@ -497,3 +498,19 @@ with usage:
 - [x] "version" - This expects a version= keyword argument in the add_argument() call, and prints version information and exits when invoked.
 - [x] "extend" - This stores a list, and extends each argument value to the list.
 - [x] argparse::BooleanOptionalAction - Adds support for boolean actions such as --foo and --no-foo
+## License
+<img align="right" src="https://opensource.org/trademarks/opensource/OSI-Approved-License-100x137.png">
+
+The class is licensed under the [MIT License](https://opensource.org/licenses/MIT):
+
+Copyright &copy; 2021-2022 [Golubchikov Mihail](https://github.com/rue-ryuzaki)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+* * *
+
+The class contains a slightly modified version of the shared_ptr implementation for C++98 from Sébastien Rombauts which is licensed under the [MIT License](https://opensource.org/licenses/MIT) (see above). Copyright &copy; 2012-2019 [Sébastien Rombauts](https://github.com/SRombauts)
