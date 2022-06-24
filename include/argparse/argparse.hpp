@@ -28,6 +28,7 @@
 #define _ARGPARSE_ARGUMENT_PARSER_HPP_
 
 #undef _ARGPARSE_CONSTEXPR
+#undef _ARGPARSE_ENUM_TYPE
 #undef _ARGPARSE_EXPERIMENTAL_OPTIONAL
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
@@ -185,11 +186,17 @@ using experimental::fundamentals_v1::nullopt;
 #define _ARGPARSE_EXPORT
 
 #ifdef _ARGPARSE_CXX_11
+#define _ARGPARSE_NOEXCEPT noexcept
+#define _ARGPARSE_OVERRIDE override
 #define _ARGPARSE_CONSTEXPR constexpr
 #define _ARGPARSE_USE_CONSTEXPR constexpr
+#define _ARGPARSE_ENUM_TYPE(X) : X
 #else
+#define _ARGPARSE_NOEXCEPT
+#define _ARGPARSE_OVERRIDE
 #define _ARGPARSE_CONSTEXPR
 #define _ARGPARSE_USE_CONSTEXPR const
+#define _ARGPARSE_ENUM_TYPE(X)
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_17
@@ -197,14 +204,6 @@ using experimental::fundamentals_v1::nullopt;
 #else
 #define _ARGPARSE_INLINE_VARIABLE static
 #endif  // C++17+
-
-#ifdef _ARGPARSE_CXX_11
-#define _ARGPARSE_NOEXCEPT noexcept
-#define _ARGPARSE_OVERRIDE override
-#else
-#define _ARGPARSE_NOEXCEPT
-#define _ARGPARSE_OVERRIDE
-#endif  // C++11+
 
 namespace argparse {
 #ifdef _ARGPARSE_CXX_11
@@ -232,10 +231,7 @@ private:
  *
  *  \enum Action
  */
-_ARGPARSE_EXPORT enum Action
-#ifdef _ARGPARSE_CXX_11
-        : uint16_t
-#endif  // _ARGPARSE_CXX_11
+_ARGPARSE_EXPORT enum Action _ARGPARSE_ENUM_TYPE(uint16_t)
 {
     store                   = 0x0001,
     store_const             = 0x0002,
@@ -2477,22 +2473,16 @@ _check_type_name(Value<std::string> const& expected,
  *
  *  \enum _SUPPRESS
  */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _SUPPRESS
-#ifdef _ARGPARSE_CXX_11
-        : uint8_t
-#endif  // _ARGPARSE_CXX_11
-{} SUPPRESS;
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE
+enum _SUPPRESS _ARGPARSE_ENUM_TYPE(uint8_t) {} SUPPRESS;
 
 /*!
  *  \brief Don't use this enum name! use argparse::REMAINDER value directly
  *
  *  \enum _REMAINDER
  */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE enum _REMAINDER
-#ifdef _ARGPARSE_CXX_11
-        : uint8_t
-#endif  // _ARGPARSE_CXX_11
-{} REMAINDER;
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE
+enum _REMAINDER _ARGPARSE_ENUM_TYPE(uint8_t) {} REMAINDER;
 
 // Forward declaration
 class Argument;
@@ -2521,10 +2511,7 @@ _ARGPARSE_EXPORT class Argument
     friend class MutuallyExclusiveGroup;
     friend class Namespace;
 
-    enum Nargs
-#ifdef _ARGPARSE_CXX_11
-            : uint8_t
-#endif  // _ARGPARSE_CXX_11
+    enum Nargs _ARGPARSE_ENUM_TYPE(uint8_t)
     {
         NARGS_DEF       = 0x01,  // ""
         NARGS_NUM       = 0x02,  // "N"
@@ -2534,10 +2521,7 @@ _ARGPARSE_EXPORT class Argument
         REMAINDER       = 0x20,  // argparse::REMAINDER
     };
 
-    enum Type
-#ifdef _ARGPARSE_CXX_11
-            : uint8_t
-#endif  // _ARGPARSE_CXX_11
+    enum Type _ARGPARSE_ENUM_TYPE(uint8_t)
     {
         NoType,
         Positional,
@@ -10686,6 +10670,7 @@ private:
 }  // namespace argparse
 
 #undef _ARGPARSE_CONSTEXPR
+#undef _ARGPARSE_ENUM_TYPE
 #undef _ARGPARSE_EXPERIMENTAL_OPTIONAL
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
