@@ -639,6 +639,13 @@ template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
 #endif  // C++20+
 
 #ifdef _ARGPARSE_CXX_11
+using std::decay;
+using std::enable_if;
+using std::is_constructible;
+using std::is_floating_point;
+using std::is_integral;
+using std::is_same;
+
 template <class T>
 struct is_stl_array                                          :std::false_type{};
 template <class T, std::size_t N>
@@ -5640,17 +5647,10 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<std::is_constructible<std::string, T>::value
-                            || std::is_floating_point<T>::value
-                            || std::is_same<bool, T>::value
-                            || detail::is_byte_type<T>::value, T>::type
-#else
     typename detail::enable_if<detail::is_constructible<std::string, T>::value
                                || detail::is_floating_point<T>::value
                                || detail::is_same<bool, T>::value
                                || detail::is_byte_type<T>::value, T>::type
-#endif  // C++11+
     get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
@@ -5678,15 +5678,9 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<std::is_integral<T>::value
-                            && !std::is_same<bool, T>::value
-                            && !detail::is_byte_type<T>::value, T>::type
-#else
     typename detail::enable_if<detail::is_integral<T>::value
                                && !detail::is_same<bool, T>::value
                                && !detail::is_byte_type<T>::value, T>::type
-#endif  // C++11+
     get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
@@ -5747,21 +5741,15 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<
-        detail::is_stl_container<typename std::decay<T>::type>::value
-        && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
-        && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value, T
-    >::type
-#else
     typename detail::enable_if<
         detail::is_stl_container<typename detail::decay<T>::type>::value
-     && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
-     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
-    >::type
+#ifdef _ARGPARSE_CXX_11
+     && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
 #endif  // C++11+
+     && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
+     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value
+     && !detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
+    >::type
     get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
@@ -5784,15 +5772,9 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<
-        detail::is_stl_container_paired<typename std::decay<T>::type>::value, T
-    >::type
-#else
     typename detail::enable_if<
       detail::is_stl_container_paired<typename detail::decay<T>::type>::value, T
     >::type
-#endif  // C++11+
     get(std::string const& key, char delim = detail::_equal) const
     {
         Storage::value_type const& args = data(key);
@@ -5844,13 +5826,8 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<
-        detail::is_stl_map<typename std::decay<T>::type>::value, T>::type
-#else
     typename detail::enable_if<
         detail::is_stl_map<typename detail::decay<T>::type>::value, T>::type
-#endif  // C++11+
     get(std::string const& key, char delim = detail::_equal) const
     {
         Storage::value_type const& args = data(key);
@@ -5886,17 +5863,10 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<
-        detail::is_stl_matrix<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value, T
-    >::type
-#else
     typename detail::enable_if<
         detail::is_stl_matrix<typename detail::decay<T>::type>::value
      && !detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
     >::type
-#endif  // C++11+
     get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
@@ -5926,15 +5896,9 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<
-        detail::is_stl_matrix_queue<typename std::decay<T>::type>::value, T
-    >::type
-#else
     typename detail::enable_if<
         detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
     >::type
-#endif  // C++11+
     get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
@@ -5965,13 +5929,8 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<
-        detail::is_stl_pair<typename std::decay<T>::type>::value, T>::type
-#else
     typename detail::enable_if<
         detail::is_stl_pair<typename detail::decay<T>::type>::value, T>::type
-#endif  // C++11+
     get(std::string const& key, char delim = detail::_equal) const
     {
         Storage::value_type const& args = data(key);
@@ -6008,13 +5967,8 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<
-        detail::is_stl_queue<typename std::decay<T>::type>::value, T>::type
-#else
     typename detail::enable_if<
         detail::is_stl_queue<typename detail::decay<T>::type>::value, T>::type
-#endif  // C++11+
     get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
@@ -6071,28 +6025,19 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<
-        !std::is_constructible<std::string, T>::value
-        && !std::is_floating_point<T>::value
-        && !std::is_integral<T>::value
-        && !detail::is_stl_array<typename std::decay<T>::type>::value
-        && !detail::is_stl_container<typename std::decay<T>::type>::value
-        && !detail::is_stl_map<typename std::decay<T>::type>::value
-        && !detail::is_stl_pair<typename std::decay<T>::type>::value
-        && !detail::is_stl_queue<typename std::decay<T>::type>::value
-        && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
-#else
     typename detail::enable_if<
         !detail::is_constructible<std::string, T>::value
         && !detail::is_floating_point<T>::value
         && !detail::is_integral<T>::value
+#ifdef _ARGPARSE_CXX_11
+        && !detail::is_stl_array<typename std::decay<T>::type>::value
+        && !detail::is_stl_tuple<typename std::decay<T>::type>::value
+#endif  // C++11+
         && !detail::is_stl_container<typename detail::decay<T>::type>::value
         && !detail::is_stl_map<typename detail::decay<T>::type>::value
         && !detail::is_stl_pair<typename detail::decay<T>::type>::value
         && !detail::is_stl_queue<typename detail::decay<T>::type>::value, T
     >::type
-#endif  // C++11+
     get(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
@@ -6946,13 +6891,8 @@ private:
 #endif  // C++11+
 
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<
-        std::is_constructible<std::string, T>::value, T>::type
-#else
     typename detail::enable_if<
         detail::is_constructible<std::string, T>::value, T>::type
-#endif  // C++11+
     to_type(std::string const& data) const
     {
 #ifdef _ARGPARSE_CXX_11
@@ -6963,22 +6903,14 @@ private:
     }
 
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<std::is_same<bool, T>::value, T>::type
-#else
     typename detail::enable_if<detail::is_same<bool, T>::value, T>::type
-#endif  // C++11+
     to_type(std::string const& data) const _ARGPARSE_NOEXCEPT
     {
         return detail::_string_to_bool(data);
     }
 
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<detail::is_byte_type<T>::value, T>::type
-#else
     typename detail::enable_if<detail::is_byte_type<T>::value, T>::type
-#endif  // C++11+
     to_type(std::string const& data) const
     {
         if (data.empty()) {
@@ -6992,15 +6924,9 @@ private:
     }
 
     template <class T>
-#ifdef _ARGPARSE_CXX_11
-    typename std::enable_if<!std::is_constructible<std::string, T>::value
-                            && !std::is_same<bool, T>::value
-                            && !detail::is_byte_type<T>::value, T>::type
-#else
     typename detail::enable_if<!detail::is_constructible<std::string, T>::value
                                && !detail::is_same<bool, T>::value
                                && !detail::is_byte_type<T>::value, T>::type
-#endif  // C++11+
     to_type(std::string const& data) const
     {
         if (data.empty()) {
