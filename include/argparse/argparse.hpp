@@ -2370,24 +2370,10 @@ public:
           m_has_value(orig.m_has_value)
     { }
 
-#ifdef _ARGPARSE_CXX_11
-    Value(Value&& orig) _ARGPARSE_NOEXCEPT
-        : m_value(std::move(orig.m_value)),
-          m_has_value(std::move(orig.m_has_value))
-    { }
-#endif  // C++11+
-
     explicit Value(T const& orig)
         : m_value(orig),
           m_has_value(true)
     { }
-
-#ifdef _ARGPARSE_CXX_11
-    explicit Value(T&& orig) _ARGPARSE_NOEXCEPT
-        : m_value(std::move(orig)),
-          m_has_value(true)
-    { }
-#endif  // C++11+
 
     inline Value& operator =(Value const& rhs)
     {
@@ -2398,17 +2384,6 @@ public:
         return *this;
     }
 
-#ifdef _ARGPARSE_CXX_11
-    inline Value& operator =(Value&& rhs) _ARGPARSE_NOEXCEPT
-    {
-        if (this != &rhs) {
-            m_value     = std::move(rhs.m_value);
-            m_has_value = std::move(rhs.m_has_value);
-        }
-        return *this;
-    }
-#endif  // C++11+
-
     inline Value& operator =(T const& rhs)
     {
         m_value     = rhs;
@@ -2417,6 +2392,25 @@ public:
     }
 
 #ifdef _ARGPARSE_CXX_11
+    Value(Value&& orig) _ARGPARSE_NOEXCEPT
+        : m_value(std::move(orig.m_value)),
+          m_has_value(std::move(orig.m_has_value))
+    { }
+
+    explicit Value(T&& orig) _ARGPARSE_NOEXCEPT
+        : m_value(std::move(orig)),
+          m_has_value(true)
+    { }
+
+    inline Value& operator =(Value&& rhs) _ARGPARSE_NOEXCEPT
+    {
+        if (this != &rhs) {
+            m_value     = std::move(rhs.m_value);
+            m_has_value = std::move(rhs.m_has_value);
+        }
+        return *this;
+    }
+
     inline Value& operator =(T&& rhs) _ARGPARSE_NOEXCEPT
     {
         m_value     = std::move(rhs);
@@ -2571,17 +2565,14 @@ _ARGPARSE_EXPORT class Argument
           m_choices(),
           m_required(),
           m_help(),
+          m_version(),
           m_metavar(),
 #ifdef _ARGPARSE_CXX_11
           m_dest(std::vector<std::string>{ std::string() }),
-#else
-          m_dest(),
-#endif  // C++11+
-          m_version(),
-#ifdef _ARGPARSE_CXX_11
           m_handle(nullptr),
           m_post_trigger(nullptr)
 #else
+          m_dest(),
           m_post_trigger(NULL)
 #endif  // C++11+
     {
@@ -2612,9 +2603,9 @@ _ARGPARSE_EXPORT class Argument
           m_choices(),
           m_required(),
           m_help(),
+          m_version(),
           m_metavar(),
           m_dest(std::vector<std::string>{ std::string() }),
-          m_version(),
           m_handle(nullptr),
           m_post_trigger(nullptr)
     { }
@@ -2692,9 +2683,9 @@ public:
           m_choices(),
           m_required(),
           m_help(),
+          m_version(),
           m_metavar(),
           m_dest(),
-          m_version(),
           m_post_trigger(NULL)
     {
         m_flags.push_back(flag);
@@ -2729,9 +2720,9 @@ public:
           m_choices(),
           m_required(),
           m_help(),
+          m_version(),
           m_metavar(),
           m_dest(),
-          m_version(),
           m_post_trigger(NULL)
     {
         m_flags.push_back(flag1);
@@ -2770,17 +2761,14 @@ public:
           m_choices(),
           m_required(),
           m_help(),
+          m_version(),
           m_metavar(),
 #ifdef _ARGPARSE_CXX_11
           m_dest(std::vector<std::string>{ std::string() }),
-#else
-          m_dest(),
-#endif  // C++11+
-          m_version(),
-#ifdef _ARGPARSE_CXX_11
           m_handle(nullptr),
           m_post_trigger(nullptr)
 #else
+          m_dest(),
           m_post_trigger(NULL)
 #endif  // C++11+
     {
@@ -2814,9 +2802,9 @@ public:
           m_choices(orig.m_choices),
           m_required(orig.m_required),
           m_help(orig.m_help),
+          m_version(orig.m_version),
           m_metavar(orig.m_metavar),
           m_dest(orig.m_dest),
-          m_version(orig.m_version),
 #ifdef _ARGPARSE_CXX_11
           m_handle(orig.m_handle),
 #endif  // C++11+
@@ -2849,9 +2837,9 @@ public:
           m_choices(std::move(orig.m_choices)),
           m_required(std::move(orig.m_required)),
           m_help(std::move(orig.m_help)),
+          m_version(std::move(orig.m_version)),
           m_metavar(std::move(orig.m_metavar)),
           m_dest(std::move(orig.m_dest)),
-          m_version(std::move(orig.m_version)),
           m_handle(std::move(orig.m_handle)),
           m_post_trigger(std::move(orig.m_post_trigger))
     { }
@@ -2884,9 +2872,9 @@ public:
             this->m_choices         = rhs.m_choices;
             this->m_required        = rhs.m_required;
             this->m_help            = rhs.m_help;
+            this->m_version         = rhs.m_version;
             this->m_metavar         = rhs.m_metavar;
             this->m_dest            = rhs.m_dest;
-            this->m_version         = rhs.m_version;
 #ifdef _ARGPARSE_CXX_11
             this->m_handle          = rhs.m_handle;
 #endif  // C++11+
@@ -2923,9 +2911,9 @@ public:
             this->m_choices         = std::move(rhs.m_choices);
             this->m_required        = std::move(rhs.m_required);
             this->m_help            = std::move(rhs.m_help);
+            this->m_version         = std::move(rhs.m_version);
             this->m_metavar         = std::move(rhs.m_metavar);
             this->m_dest            = std::move(rhs.m_dest);
-            this->m_version         = std::move(rhs.m_version);
             this->m_handle          = std::move(rhs.m_handle);
             this->m_post_trigger    = std::move(rhs.m_post_trigger);
         }
@@ -3477,6 +3465,23 @@ public:
     }
 
     /*!
+     *  \brief Set argument 'version' for arguments with 'version' action
+     *
+     *  \param value Version value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& version(std::string const& value)
+    {
+        if (action() == argparse::version) {
+            m_version = detail::_trim_copy(value);
+        } else {
+            throw TypeError("got an unexpected keyword argument 'version'");
+        }
+        return *this;
+    }
+
+    /*!
      *  \brief Set argument 'metavar' value
      *
      *  \param value Metavar value
@@ -3540,23 +3545,6 @@ public:
             throw ValueError("dest supplied twice for positional argument");
         }
         m_dest.front() = detail::_format_name(value);
-        return *this;
-    }
-
-    /*!
-     *  \brief Set argument 'version' for arguments with 'version' action
-     *
-     *  \param value Version value
-     *
-     *  \return Current argument reference
-     */
-    inline Argument& version(std::string const& value)
-    {
-        if (action() == argparse::version) {
-            m_version = detail::_trim_copy(value);
-        } else {
-            throw TypeError("got an unexpected keyword argument 'version'");
-        }
         return *this;
     }
 
@@ -3697,6 +3685,16 @@ public:
     }
 
     /*!
+     *  \brief Get argument 'version' value
+     *
+     *  \return Argument 'version' value
+     */
+    inline std::string const& version() const _ARGPARSE_NOEXCEPT
+    {
+        return m_version();
+    }
+
+    /*!
      *  \brief Get argument 'metavar' value
      *
      *  \return Argument 'metavar' value
@@ -3714,16 +3712,6 @@ public:
     inline std::string const& dest() const _ARGPARSE_NOEXCEPT
     {
         return m_dest.front();
-    }
-
-    /*!
-     *  \brief Get argument 'version' value
-     *
-     *  \return Argument 'version' value
-     */
-    inline std::string const& version() const _ARGPARSE_NOEXCEPT
-    {
-        return m_version();
     }
 
 private:
@@ -4003,9 +3991,9 @@ private:
     detail::Value<std::vector<std::string> > m_choices;
     detail::Value<bool> m_required;
     std::string m_help;
+    detail::Value<std::string> m_version;
     detail::Value<std::vector<std::string> > m_metavar;
     std::vector<std::string> m_dest;
-    detail::Value<std::string> m_version;
 #ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
 #endif  // C++11+
