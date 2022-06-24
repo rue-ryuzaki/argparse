@@ -7879,6 +7879,37 @@ public:
     {
         return aliases(std::vector<std::string>{ value, args... });
     }
+#else
+    /*!
+     *  \brief Set argument parser 'aliases' value (for subparsers)
+     *
+     *  \param value First value
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser& aliases(std::string const& value)
+    {
+        std::vector<std::string> values;
+        values.push_back(value);
+        return aliases(values);
+    }
+
+    /*!
+     *  \brief Set argument parser 'aliases' value (for subparsers)
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    aliases(std::string const& value1, std::string const& value2)
+    {
+        std::vector<std::string> values;
+        values.push_back(value1);
+        values.push_back(value2);
+        return aliases(values);
+    }
 #endif  // C++11+
 
     /*!
@@ -7948,6 +7979,37 @@ public:
     {
         return parents(std::vector<ArgumentParser>{ value, args... });
     }
+#else
+    /*!
+     *  \brief Set argument parser 'parents' value
+     *
+     *  \param value Parent value
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser& parents(ArgumentParser const& value)
+    {
+        std::vector<ArgumentParser> values;
+        values.push_back(value);
+        return parents(values);
+    }
+
+    /*!
+     *  \brief Set argument parser 'parents' value
+     *
+     *  \param value1 Parent value1
+     *  \param value2 Parent value2
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    parents(ArgumentParser const& value1, ArgumentParser const& value2)
+    {
+        std::vector<ArgumentParser> values;
+        values.push_back(value1);
+        values.push_back(value2);
+        return parents(values);
+    }
 #endif  // C++11+
 
     /*!
@@ -7980,6 +8042,22 @@ public:
         formatter_class(value);
         return add_formatter_class(args...);
     }
+#else
+    /*!
+     *  \brief Set argument parser 'formatter_class' value
+     *
+     *  \param value1 HelpFormatter value1
+     *  \param value2 HelpFormatter value2
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    formatter_class(HelpFormatter const& value1,
+                    HelpFormatter const& value2)
+    {
+        formatter_class(value1);
+        return add_formatter_class(value2);
+    }
 #endif  // C++11+
 
     /*!
@@ -8011,6 +8089,22 @@ public:
     {
         add_formatter_class(value);
         return add_formatter_class(args...);
+    }
+#else
+    /*!
+     *  \brief Add argument parser 'formatter_class' value
+     *
+     *  \param value1 HelpFormatter value1
+     *  \param value2 HelpFormatter value2
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    add_formatter_class(HelpFormatter const& value1,
+                        HelpFormatter const& value2)
+    {
+        add_formatter_class(value1);
+        return add_formatter_class(value2);
     }
 #endif  // C++11+
 
