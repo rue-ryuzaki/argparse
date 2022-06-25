@@ -3475,32 +3475,6 @@ public:
     /*!
      *  \brief Set argument 'metavar' value
      *
-     *  \param value Metavar value
-     *
-     *  \return Current argument reference
-     */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
-    inline Argument& metavar(std::string const& value)
-    {
-        if (!(action() & (detail::_store_const_action
-                          | argparse::BooleanOptionalAction))) {
-            throw TypeError("got an unexpected keyword argument 'metavar'");
-        }
-#ifdef _ARGPARSE_CXX_11
-        m_metavar = { detail::_trim_copy(value) };
-#else
-        std::vector<std::string> _values;
-        _values.push_back(detail::_trim_copy(value));
-        m_metavar = _values;
-#endif  // _ARGPARSE_CXX_11
-        return *this;
-    }
-
-    /*!
-     *  \brief Set argument 'metavar' value
-     *
      *  \param value Metavar values
      *
      *  \return Current argument reference
@@ -3522,6 +3496,96 @@ public:
 #endif  // C++11+
         return *this;
     }
+
+#ifdef _ARGPARSE_CXX_11
+    /*!
+     *  \brief Set argument 'metavar' value
+     *
+     *  \param value First value
+     *  \param args Other values
+     *
+     *  \return Current argument reference
+     */
+    template <class... Args>
+    Argument& metavar(std::string const& value, Args... args)
+    {
+        return metavar(std::vector<std::string>{ value, args... });
+    }
+#else
+    /*!
+     *  \brief Set argument 'metavar' value
+     *
+     *  \param value Metavar value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& metavar(std::string const& value)
+    {
+        std::vector<std::string> values;
+        values.push_back(value);
+        return metavar(values);
+    }
+
+    /*!
+     *  \brief Set argument 'metavar' value
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& metavar(std::string const& value1,
+                             std::string const& value2)
+    {
+        std::vector<std::string> values;
+        values.push_back(value1);
+        values.push_back(value2);
+        return metavar(values);
+    }
+
+    /*!
+     *  \brief Set argument 'metavar' value
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *  \param value3 Third value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& metavar(std::string const& value1,
+                             std::string const& value2,
+                             std::string const& value3)
+    {
+        std::vector<std::string> values;
+        values.push_back(value1);
+        values.push_back(value2);
+        values.push_back(value3);
+        return metavar(values);
+    }
+
+    /*!
+     *  \brief Set argument 'metavar' value
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *  \param value3 Third value
+     *  \param value4 Fourth value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& metavar(std::string const& value1,
+                             std::string const& value2,
+                             std::string const& value3,
+                             std::string const& value4)
+    {
+        std::vector<std::string> values;
+        values.push_back(value1);
+        values.push_back(value2);
+        values.push_back(value3);
+        values.push_back(value4);
+        return metavar(values);
+    }
+#endif  // C++11+
 
     /*!
      *  \brief Set argument 'dest' value for optional arguments
@@ -4753,7 +4817,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::string const& flag)
+    inline Argument& add_argument(std::string const& flag)
     {
         std::vector<std::string> flags;
         flags.push_back(flag);
@@ -4768,7 +4832,8 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::string const& flag1, std::string const& flag2)
+    inline Argument& add_argument(std::string const& flag1,
+                                  std::string const& flag2)
     {
         std::vector<std::string> flags;
         flags.push_back(flag1);
@@ -7813,7 +7878,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& aliases(std::string const& value)
+    inline ArgumentParser& aliases(std::string const& value)
     {
         std::vector<std::string> values;
         values.push_back(value);
@@ -7828,8 +7893,8 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser&
-    aliases(std::string const& value1, std::string const& value2)
+    inline ArgumentParser& aliases(std::string const& value1,
+                                   std::string const& value2)
     {
         std::vector<std::string> values;
         values.push_back(value1);
@@ -7945,8 +8010,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser&
-    formatter_class(HelpFormatter const& value)
+    inline ArgumentParser& formatter_class(HelpFormatter const& value)
     {
         set_formatter_class(value);
         return *this;
@@ -7977,9 +8041,8 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser&
-    formatter_class(HelpFormatter const& value1,
-                    HelpFormatter const& value2)
+    inline ArgumentParser& formatter_class(HelpFormatter const& value1,
+                                           HelpFormatter const& value2)
     {
         formatter_class(value1);
         return add_formatter_class(value2);
@@ -7993,8 +8056,7 @@ public:
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser&
-    add_formatter_class(HelpFormatter const& value)
+    inline ArgumentParser& add_formatter_class(HelpFormatter const& value)
     {
         apply_formatter_class(value);
         return *this;
@@ -8025,9 +8087,8 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser&
-    add_formatter_class(HelpFormatter const& value1,
-                        HelpFormatter const& value2)
+    inline ArgumentParser& add_formatter_class(HelpFormatter const& value1,
+                                               HelpFormatter const& value2)
     {
         add_formatter_class(value1);
         return add_formatter_class(value2);
@@ -8332,7 +8393,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::string const& flag)
+    inline Argument& add_argument(std::string const& flag)
     {
         std::vector<std::string> flags;
         flags.push_back(flag);
@@ -8347,7 +8408,8 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::string const& flag1, std::string const& flag2)
+    inline Argument& add_argument(std::string const& flag1,
+                                  std::string const& flag2)
     {
         std::vector<std::string> flags;
         flags.push_back(flag1);
