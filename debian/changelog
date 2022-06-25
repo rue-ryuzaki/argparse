@@ -1,3 +1,10 @@
+cpp-argparse-dev (1.6.5-0ppa0) focal; urgency=low
+
+  * Add: missing ArgumentParser functions for C++98
+  * Update: Argument::metavar functions
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 25 Jun 2022 20:29:39 +0300
+
 cpp-argparse-dev (1.6.4-0ppa0) focal; urgency=low
 
   * Add: C++98 standard support for Namespace::get
