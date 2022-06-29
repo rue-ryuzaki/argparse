@@ -23,9 +23,11 @@ C++ support compiler (C++98 standard support is experimental)
  - Windows: mingw (tested 8.1), clang (tested 11 up to 14), msvc (tested 2019, 2022), github legacy: msvc2017
 
 ## Official repositories:
-[PPA](https://launchpad.net/~golubchikov-mihail/+archive/ubuntu/cpp-argparse)
+```cpp-argparse-dev``` [PPA](https://launchpad.net/~golubchikov-mihail/+archive/ubuntu/cpp-argparse)
 
-[AUR](https://aur.archlinux.org/packages/cpp-argparse-dev)
+```cpp-argparse-dev``` [AUR](https://aur.archlinux.org/packages/cpp-argparse-dev)
+
+```cpp-argparse-dev``` [MacPorts](https://ports.macports.org/port/cpp-argparse-dev)
 ## Overview
 - Examples:
   - [code](#code-example) - [usage](#usage-example) - [output](#output)
