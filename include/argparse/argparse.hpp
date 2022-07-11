@@ -207,7 +207,7 @@ using experimental::fundamentals_v1::nullopt;
 
 namespace argparse {
 #ifdef _ARGPARSE_CXX_11
-#define _ARGPARSE_NULLPTR  nullptr
+#define _ARGPARSE_NULLPTR nullptr
 #else
 const
 class nullptr_t
@@ -223,7 +223,7 @@ private:
     void operator &() const;
 } _nullptr = {};
 
-#define _ARGPARSE_NULLPTR  _nullptr
+#define _ARGPARSE_NULLPTR _nullptr
 #endif  // _ARGPARSE_CXX_11
 
 /*!
@@ -359,24 +359,24 @@ struct _HelpFormatter
 };
 
 namespace detail {
-std::size_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _min_width = 33;
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _prefix_char      = '-';
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _prefix_chars[]   = "-";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _pseudo_arg[]     = "--";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _space            = ' ';
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equal            = '=';
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _spaces[]         = " ";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR _equals[]         = "=";
-char _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_ARGPARSE_INLINE_VARIABLE std::size_t _ARGPARSE_USE_CONSTEXPR _min_width = 33;
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_char      = '-';
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_chars[]   = "-";
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _pseudo_arg[]     = "--";
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _space            = ' ';
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equal            = '=';
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _spaces[]         = " ";
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equals[]         = "=";
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
-int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _bool_action = argparse::store_true | argparse::store_false;
-int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _store_action = argparse::store | argparse::append | argparse::extend;
-int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _const_action = argparse::store_const | argparse::append_const;
-int32_t _ARGPARSE_INLINE_VARIABLE _ARGPARSE_USE_CONSTEXPR
+_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
 
 #ifdef _ARGPARSE_CXX_11
@@ -2120,7 +2120,7 @@ public:
 #endif  // C++17+
                   || is_stl_pair<T>::value
                   || is_stl_tuple<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     basic()
     {
         return name<T>();
@@ -2130,7 +2130,7 @@ public:
                   is_stl_array<T>::value
                   || is_stl_container<T>::value
                   || is_stl_queue<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     basic()
     {
         return basic<typename T::value_type>();
@@ -2138,7 +2138,7 @@ public:
 
     template <class T, typename std::enable_if<
                   is_stl_map<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     basic()
     {
         return "std::pair<" + name<typename T::key_type>()
@@ -2156,14 +2156,14 @@ public:
                   && !is_stl_pair<T>::value
                   && !is_stl_queue<T>::value
                   && !is_stl_tuple<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     basic()
     {
         return name<T>();
     }
 #else
     template <class T>
-    std::string static
+    static std::string
     basic(typename enable_if<is_same<std::string, T>::value
                              || is_stl_pair<T>::value, bool>::type = true)
     {
@@ -2171,7 +2171,7 @@ public:
     }
 
     template <class T>
-    std::string static
+    static std::string
     basic(typename enable_if<is_stl_container<T>::value
                              || is_stl_queue<T>::value, bool>::type = true)
     {
@@ -2179,7 +2179,7 @@ public:
     }
 
     template <class T>
-    std::string static
+    static std::string
     basic(typename enable_if<is_stl_map<T>::value, bool>::type = true)
     {
         return "std::pair<" + name<typename T::key_type>()
@@ -2187,7 +2187,7 @@ public:
     }
 
     template <class T>
-    std::string static
+    static std::string
     basic(typename enable_if<!is_same<std::string, T>::value
                              && !is_stl_container<T>::value
                              && !is_stl_map<T>::value
@@ -2204,7 +2204,7 @@ public:
                   std::is_same<std::string_view, T>::value ||
 #endif  // C++17+
                   std::is_same<std::string, T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     name()
     {
         return "std::string";
@@ -2212,7 +2212,7 @@ public:
 
     template <class T, typename std::enable_if<
                   is_stl_array<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     name()
     {
         auto str = _replace(_get_type_name<T>(), "__cxx11::", std::string());
@@ -2225,7 +2225,7 @@ public:
     template <class T, typename std::enable_if<
                   is_stl_container<T>::value
                   || is_stl_queue<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     name()
     {
         auto str = _replace(_get_type_name<T>(), "__cxx11::", std::string());
@@ -2236,7 +2236,7 @@ public:
 
     template <class T, typename std::enable_if<
                   is_stl_map<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     name()
     {
         auto str = _get_type_name<T>();
@@ -2247,7 +2247,7 @@ public:
 
     template <class T, typename std::enable_if<
                   is_stl_pair<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     name()
     {
         return "std::pair<" + name<typename T::first_type>()
@@ -2256,7 +2256,7 @@ public:
 
     template <class T, typename std::enable_if<
                   is_stl_tuple<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     name()
     {
         return tuple_as_string(type_tag<T>{});
@@ -2273,21 +2273,21 @@ public:
                   && !is_stl_pair<T>::value
                   && !is_stl_queue<T>::value
                   && !is_stl_tuple<T>::value>::type* = nullptr>
-    std::string static
+    static std::string
     name()
     {
         return _get_type_name<T>();
     }
 #else
     template <class T>
-    std::string static
+    static std::string
     name(typename enable_if<is_same<std::string, T>::value, bool>::type = true)
     {
         return "std::string";
     }
 
     template <class T>
-    std::string static
+    static std::string
     name(typename enable_if<is_stl_container<T>::value
                             || is_stl_queue<T>::value, bool>::type = true)
     {
@@ -2299,7 +2299,7 @@ public:
     }
 
     template <class T>
-    std::string static
+    static std::string
     name(typename enable_if<is_stl_map<T>::value, bool>::type = true)
     {
         std::string str = _get_type_name<T>();
@@ -2309,7 +2309,7 @@ public:
     }
 
     template <class T>
-    std::string static
+    static std::string
     name(typename enable_if<is_stl_pair<T>::value, bool>::type = true)
     {
         return "std::pair<" + name<typename T::first_type>()
@@ -2317,7 +2317,7 @@ public:
     }
 
     template <class T>
-    std::string static
+    static std::string
     name(typename enable_if<!is_same<std::string, T>::value
                             && !is_stl_container<T>::value
                             && !is_stl_map<T>::value
@@ -2331,14 +2331,14 @@ public:
 private:
 #ifdef _ARGPARSE_CXX_11
     template <std::size_t N>
-    std::string static&
+    static std::string&
     tuple_type(std::string& s)
     {
         return s;
     }
 
     template <std::size_t N, class T, class... Ts>
-    std::string static&
+    static std::string&
     tuple_type(std::string& s)
     {
         if (!s.empty()) {
@@ -2349,7 +2349,7 @@ private:
     }
 
     template <class... Ts>
-    std::string static
+    static std::string
     tuple_as_string(type_tag<std::tuple<Ts...>>)
     {
         std::string result;
@@ -2602,7 +2602,7 @@ _ARGPARSE_EXPORT class Argument
     { }
 #endif  // C++11+
 
-    static inline detail::shared_ptr<Argument>
+    static detail::shared_ptr<Argument>
     make_argument(std::vector<std::string> const& flags,
                   std::string const& name,
                   Type type)
@@ -2611,7 +2611,7 @@ _ARGPARSE_EXPORT class Argument
     }
 
 #ifdef _ARGPARSE_CXX_11
-    static inline detail::shared_ptr<Argument>
+    static detail::shared_ptr<Argument>
     make_argument(std::vector<std::string>&& flags,
                   std::string&& name,
                   Type type)
@@ -4925,7 +4925,7 @@ _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
                          argument_default, argument_default_type, false)
     { }
 
-    static inline detail::shared_ptr<ArgumentGroup>
+    static detail::shared_ptr<ArgumentGroup>
     make_argument_group(std::string const& title,
                         std::string const& description,
                         std::string& prefix_chars,
@@ -5084,7 +5084,7 @@ _ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
           m_required(false)
     { }
 
-    static inline MutuallyExclusiveGroup
+    static MutuallyExclusiveGroup
     make_mutex_group(std::string& prefix_chars,
                      _ArgumentData& parent_data,
                      detail::Value<std::string>& argument_default,
@@ -7230,7 +7230,7 @@ public:
               m_parsers()
         { }
 
-        static inline detail::shared_ptr<Subparser>
+        static detail::shared_ptr<Subparser>
         make_subparser(std::string const& title,
                        std::string const& description)
         {
@@ -7757,7 +7757,7 @@ public:
     virtual ~ArgumentParser() _ARGPARSE_NOEXCEPT { }
 
 private:
-    pParser static make_parser(std::string const& name)
+    static pParser make_parser(std::string const& name)
     {
         pParser result = detail::make_shared<ArgumentParser>(ArgumentParser());
         result->m_prog.clear();
