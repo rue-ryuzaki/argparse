@@ -83,43 +83,6 @@
 #endif  // C++20+
 #endif  // _MSVC_LANG
 
-#include <algorithm>
-#include <cctype>
-#include <cstddef>
-#include <deque>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <list>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <queue>
-#include <set>
-#include <sstream>
-#include <stack>
-#include <stdexcept>
-#include <string>
-#ifdef _ARGPARSE_CXX_17
-#include <string_view>
-#endif  // C++17+
-#include <utility>
-#include <vector>
-
-#ifdef _ARGPARSE_CXX_11
-#include <array>
-#include <cstdint>
-#include <forward_list>
-#include <initializer_list>
-#include <tuple>
-#include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
-#else
-#include <cassert>
-#include <stdint.h>
-#endif  // C++11+
-
 #ifndef ARGPARSE_NO_AUTODETECT
 #if defined(_WIN32)
 #undef _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
@@ -164,6 +127,44 @@
 #define _ARGPARSE_USE_FILESYSTEM 1
 #endif  //
 #endif  // C++17+
+
+#ifdef _ARGPARSE_CXX_11
+#include <array>
+#include <cstdint>
+#include <forward_list>
+#include <initializer_list>
+#include <tuple>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
+#else
+#include <stdint.h>
+
+#include <cassert>
+#endif  // C++11+
+
+#include <algorithm>
+#include <cctype>
+#include <cstddef>
+#include <deque>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <list>
+#include <map>
+#include <memory>
+#include <numeric>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <stack>
+#include <stdexcept>
+#include <string>
+#ifdef _ARGPARSE_CXX_17
+#include <string_view>
+#endif  // C++17+
+#include <utility>
+#include <vector>
 
 // optional
 #ifdef _ARGPARSE_CXX_17
@@ -220,7 +221,7 @@ public:
     operator T C::* () const { return 0; }
 
 private:
-    void operator &() const;
+    void operator & () const;
 } _nullptr = {};
 
 #define _ARGPARSE_NULLPTR _nullptr
