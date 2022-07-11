@@ -1473,9 +1473,11 @@ _remove_quotes(std::string const& str)
 inline bool
 _contains_substr(std::string const& str, std::string const& substr)
 {
-    //  C++23+
-    //  return str.contains(substr);
+#ifdef _ARGPARSE_CXX_23  // C++23+
+    return str.contains(substr);
+#else
     return str.find(substr) != std::string::npos;
+#endif  // C++23+
 }
 
 inline std::string
