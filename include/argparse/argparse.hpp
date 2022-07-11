@@ -4741,6 +4741,7 @@ class _ArgumentGroup
 protected:
     typedef detail::shared_ptr<Argument> pArgument;
 
+    explicit
     _ArgumentGroup(std::string& prefix_chars,
                    _ArgumentData& parent_data,
                    detail::Value<std::string>& argument_default,
@@ -5216,6 +5217,7 @@ _ARGPARSE_EXPORT class Namespace
                   m_matrix()
             { }
 
+            explicit
             mapped_type(bool is_default, std::vector<std::string> const& values)
                 : m_exists(true),
                   m_is_default(is_default),
@@ -7217,6 +7219,7 @@ public:
     {
         friend class ArgumentParser;
 
+        explicit
         Subparser(std::string const& title,
                   std::string const& description)
             : _Group(title, description),
@@ -10465,7 +10468,9 @@ private:
                             std::vector<std::string>{ pair.first },
                             pair.first, Argument::Positional);
                 arg->default_value(pair.second);
-                storage.create(arg, { true, { pair.second } });
+                storage.create(arg,
+                               Namespace::Storage::mapped_type(true,
+                                                               { pair.second }));
 #else
                 std::vector<std::string> flags;
                 flags.push_back(pair.first);
