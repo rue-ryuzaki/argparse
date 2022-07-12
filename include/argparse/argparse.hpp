@@ -808,7 +808,7 @@ struct make_integer_sequence_impl
     struct tmp;
 
     template <T... Prev>
-    struct tmp<integer_sequence<T, Prev...>>
+    struct tmp<integer_sequence<T, Prev...> >
     { using type = integer_sequence<T, Prev..., N - 1>; };
 
     using type
@@ -2353,7 +2353,7 @@ private:
 
     template <class... Ts>
     static std::string
-    tuple_as_string(type_tag<std::tuple<Ts...>>)
+    tuple_as_string(type_tag<std::tuple<Ts...> >)
     {
         std::string result;
         tuple_type<sizeof...(Ts), Ts...>(result);
@@ -6925,7 +6925,7 @@ private:
 
     template <class... Ts>
     std::tuple<Ts...>
-    to_tuple(detail::type_tag<std::tuple<Ts...>>,
+    to_tuple(detail::type_tag<std::tuple<Ts...> >,
              std::vector<std::string> const& values) const
     {
         return parse_tuple<Ts...>(
@@ -7089,7 +7089,7 @@ private:
 
     template <class... Ts>
     std::optional<std::tuple<Ts...> >
-    try_to_tuple(detail::type_tag<std::tuple<Ts...>>,
+    try_to_tuple(detail::type_tag<std::tuple<Ts...> >,
                  std::vector<std::string> const& values) const
     {
         try {
