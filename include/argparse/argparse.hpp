@@ -477,7 +477,7 @@ public:
         acquire(p);
     }
 
-    shared_ptr(nullptr_t)
+    explicit shared_ptr(nullptr_t)
         : _shared_ptr_base(),
           px(NULL)
     { }
@@ -491,7 +491,7 @@ public:
     }
 
     template <class U>
-    shared_ptr(shared_ptr<U> const& orig) throw()
+    explicit shared_ptr(shared_ptr<U> const& orig) throw()
         : _shared_ptr_base(orig),
           px(NULL)
     {
@@ -8471,7 +8471,7 @@ public:
                 = ArgumentGroup::make_argument_group(
                     title, description, m_prefix_chars, m_data,
                     m_argument_default, m_argument_default_type);
-        m_groups.push_back(group);
+        m_groups.push_back(pGroup(group));
         return *group;
     }
 
@@ -8514,7 +8514,7 @@ public:
         m_subparsers_position = m_data.m_positional.size();
         m_subparsers = Subparser::make_subparser(title, description);
         m_subparsers->update_prog(prog(), subparser_prog_args());
-        m_groups.push_back(m_subparsers);
+        m_groups.push_back(pGroup(m_subparsers));
         return *m_subparsers;
     }
 
@@ -10121,7 +10121,7 @@ private:
             }
         }
 #endif  // C++11+
-        return it != args.end() ? *it : _ARGPARSE_NULLPTR;
+        return it != args.end() ? *it : pArgument(_ARGPARSE_NULLPTR);
     }
 
     static pArgument const
@@ -10129,7 +10129,7 @@ private:
                              Parsers const& parsers,
                              std::string const& key)
     {
-        return was_pseudo_arg ? _ARGPARSE_NULLPTR
+        return was_pseudo_arg ? pArgument(_ARGPARSE_NULLPTR)
                               : optional_arg_by_flag(parsers, key);
     }
 
