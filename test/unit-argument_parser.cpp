@@ -2872,8 +2872,8 @@ TEST_CASE("22. value types check", "[namespace]")
 //        REQUIRE(args3.get<std::string>("bar") == "");
         REQUIRE(args3.get<std::vector<std::string> >("foo").size() == 1);
         REQUIRE(args3.get<std::vector<std::string> >("bar").size() == 2);
-        REQUIRE(args3.get<std::map<std::string, std::string> >("bar").size() == 1);
-        REQUIRE(args3.get<std::map<std::string, std::string> >("bar").count("key") == 1);
+        REQUIRE((args3.get<std::map<std::string, std::string> >("bar").size() == 1));
+        REQUIRE((args3.get<std::map<std::string, std::string> >("bar").count("key") == 1));
 #ifdef _ARGPARSE_CXX_11
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("foo").size() == 1);
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").size() == 2);
@@ -2913,8 +2913,8 @@ TEST_CASE("22. value types check", "[namespace]")
         REQUIRE(args1.exists("foo") == true);
         REQUIRE(args1.get<std::string>("foo") == "key:value");
         REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
-        REQUIRE(args1.get<std::pair<std::string, std::string> >("foo", ':').first == "key");
-        REQUIRE(args1.get<std::pair<std::string, std::string> >("foo", ':').second == "value");
+        REQUIRE((args1.get<std::pair<std::string, std::string> >("foo", ':').first == "key"));
+        REQUIRE((args1.get<std::pair<std::string, std::string> >("foo", ':').second == "value"));
 #ifdef _ARGPARSE_CXX_17
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
@@ -2932,8 +2932,8 @@ TEST_CASE("22. value types check", "[namespace]")
         // or parser2.parse_args("--foo key value");
         REQUIRE(args2.exists("foo") == true);
         REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 2);
-        REQUIRE(args2.get<std::pair<std::string, std::string> >("foo", ' ').first == "key");
-        REQUIRE(args2.get<std::pair<std::string, std::string> >("foo", ' ').second == "value");
+        REQUIRE((args2.get<std::pair<std::string, std::string> >("foo", ' ').first == "key"));
+        REQUIRE((args2.get<std::pair<std::string, std::string> >("foo", ' ').second == "value"));
 #ifdef _ARGPARSE_CXX_17
         REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 2);
         REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->first == "key");
