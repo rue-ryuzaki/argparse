@@ -6540,7 +6540,7 @@ namespace Catch {
         static bool isSet;
         static struct sigaction oldSigActions [sizeof(signalDefs)/sizeof(SignalDefs)];
         static stack_t oldSigStack;
-        static char altStackMem[SIGSTKSZ];
+        static char* altStackMem;
 
         static void handleSignal( int sig ) {
             std::string name = "<unknown signal>";
@@ -6557,6 +6557,8 @@ namespace Catch {
         }
 
         FatalConditionHandler() {
+            assert(!altStackMem && "Cannot initialize POSIX signal handler when one already exists");
+            altStackMem = new char[SIGSTKSZ]();
             isSet = true;
             stack_t sigStack;
             sigStack.ss_sp = altStackMem;
@@ -6574,6 +6576,10 @@ namespace Catch {
 
         ~FatalConditionHandler() {
             reset();
+            delete[] altStackMem;
+            // We signal that another instance can be constructed by zeroing
+            // out the pointer.
+            altStackMem = NULL;
         }
         static void reset() {
             if( isSet ) {
@@ -6591,7 +6597,7 @@ namespace Catch {
     bool FatalConditionHandler::isSet = false;
     struct sigaction FatalConditionHandler::oldSigActions[sizeof(signalDefs)/sizeof(SignalDefs)] = {};
     stack_t FatalConditionHandler::oldSigStack = {};
-    char FatalConditionHandler::altStackMem[SIGSTKSZ] = {};
+    char* FatalConditionHandler::altStackMem;
 
 } // namespace Catch
 
