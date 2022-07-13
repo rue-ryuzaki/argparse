@@ -225,7 +225,7 @@ private:
 } _nullptr = {};
 
 #define _ARGPARSE_NULLPTR _nullptr
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
 
 /*!
  *  \brief Action values
@@ -3981,7 +3981,7 @@ private:
                       ? formatter._get_default_metavar_for_optional(this)
                       : formatter._get_default_metavar_for_positional(this));
         return res;
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
     }
 
     inline std::vector<std::string> const&
@@ -6910,7 +6910,7 @@ private:
         for (std::size_t i = 0; i < args.size(); ++i) {
             vec.push_back(to_type<T>(args.at(i)));
         }
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
         return vec;
     }
 
@@ -7546,7 +7546,7 @@ public:
                 }
             }
             return res;
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
         }
 
         std::string m_parent_prog;
@@ -8668,7 +8668,7 @@ public:
      */
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
     Namespace parse_args(Namespace const& space = Namespace()) const
     {
         return parse_args(m_parsed_arguments, space);
@@ -8723,7 +8723,7 @@ public:
      */
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
     Namespace parse_known_args(Namespace const& space = Namespace()) const
     {
         return parse_known_args(m_parsed_arguments, space);
@@ -8779,7 +8779,7 @@ public:
      */
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
     Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(m_parsed_arguments, space);
@@ -8835,7 +8835,7 @@ public:
      */
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
     Namespace
     parse_known_intermixed_args(Namespace const& space = Namespace()) const
     {
@@ -9064,7 +9064,7 @@ public:
         std::vector<std::string> res;
         res.push_back(arg_line);
         return res;
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
     }
 
 private:
@@ -9367,7 +9367,7 @@ private:
                 }
             }
         }
-#endif  // _ARGPARSE_CXX_11
+#endif  // C++11+
     }
 
     inline std::vector<std::string>
