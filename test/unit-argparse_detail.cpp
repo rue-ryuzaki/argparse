@@ -37,8 +37,8 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::name<std::unordered_multiset<int> >() == "std::unordered_multiset<int>");
         REQUIRE(argparse::detail::Type::name<std::unordered_set<int> >() == "std::unordered_set<int>");
 #endif  // C++11+
-        REQUIRE(argparse::detail::Type::name<std::pair<int, int> >() == "std::pair<int, int>");
-        REQUIRE(argparse::detail::Type::name<std::map<int, int> >() == "std::map<int, int>");
+        REQUIRE((argparse::detail::Type::name<std::pair<int, int> >() == "std::pair<int, int>"));
+        REQUIRE((argparse::detail::Type::name<std::map<int, int> >() == "std::map<int, int>"));
         REQUIRE(argparse::detail::Type::name<std::deque<int> >() == "std::deque<int>");
         REQUIRE(argparse::detail::Type::name<std::list<int> >() == "std::list<int>");
         REQUIRE(argparse::detail::Type::name<std::multiset<int> >() == "std::multiset<int>");
@@ -56,8 +56,8 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::name<std::unordered_multiset<std::string> >() == "std::unordered_multiset<std::string>");
         REQUIRE(argparse::detail::Type::name<std::unordered_set<std::string> >() == "std::unordered_set<std::string>");
 #endif  // C++11+
-        REQUIRE(argparse::detail::Type::name<std::pair<std::string, std::string> >() == "std::pair<std::string, std::string>");
-        REQUIRE(argparse::detail::Type::name<std::map<std::string, std::string> >() == "std::map<std::string, std::string>");
+        REQUIRE((argparse::detail::Type::name<std::pair<std::string, std::string> >() == "std::pair<std::string, std::string>"));
+        REQUIRE((argparse::detail::Type::name<std::map<std::string, std::string> >() == "std::map<std::string, std::string>"));
         REQUIRE(argparse::detail::Type::name<std::deque<std::string> >() == "std::deque<std::string>");
         REQUIRE(argparse::detail::Type::name<std::list<std::string> >() == "std::list<std::string>");
         REQUIRE(argparse::detail::Type::name<std::multiset<std::string> >() == "std::multiset<std::string>");
@@ -67,7 +67,7 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::name<std::stack<std::string> >() == "std::stack<std::string>");
         REQUIRE(argparse::detail::Type::name<std::queue<std::string> >() == "std::queue<std::string>");
 
-        REQUIRE(argparse::detail::Type::name<std::vector<std::pair<int, int> > >() == "std::vector<std::pair<int, int>>");
+        REQUIRE((argparse::detail::Type::name<std::vector<std::pair<int, int> > >() == "std::vector<std::pair<int, int>>"));
         REQUIRE(argparse::detail::Type::name<std::vector<std::vector<int> > >() == "std::vector<std::vector<int>>");
     }
 
@@ -86,8 +86,8 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::basic<std::unordered_multiset<int> >() == "int");
         REQUIRE(argparse::detail::Type::basic<std::unordered_set<int> >() == "int");
 #endif  // C++11+
-        REQUIRE(argparse::detail::Type::basic<std::pair<int, int> >() == "std::pair<int, int>");
-        REQUIRE(argparse::detail::Type::basic<std::map<int, int> >() == "std::pair<int, int>");
+        REQUIRE((argparse::detail::Type::basic<std::pair<int, int> >() == "std::pair<int, int>"));
+        REQUIRE((argparse::detail::Type::basic<std::map<int, int> >() == "std::pair<int, int>"));
         REQUIRE(argparse::detail::Type::basic<std::deque<int> >() == "int");
         REQUIRE(argparse::detail::Type::basic<std::list<int> >() == "int");
         REQUIRE(argparse::detail::Type::basic<std::multiset<int> >() == "int");
@@ -105,8 +105,8 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::basic<std::unordered_multiset<std::string> >() == "std::string");
         REQUIRE(argparse::detail::Type::basic<std::unordered_set<std::string> >() == "std::string");
 #endif  // C++11+
-        REQUIRE(argparse::detail::Type::basic<std::pair<std::string, std::string> >() == "std::pair<std::string, std::string>");
-        REQUIRE(argparse::detail::Type::basic<std::map<std::string, std::string> >() == "std::pair<std::string, std::string>");
+        REQUIRE((argparse::detail::Type::basic<std::pair<std::string, std::string> >() == "std::pair<std::string, std::string>"));
+        REQUIRE((argparse::detail::Type::basic<std::map<std::string, std::string> >() == "std::pair<std::string, std::string>"));
         REQUIRE(argparse::detail::Type::basic<std::deque<std::string> >() == "std::string");
         REQUIRE(argparse::detail::Type::basic<std::list<std::string> >() == "std::string");
         REQUIRE(argparse::detail::Type::basic<std::multiset<std::string> >() == "std::string");
@@ -116,7 +116,7 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::basic<std::stack<std::string> >() == "std::string");
         REQUIRE(argparse::detail::Type::basic<std::queue<std::string> >() == "std::string");
 
-        REQUIRE(argparse::detail::Type::basic<std::vector<std::pair<int, int> > >() == "std::pair<int, int>");
+        REQUIRE((argparse::detail::Type::basic<std::vector<std::pair<int, int> > >() == "std::pair<int, int>"));
         REQUIRE(argparse::detail::Type::basic<std::vector<std::vector<int> > >() == "int");
     }
 }
