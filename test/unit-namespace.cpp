@@ -1,6 +1,6 @@
-#include <catch2/catch.hpp>
-
 #include <argparse/argparse.hpp>
+
+#include "catch-define.h"
 
 TEST_CASE("1. to string", "[namespace]")
 {
@@ -8,7 +8,7 @@ TEST_CASE("1. to string", "[namespace]")
     std::string const_value = "const";
 
     SECTION("1.1. sample") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo");
         parser.add_argument("--bar").dest("foobar");
 
@@ -18,13 +18,19 @@ TEST_CASE("1. to string", "[namespace]")
         REQUIRE(parser.parse_known_args("a").to_string() == "(Namespace(foo=None, foobar=None), ['a'])");
         REQUIRE(parser.parse_known_args("--bar a").to_string() == "(Namespace(foo=None, foobar='a'), [])");
 
-        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
+#ifdef _ARGPARSE_CXX_11
         parser2.set_defaults({ { "foo", "bar" } });
+#else
+        std::vector<std::pair<std::string, std::string> > values;
+        values.push_back(std::make_pair("foo", "bar"));
+        parser2.set_defaults(values);
+#endif  // C++11+
         REQUIRE(parser2.parse_args("").to_string() == "Namespace(foo='bar')");
     }
 
     SECTION("1.2. optional action store without default value") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo1").action("store");
         parser.add_argument("--foo2").action("store").nargs("?");
         parser.add_argument("--foo3").action("store").nargs("*");
@@ -50,7 +56,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.3. optional action store with default value") {
-        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("store");
         parser.add_argument("--foo2").action("store").nargs("?");
         parser.add_argument("--foo3").action("store").nargs("*");
@@ -76,7 +82,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.4. optional action append without default value") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo1").action("append");
         parser.add_argument("--foo2").action("append").nargs("?");
         parser.add_argument("--foo3").action("append").nargs("*");
@@ -102,7 +108,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.5. optional action append with default value") {
-        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("append");
         parser.add_argument("--foo2").action("append").nargs("?");
         parser.add_argument("--foo3").action("append").nargs("*");
@@ -128,7 +134,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.6. optional action extend without default value") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo1").action("extend");
         parser.add_argument("--foo2").action("extend").nargs("?");
         parser.add_argument("--foo3").action("extend").nargs("*");
@@ -154,7 +160,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.7. optional action extend with default value") {
-        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("extend");
         parser.add_argument("--foo2").action("extend").nargs("?");
         parser.add_argument("--foo3").action("extend").nargs("*");
@@ -180,7 +186,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.8. optional action store const without default value") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo1").action("store_const").const_value(const_value);
         parser.add_argument("--foo2").action("store_const").const_value("");
         parser.add_argument("--foo3").action("store_true");
@@ -194,7 +200,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.9. optional action store const with default value") {
-        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("store_const").const_value(const_value);
         parser.add_argument("--foo2").action("store_const").const_value("");
         parser.add_argument("--foo3").action("store_true");
@@ -208,7 +214,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.10. optional action append_const without default value") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo1").action("append_const").const_value(const_value);
         parser.add_argument("--foo2").action("append_const").const_value("");
 
@@ -218,7 +224,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.11. optional action append_const with default value") {
-        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("append_const").const_value(const_value);
         parser.add_argument("--foo2").action("append_const").const_value("");
 
@@ -228,7 +234,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.12. optional action BooleanOptionalAction without default value") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo=None)");
@@ -237,7 +243,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.13. optional action BooleanOptionalAction with default value") {
-        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo='global')");
@@ -246,7 +252,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.14. optional action count") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("-f", "--foo").action("count");
 
         REQUIRE(parser.parse_args("").to_string()       == "Namespace(foo=None)");
@@ -255,13 +261,13 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.15. positional action store without default value") {
-        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser3 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser4 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser5 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser6 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser7 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser3 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser4 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser5 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser6 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser7 = argparse::ArgumentParser().exit_on_error(false);
         parser1.add_argument("foo").action("store");
         parser2.add_argument("foo").action("store").nargs("?");
         parser3.add_argument("foo").action("store").nargs("*");
@@ -287,13 +293,13 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.16. positional action store with default value") {
-        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("store");
         parser2.add_argument("foo").action("store").nargs("?");
         parser3.add_argument("foo").action("store").nargs("*");
@@ -319,13 +325,13 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.17. positional action append without default value") {
-        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser3 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser4 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser5 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser6 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser7 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser3 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser4 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser5 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser6 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser7 = argparse::ArgumentParser().exit_on_error(false);
         parser1.add_argument("foo").action("append");
         parser2.add_argument("foo").action("append").nargs("?");
         parser3.add_argument("foo").action("append").nargs("*");
@@ -351,13 +357,13 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.18. positional action append with default value") {
-        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("append");
         parser2.add_argument("foo").action("append").nargs("?");
         parser3.add_argument("foo").action("append").nargs("*");
@@ -383,13 +389,13 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.19. positional action extend without default value") {
-        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser3 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser4 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser5 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser6 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser7 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser3 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser4 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser5 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser6 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser7 = argparse::ArgumentParser().exit_on_error(false);
         parser1.add_argument("foo").action("extend");
         parser2.add_argument("foo").action("extend").nargs("?");
         parser3.add_argument("foo").action("extend").nargs("*");
@@ -415,13 +421,13 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.20. positional action extend with default value") {
-        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("extend");
         parser2.add_argument("foo").action("extend").nargs("?");
         parser3.add_argument("foo").action("extend").nargs("*");
@@ -447,10 +453,10 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.21. positional action store const without default value") {
-        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser3 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser4 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser3 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser4 = argparse::ArgumentParser().exit_on_error(false);
         parser1.add_argument("foo").action("store_const").const_value(const_value);
         parser2.add_argument("foo").action("store_const").const_value("");
         parser3.add_argument("foo").action("store_true");
@@ -463,10 +469,10 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.22. positional action store const with default value") {
-        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("store_const").const_value(const_value);
         parser2.add_argument("foo").action("store_const").const_value("");
         parser3.add_argument("foo").action("store_true");
@@ -479,8 +485,8 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.23. positional action append_const without default value") {
-        auto parser1 = argparse::ArgumentParser().exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
         parser1.add_argument("foo").action("append_const").const_value(const_value);
         parser2.add_argument("foo").action("append_const").const_value("");
 
@@ -489,8 +495,8 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.24. positional action append_const with default value") {
-        auto parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        auto parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("append_const").const_value(const_value);
         parser2.add_argument("foo").action("append_const").const_value("");
 
@@ -499,7 +505,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.25. positional action BooleanOptionalAction without default value") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser.parse_args("").to_string()   == "Namespace(foo=None)");
@@ -507,7 +513,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.26. positional action BooleanOptionalAction with default value") {
-        auto parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser.parse_args("").to_string()   == "Namespace(foo='global')");
@@ -515,7 +521,7 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.27. positional action count") {
-        auto parser = argparse::ArgumentParser().exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("foo").action("count");
 
         REQUIRE(parser.parse_args("").to_string()   == "Namespace(foo=1)");
