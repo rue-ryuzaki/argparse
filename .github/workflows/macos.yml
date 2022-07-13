@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        standard: [11, 14, 17, 20]
+        standard: [98, 11, 14, 17, 20]
 
     steps:
     - uses: actions/checkout@v2
