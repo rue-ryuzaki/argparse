@@ -1,5 +1,9 @@
-#ifndef _ARGPARSE_TEST_UNIT_DEFINE_H_
-#define _ARGPARSE_TEST_UNIT_DEFINE_H_
+/*
+* Copyright (c) 2021-2022 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+*/
+
+#ifndef _ARGPARSE_TEST_CATCH_DEFINE_H_
+#define _ARGPARSE_TEST_CATCH_DEFINE_H_
 
 #ifdef _MSVC_LANG
 #if _MSVC_LANG >= 201103L
@@ -35,5 +39,4 @@
 #include <catch1/catch.hpp>
 #endif  // C++11+
 
-#endif  //  _ARGPARSE_TEST_UNIT_DEFINE_H_
-
+#endif  //  _ARGPARSE_TEST_CATCH_DEFINE_H_

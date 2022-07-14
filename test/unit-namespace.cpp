@@ -1,6 +1,10 @@
+/*
+* Copyright (c) 2021-2022 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+*/
+
 #include <argparse/argparse.hpp>
 
-#include "catch-define.h"
+#include "./catch-define.h"
 
 TEST_CASE("1. to string", "[namespace]")
 {
@@ -39,24 +43,37 @@ TEST_CASE("1. to string", "[namespace]")
         parser.add_argument("--foo6").action("store").nargs("?").const_value(const_value);
         parser.add_argument("--foo7").action("store").nargs("?").const_value("");
 
-        REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("").to_string()
+                           == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
         REQUIRE_THROWS(parser.parse_args("--foo1"));
-        REQUIRE(parser.parse_args("--foo1 a").to_string()   == "Namespace(foo1='a', foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo2").to_string()     == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo2 a").to_string()   == "Namespace(foo1=None, foo2='a', foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo3").to_string()     == "Namespace(foo1=None, foo2=None, foo3=[], foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo3 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=['a'], foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo1 a").to_string()
+                            == "Namespace(foo1='a', foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo2").to_string()
+                           == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo2 a").to_string()
+                            == "Namespace(foo1=None, foo2='a', foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo3").to_string()
+                             == "Namespace(foo1=None, foo2=None, foo3=[], foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo3 a").to_string()
+                          == "Namespace(foo1=None, foo2=None, foo3=['a'], foo4=None, foo5=None, foo6=None, foo7=None)");
         REQUIRE_THROWS(parser.parse_args("--foo4"));
-        REQUIRE(parser.parse_args("--foo4 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=['a'], foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo5 a a").to_string() == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=['a', 'a'], foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo6").to_string()     == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6='const', foo7=None)");
-        REQUIRE(parser.parse_args("--foo6 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6='a', foo7=None)");
-        REQUIRE(parser.parse_args("--foo7").to_string()     == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7='')");
-        REQUIRE(parser.parse_args("--foo7 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7='a')");
+        REQUIRE(parser.parse_args("--foo4 a").to_string()
+                          == "Namespace(foo1=None, foo2=None, foo3=None, foo4=['a'], foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo5 a a").to_string()
+                     == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=['a', 'a'], foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo6").to_string()
+                        == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6='const', foo7=None)");
+        REQUIRE(parser.parse_args("--foo6 a").to_string()
+                            == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6='a', foo7=None)");
+        REQUIRE(parser.parse_args("--foo7").to_string()
+                             == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7='')");
+        REQUIRE(parser.parse_args("--foo7 a").to_string()
+                            == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7='a')");
     }
 
     SECTION("1.3. optional action store with default value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("store");
         parser.add_argument("--foo2").action("store").nargs("?");
         parser.add_argument("--foo3").action("store").nargs("*");
@@ -65,20 +82,44 @@ TEST_CASE("1. to string", "[namespace]")
         parser.add_argument("--foo6").action("store").nargs("?").const_value(const_value);
         parser.add_argument("--foo7").action("store").nargs("?").const_value("");
 
-        REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
         REQUIRE_THROWS(parser.parse_args("--foo1"));
-        REQUIRE(parser.parse_args("--foo1 a").to_string()   == "Namespace(foo1='a', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo2").to_string()     == "Namespace(foo1='global', foo2=None, foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo2 a").to_string()   == "Namespace(foo1='global', foo2='a', foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo3").to_string()     == "Namespace(foo1='global', foo2='global', foo3=[], foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo3 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3=['a'], foo4='global', foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo1 a").to_string()
+                == "Namespace(foo1='a', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo2").to_string()
+                == "Namespace(foo1='global', foo2=None, foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo2 a").to_string()
+                == "Namespace(foo1='global', foo2='a', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo3").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3=[], foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo3 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3=['a'], foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
         REQUIRE_THROWS(parser.parse_args("--foo4"));
-        REQUIRE(parser.parse_args("--foo4 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3='global', foo4=['a'], foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo5 a a").to_string() == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5=['a', 'a'], foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo6").to_string()     == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='const', foo7='global')");
-        REQUIRE(parser.parse_args("--foo6 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='a', foo7='global')");
-        REQUIRE(parser.parse_args("--foo7").to_string()     == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7='')");
-        REQUIRE(parser.parse_args("--foo7 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7='a')");
+        REQUIRE(parser.parse_args("--foo4 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4=['a'],"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo5 a a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5=['a', 'a'], foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo6").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='const', foo7='global')");
+        REQUIRE(parser.parse_args("--foo6 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='a', foo7='global')");
+        REQUIRE(parser.parse_args("--foo7").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='')");
+        REQUIRE(parser.parse_args("--foo7 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='a')");
     }
 
     SECTION("1.4. optional action append without default value") {
@@ -91,24 +132,37 @@ TEST_CASE("1. to string", "[namespace]")
         parser.add_argument("--foo6").action("append").nargs("?").const_value(const_value);
         parser.add_argument("--foo7").action("append").nargs("?").const_value("");
 
-        REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("").to_string()
+                           == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
         REQUIRE_THROWS(parser.parse_args("--foo1"));
-        REQUIRE(parser.parse_args("--foo1 a").to_string()   == "Namespace(foo1=['a'], foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo2").to_string()     == "Namespace(foo1=None, foo2=[None], foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo2 a").to_string()   == "Namespace(foo1=None, foo2=['a'], foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo3").to_string()     == "Namespace(foo1=None, foo2=None, foo3=[[]], foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo3 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=[['a']], foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo1 a").to_string()
+                          == "Namespace(foo1=['a'], foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo2").to_string()
+                         == "Namespace(foo1=None, foo2=[None], foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo2 a").to_string()
+                          == "Namespace(foo1=None, foo2=['a'], foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo3").to_string()
+                           == "Namespace(foo1=None, foo2=None, foo3=[[]], foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo3 a").to_string()
+                        == "Namespace(foo1=None, foo2=None, foo3=[['a']], foo4=None, foo5=None, foo6=None, foo7=None)");
         REQUIRE_THROWS(parser.parse_args("--foo4"));
-        REQUIRE(parser.parse_args("--foo4 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=[['a']], foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo5 a a").to_string() == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=[['a', 'a']], foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo6").to_string()     == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=['const'], foo7=None)");
-        REQUIRE(parser.parse_args("--foo6 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=['a'], foo7=None)");
-        REQUIRE(parser.parse_args("--foo7").to_string()     == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=[''])");
-        REQUIRE(parser.parse_args("--foo7 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=['a'])");
+        REQUIRE(parser.parse_args("--foo4 a").to_string()
+                        == "Namespace(foo1=None, foo2=None, foo3=None, foo4=[['a']], foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo5 a a").to_string()
+                   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=[['a', 'a']], foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo6").to_string()
+                      == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=['const'], foo7=None)");
+        REQUIRE(parser.parse_args("--foo6 a").to_string()
+                          == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=['a'], foo7=None)");
+        REQUIRE(parser.parse_args("--foo7").to_string()
+                           == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=[''])");
+        REQUIRE(parser.parse_args("--foo7 a").to_string()
+                          == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=['a'])");
     }
 
     SECTION("1.5. optional action append with default value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("append");
         parser.add_argument("--foo2").action("append").nargs("?");
         parser.add_argument("--foo3").action("append").nargs("*");
@@ -117,20 +171,44 @@ TEST_CASE("1. to string", "[namespace]")
         parser.add_argument("--foo6").action("append").nargs("?").const_value(const_value);
         parser.add_argument("--foo7").action("append").nargs("?").const_value("");
 
-        REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
         REQUIRE_THROWS(parser.parse_args("--foo1"));
-        REQUIRE(parser.parse_args("--foo1 a").to_string()   == "Namespace(foo1=['a'], foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo2").to_string()     == "Namespace(foo1='global', foo2=[None], foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo2 a").to_string()   == "Namespace(foo1='global', foo2=['a'], foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo3").to_string()     == "Namespace(foo1='global', foo2='global', foo3=[[]], foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo3 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3=[['a']], foo4='global', foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo1 a").to_string()
+                == "Namespace(foo1=['a'], foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo2").to_string()
+                == "Namespace(foo1='global', foo2=[None], foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo2 a").to_string()
+                == "Namespace(foo1='global', foo2=['a'], foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo3").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3=[[]], foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo3 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3=[['a']], foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
         REQUIRE_THROWS(parser.parse_args("--foo4"));
-        REQUIRE(parser.parse_args("--foo4 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3='global', foo4=[['a']], foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo5 a a").to_string() == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5=[['a', 'a']], foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo6").to_string()     == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6=['const'], foo7='global')");
-        REQUIRE(parser.parse_args("--foo6 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6=['a'], foo7='global')");
-        REQUIRE(parser.parse_args("--foo7").to_string()     == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7=[''])");
-        REQUIRE(parser.parse_args("--foo7 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7=['a'])");
+        REQUIRE(parser.parse_args("--foo4 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4=[['a']],"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo5 a a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5=[['a', 'a']], foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo6").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6=['const'], foo7='global')");
+        REQUIRE(parser.parse_args("--foo6 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6=['a'], foo7='global')");
+        REQUIRE(parser.parse_args("--foo7").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7=[''])");
+        REQUIRE(parser.parse_args("--foo7 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7=['a'])");
     }
 
     SECTION("1.6. optional action extend without default value") {
@@ -143,24 +221,37 @@ TEST_CASE("1. to string", "[namespace]")
         parser.add_argument("--foo6").action("extend").nargs("?").const_value(const_value);
         parser.add_argument("--foo7").action("extend").nargs("?").const_value("");
 
-        REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("").to_string()
+                           == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
         REQUIRE_THROWS(parser.parse_args("--foo1"));
-        REQUIRE(parser.parse_args("--foo1 a").to_string()   == "Namespace(foo1=['a'], foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo1 a").to_string()
+                          == "Namespace(foo1=['a'], foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
         REQUIRE_THROWS(parser.parse_args("--foo2"));
-        REQUIRE(parser.parse_args("--foo2 a").to_string()   == "Namespace(foo1=None, foo2=['a'], foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo3").to_string()     == "Namespace(foo1=None, foo2=None, foo3=[], foo4=None, foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo3 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=['a'], foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo2 a").to_string()
+                          == "Namespace(foo1=None, foo2=['a'], foo3=None, foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo3").to_string()
+                             == "Namespace(foo1=None, foo2=None, foo3=[], foo4=None, foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo3 a").to_string()
+                          == "Namespace(foo1=None, foo2=None, foo3=['a'], foo4=None, foo5=None, foo6=None, foo7=None)");
         REQUIRE_THROWS(parser.parse_args("--foo4"));
-        REQUIRE(parser.parse_args("--foo4 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=['a'], foo5=None, foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo5 a a").to_string() == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=['a', 'a'], foo6=None, foo7=None)");
-        REQUIRE(parser.parse_args("--foo6").to_string()     == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=['c', 'o', 'n', 's', 't'], foo7=None)");
-        REQUIRE(parser.parse_args("--foo6 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=['a'], foo7=None)");
-        REQUIRE(parser.parse_args("--foo7").to_string()     == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=[])");
-        REQUIRE(parser.parse_args("--foo7 a").to_string()   == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=['a'])");
+        REQUIRE(parser.parse_args("--foo4 a").to_string()
+                          == "Namespace(foo1=None, foo2=None, foo3=None, foo4=['a'], foo5=None, foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo5 a a").to_string()
+                     == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=['a', 'a'], foo6=None, foo7=None)");
+        REQUIRE(parser.parse_args("--foo6").to_string()
+                ==
+         "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=['c', 'o', 'n', 's', 't'], foo7=None)");
+        REQUIRE(parser.parse_args("--foo6 a").to_string()
+                          == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=['a'], foo7=None)");
+        REQUIRE(parser.parse_args("--foo7").to_string()
+                             == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=[])");
+        REQUIRE(parser.parse_args("--foo7 a").to_string()
+                          == "Namespace(foo1=None, foo2=None, foo3=None, foo4=None, foo5=None, foo6=None, foo7=['a'])");
     }
 
     SECTION("1.7. optional action extend with default value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("extend");
         parser.add_argument("--foo2").action("extend").nargs("?");
         parser.add_argument("--foo3").action("extend").nargs("*");
@@ -169,20 +260,42 @@ TEST_CASE("1. to string", "[namespace]")
         parser.add_argument("--foo6").action("extend").nargs("?").const_value(const_value);
         parser.add_argument("--foo7").action("extend").nargs("?").const_value("");
 
-        REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
         REQUIRE_THROWS(parser.parse_args("--foo1"));
-        REQUIRE(parser.parse_args("--foo1 a").to_string()   == "Namespace(foo1=['a'], foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo1 a").to_string()
+                == "Namespace(foo1=['a'], foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
         REQUIRE_THROWS(parser.parse_args("--foo2"));
-        REQUIRE(parser.parse_args("--foo2 a").to_string()   == "Namespace(foo1='global', foo2=['a'], foo3='global', foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo3").to_string()     == "Namespace(foo1='global', foo2='global', foo3=[], foo4='global', foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo3 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3=['a'], foo4='global', foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo2 a").to_string()
+                == "Namespace(foo1='global', foo2=['a'], foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo3").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3=[], foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo3 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3=['a'], foo4='global',"
+                   " foo5='global', foo6='global', foo7='global')");
         REQUIRE_THROWS(parser.parse_args("--foo4"));
-        REQUIRE(parser.parse_args("--foo4 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3='global', foo4=['a'], foo5='global', foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo5 a a").to_string() == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5=['a', 'a'], foo6='global', foo7='global')");
-        REQUIRE(parser.parse_args("--foo6").to_string()     == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6=['c', 'o', 'n', 's', 't'], foo7='global')");
-        REQUIRE(parser.parse_args("--foo6 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6=['a'], foo7='global')");
-        REQUIRE(parser.parse_args("--foo7").to_string()     == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7=[])");
-        REQUIRE(parser.parse_args("--foo7 a").to_string()   == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global', foo5='global', foo6='global', foo7=['a'])");
+        REQUIRE(parser.parse_args("--foo4 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4=['a'],"
+                   " foo5='global', foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo5 a a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5=['a', 'a'], foo6='global', foo7='global')");
+        REQUIRE(parser.parse_args("--foo6").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6=['c', 'o', 'n', 's', 't'], foo7='global')");
+        REQUIRE(parser.parse_args("--foo6 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6=['a'], foo7='global')");
+        REQUIRE(parser.parse_args("--foo7").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7=[])");
+        REQUIRE(parser.parse_args("--foo7 a").to_string()
+                == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global',"
+                   " foo5='global', foo6='global', foo7=['a'])");
     }
 
     SECTION("1.8. optional action store const without default value") {
@@ -200,17 +313,23 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.9. optional action store const with default value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("store_const").const_value(const_value);
         parser.add_argument("--foo2").action("store_const").const_value("");
         parser.add_argument("--foo3").action("store_true");
         parser.add_argument("--foo4").action("store_false");
 
-        REQUIRE(parser.parse_args("").to_string()       == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global')");
-        REQUIRE(parser.parse_args("--foo1").to_string() == "Namespace(foo1='const', foo2='global', foo3='global', foo4='global')");
-        REQUIRE(parser.parse_args("--foo2").to_string() == "Namespace(foo1='global', foo2='', foo3='global', foo4='global')");
-        REQUIRE(parser.parse_args("--foo3").to_string() == "Namespace(foo1='global', foo2='global', foo3=true, foo4='global')");
-        REQUIRE(parser.parse_args("--foo4").to_string() == "Namespace(foo1='global', foo2='global', foo3='global', foo4=false)");
+        REQUIRE(parser.parse_args("").to_string()
+                                            == "Namespace(foo1='global', foo2='global', foo3='global', foo4='global')");
+        REQUIRE(parser.parse_args("--foo1").to_string()
+                                             == "Namespace(foo1='const', foo2='global', foo3='global', foo4='global')");
+        REQUIRE(parser.parse_args("--foo2").to_string()
+                                                  == "Namespace(foo1='global', foo2='', foo3='global', foo4='global')");
+        REQUIRE(parser.parse_args("--foo3").to_string()
+                                                == "Namespace(foo1='global', foo2='global', foo3=true, foo4='global')");
+        REQUIRE(parser.parse_args("--foo4").to_string()
+                                               == "Namespace(foo1='global', foo2='global', foo3='global', foo4=false)");
     }
 
     SECTION("1.10. optional action append_const without default value") {
@@ -224,7 +343,8 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.11. optional action append_const with default value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo1").action("append_const").const_value(const_value);
         parser.add_argument("--foo2").action("append_const").const_value("");
 
@@ -243,7 +363,8 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.13. optional action BooleanOptionalAction with default value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser.parse_args("").to_string()           == "Namespace(foo='global')");
@@ -293,13 +414,20 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.16. positional action store with default value") {
-        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser3
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser4
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser5
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser6
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser7
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("store");
         parser2.add_argument("foo").action("store").nargs("?");
         parser3.add_argument("foo").action("store").nargs("*");
@@ -357,13 +485,20 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.18. positional action append with default value") {
-        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser3
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser4
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser5
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser6
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser7
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("append");
         parser2.add_argument("foo").action("append").nargs("?");
         parser3.add_argument("foo").action("append").nargs("*");
@@ -421,13 +556,20 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.20. positional action extend with default value") {
-        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser5 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser6 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser7 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser3
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser4
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser5
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser6
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser7
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("extend");
         parser2.add_argument("foo").action("extend").nargs("?");
         parser3.add_argument("foo").action("extend").nargs("*");
@@ -469,10 +611,14 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.22. positional action store const with default value") {
-        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser3 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser4 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser3
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser4
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("store_const").const_value(const_value);
         parser2.add_argument("foo").action("store_const").const_value("");
         parser3.add_argument("foo").action("store_true");
@@ -495,8 +641,10 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.24. positional action append_const with default value") {
-        argparse::ArgumentParser parser1 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
-        argparse::ArgumentParser parser2 = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser1
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser2
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser1.add_argument("foo").action("append_const").const_value(const_value);
         parser2.add_argument("foo").action("append_const").const_value("");
 
@@ -513,7 +661,8 @@ TEST_CASE("1. to string", "[namespace]")
     }
 
     SECTION("1.26. positional action BooleanOptionalAction with default value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
         parser.add_argument("foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser.parse_args("").to_string()   == "Namespace(foo='global')");
