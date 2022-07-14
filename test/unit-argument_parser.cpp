@@ -1,6 +1,10 @@
+/*
+* Copyright (c) 2021-2022 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+*/
+
 #include <argparse/argparse.hpp>
 
-#include "catch-define.h"
+#include "./catch-define.h"
 
 #ifdef _ARGPARSE_CXX_11
 template <class... Args>
@@ -924,8 +928,10 @@ TEST_CASE("8. argument actions", "[argument]")
         REQUIRE(args1.get<std::vector<std::string> >("--extend").size() == 0);
 
         // all args
-        argparse::Namespace args2 = parser.parse_args(make_args("--store", new_value, "--store_const", "--store_true", "--store_false",
-                                         "--append", new_value, "--append_const", "--count", "--extend", new_value));
+        argparse::Namespace args2
+                = parser.parse_args(
+                      make_args("--store", new_value, "--store_const", "--store_true", "--store_false",
+                                "--append", new_value, "--append_const", "--count", "--extend", new_value));
         REQUIRE(args2.get<std::string>("--store") == new_value);
         REQUIRE(args2.get<std::string>("--store_const") == const_value);
         REQUIRE(args2.get<bool>("--store_true") == true);
@@ -1031,28 +1037,32 @@ TEST_CASE("8. argument actions", "[argument]")
 //    }
 
     SECTION("8.7. BooleanOptionalAction conflict options resolved [1]") {
-        argparse::ArgumentParser parser1 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
+        argparse::ArgumentParser parser1
+                = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
 
         parser1.add_argument("--foo").action(argparse::BooleanOptionalAction);
         parser1.add_argument("--no-foo").action(argparse::store_true);
 
         REQUIRE(parser1.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
 
-        argparse::ArgumentParser parser2 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
+        argparse::ArgumentParser parser2
+                = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
 
         parser2.add_argument("--no-foo").action(argparse::store_true);
         parser2.add_argument("--foo").action(argparse::BooleanOptionalAction);
 
         REQUIRE(parser2.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
 
-        argparse::ArgumentParser parser3 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
+        argparse::ArgumentParser parser3
+                = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
 
         parser3.add_argument(argparse::Argument(make_args("--foo")).action(argparse::BooleanOptionalAction));
         parser3.add_argument(argparse::Argument(make_args("--no-foo")).action(argparse::store_true));
 
         REQUIRE(parser3.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
 
-        argparse::ArgumentParser parser4 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
+        argparse::ArgumentParser parser4
+                = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
 
         parser4.add_argument(argparse::Argument(make_args("--no-foo")).action(argparse::store_true));
         parser4.add_argument(argparse::Argument(make_args("--foo")).action(argparse::BooleanOptionalAction));
@@ -1100,10 +1110,14 @@ TEST_CASE("9. argument nargs", "[argument]")
     argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
 
     SECTION("9.1. nargs break actions") {
-        REQUIRE_THROWS(parser.add_argument("--store_const?").action(argparse::store_const).const_value(const_value).nargs("?"));
-        REQUIRE_THROWS(parser.add_argument("--store_const*").action(argparse::store_const).const_value(const_value).nargs("*"));
-        REQUIRE_THROWS(parser.add_argument("--store_const+").action(argparse::store_const).const_value(const_value).nargs("+"));
-        REQUIRE_THROWS(parser.add_argument("--store_constN").action(argparse::store_const).const_value(const_value).nargs(2));
+        REQUIRE_THROWS(parser.add_argument("--store_const?").action(argparse::store_const)
+                                                                                  .const_value(const_value).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument("--store_const*").action(argparse::store_const)
+                                                                                  .const_value(const_value).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument("--store_const+").action(argparse::store_const)
+                                                                                  .const_value(const_value).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument("--store_constN").action(argparse::store_const)
+                                                                                    .const_value(const_value).nargs(2));
         REQUIRE_THROWS(parser.add_argument("--store_true?").action(argparse::store_true).nargs("?"));
         REQUIRE_THROWS(parser.add_argument("--store_true*").action(argparse::store_true).nargs("*"));
         REQUIRE_THROWS(parser.add_argument("--store_true+").action(argparse::store_true).nargs("+"));
@@ -1112,19 +1126,27 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE_THROWS(parser.add_argument("--store_false*").action(argparse::store_false).nargs("*"));
         REQUIRE_THROWS(parser.add_argument("--store_false+").action(argparse::store_false).nargs("+"));
         REQUIRE_THROWS(parser.add_argument("--store_falseN").action(argparse::store_false).nargs(2));
-        REQUIRE_THROWS(parser.add_argument("--append_const?").action(argparse::append_const).const_value(const_value).nargs("?"));
-        REQUIRE_THROWS(parser.add_argument("--append_const*").action(argparse::append_const).const_value(const_value).nargs("*"));
-        REQUIRE_THROWS(parser.add_argument("--append_const+").action(argparse::append_const).const_value(const_value).nargs("+"));
-        REQUIRE_THROWS(parser.add_argument("--append_constN").action(argparse::append_const).const_value(const_value).nargs(2));
+        REQUIRE_THROWS(parser.add_argument("--append_const?").action(argparse::append_const)
+                                                                                  .const_value(const_value).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument("--append_const*").action(argparse::append_const)
+                                                                                  .const_value(const_value).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument("--append_const+").action(argparse::append_const)
+                                                                                  .const_value(const_value).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument("--append_constN").action(argparse::append_const)
+                                                                                    .const_value(const_value).nargs(2));
         REQUIRE_THROWS(parser.add_argument("--count?").action(argparse::count).nargs("?"));
         REQUIRE_THROWS(parser.add_argument("--count*").action(argparse::count).nargs("*"));
         REQUIRE_THROWS(parser.add_argument("--count+").action(argparse::count).nargs("+"));
         REQUIRE_THROWS(parser.add_argument("--countN").action(argparse::count).nargs(2));
 
-        REQUIRE_THROWS(parser.add_argument("store_const?").action(argparse::store_const).const_value(const_value).nargs("?"));
-        REQUIRE_THROWS(parser.add_argument("store_const*").action(argparse::store_const).const_value(const_value).nargs("*"));
-        REQUIRE_THROWS(parser.add_argument("store_const+").action(argparse::store_const).const_value(const_value).nargs("+"));
-        REQUIRE_THROWS(parser.add_argument("store_constN").action(argparse::store_const).const_value(const_value).nargs(2));
+        REQUIRE_THROWS(parser.add_argument("store_const?").action(argparse::store_const)
+                                                                                  .const_value(const_value).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument("store_const*").action(argparse::store_const)
+                                                                                  .const_value(const_value).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument("store_const+").action(argparse::store_const)
+                                                                                  .const_value(const_value).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument("store_constN").action(argparse::store_const)
+                                                                                    .const_value(const_value).nargs(2));
         REQUIRE_THROWS(parser.add_argument("store_true?").action(argparse::store_true).nargs("?"));
         REQUIRE_THROWS(parser.add_argument("store_true*").action(argparse::store_true).nargs("*"));
         REQUIRE_THROWS(parser.add_argument("store_true+").action(argparse::store_true).nargs("+"));
@@ -1133,10 +1155,14 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE_THROWS(parser.add_argument("store_false*").action(argparse::store_false).nargs("*"));
         REQUIRE_THROWS(parser.add_argument("store_false+").action(argparse::store_false).nargs("+"));
         REQUIRE_THROWS(parser.add_argument("store_falseN").action(argparse::store_false).nargs(2));
-        REQUIRE_THROWS(parser.add_argument("append_const?").action(argparse::append_const).const_value(const_value).nargs("?"));
-        REQUIRE_THROWS(parser.add_argument("append_const*").action(argparse::append_const).const_value(const_value).nargs("*"));
-        REQUIRE_THROWS(parser.add_argument("append_const+").action(argparse::append_const).const_value(const_value).nargs("+"));
-        REQUIRE_THROWS(parser.add_argument("append_constN").action(argparse::append_const).const_value(const_value).nargs(2));
+        REQUIRE_THROWS(parser.add_argument("append_const?").action(argparse::append_const)
+                                                                                  .const_value(const_value).nargs("?"));
+        REQUIRE_THROWS(parser.add_argument("append_const*").action(argparse::append_const)
+                                                                                  .const_value(const_value).nargs("*"));
+        REQUIRE_THROWS(parser.add_argument("append_const+").action(argparse::append_const)
+                                                                                  .const_value(const_value).nargs("+"));
+        REQUIRE_THROWS(parser.add_argument("append_constN").action(argparse::append_const)
+                                                                                    .const_value(const_value).nargs(2));
         REQUIRE_THROWS(parser.add_argument("count?").action(argparse::count).nargs("?"));
         REQUIRE_THROWS(parser.add_argument("count*").action(argparse::count).nargs("*"));
         REQUIRE_THROWS(parser.add_argument("count+").action(argparse::count).nargs("+"));
@@ -1171,8 +1197,10 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.3. nargs ? optional") {
         parser.add_argument("--store").action(argparse::store).nargs("?").default_value(default_value);
-        parser.add_argument("--append").action(argparse::append).nargs("?");  // default value are invalid in python if flag used
-        parser.add_argument("--extend").action(argparse::extend).nargs("?");  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("--append").action(argparse::append).nargs("?");
+        // default value are invalid in python if flag used
+        parser.add_argument("--extend").action(argparse::extend).nargs("?");
 
         // no args
         argparse::Namespace args1 = parser.parse_args(make_args());
@@ -1186,7 +1214,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE_THROWS(parser.parse_args(make_args("--store", new_value, new_value)));
 
         // all args
-        argparse::Namespace args2 = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value));
+        argparse::Namespace args2
+                = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value));
         REQUIRE(args2.get<std::string>("--store") == new_value);
         REQUIRE(args2.get<std::string>("--append") == new_value);  // return array value
         REQUIRE(args2.get<std::string>("--extend") == new_value);  // return array value
@@ -1195,8 +1224,9 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 1);
 
         // override args
-        argparse::Namespace args3 = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value,
-                                         "--store", new_value, "--append", new_value, "--extend", new_value));
+        argparse::Namespace args3
+                = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value,
+                                              "--store", new_value, "--append", new_value, "--extend", new_value));
         REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 1);
         REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 2);
         REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 2);
@@ -1230,8 +1260,10 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.5. nargs * optional") {
         parser.add_argument("--store").action(argparse::store).nargs("*").default_value(default_value);
-        parser.add_argument("--append").action(argparse::append).nargs("*");  // default value are invalid in python if flag used
-        parser.add_argument("--extend").action(argparse::extend).nargs("*");  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("--append").action(argparse::append).nargs("*");
+        // default value are invalid in python if flag used
+        parser.add_argument("--extend").action(argparse::extend).nargs("*");
 
         // no args
         argparse::Namespace args1 = parser.parse_args(make_args());
@@ -1243,7 +1275,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args1.get<std::vector<std::string> >("--extend").size() == 0);
 
         // all args
-        argparse::Namespace args2 = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value));
+        argparse::Namespace args2
+                = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value));
         REQUIRE(args2.get<std::string>("--store") == new_value);
         REQUIRE(args2.get<std::string>("--append") == new_value);  // return array value
         REQUIRE(args2.get<std::string>("--extend") == new_value);  // return array value
@@ -1252,9 +1285,10 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 1);
 
         // override args
-        argparse::Namespace args3 = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value,
-                                         "--store", new_value, new_value, "--append", new_value, new_value,
-                                        "--extend", new_value, new_value));
+        argparse::Namespace args3
+                = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value,
+                                              "--store", new_value, new_value, "--append", new_value, new_value,
+                                              "--extend", new_value, new_value));
         REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 2);
         REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 3);
         REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
@@ -1262,8 +1296,10 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.6. nargs * positional") {
         parser.add_argument("store").action(argparse::store).nargs("*").default_value(default_value);
-        parser.add_argument("append").action(argparse::append).nargs("*");  // default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("*");  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("*");
+        // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("*");
 
         argparse::Namespace args1 = parser.parse_args(make_args());
         REQUIRE(args1.get<std::string>("store") == default_value);
@@ -1285,8 +1321,10 @@ TEST_CASE("9. argument nargs", "[argument]")
     }
 
     SECTION("9.7. nargs * positional [2]") {
-        parser.add_argument("append").action(argparse::append).nargs("*");  // default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("*");  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("*");
+        // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("*");
         parser.add_argument("store").action(argparse::store).nargs("*").default_value(default_value);
 
         argparse::Namespace args1 = parser.parse_args(make_args());
@@ -1312,8 +1350,10 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.8. nargs + optional") {
         parser.add_argument("--store").action(argparse::store).nargs("+").default_value(default_value);
-        parser.add_argument("--append").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
-        parser.add_argument("--extend").action(argparse::extend).nargs("+");  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("--append").action(argparse::append).nargs("+");
+        // default value are invalid in python if flag used
+        parser.add_argument("--extend").action(argparse::extend).nargs("+");
 
         // no args
         argparse::Namespace args1 = parser.parse_args(make_args());
@@ -1325,7 +1365,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args1.get<std::vector<std::string> >("--extend").size() == 0);
 
         // all args
-        argparse::Namespace args2 = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value));
+        argparse::Namespace args2
+                = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value));
         REQUIRE(args2.get<std::string>("--store") == new_value);
         REQUIRE(args2.get<std::string>("--append") == new_value);  // return array value
         REQUIRE(args2.get<std::string>("--extend") == new_value);  // return array value
@@ -1334,8 +1375,10 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 1);
 
         // override args
-        argparse::Namespace args3 = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value,
-                                         "--store", new_value, new_value, "--append", new_value, new_value, "--extend", new_value, new_value));
+        argparse::Namespace args3
+                = parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value,
+                                              "--store", new_value, new_value, "--append", new_value, new_value,
+                                              "--extend", new_value, new_value));
         REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 2);
         REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 3);
         REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 3);
@@ -1343,8 +1386,10 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.9. nargs + positional") {
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
-        parser.add_argument("append").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("+");  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("+");
+        // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("+");
 
         REQUIRE_THROWS(parser.parse_args(make_args()));
         REQUIRE_THROWS(parser.parse_args(make_args(new_value)));
@@ -1370,8 +1415,10 @@ TEST_CASE("9. argument nargs", "[argument]")
     }
 
     SECTION("9.10. nargs + positional [2]") {
-        parser.add_argument("append").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("+");  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("+");
+        // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("+");
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
 
         REQUIRE_THROWS(parser.parse_args(make_args()));
@@ -1398,8 +1445,10 @@ TEST_CASE("9. argument nargs", "[argument]")
     }
 
     SECTION("9.11. nargs mixed positional") {
-        parser.add_argument("append").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs("*");  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs("+");
+        // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs("*");
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
 
         REQUIRE_THROWS(parser.parse_args(make_args()));
@@ -1425,8 +1474,10 @@ TEST_CASE("9. argument nargs", "[argument]")
     }
 
     SECTION("9.12. nargs mixed positional [2]") {
-        parser.add_argument("append1").action(argparse::append).nargs("+");  // default value are invalid in python if flag used
-        parser.add_argument("append2").action(argparse::append).nargs("?");  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("append1").action(argparse::append).nargs("+");
+        // default value are invalid in python if flag used
+        parser.add_argument("append2").action(argparse::append).nargs("?");
         parser.add_argument("store").action(argparse::store).nargs("+").default_value(default_value);
 
         REQUIRE_THROWS(parser.parse_args(make_args()));
@@ -1545,7 +1596,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE_THROWS(parser.parse_args(make_args(new_value, new_value, new_value, new_value)));
         REQUIRE_THROWS(parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value)));
 
-        argparse::Namespace args1 = parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value, new_value));
+        argparse::Namespace args1 = parser.parse_args(make_args(new_value, new_value, new_value, new_value,
+                                                                new_value, new_value));
         REQUIRE(args1.get<std::string>("store1") == new_value);
         REQUIRE(args1.get<std::string>("store3") == default_value);
         REQUIRE(args1.get<std::string>("store4") == new_value);
@@ -1555,7 +1607,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args1.get<std::vector<std::string> >("store4").size() == 1);
         REQUIRE(args1.get<std::vector<std::string> >("store5").size() == 2);
 
-        argparse::Namespace args2 = parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value, new_value, new_value));
+        argparse::Namespace args2 = parser.parse_args(make_args(new_value, new_value, new_value, new_value,
+                                                                new_value, new_value, new_value));
         REQUIRE(args2.get<std::string>("store3") == default_value);
         REQUIRE(args2.get<std::string>("store4") == new_value);
         REQUIRE(args2.get<std::string>("store6") == default_value);
@@ -1564,7 +1617,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args2.get<std::vector<std::string> >("store4").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("store5").size() == 2);
 
-        argparse::Namespace args3 = parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value, new_value, new_value, new_value));
+        argparse::Namespace args3 = parser.parse_args(make_args(new_value, new_value, new_value, new_value,
+                                                                new_value, new_value, new_value, new_value));
         REQUIRE(args3.get<std::string>("store3") == default_value);
         REQUIRE(args3.get<std::string>("store4") == new_value);
         REQUIRE(args3.get<std::string>("store6") == default_value);
@@ -1589,7 +1643,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE_THROWS(parser.parse_args(make_args(new_value, new_value, new_value, new_value)));
         REQUIRE_THROWS(parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value)));
 
-        argparse::Namespace args1 = parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value, new_value));
+        argparse::Namespace args1 = parser.parse_args(make_args(new_value, new_value, new_value, new_value,
+                                                                new_value, new_value));
         REQUIRE(args1.get<std::string>("store1") == default_value);
         REQUIRE(args1.get<std::string>("store3") == new_value);
         REQUIRE(args1.get<std::string>("store4") == default_value);
@@ -1599,7 +1654,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args1.get<std::vector<std::string> >("store5").size() == 2);
         REQUIRE(args1.get<std::vector<std::string> >("store6").size() == 1);
 
-        argparse::Namespace args2 = parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value, new_value, new_value));
+        argparse::Namespace args2 = parser.parse_args(make_args(new_value, new_value, new_value, new_value,
+                                                                new_value, new_value, new_value));
         REQUIRE(args2.get<std::string>("store1") == new_value);
         REQUIRE(args2.get<std::string>("store3") == new_value);
         REQUIRE(args2.get<std::string>("store4") == default_value);
@@ -1610,7 +1666,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args2.get<std::vector<std::string> >("store5").size() == 2);
         REQUIRE(args2.get<std::vector<std::string> >("store6").size() == 1);
 
-        argparse::Namespace args3 = parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value, new_value, new_value, new_value));
+        argparse::Namespace args3 = parser.parse_args(make_args(new_value, new_value, new_value, new_value,
+                                                                new_value, new_value, new_value, new_value));
         REQUIRE(args3.get<std::string>("store3") == new_value);
         REQUIRE(args3.get<std::string>("store4") == default_value);
         REQUIRE(args3.get<std::string>("store6") == new_value);
@@ -1623,8 +1680,10 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.17. nargs N optional") {
         parser.add_argument("--store").action(argparse::store).nargs(1).default_value(default_value);
-        parser.add_argument("--append").action(argparse::append).nargs(2);  // default value are invalid in python if flag used
-        parser.add_argument("--extend").action(argparse::extend).nargs(3);  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("--append").action(argparse::append).nargs(2);
+        // default value are invalid in python if flag used
+        parser.add_argument("--extend").action(argparse::extend).nargs(3);
 
         // no args
         argparse::Namespace args1 = parser.parse_args(make_args());
@@ -1636,16 +1695,21 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args1.get<std::vector<std::string> >("--extend").size() == 0);
 
         // all args
-        argparse::Namespace args2 = parser.parse_args(make_args("--store", new_value, "--append", new_value, new_value, "--extend", new_value, new_value, new_value));
+        argparse::Namespace args2 = parser.parse_args(make_args("--store", new_value, "--append", new_value, new_value,
+                                                                "--extend", new_value, new_value, new_value));
         REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("--append").size() == 2);
         REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 3);
 
-        REQUIRE_THROWS(parser.parse_args(make_args("--store", new_value, "--append", new_value, "--extend", new_value)));
+        REQUIRE_THROWS(parser.parse_args(
+                           make_args("--store", new_value, "--append", new_value, "--extend", new_value)));
 
         // override args
-        argparse::Namespace args3 = parser.parse_args(make_args("--store", new_value, "--append", new_value, new_value, "--extend", new_value, new_value, new_value,
-                                         "--store", new_value, "--append", new_value, new_value, "--extend", new_value, new_value, new_value));
+        argparse::Namespace args3
+                = parser.parse_args(make_args("--store", new_value, "--append", new_value, new_value,
+                                              "--extend", new_value, new_value, new_value,
+                                              "--store", new_value, "--append", new_value, new_value,
+                                              "--extend", new_value, new_value, new_value));
         REQUIRE(args3.get<std::vector<std::string> >("--store").size() == 1);
         REQUIRE(args3.get<std::vector<std::string> >("--append").size() == 4);
         REQUIRE(args3.get<std::vector<std::string> >("--extend").size() == 6);
@@ -1653,8 +1717,10 @@ TEST_CASE("9. argument nargs", "[argument]")
 
     SECTION("9.18. nargs N positional") {
         parser.add_argument("store").action(argparse::store).nargs(1).default_value(default_value);
-        parser.add_argument("append").action(argparse::append).nargs(2);  // default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs(3);  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("append").action(argparse::append).nargs(2);
+        // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs(3);
 
         REQUIRE_THROWS(parser.parse_args(make_args()));
         REQUIRE_THROWS(parser.parse_args(make_args(new_value)));
@@ -1663,20 +1729,25 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE_THROWS(parser.parse_args(make_args(new_value, new_value, new_value, new_value)));
         REQUIRE_THROWS(parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value)));
 
-        argparse::Namespace args = parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value, new_value));
+        argparse::Namespace args
+                = parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value, new_value));
         REQUIRE(args.get<std::vector<std::string> >("store").size() == 1);
         REQUIRE(args.get<std::vector<std::string> >("append").size() == 2);
         REQUIRE(args.get<std::vector<std::string> >("extend").size() == 3);
 
-        REQUIRE_THROWS(parser.parse_args(make_args(new_value, new_value, new_value, new_value, new_value, new_value, new_value)));
+        REQUIRE_THROWS(parser.parse_args(
+                           make_args(new_value, new_value, new_value, new_value, new_value, new_value, new_value)));
     }
 
     SECTION("9.19. nargs N optional + positional") {
         parser.add_argument("--store").action(argparse::store).nargs(1).default_value(default_value);
-        parser.add_argument("store").action(argparse::store).nargs(2);  // default value are invalid in python if flag used
-        parser.add_argument("extend").action(argparse::extend).nargs(2);  // default value are invalid in python if flag used
+        // default value are invalid in python if flag used
+        parser.add_argument("store").action(argparse::store).nargs(2);
+        // default value are invalid in python if flag used
+        parser.add_argument("extend").action(argparse::extend).nargs(2);
 
-        REQUIRE_THROWS(parser.parse_args(make_args(new_value, "--store", new_value, new_value, new_value, new_value, new_value, new_value)));
+        REQUIRE_THROWS(parser.parse_args(make_args(new_value, "--store", new_value, new_value,
+                                                   new_value, new_value, new_value, new_value)));
 
         // no args
         argparse::Namespace args1 = parser.parse_args(make_args(new_value, new_value, new_value, new_value));
@@ -1686,7 +1757,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         REQUIRE(args1.get<std::vector<std::string> >("extend").size() == 2);
 
         // all args
-        argparse::Namespace args2 = parser.parse_args(make_args("--store", new_value, new_value, new_value, new_value, new_value));
+        argparse::Namespace args2
+                = parser.parse_args(make_args("--store", new_value, new_value, new_value, new_value, new_value));
         REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("store").size() == 2);
         REQUIRE(args2.get<std::vector<std::string> >("extend").size() == 2);
@@ -1698,7 +1770,8 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("--bar");
 
         REQUIRE(parser.parse_args("").to_string()          == "Namespace(baz='123', args=[], bar=None)");
-        REQUIRE(parser.parse_args("a b c d e").to_string() == "Namespace(baz=['a', 'b', 'c', 'd', 'e'], args=[], bar=None)");
+        REQUIRE(parser.parse_args("a b c d e").to_string()
+                                                      == "Namespace(baz=['a', 'b', 'c', 'd', 'e'], args=[], bar=None)");
         REQUIRE(parser.parse_args("--bar c").to_string()   == "Namespace(baz='123', args=[], bar='c')");
         REQUIRE(parser.parse_args("--bar c d").to_string() == "Namespace(baz=['d'], args=[], bar='c')");
 
@@ -1712,10 +1785,12 @@ TEST_CASE("9. argument nargs", "[argument]")
         parser.add_argument("--bar");
 
         REQUIRE(parser.parse_args("").to_string()          == "Namespace(args=[], baz='123', bar=None)");
-        REQUIRE(parser.parse_args("a b c d e").to_string() == "Namespace(args=['a', 'b', 'c', 'd', 'e'], baz='123', bar=None)");
+        REQUIRE(parser.parse_args("a b c d e").to_string()
+                                                   == "Namespace(args=['a', 'b', 'c', 'd', 'e'], baz='123', bar=None)");
         REQUIRE(parser.parse_args("--bar c").to_string()   == "Namespace(args=[], baz='123', bar='c')");
         REQUIRE(parser.parse_args("--bar c d").to_string() == "Namespace(args=['d'], baz='123', bar='c')");
-        REQUIRE(parser.parse_args("a --bar c").to_string() == "Namespace(args=['a', '--bar', 'c'], baz='123', bar=None)");
+        REQUIRE(parser.parse_args("a --bar c").to_string()
+                                                         == "Namespace(args=['a', '--bar', 'c'], baz='123', bar=None)");
     }
 }
 
@@ -1726,39 +1801,67 @@ TEST_CASE("10. argument const", "[argument]")
     argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
 
     SECTION("10.1. optional arguments") {
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo1").action("store").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo2").action("store_true").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo3").action("store_false").const_value(const_value)));
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo4").action("store_const").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo5").action("append").const_value(const_value)));
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo6").action("append_const").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo7").action("extend").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("--foo1").action("store").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("--foo2").action("store_true").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("--foo3").action("store_false").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("--foo4").action("store_const").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("--foo5").action("append").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("--foo6").action("append_const").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("--foo7").action("extend").const_value(const_value)));
 
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo1?").action("store").nargs("?").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo2?").action("store_true").nargs("?").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo3?").action("store_false").nargs("?").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo4?").action("store_const").nargs("?").const_value(const_value)));
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo5?").action("append").nargs("?").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--foo6?").action("append_const").nargs("?").const_value(const_value)));
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("--foo7?").action("extend").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("--foo1?").action("store").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("--foo2?").action("store_true").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("--foo3?").action("store_false").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("--foo4?").action("store_const").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("--foo5?").action("append").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("--foo6?").action("append_const").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("--foo7?").action("extend").nargs("?").const_value(const_value)));
     }
 
     SECTION("10.2. optional arguments") {
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo1").action("store").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo2").action("store_true").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo3").action("store_false").const_value(const_value)));
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo4").action("store_const").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo5").action("append").const_value(const_value)));
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo6").action("append_const").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo7").action("extend").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("foo1").action("store").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("foo2").action("store_true").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("foo3").action("store_false").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("foo4").action("store_const").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("foo5").action("append").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("foo6").action("append_const").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("foo7").action("extend").const_value(const_value)));
 
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo1?").action("store").nargs("?").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo2?").action("store_true").nargs("?").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo3?").action("store_false").nargs("?").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo4?").action("store_const").nargs("?").const_value(const_value)));
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo5?").action("append").nargs("?").const_value(const_value)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("foo6?").action("append_const").nargs("?").const_value(const_value)));
-        REQUIRE_NOTHROW(parser.add_argument(argparse::Argument("foo7?").action("extend").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("foo1?").action("store").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("foo2?").action("store_true").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("foo3?").action("store_false").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("foo4?").action("store_const").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("foo5?").action("append").nargs("?").const_value(const_value)));
+        REQUIRE_THROWS(parser.add_argument(
+                           argparse::Argument("foo6?").action("append_const").nargs("?").const_value(const_value)));
+        REQUIRE_NOTHROW(parser.add_argument(
+                            argparse::Argument("foo7?").action("extend").nargs("?").const_value(const_value)));
     }
 }
 
@@ -2182,7 +2285,8 @@ TEST_CASE("12. subparsers", "[argument_parser]")
     SECTION("12.6. subparser required=true") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
-        argparse::ArgumentParser::Subparser& subparsers = parser.add_subparsers().required(true).dest("cmd").help("sub-command help");
+        argparse::ArgumentParser::Subparser& subparsers
+                = parser.add_subparsers().required(true).dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
         parser_a.add_argument("bar").help("bar help");
@@ -2236,7 +2340,8 @@ TEST_CASE("13. default values", "[argument_parser]")
     std::string new_default = "new";
 
     SECTION("13.1. have global value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
         parser.add_argument("--bar").action("store").default_value(local_default).help("bar help");
@@ -2324,7 +2429,8 @@ TEST_CASE("13. default values", "[argument_parser]")
     }
 
     SECTION("13.3. suppress global value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(argparse::SUPPRESS).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(argparse::SUPPRESS).exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
         parser.add_argument("--bar").action("store").default_value(local_default).help("bar help");
@@ -2357,7 +2463,8 @@ TEST_CASE("13. default values", "[argument_parser]")
     }
 
     SECTION("13.4. suppress local value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
         parser.add_argument("--bar").action("store").default_value(argparse::SUPPRESS).help("bar help");
@@ -2398,7 +2505,8 @@ TEST_CASE("14. value exists check", "[namespace]")
     std::string new_value = "new";
 
     SECTION("14.1. have default value") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
 
         parser.add_argument("--foo").action("store").help("foo help");
         parser.add_argument("--bar").action("store").default_value(local_default).help("bar help");
@@ -2759,7 +2867,8 @@ TEST_CASE("21. namespace", "[argument_parser]")
 
         // if parser2 have arguments in python there are error: AttributeError: 'tuple' object has no attribute 'baz'
         REQUIRE_THROWS(parser2.parse_args("", parser.parse_known_args(make_args(pos, "-f", foo, "--bar", bar))));
-        REQUIRE_THROWS(parser2.parse_args("", parser.parse_known_args(make_args(pos, "-f", foo, "--bar", bar, "--baz", baz))));
+        REQUIRE_THROWS(parser2.parse_args("", parser.parse_known_args(
+                                                make_args(pos, "-f", foo, "--bar", bar, "--baz", baz))));
 
         argparse::Namespace args3 = parser2.parse_args("", args2);
         REQUIRE(args3.get<std::string>("-f") == foo);
@@ -2837,7 +2946,8 @@ TEST_CASE("22. value types check", "[namespace]")
 #endif  // C++17+
 
         // delimiter '=', std::unordered_map
-        argparse::Namespace args2 = parser.parse_args(make_args("--foo=key=value", "--bar", "key1=value1", "key2=value2"));
+        argparse::Namespace args2
+                = parser.parse_args(make_args("--foo=key=value", "--bar", "key1=value1", "key2=value2"));
         REQUIRE(args2.exists("foo") == true);
         REQUIRE(args2.exists("bar") == true);
         REQUIRE(args2.get<std::string>("foo") == "key=value");
@@ -2865,7 +2975,8 @@ TEST_CASE("22. value types check", "[namespace]")
 #endif  // C++17+
 
         // delimiter '=', std::multimap
-        argparse::Namespace args3 = parser.parse_args(make_args("--foo=key=value", "--bar", "key=value1", "key=value2"));
+        argparse::Namespace args3
+                = parser.parse_args(make_args("--foo=key=value", "--bar", "key=value1", "key=value2"));
         REQUIRE(args3.exists("foo") == true);
         REQUIRE(args3.exists("bar") == true);
         REQUIRE(args3.get<std::string>("foo") == "key=value");
