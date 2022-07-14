@@ -206,6 +206,10 @@ using experimental::fundamentals_v1::nullopt;
 #define _ARGPARSE_INLINE_VARIABLE static
 #endif  // C++17+
 
+#ifndef ARGPARSE_TAB_SIZE
+#define ARGPARSE_TAB_SIZE 4
+#endif  // ARGPARSE_TAB_SIZE
+
 namespace argparse {
 #ifdef _ARGPARSE_CXX_11
 #define _ARGPARSE_NULLPTR nullptr
@@ -4194,10 +4198,13 @@ protected:
     static std::vector<std::string>
     _split_lines_s(std::string const& text, std::size_t width)
     {
-        std::string body = detail::_replace(text, '\t', " ");
+        std::size_t tab_size = ARGPARSE_TAB_SIZE;
+        if (ARGPARSE_TAB_SIZE < 2) {
+            tab_size = 2;
+        }
         std::string value;
         std::vector<std::string> result;
-        std::vector<std::string> split_str = detail::_split(body, '\n', true);
+        std::vector<std::string> split_str = detail::_split(text, '\n', true);
         for (std::size_t i = 0; i < split_str.size(); ++i) {
             std::string const& str = split_str.at(i);
             if (str.empty()) {
@@ -4206,11 +4213,23 @@ protected:
                 std::vector<std::string> sub_split_str
                         = detail::_split(str, detail::_space, true, true);
                 for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
-                    std::string const& sub = sub_split_str.at(j);
-                    if (value.size() + 1 + sub.size() > width) {
-                        detail::_store_value_to(value, result);
+                    std::vector<std::string> tab_split_str
+                        = detail::_split(sub_split_str.at(j), '\t', true, true);
+                    for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
+                        std::string sub = tab_split_str.at(k);
+                        if (sub == "\t") {
+                            sub = std::string(
+                                        tab_size - (value.size() % tab_size),
+                                        detail::_space);
+                        }
+                        if (value.size() + 1 + sub.size() > width) {
+                            detail::_store_value_to(value, result);
+                            if (sub == "\t") {
+                                sub = std::string(tab_size, detail::_space);
+                            }
+                        }
+                        value += sub;
                     }
-                    value += sub;
                 }
                 detail::_store_value_to(value, result);
             }
