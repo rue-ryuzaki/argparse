@@ -1259,6 +1259,57 @@ template <class T>
 struct is_stl_matrix_queue<std::vector<std::queue           <T> > >:true_type{};
 #endif  // C++11+
 
+#ifdef _ARGPARSE_CXX_11
+template <class T, class... Args>
+std::vector<T>
+_make_vector(Args... args)
+{
+    return std::vector<T>{ args... };
+}
+#else
+template <class T>
+std::vector<T>
+_make_vector(T const& arg1)
+{
+    std::vector<T> res;
+    res.push_back(arg1);
+    return res;
+}
+
+template <class T>
+std::vector<T>
+_make_vector(T const& arg1, T const& arg2)
+{
+    std::vector<T> res;
+    res.push_back(arg1);
+    res.push_back(arg2);
+    return res;
+}
+
+template <class T>
+std::vector<T>
+_make_vector(T const& arg1, T const& arg2, T const& arg3)
+{
+    std::vector<T> res;
+    res.push_back(arg1);
+    res.push_back(arg2);
+    res.push_back(arg3);
+    return res;
+}
+
+template <class T>
+std::vector<T>
+_make_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
+{
+    std::vector<T> res;
+    res.push_back(arg1);
+    res.push_back(arg2);
+    res.push_back(arg3);
+    res.push_back(arg4);
+    return res;
+}
+#endif  // C++11+
+
 inline std::pair<std::size_t, std::size_t>
 _get_terminal_size(bool default_values = false)
 {
@@ -1477,7 +1528,7 @@ _remove_quotes(std::string const& str)
 inline bool
 _contains_substr(std::string const& str, std::string const& substr)
 {
-#ifdef _ARGPARSE_CXX_23  // C++23+
+#ifdef _ARGPARSE_CXX_23
     return str.contains(substr);
 #else
     return str.find(substr) != std::string::npos;
@@ -1693,10 +1744,8 @@ _help_flags(std::string const& prefix_chars)
 #ifdef _ARGPARSE_CXX_11
     return { std::string(1, prefix) + "h", std::string(2, prefix) + "help" };
 #else
-    std::vector<std::string> res;
-    res.push_back(std::string(1, prefix) + "h");
-    res.push_back(std::string(2, prefix) + "help");
-    return res;
+    return _make_vector(std::string(1, prefix) + "h",
+                        std::string(2, prefix) + "help");
 #endif  // C++11+
 }
 
@@ -1856,14 +1905,11 @@ _split_equal(std::string const& str, std::string const& prefix)
     } else {
         pos = str.find(_equal);
     }
-    std::vector<std::string> res;
     if (pos != std::string::npos) {
-        res.push_back(str.substr(0, pos));
-        res.push_back(str.substr(pos + 1));
+        return _make_vector(str.substr(0, pos), str.substr(pos + 1));
     } else {
-        res.push_back(str);
+        return _make_vector(str);
     }
-    return res;
 #endif  // C++11+
 }
 
@@ -2568,16 +2614,11 @@ _ARGPARSE_EXPORT class Argument
 #ifdef _ARGPARSE_CXX_11
           m_dest(std::vector<std::string>{ std::string() }),
           m_handle(nullptr),
-          m_post_trigger(nullptr)
 #else
-          m_dest(),
-          m_post_trigger(NULL)
+          m_dest(detail::_make_vector(std::string())),
 #endif  // C++11+
-    {
-#ifndef _ARGPARSE_CXX_11
-        m_dest.push_back(std::string());
-#endif  // C++11+
-    }
+          m_post_trigger(_ARGPARSE_NULLPTR)
+    { }
 
 #ifdef _ARGPARSE_CXX_11
     explicit
@@ -2664,8 +2705,8 @@ public:
      */
     explicit
     Argument(std::string const& flag)
-        : m_flags(),
-          m_all_flags(),
+        : m_flags(detail::_make_vector(flag)),
+          m_all_flags(m_flags),
           m_name(),
           m_action(argparse::store),
           m_type(NoType),
@@ -2683,13 +2724,9 @@ public:
           m_help(),
           m_version(),
           m_metavar(),
-          m_dest(),
-          m_post_trigger(NULL)
-    {
-        m_flags.push_back(flag);
-        m_all_flags = m_flags;
-        m_dest.push_back(std::string());
-    }
+          m_dest(detail::_make_vector(std::string())),
+          m_post_trigger(_ARGPARSE_NULLPTR)
+    { }
 
     /*!
      *  \brief Construct argument object with parsed arguments
@@ -2701,8 +2738,8 @@ public:
      */
     explicit
     Argument(std::string const& flag1, std::string const& flag2)
-        : m_flags(),
-          m_all_flags(),
+        : m_flags(detail::_make_vector(flag1, flag2)),
+          m_all_flags(m_flags),
           m_name(),
           m_action(argparse::store),
           m_type(NoType),
@@ -2720,14 +2757,9 @@ public:
           m_help(),
           m_version(),
           m_metavar(),
-          m_dest(),
-          m_post_trigger(NULL)
-    {
-        m_flags.push_back(flag1);
-        m_flags.push_back(flag2);
-        m_all_flags = m_flags;
-        m_dest.push_back(std::string());
-    }
+          m_dest(detail::_make_vector(std::string())),
+          m_post_trigger(_ARGPARSE_NULLPTR)
+    { }
 #endif  // C++11+
 
     /*!
@@ -2764,16 +2796,11 @@ public:
 #ifdef _ARGPARSE_CXX_11
           m_dest(std::vector<std::string>{ std::string() }),
           m_handle(nullptr),
-          m_post_trigger(nullptr)
 #else
-          m_dest(),
-          m_post_trigger(NULL)
+          m_dest(detail::_make_vector(std::string())),
 #endif  // C++11+
-    {
-#ifndef _ARGPARSE_CXX_11
-        m_dest.push_back(std::string());
-#endif  // C++11+
-    }
+          m_post_trigger(_ARGPARSE_NULLPTR)
+    { }
 
     /*!
      *  \brief Construct argument object from another argument
@@ -3528,9 +3555,7 @@ public:
      */
     inline Argument& metavar(std::string const& value)
     {
-        std::vector<std::string> values;
-        values.push_back(value);
-        return metavar(values);
+        return metavar(detail::_make_vector(value));
     }
 
     /*!
@@ -3544,10 +3569,7 @@ public:
     inline Argument& metavar(std::string const& value1,
                              std::string const& value2)
     {
-        std::vector<std::string> values;
-        values.push_back(value1);
-        values.push_back(value2);
-        return metavar(values);
+        return metavar(detail::_make_vector(value1, value2));
     }
 
     /*!
@@ -3563,11 +3585,7 @@ public:
                              std::string const& value2,
                              std::string const& value3)
     {
-        std::vector<std::string> values;
-        values.push_back(value1);
-        values.push_back(value2);
-        values.push_back(value3);
-        return metavar(values);
+        return metavar(detail::_make_vector(value1, value2, value3));
     }
 
     /*!
@@ -3585,12 +3603,7 @@ public:
                              std::string const& value3,
                              std::string const& value4)
     {
-        std::vector<std::string> values;
-        values.push_back(value1);
-        values.push_back(value2);
-        values.push_back(value3);
-        values.push_back(value4);
-        return metavar(values);
+        return metavar(detail::_make_vector(value1, value2, value3, value4));
     }
 #endif  // C++11+
 
@@ -3975,16 +3988,14 @@ private:
                     ? formatter._get_default_metavar_for_optional(this)
                     : formatter._get_default_metavar_for_positional(this) };
 #else
-        std::vector<std::string> res;
         if (m_choices.has_value()) {
-            res.push_back(
+            return detail::_make_vector(
                         "{" + detail::_vector_to_string(choices(), ",") + "}");
-            return res;
         }
-        res.push_back(m_type == Optional
+        return detail::_make_vector(
+                    m_type == Optional
                       ? formatter._get_default_metavar_for_optional(this)
                       : formatter._get_default_metavar_for_positional(this));
-        return res;
 #endif  // C++11+
     }
 
@@ -4842,9 +4853,7 @@ public:
      */
     inline Argument& add_argument(std::string const& flag)
     {
-        std::vector<std::string> flags;
-        flags.push_back(flag);
-        return add_argument(flags);
+        return add_argument(detail::_make_vector(flag));
     }
 
     /*!
@@ -4858,10 +4867,7 @@ public:
     inline Argument& add_argument(std::string const& flag1,
                                   std::string const& flag2)
     {
-        std::vector<std::string> flags;
-        flags.push_back(flag1);
-        flags.push_back(flag2);
-        return add_argument(flags);
+        return add_argument(detail::_make_vector(flag1, flag2));
     }
 #endif  // C++11+
 
@@ -5333,7 +5339,7 @@ _ARGPARSE_EXPORT class Namespace
             inline void push_to_matrix()
             {
                 m_matrix.push_back(
-                            std::vector<std::string>(1, m_values.back()));
+                            detail::_make_vector<std::string>(m_values.back()));
             }
 
             bool m_exists;
@@ -7905,9 +7911,7 @@ public:
      */
     inline ArgumentParser& aliases(std::string const& value)
     {
-        std::vector<std::string> values;
-        values.push_back(value);
-        return aliases(values);
+        return aliases(detail::_make_vector(value));
     }
 
     /*!
@@ -7921,10 +7925,7 @@ public:
     inline ArgumentParser& aliases(std::string const& value1,
                                    std::string const& value2)
     {
-        std::vector<std::string> values;
-        values.push_back(value1);
-        values.push_back(value2);
-        return aliases(values);
+        return aliases(detail::_make_vector(value1, value2));
     }
 #endif  // C++11+
 
@@ -8005,9 +8006,7 @@ public:
      */
     ArgumentParser& parents(ArgumentParser const& value)
     {
-        std::vector<ArgumentParser> values;
-        values.push_back(value);
-        return parents(values);
+        return parents(detail::_make_vector(value));
     }
 
     /*!
@@ -8021,10 +8020,7 @@ public:
     ArgumentParser&
     parents(ArgumentParser const& value1, ArgumentParser const& value2)
     {
-        std::vector<ArgumentParser> values;
-        values.push_back(value1);
-        values.push_back(value2);
-        return parents(values);
+        return parents(detail::_make_vector(value1, value2));
     }
 #endif  // C++11+
 
@@ -8420,9 +8416,7 @@ public:
      */
     inline Argument& add_argument(std::string const& flag)
     {
-        std::vector<std::string> flags;
-        flags.push_back(flag);
-        return add_argument(flags);
+        return add_argument(detail::_make_vector(flag));
     }
 
     /*!
@@ -8436,10 +8430,7 @@ public:
     inline Argument& add_argument(std::string const& flag1,
                                   std::string const& flag2)
     {
-        std::vector<std::string> flags;
-        flags.push_back(flag1);
-        flags.push_back(flag2);
-        return add_argument(flags);
+        return add_argument(detail::_make_vector(flag1, flag2));
     }
 #endif  // C++11+
 
@@ -9080,9 +9071,7 @@ public:
 #ifdef _ARGPARSE_CXX_11
         return { arg_line };
 #else
-        std::vector<std::string> res;
-        res.push_back(arg_line);
-        return res;
+        return detail::_make_vector(arg_line);
 #endif  // C++11+
     }
 
@@ -10016,11 +10005,10 @@ private:
                                                       Argument::Positional);
                     for (auto& info : parsers) {
 #else
-                    std::vector<std::string> flags;
-                    flags.push_back(dest);
                     pArgument subparser_arg
-                            = Argument::make_argument(flags, dest,
-                                                      Argument::Positional);
+                            = Argument::make_argument(
+                                detail::_make_vector(dest),
+                                dest, Argument::Positional);
                     for (std::size_t j = 0; j < parsers.size(); ++j) {
                         ParserInfo& info = parsers.at(j);
 #endif  // C++11+
@@ -10494,15 +10482,13 @@ private:
                                Namespace::Storage::mapped_type(true,
                                                                { pair.second }));
 #else
-                std::vector<std::string> flags;
-                flags.push_back(pair.first);
                 pArgument arg = Argument::make_argument(
-                            flags, pair.first, Argument::Positional);
+                            detail::_make_vector(pair.first),
+                            pair.first, Argument::Positional);
                 arg->default_value(pair.second);
-                std::vector<std::string> values;
-                values.push_back(pair.second);
                 storage.create(arg,
-                               Namespace::Storage::mapped_type(true, values));
+                               Namespace::Storage::mapped_type(
+                                   true, detail::_make_vector(pair.second)));
 #endif  // C++11+
             }
         }
