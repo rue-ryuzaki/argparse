@@ -1411,22 +1411,6 @@ _trim_copy(std::string const& str)
 }
 
 inline std::string
-_to_lower(std::string str)
-{
-#ifdef _ARGPARSE_CXX_11
-    std::transform(str.begin(), str.end(), str.begin(),
-                   [] (unsigned char c)
-    { return static_cast<char>(std::tolower(c)); });
-#else
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        str.at(i) = static_cast<char>(
-                        std::tolower(static_cast<unsigned char>(str.at(i))));
-    }
-#endif  // C++11+
-    return str;
-}
-
-inline std::string
 _to_upper(std::string str)
 {
 #ifdef _ARGPARSE_CXX_11
@@ -1460,13 +1444,8 @@ _file_name(std::string const& path)
 inline bool
 _have_quotes(std::string const& str)
 {
-#ifdef _ARGPARSE_CXX_11
-    return str.size() > 1 && str.front() == str.back()
-            && (str.front() == '\'' || str.front() == '\"');
-#else
     return str.size() > 1 && str.at(0) == str.at(str.size() - 1)
             && (str.at(0) == '\'' || str.at(0) == '\"');
-#endif  // C++11+
 }
 
 inline void
@@ -1704,11 +1683,6 @@ _flag_name(std::string const& str)
 {
     std::string res = str;
     char prefix = res.at(0);
-#ifdef _ARGPARSE_CXX_11
-    res.erase(res.begin(),
-              std::find_if(res.begin(), res.end(),
-                           [prefix] (char c) { return c != prefix; }));
-#else
     std::string::iterator it = res.begin();
     for ( ; it != res.end(); ++it) {
         if (*it != prefix) {
@@ -1716,7 +1690,6 @@ _flag_name(std::string const& str)
         }
     }
     res.erase(res.begin(), it);
-#endif  // C++11+
     return res;
 }
 
@@ -1770,17 +1743,12 @@ _make_no_flag(std::string const& str)
 {
     std::string res = str;
     char prefix = res.at(0);
-#ifdef _ARGPARSE_CXX_11
-    auto it = std::find_if(res.begin(), res.end(),
-                           [prefix] (char c) { return c != prefix; });
-#else
     std::string::iterator it = res.begin();
     for ( ; it != res.end(); ++it) {
         if (*it != prefix) {
             break;
         }
     }
-#endif  // C++11+
     if (it == res.end()) {
         throw ValueError("can't create no- boolean option");
     }
@@ -1909,12 +1877,8 @@ _process_quotes(std::deque<char>& quotes, std::string const& value,
                     || std::ispunct(static_cast<unsigned char>(str.at(i))))) {
             quotes.pop_back();
         } else if (value.empty()
-#ifdef _ARGPARSE_CXX_11
-                   || std::ispunct(static_cast<unsigned char>(value.back()))) {
-#else
                    || std::ispunct(static_cast<unsigned char>(
                                        value.at(value.size() - 1)))) {
-#endif  // C++11+
             quotes.push_back(c);
         }
     }
@@ -3378,14 +3342,12 @@ public:
         }
         std::vector<std::string> values;
         values.reserve(value.size());
-#ifdef _ARGPARSE_CXX_11
-        std::transform(value.begin(), value.end(), std::back_inserter(values),
-                       [] (char c) { return std::string(1, c); });
-        m_choices = std::move(values);
-#else
         for (std::size_t i = 0; i < value.size(); ++i) {
             values.push_back(std::string(1, value.at(i)));
         }
+#ifdef _ARGPARSE_CXX_11
+        m_choices = std::move(values);
+#else
         m_choices = values;
 #endif  // C++11+
         return *this;
@@ -3834,12 +3796,8 @@ private:
     inline void make_no_flags()
     {
         m_all_flags.clear();
-#ifdef _ARGPARSE_CXX_11
-        for (auto const& flag : m_flags) {
-#else
         for (std::size_t i = 0; i < m_flags.size(); ++i) {
             std::string const& flag = m_flags.at(i);
-#endif  // C++11+
             m_all_flags.push_back(flag);
             m_all_flags.push_back(detail::_make_no_flag(flag));
         }
@@ -3875,12 +3833,8 @@ private:
     {
         std::string res;
         if (m_type == Optional) {
-#ifdef _ARGPARSE_CXX_11
-            for (auto const& flag : flags()) {
-#else
             for (std::size_t i = 0; i < flags().size(); ++i) {
                 std::string const& flag = flags().at(i);
-#endif  // C++11+
                 if (!res.empty()) {
                     res += ", ";
                 }
@@ -4423,12 +4377,8 @@ protected:
             std::vector<std::string> help_flags
                     = detail::_help_flags(prefix_chars);
             if (m_conflict_handler == "resolve") {
-#ifdef _ARGPARSE_CXX_11
-                for (auto const& pair : m_optional) {
-#else
                 for (std::size_t i = 0; i < m_optional.size(); ++i) {
                     std::pair<pArgument, bool> const& pair = m_optional.at(i);
-#endif  // C++11+
                     detail::_resolve_conflict(pair.first->flags(), help_flags);
                 }
             }
@@ -4735,11 +4685,7 @@ protected:
             }
             check_conflict_arg(&arg);
         }
-#ifdef _ARGPARSE_CXX_11
-        m_arguments.emplace_back(std::make_shared<Argument>(arg));
-#else
         m_arguments.push_back(detail::make_shared<Argument>(arg));
-#endif  // C++11+
     }
 
     std::string m_conflict_handler;
@@ -6235,13 +6181,9 @@ public:
     inline std::string to_string() const
     {
         std::string result;
-#ifdef _ARGPARSE_CXX_11
-        for (auto const& pair : storage()) {
-#else
         for (Storage::const_iterator it
              = storage().begin(); it != storage().end(); ++it) {
             Storage::value_type const& pair = *it;
-#endif  // C++11+
             std::vector<std::string> const& flags
                     = pair.first->get_argument_flags();
             if (flags.empty()) {
@@ -6883,13 +6825,8 @@ private:
             }
             vec.reserve(args.size() / 2);
             for (std::size_t i = 0; i < args.size(); i += 2) {
-#ifdef _ARGPARSE_CXX_11
-                vec.emplace_back(std::make_pair(to_type<T>(args.at(i)),
-                                                to_type<U>(args.at(i + 1))));
-#else
                 vec.push_back(std::make_pair(to_type<T>(args.at(i)),
                                              to_type<U>(args.at(i + 1))));
-#endif  // C++11+
             }
         } else {
             vec.reserve(args.size());
@@ -6911,15 +6848,9 @@ private:
     {
         std::vector<T> vec;
         vec.reserve(args.size());
-#ifdef _ARGPARSE_CXX_11
-        std::transform(args.begin(), args.end(), std::back_inserter(vec),
-                       [this] (std::string const& arg)
-        { return to_type<T>(arg); });
-#else
         for (std::size_t i = 0; i < args.size(); ++i) {
             vec.push_back(to_type<T>(args.at(i)));
         }
-#endif  // C++11+
         return vec;
     }
 
@@ -7488,14 +7419,6 @@ public:
                 return metavar();
             }
             std::string res;
-#ifdef _ARGPARSE_CXX_11
-            for (auto const& p : m_parsers) {
-                detail::_append_value_to(p->m_name, res, ",");
-                for (auto const& alias : p->aliases()) {
-                    detail::_append_value_to(alias, res, ",");
-                }
-            }
-#else
             for (std::size_t i = 0; i < m_parsers.size(); ++i) {
                 pParser const& p = m_parsers.at(i);
                 detail::_append_value_to(p->m_name, res, ",");
@@ -7503,7 +7426,6 @@ public:
                     detail::_append_value_to(p->aliases().at(j), res, ",");
                 }
             }
-#endif  // C++11+
             return "{" + res + "}";
         }
 
@@ -7623,11 +7545,7 @@ private:
                 if (!argv[i]) {
                     break;
                 }
-#ifdef _ARGPARSE_CXX_11
-                m_parsed_arguments.emplace_back(std::string(argv[i]));
-#else
                 m_parsed_arguments.push_back(std::string(argv[i]));
-#endif  // C++11+
             }
         }
     }
@@ -10133,11 +10051,7 @@ private:
     {
         if (name.at(i) == detail::_equal) {
             if (flags.empty()) {
-#ifdef _ARGPARSE_CXX_11
-                flags.emplace_back(std::string());
-#else
                 flags.push_back(std::string());
-#endif  // C++11+
             }
             flags.back() += name.substr(i);
             return false;
