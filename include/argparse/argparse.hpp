@@ -36,7 +36,6 @@
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
-#undef _ARGPARSE_USE_FILESYSTEM
 #undef _ARGPARSE_USE_OPTIONAL
 
 #undef _ARGPARSE_VERSION_MAJOR
@@ -116,17 +115,6 @@
 #include <unistd.h>
 #endif  // _WIN32
 #endif  // ARGPARSE_NO_AUTODETECT
-
-// filesystem
-#ifdef _ARGPARSE_CXX_17
-#if (defined(_MSC_VER) && _MSC_VER >= 1914) \
-    || (defined(__clang__) && (__clang_major__ > 8)) \
-    || (defined(__GNUC__) && (__GNUC__ > 8))
-#include <filesystem>
-
-#define _ARGPARSE_USE_FILESYSTEM 1
-#endif  //
-#endif  // C++17+
 
 #ifdef _ARGPARSE_CXX_11
 #include <array>
@@ -1466,11 +1454,7 @@ _to_string(T const& value)
 inline std::string
 _file_name(std::string const& path)
 {
-#ifdef _ARGPARSE_USE_FILESYSTEM
-    return std::filesystem::path(path.c_str()).filename().string();
-#else
     return path.substr(path.find_last_of("/\\") + 1);
-#endif  // _ARGPARSE_USE_FILESYSTEM
 }
 
 inline bool
@@ -10773,7 +10757,6 @@ private:
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
-#undef _ARGPARSE_USE_FILESYSTEM
 #undef _ARGPARSE_USE_OPTIONAL
 
 #undef _ARGPARSE_CXX_98
