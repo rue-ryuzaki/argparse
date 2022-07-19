@@ -7377,10 +7377,7 @@ public:
         limit_help_flags(_HelpFormatter const&,
                          std::size_t& limit) const _ARGPARSE_OVERRIDE
         {
-            std::size_t size = flags_to_string().size();
-            if (limit < size) {
-                limit = size;
-            }
+            detail::_limit_to_min(limit, flags_to_string().size());
 #ifdef _ARGPARSE_CXX_11
             for (auto const& p : m_parsers) {
                 std::size_t s = p->m_name.size() + 2;
@@ -7388,9 +7385,7 @@ public:
             for (std::size_t i = 0; i < m_parsers.size(); ++i) {
                 std::size_t s = m_parsers.at(i)->m_name.size() + 2;
 #endif  // C++11+
-                if (limit < s) {
-                    limit = s;
-                }
+                detail::_limit_to_min(limit, s);
             }
         }
 
