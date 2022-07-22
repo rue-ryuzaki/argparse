@@ -5285,18 +5285,16 @@ _ARGPARSE_EXPORT class Namespace
         typedef map_type::const_iterator                const_iterator;
 
         Storage()
-            : m_data(),
-              m_conflict_arg()
+            : m_data()
         { }
 
         inline void
-        force_add(key_type const& key, mapped_type const& value = mapped_type())
+        create(key_type const& key, mapped_type const& value = mapped_type())
         {
             if (key->action() & (argparse::version | argparse::help)) {
                 return;
             }
-            std::vector<std::string> const& arg_flags
-                    = key->get_argument_flags();
+            std::vector<std::string> const& arg_flags = key->flags();
             bool have_key = false;
 #ifdef _ARGPARSE_CXX_11
             for (auto& pair : m_data) {
@@ -5311,40 +5309,6 @@ _ARGPARSE_EXPORT class Namespace
             }
             if (!have_key) {
                 m_data.push_back(std::make_pair(key, value));
-            }
-        }
-
-#ifdef _ARGPARSE_CXX_11
-        template <class T>
-        void force_add(T const& arguments)
-        {
-            for (auto const& arg : arguments) {
-                force_add(arg);
-            }
-        }
-#else
-        void force_add(std::vector<key_type> const& arguments)
-        {
-            for (std::size_t i = 0; i < arguments.size(); ++i) {
-                force_add(arguments.at(i));
-            }
-        }
-#endif  // C++11+
-
-        inline void
-        create(key_type const& key, mapped_type const& value = mapped_type())
-        {
-            if (key->action() & (argparse::version | argparse::help)) {
-                return;
-            }
-            std::string const& flag = conflict_arg(key);
-            if (flag.empty()) {
-                m_data.push_back(std::make_pair(key, value));
-            } else {
-                throw
-                ArgumentError("argument "
-                              + detail::_vector_to_string(key->m_flags, "/")
-                              + ": conflicting dest string: " + flag);
             }
         }
 
@@ -5368,9 +5332,9 @@ _ARGPARSE_EXPORT class Namespace
         inline void have_value(key_type const& arg)
         {
             if (arg->implicit_value().empty()) {
-                at(arg).push_values(std::vector<std::string>());
+                on_process_store(arg, std::vector<std::string>());
             } else {
-                at(arg).push_back(arg->implicit_value());
+                on_process_store(arg, arg->implicit_value());
 #ifdef _ARGPARSE_CXX_11
                 arg->handle(arg->implicit_value());
 #endif  // C++11+
@@ -5379,7 +5343,7 @@ _ARGPARSE_EXPORT class Namespace
 
         inline void store_value(key_type const& arg, std::string const& value)
         {
-            at(arg).push_back(value);
+            on_process_store(arg, value);
 #ifdef _ARGPARSE_CXX_11
             arg->handle(value);
 #endif  // C++11+
@@ -5388,7 +5352,7 @@ _ARGPARSE_EXPORT class Namespace
         inline void store_values(key_type const& arg,
                                  std::vector<std::string> const& values)
         {
-            at(arg).push_values(values);
+            on_process_store(arg, values);
 #ifdef _ARGPARSE_CXX_11
             for (auto const& value : values) {
                 arg->handle(value);
@@ -5417,24 +5381,22 @@ _ARGPARSE_EXPORT class Namespace
                     & (argparse::store_const | detail::_bool_action)) {
                 mapped_type& arg_data = at(arg);
                 if (arg_data.empty()) {
-                    arg_data.push_back(arg->const_value());
+                    on_process_store(arg, arg->const_value());
 #ifdef _ARGPARSE_CXX_11
                     arg->handle(arg->const_value());
 #endif  // C++11+
                 }
                 return true;
             } else if (arg->action() == argparse::append_const) {
-                at(arg).push_back(arg->const_value());
+                on_process_store(arg, arg->const_value());
 #ifdef _ARGPARSE_CXX_11
                 arg->handle(arg->const_value());
 #endif  // C++11+
                 return true;
             } else if (arg->action() == argparse::count) {
+                on_process_store(arg, std::string());
 #ifdef _ARGPARSE_CXX_11
-                at(arg).emplace_back(std::string());
                 arg->handle(std::string());
-#else
-                at(arg).push_back(std::string());
 #endif  // C++11+
                 return true;
             }
@@ -5556,34 +5518,41 @@ _ARGPARSE_EXPORT class Namespace
             return end();
         }
 
-#ifdef _ARGPARSE_CXX_11
-        inline
-#endif  // C++11+
-        std::string const&
-        conflict_arg(key_type const& arg) const
+        inline void on_process_store(key_type const& arg,
+                                     std::string const& value)
         {
-            std::vector<std::string> const& arg_flags
-                    = arg->get_argument_flags();
-#ifdef _ARGPARSE_CXX_11
-            for (auto const& pair : m_data) {
-                for (auto const& flag : pair.first->get_argument_flags()) {
-#else
-            for (std::size_t i = 0; i < m_data.size(); ++i) {
-                key_type const& key = m_data.at(i).first;
-                for (std::size_t j = 0;
-                     j < key->get_argument_flags().size(); ++j) {
-                    std::string const& flag = key->get_argument_flags().at(j);
-#endif  // C++11+
-                    if (detail::_is_value_exists(flag, arg_flags)) {
-                        return flag;
+            at(arg).push_back(value);
+            std::string const& dest = arg->dest();
+            if (!dest.empty()) {
+                for (iterator it = begin(); it != end(); ++it) {
+                    if (it->first != arg && it->first->dest() == dest) {
+                        if (it->first->action() == argparse::store) {
+                            it->second.clear();
+                        }
+                        it->second.push_back(value);
                     }
                 }
             }
-            return m_conflict_arg;
+        }
+
+        inline void on_process_store(key_type const& arg,
+                                     std::vector<std::string> const& values)
+        {
+            at(arg).push_values(values);
+            std::string const& dest = arg->dest();
+            if (!dest.empty()) {
+                for (iterator it = begin(); it != end(); ++it) {
+                    if (it->first != arg && it->first->dest() == dest) {
+                        if (it->first->action() == argparse::store) {
+                            it->second.clear();
+                        }
+                        it->second.push_values(values);
+                    }
+                }
+            }
         }
 
         map_type m_data;
-        std::string m_conflict_arg;
     };
 
     friend class ArgumentParser;
@@ -9060,13 +9029,9 @@ private:
             validate_arguments(parser->m_data.get_arguments(true));
         }
 
-        inline void create_storage(bool force)
+        inline void create_storage()
         {
-            if (storage.m_data.empty() && !force) {
-                storage.create(parser->m_data.get_arguments(true));
-            } else {
-                storage.force_add(parser->m_data.get_arguments(true));
-            }
+            storage.create(parser->m_data.get_arguments(true));
         }
 
         ArgumentParser const* parser;
@@ -9104,7 +9069,7 @@ private:
         bool was_pseudo_arg = false;
 
         parsers.back().validate();
-        parsers.back().create_storage(false);
+        parsers.back().create_storage();
 
         std::vector<std::string> unrecognized_args;
         std::deque<std::string> intermixed_args;
@@ -9880,7 +9845,7 @@ private:
                     for (std::size_t j = 0; j < parsers.size(); ++j) {
                         ParserInfo& info = parsers.at(j);
 #endif  // C++11+
-                        info.storage.force_add(subparser_arg);
+                        info.storage.create(subparser_arg);
                     }
                     parsers.front().storage.at(subparser_arg).push_back(name);
                 }
@@ -9891,7 +9856,7 @@ private:
                 for (std::size_t j = 0; j < parsers.size(); ++j) {
                     ParserInfo& info = parsers.at(j);
 #endif  // C++11+
-                    info.storage.force_add(
+                    info.storage.create(
                              parsers.back().parser->m_data.get_arguments(true));
                 }
 
