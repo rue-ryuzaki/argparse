@@ -5332,8 +5332,10 @@ _ARGPARSE_EXPORT class Namespace
         inline void have_value(key_type const& arg)
         {
             if (arg->implicit_value().empty()) {
+                at(arg).push_values(std::vector<std::string>());
                 on_process_store(arg, std::vector<std::string>());
             } else {
+                at(arg).push_back(arg->implicit_value());
                 on_process_store(arg, arg->implicit_value());
 #ifdef _ARGPARSE_CXX_11
                 arg->handle(arg->implicit_value());
@@ -5343,6 +5345,7 @@ _ARGPARSE_EXPORT class Namespace
 
         inline void store_value(key_type const& arg, std::string const& value)
         {
+            at(arg).push_back(value);
             on_process_store(arg, value);
 #ifdef _ARGPARSE_CXX_11
             arg->handle(value);
@@ -5352,6 +5355,7 @@ _ARGPARSE_EXPORT class Namespace
         inline void store_values(key_type const& arg,
                                  std::vector<std::string> const& values)
         {
+            at(arg).push_values(values);
             on_process_store(arg, values);
 #ifdef _ARGPARSE_CXX_11
             for (auto const& value : values) {
@@ -5368,6 +5372,7 @@ _ARGPARSE_EXPORT class Namespace
                 mapped_type& arg_data = at(arg);
                 if (arg_data.empty()) {
                     arg_data.push_default(value);
+                    on_process_store(arg, value);
 #ifdef _ARGPARSE_CXX_11
                     arg->handle(value);
 #endif  // C++11+
@@ -5380,20 +5385,22 @@ _ARGPARSE_EXPORT class Namespace
             if (arg->action()
                     & (argparse::store_const | detail::_bool_action)) {
                 mapped_type& arg_data = at(arg);
-                if (arg_data.empty()) {
-                    on_process_store(arg, arg->const_value());
+                arg_data.clear();
+                arg_data.push_back(arg->const_value());
+                on_process_store(arg, arg->const_value());
 #ifdef _ARGPARSE_CXX_11
-                    arg->handle(arg->const_value());
+                arg->handle(arg->const_value());
 #endif  // C++11+
-                }
                 return true;
             } else if (arg->action() == argparse::append_const) {
+                at(arg).push_back(arg->const_value());
                 on_process_store(arg, arg->const_value());
 #ifdef _ARGPARSE_CXX_11
                 arg->handle(arg->const_value());
 #endif  // C++11+
                 return true;
             } else if (arg->action() == argparse::count) {
+                at(arg).push_back(std::string());
                 on_process_store(arg, std::string());
 #ifdef _ARGPARSE_CXX_11
                 arg->handle(std::string());
@@ -5521,12 +5528,15 @@ _ARGPARSE_EXPORT class Namespace
         inline void on_process_store(key_type const& arg,
                                      std::string const& value)
         {
-            at(arg).push_back(value);
             std::string const& dest = arg->dest();
             if (!dest.empty()) {
                 for (iterator it = begin(); it != end(); ++it) {
                     if (it->first != arg && it->first->dest() == dest) {
-                        if (it->first->action() == argparse::store) {
+                        if (it->first->action() &
+                                (argparse::store
+                                 | argparse::store_const
+                                 | detail::_bool_action
+                                 | argparse::BooleanOptionalAction)) {
                             it->second.clear();
                         }
                         it->second.push_back(value);
@@ -5538,12 +5548,15 @@ _ARGPARSE_EXPORT class Namespace
         inline void on_process_store(key_type const& arg,
                                      std::vector<std::string> const& values)
         {
-            at(arg).push_values(values);
             std::string const& dest = arg->dest();
             if (!dest.empty()) {
                 for (iterator it = begin(); it != end(); ++it) {
                     if (it->first != arg && it->first->dest() == dest) {
-                        if (it->first->action() == argparse::store) {
+                        if (it->first->action() &
+                                (argparse::store
+                                 | argparse::store_const
+                                 | detail::_bool_action
+                                 | argparse::BooleanOptionalAction)) {
                             it->second.clear();
                         }
                         it->second.push_values(values);
@@ -10287,8 +10300,10 @@ private:
                         && it->first->m_type == Argument::Optional) {
                     if (value.has_value()) {
                         it->second.push_default(value());
+                        storage.on_process_store(it->first, value());
                     } else if (it->first->action() & detail::_bool_action) {
                         it->second.push_back(value());
+                        storage.on_process_store(it->first, value());
                     }
                 }
             }
