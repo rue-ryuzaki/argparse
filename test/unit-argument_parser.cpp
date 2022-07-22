@@ -1108,6 +1108,18 @@ TEST_CASE("8. argument actions", "[argument]")
         REQUIRE(parser.parse_args("--arg x").get<std::string>("arg") == "x");
         REQUIRE(parser.parse_args("--arg x --no-arg").get<std::string>("arg") == const_value);
     }
+
+    SECTION("8.10. shared argument dest action count") {
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--arg").action("count").dest("arg");
+        parser.add_argument("--no-arg").action("count").dest("arg");
+
+        REQUIRE(parser.parse_args("").get<uint32_t>("arg") == 0);
+        REQUIRE(parser.parse_args("--no-arg").get<uint32_t>("arg") == 1);
+        REQUIRE(parser.parse_args("--arg").get<uint32_t>("arg") == 1);
+        REQUIRE(parser.parse_args("--arg --no-arg").get<uint32_t>("arg") == 2);
+    }
 }
 
 TEST_CASE("9. argument nargs", "[argument]")
