@@ -5332,35 +5332,6 @@ _ARGPARSE_EXPORT class Namespace
 #endif  // C++11+
 
         inline void
-        try_add(key_type const& key, mapped_type const& value = mapped_type())
-        {
-            if (key->action() & (argparse::version | argparse::help)) {
-                return;
-            }
-            std::string const& flag = conflict_arg(key);
-            if (flag.empty()) {
-                m_data.push_back(std::make_pair(key, value));
-            }
-        }
-
-#ifdef _ARGPARSE_CXX_11
-        template <class T>
-        void try_add(T const& arguments)
-        {
-            for (auto const& arg : arguments) {
-                try_add(arg);
-            }
-        }
-#else
-        void try_add(std::vector<key_type> const& arguments)
-        {
-            for (std::size_t i = 0; i < arguments.size(); ++i) {
-                try_add(arguments.at(i));
-            }
-        }
-#endif  // C++11+
-
-        inline void
         create(key_type const& key, mapped_type const& value = mapped_type())
         {
             if (key->action() & (argparse::version | argparse::help)) {
