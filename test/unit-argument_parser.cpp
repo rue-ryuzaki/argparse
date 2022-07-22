@@ -1094,6 +1094,20 @@ TEST_CASE("8. argument actions", "[argument]")
         REQUIRE(args2.get<bool>("foo") == false);
         REQUIRE(args2.to_string("foo") == "false");
     }
+
+    SECTION("8.9. shared argument dest") {
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+        std::string default_value = "default";
+
+        parser.add_argument("--arg").dest("arg").default_value(default_value);
+        parser.add_argument("--no-arg").action("store_const").dest("arg").const_value(const_value);
+
+        REQUIRE(parser.parse_args("").get<std::string>("arg") == default_value);
+        REQUIRE(parser.parse_args("--no-arg").get<std::string>("arg") == const_value);
+        REQUIRE(parser.parse_args("--arg x").get<std::string>("arg") == "x");
+        REQUIRE(parser.parse_args("--arg x --no-arg").get<std::string>("arg") == const_value);
+    }
 }
 
 TEST_CASE("9. argument nargs", "[argument]")
