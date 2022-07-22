@@ -5401,7 +5401,6 @@ _ARGPARSE_EXPORT class Namespace
                 return true;
             } else if (arg->action() == argparse::count) {
                 at(arg).push_back(std::string());
-                on_process_store(arg, std::string());
 #ifdef _ARGPARSE_CXX_11
                 arg->handle(std::string());
 #endif  // C++11+
