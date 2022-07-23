@@ -1,3 +1,11 @@
+cpp-argparse-dev (1.6.6-0ppa0) focal; urgency=low
+
+  * Update: C++98 shared_ptr implementation
+  * Update: format tab up to ARGPARSE_TAB_SIZE (default 4) spaces
+  * Fix: Allow share dest storage #9
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Sat, 23 Jul 2022 20:29:06 +0300
+
 cpp-argparse-dev (1.6.5-0ppa0) focal; urgency=low
 
   * Add: missing ArgumentParser functions for C++98
