@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 6)
-set(VERSION_PATCH 5)
+set(VERSION_PATCH 6)
 
 if (${CMAKE_VERSION} VERSION_LESS "3.8")
     project("ArgumentParser"
