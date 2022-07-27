@@ -28,6 +28,17 @@ C++ support compiler
 ```cpp-argparse-dev``` [AUR](https://aur.archlinux.org/packages/cpp-argparse-dev)
 
 ```cpp-argparse-dev``` [MacPorts](https://ports.macports.org/port/cpp-argparse-dev)
+## Available macroses:
+### Can be setted
+```ARGPARSE_NO_AUTODETECT``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely <Windows.h> on OS Windows)
+
+```ARGPARSE_TAB_SIZE``` - By default, RawDescriptionHelpFormatter and RawTextHelpFormatter replaces tab with 4 spaces expand. You can change amount of expanding spaces.
+### Can be read
+```ARGPARSE_VERSION_MAJOR``` - Major version of the argparse library
+
+```ARGPARSE_VERSION_MINOR``` - Minor version of the argparse library
+
+```ARGPARSE_VERSION_PATCH``` - Patch level of the argparse library
 ## Overview
 - Examples:
   - [code](#code-example) - [usage](#usage-example) - [output](#output)
