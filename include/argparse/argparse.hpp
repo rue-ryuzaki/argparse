@@ -8389,17 +8389,17 @@ public:
         return *m_subparsers;
     }
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get subparsers
      *
      *  \return Current subparser pointer
      */
-    inline Subparser* subparsers() _ARGPARSE_NOEXCEPT
+    inline Subparser* subparsers() const _ARGPARSE_NOEXCEPT
     {
         return m_subparsers.get();
     }
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set argument parser 'handle' function.
      *  Called when the parser is executed and passed the value of the
