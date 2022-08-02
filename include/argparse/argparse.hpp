@@ -8391,6 +8391,16 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
+     *  \brief Get subparsers
+     *
+     *  \return Current subparser pointer
+     */
+    inline Subparser* subparsers() _ARGPARSE_NOEXCEPT
+    {
+        return m_subparsers.get();
+    }
+
+    /*!
      *  \brief Set argument parser 'handle' function.
      *  Called when the parser is executed and passed the value of the
      *  parser
