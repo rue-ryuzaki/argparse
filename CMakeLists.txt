@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 
+include(cmake/prelude.cmake)
+
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 6)
 set(VERSION_PATCH 6)
