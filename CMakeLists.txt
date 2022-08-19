@@ -19,6 +19,8 @@ else()
     )
 endif()
 
+include(cmake/project-is-top-level.cmake)
+
 if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /EHsc")
 else()
@@ -91,6 +93,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     )
 
     install(FILES ${ARGPARSE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
+endif()
+
+if(NOT PROJECT_IS_TOP_LEVEL)
+    return()
 endif()
 
 enable_testing()
