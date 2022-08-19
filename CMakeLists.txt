@@ -6,17 +6,12 @@ set(VERSION_MAJOR 1)
 set(VERSION_MINOR 6)
 set(VERSION_PATCH 6)
 
-if (${CMAKE_VERSION} VERSION_LESS "3.8")
-    project("ArgumentParser"
-        VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-        LANGUAGES CXX
-    )
-else()
-    project("ArgumentParser"
-        DESCRIPTION "C++ argument parser"
-        VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-        LANGUAGES CXX
-    )
+project("ArgumentParser"
+    VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+    LANGUAGES CXX
+)
+if (NOT ${CMAKE_VERSION} VERSION_LESS "3.9")
+    project(${PROJECT_NAME} DESCRIPTION "C++ argument parser")
 endif()
 
 include(cmake/project-is-top-level.cmake)
