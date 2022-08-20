@@ -6,12 +6,17 @@ set(VERSION_MAJOR 1)
 set(VERSION_MINOR 6)
 set(VERSION_PATCH 6)
 
-project("ArgumentParser"
-    VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-    LANGUAGES CXX
-)
-if (NOT ${CMAKE_VERSION} VERSION_LESS "3.9")
-    project(${PROJECT_NAME} DESCRIPTION "C++ argument parser")
+if (${CMAKE_VERSION} VERSION_LESS "3.8")
+    project("ArgumentParser"
+        VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+        LANGUAGES CXX
+    )
+else()
+    project("ArgumentParser"
+        DESCRIPTION "C++ argument parser"
+        VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+        LANGUAGES CXX
+    )
 endif()
 
 include(cmake/project-is-top-level.cmake)
@@ -35,26 +40,31 @@ else()
     add_library(argparse INTERFACE ${ARGPARSE_HEADER})
 endif()
 
+include(GNUInstallDirs)
+
+target_include_directories(
+    argparse INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+if (NOT PROJECT_IS_TOP_LEVEL)
+    return()
+endif()
+
+install(FILES ${ARGPARSE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
+
+set(CPACK_PACKAGE_NAME "cpp-argparse-dev")
+set(CPACK_PACKAGE_MAINTAINER "Mikhail Golubchikov")
+set(CMAKE_PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
+if (${CMAKE_VERSION} VERSION_LESS "3.12")
+    set(CPACK_PACKAGE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+endif()
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    include(GNUInstallDirs)
-
-    target_include_directories(
-        argparse INTERFACE
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    )
-
-    install(FILES ${ARGPARSE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
-
-    set(CPACK_GENERATOR "DEB")
-    set(CPACK_PACKAGE_NAME "cpp-argparse-dev")
-    set(CPACK_PACKAGE_MAINTAINER "Mikhail Golubchikov")
-    set(CMAKE_PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
-    if (${CMAKE_VERSION} VERSION_LESS "3.12")
-        set(CPACK_PACKAGE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
-    endif()
-    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-    set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+    set(CPACK_GENERATOR DEB)
     ## DEB
     set(CPACK_DEBIAN_PACKAGE_NAME "${CPACK_PACKAGE_NAME}")
     set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Python-like header-only C++ argument parser")
@@ -75,24 +85,17 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
     set(CPACK_DEB_COMPONENT_INSTALL ON)
     set(CPACK_RPM_COMPONENT_INSTALL ON)
-    include(CPack)
 endif()
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    include(GNUInstallDirs)
-
-    target_include_directories(
-        argparse INTERFACE
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    )
-
-    install(FILES ${ARGPARSE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
+if (NOT CPACK_GENERATOR)
+    if (WIN32)
+        set(CPACK_GENERATOR ZIP)
+    else()
+        set(CPACK_GENERATOR TGZ)
+    endif()
 endif()
 
-if(NOT PROJECT_IS_TOP_LEVEL)
-    return()
-endif()
+include(CPack)
 
 enable_testing()
 add_subdirectory(test)
