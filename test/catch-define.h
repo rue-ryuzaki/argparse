@@ -39,4 +39,4 @@
 #include <catch1/catch.hpp>
 #endif  // C++11+
 
-#endif  //  _ARGPARSE_TEST_CATCH_DEFINE_H_
+#endif  // _ARGPARSE_TEST_CATCH_DEFINE_H_
