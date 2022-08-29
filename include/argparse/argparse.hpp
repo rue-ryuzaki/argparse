@@ -3099,6 +3099,8 @@ public:
     /*!
      *  \brief Set argument 'nargs' argparse::REMAINDER value
      *
+     *  \param value argparse::REMAINDER
+     *
      *  \return Current argument reference
      */
     inline Argument& nargs(_REMAINDER value)
@@ -3337,7 +3339,7 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'choices' value
+     *  \brief Set argument 'choices' value. Each character is a separate choice
      *
      *  \param value Choices value
      *
@@ -5612,7 +5614,7 @@ public:
     /*!
      *  \brief Check if argument name exists and specified in parsed arguments
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return true if argument name exists and specified, otherwise false
      */
@@ -5631,7 +5633,7 @@ public:
      *  and string types.
      *  If argument not parsed, returns default value.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value
      */
@@ -5662,7 +5664,7 @@ public:
      *  \brief Get parsed argument value for integer types.
      *  If argument not parsed, returns default value.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value
      */
@@ -5692,7 +5694,7 @@ public:
     /*!
      *  \brief Get parsed argument value std array type
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value
      */
@@ -5725,7 +5727,7 @@ public:
     /*!
      *  \brief Get parsed argument value for std containers types
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value
      */
@@ -5755,7 +5757,7 @@ public:
     /*!
      *  \brief Get parsed argument value for paired container types
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value
@@ -5783,7 +5785,7 @@ public:
     /*!
      *  \brief Get parsed argument value for tupled container types
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value
@@ -5809,7 +5811,7 @@ public:
     /*!
      *  \brief Get parsed argument value for mapped types
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value
@@ -5847,7 +5849,7 @@ public:
     /*!
      *  \brief Get parsed argument value for 2D deque, list, vector of not queue
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value
      */
@@ -5880,7 +5882,7 @@ public:
     /*!
      *  \brief Get parsed argument value for 2D deque, list, vector of queue
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value
      */
@@ -5912,7 +5914,7 @@ public:
     /*!
      *  \brief Get parsed argument value for pair types
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value
@@ -5951,7 +5953,7 @@ public:
     /*!
      *  \brief Get parsed argument value for queue types
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value
      */
@@ -5975,7 +5977,7 @@ public:
     /*!
      *  \brief Get parsed argument value for tuple
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value
@@ -6009,7 +6011,7 @@ public:
     /*!
      *  \brief Get parsed argument value for custom types
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value
      */
@@ -6039,7 +6041,7 @@ public:
     }
 
     /*!
-     *  \brief Print namespace to output stream
+     *  \brief Print namespace to output stream (default: std::cout)
      *
      *  \param os Output stream
      */
@@ -6051,7 +6053,7 @@ public:
     /*!
      *  \brief Get parsed argument value as args string
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value as args string
      */
@@ -6099,7 +6101,7 @@ public:
     /*!
      *  \brief Get parsed argument value as string
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param quotes Value quotes
      *
      *  \return Parsed argument value as string
@@ -6176,7 +6178,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -6208,7 +6210,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -6242,7 +6244,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -6283,7 +6285,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -6319,7 +6321,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value or std::nullopt
@@ -6354,7 +6356,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value or std::nullopt
@@ -6388,7 +6390,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value or std::nullopt
@@ -6427,7 +6429,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -6470,7 +6472,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -6512,7 +6514,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value
@@ -6560,7 +6562,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -6592,7 +6594,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *  \param delim Delimiter
      *
      *  \return Parsed argument value or std::nullopt
@@ -6630,7 +6632,7 @@ public:
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
-     *  \param key Argument name
+     *  \param key Argument destination name or flag
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -7295,7 +7297,7 @@ public:
         }
 
         /*!
-         *  \brief Add argument parser with name
+         *  \brief Add argument parser with concrete name
          *
          *  \param name Parser name
          *
@@ -7512,6 +7514,7 @@ private:
 public:
     /*!
      *  \brief Construct argument parser with concrete program name
+     *  (default: "untitled")
      *
      *  \param prog Program name
      *
@@ -7554,6 +7557,7 @@ public:
     /*!
      *  \brief Construct argument parser from command line arguments
      *  with concrete program name
+     *  (default: "" don't override argv[0] or default program name "untitled")
      *
      *  \param argc Number of command line arguments
      *  \param argv Command line arguments data
@@ -7600,6 +7604,7 @@ public:
     /*!
      *  \brief Construct argument parser from command line arguments
      *  with concrete program name
+     *  (default: "" don't override argv[0] or default program name "untitled")
      *
      *  \param argc Number of command line arguments
      *  \param argv Command line arguments data
@@ -8373,6 +8378,9 @@ public:
     /*!
      *  \brief Add subparsers
      *
+     *  \param title Subparsers title (default: "")
+     *  \param description Subparsers description (default: "")
+     *
      *  \return Current subparser reference
      */
     inline Subparser&
@@ -8448,11 +8456,11 @@ public:
 #endif  // C++11+
 
     /*!
-     *  \brief Get default value for certain argument
+     *  \brief Get the default value for a specific argument
      *
      *  \param dest Argument destination name or flag
      *
-     *  \return Default value for certain argument
+     *  \return Default value for a specific argument
      */
     std::string get_default(std::string const& dest) const
     {
@@ -8521,7 +8529,7 @@ public:
     }
 
     /*!
-     *  \brief Set default values for certain arguments
+     *  \brief Set default values for a specific arguments
      *
      *  \param pairs Vector of pairs: { 'argument flag', 'default value' }
      */
@@ -8788,7 +8796,7 @@ public:
      *
      *  \param os Output stream
      */
-    void print_help(std::ostream& os = std::cout) const
+    inline void print_help(std::ostream& os = std::cout) const
     {
         pArguments const positional_all = m_data.get_positional(false, true);
         pArguments const optional_all = m_data.get_optional(false, true);
