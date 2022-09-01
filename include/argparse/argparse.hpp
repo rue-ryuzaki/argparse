@@ -5629,8 +5629,8 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for boolean, byte, floating point
-     *  and string types.
+     *  \brief Get parsed argument value as boolean, byte, floating point
+     *  or string types.
      *  If argument not parsed, returns default value.
      *
      *  \param key Argument destination name or flag
@@ -5661,7 +5661,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for integer types.
+     *  \brief Get parsed argument value as integer types.
      *  If argument not parsed, returns default value.
      *
      *  \param key Argument destination name or flag
@@ -5692,7 +5692,7 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
-     *  \brief Get parsed argument value std array type
+     *  \brief Get parsed argument value as std array type
      *
      *  \param key Argument destination name or flag
      *
@@ -5725,7 +5725,7 @@ public:
 #endif  // C++11+
 
     /*!
-     *  \brief Get parsed argument value for std containers types
+     *  \brief Get parsed argument value as std containers types
      *
      *  \param key Argument destination name or flag
      *
@@ -5755,7 +5755,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for paired container types
+     *  \brief Get parsed argument value as paired container types
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -5783,7 +5783,7 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
-     *  \brief Get parsed argument value for tupled container types
+     *  \brief Get parsed argument value as tupled container types
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -5809,7 +5809,7 @@ public:
 #endif  // C++11+
 
     /*!
-     *  \brief Get parsed argument value for mapped types
+     *  \brief Get parsed argument value as mapped types
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -5847,7 +5847,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for 2D deque, list, vector of not queue
+     *  \brief Get parsed argument value as 2D deque, list, vector of not queues
      *
      *  \param key Argument destination name or flag
      *
@@ -5880,7 +5880,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for 2D deque, list, vector of queue
+     *  \brief Get parsed argument value as 2D deque, list, vector of queues
      *
      *  \param key Argument destination name or flag
      *
@@ -5912,7 +5912,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for pair types
+     *  \brief Get parsed argument value as paired types
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -5951,7 +5951,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value for queue types
+     *  \brief Get parsed argument value as queue types
      *
      *  \param key Argument destination name or flag
      *
@@ -5975,7 +5975,7 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
-     *  \brief Get parsed argument value for tuple
+     *  \brief Get parsed argument value as tuple types
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -6009,7 +6009,7 @@ public:
 #endif  // C++11+
 
     /*!
-     *  \brief Get parsed argument value for custom types
+     *  \brief Get parsed argument value as custom type
      *
      *  \param key Argument destination name or flag
      *
@@ -6173,8 +6173,8 @@ public:
 
 #ifdef _ARGPARSE_USE_OPTIONAL
     /*!
-     *  \brief Try get parsed argument value for boolean, byte, floating point
-     *  and string types.
+     *  \brief Try get parsed argument value as boolean, byte, floating point
+     *  or string types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6206,7 +6206,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for integer types.
+     *  \brief Try get parsed argument value as integer types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6240,7 +6240,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value std array type.
+     *  \brief Try get parsed argument value as std array type.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6281,7 +6281,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for std containers types.
+     *  \brief Try get parsed argument value as std containers types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6317,7 +6317,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for paired container types.
+     *  \brief Try get parsed argument value as paired container types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6352,7 +6352,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for tupled container types.
+     *  \brief Try get parsed argument value as tupled container types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6386,7 +6386,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for mapped types.
+     *  \brief Try get parsed argument value as mapped types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6424,8 +6424,8 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for 2D deque, list, vector
-     *  of not queue.
+     *  \brief Try get parsed argument value as 2D deque, list, vector
+     *  of not queues.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6467,8 +6467,8 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for 2D deque, list, vector
-     *  of queue.
+     *  \brief Try get parsed argument value as 2D deque, list, vector
+     *  of queues.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6510,7 +6510,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for pair types.
+     *  \brief Try get parsed argument value as paired types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6558,7 +6558,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for queue types.
+     *  \brief Try get parsed argument value as queue types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6590,7 +6590,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for tuple.
+     *  \brief Try get parsed argument value as tuple types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -6628,7 +6628,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value for custom types.
+     *  \brief Try get parsed argument value as custom type.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
