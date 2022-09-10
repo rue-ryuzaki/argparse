@@ -1723,10 +1723,7 @@ _is_negative_number(std::string const& str)
     double value;
     std::stringstream ss(str);
     ss >> value;
-    if (ss.fail() || !ss.eof()) {
-        return false;
-    }
-    return value < 0;
+    return !ss.fail() && ss.eof() && value < 0;
 }
 
 inline bool
