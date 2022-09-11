@@ -2336,6 +2336,7 @@ TEST_CASE("12. subparsers", "[argument_parser]")
         });
 #endif  // C++11+
         parser_a.add_argument("bar").help("bar help");
+        REQUIRE(subparsers.parser_names().size() == 1);
 
         argparse::ArgumentParser& parser_b = subparsers.add_parser("b").help("b help");
 #ifdef _ARGPARSE_CXX_11
@@ -2348,6 +2349,7 @@ TEST_CASE("12. subparsers", "[argument_parser]")
         });
 #endif  // C++11+
         parser_b.add_argument("--baz").choices("XYZ").help("baz help");
+        REQUIRE(subparsers.parser_names().size() == 2);
 
         parser.parse_args(_make_vec("--foo"));
         parser.parse_args(_make_vec("a", "12"));
