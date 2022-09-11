@@ -1776,11 +1776,11 @@ _append_value_to(std::string const& value, std::string& str,
 }
 
 inline void
-_store_value_to(std::string& value, std::vector<std::string>& result,
+_store_value_to(std::string& value, std::vector<std::string>& res,
                 bool force = false)
 {
     if (!value.empty() || force) {
-        result.push_back(value);
+        res.push_back(value);
         value.clear();
     }
 }
@@ -1789,39 +1789,39 @@ inline std::vector<std::string>
 _split(std::string const& str, char delim,
        bool force = false, bool add_delim = false)
 {
-    std::vector<std::string> result;
+    std::vector<std::string> res;
     std::string value;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
         if (c == delim) {
-            _store_value_to(value, result, force);
+            _store_value_to(value, res, force);
             if (add_delim) {
                 value = std::string(1, delim);
-                _store_value_to(value, result, true);
+                _store_value_to(value, res, true);
             }
         } else {
             value += c;
         }
     }
-    _store_value_to(value, result);
-    return result;
+    _store_value_to(value, res);
+    return res;
 }
 
 inline std::vector<std::string>
 _split_whitespace(std::string const& str, bool force = false)
 {
-    std::vector<std::string> result;
+    std::vector<std::string> res;
     std::string value;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
         if (std::isspace(static_cast<unsigned char>(c))) {
-            _store_value_to(value, result, force);
+            _store_value_to(value, res, force);
         } else {
             value += c;
         }
     }
-    _store_value_to(value, result);
-    return result;
+    _store_value_to(value, res);
+    return res;
 }
 
 inline std::pair<std::string, std::string>
@@ -1895,7 +1895,7 @@ _process_quotes(std::deque<char>& quotes, std::string const& value,
 inline std::vector<std::string>
 _split_to_args(std::string const& str)
 {
-    std::vector<std::string> result;
+    std::vector<std::string> res;
     std::string value;
     std::deque<char> quotes;
     for (std::size_t i = 0; i < str.size(); ++i) {
@@ -1917,17 +1917,17 @@ _split_to_args(std::string const& str)
         if (((c == _space && !skip)
              || (c != _space && std::isspace(static_cast<unsigned char>(c))))
                 && quotes.empty()) {
-            _store_value_to(value, result);
+            _store_value_to(value, res);
         } else {
             _process_quotes(quotes, value, str, c, i + 1);
             value += c;
         }
     }
-    _store_value_to(value, result);
+    _store_value_to(value, res);
     if (!quotes.empty()) {
         std::cerr << "possible incorrect string: '" << str << "'" << std::endl;
     }
-    return result;
+    return res;
 }
 
 inline bool
@@ -1993,11 +1993,11 @@ _ignore_explicit(std::string const& arg, std::string const& value)
 
 inline void
 _format_output_func(std::size_t indent, std::size_t width,
-                    std::vector<std::string>& result, std::string& value,
+                    std::vector<std::string>& res, std::string& value,
                     std::string const& str)
 {
     if (value.size() > indent && value.size() + 1 + str.size() > width) {
-        _store_value_to(value, result);
+        _store_value_to(value, res);
     }
     if (value.size() < indent) {
         value.resize(indent, _space);
@@ -2012,10 +2012,10 @@ _format_output(std::string const& head, std::string const& body,
                std::size_t interlayer, std::size_t indent, std::size_t width,
                char delimiter = '\n')
 {
-    std::vector<std::string> result;
+    std::vector<std::string> res;
     std::string value = head;
     if (value.size() + interlayer > indent) {
-        _store_value_to(value, result);
+        _store_value_to(value, res);
     }
     std::vector<std::string> split_str = _split(body, '\n', true);
 #ifdef _ARGPARSE_CXX_11
@@ -2025,10 +2025,10 @@ _format_output(std::string const& head, std::string const& body,
         std::string const& str = split_str.at(i);
 #endif  // C++11+
         if (delimiter == '\n') {
-            _format_output_func(indent, width, result, value, str);
+            _format_output_func(indent, width, res, value, str);
         } else if (str.empty()) {
             value.resize(indent, _space);
-            _store_value_to(value, result, true);
+            _store_value_to(value, res, true);
         } else {
             std::vector<std::string> sub_split_str
                     = _split(str, delimiter, true);
@@ -2038,13 +2038,13 @@ _format_output(std::string const& head, std::string const& body,
             for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
                 std::string const& sub = sub_split_str.at(j);
 #endif  // C++11+
-                _format_output_func(indent, width, result, value, sub);
+                _format_output_func(indent, width, res, value, sub);
             }
-            _store_value_to(value, result);
+            _store_value_to(value, res);
         }
     }
-    _store_value_to(value, result);
-    return _vector_to_string(result, "\n");
+    _store_value_to(value, res);
+    return _vector_to_string(res, "\n");
 }
 
 inline std::string
@@ -2056,10 +2056,10 @@ _help_formatter(std::string const& head,
 {
     std::size_t const interlayer = 2;
 
-    std::vector<std::string> result;
+    std::vector<std::string> res;
     std::string value = head;
     if (value.size() + interlayer > indent.size()) {
-        _store_value_to(value, result);
+        _store_value_to(value, res);
     }
     if (!help.empty()) {
         std::vector<std::string> lines
@@ -2070,11 +2070,11 @@ _help_formatter(std::string const& head,
                 value.resize(indent.size(), _space);
             }
             value += line;
-            _store_value_to(value, result, true);
+            _store_value_to(value, res, true);
         }
     }
-    _store_value_to(value, result);
-    return _vector_to_string(result, "\n");
+    _store_value_to(value, res);
+    return _vector_to_string(res, "\n");
 }
 
 inline void
@@ -2361,9 +2361,9 @@ private:
     static std::string
     tuple_as_string(type_tag<std::tuple<Ts...> >)
     {
-        std::string result;
-        tuple_type<sizeof...(Ts), Ts...>(result);
-        return "std::tuple<" + result + ">";
+        std::string res;
+        tuple_type<sizeof...(Ts), Ts...>(res);
+        return "std::tuple<" + res + ">";
     }
 #endif  // C++11+
 };
@@ -4064,7 +4064,7 @@ protected:
     _fill_text_s(std::string const& text, std::size_t width,
                  std::string const& indent)
     {
-        std::vector<std::string> result;
+        std::vector<std::string> res;
         std::string value;
         std::vector<std::string> lines
                 = _split_lines_s(text, width - indent.size());
@@ -4073,10 +4073,10 @@ protected:
                 value.resize(indent.size(), detail::_space);
             }
             value += lines[i];
-            detail::_store_value_to(value, result, true);
+            detail::_store_value_to(value, res, true);
         }
-        detail::_store_value_to(value, result);
-        return detail::_vector_to_string(result, "\n");
+        detail::_store_value_to(value, res);
+        return detail::_vector_to_string(res, "\n");
     }
 
     static std::string
@@ -4102,19 +4102,19 @@ protected:
     _split_lines_s(std::string const& text, std::size_t width)
     {
         std::string value;
-        std::vector<std::string> result;
+        std::vector<std::string> res;
         std::vector<std::string> split_str = detail::_split_whitespace(text);
         for (std::size_t i = 0; i < split_str.size(); ++i) {
             if (value.size() + 1 + split_str.at(i).size() > width) {
-                detail::_store_value_to(value, result);
+                detail::_store_value_to(value, res);
             }
             if (!value.empty()) {
                 value += detail::_spaces;
             }
             value += split_str.at(i);
         }
-        detail::_store_value_to(value, result);
-        return result;
+        detail::_store_value_to(value, res);
+        return res;
     }
 };
 
@@ -4139,7 +4139,7 @@ protected:
     _fill_text_s(std::string const& text, std::size_t width,
                  std::string const& indent)
     {
-        std::vector<std::string> result;
+        std::vector<std::string> res;
         std::string value;
         std::vector<std::string> lines
                 = _split_lines_s(text, width - indent.size());
@@ -4148,10 +4148,10 @@ protected:
                 value.resize(indent.size(), detail::_space);
             }
             value += lines.at(i);
-            detail::_store_value_to(value, result, true);
+            detail::_store_value_to(value, res, true);
         }
-        detail::_store_value_to(value, result);
-        return detail::_vector_to_string(result, "\n");
+        detail::_store_value_to(value, res);
+        return detail::_vector_to_string(res, "\n");
     }
 
     static std::vector<std::string>
@@ -4162,12 +4162,12 @@ protected:
             tab_size = 2;
         }
         std::string value;
-        std::vector<std::string> result;
+        std::vector<std::string> res;
         std::vector<std::string> split_str = detail::_split(text, '\n', true);
         for (std::size_t i = 0; i < split_str.size(); ++i) {
             std::string const& str = split_str.at(i);
             if (str.empty()) {
-                detail::_store_value_to(value, result, true);
+                detail::_store_value_to(value, res, true);
             } else {
                 std::vector<std::string> sub_split_str
                         = detail::_split(str, detail::_space, true, true);
@@ -4182,7 +4182,7 @@ protected:
                                         detail::_space);
                         }
                         if (value.size() + 1 + sub.size() > width) {
-                            detail::_store_value_to(value, result);
+                            detail::_store_value_to(value, res);
                             if (sub == "\t") {
                                 sub = std::string(tab_size, detail::_space);
                             }
@@ -4190,11 +4190,11 @@ protected:
                         value += sub;
                     }
                 }
-                detail::_store_value_to(value, result);
+                detail::_store_value_to(value, res);
             }
         }
-        detail::_store_value_to(value, result);
-        return result;
+        detail::_store_value_to(value, res);
+        return res;
     }
 } _ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
 
@@ -4417,8 +4417,8 @@ protected:
     inline std::vector<pArgument>
     get_arguments(bool add_suppress) const
     {
-        std::vector<pArgument> result;
-        result.reserve(m_arguments.size());
+        std::vector<pArgument> res;
+        res.reserve(m_arguments.size());
 #ifdef _ARGPARSE_CXX_11
         for (auto const& arg : m_arguments) {
 #else
@@ -4428,17 +4428,17 @@ protected:
             if ((add_suppress || !arg->m_help_type.has_value())
                     && (arg->m_type != Argument::Optional
                         || !arg->flags().empty())) {
-                result.push_back(arg);
+                res.push_back(arg);
             }
         }
-        return result;
+        return res;
     }
 
     inline std::vector<pArgument>
     get_optional(bool add_suppress, bool add_group) const
     {
-        std::vector<pArgument> result;
-        result.reserve(m_optional.size());
+        std::vector<pArgument> res;
+        res.reserve(m_optional.size());
 #ifdef _ARGPARSE_CXX_11
         for (auto const& pair : m_optional) {
 #else
@@ -4448,17 +4448,17 @@ protected:
             if ((add_suppress || !pair.first->m_help_type.has_value())
                     && (add_group || !pair.second)
                     && !pair.first->flags().empty()) {
-                result.push_back(pair.first);
+                res.push_back(pair.first);
             }
         }
-        return result;
+        return res;
     }
 
     inline std::vector<pArgument>
     get_positional(bool add_suppress, bool add_group) const
     {
-        std::vector<pArgument> result;
-        result.reserve(m_positional.size());
+        std::vector<pArgument> res;
+        res.reserve(m_positional.size());
 #ifdef _ARGPARSE_CXX_11
         for (auto const& pair : m_positional) {
 #else
@@ -4467,10 +4467,10 @@ protected:
 #endif  // C++11+
             if ((add_suppress || !pair.first->m_help_type.has_value())
                     && (add_group || !pair.second)) {
-                result.push_back(pair.first);
+                res.push_back(pair.first);
             }
         }
-        return result;
+        return res;
     }
 
     static void update_flag_name_func(
@@ -6143,7 +6143,7 @@ public:
      */
     inline std::string to_string() const
     {
-        std::string result;
+        std::string res;
         for (Storage::const_iterator it
              = storage().begin(); it != storage().end(); ++it) {
             Storage::value_type const& pair = *it;
@@ -6152,20 +6152,20 @@ public:
             if (flags.empty()) {
                 continue;
             }
-            if (!result.empty()) {
-                result += ", ";
+            if (!res.empty()) {
+                res += ", ";
             }
             std::string const& name
                     = !pair.first->dest().empty() ? pair.first->dest()
                                                   : pair.first->m_name;
-            result += name + detail::_equals + to_string(flags.front(), "'");
+            res += name + detail::_equals + to_string(flags.front(), "'");
         }
         if (!m_unrecognized_args.has_value()) {
-            return "Namespace(" + result + ")";
+            return "Namespace(" + res + ")";
         }
         std::string unknown_args
                 = detail::_vector_to_string(unrecognized_args(), ", ", "'");
-        return "(Namespace(" + result + "), [" + unknown_args + "])";
+        return "(Namespace(" + res + "), [" + unknown_args + "])";
     }
 
 #ifdef _ARGPARSE_USE_OPTIONAL
@@ -6905,14 +6905,14 @@ private:
         if (data.empty()) {
             return T();
         }
-        T result;
+        T res;
         std::stringstream ss(detail::_remove_quotes(data));
-        ss >> result;
+        ss >> res;
         if (ss.fail() || !ss.eof()) {
             throw TypeError("invalid " + detail::Type::name<T>()
                             + " value: '" + data + "'");
         }
-        return result;
+        return res;
     }
 
 #ifdef _ARGPARSE_USE_OPTIONAL
@@ -7079,13 +7079,13 @@ private:
         if (data.empty()) {
             return T();
         }
-        T result;
+        T res;
         std::stringstream ss(detail::_remove_quotes(data));
-        ss >> result;
+        ss >> res;
         if (ss.fail() || !ss.eof()) {
             return {};
         }
-        return result;
+        return res;
     }
 #endif  // _ARGPARSE_USE_OPTIONAL
 
@@ -7668,10 +7668,10 @@ public:
 private:
     static pParser make_parser(std::string const& name)
     {
-        pParser result = detail::make_shared<ArgumentParser>(ArgumentParser());
-        result->m_prog.clear();
-        result->m_name = name;
-        return result;
+        pParser res = detail::make_shared<ArgumentParser>(ArgumentParser());
+        res->m_prog.clear();
+        res->m_name = name;
+        return res;
     }
 
 public:
@@ -10475,7 +10475,7 @@ private:
 
     inline std::string subparser_prog_args() const
     {
-        std::string result;
+        std::string res;
         bool add_suppress = false;
         SubparserInfo info = subparser_info(add_suppress);
         pArguments pos = m_data.get_positional(add_suppress, true);
@@ -10484,9 +10484,9 @@ private:
                 break;
             }
             std::string str = pos.at(i)->usage(m_formatter_class);
-            detail::_append_value_to(str, result);
+            detail::_append_value_to(str, res);
         }
-        return result;
+        return res;
     }
 
     inline void
