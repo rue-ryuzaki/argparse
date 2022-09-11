@@ -7315,6 +7315,21 @@ public:
             return *m_parsers.back();
         }
 
+        /*!
+         *  \brief Get parser names
+         *
+         *  \return Parser names container
+         */
+        inline std::vector<std::string> parser_names() const
+        {
+            std::vector<std::string> res;
+            res.reserve(m_parsers.size());
+            for (std::size_t i = 0; i < m_parsers.size(); ++i) {
+                res.push_back(m_parsers.at(i)->m_name);
+            }
+            return res;
+        }
+
     private:
         inline std::string prog_name() const
         {
