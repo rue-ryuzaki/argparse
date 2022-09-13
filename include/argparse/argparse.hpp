@@ -9511,10 +9511,10 @@ private:
                         break;
                     }
                 }
-            } while ((tmp->m_nargs != Argument::NARGS_DEF
-                      && tmp->m_nargs != Argument::ZERO_OR_ONE
-                      && (tmp->m_nargs != Argument::NARGS_NUM
-                          || n != tmp->m_num_args)));
+            } while (!(tmp->m_nargs
+                       & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))
+                     && (tmp->m_nargs != Argument::NARGS_NUM
+                         || n != tmp->m_num_args));
             if (!values.empty()) {
                 storage_store_values(parsers, tmp, values);
             }
