@@ -2833,7 +2833,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& operator =(Argument const& rhs)
+    inline Argument& operator =(Argument const& rhs)
     {
         if (this != &rhs) {
             this->m_flags           = rhs.m_flags;
@@ -2872,7 +2872,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& operator =(Argument&& rhs) _ARGPARSE_NOEXCEPT
+    inline Argument& operator =(Argument&& rhs) _ARGPARSE_NOEXCEPT
     {
         if (this != &rhs) {
             this->m_flags           = std::move(rhs.m_flags);
@@ -2921,7 +2921,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& action(std::string const& value)
+    inline Argument& action(std::string const& value)
     {
         if (value == "store") {
             return action(argparse::store);
@@ -2954,7 +2954,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& action(Action value)
+    inline Argument& action(Action value)
     {
         prepare_action(value);
         switch (value) {
@@ -3883,7 +3883,7 @@ private:
                             std::string(limit, detail::_space));
     }
 
-    std::string get_nargs_suffix(_HelpFormatter const& formatter) const
+    inline std::string get_nargs_suffix(_HelpFormatter const& formatter) const
     {
         std::vector<std::string> names = get_argument_name(formatter);
         if (names.size() > 1
@@ -4375,7 +4375,7 @@ public:
     virtual ~_ArgumentData() _ARGPARSE_NOEXCEPT { }
 
 protected:
-    void update_help(bool add_help, std::string const& prefix_chars)
+    inline void update_help(bool add_help, std::string const& prefix_chars)
     {
         m_add_help = add_help;
         if (m_help_added) {
@@ -4528,8 +4528,8 @@ protected:
         }
     }
 
-    void check_conflicting_option(Argument const* arg,
-                                  std::vector<std::string>& flags) const
+    inline void check_conflicting_option(Argument const* arg,
+                                         std::vector<std::string>& flags) const
     {
         std::vector<std::string> conflict_options;
         for (std::size_t i = 0; i < arg->flags().size(); ++i) {
@@ -4602,8 +4602,8 @@ protected:
 #endif  // C++11+
     }
 
-    void create_argument(std::vector<std::string> const& in_flags,
-                         std::string const& prefix_chars)
+    inline void create_argument(std::vector<std::string> const& in_flags,
+                                std::string const& prefix_chars)
     {
         std::vector<std::string> flags = in_flags;
         if (flags.empty()) {
@@ -4648,9 +4648,10 @@ protected:
         }
     }
 
-    void validate_argument(Argument const& ar, std::string const& prefix_chars)
+    inline void validate_argument(Argument const& argument,
+                                  std::string const& prefix_chars)
     {
-        Argument arg = ar;
+        Argument arg = argument;
         std::vector<std::string>& flags = arg.m_flags;
         bool is_optional = false;
         if (flags.empty()) {
@@ -4757,7 +4758,7 @@ public:
      *
      *  \return Current argument group reference
      */
-    _ArgumentGroup& operator =(_ArgumentGroup const& rhs)
+    inline _ArgumentGroup& operator =(_ArgumentGroup const& rhs)
     {
         if (this != &rhs) {
             m_data                  = rhs.m_data;
@@ -4931,7 +4932,7 @@ public:
      *
      *  \return Current argument group reference
      */
-    ArgumentGroup& operator =(ArgumentGroup const& rhs)
+    inline ArgumentGroup& operator =(ArgumentGroup const& rhs)
     {
         if (this != &rhs) {
             m_title                 = rhs.m_title;
@@ -5087,7 +5088,7 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
-    MutuallyExclusiveGroup& operator =(MutuallyExclusiveGroup const& rhs)
+    inline MutuallyExclusiveGroup& operator =(MutuallyExclusiveGroup const& rhs)
     {
         if (this != &rhs) {
             m_data                  = rhs.m_data;
@@ -6054,7 +6055,7 @@ public:
      *
      *  \return Parsed argument value as args string
      */
-    std::string to_args(std::string const& key) const
+    inline std::string to_args(std::string const& key) const
     {
         Storage::value_type const& args = data(key);
         switch (args.first->action()) {
@@ -6103,8 +6104,9 @@ public:
      *
      *  \return Parsed argument value as string
      */
-    std::string to_string(std::string const& key,
-                          std::string const& quotes = std::string()) const
+    inline std::string
+    to_string(std::string const& key,
+              std::string const& quotes = std::string()) const
     {
         Storage::value_type const& args = data(key);
         switch (args.first->action()) {
@@ -8474,7 +8476,7 @@ public:
      *
      *  \return Default value for a specific argument
      */
-    std::string get_default(std::string const& dest) const
+    inline std::string get_default(std::string const& dest) const
     {
         pArguments const positional = m_data.get_positional(true, true);
         pArguments const optional = m_data.get_optional(true, true);
@@ -9097,7 +9099,7 @@ private:
 
     typedef std::deque<ParserInfo> Parsers;
 
-    Namespace
+    inline Namespace
     parse_arguments(std::vector<std::string> const& in_parsed_arguments,
                     bool only_known,
                     bool intermixed,
@@ -9477,23 +9479,23 @@ private:
         }
     }
 
-    void storage_optional_store(Parsers& parsers,
-                                std::vector<std::string> const& equals,
-                                std::vector<std::string> const& arguments,
-                                std::size_t& i,
-                                bool was_pseudo_arg,
-                                std::string const& arg,
-                                pArgument const& tmp) const
+    inline void storage_optional_store(Parsers& parsers,
+                                       std::vector<std::string> const& equals,
+                                       std::vector<std::string> const& args,
+                                       std::size_t& i,
+                                       bool was_pseudo_arg,
+                                       std::string const& arg,
+                                       pArgument const& tmp) const
     {
         if (equals.size() == 1) {
             std::size_t n = 0;
             std::vector<std::string> values;
             do {
-                if (++i == arguments.size()) {
+                if (++i == args.size()) {
                     storage_optional_store_func(parsers, arg, tmp, n);
                     break;
                 } else {
-                    std::string const& next = arguments.at(i);
+                    std::string const& next = args.at(i);
                     if (next.empty()
                             || tmp->m_nargs == Argument::REMAINDER
                             || detail::_not_optional(
@@ -9524,10 +9526,11 @@ private:
         }
     }
 
-    void storage_optional_store_const(Parsers& parsers,
-                                      std::vector<std::string> const& equals,
-                                      std::string const& arg,
-                                      pArgument const& tmp) const
+    inline void
+    storage_optional_store_const(Parsers& parsers,
+                                 std::vector<std::string> const& equals,
+                                 std::string const& arg,
+                                 pArgument const& tmp) const
     {
         if (equals.size() == 1) {
             if (tmp->action() == argparse::BooleanOptionalAction) {
@@ -9544,10 +9547,9 @@ private:
         }
     }
 
-    inline void
-    process_optional_help(Parsers const& parsers,
-                          std::vector<std::string> const& equals,
-                          std::string const& arg) const
+    inline void process_optional_help(Parsers const& parsers,
+                                      std::vector<std::string> const& equals,
+                                      std::string const& arg) const
     {
         if (equals.size() != 1) {
             parsers.back().parser->throw_error(
@@ -9558,11 +9560,10 @@ private:
         ::exit(0);
     }
 
-    inline void
-    process_optional_version(Parsers const& parsers,
-                             std::vector<std::string> const& equals,
-                             std::string const& arg,
-                             pArgument const& tmp) const
+    inline void process_optional_version(Parsers const& parsers,
+                                         std::vector<std::string> const& equals,
+                                         std::string const& arg,
+                                         pArgument const& tmp) const
     {
         if (equals.size() != 1) {
             parsers.back().parser->throw_error(
@@ -9577,9 +9578,9 @@ private:
         ::exit(0);
     }
 
-    void match_positional_minimum(Parsers& parsers,
-                                  std::deque<std::string>& arguments,
-                                  pArgument const& arg) const
+    inline void match_positional_minimum(Parsers& parsers,
+                                         std::deque<std::string>& arguments,
+                                         pArgument const& arg) const
     {
         if (storage_is_positional_arg_stored(parsers, arg)) {
             return;
@@ -9610,10 +9611,10 @@ private:
         }
     }
 
-    void match_positional_more_zero(Parsers& parsers,
-                                    std::deque<std::string>& arguments,
-                                    pArgument const& arg,
-                                    std::size_t& over_args) const
+    inline void match_positional_more_zero(Parsers& parsers,
+                                           std::deque<std::string>& arguments,
+                                           pArgument const& arg,
+                                           std::size_t& over_args) const
     {
         if (storage_is_positional_arg_stored(parsers, arg)) {
             return;
@@ -9655,11 +9656,11 @@ private:
         }
     }
 
-    void match_positional_optional(Parsers& parsers,
-                                   std::deque<std::string>& arguments,
-                                   pArgument const& arg,
-                                   std::size_t& over_args,
-                                   std::size_t one_args) const
+    inline void match_positional_optional(Parsers& parsers,
+                                          std::deque<std::string>& arguments,
+                                          pArgument const& arg,
+                                          std::size_t& over_args,
+                                          std::size_t one_args) const
     {
         if (storage_is_positional_arg_stored(parsers, arg)) {
             return;
@@ -9694,9 +9695,9 @@ private:
         }
     }
 
-    void match_positional_default(Parsers& parsers,
-                                  std::deque<std::string>& arguments,
-                                  pArgument const& arg) const
+    inline void match_positional_default(Parsers& parsers,
+                                         std::deque<std::string>& arguments,
+                                         pArgument const& arg) const
     {
         if (storage_is_positional_arg_stored(parsers, arg)) {
             return;
@@ -9716,14 +9717,14 @@ private:
         }
     }
 
-    void match_positionals(Parsers& parsers,
-                           std::size_t& pos,
-                           pArguments const& positional,
-                           std::deque<std::string>& arguments,
-                           std::size_t finish,
-                           std::size_t min_args,
-                           std::size_t one_args,
-                           bool more_args) const
+    inline void match_positionals(Parsers& parsers,
+                                  std::size_t& pos,
+                                  pArguments const& positional,
+                                  std::deque<std::string>& arguments,
+                                  std::size_t finish,
+                                  std::size_t min_args,
+                                  std::size_t one_args,
+                                  bool more_args) const
     {
         if (finish == pos) {
             return;
@@ -9794,12 +9795,12 @@ private:
         return false;
     }
 
-    void match_args_partial(Parsers& parsers,
-                            std::size_t& pos,
-                            pArguments const& positional,
-                            std::vector<std::string>& unrecognized_args,
-                            std::deque<std::string>& args,
-                            bool read_all_args = true) const
+    inline void match_args_partial(Parsers& parsers,
+                                   std::size_t& pos,
+                                   pArguments const& positional,
+                                   std::vector<std::string>& unrecognized_args,
+                                   std::deque<std::string>& args,
+                                   bool read_all_args = true) const
     {
         if (pos < positional.size()) {
             std::size_t finish = pos;
@@ -9821,12 +9822,12 @@ private:
         }
     }
 
-    bool try_capture_parser(Parsers& parsers,
-                            std::size_t& pos,
-                            pArguments& positional,
-                            std::vector<std::string>& unrecognized_args,
-                            std::deque<std::string>& args,
-                            bool read_all_args) const
+    inline bool try_capture_parser(Parsers& parsers,
+                                   std::size_t& pos,
+                                   pArguments& positional,
+                                   std::vector<std::string>& unrecognized_args,
+                                   std::deque<std::string>& args,
+                                   bool read_all_args) const
     {
         std::size_t finish = pos;
         std::size_t min_args = 0;
@@ -9927,10 +9928,10 @@ private:
         return false;
     }
 
-    void check_abbreviations(Parsers const& parsers,
-                             bool was_pseudo_arg,
-                             std::vector<std::string>& arguments,
-                             std::size_t i) const
+    inline void check_abbreviations(Parsers const& parsers,
+                                    bool was_pseudo_arg,
+                                    std::vector<std::string>& arguments,
+                                    std::size_t i) const
     {
         std::string& arg = arguments.at(i);
         if (!arg.empty() && !parsers.front().storage.exists(arg)
@@ -10087,11 +10088,11 @@ private:
         return true;
     }
 
-    void separate_arg_abbrev(Parsers const& parsers,
-                             std::vector<std::string>& temp,
-                             std::string const& arg,
-                             std::string const& name,
-                             pArguments const& args) const
+    inline void separate_arg_abbrev(Parsers const& parsers,
+                                    std::vector<std::string>& temp,
+                                    std::string const& arg,
+                                    std::string const& name,
+                                    pArguments const& args) const
     {
         if (name.size() + 1 == arg.size()) {
             std::vector<std::string> const split
@@ -10115,7 +10116,7 @@ private:
         }
     }
 
-    void
+    inline void
     process_positional_args(std::vector<std::string> const& parsed_arguments,
                             std::size_t& i,
                             Parsers& parsers,
@@ -10281,7 +10282,7 @@ private:
         return false;
     }
 
-    void
+    inline void
     check_required_args(Parsers& parsers,
                         std::size_t& pos,
                         pArguments const& positional) const
