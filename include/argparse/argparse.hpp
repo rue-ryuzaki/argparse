@@ -4122,7 +4122,7 @@ protected:
  *  \brief Help message formatter which retains any formatting in descriptions
  */
 _ARGPARSE_EXPORT
-class _RawDescriptionHelpFormatter : public HelpFormatter
+class _RawDescriptionHelpFormatter : virtual public HelpFormatter
 {
 public:
     virtual ~_RawDescriptionHelpFormatter() _ARGPARSE_NOEXCEPT { }
@@ -4202,7 +4202,7 @@ protected:
  *  \brief Help message formatter which retains formatting of all help text
  */
 _ARGPARSE_EXPORT
-class _RawTextHelpFormatter : public _RawDescriptionHelpFormatter
+class _RawTextHelpFormatter : virtual public _RawDescriptionHelpFormatter
 {
 public:
     virtual ~_RawTextHelpFormatter() _ARGPARSE_NOEXCEPT { }
@@ -4218,7 +4218,7 @@ public:
  *  \brief Help message formatter which adds default values to argument help
  */
 _ARGPARSE_EXPORT
-class _ArgumentDefaultsHelpFormatter : public HelpFormatter
+class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
 {
 public:
     virtual ~_ArgumentDefaultsHelpFormatter() _ARGPARSE_NOEXCEPT { }
@@ -4254,7 +4254,7 @@ protected:
  *  metavar value (instead of the argument 'dest')
  */
 _ARGPARSE_EXPORT
-class _MetavarTypeHelpFormatter : public HelpFormatter
+class _MetavarTypeHelpFormatter : virtual public HelpFormatter
 {
 public:
     virtual ~_MetavarTypeHelpFormatter() _ARGPARSE_NOEXCEPT { }
