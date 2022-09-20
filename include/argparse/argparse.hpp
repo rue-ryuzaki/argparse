@@ -387,6 +387,9 @@ _store_const_action = _store_action | _const_action;
 using std::shared_ptr;
 using std::make_shared;
 #else
+//  Slightly modified version of the shared_ptr implementation for C++98
+//  from Sébastien Rombauts which is licensed under the MIT License.
+//  See https://github.com/SRombauts/shared_ptr
 class _shared_ptr_count
 {
 public:
