@@ -8485,7 +8485,7 @@ public:
                                [&dest] (pArgument const& arg)
         { return detail::_is_value_exists(dest, arg->m_flags); });
 #else
-        std::vector<pArgument>::const_iterator ip = positional.begin();
+        pArguments::const_iterator ip = positional.begin();
         for ( ; ip != positional.end(); ++ip) {
             if (detail::_is_value_exists(dest, (*ip)->m_flags)) {
                 break;
@@ -10009,7 +10009,7 @@ private:
                                [&key] (pArgument const& arg)
         { return detail::_is_value_exists(key, arg->flags()); });
 #else
-        std::vector<pArgument>::const_iterator it = args.begin();
+        pArguments::const_iterator it = args.begin();
         for ( ; it != args.end(); ++it) {
             if (detail::_is_value_exists(key, (*it)->flags())) {
                 break;
