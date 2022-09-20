@@ -5693,7 +5693,8 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
-     *  \brief Get parsed argument value as std array type
+     *  \brief Get parsed argument value as std array type.
+     *  If argument not parsed, returns array of default values.
      *
      *  \param key Argument destination name or flag
      *
@@ -5726,7 +5727,8 @@ public:
 #endif  // C++11+
 
     /*!
-     *  \brief Get parsed argument value as std containers types
+     *  \brief Get parsed argument value as std containers types.
+     *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
      *
@@ -5756,7 +5758,8 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as paired container types
+     *  \brief Get parsed argument value as paired container types.
+     *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -5784,7 +5787,8 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
-     *  \brief Get parsed argument value as tupled container types
+     *  \brief Get parsed argument value as tupled container types.
+     *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -5810,7 +5814,8 @@ public:
 #endif  // C++11+
 
     /*!
-     *  \brief Get parsed argument value as mapped types
+     *  \brief Get parsed argument value as mapped types.
+     *  If argument not parsed, returns empty map.
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -5848,7 +5853,8 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as 2D deque, list, vector of not queues
+     *  \brief Get parsed argument value as 2D deque, list, vector of not queue.
+     *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
      *
@@ -5881,7 +5887,8 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as 2D deque, list, vector of queues
+     *  \brief Get parsed argument value as 2D deque, list, vector of queues.
+     *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
      *
@@ -5913,7 +5920,8 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as paired types
+     *  \brief Get parsed argument value as paired types.
+     *  If argument not parsed, returns default pair.
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -5952,7 +5960,8 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as queue types
+     *  \brief Get parsed argument value as queue types.
+     *  If argument not parsed, returns empty queue.
      *
      *  \param key Argument destination name or flag
      *
@@ -5976,7 +5985,8 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
-     *  \brief Get parsed argument value as tuple types
+     *  \brief Get parsed argument value as tuple types.
+     *  If argument not parsed, returns empty tuple.
      *
      *  \param key Argument destination name or flag
      *  \param delim Delimiter
@@ -6010,7 +6020,8 @@ public:
 #endif  // C++11+
 
     /*!
-     *  \brief Get parsed argument value as custom type
+     *  \brief Get parsed argument value as custom type.
+     *  If argument not parsed, returns default custom type.
      *
      *  \param key Argument destination name or flag
      *
@@ -8393,7 +8404,7 @@ public:
     }
 
     /*!
-     *  \brief Add subparsers
+     *  \brief Add subparsers. Only arguments of one subparser are allowed
      *
      *  \param title Subparsers title (default: "")
      *  \param description Subparsers description (default: "")
@@ -8415,9 +8426,10 @@ public:
     }
 
     /*!
-     *  \brief Get subparsers
+     *  \brief Get subparsers.
+     *  If no subparsers are present, returns nullptr
      *
-     *  \return Current subparser pointer
+     *  \return Current subparser pointer or nullptr
      */
     inline Subparser* subparsers() const _ARGPARSE_NOEXCEPT
     {
