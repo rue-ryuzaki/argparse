@@ -60,13 +60,18 @@
 #define ARGPARSE_VERSION_PATCH 7
 
 #define ARGPARSE_VERSION_NUM(X, Y, Z) ((X) * 10000 + (Y) * 100 + (Z))
-/**
+/*!
  *  This is the version number macro for the current argparse version.
  */
 #define ARGPARSE_VERSION_COMPILED \
     ARGPARSE_VERSION_NUM(ARGPARSE_VERSION_MAJOR, \
                          ARGPARSE_VERSION_MINOR, \
                          ARGPARSE_VERSION_PATCH)
+/*!
+ *  This macro will evaluate to true if compiled with argparse at least X.Y.Z.
+ */
+#define ARGPARSE_VERSION_ATLEAST(X, Y, Z) \
+    (ARGPARSE_VERSION_COMPILED >= ARGPARSE_VERSION_NUM(X, Y, Z))
 
 // compability for version 1.4.0 - 1.6.6
 // will be removed in the next minor release (v1.7.0)
