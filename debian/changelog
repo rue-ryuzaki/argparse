@@ -1,3 +1,11 @@
+cpp-argparse-dev (1.6.7-0ppa0) focal; urgency=low
+
+  * Add: ArgumentParser::subparsers() function
+  * Add: Subparser::parser_names function
+  * Set: virtual inherit for HelpFormatter classes
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Thu, 22 Sep 2022 21:30:04 +0300
+
 cpp-argparse-dev (1.6.6-0ppa0) focal; urgency=low
 
   * Update: C++98 shared_ptr implementation
