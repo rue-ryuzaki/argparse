@@ -31,6 +31,9 @@
 #undef ARGPARSE_VERSION_MINOR
 #undef ARGPARSE_VERSION_PATCH
 #undef ARGPARSE_VERSION_TWEAK
+#undef ARGPARSE_VERSION_NUM
+#undef ARGPARSE_VERSION_COMPILED
+#undef ARGPARSE_VERSION_AT_LEAST
 
 #undef _ARGPARSE_CONSTEXPR
 #undef _ARGPARSE_ENUM_TYPE
@@ -70,7 +73,7 @@
 /*!
  *  This macro will evaluate to true if compiled with argparse at least X.Y.Z.
  */
-#define ARGPARSE_VERSION_ATLEAST(X, Y, Z) \
+#define ARGPARSE_VERSION_AT_LEAST(X, Y, Z) \
     (ARGPARSE_VERSION_COMPILED >= ARGPARSE_VERSION_NUM(X, Y, Z))
 
 // compability for version 1.4.0 - 1.6.6
