@@ -2554,7 +2554,7 @@ _ARGPARSE_EXPORT class Argument
         ONE_OR_MORE     = 0x04,  // "+"
         ZERO_OR_ONE     = 0x08,  // "?"
         ZERO_OR_MORE    = 0x10,  // "*"
-        REMAINDER       = 0x20,  // argparse::REMAINDER
+        REMAINDING      = 0x20,  // argparse::REMAINDER
     };
 
     enum Type _ARGPARSE_ENUM_TYPE(uint8_t)
@@ -3126,7 +3126,7 @@ public:
                 || value != argparse::REMAINDER) {
             throw TypeError("got an unexpected keyword argument 'nargs'");
         }
-        m_nargs = REMAINDER;
+        m_nargs = REMAINDING;
         m_nargs_str = "0";
         m_num_args = 0;
         return *this;
@@ -3932,7 +3932,7 @@ private:
             case NARGS_NUM :
                 res += name;
                 break;
-            case REMAINDER :
+            case REMAINDING :
                 res += "...";
                 break;
             default :
@@ -6772,7 +6772,7 @@ private:
                     & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))) {
             std::string none
                     = (args.first->m_nargs
-                       & (Argument::ZERO_OR_MORE | Argument::REMAINDER))
+                       & (Argument::ZERO_OR_MORE | Argument::REMAINDING))
                     || (args.first->action() == argparse::extend
                         && args.first->m_nargs == Argument::ZERO_OR_ONE)
                     ? std::string() : "None";
@@ -6780,7 +6780,7 @@ private:
                                              quotes, false, none, "[", "]");
         } else {
             std::string none = (args.first->m_nargs
-                               & (Argument::ZERO_OR_MORE | Argument::REMAINDER))
+                             & (Argument::ZERO_OR_MORE | Argument::REMAINDING))
                     ? std::string() : "None";
             return detail::_matrix_to_string(args.second.matrix(), ", ",
                                              quotes, false, none, "[", "]");
@@ -9282,14 +9282,14 @@ private:
         if (intermixed
                 && std::any_of(positional.begin(), positional.end(),
                                [] (pArgument const& arg)
-        { return arg->m_nargs == Argument::REMAINDER; })) {
+        { return arg->m_nargs == Argument::REMAINDING; })) {
             throw
             TypeError("parse_intermixed_args: positional arg with nargs=...");
         }
 #else
         if (intermixed) {
             for (std::size_t i = 0; i < positional.size(); ++i) {
-                if (positional.at(i)->m_nargs == Argument::REMAINDER) {
+                if (positional.at(i)->m_nargs == Argument::REMAINDING) {
                     throw
                     TypeError(
                         "parse_intermixed_args: positional arg with nargs=...");
@@ -9529,7 +9529,7 @@ private:
                 } else {
                     std::string const& next = args.at(i);
                     if (next.empty()
-                            || tmp->m_nargs == Argument::REMAINDER
+                            || tmp->m_nargs == Argument::REMAINDING
                             || detail::_not_optional(
                                 next,
                                 parsers.back().parser->prefix_chars(),
@@ -9671,7 +9671,7 @@ private:
                 storage_store_default_value(parsers, arg);
                 break;
             case Argument::ZERO_OR_MORE :
-            case Argument::REMAINDER :
+            case Argument::REMAINDING :
                 if (over_args > 0) {
                     storage_store_n_values(parsers, arg, arguments, over_args);
                     over_args = 0;
@@ -9810,7 +9810,7 @@ private:
             case Argument::ZERO_OR_MORE :
                 more_args = true;
                 break;
-            case Argument::REMAINDER :
+            case Argument::REMAINDING :
                 more_args = true;
                 break;
             default :
@@ -9821,7 +9821,7 @@ private:
             return true;
         }
         min_args += min_amount;
-        if (arg->m_nargs == Argument::REMAINDER && !first && !read_all_args) {
+        if (arg->m_nargs == Argument::REMAINDING && !first && !read_all_args) {
             return true;
         }
         return false;
@@ -10028,7 +10028,7 @@ private:
                                        Parsers const& parsers)
     {
         return pos < positional.size()
-                && positional.at(pos)->m_nargs == Argument::REMAINDER
+                && positional.at(pos)->m_nargs == Argument::REMAINDING
                 && !parsers.front().storage.at(positional.at(pos)).empty();
     }
 
@@ -10162,7 +10162,7 @@ private:
         std::deque<std::string> args;
         args.push_back(parsed_arguments.at(i));
         bool remainder = pos < positional.size()
-                && positional.at(pos)->m_nargs == Argument::REMAINDER;
+                && positional.at(pos)->m_nargs == Argument::REMAINDING;
         while (true) {
             if (++i == parsed_arguments.size()) {
                 break;
@@ -10308,7 +10308,7 @@ private:
             storage_store_default_value(parsers, arg);
             return true;
         }
-        if (arg->m_nargs == Argument::REMAINDER) {
+        if (arg->m_nargs == Argument::REMAINDING) {
             return true;
         }
         return false;
