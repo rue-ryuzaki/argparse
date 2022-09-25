@@ -1461,9 +1461,13 @@ template <class T>
 std::string
 _to_string(T const& value)
 {
+#ifdef _ARGPARSE_CXX_11
+    return std::to_string(value);
+#else
     std::stringstream ss;
     ss << value;
     return ss.str();
+#endif  // C++11+
 }
 
 inline std::string
@@ -1967,14 +1971,11 @@ _vector_to_string(std::vector<std::string> const& vec,
 {
     std::string res;
     for (std::size_t i = 0; i < vec.size(); ++i) {
-        if (!res.empty()) {
-            res += separator;
-        }
         std::string val = vec.at(i);
         if (quotes.empty() && replace_space && !_have_quotes(val)) {
             val = _replace(val, _space, "\\ ");
         }
-        res += quotes + val + quotes;
+        _append_value_to(quotes + val + quotes, res, separator);
     }
     return begin + (res.empty() ? none : res) + end;
 }
@@ -1990,11 +1991,9 @@ _matrix_to_string(std::vector<std::vector<std::string> > const& matrix,
 {
     std::string res;
     for (std::size_t i = 0; i < matrix.size(); ++i) {
-        if (!res.empty()) {
-            res += separator;
-        }
-        res += _vector_to_string(matrix.at(i), separator, quotes, replace_space,
-                                 none, begin, end);
+        _append_value_to(_vector_to_string(matrix.at(i), separator, quotes,
+                                           replace_space, none, begin, end),
+                         res, separator);
     }
     return begin + (res.empty() ? (begin + res + end) : res) + end;
 }
@@ -3059,11 +3058,7 @@ public:
                 throw ValueError("unknown action");
         }
         m_nargs = NARGS_NUM;
-#ifdef _ARGPARSE_CXX_11
-        m_nargs_str = std::to_string(value);
-#else
         m_nargs_str = detail::_to_string(value);
-#endif  // C++11+
         m_num_args = value;
         return *this;
     }
@@ -6096,10 +6091,8 @@ public:
             case argparse::BooleanOptionalAction :
                 return boolean_option_to_string(key, args, quotes);
             case argparse::count :
-                if (args.second.empty()) {
-                    return std::string("None");
-                }
-                return detail::_to_string(args.second.size());
+                return args.second.empty()
+                        ? "None" : detail::_to_string(args.second.size());
             case argparse::store :
             case argparse::append :
             case argparse::append_const :
@@ -6126,13 +6119,11 @@ public:
             if (flags.empty()) {
                 continue;
             }
-            if (!res.empty()) {
-                res += ", ";
-            }
             std::string const& name
                     = !pair.first->dest().empty() ? pair.first->dest()
                                                   : pair.first->m_name;
-            res += name + detail::_equals + to_string(flags.front(), "'");
+            detail::_append_value_to(
+             name + detail::_equals + to_string(flags.front(), "'"), res, ", ");
         }
         if (!m_unrecognized_args.has_value()) {
             return "Namespace(" + res + ")";
@@ -6679,20 +6670,16 @@ private:
                              std::string const& quotes) const
     {
         if (args.second.empty()) {
-            if (args.first->action() == argparse::BooleanOptionalAction) {
-                return std::string("None");
-            } else {
-                return detail::_bool_to_string(args.first->default_value());
-            }
+            return args.first->action() == argparse::BooleanOptionalAction
+               ? "None" :  detail::_bool_to_string(args.first->default_value());
         }
         if (args.second.size() != 1) {
             throw
             TypeError("trying to get data from array argument '" + key + "'");
         }
-        if (args.second.is_default()) {
-            return quotes + args.second.front() + quotes;
-        }
-        return detail::_bool_to_string(args.second.front());
+        return args.second.is_default()
+                ? quotes + args.second.front() + quotes
+                : detail::_bool_to_string(args.second.front());
     }
 
     inline std::string
@@ -9924,31 +9911,16 @@ private:
             return false;
         }
         Argument const* argument = _ARGPARSE_NULLPTR;
-#ifdef _ARGPARSE_CXX_11
-        for (pArgument const& opt : args) {
-            auto it = std::find_if(opt->flags().begin(), opt->flags().end(),
-                                   [&name, &arg, i] (std::string const& flag)
-            {
-                return flag.size() == 2
-                        && flag.back() == name.at(i)
-                        && flag.front() == arg.front();
-            });
-#else
-        for (std::size_t j = 0; j < args.size(); ++j) {
-            pArgument const& opt = args.at(j);
-            std::vector<std::string>::const_iterator it = opt->flags().begin();
-            for ( ; it != opt->flags().end(); ++it) {
-                if ((*it).size() == 2
-                        && (*it).at((*it).size() - 1) == name.at(i)
-                        && (*it).at(0) == arg.at(0)) {
+        for (std::size_t j = 0; j < args.size() && !argument; ++j) {
+            for (std::size_t k = 0; k < args.at(j)->flags().size(); ++k) {
+                std::string const& flag = args.at(j)->flags().at(k);
+                if (flag.size() == 2
+                        && flag.at(flag.size() - 1) == name.at(i)
+                        && flag.at(0) == arg.at(0)) {
+                    flags.push_back(flag);
+                    argument = args.at(j).get();
                     break;
                 }
-            }
-#endif  // C++11+
-            if (it != opt->flags().end()) {
-                flags.push_back(*it);
-                argument = opt.get();
-                break;
             }
         }
         if (!argument && flags.empty()) {
@@ -10358,10 +10330,7 @@ private:
     inline void
     add_arg_usage(std::string& res, std::string const& str, bool required) const
     {
-        if (!res.empty()) {
-            res += '\n';
-        }
-        res += (required ? str : "[" + str + "]");
+        detail::_append_value_to(required ? str : "[" + str + "]", res, "\n");
     }
 
     inline void
