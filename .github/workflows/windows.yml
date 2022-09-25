@@ -58,7 +58,7 @@ jobs:
       fail-fast: false
       matrix:
         architecture: [Win32, x64]
-        standard: [11, 14, 17, 20]
+        standard: [98, 11, 14, 17, 20]
 
     steps:
     - uses: actions/checkout@v3
@@ -131,7 +131,7 @@ jobs:
       fail-fast: false
       matrix:
         version: [13, 14, 15]
-        standard: [11, 14, 17, 20]
+        standard: [98, 11, 14, 17, 20]
 
     steps:
     - uses: actions/checkout@v3
