@@ -62,6 +62,12 @@
 #define ARGPARSE_VERSION_MINOR 6
 #define ARGPARSE_VERSION_PATCH 7
 
+/**
+ *  This macro turns the version numbers into a numeric value:
+ *  \verbatim
+    (1,2,3) -> (10203)
+    \endverbatim
+ */
 #define ARGPARSE_VERSION_NUM(X, Y, Z) ((X) * 10000 + (Y) * 100 + (Z))
 /*!
  *  This is the version number macro for the current argparse version.

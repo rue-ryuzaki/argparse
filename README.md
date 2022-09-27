@@ -42,6 +42,12 @@ github legacy:
 ```ARGPARSE_VERSION_MINOR``` - Minor version of the argparse library
 
 ```ARGPARSE_VERSION_PATCH``` - Patch level of the argparse library
+
+```ARGPARSE_VERSION_NUM(X, Y, Z)``` - Turns the argparse version numbers into a numeric value
+
+```ARGPARSE_VERSION_COMPILED``` - Current argparse library version 
+
+```ARGPARSE_VERSION_AT_LEAST(X, Y, Z)``` - True if compiled with argparse library at least X.Y.Z
 ## Overview
 - Examples:
   - [code](#code-example) - [usage](#usage-example) - [output](#output)
