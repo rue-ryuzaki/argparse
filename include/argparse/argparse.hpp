@@ -155,6 +155,7 @@
 #include <cstdint>
 #include <forward_list>
 #include <initializer_list>
+#include <regex>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
@@ -177,7 +178,6 @@
 #include <memory>
 #include <numeric>
 #include <queue>
-#include <regex>
 #include <set>
 #include <sstream>
 #include <stack>
