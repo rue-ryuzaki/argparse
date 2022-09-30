@@ -3862,6 +3862,11 @@ private:
         return res;
     }
 
+    inline std::string get_const() const
+    {
+        return m_const.has_value() ? const_value() : "None";
+    }
+
     inline std::string get_default() const
     {
         if (!m_default.has_value() && (action() & detail::_bool_action)) {
@@ -3875,6 +3880,21 @@ private:
     inline std::string const& get_dest() const _ARGPARSE_NOEXCEPT
     {
         return dest().empty() ? m_name : dest();
+    }
+
+    inline std::string get_nargs() const
+    {
+        switch (m_nargs) {
+            case NARGS_NUM :
+            case ONE_OR_MORE :
+            case ZERO_OR_ONE :
+            case ZERO_OR_MORE :
+                return m_nargs_str;
+            case REMAINDING :
+                return "...";
+            default :
+                return "None";
+        }
     }
 
     inline std::string get_required() const
@@ -3899,8 +3919,10 @@ private:
         std::unordered_map<std::string, std::function<std::string()> > const
                 specifiers =
         {
+            { "%(const)s",      [this] () { return get_const();     } },
             { "%(default)s",    [this] () { return get_default();   } },
             { "%(dest)s",       [this] () { return get_dest();      } },
+            { "%(nargs)s",      [this] () { return get_nargs();     } },
             { "%(required)s",   [this] () { return get_required();  } },
             { "%(type)s",       [this] () { return get_type();      } },
         };
@@ -3914,8 +3936,10 @@ private:
         text += help;
         std::swap(help, text);
 #else
+        help = detail::_replace(help, "%(const)s", get_const());
         help = detail::_replace(help, "%(default)s", get_default());
         help = detail::_replace(help, "%(dest)s", get_dest());
+        help = detail::_replace(help, "%(nargs)s", get_nargs());
         help = detail::_replace(help, "%(required)s", get_required());
         help = detail::_replace(help, "%(type)s", get_type());
 #endif  // C++11+
