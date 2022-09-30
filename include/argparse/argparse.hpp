@@ -3860,7 +3860,10 @@ private:
                 }
             }
         } else {
-            res += detail::_vector_to_string(get_argument_name(formatter));
+            std::vector<std::string> names = get_argument_name(formatter);
+            res += names.size() > 1
+                    ? ("[" + detail::_vector_to_string(names, ", ") + "]")
+                    : detail::_vector_to_string(names);
         }
         return res;
     }
@@ -3978,6 +3981,7 @@ private:
     inline std::string get_nargs_suffix(_HelpFormatter const& formatter) const
     {
         std::vector<std::string> names = get_argument_name(formatter);
+        std::size_t names_size = names.size();
         if (names.size() > 1
                 && (m_nargs != NARGS_NUM || names.size() != m_num_args)) {
             throw TypeError("length of metavar tuple does not match nargs");
@@ -3986,7 +3990,9 @@ private:
                 && m_nargs == NARGS_NUM && names.size() != m_num_args) {
             names.resize(m_num_args, names.front());
         }
-        std::string const name = detail::_vector_to_string(names);
+        std::string name = names_size > 1
+                ? ("[" + detail::_vector_to_string(names, ", ") + "]")
+                : detail::_vector_to_string(names);
         std::string res;
         if (m_type == Optional && !name.empty()) {
             res += detail::_spaces;
