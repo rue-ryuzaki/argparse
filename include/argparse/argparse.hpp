@@ -62,7 +62,7 @@
 #define ARGPARSE_VERSION_MINOR 6
 #define ARGPARSE_VERSION_PATCH 7
 
-/**
+/*!
  *  This macro turns the version numbers into a numeric value:
  *  \verbatim
     (1,2,3) -> (10203)
