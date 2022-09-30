@@ -3865,6 +3865,11 @@ private:
         }
     }
 
+    inline std::string const& get_dest() const _ARGPARSE_NOEXCEPT
+    {
+        return dest().empty() ? m_name : dest();
+    }
+
     inline std::string print(_HelpFormatter const& formatter,
                              std::size_t limit,
                              std::size_t width) const
@@ -4077,14 +4082,13 @@ protected:
     static std::string
     _get_default_metavar_for_optional_s(Argument const* action)
     {
-        return detail::_to_upper(action->dest().empty() ? action->m_name
-                                                        : action->dest());
+        return detail::_to_upper(action->get_dest());
     }
 
     static std::string
     _get_default_metavar_for_positional_s(Argument const* action)
     {
-        return action->dest().empty() ? action->m_name : action->dest();
+        return action->get_dest();
     }
 
     static std::string
@@ -6125,11 +6129,8 @@ public:
             if (flags.empty()) {
                 continue;
             }
-            std::string const& name
-                    = !pair.first->dest().empty() ? pair.first->dest()
-                                                  : pair.first->m_name;
-            detail::_append_value_to(
-             name + detail::_equals + to_string(flags.front(), "'"), res, ", ");
+            detail::_append_value_to(pair.first->get_dest() + detail::_equals
+                                    + to_string(flags.front(), "'"), res, ", ");
         }
         if (!m_unrecognized_args.has_value()) {
             return "Namespace(" + res + ")";
@@ -9117,10 +9118,8 @@ private:
         if (space.m_unrecognized_args.has_value()
                 && !m_data.m_arguments.empty()) {
             pArgument const& arg = m_data.m_arguments.front();
-            std::string const& name
-                    = !arg->dest().empty() ? arg->dest() : arg->m_name;
-            throw
-            AttributeError("'tuple' object has no attribute '" + name + "'");
+            throw AttributeError(
+                   "'tuple' object has no attribute '" + arg->get_dest() + "'");
         }
     }
 
