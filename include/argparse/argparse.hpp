@@ -3862,6 +3862,12 @@ private:
         return res;
     }
 
+    inline std::string get_choices() const
+    {
+        return m_choices.has_value()
+                ? detail::_vector_to_string(choices(), ", ") : "None";
+    }
+
     inline std::string get_const() const
     {
         return m_const.has_value() ? const_value() : "None";
@@ -3919,9 +3925,11 @@ private:
         std::unordered_map<std::string, std::function<std::string()> > const
                 specifiers =
         {
+            { "%(choices)s",    [this] () { return get_choices();   } },
             { "%(const)s",      [this] () { return get_const();     } },
             { "%(default)s",    [this] () { return get_default();   } },
             { "%(dest)s",       [this] () { return get_dest();      } },
+            { "%(help)s",       [this] () { return this->help();    } },
             { "%(nargs)s",      [this] () { return get_nargs();     } },
             { "%(required)s",   [this] () { return get_required();  } },
             { "%(type)s",       [this] () { return get_type();      } },
@@ -3936,12 +3944,14 @@ private:
         text += help;
         std::swap(help, text);
 #else
+        help = detail::_replace(help, "%(choices)s", get_choices());
         help = detail::_replace(help, "%(const)s", get_const());
         help = detail::_replace(help, "%(default)s", get_default());
         help = detail::_replace(help, "%(dest)s", get_dest());
         help = detail::_replace(help, "%(nargs)s", get_nargs());
         help = detail::_replace(help, "%(required)s", get_required());
         help = detail::_replace(help, "%(type)s", get_type());
+        help = detail::_replace(help, "%(help)s", this->help());
 #endif  // C++11+
         return detail::_help_formatter("  " + flags_to_string(formatter),
                                        formatter, help, width,
