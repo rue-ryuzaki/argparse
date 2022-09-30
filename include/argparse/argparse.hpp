@@ -1771,22 +1771,21 @@ _not_optional(std::string const& arg,
             || (!have_negative_args && _is_negative_number(arg));
 }
 
-inline std::string
+inline std::pair<bool, std::string>
 _make_no_flag(std::string const& str)
 {
-    std::string res = str;
-    char prefix = res.at(0);
-    std::string::iterator it = res.begin();
-    for ( ; it != res.end(); ++it) {
+    char prefix = str.at(0);
+    std::string::const_iterator it = str.begin();
+    for ( ; it != str.end(); ++it) {
         if (*it != prefix) {
             break;
         }
     }
-    if (it == res.end()) {
-        throw ValueError("can't create no- boolean option");
+    std::pair<bool, std::string> res
+            = std::make_pair(std::distance(str.begin(), it) > 1, str);
+    if (res.first) {
+        res.second.insert(static_cast<std::string::size_type>(2), "no-");
     }
-    res.insert(static_cast<std::string::size_type>(
-                   std::distance(res.begin(), it)), "no-");
     return res;
 }
 
@@ -3824,7 +3823,10 @@ private:
         for (std::size_t i = 0; i < m_flags.size(); ++i) {
             std::string const& flag = m_flags.at(i);
             m_all_flags.push_back(flag);
-            m_all_flags.push_back(detail::_make_no_flag(flag));
+            std::pair<bool, std::string> no_flag = detail::_make_no_flag(flag);
+            if (no_flag.first) {
+                m_all_flags.push_back(no_flag.second);
+            }
         }
     }
 
