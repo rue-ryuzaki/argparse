@@ -3746,7 +3746,8 @@ public:
      */
     inline std::string metavar() const
     {
-        return detail::_vector_to_string(m_metavar());
+        std::string res = detail::_vector_to_string(m_metavar(), ", ");
+        return m_metavar().size() > 1 ? ("[" + res + "]") : res;
     }
 
     /*!
@@ -3888,6 +3889,11 @@ private:
         return dest().empty() ? m_name : dest();
     }
 
+    inline std::string get_metavar() const
+    {
+        return m_metavar.has_value() ? metavar() : "None";
+    }
+
     inline std::string get_nargs() const
     {
         switch (m_nargs) {
@@ -3901,6 +3907,11 @@ private:
             default :
                 return "None";
         }
+    }
+
+    inline std::string option_strings() const
+    {
+        return "[" + detail::_vector_to_string(flags(), ", ", "'")+ "]";
     }
 
     inline std::string get_required() const
@@ -3919,20 +3930,22 @@ private:
     {
         std::string help = formatter._get_help_string(this);
 #ifdef _ARGPARSE_CXX_11
-        std::regex const r("%[(]([a-z]*)[)]s");
+        std::regex const r("%[(]([a-z_]*)[)]s");
         std::smatch match;
         std::string text;
         std::unordered_map<std::string, std::function<std::string()> > const
                 specifiers =
         {
-            { "%(choices)s",    [this] () { return get_choices();   } },
-            { "%(const)s",      [this] () { return get_const();     } },
-            { "%(default)s",    [this] () { return get_default();   } },
-            { "%(dest)s",       [this] () { return get_dest();      } },
-            { "%(help)s",       [this] () { return this->help();    } },
-            { "%(nargs)s",      [this] () { return get_nargs();     } },
-            { "%(required)s",   [this] () { return get_required();  } },
-            { "%(type)s",       [this] () { return get_type();      } },
+            { "%(choices)s",        [this] () { return get_choices();       } },
+            { "%(const)s",          [this] () { return get_const();         } },
+            { "%(default)s",        [this] () { return get_default();       } },
+            { "%(dest)s",           [this] () { return get_dest();          } },
+            { "%(help)s",           [this] () { return this->help();        } },
+            { "%(metavar)s",        [this] () { return get_metavar();       } },
+            { "%(nargs)s",          [this] () { return get_nargs();         } },
+            { "%(option_strings)s", [this] () { return option_strings();    } },
+            { "%(required)s",       [this] () { return get_required();      } },
+            { "%(type)s",           [this] () { return get_type();          } },
         };
         while (std::regex_search(help, match, r)) {
             text += match.prefix();
@@ -3948,7 +3961,9 @@ private:
         help = detail::_replace(help, "%(const)s", get_const());
         help = detail::_replace(help, "%(default)s", get_default());
         help = detail::_replace(help, "%(dest)s", get_dest());
+        help = detail::_replace(help, "%(metavar)s", get_metavar());
         help = detail::_replace(help, "%(nargs)s", get_nargs());
+        help = detail::_replace(help, "%(option_strings)s", option_strings());
         help = detail::_replace(help, "%(required)s", get_required());
         help = detail::_replace(help, "%(type)s", get_type());
         help = detail::_replace(help, "%(help)s", this->help());
