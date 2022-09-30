@@ -3896,20 +3896,19 @@ private:
         std::regex const r("%[(]([a-z]*)[)]s");
         std::smatch match;
         std::string text;
+        std::unordered_map<std::string, std::function<std::string()> > const
+                specifiers =
+        {
+            { "%(default)s",    [this] () { return get_default();   } },
+            { "%(dest)s",       [this] () { return get_dest();      } },
+            { "%(required)s",   [this] () { return get_required();  } },
+            { "%(type)s",       [this] () { return get_type();      } },
+        };
         while (std::regex_search(help, match, r)) {
             text += match.prefix();
             auto specifier = std::string(match[0]);
-            if (specifier == "%(default)s") {
-                text += get_default();
-            } else if (specifier == "%(dest)s") {
-                text += get_dest();
-            } else if (specifier == "%(required)s") {
-                text += get_required();
-            } else if (specifier == "%(type)s") {
-                text += get_type();
-            } else {
-                text += specifier;
-            }
+            auto it = specifiers.find(specifier);
+            text += (it != specifiers.end() ? it->second() : specifier);
             help = match.suffix();
         }
         text += help;
