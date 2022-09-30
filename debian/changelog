@@ -1,3 +1,13 @@
+cpp-argparse-dev (1.6.8-0ppa0) focal; urgency=low
+
+  * Add: ARGPARSE_VERSION_NUM, ARGPARSE_VERSION_COMPILED, ARGPARSE_VERSION_AT_LEAST macros
+  * Add: Argument choices, const, dest, help, metavar, nargs, option_strings, required, type format specifiers
+  * Fix: typos in README.md and argparse.hpp (#12)
+  * Fix: Argument 'no-' flag generation
+  * Fix: help message if Argument metavar values are used
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Fri, 30 Sep 2022 23:02:16 +0300
+
 cpp-argparse-dev (1.6.7-0ppa0) focal; urgency=low
 
   * Add: ArgumentParser::subparsers() function
