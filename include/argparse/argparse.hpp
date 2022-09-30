@@ -82,7 +82,7 @@
 #define ARGPARSE_VERSION_AT_LEAST(X, Y, Z) \
     (ARGPARSE_VERSION_COMPILED >= ARGPARSE_VERSION_NUM(X, Y, Z))
 
-// compability for version 1.4.0 - 1.6.6
+// compatibility for version 1.4.0 - 1.6.6
 // will be removed in the next minor release (v1.7.0)
 #define _ARGPARSE_VERSION_MAJOR ARGPARSE_VERSION_MAJOR
 #define _ARGPARSE_VERSION_MINOR ARGPARSE_VERSION_MINOR
@@ -2496,7 +2496,7 @@ _check_type_name(Value<std::string> const& expected,
                  std::string const& received)
 {
     if (expected.has_value() && !_is_type_name_correct(expected(), received)) {
-        throw TypeError("type_name missmatch: expected '" + expected() + "'"
+        throw TypeError("type_name mismatch: expected '" + expected() + "'"
                         + ", received '" + received + "'");
     }
 }
