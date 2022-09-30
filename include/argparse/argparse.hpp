@@ -177,6 +177,7 @@
 #include <memory>
 #include <numeric>
 #include <queue>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <stack>
@@ -3876,17 +3877,50 @@ private:
         return dest().empty() ? m_name : dest();
     }
 
+    inline std::string get_required() const
+    {
+        return detail::_bool_to_string(required());
+    }
+
+    inline std::string get_type() const
+    {
+        return m_type_name.has_value() ? type_name() : "None";
+    }
+
     inline std::string print(_HelpFormatter const& formatter,
                              std::size_t limit,
                              std::size_t width) const
     {
-        return detail::_help_formatter(
-                            "  " + flags_to_string(formatter),
-                            formatter,
-                            detail::_replace(formatter._get_help_string(this),
-                                             "%(default)s", get_default()),
-                            width,
-                            std::string(limit, detail::_space));
+        std::string help = formatter._get_help_string(this);
+#ifdef _ARGPARSE_CXX_11
+        std::set<std::string> specifiers;
+        std::regex const r("%[(]([a-z]*)[)]s");
+        std::smatch match;
+        std::string text = help;
+        while (std::regex_search(text, match, r)) {
+            specifiers.insert(std::string(match[0]));
+            text = match.suffix();
+        }
+        for (auto const& specifier : specifiers) {
+            if (specifier == "%(default)s") {
+                help = detail::_replace(help, specifier, get_default());
+            } else if (specifier == "%(dest)s") {
+                help = detail::_replace(help, specifier, get_dest());
+            } else if (specifier == "%(required)s") {
+                help = detail::_replace(help, specifier, get_required());
+            } else if (specifier == "%(type)s") {
+                help = detail::_replace(help, specifier, get_type());
+            }
+        }
+#else
+        help = detail::_replace(help, "%(default)s", get_default());
+        help = detail::_replace(help, "%(dest)s", get_dest());
+        help = detail::_replace(help, "%(required)s", get_required());
+        help = detail::_replace(help, "%(type)s", get_type());
+#endif  // C++11+
+        return detail::_help_formatter("  " + flags_to_string(formatter),
+                                       formatter, help, width,
+                                       std::string(limit, detail::_space));
     }
 
     inline std::string get_nargs_suffix(_HelpFormatter const& formatter) const
