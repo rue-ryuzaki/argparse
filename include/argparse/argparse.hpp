@@ -1961,9 +1961,15 @@ _string_to_bool(std::string const& str) _ARGPARSE_NOEXCEPT
 }
 
 inline std::string
+_bool_to_string(bool value)
+{
+    return value ? "true" : "false";
+}
+
+inline std::string
 _bool_to_string(std::string const& str)
 {
-    return _string_to_bool(str) ? "true" : "false";
+    return _bool_to_string(_string_to_bool(str));
 }
 
 inline std::string
