@@ -3893,25 +3893,27 @@ private:
     {
         std::string help = formatter._get_help_string(this);
 #ifdef _ARGPARSE_CXX_11
-        std::set<std::string> specifiers;
         std::regex const r("%[(]([a-z]*)[)]s");
         std::smatch match;
-        std::string text = help;
-        while (std::regex_search(text, match, r)) {
-            specifiers.insert(std::string(match[0]));
-            text = match.suffix();
-        }
-        for (auto const& specifier : specifiers) {
+        std::string text;
+        while (std::regex_search(help, match, r)) {
+            text += match.prefix();
+            auto specifier = std::string(match[0]);
             if (specifier == "%(default)s") {
-                help = detail::_replace(help, specifier, get_default());
+                text += get_default();
             } else if (specifier == "%(dest)s") {
-                help = detail::_replace(help, specifier, get_dest());
+                text += get_dest();
             } else if (specifier == "%(required)s") {
-                help = detail::_replace(help, specifier, get_required());
+                text += get_required();
             } else if (specifier == "%(type)s") {
-                help = detail::_replace(help, specifier, get_type());
+                text += get_type();
+            } else {
+                text += specifier;
             }
+            help = match.suffix();
         }
+        text += help;
+        std::swap(help, text);
 #else
         help = detail::_replace(help, "%(default)s", get_default());
         help = detail::_replace(help, "%(dest)s", get_dest());
