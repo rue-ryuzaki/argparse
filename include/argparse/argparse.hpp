@@ -7599,6 +7599,8 @@ public:
           m_prog("untitled"),
           m_usage(),
           m_description(),
+          m_positionals_title("positional arguments"),
+          m_optionals_title("options"),
           m_epilog(),
           m_help(),
           m_aliases(),
@@ -7645,6 +7647,8 @@ public:
           m_prog("untitled"),
           m_usage(),
           m_description(),
+          m_positionals_title("positional arguments"),
+          m_optionals_title("options"),
           m_epilog(),
           m_help(),
           m_aliases(),
@@ -7692,6 +7696,8 @@ public:
           m_prog("untitled"),
           m_usage(),
           m_description(),
+          m_positionals_title("positional arguments"),
+          m_optionals_title("options"),
           m_epilog(),
           m_help(),
           m_aliases(),
@@ -7777,6 +7783,38 @@ public:
     inline ArgumentParser& description(std::string const& value)
     {
         m_description = value;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set title for positional arguments
+     *
+     *  \param value Title for positional arguments
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& positionals_title(std::string const& value)
+    {
+        std::string val = detail::_trim_copy(value);
+        if (!val.empty()) {
+            m_positionals_title = val;
+        }
+        return *this;
+    }
+
+    /*!
+     *  \brief Set title for optional arguments
+     *
+     *  \param value Title for optional arguments
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& optionals_title(std::string const& value)
+    {
+        std::string val = detail::_trim_copy(value);
+        if (!val.empty()) {
+            m_optionals_title = val;
+        }
         return *this;
     }
 
@@ -8202,6 +8240,26 @@ public:
     inline std::string const& description() const _ARGPARSE_NOEXCEPT
     {
         return m_description;
+    }
+
+    /*!
+     *  \brief Get title for positional arguments
+     *
+     *  \return Title for positional arguments
+     */
+    inline std::string const& positionals_title() const _ARGPARSE_NOEXCEPT
+    {
+        return m_positionals_title;
+    }
+
+    /*!
+     *  \brief Get title for optional arguments
+     *
+     *  \return Title for optional arguments
+     */
+    inline std::string const& optionals_title() const _ARGPARSE_NOEXCEPT
+    {
+        return m_optionals_title;
     }
 
     /*!
@@ -8868,7 +8926,7 @@ public:
         size += 4;
         detail::_limit_to_max(size, argument_name_limit());
         if (!positional.empty() || sub_positional) {
-            os << "\npositional arguments:\n";
+            os << "\n" << positionals_title() << ":\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
                 print_subparser(sub_positional, sub_info, i,
                                 m_formatter_class, size, width, os);
@@ -8881,7 +8939,7 @@ public:
                             m_formatter_class, size, width, os);
         }
         if (!optional.empty()) {
-            os << "\noptions:\n";
+            os << "\n" << optionals_title() << ":\n";
             for (std::size_t i = 0; i < optional.size(); ++i) {
                 os << detail::_replace(
                           optional.at(i)->print(m_formatter_class, size, width),
@@ -10546,6 +10604,8 @@ private:
     std::string m_prog;
     std::string m_usage;
     std::string m_description;
+    std::string m_positionals_title;
+    std::string m_optionals_title;
     std::string m_epilog;
     std::string m_help;
     std::vector<std::string> m_aliases;
