@@ -2069,22 +2069,22 @@ _help_formatter(std::string const& head,
                 _HelpFormatter const& formatter,
                 std::string const& help,
                 std::size_t width,
-                std::string const& indent = std::string())
+                std::size_t indent)
 {
     std::size_t const interlayer = 2;
 
     std::vector<std::string> res;
     std::string value = head;
-    if (value.size() + interlayer > indent.size()) {
+    if (value.size() + interlayer > indent) {
         _store_value_to(value, res);
     }
     if (!help.empty()) {
         std::vector<std::string> lines
-                = formatter._split_lines(help, width - indent.size());
+                = formatter._split_lines(help, width - indent);
         for (std::size_t i = 0; i < lines.size(); ++i) {
             std::string const& line = lines.at(i);
-            if (value.size() < indent.size()) {
-                value.resize(indent.size(), _space);
+            if (value.size() < indent) {
+                value.resize(indent, _space);
             }
             value += line;
             _store_value_to(value, res, true);
@@ -3974,8 +3974,7 @@ private:
         help = detail::_replace(help, "%(help)s", this->help());
 #endif  // C++11+
         return detail::_help_formatter("  " + flags_to_string(formatter),
-                                       formatter, help, width,
-                                       std::string(limit, detail::_space));
+                                       formatter, help, width, limit);
     }
 
     inline std::string get_nargs_suffix(_HelpFormatter const& formatter) const
@@ -7465,12 +7464,9 @@ public:
         inline std::string print(_HelpFormatter const& formatter,
                                  std::size_t limit, std::size_t width) const
         {
-            std::string res = detail::_help_formatter(
-                        "  " + flags_to_string(),
-                        formatter,
-                        help(),
-                        width,
-                        std::string(limit, detail::_space));
+            std::string res
+                    = detail::_help_formatter("  " + flags_to_string(),
+                                              formatter, help(), width, limit);
 #ifdef _ARGPARSE_CXX_11
             return std::accumulate(m_parsers.begin(), m_parsers.end(),
                                    res, [formatter, limit, width]
@@ -7483,11 +7479,7 @@ public:
                         name += " (" + alias + ")";
                     }
                     return str + "\n" + detail::_help_formatter(
-                                name,
-                                formatter,
-                                p->help(),
-                                width,
-                                std::string(limit, detail::_space));
+                                name, formatter, p->help(), width, limit);
                 }
                 return str;
             });
@@ -7502,11 +7494,7 @@ public:
                         name += " (" + alias + ")";
                     }
                     return res += "\n" + detail::_help_formatter(
-                                name,
-                                formatter,
-                                p->help(),
-                                width,
-                                std::string(limit, detail::_space));
+                                name, formatter, p->help(), width, limit);
                 }
             }
             return res;
