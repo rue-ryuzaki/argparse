@@ -7788,6 +7788,7 @@ public:
 
     /*!
      *  \brief Set title for positional arguments
+     *  (default: "positional arguments")
      *
      *  \param value Title for positional arguments
      *
@@ -7803,7 +7804,7 @@ public:
     }
 
     /*!
-     *  \brief Set title for optional arguments
+     *  \brief Set title for optional arguments (default: "options")
      *
      *  \param value Title for optional arguments
      *
@@ -8244,6 +8245,7 @@ public:
 
     /*!
      *  \brief Get title for positional arguments
+     *  (default: "positional arguments")
      *
      *  \return Title for positional arguments
      */
@@ -8253,7 +8255,7 @@ public:
     }
 
     /*!
-     *  \brief Get title for optional arguments
+     *  \brief Get title for optional arguments (default: "options")
      *
      *  \return Title for optional arguments
      */
