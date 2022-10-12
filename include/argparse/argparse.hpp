@@ -10071,7 +10071,7 @@ private:
                                                      args, ",");
                             break;
                         }
-                        if (flag.size() == 2
+                        if (detail::_utf8_size(flag).second == 2
                                 && detail::_starts_with(arg, flag)) {
                             keys.push_back(arg);
                             detail::_append_value_to(detail::_spaces + flag,
@@ -10089,8 +10089,8 @@ private:
                 if (is_flag_added) {
                     temp.push_back(flag);
                 } else {
-                    std::string name = detail::_flag_name(flag);
-                    separate_arg_abbrev(parsers, temp, arg, name, optionals);
+                    separate_arg_abbrev(parsers, temp, arg,
+                                        detail::_flag_name(flag), optionals);
                 }
             } else {
                 separate_arg_abbrev(parsers, temp, arg,
@@ -10140,11 +10140,13 @@ private:
     static bool
     process_separate_arg_abbrev(std::string const& name,
                                 std::size_t i,
+                                std::size_t cp_size,
                                 std::vector<std::string>& flags,
                                 std::string const& arg,
                                 pArguments const& args)
     {
-        if (name.at(i) == detail::_equal) {
+        std::string abbrev = name.substr(i, cp_size);
+        if (abbrev == detail::_equals) {
             if (flags.empty()) {
                 flags.push_back(std::string());
             }
@@ -10155,8 +10157,8 @@ private:
         for (std::size_t j = 0; j < args.size() && !argument; ++j) {
             for (std::size_t k = 0; k < args.at(j)->flags().size(); ++k) {
                 std::string const& flag = args.at(j)->flags().at(k);
-                if (flag.size() == 2
-                        && flag.at(flag.size() - 1) == name.at(i)
+                if (detail::_utf8_size(flag).second == 2
+                        && flag.substr(1) == abbrev
                         && flag.at(0) == arg.at(0)) {
                     flags.push_back(flag);
                     argument = args.at(j).get();
@@ -10170,7 +10172,8 @@ private:
         } else if ((!argument && !flags.empty())
                    || (argument
                        && (argument->action() & detail::_store_action))) {
-            std::string str = name.substr(i + static_cast<bool>(argument));
+            std::string str
+                 = name.substr(i + (static_cast<bool>(argument) ? cp_size : 0));
             if (!str.empty()) {
                 if (!detail::_starts_with(str, detail::_equals)) {
                     flags.back() += detail::_equals;
@@ -10199,10 +10202,18 @@ private:
             }
             std::vector<std::string> flags;
             flags.reserve(8);
-            for (std::size_t i = 0; i < name.size(); ++i) {
-                if (!process_separate_arg_abbrev(name, i, flags, arg, args)) {
+            for (std::size_t i = 0; i < name.size(); ) {
+                std::size_t cp_size
+                   = detail::_utf8_codepoint_size(detail::_char_to_u8(name[i]));
+                if (cp_size == 0) {
+                    // invalid string
+                    cp_size = 1;
+                }
+                if (!process_separate_arg_abbrev(name, i, cp_size,
+                                                 flags, arg, args)) {
                     break;
                 }
+                i += cp_size;
             }
             detail::_move_vector_insert_to_end(flags, temp);
         } else {
