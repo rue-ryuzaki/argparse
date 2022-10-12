@@ -1603,6 +1603,18 @@ _contains_substr(std::string const& str, std::string const& substr)
 }
 
 inline std::string
+_get_punct(std::string const& str)
+{
+    std::string res;
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        if (std::ispunct(static_cast<unsigned char>(str.at(i)))) {
+            res += str.at(i);
+        }
+    }
+    return res;
+}
+
+inline std::string
 _replace(std::string str, char old, std::string const& value)
 {
     std::string::size_type pos = str.find(old);
@@ -8144,13 +8156,13 @@ public:
     /*!
      *  \brief Set argument parser 'prefix_chars' value (default: "-")
      *
-     *  \param value Prefix chars values
+     *  \param value Prefix chars values (only punctuation characters)
      *
      *  \return Current argument parser reference
      */
     inline ArgumentParser& prefix_chars(std::string const& value)
     {
-        std::string val = detail::_trim_copy(value);
+        std::string val = detail::_get_punct(value);
         if (!val.empty()) {
 #ifdef _ARGPARSE_CXX_11
             m_prefix_chars = std::move(val);
@@ -8165,13 +8177,13 @@ public:
     /*!
      *  \brief Set argument parser 'fromfile_prefix_chars' value
      *
-     *  \param value Fromfile prefix chars values
+     *  \param value Fromfile prefix chars values (only punctuation characters)
      *
      *  \return Current argument parser reference
      */
     inline ArgumentParser& fromfile_prefix_chars(std::string const& value)
     {
-        m_fromfile_prefix_chars = detail::_trim_copy(value);
+        m_fromfile_prefix_chars = detail::_get_punct(value);
         return *this;
     }
 
