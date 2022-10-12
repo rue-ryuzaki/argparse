@@ -9285,7 +9285,7 @@ private:
                 continue;
             }
             check_abbreviations(parsers, was_pseudo_arg, parsed_arguments, i);
-            bool remainder = is_reminder_positional(pos, positional, parsers);
+            bool remainder = is_remainder_positional(pos, positional, parsers);
             std::string arg = parsed_arguments.at(i);
             std::vector<std::string> equals = process_split_equal(arg, parsers);
             pArgument const tmp
@@ -10100,9 +10100,9 @@ private:
         }
     }
 
-    static bool is_reminder_positional(std::size_t pos,
-                                       pArguments const& positional,
-                                       Parsers const& parsers)
+    static bool is_remainder_positional(std::size_t pos,
+                                        pArguments const& positional,
+                                        Parsers const& parsers)
     {
         return pos < positional.size()
                 && positional.at(pos)->m_nargs == Argument::REMAINDING
