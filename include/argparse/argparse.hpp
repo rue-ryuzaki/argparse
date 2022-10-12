@@ -378,7 +378,7 @@ class Argument;
 struct _HelpFormatter
 {
     std::string (*_fill_text)(std::string const& text, std::size_t width,
-                              std::string const& indent);
+                              std::size_t indent);
     std::string (*_get_default_metavar_for_optional)(Argument const* action);
     std::string (*_get_default_metavar_for_positional)(Argument const* action);
     std::string (*_get_help_string)(Argument const* action);
@@ -2173,7 +2173,7 @@ _print_raw_text_formatter(_HelpFormatter const& formatter,
                           std::size_t width,
                           std::ostream& os,
                           std::string const& begin = "\n",
-                          std::string const& indent = std::string(),
+                          std::size_t indent = 0,
                           std::string const& end = std::string())
 {
     if (!text.empty()) {
@@ -4200,7 +4200,7 @@ public:
     virtual ~HelpFormatter() _ARGPARSE_NOEXCEPT { }
 
     virtual std::string
-    (*_fill_text() const) (std::string const&, std::size_t, std::string const&)
+    (*_fill_text() const) (std::string const&, std::size_t, std::size_t)
     {
         return _fill_text_s;
     }
@@ -4231,17 +4231,15 @@ public:
 
 protected:
     static std::string
-    _fill_text_s(std::string const& text, std::size_t width,
-                 std::string const& indent)
+    _fill_text_s(std::string const& text, std::size_t width, std::size_t indent)
     {
         std::vector<std::string> res;
         std::string value;
-        std::vector<std::string> lines
-                = _split_lines_s(text, width - indent.size());
+        std::vector<std::string> lines = _split_lines_s(text, width - indent);
         for (std::size_t i = 0; i < lines.size(); ++i) {
             std::size_t value_size = detail::_utf8_size(value).second;
-            if (value_size < indent.size()) {
-                value.resize(value.size() + indent.size() - value_size,
+            if (value_size < indent) {
+                value.resize(value.size() + indent - value_size,
                              detail::_space);
             }
             value += lines[i];
@@ -4301,24 +4299,22 @@ public:
 
     std::string
     (*_fill_text() const) (std::string const&, std::size_t,
-                           std::string const&) _ARGPARSE_OVERRIDE
+                           std::size_t) _ARGPARSE_OVERRIDE
     {
         return _fill_text_s;
     }
 
 protected:
     static std::string
-    _fill_text_s(std::string const& text, std::size_t width,
-                 std::string const& indent)
+    _fill_text_s(std::string const& text, std::size_t width, std::size_t indent)
     {
         std::vector<std::string> res;
         std::string value;
-        std::vector<std::string> lines
-                = _split_lines_s(text, width - indent.size());
+        std::vector<std::string> lines = _split_lines_s(text, width - indent);
         for (std::size_t i = 0; i < lines.size(); ++i) {
             std::size_t value_size = detail::_utf8_size(value).second;
-            if (value_size < indent.size()) {
-                value.resize(value.size() + indent.size() - value_size,
+            if (value_size < indent) {
+                value.resize(value.size() + indent - value_size,
                              detail::_space);
             }
             value += lines.at(i);
@@ -5184,7 +5180,7 @@ private:
                         formatter,
                         detail::_replace(
                             description(), "%(prog)s", prog),
-                        width, os, "\n", "  ");
+                        width, os, "\n", 2);
             if (!m_data.m_arguments.empty()) {
                 os << std::endl;
             }
@@ -7516,7 +7512,7 @@ public:
             detail::_print_raw_text_formatter(
                         formatter,
                         detail::_replace(description(), "%(prog)s", prog),
-                        width, os, std::string(), "  ", "\n");
+                        width, os, std::string(), 2, "\n");
             os << print(formatter, limit, width) << std::endl;
         }
 
