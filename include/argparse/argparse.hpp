@@ -4586,11 +4586,7 @@ protected:
 #endif  // C++11+
                 help->help("show this help message and exit")
                         .action(argparse::help);
-#ifdef _ARGPARSE_CXX_11
-                m_arguments.push_front(std::move(help));
-#else
                 m_arguments.push_front(help);
-#endif  // C++11+
                 m_optional
                         .push_front(std::make_pair(m_arguments.front(), false));
                 m_help_added = true;
@@ -4791,17 +4787,9 @@ protected:
     {
         std::vector<std::string> flags = in_flags;
         if (flags.empty()) {
-            std::string flag = std::string();
-#ifdef _ARGPARSE_CXX_11
-            auto arg = Argument::make_argument(std::move(flags),
-                                               std::move(flag),
-                                               Argument::Positional);
-            m_arguments.emplace_back(std::move(arg));
-#else
-            pArgument arg = Argument::make_argument(flags, flag,
+            pArgument arg = Argument::make_argument(flags, std::string(),
                                                     Argument::Positional);
             m_arguments.push_back(arg);
-#endif  // C++11+
             return;
         }
         flags.front() = detail::_format_name(flags.front());
@@ -4822,11 +4810,7 @@ protected:
         if (is_optional) {
             check_conflict_arg(arg.get());
         }
-#ifdef _ARGPARSE_CXX_11
-        m_arguments.emplace_back(std::move(arg));
-#else
         m_arguments.push_back(arg);
-#endif  // C++11+
         if (is_optional) {
             m_arguments.back()->m_post_trigger = this;
         }
@@ -8164,11 +8148,7 @@ public:
     {
         std::string val = detail::_get_punct(value);
         if (!val.empty()) {
-#ifdef _ARGPARSE_CXX_11
-            m_prefix_chars = std::move(val);
-#else
             m_prefix_chars = val;
-#endif  // C++11+
             m_data.update_help(m_data.m_add_help, m_prefix_chars);
         }
         return *this;
@@ -10322,11 +10302,7 @@ private:
             pArgument const& arg = optional.at(i);
             if (arg->required() && storage.at(arg).empty()) {
                 std::string args = detail::_vector_to_string(arg->flags(), "/");
-#ifdef _ARGPARSE_CXX_11
-                required_args.emplace_back(std::move(args));
-#else
                 required_args.push_back(args);
-#endif  // C++11+
             }
         }
     }
@@ -10434,19 +10410,19 @@ private:
         for (Namespace::Storage::iterator it = storage.begin();
              it != storage.end(); ) {
             if (!it->second.exists()) {
-                detail::Value<std::string> const& value = it->first->m_default;
                 if (it->first->is_suppressed()) {
                     it = storage.erase(it);
                     continue;
                 }
                 if (it->first->action() != argparse::count
                         && it->first->m_type == Argument::Optional) {
-                    if (value.has_value()) {
-                        it->second.push_default(value());
-                        storage.on_process_store(it->first, value());
+                    detail::Value<std::string> const& dv = it->first->m_default;
+                    if (dv.has_value()) {
+                        it->second.push_default(dv());
+                        storage.on_process_store(it->first, dv());
                     } else if (it->first->action() & detail::_bool_action) {
-                        it->second.push_back(value());
-                        storage.on_process_store(it->first, value());
+                        it->second.push_back(dv());
+                        storage.on_process_store(it->first, dv());
                     }
                 }
             }
