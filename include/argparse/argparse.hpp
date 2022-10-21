@@ -37,14 +37,12 @@
 
 #undef _ARGPARSE_CONSTEXPR
 #undef _ARGPARSE_ENUM_TYPE
-#undef _ARGPARSE_EXPERIMENTAL_OPTIONAL
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
-#undef _ARGPARSE_USE_OPTIONAL
 
 #undef _ARGPARSE_VERSION_MAJOR
 #undef _ARGPARSE_VERSION_MINOR
@@ -81,12 +79,6 @@
  */
 #define ARGPARSE_VERSION_AT_LEAST(X, Y, Z) \
     (ARGPARSE_VERSION_COMPILED >= ARGPARSE_VERSION_NUM(X, Y, Z))
-
-// compatibility for version 1.4.0 - 1.6.6
-// will be removed in the next minor release (v1.7.0)
-#define _ARGPARSE_VERSION_MAJOR ARGPARSE_VERSION_MAJOR
-#define _ARGPARSE_VERSION_MINOR ARGPARSE_VERSION_MINOR
-#define _ARGPARSE_VERSION_PATCH ARGPARSE_VERSION_PATCH
 
 #ifdef _MSVC_LANG
 #if _MSVC_LANG >= 201103L
@@ -177,6 +169,9 @@
 #include <map>
 #include <memory>
 #include <numeric>
+#ifdef _ARGPARSE_CXX_17
+#include <optional>
+#endif  // C++17+
 #include <queue>
 #include <set>
 #include <sstream>
@@ -188,24 +183,6 @@
 #endif  // C++17+
 #include <utility>
 #include <vector>
-
-// optional
-#ifdef _ARGPARSE_CXX_17
-#include <optional>
-
-#define _ARGPARSE_USE_OPTIONAL 1
-#elif defined _ARGPARSE_CXX_14
-#if defined(__GNUC__) && (defined(__linux__) || !defined(__clang__))
-#include <experimental/optional>
-namespace std {
-using experimental::optional;
-using experimental::fundamentals_v1::nullopt;
-}  // namespace std
-
-#define _ARGPARSE_EXPERIMENTAL_OPTIONAL 1
-#define _ARGPARSE_USE_OPTIONAL 1
-#endif  // __GNUC__
-#endif  // C++14+
 
 #define _ARGPARSE_EXPORT
 
@@ -6309,7 +6286,7 @@ public:
         return "(Namespace(" + res + "), [" + unknown_args + "])";
     }
 
-#ifdef _ARGPARSE_USE_OPTIONAL
+#ifdef _ARGPARSE_CXX_17
     /*!
      *  \brief Try get parsed argument value as boolean, byte, floating point
      *  or string types.
@@ -6321,9 +6298,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         std::is_constructible<std::string, T>::value
         || std::is_floating_point<T>::value
@@ -6338,7 +6312,7 @@ public:
                 || args->second.size() != 1
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
-            return {};
+            return std::nullopt;
         }
         return try_to_type<T>(args->second.front());
     }
@@ -6353,9 +6327,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         std::is_integral<T>::value
         && !std::is_same<bool, T>::value
@@ -6366,13 +6337,13 @@ public:
         if (!args.operator bool()
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
-            return {};
+            return std::nullopt;
         }
         if (args->first->action() == argparse::count) {
             return T(args->second.size());
         }
         if (args->second.empty() || args->second.size() != 1) {
-            return {};
+            return std::nullopt;
         }
         return try_to_type<T>(args->second.front());
     }
@@ -6387,9 +6358,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_array<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -6399,11 +6367,11 @@ public:
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
-            return {};
+            return std::nullopt;
         }
         auto vector = try_to_vector<typename T::value_type>(args->second());
         if (!vector.operator bool()) {
-            return {};
+            return std::nullopt;
         }
         T res{};
         if (res.size() != vector->size()) {
@@ -6428,9 +6396,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_container<typename std::decay<T>::type>::value
         && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
@@ -6445,11 +6410,11 @@ public:
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
-            return {};
+            return std::nullopt;
         }
         auto vector = try_to_vector<typename T::value_type>(args->second());
         if (!vector.operator bool()) {
-            return {};
+            return std::nullopt;
         }
         return T(vector.value().begin(), vector.value().end());
     }
@@ -6465,9 +6430,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_container_paired<typename std::decay<T>::type>::value,
     T>::type>
@@ -6478,13 +6440,13 @@ public:
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
-            return {};
+            return std::nullopt;
         }
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
         auto vector = try_to_paired_vector<K, V>(args->second(), delim);
         if (!vector.operator bool()) {
-            return {};
+            return std::nullopt;
         }
         return T(vector.value().begin(), vector.value().end());
     }
@@ -6500,9 +6462,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_container_tupled<typename std::decay<T>::type>::value,
     T>::type>
@@ -6513,12 +6472,12 @@ public:
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
-            return {};
+            return std::nullopt;
         }
         auto vector = try_to_tupled_vector<
                 typename T::value_type>(args->second(), delim);
         if (!vector.operator bool()) {
-            return {};
+            return std::nullopt;
         }
         return T(vector.value().begin(), vector.value().end());
     }
@@ -6534,9 +6493,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_map<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -6546,14 +6502,14 @@ public:
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
-            return {};
+            return std::nullopt;
         }
         typedef typename T::key_type K;
         typedef typename T::mapped_type V;
         T res{};
         auto vector = try_to_paired_vector<K, V>(args->second(), delim);
         if (!vector.operator bool()) {
-            return {};
+            return std::nullopt;
         }
         for (auto const& pair : vector.value()) {
             res.emplace(std::make_pair(pair.first, pair.second));
@@ -6572,9 +6528,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_matrix<typename std::decay<T>::type>::value
         && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
@@ -6589,7 +6542,7 @@ public:
                         | Argument::ZERO_OR_MORE))
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
-            return {};
+            return std::nullopt;
         }
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
@@ -6597,7 +6550,7 @@ public:
         for (auto const& v : args->second.matrix()) {
             auto vector = try_to_vector<VV>(v);
             if (!vector.operator bool()) {
-                return {};
+                return std::nullopt;
             }
             res.push_back(V(vector.value().begin(), vector.value().end()));
         }
@@ -6615,9 +6568,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
     T>::type>
@@ -6631,7 +6581,7 @@ public:
                         | Argument::ZERO_OR_MORE))
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
-            return {};
+            return std::nullopt;
         }
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
@@ -6639,7 +6589,7 @@ public:
         for (auto const& v : args->second.matrix()) {
             auto vector = try_to_vector<VV>(v);
             if (!vector.operator bool()) {
-                return {};
+                return std::nullopt;
             }
             res.push_back(V(std::deque<VV>(vector.value().begin(),
                                            vector.value().end())));
@@ -6658,9 +6608,6 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_pair<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -6670,7 +6617,7 @@ public:
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
-            return {};
+            return std::nullopt;
         }
         if (args->second.empty()) {
             return T();
@@ -6679,18 +6626,18 @@ public:
         typedef typename T::second_type V;
         if (std::isspace(static_cast<unsigned char>(delim))) {
             if (args->second.size() != 2) {
-                return {};
+                return std::nullopt;
             }
             auto el1 = try_to_type<K>(args->second.at(0));
             auto el2 = try_to_type<V>(args->second.at(1));
             if (el1.operator bool() && el2.operator bool()) {
                 return std::make_pair(el1.value(), el2.value());
             } else {
-                return {};
+                return std::nullopt;
             }
         }
         if (args->second.size() != 1) {
-            return {};
+            return std::nullopt;
         }
         return try_to_pair<K, V>(args->second.front(), delim);
     }
@@ -6705,9 +6652,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_queue<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -6717,12 +6661,12 @@ public:
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
-            return {};
+            return std::nullopt;
         }
         typedef typename T::value_type V;
         auto vector = try_to_vector<V>(args->second());
         if (!vector.operator bool()) {
-            return {};
+            return std::nullopt;
         }
         return T(std::deque<V>(vector.value().begin(), vector.value().end()));
     }
@@ -6738,9 +6682,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -6750,7 +6691,7 @@ public:
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
-            return {};
+            return std::nullopt;
         }
         if (args->second.empty()) {
             return T();
@@ -6759,7 +6700,7 @@ public:
             return try_to_tuple(detail::type_tag<T>{}, args->second());
         }
         if (args->second.size() != 1) {
-            return {};
+            return std::nullopt;
         }
         return try_to_tuple(detail::type_tag<T>{},
                             detail::_split(args->second.front(), delim));
@@ -6775,9 +6716,6 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-#ifdef _ARGPARSE_EXPERIMENTAL_OPTIONAL
-    [[deprecated("std::optional support is experimental, use C++17 or later")]]
-#endif  // _ARGPARSE_EXPERIMENTAL_OPTIONAL
     std::optional<typename std::enable_if<
         !std::is_constructible<std::string, T>::value
         && !std::is_floating_point<T>::value
@@ -6795,11 +6733,11 @@ public:
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
-            return {};
+            return std::nullopt;
         }
         return try_to_type<T>(detail::_vector_to_string(args->second()));
     }
-#endif  // _ARGPARSE_USE_OPTIONAL
+#endif  // C++17+
 
     /*!
      *  \brief Get unrecognized arguments
@@ -7046,7 +6984,7 @@ private:
         return res;
     }
 
-#ifdef _ARGPARSE_USE_OPTIONAL
+#ifdef _ARGPARSE_CXX_17
     inline std::optional<Storage::value_type>
     try_get_data(std::string const& key) const
     {
@@ -7054,7 +6992,7 @@ private:
         if (it != storage().end()) {
             return *it;
         }
-        return {};
+        return std::nullopt;
     }
 
     template <class T, class U>
@@ -7067,7 +7005,7 @@ private:
         if (el1.operator bool() && el2.operator bool()) {
             return std::make_pair(el1.value(), el2.value());
         } else {
-            return {};
+            return std::nullopt;
         }
     }
 
@@ -7078,7 +7016,7 @@ private:
         std::vector<std::pair<T, U> > vec;
         if (std::isspace(static_cast<unsigned char>(delim))) {
             if (args.size() & 1) {
-                return {};
+                return std::nullopt;
             }
             vec.reserve(args.size() / 2);
             for (std::size_t i = 0; i < args.size(); i += 2) {
@@ -7087,7 +7025,7 @@ private:
                 if (el1.operator bool() && el2.operator bool()) {
                     vec.emplace_back(std::make_pair(el1.value(), el2.value()));
                 } else {
-                    return {};
+                    return std::nullopt;
                 }
             }
         } else {
@@ -7097,7 +7035,7 @@ private:
                 if (pair.operator bool()) {
                     vec.emplace_back(pair.value());
                 } else {
-                    return {};
+                    return std::nullopt;
                 }
             }
         }
@@ -7115,7 +7053,7 @@ private:
             if (el.operator bool()) {
                 vec.emplace_back(el.value());
             } else {
-                return {};
+                return std::nullopt;
             }
         }
         return vec;
@@ -7133,7 +7071,7 @@ private:
                                                               sizeof...(Ts)>());
             return res;
         } catch (...) {
-            return {};
+            return std::nullopt;
         }
     }
 
@@ -7145,7 +7083,7 @@ private:
         if (std::isspace(static_cast<unsigned char>(delim))) {
             auto const size = std::tuple_size<T>{};
             if (size == 0 || args.size() % size != 0) {
-                return {};
+                return std::nullopt;
             }
             vec.reserve(args.size() / size);
             for (std::size_t i = 0; i < args.size(); i += size) {
@@ -7155,7 +7093,7 @@ private:
                 if (tuple.operator bool()) {
                     vec.emplace_back(tuple.value());
                 } else {
-                    return {};
+                    return std::nullopt;
                 }
             }
         } else {
@@ -7166,7 +7104,7 @@ private:
                 if (tuple.operator bool()) {
                     vec.emplace_back(tuple.value());
                 } else {
-                    return {};
+                    return std::nullopt;
                 }
             }
         }
@@ -7195,7 +7133,7 @@ private:
     try_to_type(std::string const& data) const _ARGPARSE_NOEXCEPT
     {
         if (data.empty() || data.size() != 1) {
-            return {};
+            return std::nullopt;
         }
         return T(data.front());
     }
@@ -7214,11 +7152,11 @@ private:
         std::stringstream ss(detail::_remove_quotes(data));
         ss >> res;
         if (ss.fail() || !ss.eof()) {
-            return {};
+            return std::nullopt;
         }
         return res;
     }
-#endif  // _ARGPARSE_USE_OPTIONAL
+#endif  // C++17+
 
     Storage m_storage;
     detail::Value<std::vector<std::string> > m_unrecognized_args;
@@ -10701,14 +10639,12 @@ private:
 
 #undef _ARGPARSE_CONSTEXPR
 #undef _ARGPARSE_ENUM_TYPE
-#undef _ARGPARSE_EXPERIMENTAL_OPTIONAL
 #undef _ARGPARSE_EXPORT
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
-#undef _ARGPARSE_USE_OPTIONAL
 
 #undef _ARGPARSE_CXX_98
 #undef _ARGPARSE_CXX_11
