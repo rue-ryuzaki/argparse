@@ -1,3 +1,13 @@
+cpp-argparse-dev (1.7.0-0ppa0) focal; urgency=low
+
+  * Add: optionals_title and positionals_title functions
+  * Fix: alignment in help for utf-8
+  * Fix: only punctuation characters are allowed for prefix chars
+  * Add: utf-8 support for flags
+  * Remove: deprecated code
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Fri, 21 Oct 2022 20:06:02 +0300
+
 cpp-argparse-dev (1.6.8-0ppa0) focal; urgency=low
 
   * Add: ARGPARSE_VERSION_NUM, ARGPARSE_VERSION_COMPILED, ARGPARSE_VERSION_AT_LEAST macros
