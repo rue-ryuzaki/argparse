@@ -33,7 +33,7 @@ github legacy:
 ```cpp-argparse-dev``` [MacPorts](https://ports.macports.org/port/cpp-argparse-dev)
 ## Available macros:
 ### Can be set
-```ARGPARSE_NO_AUTODETECT``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely <Windows.h> on OS Windows)
+```ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION``` or ```ARGPARSE_NO_AUTODETECT``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely <Windows.h> on OS Windows)
 
 ```ARGPARSE_TAB_SIZE``` - By default, RawDescriptionHelpFormatter and RawTextHelpFormatter replaces tab with 4 spaces expand. You can change amount of expanding spaces.
 ### Can be read
