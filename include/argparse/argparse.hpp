@@ -103,7 +103,13 @@
 #endif  // C++20+
 #endif  // _MSVC_LANG
 
-#ifndef ARGPARSE_NO_AUTODETECT
+#undef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+#if !defined ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION \
+ && !defined ARGPARSE_NO_AUTODETECT
+#define ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+#endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+
+#ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #if defined(_WIN32)
 #undef _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 #undef _ARGPARSE_DEFINE_VC_EXTRALEAN
@@ -135,7 +141,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #endif  // _WIN32
-#endif  // ARGPARSE_NO_AUTODETECT
+#endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 
 #ifdef _ARGPARSE_CXX_11
 #include <array>
@@ -1384,7 +1390,7 @@ _get_terminal_size(bool default_values = false)
     if (default_values) {
         return std::make_pair(width, height);
     }
-#ifndef ARGPARSE_NO_AUTODETECT
+#ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #if defined(_WIN32)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
@@ -1417,7 +1423,7 @@ _get_terminal_size(bool default_values = false)
     }
 #endif  // TIOCGSIZE
 #endif  // _WIN32
-#endif  // ARGPARSE_NO_AUTODETECT
+#endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
     return std::make_pair(width, height);
 }
 
