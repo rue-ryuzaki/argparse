@@ -3106,9 +3106,9 @@ public:
             case argparse::store_true :
             case argparse::store_false :
             case argparse::append_const :
+            case argparse::count :
             case argparse::help :
             case argparse::version :
-            case argparse::count :
             case argparse::BooleanOptionalAction :
                 throw TypeError("got an unexpected keyword argument 'nargs'");
             case argparse::store :
