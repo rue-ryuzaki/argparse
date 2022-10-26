@@ -3447,8 +3447,7 @@ public:
      */
     inline Argument& choices(std::vector<std::string> const& value)
     {
-        if (!(action() & (detail::_store_action
-                          | argparse::BooleanOptionalAction))) {
+        if (!(action() & detail::_store_action)) {
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
         std::vector<std::string> values;
