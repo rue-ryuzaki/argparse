@@ -64,7 +64,7 @@ github legacy:
 - Python API support:
   - [ArgumentParser objects](#argumentparser-objects-support)
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
-  - [add_argument() actions](#the-add_argumentname-or-flags-method-support)
+  - [add_argument() actions](#the-add_argument-actions-support)
 - [Execute unit tests](#execute-unit-tests)
 - [License](#license)
 
