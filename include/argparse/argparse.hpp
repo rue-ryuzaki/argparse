@@ -249,6 +249,7 @@ _ARGPARSE_EXPORT enum Action _ARGPARSE_ENUM_TYPE(uint16_t)
     help                    = 0x0080,
     version                 = 0x0100,
     extend                  = 0x0200,
+    language                = 0x0400,
     BooleanOptionalAction   = 0x1000,
 };
 
@@ -359,7 +360,8 @@ struct _HelpFormatter
                               std::size_t indent);
     std::string (*_get_default_metavar_for_optional)(Argument const* action);
     std::string (*_get_default_metavar_for_positional)(Argument const* action);
-    std::string (*_get_help_string)(Argument const* action);
+    std::string (*_get_help_string)(Argument const* action,
+                                    std::string const& lang);
     std::vector<std::string> (*_split_lines)(std::string const& text,
                                              std::size_t width);
 };
@@ -1381,6 +1383,29 @@ _utf8_size(std::string const& value)
     return std::make_pair(true, res);
 }
 // -----------------------------------------------------------------------------
+
+typedef std::map<std::string, std::string> LanguagePack;
+
+inline std::string
+_translation(LanguagePack const& pack, std::string const& lang)
+{
+    if (pack.count(lang) != 0) {
+        return pack.at(lang);
+    }
+    if (pack.count(std::string()) != 0) {
+        return pack.at(std::string());
+    }
+    return std::string();
+}
+
+inline std::string const&
+_translation_ref(LanguagePack const& pack, std::string const& lang)
+{
+    if (pack.count(lang) != 0) {
+        return pack.at(lang);
+    }
+    return pack.at(std::string());
+}
 
 inline std::pair<std::size_t, std::size_t>
 _get_terminal_size(bool default_values = false)
@@ -2654,7 +2679,9 @@ _ARGPARSE_EXPORT class Argument
           m_dest(detail::_make_vector(std::string())),
 #endif  // C++11+
           m_post_trigger(_ARGPARSE_NULLPTR)
-    { }
+    {
+        m_help[std::string()] = std::string();
+    }
 
 #ifdef _ARGPARSE_CXX_11
     explicit
@@ -2683,7 +2710,9 @@ _ARGPARSE_EXPORT class Argument
           m_dest(std::vector<std::string>{ std::string() }),
           m_handle(nullptr),
           m_post_trigger(nullptr)
-    { }
+    {
+        m_help[std::string()] = std::string();
+    }
 #endif  // C++11+
 
     static detail::shared_ptr<Argument>
@@ -2762,7 +2791,9 @@ public:
           m_metavar(),
           m_dest(detail::_make_vector(std::string())),
           m_post_trigger(_ARGPARSE_NULLPTR)
-    { }
+    {
+        m_help[std::string()] = std::string();
+    }
 
     /*!
      *  \brief Construct argument object with parsed arguments
@@ -2795,7 +2826,9 @@ public:
           m_metavar(),
           m_dest(detail::_make_vector(std::string())),
           m_post_trigger(_ARGPARSE_NULLPTR)
-    { }
+    {
+        m_help[std::string()] = std::string();
+    }
 #endif  // C++11+
 
     /*!
@@ -2836,7 +2869,9 @@ public:
           m_dest(detail::_make_vector(std::string())),
 #endif  // C++11+
           m_post_trigger(_ARGPARSE_NULLPTR)
-    { }
+    {
+        m_help[std::string()] = std::string();
+    }
 
     /*!
      *  \brief Construct argument object from another argument
@@ -2870,7 +2905,9 @@ public:
           m_handle(orig.m_handle),
 #endif  // C++11+
           m_post_trigger(orig.m_post_trigger)
-    { }
+    {
+        m_help[std::string()] = std::string();
+    }
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -2903,7 +2940,9 @@ public:
           m_dest(std::move(orig.m_dest)),
           m_handle(std::move(orig.m_handle)),
           m_post_trigger(std::move(orig.m_post_trigger))
-    { }
+    {
+        m_help[std::string()] = std::string();
+    }
 #endif  // C++11+
 
     /*!
@@ -3023,6 +3062,8 @@ public:
             return action(argparse::version);
         } else if (value == "extend") {
             return action(argparse::extend);
+        } else if (value == "language") {
+            return action(argparse::language);
         }
         throw ValueError("unknown action '" + value + "'");
     }
@@ -3086,6 +3127,13 @@ public:
                     m_num_args = 1;
                 }
                 break;
+            case argparse::language :
+                check_required();
+                m_const.clear();
+                m_nargs = NARGS_DEF;
+                m_nargs_str = "1";
+                m_num_args = 1;
+                break;
             default :
                 throw ValueError("unknown action");
         }
@@ -3110,6 +3158,7 @@ public:
             case argparse::count :
             case argparse::help :
             case argparse::version :
+            case argparse::language :
             case argparse::BooleanOptionalAction :
                 throw TypeError("got an unexpected keyword argument 'nargs'");
             case argparse::store :
@@ -3423,7 +3472,7 @@ public:
 #endif  // C++11+
     Argument& choices(std::string const& value)
     {
-        if (!(action() & detail::_store_action)) {
+        if (!(action() & (detail::_store_action | argparse::language))) {
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
         std::vector<std::string> values;
@@ -3448,7 +3497,7 @@ public:
      */
     inline Argument& choices(std::vector<std::string> const& value)
     {
-        if (!(action() & detail::_store_action)) {
+        if (!(action() & (detail::_store_action | argparse::language))) {
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
         std::vector<std::string> values;
@@ -3491,16 +3540,20 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'help' message
+     *  \brief Set argument 'help' message for selected language (default: "")
      *
      *  \param value Help message
+     *  \param lang Language value
      *
      *  \return Current argument reference
      */
-    inline Argument& help(std::string const& value)
+    inline Argument& help(std::string const& value,
+                          std::string const& lang = std::string())
     {
-        m_help = value;
-        m_help_type.clear();
+        if (lang.empty()) {
+            m_help_type.clear();
+        }
+        m_help[lang] = value;
         return *this;
     }
 
@@ -3785,9 +3838,9 @@ public:
      *
      *  \return Argument 'help' message
      */
-    inline std::string const& help() const _ARGPARSE_NOEXCEPT
+    inline std::string const& help() const
     {
-        return m_help;
+        return m_help.at(std::string());
     }
 
     /*!
@@ -3904,7 +3957,9 @@ private:
                 res += m_flags.front();
             }
         }
-        if (action() & (detail::_store_action | argparse::append_const)) {
+        if (action() & (detail::_store_action
+                        | argparse::append_const
+                        | argparse::language)) {
             res += get_nargs_suffix(formatter);
         }
         return res;
@@ -3917,7 +3972,8 @@ private:
             for (std::size_t i = 0; i < flags().size(); ++i) {
                 detail::_append_value_to(flags().at(i), res, ", ");
                 if (action() & (detail::_store_action
-                                | argparse::append_const)) {
+                                | argparse::append_const
+                                | argparse::language)) {
                     res += get_nargs_suffix(formatter);
                 }
             }
@@ -3993,9 +4049,10 @@ private:
 
     inline std::string print(_HelpFormatter const& formatter,
                              std::size_t limit,
-                             std::size_t width) const
+                             std::size_t width,
+                             std::string const& lang) const
     {
-        std::string help = formatter._get_help_string(this);
+        std::string help = formatter._get_help_string(this, lang);
 #ifdef _ARGPARSE_CXX_11
         std::regex const r("%[(]([a-z_]*)[)]s");
         std::smatch match;
@@ -4170,7 +4227,7 @@ private:
     detail::Value<std::string> m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
     detail::Value<bool> m_required;
-    std::string m_help;
+    detail::LanguagePack m_help;
     detail::Value<std::string> m_version;
     detail::Value<std::vector<std::string> > m_metavar;
     std::vector<std::string> m_dest;
@@ -4207,7 +4264,7 @@ public:
     }
 
     virtual std::string
-    (*_get_help_string() const) (Argument const*)
+    (*_get_help_string() const) (Argument const*, std::string const&)
     {
         return _get_help_string_s;
     }
@@ -4251,9 +4308,9 @@ protected:
     }
 
     static std::string
-    _get_help_string_s(Argument const* action)
+    _get_help_string_s(Argument const* action, std::string const& lang)
     {
-        return action->help();
+        return detail::_translation(action->m_help, lang);
     }
 
     static std::vector<std::string>
@@ -4385,16 +4442,17 @@ public:
     virtual ~_ArgumentDefaultsHelpFormatter() _ARGPARSE_NOEXCEPT { }
 
     std::string
-    (*_get_help_string() const) (Argument const*) _ARGPARSE_OVERRIDE
+    (*_get_help_string() const) (Argument const*,
+                                 std::string const&) _ARGPARSE_OVERRIDE
     {
         return _get_help_string_s;
     }
 
 protected:
     static std::string
-    _get_help_string_s(Argument const* action)
+    _get_help_string_s(Argument const* action, std::string const& lang)
     {
-        std::string help = action->help();
+        std::string help = detail::_translation(action->m_help, lang);
         if (!help.empty()
                 && !detail::_contains_substr(help, "%(default)s")
                 && !action->is_suppressed()) {
@@ -4464,9 +4522,12 @@ class _Group
 protected:
     explicit
     _Group(std::string const& title, std::string const& description)
-        : m_title(title),
-          m_description(description)
-    { }
+        : m_title(),
+          m_description()
+    {
+        m_title[std::string()] = title;
+        m_description[std::string()] = description;
+    }
 
 public:
     /*!
@@ -4479,9 +4540,9 @@ public:
      *
      *  \return Group 'title' value
      */
-    inline std::string const& title() const _ARGPARSE_NOEXCEPT
+    inline std::string const& title() const
     {
-        return m_title;
+        return m_title.at(std::string());
     }
 
     /*!
@@ -4489,22 +4550,23 @@ public:
      *
      *  \return Group 'description' value
      */
-    inline std::string const& description() const _ARGPARSE_NOEXCEPT
+    inline std::string const& description() const
     {
-        return m_description;
+        return m_description.at(std::string());
     }
 
 protected:
     virtual void limit_help_flags(_HelpFormatter const& formatter,
-                                  std::size_t& limit)                 const = 0;
+                                  std::size_t& limit) const                 = 0;
     virtual void print_help(std::ostream& os,
                             _HelpFormatter const& formatter,
                             std::string const& prog,
                             std::size_t limit,
-                            std::size_t width)                        const = 0;
+                            std::size_t width,
+                            std::string const& lang) const                  = 0;
 
-    std::string m_title;
-    std::string m_description;
+    detail::LanguagePack m_title;
+    detail::LanguagePack m_description;
 };
 
 /*!
@@ -5086,27 +5148,33 @@ public:
 
     /*!
      *  \brief Set argument group 'title' value
+     *  for selected language (default: "")
      *
      *  \param value Title value
+     *  \param lang Language value
      *
      *  \return Current argument group reference
      */
-    inline ArgumentGroup& title(std::string const& value)
+    inline ArgumentGroup& title(std::string const& value,
+                                std::string const& lang = std::string())
     {
-        m_title = detail::_trim_copy(value);
+        m_title[lang] = detail::_trim_copy(value);
         return *this;
     }
 
     /*!
      *  \brief Set argument group 'description' value
+     *  for selected language (default: "")
      *
      *  \param value Description value
+     *  \param lang Language value
      *
      *  \return Current argument group reference
      */
-    inline ArgumentGroup& description(std::string const& value)
+    inline ArgumentGroup& description(std::string const& value,
+                                      std::string const& lang = std::string())
     {
-        m_description = detail::_trim_copy(value);
+        m_description[lang] = detail::_trim_copy(value);
         return *this;
     }
 
@@ -5143,22 +5211,25 @@ private:
                            _HelpFormatter const& formatter,
                            std::string const& prog,
                            std::size_t limit,
-                           std::size_t width) const _ARGPARSE_OVERRIDE
+                           std::size_t width,
+                           std::string const& lang) const _ARGPARSE_OVERRIDE
     {
-        if (!description().empty() || !m_data.m_arguments.empty()) {
-            if (!title().empty()) {
-                os << "\n" << title() << ":";
+        std::string description = detail::_translation(m_description, lang);
+        if (!description.empty() || !m_data.m_arguments.empty()) {
+            std::string title = detail::_translation(m_title, lang);
+            if (!title.empty()) {
+                os << "\n" << title << ":";
             }
             detail::_print_raw_text_formatter(
                         formatter,
-                        detail::_replace(
-                            description(), "%(prog)s", prog),
+                        detail::_replace(description, "%(prog)s", prog),
                         width, os, "\n", 2);
             if (!m_data.m_arguments.empty()) {
                 os << std::endl;
             }
             for (std::size_t i = 0; i < m_data.m_arguments.size(); ++i) {
-                os << m_data.m_arguments.at(i)->print(formatter, limit, width)
+                os << m_data.m_arguments.at(i)->print(formatter, limit,
+                                                      width, lang)
                    << std::endl;
             }
         }
@@ -7206,7 +7277,9 @@ public:
               m_help(),
               m_metavar(),
               m_parsers()
-        { }
+        {
+            m_help[std::string()] = std::string();
+        }
 
         static detail::shared_ptr<Subparser>
         make_subparser(std::string const& title,
@@ -7222,27 +7295,33 @@ public:
 
         /*!
          *  \brief Set subparser 'title' value
+         *  for selected language (default: "")
          *
          *  \param value Title value
+         *  \param lang Language value
          *
          *  \return Current subparser reference
          */
-        inline Subparser& title(std::string const& value)
+        inline Subparser& title(std::string const& value,
+                                std::string const& lang = std::string())
         {
-            m_title = detail::_trim_copy(value);
+            m_title[lang] = detail::_trim_copy(value);
             return *this;
         }
 
         /*!
          *  \brief Set subparser 'description' value
+         *  for selected language (default: "")
          *
          *  \param value Description value
+         *  \param lang Language value
          *
          *  \return Current subparser reference
          */
-        inline Subparser& description(std::string const& value)
+        inline Subparser& description(std::string const& value,
+                                      std::string const& lang = std::string())
         {
-            m_description = detail::_trim_copy(value);
+            m_description[lang] = detail::_trim_copy(value);
             return *this;
         }
 
@@ -7288,14 +7367,17 @@ public:
 
         /*!
          *  \brief Set subparser 'help' message
+         *  for selected language (default: "")
          *
          *  \param value Help message
+         *  \param lang Language value
          *
          *  \return Current subparser reference
          */
-        inline Subparser& help(std::string const& value)
+        inline Subparser& help(std::string const& value,
+                               std::string const& lang = std::string())
         {
-            m_help = value;
+            m_help[lang] = value;
             return *this;
         }
 
@@ -7347,9 +7429,9 @@ public:
          *
          *  \return Subparser 'help' message
          */
-        inline std::string const& help() const _ARGPARSE_NOEXCEPT
+        inline std::string const& help() const
         {
-            return m_help;
+            return m_help.at(std::string());
         }
 
         /*!
@@ -7440,14 +7522,18 @@ public:
                                _HelpFormatter const& formatter,
                                std::string const& prog,
                                std::size_t limit,
-                               std::size_t width) const _ARGPARSE_OVERRIDE
+                               std::size_t width,
+                               std::string const& lang) const _ARGPARSE_OVERRIDE
         {
-            os << "\n" << (title().empty() ? "subcommands" : title()) << ":\n";
+            std::string title = detail::_translation(m_title, lang);
+            os << "\n" << (title.empty() ? "subcommands" : title) << ":\n";
             detail::_print_raw_text_formatter(
                         formatter,
-                        detail::_replace(description(), "%(prog)s", prog),
+                        detail::_replace(
+                            detail::_translation(m_description, lang),
+                            "%(prog)s", prog),
                         width, os, std::string(), 2, "\n");
-            os << print(formatter, limit, width) << std::endl;
+            os << print(formatter, limit, width, lang) << std::endl;
         }
 
         inline std::string usage() const
@@ -7472,31 +7558,35 @@ public:
         }
 
         inline std::string print(_HelpFormatter const& formatter,
-                                 std::size_t limit, std::size_t width) const
+                                 std::size_t limit, std::size_t width,
+                                 std::string const& lang) const
         {
             std::string res
-                    = detail::_help_formatter("  " + flags_to_string(),
-                                              formatter, help(), width, limit);
+                    = detail::_help_formatter(
+                        "  " + flags_to_string(), formatter,
+                        detail::_translation(m_help, lang), width, limit);
 #ifdef _ARGPARSE_CXX_11
             return std::accumulate(m_parsers.begin(), m_parsers.end(),
-                                   res, [formatter, limit, width]
+                                   res, [formatter, limit, width, &lang]
                                    (std::string const& str, pParser const& p)
             {
-                if (!p->help().empty()) {
+                auto help = detail::_translation(p->m_help, lang);
+                if (!help.empty()) {
                     std::string name = "    " + p->m_name;
                     auto alias = detail::_vector_to_string(p->aliases(), ", ");
                     if (!alias.empty()) {
                         name += " (" + alias + ")";
                     }
                     return str + "\n" + detail::_help_formatter(
-                                name, formatter, p->help(), width, limit);
+                                name, formatter, help, width, limit);
                 }
                 return str;
             });
 #else
             for (std::size_t i = 0; i < m_parsers.size(); ++i) {
                 pParser const& p = m_parsers.at(i);
-                if (!p->help().empty()) {
+                std::string help = detail::_translation(p->m_help, lang);
+                if (!help.empty()) {
                     std::string name = "    " + p->m_name;
                     std::string alias
                             = detail::_vector_to_string(p->aliases(), ", ");
@@ -7504,7 +7594,7 @@ public:
                         name += " (" + alias + ")";
                     }
                     return res += "\n" + detail::_help_formatter(
-                                name, formatter, p->help(), width, limit);
+                                name, formatter, help, width, limit);
                 }
             }
             return res;
@@ -7516,7 +7606,7 @@ public:
         std::string m_prog;
         std::string m_dest;
         bool        m_required;
-        std::string m_help;
+        detail::LanguagePack m_help;
         detail::Value<std::string> m_metavar;
         std::deque<pParser> m_parsers;
     };
@@ -7581,6 +7671,16 @@ private:
         }
     }
 
+    inline void init_translations()
+    {
+        m_usage[std::string()] = std::string();
+        m_description[std::string()] = std::string();
+        m_positionals_title[std::string()] = "positional arguments";
+        m_optionals_title[std::string()] = "options";
+        m_epilog[std::string()] = std::string();
+        m_help[std::string()] = std::string();
+    }
+
 public:
     /*!
      *  \brief Construct argument parser with concrete program name
@@ -7597,8 +7697,8 @@ public:
           m_prog("untitled"),
           m_usage(),
           m_description(),
-          m_positionals_title("positional arguments"),
-          m_optionals_title("options"),
+          m_positionals_title(),
+          m_optionals_title(),
           m_epilog(),
           m_help(),
           m_aliases(),
@@ -7621,6 +7721,7 @@ public:
           m_parse_handle(nullptr)
 #endif  // C++11+
     {
+        init_translations();
         set_formatter_class(HelpFormatter());
         this->prog(prog);
         m_data.update_help(true, m_prefix_chars);
@@ -7645,8 +7746,8 @@ public:
           m_prog("untitled"),
           m_usage(),
           m_description(),
-          m_positionals_title("positional arguments"),
-          m_optionals_title("options"),
+          m_positionals_title(),
+          m_optionals_title(),
           m_epilog(),
           m_help(),
           m_aliases(),
@@ -7669,6 +7770,7 @@ public:
           m_parse_handle(nullptr)
 #endif  // C++11+
     {
+        init_translations();
         set_formatter_class(HelpFormatter());
         m_data.update_help(true, m_prefix_chars);
         read_args(argc, const_cast<char const**>(argv));
@@ -7694,8 +7796,8 @@ public:
           m_prog("untitled"),
           m_usage(),
           m_description(),
-          m_positionals_title("positional arguments"),
-          m_optionals_title("options"),
+          m_positionals_title(),
+          m_optionals_title(),
           m_epilog(),
           m_help(),
           m_aliases(),
@@ -7718,6 +7820,7 @@ public:
           m_parse_handle(nullptr)
 #endif  // C++11+
     {
+        init_translations();
         set_formatter_class(HelpFormatter());
         m_data.update_help(true, m_prefix_chars);
         read_args(argc, argv);
@@ -7760,86 +7863,105 @@ public:
 
     /*!
      *  \brief Set argument parser 'usage' value
+     *  for selected language (default: "")
      *
      *  \param value Usage value
+     *  \param lang Language value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& usage(std::string const& value)
+    inline ArgumentParser& usage(std::string const& value,
+                                 std::string const& lang = std::string())
     {
-        m_usage = detail::_trim_copy(value);
+        m_usage[lang] = detail::_trim_copy(value);
         return *this;
     }
 
     /*!
      *  \brief Set argument parser 'description' value
+     *  for selected language (default: "")
      *
      *  \param value Description value
+     *  \param lang Language value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& description(std::string const& value)
+    inline ArgumentParser& description(std::string const& value,
+                                       std::string const& lang = std::string())
     {
-        m_description = value;
+        m_description[lang] = value;
         return *this;
     }
 
     /*!
      *  \brief Set title for positional arguments
-     *  (default: "positional arguments")
+     *  (default: "positional arguments") for selected language (default: "")
      *
      *  \param value Title for positional arguments
+     *  \param lang Language value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& positionals_title(std::string const& value)
+    inline ArgumentParser&
+    positionals_title(std::string const& value,
+                      std::string const& lang = std::string())
     {
         std::string val = detail::_trim_copy(value);
         if (!val.empty()) {
-            m_positionals_title = val;
+            m_positionals_title[lang] = val;
         }
         return *this;
     }
 
     /*!
-     *  \brief Set title for optional arguments (default: "options")
+     *  \brief Set title for optional arguments
+     *  (default: "options") for selected language (default: "")
      *
      *  \param value Title for optional arguments
+     *  \param lang Language value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& optionals_title(std::string const& value)
+    inline ArgumentParser&
+    optionals_title(std::string const& value,
+                    std::string const& lang = std::string())
     {
         std::string val = detail::_trim_copy(value);
         if (!val.empty()) {
-            m_optionals_title = val;
+            m_optionals_title[lang] = val;
         }
         return *this;
     }
 
     /*!
      *  \brief Set argument parser 'epilog' value
+     *  for selected language (default: "")
      *
      *  \param value Epilog value
+     *  \param lang Language value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& epilog(std::string const& value)
+    inline ArgumentParser& epilog(std::string const& value,
+                                  std::string const& lang = std::string())
     {
-        m_epilog = value;
+        m_epilog[lang] = value;
         return *this;
     }
 
     /*!
      *  \brief Set argument parser 'help' message (for subparsers)
+     *  for selected language (default: "")
      *
      *  \param value Help message
+     *  \param lang Language value
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& help(std::string const& value)
+    inline ArgumentParser& help(std::string const& value,
+                                std::string const& lang = std::string())
     {
-        m_help = value;
+        m_help[lang] = value;
         return *this;
     }
 
@@ -8222,9 +8344,9 @@ public:
      *
      *  \return Argument parser 'usage' value
      */
-    inline std::string const& usage() const _ARGPARSE_NOEXCEPT
+    inline std::string const& usage() const
     {
-        return m_usage;
+        return m_usage.at(std::string());
     }
 
     /*!
@@ -8232,9 +8354,9 @@ public:
      *
      *  \return Argument parser 'description' value
      */
-    inline std::string const& description() const _ARGPARSE_NOEXCEPT
+    inline std::string const& description() const
     {
-        return m_description;
+        return m_description.at(std::string());
     }
 
     /*!
@@ -8243,9 +8365,9 @@ public:
      *
      *  \return Title for positional arguments
      */
-    inline std::string const& positionals_title() const _ARGPARSE_NOEXCEPT
+    inline std::string const& positionals_title() const
     {
-        return m_positionals_title;
+        return m_positionals_title.at(std::string());
     }
 
     /*!
@@ -8253,9 +8375,9 @@ public:
      *
      *  \return Title for optional arguments
      */
-    inline std::string const& optionals_title() const _ARGPARSE_NOEXCEPT
+    inline std::string const& optionals_title() const
     {
-        return m_optionals_title;
+        return m_optionals_title.at(std::string());
     }
 
     /*!
@@ -8263,9 +8385,9 @@ public:
      *
      *  \return Argument parser 'epilog' value
      */
-    inline std::string const& epilog() const _ARGPARSE_NOEXCEPT
+    inline std::string const& epilog() const
     {
-        return m_epilog;
+        return m_epilog.at(std::string());
     }
 
     /*!
@@ -8273,9 +8395,9 @@ public:
      *
      *  \return Argument parser 'help' message
      */
-    inline std::string const& help() const _ARGPARSE_NOEXCEPT
+    inline std::string const& help() const
     {
-        return m_help;
+        return m_help.at(std::string());
     }
 
     /*!
@@ -8870,8 +8992,22 @@ public:
      */
     inline void print_usage(std::ostream& os = std::cout) const
     {
-        if (!usage().empty()) {
-            os << "usage: " << detail::_replace(usage(), "%(prog)s", prog())
+        print_usage(std::string(), os);
+    }
+
+    /*!
+     *  \brief Print a program usage for selected language
+     *  to output stream (default: std::cout)
+     *
+     *  \param lang Language value
+     *  \param os Output stream
+     */
+    inline void print_usage(std::string const& lang,
+                            std::ostream& os = std::cout) const
+    {
+        std::string value = detail::_translation(m_usage, lang);
+        if (!value.empty()) {
+            os << "usage: " << detail::_replace(value, "%(prog)s", prog())
                << std::endl;
         } else {
             pArguments const positional = m_data.get_positional(false, true);
@@ -8888,13 +9024,27 @@ public:
      */
     inline void print_help(std::ostream& os = std::cout) const
     {
+        print_help(std::string(), os);
+    }
+
+    /*!
+     *  \brief Print a help message for selected language
+     *  to output stream (default: std::cout)
+     *
+     *  \param lang Language value
+     *  \param os Output stream
+     */
+    inline void print_help(std::string const& lang,
+                           std::ostream& os = std::cout) const
+    {
         pArguments const positional_all = m_data.get_positional(false, true);
         pArguments const optional_all = m_data.get_optional(false, true);
         pArguments const positional = m_data.get_positional(false, false);
         pArguments const optional = m_data.get_optional(false, false);
         SubparserInfo const sub_info = subparser_info(false);
-        if (!usage().empty()) {
-            os << "usage: " << detail::_replace(usage(), "%(prog)s", prog())
+        std::string value = detail::_translation(m_usage, lang);
+        if (!value.empty()) {
+            os << "usage: " << detail::_replace(value, "%(prog)s", prog())
                << std::endl;
         } else {
             print_custom_usage(positional_all, optional_all,
@@ -8903,7 +9053,8 @@ public:
         std::size_t width = output_width();
         detail::_print_raw_text_formatter(
                     m_formatter_class,
-                    detail::_replace(description(), "%(prog)s", prog()),
+                    detail::_replace(detail::_translation(m_description, lang),
+                                     "%(prog)s", prog()),
                     width, os);
         std::size_t size = 0;
         pSubparser subparser = sub_info.first;
@@ -8924,23 +9075,26 @@ public:
         size += 4;
         detail::_limit_to_max(size, argument_name_limit());
         if (!positional.empty() || sub_positional) {
-            os << "\n" << positionals_title() << ":\n";
+            os << "\n" << detail::_translation(m_positionals_title, lang)
+               << ":\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
                 print_subparser(sub_positional, sub_info, i,
-                                m_formatter_class, size, width, os);
+                                m_formatter_class, size, width, lang, os);
                 os << detail::_replace(
                           positional.at(i)->print(m_formatter_class,
-                                                  size, width),
+                                                  size, width, lang),
                           "%(prog)s", prog()) << std::endl;
             }
             print_subparser(sub_positional, sub_info, positional.size(),
-                            m_formatter_class, size, width, os);
+                            m_formatter_class, size, width, lang, os);
         }
         if (!optional.empty()) {
-            os << "\n" << optionals_title() << ":\n";
+            os << "\n" << detail::_translation(m_optionals_title, lang)
+               << ":\n";
             for (std::size_t i = 0; i < optional.size(); ++i) {
                 os << detail::_replace(
-                          optional.at(i)->print(m_formatter_class, size, width),
+                          optional.at(i)->print(m_formatter_class,
+                                                size, width, lang),
                           "%(prog)s", prog()) << std::endl;
             }
         }
@@ -8951,35 +9105,44 @@ public:
             pGroup const& group = m_groups.at(i);
 #endif  // C++11+
             print_group(group, subparser, sub_positional, m_formatter_class,
-                        prog(), size, width, os);
+                        prog(), size, width, lang, os);
         }
         detail::_print_raw_text_formatter(
                     m_formatter_class,
-                    detail::_replace(epilog(), "%(prog)s", prog()),
+                    detail::_replace(detail::_translation(m_epilog, lang),
+                                     "%(prog)s", prog()),
                     width, os);
     }
 
     /*!
      *  \brief Return a string containing a program usage
+     *  for selected language (default: "")
      *
-     *  \return Program usage
+     *  \param lang Language value
+     *
+     *  \return Program usage for selected language
      */
-    inline std::string format_usage() const
+    inline std::string
+    format_usage(std::string const& lang = std::string()) const
     {
         std::stringstream ss;
-        print_usage(ss);
+        print_usage(lang, ss);
         return detail::_trim_copy(ss.str());
     }
 
     /*!
      *  \brief Return a string containing a help message
+     *  for selected language (default: "")
      *
-     *  \return Help message
+     *  \param lang Language value
+     *
+     *  \return Help message for selected language
      */
-    inline std::string format_help() const
+    inline std::string
+    format_help(std::string const& lang = std::string()) const
     {
         std::stringstream ss;
-        print_help(ss);
+        print_help(lang, ss);
         return detail::_trim_copy(ss.str());
     }
 
@@ -9034,9 +9197,11 @@ public:
 
 private:
     inline void
-    throw_error(std::string const& message, std::ostream& os = std::cerr) const
+    throw_error(std::string const& message,
+                std::string const& lang = std::string(),
+                std::ostream& os = std::cerr) const
     {
-        print_usage(os);
+        print_usage(lang, os);
         throw std::logic_error(prog() + ": error: " + message);
     }
 
@@ -9169,6 +9334,7 @@ private:
                     bool intermixed,
                     Namespace const& space) const
     {
+        std::string lang;
 #ifdef _ARGPARSE_CXX_11
         handle(prog());
 #endif  // C++11+
@@ -9220,10 +9386,18 @@ private:
                                                was_pseudo_arg, arg, tmp);
                         break;
                     case argparse::help :
-                        process_optional_help(parsers, equals, arg);
+                        process_optional_help(parsers, equals, arg, lang);
                         break;
                     case argparse::version :
-                        process_optional_version(parsers, equals, arg, tmp);
+                        process_optional_version(parsers, equals, arg, tmp,
+                                                 lang);
+                        break;
+                    case argparse::language :
+                        parsers.front().storage.at(tmp).clear();
+                        storage_optional_store(parsers, equals,
+                                               parsed_arguments, i,
+                                               was_pseudo_arg, arg, tmp);
+                        lang = parsers.front().storage.at(tmp).front();
                         break;
                     default :
                         // argparse::store_const :
@@ -9597,25 +9771,27 @@ private:
 
     inline void process_optional_help(Parsers const& parsers,
                                       std::vector<std::string> const& equals,
-                                      std::string const& arg) const
+                                      std::string const& arg,
+                                      std::string const& lang) const
     {
         if (equals.size() != 1) {
             parsers.back().parser->throw_error(
-                        detail::_ignore_explicit(arg, equals.back()));
+                        detail::_ignore_explicit(arg, equals.back()), lang);
         }
         // print help and exit
-        parsers.back().parser->print_help();
+        parsers.back().parser->print_help(lang);
         ::exit(0);
     }
 
     inline void process_optional_version(Parsers const& parsers,
                                          std::vector<std::string> const& equals,
                                          std::string const& arg,
-                                         pArgument const& tmp) const
+                                         pArgument const& tmp,
+                                         std::string const& lang) const
     {
         if (equals.size() != 1) {
             parsers.back().parser->throw_error(
-                        detail::_ignore_explicit(arg, equals.back()));
+                        detail::_ignore_explicit(arg, equals.back()), lang);
         }
         if (!tmp->m_version.has_value()) {
             throw AttributeError("'ArgumentParser' object has no "
@@ -10556,10 +10732,12 @@ private:
     static void
     print_subparser(bool need_print, SubparserInfo const& subparser,
                     std::size_t index, _HelpFormatter const& formatter,
-                    std::size_t size, std::size_t width, std::ostream& os)
+                    std::size_t size, std::size_t width,
+                    std::string const& lang, std::ostream& os)
     {
         if (need_print && subparser.second == index) {
-            os << subparser.first->print(formatter, size, width) << std::endl;
+            os << subparser.first->print(formatter, size, width, lang)
+               << std::endl;
         }
     }
 
@@ -10568,11 +10746,12 @@ private:
                             bool is_positional,
                             _HelpFormatter const& formatter,
                             std::string const& prog, std::size_t size,
-                            std::size_t width, std::ostream& os)
+                            std::size_t width,
+                            std::string const& lang, std::ostream& os)
     {
         if ((subparser && (group != subparser || !is_positional))
                 || (!subparser && group != subparser)) {
-            group->print_help(os, formatter, prog, size, width);
+            group->print_help(os, formatter, prog, size, width, lang);
         }
     }
 
@@ -10607,12 +10786,12 @@ private:
     _ArgumentData m_data;
     std::string m_name;
     std::string m_prog;
-    std::string m_usage;
-    std::string m_description;
-    std::string m_positionals_title;
-    std::string m_optionals_title;
-    std::string m_epilog;
-    std::string m_help;
+    detail::LanguagePack m_usage;
+    detail::LanguagePack m_description;
+    detail::LanguagePack m_positionals_title;
+    detail::LanguagePack m_optionals_title;
+    detail::LanguagePack m_epilog;
+    detail::LanguagePack m_help;
     std::vector<std::string> m_aliases;
     _HelpFormatter m_formatter_class;
     std::string m_prefix_chars;
