@@ -3907,7 +3907,7 @@ private:
     inline void check_required() const
     {
         if (m_type == Positional) {
-            // version and help actions cannot be positional
+            // version, help and language actions cannot be positional
             throw TypeError("got an unexpected keyword argument 'required'");
         }
     }
@@ -6281,6 +6281,7 @@ public:
             case argparse::append :
             case argparse::append_const :
             case argparse::extend :
+            case argparse::language :
                 return detail::_vector_to_string(args.second(), detail::_spaces,
                                                  std::string(), true);
             case argparse::BooleanOptionalAction :
@@ -6324,6 +6325,7 @@ public:
             case argparse::append :
             case argparse::append_const :
             case argparse::extend :
+            case argparse::language :
                 return store_actions_to_string(args, quotes);
             default :
                 throw ValueError("action not supported");
@@ -9282,6 +9284,7 @@ private:
               optional(),
               storage(storage),
               subparser(subparser),
+              lang(),
               have_negative_args()
         {
             optional = parser->m_data.get_optional(true, true);
@@ -9294,6 +9297,7 @@ private:
               optional(orig.optional),
               storage(orig.storage),
               subparser(orig.subparser),
+              lang(orig.lang),
               have_negative_args(orig.have_negative_args)
         { }
 
@@ -9304,6 +9308,7 @@ private:
                 optional            = rhs.optional;
                 storage             = rhs.storage;
                 subparser           = rhs.subparser;
+                lang                = rhs.lang;
                 have_negative_args  = rhs.have_negative_args;
             }
             return *this;
@@ -9323,6 +9328,7 @@ private:
         pArguments optional;
         Namespace::Storage storage;
         SubparserInfo subparser;
+        std::string lang;
         bool have_negative_args;
     };
 
@@ -9334,7 +9340,6 @@ private:
                     bool intermixed,
                     Namespace const& space) const
     {
-        std::string lang;
 #ifdef _ARGPARSE_CXX_11
         handle(prog());
 #endif  // C++11+
@@ -9386,18 +9391,18 @@ private:
                                                was_pseudo_arg, arg, tmp);
                         break;
                     case argparse::help :
-                        process_optional_help(parsers, equals, arg, lang);
+                        process_optional_help(parsers, equals, arg);
                         break;
                     case argparse::version :
-                        process_optional_version(parsers, equals, arg, tmp,
-                                                 lang);
+                        process_optional_version(parsers, equals, arg, tmp);
                         break;
                     case argparse::language :
                         parsers.front().storage.at(tmp).clear();
                         storage_optional_store(parsers, equals,
                                                parsed_arguments, i,
                                                was_pseudo_arg, arg, tmp);
-                        lang = parsers.front().storage.at(tmp).front();
+                        parsers.back().lang
+                                = parsers.front().storage.at(tmp).front();
                         break;
                     default :
                         // argparse::store_const :
@@ -9771,27 +9776,27 @@ private:
 
     inline void process_optional_help(Parsers const& parsers,
                                       std::vector<std::string> const& equals,
-                                      std::string const& arg,
-                                      std::string const& lang) const
+                                      std::string const& arg) const
     {
         if (equals.size() != 1) {
             parsers.back().parser->throw_error(
-                        detail::_ignore_explicit(arg, equals.back()), lang);
+                        detail::_ignore_explicit(arg, equals.back()),
+                        parsers.back().lang);
         }
         // print help and exit
-        parsers.back().parser->print_help(lang);
+        parsers.back().parser->print_help(parsers.back().lang);
         ::exit(0);
     }
 
     inline void process_optional_version(Parsers const& parsers,
                                          std::vector<std::string> const& equals,
                                          std::string const& arg,
-                                         pArgument const& tmp,
-                                         std::string const& lang) const
+                                         pArgument const& tmp) const
     {
         if (equals.size() != 1) {
             parsers.back().parser->throw_error(
-                        detail::_ignore_explicit(arg, equals.back()), lang);
+                        detail::_ignore_explicit(arg, equals.back()),
+                        parsers.back().lang);
         }
         if (!tmp->m_version.has_value()) {
             throw AttributeError("'ArgumentParser' object has no "
