@@ -1387,7 +1387,7 @@ _utf8_size(std::string const& value)
 typedef std::map<std::string, std::string> LanguagePack;
 
 inline std::string
-_translation(LanguagePack const& pack, std::string const& lang)
+_tr(LanguagePack const& pack, std::string const& lang)
 {
     if (!lang.empty() && pack.count(lang) != 0) {
         return pack.at(lang);
@@ -4301,7 +4301,7 @@ protected:
     static std::string
     _get_help_string_s(Argument const* action, std::string const& lang)
     {
-        return detail::_translation(action->m_help, lang);
+        return detail::_tr(action->m_help, lang);
     }
 
     static std::vector<std::string>
@@ -4443,9 +4443,9 @@ protected:
     static std::string
     _get_help_string_s(Argument const* action, std::string const& lang)
     {
-        std::string help = detail::_translation(action->m_help, lang);
-        if (!help.empty()
-                && !detail::_contains_substr(help, "%(default)s")
+        std::string res = detail::_tr(action->m_help, lang);
+        if (!res.empty()
+                && !detail::_contains_substr(res, "%(default)s")
                 && !action->is_suppressed()) {
             if ((action->m_type == Argument::Optional
                  || (action->m_nargs & (Argument::ZERO_OR_ONE
@@ -4453,10 +4453,10 @@ protected:
                     && !(action->action() & (argparse::help
                                              | argparse::version
                                              | argparse::language))) {
-                help += " (default: %(default)s)";
+                res += " (default: %(default)s)";
             }
         }
-        return help;
+        return res;
     }
 } _ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
 
@@ -5207,9 +5207,9 @@ private:
                            std::size_t width,
                            std::string const& lang) const _ARGPARSE_OVERRIDE
     {
-        std::string description = detail::_translation(m_description, lang);
+        std::string description = detail::_tr(m_description, lang);
         if (!description.empty() || !m_data.m_arguments.empty()) {
-            std::string title = detail::_translation(m_title, lang);
+            std::string title = detail::_tr(m_title, lang);
             if (!title.empty()) {
                 os << "\n" << title << ":";
             }
@@ -5222,8 +5222,7 @@ private:
             }
             for (std::size_t i = 0; i < m_data.m_arguments.size(); ++i) {
                 os << m_data.m_arguments.at(i)->print(formatter, limit,
-                                                      width, lang)
-                   << std::endl;
+                                                      width, lang) << std::endl;
             }
         }
     }
@@ -7520,13 +7519,12 @@ public:
                                std::size_t width,
                                std::string const& lang) const _ARGPARSE_OVERRIDE
         {
-            std::string title = detail::_translation(m_title, lang);
+            std::string title = detail::_tr(m_title, lang);
             os << "\n" << (title.empty() ? "subcommands" : title) << ":\n";
             detail::_print_raw_text_formatter(
                         formatter,
                         detail::_replace(
-                            detail::_translation(m_description, lang),
-                            "%(prog)s", prog),
+                            detail::_tr(m_description, lang), "%(prog)s", prog),
                         width, os, std::string(), 2, "\n");
             os << print(formatter, limit, width, lang) << std::endl;
         }
@@ -7559,13 +7557,13 @@ public:
             std::string res
                     = detail::_help_formatter(
                         "  " + flags_to_string(), formatter,
-                        detail::_translation(m_help, lang), width, limit);
+                        detail::_tr(m_help, lang), width, limit);
 #ifdef _ARGPARSE_CXX_11
             return std::accumulate(m_parsers.begin(), m_parsers.end(),
                                    res, [formatter, limit, width, &lang]
                                    (std::string const& str, pParser const& p)
             {
-                auto help = detail::_translation(p->m_help, lang);
+                auto help = detail::_tr(p->m_help, lang);
                 if (!help.empty()) {
                     std::string name = "    " + p->m_name;
                     auto alias = detail::_vector_to_string(p->aliases(), ", ");
@@ -7580,7 +7578,7 @@ public:
 #else
             for (std::size_t i = 0; i < m_parsers.size(); ++i) {
                 pParser const& p = m_parsers.at(i);
-                std::string help = detail::_translation(p->m_help, lang);
+                std::string help = detail::_tr(p->m_help, lang);
                 if (!help.empty()) {
                     std::string name = "    " + p->m_name;
                     std::string alias
@@ -9000,7 +8998,7 @@ public:
     inline void print_usage(std::string const& lang,
                             std::ostream& os = std::cout) const
     {
-        std::string value = detail::_translation(m_usage, lang);
+        std::string value = detail::_tr(m_usage, lang);
         if (!value.empty()) {
             os << "usage: " << detail::_replace(value, "%(prog)s", prog())
                << std::endl;
@@ -9037,9 +9035,9 @@ public:
         pArguments const positional = m_data.get_positional(false, false);
         pArguments const optional = m_data.get_optional(false, false);
         SubparserInfo const sub_info = subparser_info(false);
-        std::string value = detail::_translation(m_usage, lang);
-        if (!value.empty()) {
-            os << "usage: " << detail::_replace(value, "%(prog)s", prog())
+        std::string tr_usage = detail::_tr(m_usage, lang);
+        if (!tr_usage.empty()) {
+            os << "usage: " << detail::_replace(tr_usage, "%(prog)s", prog())
                << std::endl;
         } else {
             print_custom_usage(positional_all, optional_all,
@@ -9048,8 +9046,8 @@ public:
         std::size_t width = output_width();
         detail::_print_raw_text_formatter(
                     m_formatter_class,
-                    detail::_replace(detail::_translation(m_description, lang),
-                                     "%(prog)s", prog()),
+                    detail::_replace(
+                        detail::_tr(m_description, lang), "%(prog)s", prog()),
                     width, os);
         std::size_t size = 0;
         pSubparser subparser = sub_info.first;
@@ -9070,8 +9068,7 @@ public:
         size += 4;
         detail::_limit_to_max(size, argument_name_limit());
         if (!positional.empty() || sub_positional) {
-            os << "\n" << detail::_translation(m_positionals_title, lang)
-               << ":\n";
+            os << "\n" << detail::_tr(m_positionals_title, lang) << ":\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
                 print_subparser(sub_positional, sub_info, i,
                                 m_formatter_class, size, width, lang, os);
@@ -9084,12 +9081,11 @@ public:
                             m_formatter_class, size, width, lang, os);
         }
         if (!optional.empty()) {
-            os << "\n" << detail::_translation(m_optionals_title, lang)
-               << ":\n";
+            os << "\n" << detail::_tr(m_optionals_title, lang) << ":\n";
             for (std::size_t i = 0; i < optional.size(); ++i) {
                 os << detail::_replace(
-                          optional.at(i)->print(m_formatter_class,
-                                                size, width, lang),
+                          optional.at(i)->print(
+                              m_formatter_class, size, width, lang),
                           "%(prog)s", prog()) << std::endl;
             }
         }
@@ -9104,8 +9100,8 @@ public:
         }
         detail::_print_raw_text_formatter(
                     m_formatter_class,
-                    detail::_replace(detail::_translation(m_epilog, lang),
-                                     "%(prog)s", prog()),
+                    detail::_replace(
+                        detail::_tr(m_epilog, lang), "%(prog)s", prog()),
                     width, os);
     }
 
