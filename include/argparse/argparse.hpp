@@ -1389,22 +1389,13 @@ typedef std::map<std::string, std::string> LanguagePack;
 inline std::string
 _translation(LanguagePack const& pack, std::string const& lang)
 {
-    if (pack.count(lang) != 0) {
+    if (!lang.empty() && pack.count(lang) != 0) {
         return pack.at(lang);
     }
     if (pack.count(std::string()) != 0) {
         return pack.at(std::string());
     }
     return std::string();
-}
-
-inline std::string const&
-_translation_ref(LanguagePack const& pack, std::string const& lang)
-{
-    if (pack.count(lang) != 0) {
-        return pack.at(lang);
-    }
-    return pack.at(std::string());
 }
 
 inline std::pair<std::size_t, std::size_t>
