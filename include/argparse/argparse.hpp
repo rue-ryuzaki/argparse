@@ -4459,8 +4459,9 @@ protected:
             if ((action->m_type == Argument::Optional
                  || (action->m_nargs & (Argument::ZERO_OR_ONE
                                         | Argument::ZERO_OR_MORE)))
-                    && !(action->action()
-                         & (argparse::help | argparse::version))) {
+                    && !(action->action() & (argparse::help
+                                             | argparse::version
+                                             | argparse::language))) {
                 help += " (default: %(default)s)";
             }
         }
@@ -4879,8 +4880,9 @@ protected:
                 throw
                 TypeError("missing 1 required positional argument: 'dest'");
             }
-            if (arg.action() & (argparse::version | argparse::help)) {
-                // version and help actions cannot be positional
+            if (arg.action()
+                  & (argparse::version | argparse::help | argparse::language)) {
+                // version, help and language actions cannot be positional
                 throw
                 TypeError("got an unexpected keyword argument 'required'");
             }
@@ -10533,7 +10535,8 @@ private:
                     it = storage.erase(it);
                     continue;
                 }
-                if (it->first->action() != argparse::count
+                if (!(it->first->action()
+                      & (argparse::count | argparse::language))
                         && it->first->m_type == Argument::Optional) {
                     detail::Value<std::string> const& dv = it->first->m_default;
                     if (dv.has_value()) {
