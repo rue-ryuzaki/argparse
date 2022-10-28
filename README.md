@@ -61,6 +61,7 @@ github legacy:
   - [handle (for C++11+)](#handle)
   - [terminal size auto-detection](#terminal-size-auto-detection)
   - [Argument::implicit_value](#argumentimplicit_value)
+  - [Action::language](#actionlanguage)
 - Python API support:
   - [ArgumentParser objects](#argumentparser-objects-support)
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
@@ -483,6 +484,112 @@ with usage:
 // here will be parsed command line value
 ./a.out --foo=baz
   foo = 'baz'
+```
+### Action::language
+Allows you to add support for displaying help in multiple languages.
+
+example:
+```cpp
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[])
+{
+    auto parser = argparse::ArgumentParser()
+            .add_help(false)
+            .description("description")
+            .description("la description", "fr")
+            .description("beschreibung", "de")
+            .description("popis", "cz")
+            .optionals_title("arguments facultatifs", "fr")
+            .optionals_title("optionale argumente", "de")
+            .optionals_title("volitelné argumenty", "cz")
+            .epilog("epilog")
+            .epilog("épilogue", "fr")
+            .epilog("epilog", "de")
+            .epilog("epilog", "cz");
+    parser.add_argument("-h", "--help")
+            .action(argparse::help)
+            .help("show this help message and exit")
+            .help("afficher ce message d'aide et quitter", "fr")
+            .help("diese hilfemeldung anzeigen und beenden", "de")
+            .help("zobrazit tuto nápovědu a odejít", "cz");
+    parser.add_argument("-l", "--lang")
+            .action(argparse::language)
+            .choices({ "fr", "de", "cz" })
+            .help("set language")
+            .help("définir la langue", "fr")
+            .help("sprache einstellen", "de")
+            .help("nastavit jazyk", "cz");
+    parser.add_argument("--foo")
+            .help("foo help")
+            .help("foo aider", "fr")
+            .help("foo hilfe", "de")
+            .help("foo pomoc", "cz");
+
+    parser.parse_args();
+
+    return 0;
+}
+```
+with usage:
+```
+// default usage
+./a.out -h
+usage: untitled [-h] [-l {fr,de,cz}] [--foo FOO]
+
+description
+
+options:
+  -h, --help            show this help message and exit
+  -l {fr,de,cz}, --lang {fr,de,cz}
+                        set language
+  --foo FOO             foo help
+
+epilog
+
+// -l fr
+./a.out -l fr -h
+usage: untitled [-h] [-l {fr,de,cz}] [--foo FOO]
+
+la description
+
+arguments facultatifs:
+  -h, --help            afficher ce message d'aide et quitter
+  -l {fr,de,cz}, --lang {fr,de,cz}
+                        définir la langue
+  --foo FOO             foo aider
+
+épilogue
+
+// -l de
+./a.out -l de -h
+usage: untitled [-h] [-l {fr,de,cz}] [--foo FOO]
+
+beschreibung
+
+optionale argumente:
+  -h, --help            diese hilfemeldung anzeigen und beenden
+  -l {fr,de,cz}, --lang {fr,de,cz}
+                        sprache einstellen
+  --foo FOO             foo hilfe
+
+epilog
+
+// -l cz
+./a.out -l cz -h
+usage: untitled [-h] [-l {fr,de,cz}] [--foo FOO]
+
+popis
+
+volitelné argumenty:
+  -h, --help            zobrazit tuto nápovědu a odejít
+  -l {fr,de,cz}, --lang {fr,de,cz}
+                        nastavit jazyk
+  --foo FOO             foo pomoc
+
+epilog
 ```
 ## ArgumentParser objects support
 - [x] prog - The name of the program (default: argv[0] or "untitled")
