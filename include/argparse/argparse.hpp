@@ -426,6 +426,24 @@ _ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
 
 #ifdef _ARGPARSE_CXX_11
+template <class K, class V, class C, class A>
+V const& _map_at(std::map<K, V, C, A> const& m, K const& k)
+{
+    return m.at(k);
+}
+#else
+template <class K, class V, class C, class A>
+V const& _map_at(std::map<K, V, C, A> const& m, K const& k)
+{
+    typename std::map<K, V, C, A>::const_iterator it(m.find(k));
+    if (it == m.end()) {
+        throw std::out_of_range("key not found in map");
+    }
+    return it->second;
+}
+#endif  // C++11+
+
+#ifdef _ARGPARSE_CXX_11
 using std::shared_ptr;
 using std::make_shared;
 #else
@@ -1437,11 +1455,16 @@ typedef std::map<std::string, std::string> LanguagePack;
 inline std::string
 _tr(LanguagePack const& pack, std::string const& lang)
 {
-    if (!lang.empty() && pack.count(lang) != 0) {
-        return pack.at(lang);
+    LanguagePack::const_iterator it;
+    if (!lang.empty()) {
+        it = pack.find(lang);
+        if (it != pack.end()) {
+            return it->second;
+        }
     }
-    if (pack.count(std::string()) != 0) {
-        return pack.at(std::string());
+    it = pack.find(std::string());
+    if (it != pack.end()) {
+        return it->second;
     }
     return std::string();
 }
@@ -3830,7 +3853,7 @@ public:
      */
     inline std::string const& help() const
     {
-        return m_help.at(std::string());
+        return detail::_map_at(m_help, std::string());
     }
 
     /*!
@@ -4529,7 +4552,7 @@ public:
      */
     inline std::string const& title() const
     {
-        return m_title.at(std::string());
+        return detail::_map_at(m_title, std::string());
     }
 
     /*!
@@ -4539,7 +4562,7 @@ public:
      */
     inline std::string const& description() const
     {
-        return m_description.at(std::string());
+        return detail::_map_at(m_description, std::string());
     }
 
 protected:
@@ -7420,7 +7443,7 @@ public:
          */
         inline std::string const& help() const
         {
-            return m_help.at(std::string());
+            return detail::_map_at(m_help, std::string());
         }
 
         /*!
@@ -8335,7 +8358,7 @@ public:
      */
     inline std::string const& usage() const
     {
-        return m_usage.at(std::string());
+        return detail::_map_at(m_usage, std::string());
     }
 
     /*!
@@ -8345,7 +8368,7 @@ public:
      */
     inline std::string const& description() const
     {
-        return m_description.at(std::string());
+        return detail::_map_at(m_description, std::string());
     }
 
     /*!
@@ -8358,7 +8381,7 @@ public:
      */
     inline std::string const& positionals_title() const
     {
-        return m_positionals_title.at(std::string());
+        return detail::_map_at(m_positionals_title, std::string());
     }
 
     /*!
@@ -8370,7 +8393,7 @@ public:
      */
     inline std::string const& optionals_title() const
     {
-        return m_optionals_title.at(std::string());
+        return detail::_map_at(m_optionals_title, std::string());
     }
 
     /*!
@@ -8380,7 +8403,7 @@ public:
      */
     inline std::string const& epilog() const
     {
-        return m_epilog.at(std::string());
+        return detail::_map_at(m_epilog, std::string());
     }
 
     /*!
@@ -8390,7 +8413,7 @@ public:
      */
     inline std::string const& help() const
     {
-        return m_help.at(std::string());
+        return detail::_map_at(m_help, std::string());
     }
 
     /*!
