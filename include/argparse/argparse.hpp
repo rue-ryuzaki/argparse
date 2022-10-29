@@ -864,11 +864,11 @@ struct enable_if { };
 template <class T>
 struct enable_if<true, T>           { typedef T type; };
 
-template<class T>
+template <class T>
 struct remove_extent                { typedef T type; };
-template<class T>
+template <class T>
 struct remove_extent<T[]>           { typedef T type; };
-template<class T, std::size_t N>
+template <class T, std::size_t N>
 struct remove_extent<T[N]>          { typedef T type; };
 
 template <class T>
@@ -927,29 +927,29 @@ struct is_same<T, T>                                               :true_type{};
 
 template <class>
 struct _is_integral_helper                                        :false_type{};
-template<>
+template <>
 struct _is_integral_helper<bool>                                   :true_type{};
-template<>
+template <>
 struct _is_integral_helper<char>                                   :true_type{};
-template<>
+template <>
 struct _is_integral_helper<signed char>                            :true_type{};
-template<>
+template <>
 struct _is_integral_helper<unsigned char>                          :true_type{};
-template<>
+template <>
 struct _is_integral_helper<short>                                  :true_type{};
-template<>
+template <>
 struct _is_integral_helper<unsigned short>                         :true_type{};
-template<>
+template <>
 struct _is_integral_helper<int>                                    :true_type{};
-template<>
+template <>
 struct _is_integral_helper<unsigned int>                           :true_type{};
-template<>
+template <>
 struct _is_integral_helper<long>                                   :true_type{};
-template<>
+template <>
 struct _is_integral_helper<unsigned long>                          :true_type{};
-template<>
+template <>
 struct _is_integral_helper<long long>                              :true_type{};
-template<>
+template <>
 struct _is_integral_helper<unsigned long long>                     :true_type{};
 
 template <class T>
@@ -957,11 +957,11 @@ struct is_integral   : _is_integral_helper<typename remove_cv<T>::type>::type{};
 
 template <class>
 struct _is_floating_point_helper                                  :false_type{};
-template<>
+template <>
 struct _is_floating_point_helper<float>                            :true_type{};
-template<>
+template <>
 struct _is_floating_point_helper<double>                           :true_type{};
-template<>
+template <>
 struct _is_floating_point_helper<long double>                      :true_type{};
 
 template <class T>
@@ -976,7 +976,8 @@ template <class T>
 struct is_array<T[]>                                               :true_type{};
 
 template <class T>
-struct decay {
+struct decay
+{
 private:
     typedef typename remove_reference<T>::type U;
 
@@ -992,9 +993,7 @@ template <class T>
 struct _replace_array_with_pointer
 {
     typedef typename conditional<
-        is_array<T>::value,
-        typename remove_extent<T>::type*,
-        T
+        is_array<T>::value, typename remove_extent<T>::type*, T
     >::type type;
 };
 
@@ -1010,7 +1009,6 @@ class _is_constructible_impl
     typedef typename _replace_array_with_pointer<AT_3>::type AU_3;
     typedef typename _replace_array_with_pointer<AT_4>::type AU_4;
 
-private:
     template <class C_T, class C_AT_1, class C_AT_2, class C_AT_3, class C_AT_4>
     static bool test(
         typename enable_if<
@@ -1043,7 +1041,6 @@ class _is_constructible_impl<T, AT_1, AT_2, AT_3, void>
     typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
     typedef typename _replace_array_with_pointer<AT_3>::type AU_3;
 
-private:
     template <class C_T, class C_AT_1, class C_AT_2, class C_AT_3>
     static bool test(
         typename enable_if<
@@ -1073,7 +1070,6 @@ class _is_constructible_impl<T, AT_1, AT_2, void, void>
     typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
     typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
 
-private:
     template <class C_T, class C_AT_1, class C_AT_2>
     static bool test(
         typename enable_if<
@@ -1100,7 +1096,6 @@ class _is_constructible_impl<T, AT_1, void, void, void>
 {
     typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
 
-private:
     template <class C_T, class C_AT_1>
     static bool test(
         typename enable_if<
@@ -1122,7 +1117,6 @@ public:
 template <class T>
 class _is_constructible_impl<T, void, void, void, void>
 {
-private:
     template <class C_T>
     static C_T testFun(C_T);
 
@@ -1153,7 +1147,6 @@ class _is_constructible_impl_ptr<T, AT_1,
         typename enable_if<is_pointer<
             typename remove_reference<T>::type>::value, void>::type, void, void>
 {
-private:
     template <class C_T>
     static bool test(C_T);
 
