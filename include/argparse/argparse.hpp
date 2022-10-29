@@ -3216,21 +3216,16 @@ public:
         if (!(action() & detail::_store_action)) {
             throw TypeError("got an unexpected keyword argument 'nargs'");
         }
-        std::string val = detail::_trim_copy(value);
-        if (val == "?") {
+        if (value == "?") {
             m_nargs = ZERO_OR_ONE;
-        } else if (val == "*") {
+        } else if (value == "*") {
             m_nargs = ZERO_OR_MORE;
-        } else if (val == "+") {
+        } else if (value == "+") {
             m_nargs = ONE_OR_MORE;
         } else {
-            throw ValueError("invalid nargs value '" + val + "'");
+            throw ValueError("invalid nargs value '" + value + "'");
         }
-#ifdef _ARGPARSE_CXX_11
-        m_nargs_str = std::move(val);
-#else
-        m_nargs_str = val;
-#endif  // C++11+
+        m_nargs_str = value;
         m_num_args = 1;
         return *this;
     }
@@ -3316,7 +3311,7 @@ public:
         if ((action() & detail::_const_action)
                 || (m_nargs == ZERO_OR_ONE
                     && (action() & detail::_store_action))) {
-            m_const = detail::_trim_copy(value);
+            m_const = value;
         } else if (m_type == Optional && m_nargs != ZERO_OR_ONE
                    && (action() & detail::_store_action)) {
             throw ValueError("nargs must be '?' to supply const");
@@ -3361,7 +3356,7 @@ public:
      */
     inline Argument& default_value(std::string const& value)
     {
-        m_default = detail::_trim_copy(value);
+        m_default = value;
         return *this;
     }
 
@@ -3421,7 +3416,7 @@ public:
      */
     inline Argument& implicit_value(std::string const& value)
     {
-        m_implicit = detail::_trim_copy(value);
+        m_implicit = value;
         return *this;
     }
 
@@ -3473,7 +3468,7 @@ public:
      */
     inline Argument& type(std::string const& value)
     {
-        m_type_name.clear(detail::_trim_copy(value));
+        m_type_name.clear(value);
         return *this;
     }
 
@@ -3517,25 +3512,7 @@ public:
         if (!(action() & (detail::_store_action | argparse::language))) {
             throw TypeError("got an unexpected keyword argument 'choices'");
         }
-        std::vector<std::string> values;
-        values.reserve(value.size());
-#ifdef _ARGPARSE_CXX_11
-        for (auto const& str : value) {
-            std::string val = detail::_trim_copy(str);
-            if (!val.empty()) {
-                values.emplace_back(std::move(val));
-            }
-        }
-        m_choices = std::move(values);
-#else
-        for (std::size_t i = 0; i < value.size(); ++i) {
-            std::string val = detail::_trim_copy(value.at(i));
-            if (!val.empty()) {
-                values.push_back(val);
-            }
-        }
-        m_choices = values;
-#endif  // C++11+
+        m_choices = value;
         return *this;
     }
 
@@ -3600,7 +3577,7 @@ public:
     inline Argument& version(std::string const& value)
     {
         if (action() == argparse::version) {
-            m_version = detail::_trim_copy(value);
+            m_version = value;
         } else {
             throw TypeError("got an unexpected keyword argument 'version'");
         }
@@ -3620,15 +3597,7 @@ public:
                           | argparse::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'metavar'");
         }
-        std::vector<std::string> _values = value;
-        for (std::size_t i = 0; i < _values.size(); ++i) {
-            detail::_trim(_values.at(i));
-        }
-#ifdef _ARGPARSE_CXX_11
-        m_metavar = std::move(_values);
-#else
-        m_metavar = _values;
-#endif  // C++11+
+        m_metavar = value;
         return *this;
     }
 
@@ -5173,7 +5142,7 @@ public:
     inline ArgumentGroup& title(std::string const& value,
                                 std::string const& lang = std::string())
     {
-        m_title[lang] = detail::_trim_copy(value);
+        m_title[lang] = value;
         return *this;
     }
 
@@ -5189,7 +5158,7 @@ public:
     inline ArgumentGroup& description(std::string const& value,
                                       std::string const& lang = std::string())
     {
-        m_description[lang] = detail::_trim_copy(value);
+        m_description[lang] = value;
         return *this;
     }
 
@@ -7321,7 +7290,7 @@ public:
         inline Subparser& title(std::string const& value,
                                 std::string const& lang = std::string())
         {
-            m_title[lang] = detail::_trim_copy(value);
+            m_title[lang] = value;
             return *this;
         }
 
@@ -7337,7 +7306,7 @@ public:
         inline Subparser& description(std::string const& value,
                                       std::string const& lang = std::string())
         {
-            m_description[lang] = detail::_trim_copy(value);
+            m_description[lang] = value;
             return *this;
         }
 
@@ -7350,7 +7319,7 @@ public:
          */
         inline Subparser& prog(std::string const& value)
         {
-            m_prog = detail::_trim_copy(value);
+            m_prog = value;
             update_prog(m_parent_prog, m_parent_args);
             return *this;
         }
@@ -7406,7 +7375,7 @@ public:
          */
         inline Subparser& metavar(std::string const& value)
         {
-            m_metavar = detail::_trim_copy(value);
+            m_metavar = value;
             return *this;
         }
 
@@ -7866,9 +7835,8 @@ public:
      */
     inline ArgumentParser& prog(std::string const& value)
     {
-        std::string val = detail::_trim_copy(value);
-        if (!val.empty()) {
-            m_prog = val;
+        if (!value.empty()) {
+            m_prog = value;
             if (m_subparsers) {
                 m_subparsers->update_prog(prog(), subparser_prog_args());
             }
@@ -7888,7 +7856,7 @@ public:
     inline ArgumentParser& usage(std::string const& value,
                                  std::string const& lang = std::string())
     {
-        m_usage[lang] = detail::_trim_copy(value);
+        m_usage[lang] = value;
         return *this;
     }
 
@@ -7923,9 +7891,8 @@ public:
     positionals_title(std::string const& value,
                       std::string const& lang = std::string())
     {
-        std::string val = detail::_trim_copy(value);
-        if (!val.empty()) {
-            m_positionals_title[lang] = val;
+        if (!value.empty()) {
+            m_positionals_title[lang] = value;
         }
         return *this;
     }
@@ -7945,9 +7912,8 @@ public:
     optionals_title(std::string const& value,
                     std::string const& lang = std::string())
     {
-        std::string val = detail::_trim_copy(value);
-        if (!val.empty()) {
-            m_optionals_title[lang] = val;
+        if (!value.empty()) {
+            m_optionals_title[lang] = value;
         }
         return *this;
     }
@@ -8255,7 +8221,7 @@ public:
      */
     inline ArgumentParser& argument_default(std::string const& value)
     {
-        m_argument_default = detail::_trim_copy(value);
+        m_argument_default = value;
         return *this;
     }
 
@@ -8775,7 +8741,7 @@ public:
             if (dest.empty()) {
                 continue;
             }
-            std::string value = detail::_trim_copy(pairs.at(i).second);
+            std::string const& value = pairs.at(i).second;
             if (!is_default_value_stored(m_data.m_arguments, dest, value)) {
                 m_default_values.push_back(std::make_pair(dest, value));
             }
