@@ -10548,7 +10548,7 @@ private:
                 arg->default_value(pair.second);
                 storage.create(arg,
                                Namespace::Storage::mapped_type(true,
-                                                               { pair.second }));
+                                                              { pair.second }));
 #else
                 pArgument arg = Argument::make_argument(
                             detail::_make_vector(pair.first),
