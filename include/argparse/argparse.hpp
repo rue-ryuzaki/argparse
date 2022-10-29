@@ -9293,16 +9293,16 @@ private:
     {
         explicit
         ParserInfo(ArgumentParser const* parser,
+                   pArguments optional,
                    _Storage const& storage,
                    SubparserInfo const& subparser)
             : parser(parser),
-              optional(),
+              optional(optional),
               storage(storage),
               subparser(subparser),
               lang(),
               have_negative_args()
         {
-            optional = parser->m_data.get_optional(true, true);
             have_negative_args
                  = negative_numbers_presented(optional, parser->prefix_chars());
         }
@@ -9329,16 +9329,6 @@ private:
             return *this;
         }
 
-        inline void validate() const
-        {
-            validate_arguments(parser->m_data.get_arguments(true));
-        }
-
-        inline void create_storage()
-        {
-            storage.create(parser->m_data.get_arguments(true));
-        }
-
         ArgumentParser const* parser;
         pArguments optional;
         _Storage storage;
@@ -9363,8 +9353,8 @@ private:
                 = read_args_from_file(in_parsed_arguments);
 
         Parsers parsers;
-        parsers.push_back(
-                    ParserInfo(this, space.storage(), subparser_info(true)));
+        parsers.push_back(ParserInfo(this, m_data.get_optional(true, true),
+                                     space.storage(), subparser_info(true)));
 
         check_mutex_arguments();
         check_intermixed_subparser(intermixed, parsers.back().subparser.first);
@@ -9374,8 +9364,8 @@ private:
 
         bool was_pseudo_arg = false;
 
-        parsers.back().validate();
-        parsers.back().create_storage();
+        validate_arguments(m_data.get_arguments(true));
+        parsers.back().storage.create(m_data.get_arguments(true));
 
         std::vector<std::string> unrecognized_args;
         std::deque<std::string> intermixed_args;
@@ -10114,12 +10104,14 @@ private:
             }
             if (p->m_name == name
                     || detail::_is_value_exists(name, p->aliases())) {
-                parsers.push_back(ParserInfo(p.get(), _Storage(),
-                                             p->subparser_info(true, pos)));
+                parsers.push_back(
+                            ParserInfo(
+                              p.get(), p.get()->m_data.get_optional(true, true),
+                              _Storage(), p->subparser_info(true, pos)));
 #ifdef _ARGPARSE_CXX_11
                 parsers.back().parser->handle(parsers.back().parser->m_name);
 #endif  // C++11+
-                parsers.back().validate();
+                validate_arguments(p.get()->m_data.get_arguments(true));
 
                 if (!dest.empty()) {
 #ifdef _ARGPARSE_CXX_11
