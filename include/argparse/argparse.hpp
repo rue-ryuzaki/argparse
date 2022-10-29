@@ -8712,14 +8712,14 @@ public:
     {
         pArguments const positional = m_data.get_positional(true, true);
         pArguments const optional = m_data.get_optional(true, true);
-        pArguments::const_iterator ip = positional.begin();
-        for ( ; ip != positional.end(); ++ip) {
-            if (detail::_is_value_exists(dest, (*ip)->m_flags)) {
-                break;
+        for (std::size_t i = 0; i < positional.size(); ++i) {
+            pArgument const& arg = positional.at(i);
+            if (detail::_is_value_exists(dest, arg->m_flags)) {
+                if (arg->is_suppressed()) {
+                    return detail::_suppress;
+                }
+                return arg->m_default();;
             }
-        }
-        if (ip != positional.end()) {
-            return (*ip)->m_default();
         }
         for (std::size_t i = 0; i < optional.size(); ++i) {
             pArgument const& arg = optional.at(i);
@@ -8748,7 +8748,7 @@ public:
                 return m_default_values.at(i).second;
             }
         }
-        throw NameError("name '" + dest + "' is not defined");
+        return std::string();
     }
 
     /*!
