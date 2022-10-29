@@ -370,7 +370,23 @@ public:
     { }
 };
 
-//  Forward declaration
+/*!
+ *  \brief Don't use this enum name! use argparse::SUPPRESS value directly
+ *
+ *  \enum _SUPPRESS
+ */
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE
+enum _SUPPRESS _ARGPARSE_ENUM_TYPE(uint8_t) {} SUPPRESS;
+
+/*!
+ *  \brief Don't use this enum name! use argparse::REMAINDER value directly
+ *
+ *  \enum _REMAINDER
+ */
+_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE
+enum _REMAINDER _ARGPARSE_ENUM_TYPE(uint8_t) {} REMAINDER;
+
+// Forward declaration
 class Argument;
 
 /*!
@@ -1180,6 +1196,20 @@ public:
                 ? _is_constructible_impl_ptr<U, AT_1, AT_2, AT_3, AT_4>::value
                 : _is_constructible_impl<U, AT_1, AT_2, AT_3, AT_4>::value
     );
+};
+
+template <>
+class is_constructible<std::string, _SUPPRESS >
+{
+public:
+    static const bool value = false;
+};
+
+template <>
+class is_constructible<std::string, std::vector<std::string> >
+{
+public:
+    static const bool value = false;
 };
 
 template <class T>
@@ -2598,25 +2628,6 @@ _check_type_name(Value<std::string> const& expected,
     }
 }
 }  // namespace detail
-
-/*!
- *  \brief Don't use this enum name! use argparse::SUPPRESS value directly
- *
- *  \enum _SUPPRESS
- */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE
-enum _SUPPRESS _ARGPARSE_ENUM_TYPE(uint8_t) {} SUPPRESS;
-
-/*!
- *  \brief Don't use this enum name! use argparse::REMAINDER value directly
- *
- *  \enum _REMAINDER
- */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE
-enum _REMAINDER _ARGPARSE_ENUM_TYPE(uint8_t) {} REMAINDER;
-
-// Forward declaration
-class Argument;
 
 /*!
  *  \brief _ConflictResolver class
