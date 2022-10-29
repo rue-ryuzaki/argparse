@@ -3967,11 +3967,7 @@ private:
                 res += m_flags.front();
             }
         }
-        if (action() & (detail::_store_action
-                        | argparse::append_const
-                        | argparse::language)) {
-            res += get_nargs_suffix(formatter);
-        }
+        process_nargs_suffix(res, formatter);
         return res;
     }
 
@@ -3981,11 +3977,7 @@ private:
         if (m_type == Optional) {
             for (std::size_t i = 0; i < flags().size(); ++i) {
                 detail::_append_value_to(flags().at(i), res, ", ");
-                if (action() & (detail::_store_action
-                                | argparse::append_const
-                                | argparse::language)) {
-                    res += get_nargs_suffix(formatter);
-                }
+                process_nargs_suffix(res, formatter);
             }
         } else {
             std::vector<std::string> names = get_argument_name(formatter);
@@ -4106,8 +4098,14 @@ private:
                                        formatter, help, width, limit);
     }
 
-    inline std::string get_nargs_suffix(_HelpFormatter const& formatter) const
+    inline void process_nargs_suffix(std::string& res,
+                                     _HelpFormatter const& formatter) const
     {
+        if (!(action() & (detail::_store_action
+                          | argparse::append_const
+                          | argparse::language))) {
+            return;
+        }
         std::vector<std::string> names = get_argument_name(formatter);
         std::size_t names_size = names.size();
         if (names.size() > 1
@@ -4121,7 +4119,6 @@ private:
         std::string name = names_size > 1
                 ? ("[" + detail::_vector_to_string(names, ", ") + "]")
                 : detail::_vector_to_string(names);
-        std::string res;
         if (m_type == Optional && !name.empty()) {
             res += detail::_spaces;
         }
@@ -4145,7 +4142,6 @@ private:
                 res += name;
                 break;
         }
-        return res;
     }
 
     inline std::vector<std::string>
