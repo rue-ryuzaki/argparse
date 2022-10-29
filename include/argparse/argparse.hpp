@@ -330,6 +330,25 @@ public:
 };
 
 /*!
+ *  \brief NameError handler
+ */
+_ARGPARSE_EXPORT class NameError : public std::invalid_argument
+{
+public:
+    /*!
+     *  \brief Construct NameError handler
+     *
+     *  \param error Error message
+     *
+     *  \return NameError object
+     */
+    explicit
+    NameError(std::string const& error)
+        : std::invalid_argument("NameError: " + error)
+    { }
+};
+
+/*!
  *  \brief TypeError handler
  */
 _ARGPARSE_EXPORT class TypeError : public std::logic_error
@@ -8682,7 +8701,8 @@ public:
 #endif  // C++11+
 
     /*!
-     *  \brief Get the default value for a specific argument
+     *  \brief Get the default value for a specific argument.
+     *  Throws NameError if argument not found
      *
      *  \param dest Argument destination name or flag
      *
@@ -8723,14 +8743,12 @@ public:
                 }
             }
         }
-        std::vector<std::pair<std::string, std::string> >::const_iterator it
-                = m_default_values.begin();
-        for ( ; it != m_default_values.end(); ++it) {
-            if ((*it).first == dest) {
-                break;
+        for (std::size_t i = 0; i < m_default_values.size(); ++i) {
+            if (m_default_values.at(i).first == dest) {
+                return m_default_values.at(i).second;
             }
         }
-        return it != m_default_values.end() ? it->second : std::string();
+        throw NameError("name '" + dest + "' is not defined");
     }
 
     /*!
