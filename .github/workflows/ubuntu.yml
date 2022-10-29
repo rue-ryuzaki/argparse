@@ -112,7 +112,7 @@ jobs:
 
     steps:
     - name: Install GCC
-      run: sudo apt-get install gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
+      run: sudo apt install gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
 
     - uses: actions/checkout@v3
 
@@ -141,7 +141,7 @@ jobs:
 
     steps:
     - name: Install GCC
-      run: sudo apt-get install gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
+      run: sudo apt install gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
 
     - uses: actions/checkout@v3
 
@@ -161,7 +161,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gcc: [9, 10, 11, 12]
+#        gcc: [9, 10, 11, 12]
+        gcc: [9, 12]
         standard: [98, 11, 14, 17, 20]
 
     env:
@@ -170,7 +171,7 @@ jobs:
 
     steps:
     - name: Install GCC
-      run: sudo apt-get install gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
+      run: sudo apt install gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
 
     - uses: actions/checkout@v3
 
@@ -269,7 +270,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang: ['6.0', 7, 8]
+#        clang: ['6.0', 7, 8]
+        clang: ['6.0', 8]
         standard: [98, 11, 14, 17]
 
     env:
@@ -278,7 +280,7 @@ jobs:
 
     steps:
     - name: Install Clang
-      run: sudo apt-get install clang-${{ matrix.clang }}
+      run: sudo apt install clang-${{ matrix.clang }}
 
     - uses: actions/checkout@v3
 
@@ -307,7 +309,7 @@ jobs:
 
     steps:
     - name: Install Clang
-      run: sudo apt-get install clang-${{ matrix.clang }}
+      run: sudo apt install clang-${{ matrix.clang }}
 
     - uses: actions/checkout@v3
 
@@ -327,7 +329,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang: [11, 12, 13, 14]
+#        clang: [11, 12, 13, 14]
+        clang: [11, 14]
         standard: [98, 11, 14, 17, 20]
 
     env:
@@ -336,7 +339,7 @@ jobs:
 
     steps:
     - name: Install Clang
-      run: sudo apt-get install clang-${{ matrix.clang }}
+      run: sudo apt install clang-${{ matrix.clang }}
 
     - uses: actions/checkout@v3
 
@@ -364,7 +367,7 @@ jobs:
 
     steps:
     - name: Install Clang
-      run: sudo apt-get install clang
+      run: sudo apt install clang
 
     - uses: actions/checkout@v3
 
