@@ -2670,6 +2670,7 @@ _ARGPARSE_EXPORT class Argument
     friend class _ArgumentData;
     friend class _ArgumentDefaultsHelpFormatter;
     friend class _ArgumentGroup;
+    friend class _Storage;
     friend class ArgumentGroup;
     friend class ArgumentParser;
     friend class HelpFormatter;
@@ -5366,435 +5367,434 @@ private:
 };
 
 /*!
+ *  \brief _Storage class
+ */
+class _Storage
+{
+    typedef detail::shared_ptr<Argument> pArgument;
+
+    friend class ArgumentParser;
+    friend class Namespace;
+
+public:
+    class mapped_type
+    {
+    public:
+        mapped_type()
+            : m_exists(),
+              m_is_default(),
+              m_values(),
+              m_matrix()
+        { }
+
+        explicit
+        mapped_type(bool is_default, std::vector<std::string> const& values)
+            : m_exists(true),
+              m_is_default(is_default),
+              m_values(values),
+              m_matrix()
+        {
+            m_matrix.push_back(m_values);
+        }
+
+        inline void clear()
+        {
+            m_exists = false;
+            m_is_default = false;
+            m_values.clear();
+            m_matrix.clear();
+        }
+
+        inline bool exists() const _ARGPARSE_NOEXCEPT
+        {
+            return m_exists;
+        }
+
+        inline void push_default(std::string const& value)
+        {
+            m_is_default = true;
+            push_back(value);
+        }
+
+        inline bool is_default() const _ARGPARSE_NOEXCEPT
+        {
+            return m_is_default;
+        }
+
+        inline std::vector<std::string> const&
+        operator ()() const _ARGPARSE_NOEXCEPT
+        {
+            return m_values;
+        }
+
+        inline std::size_t size() const _ARGPARSE_NOEXCEPT
+        {
+            return m_values.size();
+        }
+
+        inline bool empty() const _ARGPARSE_NOEXCEPT
+        {
+            return m_values.empty();
+        }
+
+        inline std::string const& front() const _ARGPARSE_NOEXCEPT
+        {
+            return m_values.front();
+        }
+
+        inline std::string const& at(std::size_t i) const
+        {
+            return m_values.at(i);
+        }
+
+#ifdef _ARGPARSE_CXX_11
+        inline void emplace_back(std::string&& value)
+        {
+            m_exists = true;
+            m_values.emplace_back(std::move(value));
+            push_to_matrix();
+        }
+#endif  // C++11+
+
+        inline void push_back(std::string const& value)
+        {
+            m_exists = true;
+            m_values.push_back(value);
+            push_to_matrix();
+        }
+
+        inline void push_values(std::vector<std::string> const& values)
+        {
+            m_exists = true;
+            m_values.reserve(m_values.size() + values.size());
+            m_values.insert(m_values.end(), values.begin(), values.end());
+            m_matrix.push_back(values);
+        }
+
+        inline std::vector<std::vector<std::string> > const&
+        matrix() const _ARGPARSE_NOEXCEPT
+        {
+            return m_matrix;
+        }
+
+    private:
+        inline void push_to_matrix()
+        {
+            m_matrix.push_back(
+                        detail::_make_vector<std::string>(m_values.back()));
+        }
+
+        bool m_exists;
+        bool m_is_default;
+        std::vector<std::string> m_values;
+        std::vector<std::vector<std::string> > m_matrix;
+    };
+
+    typedef pArgument                               key_type;
+    typedef std::pair<key_type, mapped_type>        value_type;
+    typedef std::deque<value_type>                  map_type;
+    typedef map_type::iterator                      iterator;
+    typedef map_type::const_iterator                const_iterator;
+
+    _Storage()
+        : m_data()
+    { }
+
+    inline void
+    create(key_type const& key, mapped_type const& value = mapped_type())
+    {
+        if (key->action() & (argparse::version | argparse::help)) {
+            return;
+        }
+        std::vector<std::string> const& arg_flags = key->flags();
+        bool have_key = false;
+#ifdef _ARGPARSE_CXX_11
+        for (auto& pair : m_data) {
+#else
+        for (std::size_t i = 0; i < m_data.size(); ++i) {
+            value_type& pair = m_data.at(i);
+#endif  // C++11+
+            have_key |= (key == pair.first);
+            if (key != pair.first) {
+                pair.first->resolve_conflict_flags(arg_flags);
+            }
+        }
+        if (!have_key) {
+            m_data.push_back(std::make_pair(key, value));
+        }
+    }
+
+#ifdef _ARGPARSE_CXX_11
+    template <class T>
+    void create(T const& arguments)
+    {
+        for (auto const& arg : arguments) {
+            create(arg);
+        }
+    }
+#else
+    void create(std::vector<key_type> const& arguments)
+    {
+        for (std::size_t i = 0; i < arguments.size(); ++i) {
+            create(arguments.at(i));
+        }
+    }
+#endif  // C++11+
+
+    inline void have_value(key_type const& arg)
+    {
+        if (arg->implicit_value().empty()) {
+            at(arg).push_values(std::vector<std::string>());
+            on_process_store(arg, std::vector<std::string>());
+        } else {
+            at(arg).push_back(arg->implicit_value());
+            on_process_store(arg, arg->implicit_value());
+#ifdef _ARGPARSE_CXX_11
+            arg->handle(arg->implicit_value());
+#endif  // C++11+
+        }
+    }
+
+    inline void store_value(key_type const& arg, std::string const& value)
+    {
+        at(arg).push_back(value);
+        on_process_store(arg, value);
+#ifdef _ARGPARSE_CXX_11
+        arg->handle(value);
+#endif  // C++11+
+    }
+
+    inline void store_values(key_type const& arg,
+                             std::vector<std::string> const& values)
+    {
+        at(arg).push_values(values);
+        on_process_store(arg, values);
+#ifdef _ARGPARSE_CXX_11
+        for (auto const& value : values) {
+            arg->handle(value);
+        }
+#endif  // C++11+
+    }
+
+    inline void store_default_value(key_type const& arg,
+                                    std::string const& value)
+    {
+        if (arg->action()
+                & (argparse::store | argparse::BooleanOptionalAction)) {
+            mapped_type& arg_data = at(arg);
+            if (arg_data.empty()) {
+                arg_data.push_default(value);
+                on_process_store(arg, value);
+#ifdef _ARGPARSE_CXX_11
+                arg->handle(value);
+#endif  // C++11+
+            }
+        }
+    }
+
+    inline bool self_value_stored(key_type const& arg)
+    {
+        if (arg->action() & (argparse::store_const | detail::_bool_action)) {
+            mapped_type& arg_data = at(arg);
+            arg_data.clear();
+            arg_data.push_back(arg->const_value());
+            on_process_store(arg, arg->const_value());
+#ifdef _ARGPARSE_CXX_11
+            arg->handle(arg->const_value());
+#endif  // C++11+
+            return true;
+        } else if (arg->action() == argparse::append_const) {
+            at(arg).push_back(arg->const_value());
+            on_process_store(arg, arg->const_value());
+#ifdef _ARGPARSE_CXX_11
+            arg->handle(arg->const_value());
+#endif  // C++11+
+            return true;
+        } else if (arg->action() == argparse::count) {
+            at(arg).push_back(std::string());
+            on_process_store(arg, std::string());
+#ifdef _ARGPARSE_CXX_11
+            arg->handle(std::string());
+#endif  // C++11+
+            return true;
+        }
+        return false;
+    }
+
+    inline bool exists_arg(std::string const& key) const
+    {
+        const_iterator it = find_arg(key);
+        return it != end();
+    }
+
+    inline bool exists(std::string const& key) const
+    {
+        const_iterator it = find(key);
+        return it != end();
+    }
+
+    inline bool exists(key_type const& key) const
+    {
+        const_iterator it = find(key);
+        return it != end();
+    }
+
+    inline value_type const& at(std::string const& key) const
+    {
+        const_iterator it = find(key);
+        if (it == end()) {
+            throw std::logic_error("key '" + key + "' not found");
+        }
+        return *it;
+    }
+
+    inline mapped_type& at(key_type const& key)
+    {
+        iterator it = find(key);
+        if (it == end()) {
+            throw std::logic_error("key '" + key->m_name + "' not found");
+        }
+        return it->second;
+    }
+
+    inline mapped_type const& at(key_type const& key) const
+    {
+        const_iterator it = find(key);
+        if (it == end()) {
+            throw std::logic_error("key '" + key->m_name + "' not found");
+        }
+        return it->second;
+    }
+
+    inline iterator erase(iterator i)                { return m_data.erase(i); }
+
+    inline iterator begin()       _ARGPARSE_NOEXCEPT { return m_data.begin(); }
+    inline iterator end()         _ARGPARSE_NOEXCEPT { return m_data.end(); }
+    inline const_iterator
+                    begin() const _ARGPARSE_NOEXCEPT { return m_data.begin(); }
+    inline const_iterator
+                    end()   const _ARGPARSE_NOEXCEPT { return m_data.end(); }
+
+private:
+    inline const_iterator find_arg(std::string const& key) const
+    {
+        const_iterator it = find(key);
+        if (it != end()) {
+            return it;
+        }
+        for (it = begin(); it != end(); ++it) {
+            if (it->first->m_type == Argument::Optional
+                    && it->first->dest().empty()) {
+                for (std::size_t i = 0; i < it->first->m_flags.size(); ++i) {
+                    if (detail::_flag_name(it->first->m_flags.at(i)) == key) {
+                        return it;
+                    }
+                }
+            }
+        }
+        return end();
+    }
+
+    inline const_iterator find(std::string const& key) const
+    {
+        for (const_iterator it = begin(); it != end(); ++it) {
+            if (*(it->first) == key) {
+                return it;
+            }
+        }
+        return end();
+    }
+
+    inline const_iterator find(key_type const& key) const
+    {
+        for (const_iterator it = begin(); it != end(); ++it) {
+            if (it->first == key) {
+                return it;
+            }
+        }
+        return end();
+    }
+
+    inline iterator find(key_type const& key)
+    {
+        for (iterator it = begin(); it != end(); ++it) {
+            if (it->first == key) {
+                return it;
+            }
+        }
+        return end();
+    }
+
+    inline void on_process_store(key_type const& arg, std::string const& value)
+    {
+        std::string const& dest = arg->dest();
+        if (!dest.empty()) {
+            for (iterator it = begin(); it != end(); ++it) {
+                if (it->first != arg && it->first->dest() == dest) {
+                    if (it->first->action()
+                            & (argparse::store
+                               | argparse::store_const
+                               | detail::_bool_action
+                               | argparse::BooleanOptionalAction)) {
+                        it->second.clear();
+                    }
+                    it->second.push_back(value);
+                }
+            }
+        }
+    }
+
+    inline void on_process_store(key_type const& arg,
+                                 std::vector<std::string> const& values)
+    {
+        std::string const& dest = arg->dest();
+        if (!dest.empty()) {
+            for (iterator it = begin(); it != end(); ++it) {
+                if (it->first != arg && it->first->dest() == dest) {
+                    if (it->first->action()
+                            & (argparse::store
+                               | argparse::store_const
+                               | detail::_bool_action
+                               | argparse::BooleanOptionalAction)) {
+                        it->second.clear();
+                    }
+                    it->second.push_values(values);
+                }
+            }
+        }
+    }
+
+    map_type m_data;
+};
+
+/*!
  *  \brief Object with parsed arguments
  */
 _ARGPARSE_EXPORT class Namespace
 {
-    typedef detail::shared_ptr<Argument> pArgument;
-
-    class Storage
-    {
-        friend class ArgumentParser;
-        friend class Namespace;
-
-    public:
-        class mapped_type
-        {
-        public:
-            mapped_type()
-                : m_exists(),
-                  m_is_default(),
-                  m_values(),
-                  m_matrix()
-            { }
-
-            explicit
-            mapped_type(bool is_default, std::vector<std::string> const& values)
-                : m_exists(true),
-                  m_is_default(is_default),
-                  m_values(values),
-                  m_matrix()
-            {
-                m_matrix.push_back(m_values);
-            }
-
-            inline void clear()
-            {
-                m_exists = false;
-                m_is_default = false;
-                m_values.clear();
-                m_matrix.clear();
-            }
-
-            inline bool exists() const _ARGPARSE_NOEXCEPT
-            {
-                return m_exists;
-            }
-
-            inline void push_default(std::string const& value)
-            {
-                m_is_default = true;
-                push_back(value);
-            }
-
-            inline bool is_default() const _ARGPARSE_NOEXCEPT
-            {
-                return m_is_default;
-            }
-
-            inline std::vector<std::string> const&
-            operator ()() const _ARGPARSE_NOEXCEPT
-            {
-                return m_values;
-            }
-
-            inline std::size_t size() const _ARGPARSE_NOEXCEPT
-            {
-                return m_values.size();
-            }
-
-            inline bool empty() const _ARGPARSE_NOEXCEPT
-            {
-                return m_values.empty();
-            }
-
-            inline std::string const& front() const _ARGPARSE_NOEXCEPT
-            {
-                return m_values.front();
-            }
-
-            inline std::string const& at(std::size_t i) const
-            {
-                return m_values.at(i);
-            }
-
-#ifdef _ARGPARSE_CXX_11
-            inline void emplace_back(std::string&& value)
-            {
-                m_exists = true;
-                m_values.emplace_back(std::move(value));
-                push_to_matrix();
-            }
-#endif  // C++11+
-
-            inline void push_back(std::string const& value)
-            {
-                m_exists = true;
-                m_values.push_back(value);
-                push_to_matrix();
-            }
-
-            inline void push_values(std::vector<std::string> const& values)
-            {
-                m_exists = true;
-                m_values.reserve(m_values.size() + values.size());
-                m_values.insert(m_values.end(), values.begin(), values.end());
-                m_matrix.push_back(values);
-            }
-
-            inline std::vector<std::vector<std::string> > const&
-            matrix() const _ARGPARSE_NOEXCEPT
-            {
-                return m_matrix;
-            }
-
-        private:
-            inline void push_to_matrix()
-            {
-                m_matrix.push_back(
-                            detail::_make_vector<std::string>(m_values.back()));
-            }
-
-            bool m_exists;
-            bool m_is_default;
-            std::vector<std::string> m_values;
-            std::vector<std::vector<std::string> > m_matrix;
-        };
-
-        typedef pArgument                               key_type;
-        typedef std::pair<key_type, mapped_type>        value_type;
-        typedef std::deque<value_type>                  map_type;
-        typedef map_type::iterator                      iterator;
-        typedef map_type::const_iterator                const_iterator;
-
-        Storage()
-            : m_data()
-        { }
-
-        inline void
-        create(key_type const& key, mapped_type const& value = mapped_type())
-        {
-            if (key->action() & (argparse::version | argparse::help)) {
-                return;
-            }
-            std::vector<std::string> const& arg_flags = key->flags();
-            bool have_key = false;
-#ifdef _ARGPARSE_CXX_11
-            for (auto& pair : m_data) {
-#else
-            for (std::size_t i = 0; i < m_data.size(); ++i) {
-                value_type& pair = m_data.at(i);
-#endif  // C++11+
-                have_key |= (key == pair.first);
-                if (key != pair.first) {
-                    pair.first->resolve_conflict_flags(arg_flags);
-                }
-            }
-            if (!have_key) {
-                m_data.push_back(std::make_pair(key, value));
-            }
-        }
-
-#ifdef _ARGPARSE_CXX_11
-        template <class T>
-        void create(T const& arguments)
-        {
-            for (auto const& arg : arguments) {
-                create(arg);
-            }
-        }
-#else
-        void create(std::vector<key_type> const& arguments)
-        {
-            for (std::size_t i = 0; i < arguments.size(); ++i) {
-                create(arguments.at(i));
-            }
-        }
-#endif  // C++11+
-
-        inline void have_value(key_type const& arg)
-        {
-            if (arg->implicit_value().empty()) {
-                at(arg).push_values(std::vector<std::string>());
-                on_process_store(arg, std::vector<std::string>());
-            } else {
-                at(arg).push_back(arg->implicit_value());
-                on_process_store(arg, arg->implicit_value());
-#ifdef _ARGPARSE_CXX_11
-                arg->handle(arg->implicit_value());
-#endif  // C++11+
-            }
-        }
-
-        inline void store_value(key_type const& arg, std::string const& value)
-        {
-            at(arg).push_back(value);
-            on_process_store(arg, value);
-#ifdef _ARGPARSE_CXX_11
-            arg->handle(value);
-#endif  // C++11+
-        }
-
-        inline void store_values(key_type const& arg,
-                                 std::vector<std::string> const& values)
-        {
-            at(arg).push_values(values);
-            on_process_store(arg, values);
-#ifdef _ARGPARSE_CXX_11
-            for (auto const& value : values) {
-                arg->handle(value);
-            }
-#endif  // C++11+
-        }
-
-        inline void store_default_value(key_type const& arg,
-                                        std::string const& value)
-        {
-            if (arg->action()
-                    & (argparse::store | argparse::BooleanOptionalAction)) {
-                mapped_type& arg_data = at(arg);
-                if (arg_data.empty()) {
-                    arg_data.push_default(value);
-                    on_process_store(arg, value);
-#ifdef _ARGPARSE_CXX_11
-                    arg->handle(value);
-#endif  // C++11+
-                }
-            }
-        }
-
-        inline bool self_value_stored(key_type const& arg)
-        {
-            if (arg->action()
-                    & (argparse::store_const | detail::_bool_action)) {
-                mapped_type& arg_data = at(arg);
-                arg_data.clear();
-                arg_data.push_back(arg->const_value());
-                on_process_store(arg, arg->const_value());
-#ifdef _ARGPARSE_CXX_11
-                arg->handle(arg->const_value());
-#endif  // C++11+
-                return true;
-            } else if (arg->action() == argparse::append_const) {
-                at(arg).push_back(arg->const_value());
-                on_process_store(arg, arg->const_value());
-#ifdef _ARGPARSE_CXX_11
-                arg->handle(arg->const_value());
-#endif  // C++11+
-                return true;
-            } else if (arg->action() == argparse::count) {
-                at(arg).push_back(std::string());
-                on_process_store(arg, std::string());
-#ifdef _ARGPARSE_CXX_11
-                arg->handle(std::string());
-#endif  // C++11+
-                return true;
-            }
-            return false;
-        }
-
-        inline bool exists_arg(std::string const& key) const
-        {
-            const_iterator it = find_arg(key);
-            return it != end();
-        }
-
-        inline bool exists(std::string const& key) const
-        {
-            const_iterator it = find(key);
-            return it != end();
-        }
-
-        inline bool exists(key_type const& key) const
-        {
-            const_iterator it = find(key);
-            return it != end();
-        }
-
-        inline value_type const& at(std::string const& key) const
-        {
-            const_iterator it = find(key);
-            if (it == end()) {
-                throw std::logic_error("key '" + key + "' not found");
-            }
-            return *it;
-        }
-
-        inline mapped_type& at(key_type const& key)
-        {
-            iterator it = find(key);
-            if (it == end()) {
-                throw std::logic_error("key '" + key->m_name + "' not found");
-            }
-            return it->second;
-        }
-
-        inline mapped_type const& at(key_type const& key) const
-        {
-            const_iterator it = find(key);
-            if (it == end()) {
-                throw std::logic_error("key '" + key->m_name + "' not found");
-            }
-            return it->second;
-        }
-
-        inline iterator erase(iterator i)          { return m_data.erase(i); }
-
-        inline iterator begin() _ARGPARSE_NOEXCEPT { return m_data.begin(); }
-        inline iterator end()   _ARGPARSE_NOEXCEPT { return m_data.end(); }
-        inline const_iterator
-        begin()          const  _ARGPARSE_NOEXCEPT { return m_data.begin(); }
-        inline const_iterator
-        end()            const  _ARGPARSE_NOEXCEPT { return m_data.end(); }
-
-    private:
-        inline const_iterator find_arg(std::string const& key) const
-        {
-            const_iterator it = find(key);
-            if (it != end()) {
-                return it;
-            }
-            for (it = begin(); it != end(); ++it) {
-                if (it->first->m_type == Argument::Optional
-                        && it->first->dest().empty()) {
-                    for (std::size_t i = 0; i < it->first->m_flags.size(); ++i)
-                    {
-                        if (detail::_flag_name(it->first->m_flags.at(i)) == key)
-                        {
-                            return it;
-                        }
-                    }
-                }
-            }
-            return end();
-        }
-
-        inline const_iterator find(std::string const& key) const
-        {
-            for (const_iterator it = begin(); it != end(); ++it) {
-                if (*(it->first) == key) {
-                    return it;
-                }
-            }
-            return end();
-        }
-
-        inline const_iterator find(key_type const& key) const
-        {
-            for (const_iterator it = begin(); it != end(); ++it) {
-                if (it->first == key) {
-                    return it;
-                }
-            }
-            return end();
-        }
-
-        inline iterator find(key_type const& key)
-        {
-            for (iterator it = begin(); it != end(); ++it) {
-                if (it->first == key) {
-                    return it;
-                }
-            }
-            return end();
-        }
-
-        inline void on_process_store(key_type const& arg,
-                                     std::string const& value)
-        {
-            std::string const& dest = arg->dest();
-            if (!dest.empty()) {
-                for (iterator it = begin(); it != end(); ++it) {
-                    if (it->first != arg && it->first->dest() == dest) {
-                        if (it->first->action() &
-                                (argparse::store
-                                 | argparse::store_const
-                                 | detail::_bool_action
-                                 | argparse::BooleanOptionalAction)) {
-                            it->second.clear();
-                        }
-                        it->second.push_back(value);
-                    }
-                }
-            }
-        }
-
-        inline void on_process_store(key_type const& arg,
-                                     std::vector<std::string> const& values)
-        {
-            std::string const& dest = arg->dest();
-            if (!dest.empty()) {
-                for (iterator it = begin(); it != end(); ++it) {
-                    if (it->first != arg && it->first->dest() == dest) {
-                        if (it->first->action() &
-                                (argparse::store
-                                 | argparse::store_const
-                                 | detail::_bool_action
-                                 | argparse::BooleanOptionalAction)) {
-                            it->second.clear();
-                        }
-                        it->second.push_values(values);
-                    }
-                }
-            }
-        }
-
-        map_type m_data;
-    };
-
     friend class ArgumentParser;
 
     explicit
-    Namespace(Storage const& storage = Storage())
+    Namespace(_Storage const& storage = _Storage())
         : m_storage(storage),
           m_unrecognized_args()
     { }
 
     explicit
-    Namespace(Storage const& storage, std::vector<std::string> const& args)
+    Namespace(_Storage const& storage, std::vector<std::string> const& args)
         : m_storage(storage),
           m_unrecognized_args(args)
     { }
 
 #ifdef _ARGPARSE_CXX_11
     explicit
-    Namespace(Storage&& storage) _ARGPARSE_NOEXCEPT
+    Namespace(_Storage&& storage) _ARGPARSE_NOEXCEPT
         : m_storage(std::move(storage)),
           m_unrecognized_args()
     { }
 
     explicit
-    Namespace(Storage&& storage,
+    Namespace(_Storage&& storage,
               std::vector<std::string>&& args) _ARGPARSE_NOEXCEPT
         : m_storage(std::move(storage)),
           m_unrecognized_args(std::move(args))
@@ -5811,7 +5811,7 @@ public:
      */
     inline bool exists(std::string const& key) const
     {
-        Storage::const_iterator it = storage().find_arg(key);
+        _Storage::const_iterator it = storage().find_arg(key);
         if (it != storage().end()) {
             return !it->second.empty()
                     || it->first->action() == argparse::count;
@@ -5835,7 +5835,7 @@ public:
                                || detail::is_byte_type<T>::value, T>::type
     get(std::string const& key) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
@@ -5865,7 +5865,7 @@ public:
                                && !detail::is_byte_type<T>::value, T>::type
     get(std::string const& key) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
@@ -5936,7 +5936,7 @@ public:
     >::type
     get(std::string const& key) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
@@ -5962,7 +5962,7 @@ public:
     >::type
     get(std::string const& key, char delim = detail::_equal) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
@@ -6017,7 +6017,7 @@ public:
         detail::is_stl_map<typename detail::decay<T>::type>::value, T>::type
     get(std::string const& key, char delim = detail::_equal) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
@@ -6057,7 +6057,7 @@ public:
     >::type
     get(std::string const& key) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() != argparse::append
@@ -6090,7 +6090,7 @@ public:
     >::type
     get(std::string const& key) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() != argparse::append
@@ -6123,7 +6123,7 @@ public:
         detail::is_stl_pair<typename detail::decay<T>::type>::value, T>::type
     get(std::string const& key, char delim = detail::_equal) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
@@ -6162,7 +6162,7 @@ public:
         detail::is_stl_queue<typename detail::decay<T>::type>::value, T>::type
     get(std::string const& key) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
@@ -6233,7 +6233,7 @@ public:
     >::type
     get(std::string const& key) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
@@ -6261,7 +6261,7 @@ public:
      */
     inline std::string to_args(std::string const& key) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         switch (args.first->action()) {
             case argparse::store_const :
                 if (args.second.empty()) {
@@ -6313,7 +6313,7 @@ public:
     to_string(std::string const& key,
               std::string const& quotes = std::string()) const
     {
-        Storage::value_type const& args = data(key);
+        _Storage::value_type const& args = data(key);
         switch (args.first->action()) {
             case argparse::store_const :
                 if (args.second.empty()) {
@@ -6350,9 +6350,9 @@ public:
     inline std::string to_string() const
     {
         std::string res;
-        for (Storage::const_iterator it
+        for (_Storage::const_iterator it
              = storage().begin(); it != storage().end(); ++it) {
-            Storage::value_type const& pair = *it;
+            _Storage::value_type const& pair = *it;
             std::vector<std::string> const& flags
                     = pair.first->get_argument_flags();
             if (flags.empty()) {
@@ -6847,7 +6847,7 @@ public:
 private:
     inline std::string
     boolean_option_to_args(std::string const& key,
-                           Storage::value_type const& args) const
+                           _Storage::value_type const& args) const
     {
         if (args.second.empty()) {
             return detail::_bool_to_string(args.first->default_value());
@@ -6863,7 +6863,7 @@ private:
 
     inline std::string
     boolean_option_to_string(std::string const& key,
-                             Storage::value_type const& args,
+                             _Storage::value_type const& args,
                              std::string const& quotes) const
     {
         if (args.second.empty()) {
@@ -6880,7 +6880,7 @@ private:
     }
 
     inline std::string
-    store_actions_to_string(Storage::value_type const& args,
+    store_actions_to_string(_Storage::value_type const& args,
                             std::string const& quotes) const
     {
         if ((args.first->action() == argparse::store
@@ -6912,9 +6912,9 @@ private:
         }
     }
 
-    inline Storage::value_type const& data(std::string const& key) const
+    inline _Storage::value_type const& data(std::string const& key) const
     {
-        Storage::const_iterator it = storage().find_arg(key);
+        _Storage::const_iterator it = storage().find_arg(key);
         if (it != storage().end()) {
             return *it;
         }
@@ -6922,7 +6922,7 @@ private:
         AttributeError("'Namespace' object has no attribute '" + key + "'");
     }
 
-    inline Storage const& storage() const _ARGPARSE_NOEXCEPT
+    inline _Storage const& storage() const _ARGPARSE_NOEXCEPT
     {
         return m_storage;
     }
@@ -7068,7 +7068,7 @@ private:
     }
 
 #ifdef _ARGPARSE_CXX_17
-    inline std::optional<Storage::value_type>
+    inline std::optional<_Storage::value_type>
     try_get_data(std::string const& key) const
     {
         auto it = storage().find_arg(key);
@@ -7241,7 +7241,7 @@ private:
     }
 #endif  // C++17+
 
-    Storage m_storage;
+    _Storage m_storage;
     detail::Value<std::vector<std::string> > m_unrecognized_args;
 };
 
@@ -9293,7 +9293,7 @@ private:
     {
         explicit
         ParserInfo(ArgumentParser const* parser,
-                   Namespace::Storage const& storage,
+                   _Storage const& storage,
                    SubparserInfo const& subparser)
             : parser(parser),
               optional(),
@@ -9341,7 +9341,7 @@ private:
 
         ArgumentParser const* parser;
         pArguments optional;
-        Namespace::Storage storage;
+        _Storage storage;
         SubparserInfo subparser;
         std::string lang;
         bool have_negative_args;
@@ -9539,7 +9539,7 @@ private:
 #ifdef _ARGPARSE_CXX_11
     static Namespace
     create_namespace(bool only_known,
-                     Namespace::Storage&& storage,
+                     _Storage&& storage,
                      std::vector<std::string>&& unrecognized_args)
     {
         if (only_known) {
@@ -9551,7 +9551,7 @@ private:
 #else
     static Namespace
     create_namespace(bool only_known,
-                     Namespace::Storage const& storage,
+                     _Storage const& storage,
                      std::vector<std::string> const& unrecognized_args)
     {
         if (only_known) {
@@ -10114,8 +10114,7 @@ private:
             }
             if (p->m_name == name
                     || detail::_is_value_exists(name, p->aliases())) {
-                parsers.push_back(ParserInfo(p.get(),
-                                             Namespace::Storage(),
+                parsers.push_back(ParserInfo(p.get(), _Storage(),
                                              p->subparser_info(true, pos)));
 #ifdef _ARGPARSE_CXX_11
                 parsers.back().parser->handle(parsers.back().parser->m_name);
@@ -10430,7 +10429,7 @@ private:
     static void
     process_optionals_required(std::vector<std::string>& required_args,
                                pArguments const& optional,
-                               Namespace::Storage const& storage)
+                               _Storage const& storage)
     {
         for (std::size_t i = 0; i < optional.size(); ++i) {
             pArgument const& arg = optional.at(i);
@@ -10456,8 +10455,7 @@ private:
     }
 
     static void
-    process_required_check(ParserInfo const& parser,
-                           Namespace::Storage const& storage)
+    process_required_check(ParserInfo const& parser, _Storage const& storage)
     {
         std::vector<std::string> required_args;
         process_optionals_required(required_args, parser.optional, storage);
@@ -10539,10 +10537,9 @@ private:
     }
 
     inline void
-    default_values_post_trigger(Namespace::Storage& storage) const
+    default_values_post_trigger(_Storage& storage) const
     {
-        for (Namespace::Storage::iterator it = storage.begin();
-             it != storage.end(); ) {
+        for (_Storage::iterator it = storage.begin(); it != storage.end(); ) {
             if (!it->second.exists()) {
                 if (it->first->is_suppressed()) {
                     it = storage.erase(it);
@@ -10572,16 +10569,14 @@ private:
                             std::vector<std::string>{ pair.first },
                             pair.first, Argument::Positional);
                 arg->default_value(pair.second);
-                storage.create(arg,
-                               Namespace::Storage::mapped_type(true,
-                                                              { pair.second }));
+                storage.create(arg, _Storage::mapped_type(
+                                   true, { pair.second }));
 #else
                 pArgument arg = Argument::make_argument(
                             detail::_make_vector(pair.first),
                             pair.first, Argument::Positional);
                 arg->default_value(pair.second);
-                storage.create(arg,
-                               Namespace::Storage::mapped_type(
+                storage.create(arg, _Storage::mapped_type(
                                    true, detail::_make_vector(pair.second)));
 #endif  // C++11+
             }
@@ -10791,7 +10786,7 @@ private:
 
     inline void
     parse_handle(bool only_known,
-                 Namespace::Storage const& storage,
+                 _Storage const& storage,
                  std::vector<std::string> const& unrecognized_args) const
     {
         if (m_parse_handle) {
