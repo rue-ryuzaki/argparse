@@ -8702,7 +8702,7 @@ public:
 
     /*!
      *  \brief Get the default value for a specific argument.
-     *  Throws NameError if argument not found
+     *  If argument not found, returns empty string.
      *
      *  \param dest Argument destination name or flag
      *
