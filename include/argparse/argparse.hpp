@@ -249,6 +249,7 @@ _ARGPARSE_EXPORT enum Action _ARGPARSE_ENUM_TYPE(uint16_t)
     help                    = 0x0080,
     version                 = 0x0100,
     extend                  = 0x0200,
+    /// since v1.7.1
     language                = 0x0400,
     BooleanOptionalAction   = 0x1000,
 };
@@ -331,6 +332,8 @@ public:
 
 /*!
  *  \brief NameError handler
+ *
+ *  \since v1.7.1
  */
 _ARGPARSE_EXPORT class NameError : public std::invalid_argument
 {
@@ -1336,6 +1339,7 @@ _make_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
 #endif  // C++11+
 
 // -- utf8 support -------------------------------------------------------------
+// since v1.7.0
 inline uint8_t
 _char_to_u8(char c)
 {
@@ -1403,6 +1407,8 @@ _utf8_size(std::string const& value)
 }
 // -----------------------------------------------------------------------------
 
+// -- translatons support ------------------------------------------------------
+// since v1.7.1
 typedef std::map<std::string, std::string> LanguagePack;
 
 inline std::string
@@ -1416,6 +1422,7 @@ _tr(LanguagePack const& pack, std::string const& lang)
     }
     return std::string();
 }
+// -----------------------------------------------------------------------------
 
 inline std::pair<std::size_t, std::size_t>
 _get_terminal_size(bool default_values = false)
@@ -7908,6 +7915,8 @@ public:
      *  \param value Title for positional arguments
      *  \param lang Language value
      *
+     *  \since v1.7.0
+     *
      *  \return Current argument parser reference
      */
     inline ArgumentParser&
@@ -7927,6 +7936,8 @@ public:
      *
      *  \param value Title for optional arguments
      *  \param lang Language value
+     *
+     *  \since v1.7.0
      *
      *  \return Current argument parser reference
      */
@@ -8371,6 +8382,8 @@ public:
      *  \brief Get title for positional arguments
      *  (default: "positional arguments")
      *
+     *  \since v1.7.0
+     *
      *  \return Title for positional arguments
      */
     inline std::string const& positionals_title() const
@@ -8380,6 +8393,8 @@ public:
 
     /*!
      *  \brief Get title for optional arguments (default: "options")
+     *
+     *  \since v1.7.0
      *
      *  \return Title for optional arguments
      */
@@ -9008,6 +9023,8 @@ public:
      *
      *  \param lang Language value
      *  \param os Output stream
+     *
+     *  \since v1.7.1
      */
     inline void print_usage(std::string const& lang,
                             std::ostream& os = std::cout) const
@@ -9040,6 +9057,8 @@ public:
      *
      *  \param lang Language value
      *  \param os Output stream
+     *
+     *  \since v1.7.1
      */
     inline void print_help(std::string const& lang,
                            std::ostream& os = std::cout) const
