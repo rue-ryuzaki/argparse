@@ -3534,6 +3534,72 @@ public:
         return *this;
     }
 
+#ifdef _ARGPARSE_CXX_11
+    /*!
+     *  \brief Set argument 'choices' value
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *  \param args Other values
+     *
+     *  \return Current argument reference
+     */
+    template <class... Args>
+    Argument& choices(std::string const& value1,
+                      std::string const& value2, Args... args)
+    {
+        return choices(std::vector<std::string>{ value1, value2, args... });
+    }
+#else
+    /*!
+     *  \brief Set argument 'choices' value
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& choices(std::string const& value1,
+                             std::string const& value2)
+    {
+        return choices(detail::_make_vector(value1, value2));
+    }
+
+    /*!
+     *  \brief Set argument 'choices' value
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *  \param value3 Third value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& choices(std::string const& value1,
+                             std::string const& value2,
+                             std::string const& value3)
+    {
+        return choices(detail::_make_vector(value1, value2, value3));
+    }
+
+    /*!
+     *  \brief Set argument 'choices' value
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *  \param value3 Third value
+     *  \param value4 Fourth value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& choices(std::string const& value1,
+                             std::string const& value2,
+                             std::string const& value3,
+                             std::string const& value4)
+    {
+        return choices(detail::_make_vector(value1, value2, value3, value4));
+    }
+#endif  // C++11+
+
     /*!
      *  \brief Set argument 'choices' value
      *
