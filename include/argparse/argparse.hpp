@@ -3507,6 +3507,28 @@ public:
     }
 
     /*!
+     *  \brief Set argument 'choices' value
+     *
+     *  \param value Choice value
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& choice(std::string const& value)
+    {
+        if (!(action() & (detail::_store_action | argparse::language))) {
+            throw TypeError("got an unexpected keyword argument 'choices'");
+        }
+        std::vector<std::string> values;
+        values.push_back(value);
+#ifdef _ARGPARSE_CXX_11
+        m_choices = std::move(values);
+#else
+        m_choices = values;
+#endif  // C++11+
+        return *this;
+    }
+
+    /*!
      *  \brief Set argument 'choices' value. Each character is a separate choice
      *
      *  \param value Choices value
