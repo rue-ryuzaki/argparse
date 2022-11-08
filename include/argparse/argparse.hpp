@@ -3511,6 +3511,8 @@ public:
      *
      *  \param value Choice value
      *
+     *  \since v1.7.1
+     *
      *  \return Current argument reference
      */
     inline Argument& choice(std::string const& value)
@@ -3564,6 +3566,8 @@ public:
      *  \param value2 Second value
      *  \param args Other values
      *
+     *  \since v1.7.1
+     *
      *  \return Current argument reference
      */
     template <class... Args>
@@ -3579,6 +3583,8 @@ public:
      *  \param value1 First value
      *  \param value2 Second value
      *
+     *  \since v1.7.1
+     *
      *  \return Current argument reference
      */
     inline Argument& choices(std::string const& value1,
@@ -3593,6 +3599,8 @@ public:
      *  \param value1 First value
      *  \param value2 Second value
      *  \param value3 Third value
+     *
+     *  \since v1.7.1
      *
      *  \return Current argument reference
      */
@@ -3610,6 +3618,8 @@ public:
      *  \param value2 Second value
      *  \param value3 Third value
      *  \param value4 Fourth value
+     *
+     *  \since v1.7.1
      *
      *  \return Current argument reference
      */
