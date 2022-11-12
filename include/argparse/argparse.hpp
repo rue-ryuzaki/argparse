@@ -7791,6 +7791,7 @@ private:
     inline void init_translations()
     {
         m_usage[std::string()] = std::string();
+        m_usage_title[std::string()] = "usage";
         m_description[std::string()] = std::string();
         m_positionals_title[std::string()] = "positional arguments";
         m_optionals_title[std::string()] = "options";
@@ -7813,6 +7814,7 @@ public:
           m_name(),
           m_prog("untitled"),
           m_usage(),
+          m_usage_title(),
           m_description(),
           m_positionals_title(),
           m_optionals_title(),
@@ -7862,6 +7864,7 @@ public:
           m_name(),
           m_prog("untitled"),
           m_usage(),
+          m_usage_title(),
           m_description(),
           m_positionals_title(),
           m_optionals_title(),
@@ -7912,6 +7915,7 @@ public:
           m_name(),
           m_prog("untitled"),
           m_usage(),
+          m_usage_title(),
           m_description(),
           m_positionals_title(),
           m_optionals_title(),
@@ -7990,6 +7994,26 @@ public:
                                  std::string const& lang = std::string())
     {
         m_usage[lang] = value;
+        return *this;
+    }
+
+    /*!
+     *  \brief Set title for argument parser 'usage' (default: "usage")
+     *  for selected language (default: "")
+     *
+     *  \param value Title for usage
+     *  \param lang Language value
+     *
+     *  \since v1.7.1
+     *
+     *  \return Current argument parser reference
+     */
+    inline ArgumentParser& usage_title(std::string const& value,
+                                       std::string const& lang = std::string())
+    {
+        if (!value.empty()) {
+            m_usage_title[lang] = value;
+        }
         return *this;
     }
 
@@ -8465,6 +8489,18 @@ public:
     inline std::string const& usage() const
     {
         return detail::_map_at(m_usage, std::string());
+    }
+
+    /*!
+     *  \brief Get title for argument parser 'usage' (default: "usage")
+     *
+     *  \since v1.7.1
+     *
+     *  \return Title for argument parser 'usage'
+     */
+    inline std::string const& usage_title() const
+    {
+        return detail::_map_at(m_usage_title, std::string());
     }
 
     /*!
@@ -9128,15 +9164,16 @@ public:
     inline void print_usage(std::string const& lang,
                             std::ostream& os = std::cout) const
     {
-        std::string value = detail::_tr(m_usage, lang);
-        if (!value.empty()) {
-            os << "usage: " << detail::_replace(value, "%(prog)s", prog())
-               << std::endl;
+        std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
+        std::string tr_usage = detail::_tr(m_usage, lang);
+        if (!tr_usage.empty()) {
+            os << tr_usage_title << " "
+               << detail::_replace(tr_usage, "%(prog)s", prog()) << std::endl;
         } else {
             pArguments const positional = m_data.get_positional(false, true);
             pArguments const optional = m_data.get_optional(false, true);
             print_custom_usage(positional, optional, m_mutex_groups,
-                               subparser_info(false), prog(), os);
+                             subparser_info(false), prog(), tr_usage_title, os);
         }
     }
 
@@ -9167,13 +9204,14 @@ public:
         pArguments const positional = m_data.get_positional(false, false);
         pArguments const optional = m_data.get_optional(false, false);
         SubparserInfo const sub_info = subparser_info(false);
+        std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
         std::string tr_usage = detail::_tr(m_usage, lang);
         if (!tr_usage.empty()) {
-            os << "usage: " << detail::_replace(tr_usage, "%(prog)s", prog())
-               << std::endl;
+            os << tr_usage_title << " "
+               << detail::_replace(tr_usage, "%(prog)s", prog()) << std::endl;
         } else {
-            print_custom_usage(positional_all, optional_all,
-                               m_mutex_groups, sub_info, prog(), os);
+            print_custom_usage(positional_all, optional_all, m_mutex_groups,
+                               sub_info, prog(), tr_usage_title, os);
         }
         std::size_t width = output_width();
         detail::_print_raw_text_formatter(
@@ -10795,13 +10833,13 @@ private:
                        std::deque<MutuallyExclusiveGroup> const& mutex_groups,
                        SubparserInfo const& subparser,
                        std::string const& prog,
+                       std::string const& usage_title,
                        std::ostream& os) const
     {
         std::size_t const w = output_width();
-        std::string head = "usage:";
-        std::string head_prog = head + " " + prog;
+        std::string head_prog = usage_title + " " + prog;
         std::size_t indent
-                = 1 + (w > detail::_min_width ? head_prog : head).size();
+                = 1 + (w > detail::_min_width ? head_prog : usage_title).size();
         std::string res;
         pArguments ex_opt = optional;
         for (std::size_t i = 0; i < mutex_groups.size(); ++i) {
@@ -10901,6 +10939,7 @@ private:
     std::string m_name;
     std::string m_prog;
     detail::LanguagePack m_usage;
+    detail::LanguagePack m_usage_title;
     detail::LanguagePack m_description;
     detail::LanguagePack m_positionals_title;
     detail::LanguagePack m_optionals_title;
