@@ -10424,6 +10424,12 @@ private:
             std::string str
                  = name.substr(i + (static_cast<bool>(argument) ? cp_size : 0));
             if (!str.empty()) {
+                if (detail::_starts_with(str, detail::_spaces)) {
+                    detail::_trim(str);
+                    if (!detail::_have_quotes(str)) {
+                        str = "'" + str + "'";
+                    }
+                }
                 if (!detail::_starts_with(str, detail::_equals)) {
                     flags.back() += detail::_equals;
                 }
