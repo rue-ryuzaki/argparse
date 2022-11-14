@@ -1607,13 +1607,9 @@ template <class T>
 std::string
 _to_string(T const& value)
 {
-#ifdef _ARGPARSE_CXX_11
-    return std::to_string(value);
-#else
     std::stringstream ss;
     ss << value;
     return ss.str();
-#endif  // C++11+
 }
 
 inline std::string
