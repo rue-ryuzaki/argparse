@@ -19,6 +19,8 @@ else()
     )
 endif()
 
+set(PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
+
 include(cmake/project-is-top-level.cmake)
 
 if (MSVC)
@@ -56,7 +58,7 @@ install(FILES ${ARGPARSE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argpars
 
 set(CPACK_PACKAGE_NAME "cpp-argparse-dev")
 set(CPACK_PACKAGE_MAINTAINER "Mikhail Golubchikov")
-set(CMAKE_PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
+set(CMAKE_PROJECT_HOMEPAGE_URL "${PROJECT_HOMEPAGE_URL}")
 if (${CMAKE_VERSION} VERSION_LESS "3.12")
     set(CPACK_PACKAGE_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 endif()
