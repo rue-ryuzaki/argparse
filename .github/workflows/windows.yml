@@ -74,30 +74,39 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest -C ${{env.BUILD_TYPE}}
 
-  mingw:
+  msys2:
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        architecture: [x64, x86]
+        sys: [mingw64]
         standard: [98, 11, 14, 17, 20]
+
+    defaults:
+      run:
+        shell: msys2 {0}
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up MinGW
-      uses: egor-tensin/setup-mingw@v2
+    - name: Set up MSYS2
+      uses: msys2/setup-msys2@v2
       with:
-        platform: ${{ matrix.architecture }}
+        update: false
+        msystem: ${{ matrix.sys }}
+        install: git
+        pacboy: >-
+          gcc:p
+          cmake:p
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -G"MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
+      run: cmake -B '${{github.workspace}}/build' -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build '${{github.workspace}}/build' --config ${{env.BUILD_TYPE}}
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
+      working-directory: '${{github.workspace}}/build'
       run: ctest -C ${{env.BUILD_TYPE}}
 
   clang-2019:
