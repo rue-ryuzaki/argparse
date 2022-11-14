@@ -306,7 +306,7 @@ struct Coord
     int y;
     int z;
 
-    void print()
+    void print() const
     {
         std::cout << "x=" << x << ";y=" << y << ";z=" << z << std::endl;
     }
@@ -325,11 +325,12 @@ std::ostream& operator <<(std::ostream& os, Coord const& c)
 int main(int argc, char* argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
-    parser.add_argument("--coord").nargs(3).help("coord help");
+    // it's recommended to use nargs=1 and pass value in quotes: 'value1 value2 ...'
+    parser.add_argument("--coord").nargs(1).help("coord help");
     parser.add_argument("--const_coord").action("store_const").default_value(Coord{0, 0, 0})
             .const_value(Coord{1, 1, 1}).help("const coord help");
 
-    auto const args = parser.parse_args({ "--coord", "1", "2", "3" });
+    auto const args = parser.parse_args("--coord='1 2 3'");
 
     auto c = args.get<Coord>("coord");
     c.print();
