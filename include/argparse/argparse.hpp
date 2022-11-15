@@ -4484,9 +4484,7 @@ protected:
     _split_lines_s(std::string const& text, std::size_t width)
     {
         std::size_t tab_size = ARGPARSE_TAB_SIZE;
-        if (tab_size < 2) {
-            tab_size = 2;
-        }
+        detail::_limit_to_min(tab_size, 2);
         std::string value;
         std::vector<std::string> res;
         std::vector<std::string> split_str = detail::_split(text, '\n', true);
