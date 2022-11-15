@@ -302,21 +302,35 @@ Required std::ostream& operator <<(std::ostream& os, Type const& t).
 
 struct Coord
 {
-    int x;
-    int y;
-    int z;
+    Coord()
+        : x(),
+          y(),
+          z()
+    { }
 
-    void print() const
+    explicit Coord(int x, int y, int z)
+        : x(x),
+          y(y),
+          z(z)
+    { }
+
+    inline void print() const
     {
         std::cout << "x=" << x << ";y=" << y << ";z=" << z << std::endl;
     }
+
+    int x;
+    int y;
+    int z;
 };
-std::istream& operator >>(std::istream& is, Coord& c)
+
+inline std::istream& operator >>(std::istream& is, Coord& c)
 {
     is >> c.x >> c.y >> c.z;
     return is;
 }
-std::ostream& operator <<(std::ostream& os, Coord const& c)
+
+inline std::ostream& operator <<(std::ostream& os, Coord const& c)
 {
     os << c.x << " " << c.y << " " << c.z;
     return os;
@@ -324,11 +338,11 @@ std::ostream& operator <<(std::ostream& os, Coord const& c)
 
 int main(int argc, char* argv[])
 {
-    auto parser = argparse::ArgumentParser(argc, argv);
+    auto parser = argparse::ArgumentParser();
     // it's recommended to use nargs=1 and pass value in quotes: 'value1 value2 ...'
     parser.add_argument("--coord").nargs(1).help("coord help");
-    parser.add_argument("--const_coord").action("store_const").default_value(Coord{0, 0, 0})
-            .const_value(Coord{1, 1, 1}).help("const coord help");
+    parser.add_argument("--const_coord").action("store_const").default_value(Coord(0, 0, 0))
+            .const_value(Coord(1, 1, 1)).help("const coord help");
 
     auto const args = parser.parse_args("--coord='1 2 3'");
 
