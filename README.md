@@ -339,8 +339,8 @@ inline std::ostream& operator <<(std::ostream& os, Coord const& c)
 int main(int argc, char* argv[])
 {
     auto parser = argparse::ArgumentParser();
-    // it's recommended to use nargs=1 and pass value in quotes: 'value1 value2 ...'
-    parser.add_argument("--coord").nargs(1).help("coord help");
+    // it's recommended to pass each custom type value in quotes: 'value1 value2 ...'
+    parser.add_argument("--coord").help("coord help");
     parser.add_argument("--const_coord").action("store_const").default_value(Coord(0, 0, 0))
             .const_value(Coord(1, 1, 1)).help("const coord help");
 
