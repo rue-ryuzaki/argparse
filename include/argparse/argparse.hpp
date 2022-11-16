@@ -7058,13 +7058,69 @@ private:
         return vec;
     }
 
-    template <class T>
+#ifdef _ARGPARSE_CXX_11
+    template <class T,
+              typename std::enable_if<
+                  std::is_constructible<std::string, T>::value
+                  || std::is_floating_point<T>::value
+                  || std::is_integral<T>::value>::type* = nullptr>
     std::vector<T> to_vector(std::vector<std::string> const& args) const
+#else
+    template <class T>
+    std::vector<T> to_vector(
+            std::vector<std::string> const& args,
+            typename detail::enable_if<
+                detail::is_constructible<std::string, T>::value
+                || detail::is_floating_point<T>::value
+                || detail::is_integral<T>::value, bool>::type = true) const
+#endif  // C++11+
     {
         std::vector<T> vec;
         vec.reserve(args.size());
         for (std::size_t i = 0; i < args.size(); ++i) {
             vec.push_back(to_type<T>(args.at(i)));
+        }
+        return vec;
+    }
+
+#ifdef _ARGPARSE_CXX_11
+    template <class T,
+              typename std::enable_if<
+                  !std::is_constructible<std::string, T>::value
+                  && !std::is_floating_point<T>::value
+                  && !std::is_integral<T>::value>::type* = nullptr>
+    std::vector<T> to_vector(std::vector<std::string> const& args) const
+#else
+    template <class T>
+    std::vector<T> to_vector(
+            std::vector<std::string> const& args,
+            typename detail::enable_if<
+                !detail::is_constructible<std::string, T>::value
+                && !detail::is_floating_point<T>::value
+                && !detail::is_integral<T>::value, bool>::type = true) const
+#endif  // C++11+
+    {
+        std::vector<T> vec;
+        if (args.empty()) {
+            return vec;
+        }
+        std::string data;
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            std::string value = detail::_remove_quotes(args.at(i));
+            if (!data.empty() && !value.empty()) {
+                data += detail::_spaces;
+            }
+            data += value;
+        }
+        T res;
+        std::stringstream ss(data);
+        while (!ss.eof()) {
+            ss >> res;
+            if (ss.fail()) {
+                throw TypeError("invalid " + detail::Type::name<T>()
+                                + " value: '" + data + "'");
+            }
+            vec.push_back(res);
         }
         return vec;
     }
@@ -7225,7 +7281,11 @@ private:
         return vec;
     }
 
-    template <class T>
+    template <class T,
+              typename std::enable_if<
+                  std::is_constructible<std::string, T>::value
+                  || std::is_floating_point<T>::value
+                  || std::is_integral<T>::value>::type* = nullptr>
     std::optional<std::vector<T> >
     try_to_vector(std::vector<std::string> const& args) const
     {
@@ -7238,6 +7298,38 @@ private:
             } else {
                 return std::nullopt;
             }
+        }
+        return vec;
+    }
+
+    template <class T,
+              typename std::enable_if<
+                  !std::is_constructible<std::string, T>::value
+                  && !std::is_floating_point<T>::value
+                  && !std::is_integral<T>::value>::type* = nullptr>
+    std::optional<std::vector<T> >
+    try_to_vector(std::vector<std::string> const& args) const
+    {
+        std::vector<T> vec;
+        if (args.empty()) {
+            return vec;
+        }
+        std::string data;
+        for (auto const& arg : args) {
+            auto value = detail::_remove_quotes(arg);
+            if (!data.empty() && !value.empty()) {
+                data += detail::_spaces;
+            }
+            data += value;
+        }
+        T res;
+        std::stringstream ss(data);
+        while (!ss.eof()) {
+            ss >> res;
+            if (ss.fail()) {
+                return std::nullopt;
+            }
+            vec.push_back(res);
         }
         return vec;
     }
