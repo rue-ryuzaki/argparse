@@ -9228,6 +9228,232 @@ public:
         return on_parse_arguments(args, true, true, space);
     }
 
+#ifdef _ARGPARSE_CXX_17
+    /*!
+     *  \brief Try parse command line arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    template <typename = void>
+    std::optional<Namespace>
+    try_parse_args(Namespace const& space = Namespace()) const
+    {
+        return try_parse_args(m_parsed_arguments, space);
+    }
+
+    /*!
+     *  \brief Try parse concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<
+                 std::is_constructible<std::string, T>::value>::type* = nullptr>
+    std::optional<Namespace>
+    try_parse_args(T const& args,
+                   Namespace const& space = Namespace()) const
+    {
+        return try_parse_args(detail::_split_to_args(args), space);
+    }
+
+    /*!
+     *  \brief Try parse concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    inline std::optional<Namespace>
+    try_parse_args(std::vector<std::string> const& args,
+                   Namespace const& space = Namespace()) const
+    {
+        return on_try_parse_arguments(args, false, false, space);
+    }
+
+    /*!
+     *  \brief Try parse known command line arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    template <typename = void>
+    std::optional<Namespace>
+    try_parse_known_args(Namespace const& space = Namespace()) const
+    {
+        return try_parse_known_args(m_parsed_arguments, space);
+    }
+
+    /*!
+     *  \brief Try parse known concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<
+                 std::is_constructible<std::string, T>::value>::type* = nullptr>
+    std::optional<Namespace>
+    try_parse_known_args(T const& args,
+                         Namespace const& space = Namespace()) const
+    {
+        return try_parse_known_args(detail::_split_to_args(args), space);
+    }
+
+    /*!
+     *  \brief Try parse known concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    inline std::optional<Namespace>
+    try_parse_known_args(std::vector<std::string> const& args,
+                         Namespace const& space = Namespace()) const
+    {
+        return on_try_parse_arguments(args, true, false, space);
+    }
+
+    /*!
+     *  \brief Try parse intermixed command line arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    template <typename = void>
+    std::optional<Namespace>
+    try_parse_intermixed_args(Namespace const& space = Namespace()) const
+    {
+        return try_parse_intermixed_args(m_parsed_arguments, space);
+    }
+
+    /*!
+     *  \brief Try parse intermixed concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<
+                 std::is_constructible<std::string, T>::value>::type* = nullptr>
+    std::optional<Namespace>
+    try_parse_intermixed_args(T const& args,
+                              Namespace const& space = Namespace()) const
+    {
+        return try_parse_intermixed_args(detail::_split_to_args(args), space);
+    }
+
+    /*!
+     *  \brief Try parse intermixed concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    inline std::optional<Namespace>
+    try_parse_intermixed_args(std::vector<std::string> const& args,
+                              Namespace const& space = Namespace()) const
+    {
+        return on_try_parse_arguments(args, false, true, space);
+    }
+
+    /*!
+     *  \brief Try parse known intermixed command line arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    template <typename = void>
+    std::optional<Namespace>
+    try_parse_known_intermixed_args(Namespace const& space = Namespace()) const
+    {
+        return try_parse_known_intermixed_args(m_parsed_arguments, space);
+    }
+
+    /*!
+     *  \brief Try parse known intermixed concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    template <class T,
+              typename std::enable_if<
+                 std::is_constructible<std::string, T>::value>::type* = nullptr>
+    std::optional<Namespace>
+    try_parse_known_intermixed_args(T const& args,
+                                    Namespace const& space = Namespace()) const
+    {
+        return try_parse_known_intermixed_args(detail::_split_to_args(args), space);
+    }
+
+    /*!
+     *  \brief Try parse known intermixed concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.1
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    inline std::optional<Namespace>
+    try_parse_known_intermixed_args(std::vector<std::string> const& args,
+                                    Namespace const& space = Namespace()) const
+    {
+        return on_try_parse_arguments(args, true, true, space);
+    }
+#endif  // C++17+
+
     /*!
      *  \brief Print a program usage to output stream (default: std::cout)
      *
@@ -9484,6 +9710,24 @@ private:
         }
         ::exit(1);
     }
+
+#ifdef _ARGPARSE_CXX_17
+    inline std::optional<Namespace>
+    on_try_parse_arguments(std::vector<std::string> const& args,
+                           bool only_known,
+                           bool intermixed,
+                           Namespace const& space) const
+    {
+        try {
+            return parse_arguments(args, only_known, intermixed, space);
+        } catch (std::exception& e) {
+            std::cerr << e.what() << std::endl;
+        } catch (...) {
+            std::cerr << "argparse error: unexpected error" << std::endl;
+        }
+        return std::nullopt;
+    }
+#endif  // C++17+
 
     inline std::vector<std::string>
     read_args_from_file(std::vector<std::string> const& arguments) const
