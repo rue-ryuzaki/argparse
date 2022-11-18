@@ -271,7 +271,7 @@ jobs:
       fail-fast: false
       matrix:
 #        clang: ['6.0', 7, 8]
-        clang: ['6.0', 8]
+        clang: ['6.0']
         standard: [98, 11, 14, 17]
 
     env:
@@ -300,7 +300,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang: [9, 10]
+#        clang: [9, 10]
+        clang: [9]
         standard: [98, 11, 14, 17, 20]
 
     env:
