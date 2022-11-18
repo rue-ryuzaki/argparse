@@ -1,3 +1,18 @@
+cpp-argparse-dev (1.7.1-0ppa0) focal; urgency=low
+
+  * Update: terminal size detection defines
+  * Add: Action::language support
+  * Fix: compile with g++-4.1, g++-4.3 on ubuntu 10.04
+  * Fix: compile with g++-3.4 on ubuntu 8.04
+  * Add: Argument::choices(1st, 2nd, ...) function
+  * Add: Argument::choice function
+  * Add: ArgumentParser::usage_title function
+  * Fix: detail::_to_string for custom types
+  * Fix: Namespace::get containers of custom types
+  * Add: ArgumentParser::try_parse_args functions
+
+ -- Mikhail Golubchikov <golubchikov.mihail@gmail.com>  Fri, 18 Nov 2022 19:39:00 +0300
+
 cpp-argparse-dev (1.7.0-0ppa0) focal; urgency=low
 
   * Add: optionals_title and positionals_title functions
