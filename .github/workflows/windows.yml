@@ -74,7 +74,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest -C ${{env.BUILD_TYPE}}
 
-  msys2:
+  msys2-latest:
     runs-on: windows-latest
     strategy:
       fail-fast: false
