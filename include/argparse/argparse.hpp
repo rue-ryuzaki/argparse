@@ -103,6 +103,12 @@
 #endif  // C++20+
 #endif  // _MSVC_LANG
 
+#ifdef ARGPARSE_NO_AUTODETECT
+#warning "ARGPARSE_NO_AUTODETECT define is deprecated and will be removed \
+in the next minor release (v1.8.0), \
+use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
+#endif  // ARGPARSE_NO_AUTODETECT
+
 #undef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #if !defined ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION \
  && !defined ARGPARSE_NO_AUTODETECT
