@@ -7962,7 +7962,7 @@ public:
     explicit
     ArgumentParser(int argc, char* argv[],
                    std::string const& prog = std::string())
-        : m_data(),
+        : m_data(_ArgumentData::make_argument_data()),
           m_name(),
           m_prog("untitled"),
           m_usage(),
@@ -8013,7 +8013,7 @@ public:
     explicit
     ArgumentParser(int argc, char const* argv[],
                    std::string const& prog = std::string())
-        : m_data(),
+        : m_data(_ArgumentData::make_argument_data()),
           m_name(),
           m_prog("untitled"),
           m_usage(),
