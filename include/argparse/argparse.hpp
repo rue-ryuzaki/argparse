@@ -698,6 +698,12 @@ make_shared(T const& t)
 {
     return shared_ptr<T>(new T(t));
 }
+
+template <class T, class U>
+shared_ptr<T> _pointer_cast(shared_ptr<U> const& r) throw()
+{
+    return shared_ptr<T>(r);
+}
 #endif  // C++11+
 
 template <class T> struct is_byte_type              { enum { value = false }; };
@@ -4350,7 +4356,7 @@ private:
 #ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
 #endif  // C++11+
-    _ConflictResolver* m_post_trigger;
+    detail::shared_ptr<_ConflictResolver> m_post_trigger;
 };
 
 /*!
@@ -4942,14 +4948,15 @@ protected:
 #endif  // C++11+
     }
 
-    inline void create_argument(std::vector<std::string> const& in_flags,
+    static void create_argument(detail::shared_ptr<_ArgumentData>& data,
+                                std::vector<std::string> const& in_flags,
                                 std::string const& prefix_chars)
     {
         std::vector<std::string> flags = in_flags;
         if (flags.empty()) {
             pArgument arg = Argument::make_argument(flags, std::string(),
                                                     Argument::Positional);
-            m_arguments.push_back(arg);
+            data->m_arguments.push_back(arg);
             return;
         }
         flags.front() = detail::_format_name(flags.front());
@@ -4968,11 +4975,16 @@ protected:
                     is_optional ? Argument::Optional : Argument::Positional);
 #endif  // C++11+
         if (is_optional) {
-            check_conflict_arg(arg.get());
+            data->check_conflict_arg(arg.get());
         }
-        m_arguments.push_back(arg);
+        data->m_arguments.push_back(arg);
         if (is_optional) {
-            m_arguments.back()->m_post_trigger = this;
+#ifdef _ARGPARSE_CXX_11
+            data->m_arguments.back()->m_post_trigger = data;
+#else
+            data->m_arguments.back()->m_post_trigger
+                = detail::_pointer_cast<_ConflictResolver, _ArgumentData>(data);
+#endif  // C++11+
         }
     }
 
@@ -5151,7 +5163,7 @@ public:
      */
     inline Argument& add_argument(std::vector<std::string> const& flags)
     {
-        m_data->create_argument(flags, m_prefix_chars);
+        m_data->create_argument(m_data, flags, m_prefix_chars);
         process_add_argument();
         return *m_data->m_arguments.back();
     }
@@ -8801,7 +8813,7 @@ public:
      */
     inline Argument& add_argument(std::vector<std::string> const& flags)
     {
-        m_data->create_argument(flags, prefix_chars());
+        m_data->create_argument(m_data, flags, prefix_chars());
         process_add_argument();
         return *m_data->m_arguments.back();
     }
