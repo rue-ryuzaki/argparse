@@ -2075,21 +2075,20 @@ _split_to_args(std::string const& str)
     std::vector<std::string> res;
     std::string value;
     std::deque<char> quotes;
+    bool skip = false;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
-        bool skip = false;
-        if (c == '\\') {
+        if (!skip && c == '\\') {
             // skip space
             skip = true;
-            if (++i == str.size()) {
+            if (i + 1 == str.size()) {
                 value += c;
                 break;
-            } else {
-                if (str.at(i) != _space) {
-                    value += c;
-                }
-                c = str[i];
             }
+            if (str[i + 1] != _space) {
+                value += c;
+            }
+            continue;
         }
         if (((c == _space && !skip)
              || (c != _space && std::isspace(static_cast<unsigned char>(c))))
@@ -2099,6 +2098,7 @@ _split_to_args(std::string const& str)
             _process_quotes(quotes, value, str, c, i + 1);
             value += c;
         }
+        skip = false;
     }
     _store_value_to(value, res);
     if (!quotes.empty()) {
