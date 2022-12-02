@@ -9508,8 +9508,7 @@ public:
         std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
         std::string tr_usage = detail::_tr(m_usage, lang);
         if (!tr_usage.empty()) {
-            os << tr_usage_title << " "
-               << detail::_replace(tr_usage, "%(prog)s", prog()) << std::endl;
+            os << tr_usage_title << " " << despecify(tr_usage) << std::endl;
         } else {
             pArguments const positional = m_data->get_positional(false, true);
             pArguments const optional = m_data->get_optional(false, true);
@@ -9548,8 +9547,7 @@ public:
         std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
         std::string tr_usage = detail::_tr(m_usage, lang);
         if (!tr_usage.empty()) {
-            os << tr_usage_title << " "
-               << detail::_replace(tr_usage, "%(prog)s", prog()) << std::endl;
+            os << tr_usage_title << " " << despecify(tr_usage) << std::endl;
         } else {
             print_custom_usage(positional_all, optional_all, m_mutex_groups,
                                sub_info, prog(), tr_usage_title, os);
@@ -9557,8 +9555,7 @@ public:
         std::size_t width = output_width();
         detail::_print_raw_text_formatter(
                     m_formatter_class,
-                    detail::_replace(
-                        detail::_tr(m_description, lang), "%(prog)s", prog()),
+                    despecify(detail::_tr(m_description, lang)),
                     width, os);
         std::size_t size = 0;
         pSubparser subparser = sub_info.first;
@@ -9583,10 +9580,9 @@ public:
             for (std::size_t i = 0; i < positional.size(); ++i) {
                 print_subparser(sub_positional, sub_info, i,
                                 m_formatter_class, size, width, lang, os);
-                os << detail::_replace(
-                          positional.at(i)->print(m_formatter_class,
-                                                  size, width, lang),
-                          "%(prog)s", prog()) << std::endl;
+                os << despecify(positional.at(i)->print(m_formatter_class,
+                                                        size, width, lang))
+                   << std::endl;
             }
             print_subparser(sub_positional, sub_info, positional.size(),
                             m_formatter_class, size, width, lang, os);
@@ -9594,10 +9590,9 @@ public:
         if (!optional.empty()) {
             os << "\n" << detail::_tr(m_optionals_title, lang) << ":\n";
             for (std::size_t i = 0; i < optional.size(); ++i) {
-                os << detail::_replace(
-                          optional.at(i)->print(
-                              m_formatter_class, size, width, lang),
-                          "%(prog)s", prog()) << std::endl;
+                os << despecify(optional.at(i)->print(
+                                    m_formatter_class, size, width, lang))
+                   << std::endl;
             }
         }
 #ifdef _ARGPARSE_CXX_11
@@ -9611,8 +9606,7 @@ public:
         }
         detail::_print_raw_text_formatter(
                     m_formatter_class,
-                    detail::_replace(
-                        detail::_tr(m_epilog, lang), "%(prog)s", prog()),
+                    despecify(detail::_tr(m_epilog, lang)),
                     width, os);
     }
 
@@ -9705,6 +9699,11 @@ private:
     {
         print_usage(lang, os);
         throw std::logic_error(prog() + ": error: " + message);
+    }
+
+    inline std::string despecify(std::string const& str) const
+    {
+        return detail::_replace(str, "%(prog)s", prog());
     }
 
     inline void process_add_argument()
@@ -10312,8 +10311,7 @@ private:
             throw AttributeError("'ArgumentParser' object has no "
                                  "attribute 'version'");
         }
-        std::cout << detail::_replace(tmp->version(), "%(prog)s", prog())
-                  << std::endl;
+        std::cout << despecify(tmp->version()) << std::endl;
         ::exit(0);
     }
 
