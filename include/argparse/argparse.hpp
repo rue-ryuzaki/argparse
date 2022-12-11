@@ -38,6 +38,7 @@
 #undef _ARGPARSE_CONSTEXPR
 #undef _ARGPARSE_ENUM_TYPE
 #undef _ARGPARSE_EXPORT
+#undef _ARGPARSE_FINAL
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
 #undef _ARGPARSE_NULLPTR
@@ -194,12 +195,14 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #define _ARGPARSE_EXPORT
 
 #ifdef _ARGPARSE_CXX_11
+#define _ARGPARSE_FINAL final
 #define _ARGPARSE_NOEXCEPT noexcept
 #define _ARGPARSE_OVERRIDE override
 #define _ARGPARSE_CONSTEXPR constexpr
 #define _ARGPARSE_USE_CONSTEXPR constexpr
 #define _ARGPARSE_ENUM_TYPE(X) : X
 #else
+#define _ARGPARSE_FINAL
 #define _ARGPARSE_NOEXCEPT
 #define _ARGPARSE_OVERRIDE
 #define _ARGPARSE_CONSTEXPR
@@ -4905,7 +4908,8 @@ protected:
         }
     }
 
-    inline void check_conflict_arg(Argument const* arg) _ARGPARSE_OVERRIDE
+    inline void
+    check_conflict_arg(Argument const* arg) _ARGPARSE_OVERRIDE _ARGPARSE_FINAL
     {
 #ifdef _ARGPARSE_CXX_11
         for (auto& opt : m_optional) {
@@ -11339,6 +11343,7 @@ private:
 #undef _ARGPARSE_CONSTEXPR
 #undef _ARGPARSE_ENUM_TYPE
 #undef _ARGPARSE_EXPORT
+#undef _ARGPARSE_FINAL
 #undef _ARGPARSE_INLINE_VARIABLE
 #undef _ARGPARSE_NOEXCEPT
 #undef _ARGPARSE_NULLPTR
