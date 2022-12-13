@@ -1736,24 +1736,6 @@ _replace(std::string const& str,
 }
 #endif  // C++11+
 
-inline std::string
-_format_name(std::string const& str)
-{
-#ifdef _ARGPARSE_CXX_11
-    auto res = _replace(str,
-                        [] (unsigned char c) { return std::iscntrl(c); }, "");
-#else
-    std::string res = _replace(str, '\t', "");
-    res = _replace(res, '\n', "");
-    res = _replace(res, '\v', "");
-    res = _replace(res, '\f', "");
-    res = _replace(res, '\r', "");
-#endif  // C++11+
-    _trim(res);
-    res = _replace(res, ' ', "_");
-    return res;
-}
-
 inline bool
 _starts_with(std::string const& str, std::string const& value)
 {
@@ -3832,7 +3814,7 @@ public:
         if (m_type == Positional && !m_flags.empty()) {
             throw ValueError("dest supplied twice for positional argument");
         }
-        m_dest.front() = detail::_format_name(value);
+        m_dest.front() = value;
         return *this;
     }
 
@@ -4827,10 +4809,7 @@ protected:
     {
         std::string name = detail::_flag_name(arg);
         std::size_t count_prefixes = arg.size() - name.size();
-        if (count < count_prefixes
-                || (count == count_prefixes
-                    && count > 1
-                    && flag.size() < name.size())) {
+        if (count < count_prefixes) {
             count = count_prefixes;
 #ifdef _ARGPARSE_CXX_11
             flag = std::move(name);
@@ -4856,7 +4835,6 @@ protected:
         for (std::size_t i = 1; i < flags.size(); ++i) {
             // check arguments
             std::string& flag = flags.at(i);
-            flag = detail::_format_name(flag);
             if (flag.empty()) {
                 throw IndexError("string index out of range");
             }
@@ -4963,12 +4941,15 @@ protected:
             data->m_arguments.push_back(arg);
             return;
         }
-        flags.front() = detail::_format_name(flags.front());
+        flags.front() = detail::_trim_copy(flags.front());
         std::string flag = flags.front();
         check_flag_name(flag);
         std::size_t prefixes = 0;
         bool is_optional = detail::_is_value_exists(flag.at(0), prefix_chars);
         update_flag_name(flags, prefix_chars, is_optional, flag, prefixes);
+        if (is_optional) {
+            flag = detail::_replace(flag, '-', "_");
+        }
 #ifdef _ARGPARSE_CXX_11
         auto arg = Argument::make_argument(
                     std::move(flags), std::move(flag),
@@ -5001,13 +4982,12 @@ protected:
         if (flags.empty()) {
             arg.m_name = arg.dest();
         } else {
-            flags.front() = detail::_format_name(flags.front());
             std::string flag = flags.front();
             check_flag_name(flag);
             std::size_t prefixes = 0;
             is_optional = detail::_is_value_exists(flag.at(0), prefix_chars);
             update_flag_name(flags, prefix_chars, is_optional, flag, prefixes);
-            arg.m_name = flag;
+            arg.m_name = is_optional ? detail::_replace(flag, '-', "_") : flag;
         }
         arg.m_type = is_optional ? Argument::Optional : Argument::Positional;
         // check
@@ -5815,7 +5795,8 @@ private:
             if (it->first->m_type == Argument::Optional
                     && it->first->dest().empty()) {
                 for (std::size_t i = 0; i < it->first->m_flags.size(); ++i) {
-                    if (detail::_flag_name(it->first->m_flags.at(i)) == key) {
+                    if (detail::_flag_name(it->first->m_flags.at(i)) == key
+                            || it->first->m_name == key) {
                         return it;
                     }
                 }
@@ -7583,7 +7564,7 @@ public:
          */
         inline Subparser& dest(std::string const& value)
         {
-            m_dest = detail::_format_name(value);
+            m_dest = value;
             return *this;
         }
 
@@ -7688,14 +7669,13 @@ public:
          */
         inline ArgumentParser& add_parser(std::string const& name)
         {
-            std::string value = detail::_format_name(name);
-            if (value.empty()) {
+            if (name.empty()) {
                 throw ValueError("parser name can't be empty");
             }
 #ifdef _ARGPARSE_CXX_11
-            m_parsers.emplace_back(make_parser(value));
+            m_parsers.emplace_back(make_parser(name));
 #else
-            m_parsers.push_back(make_parser(value));
+            m_parsers.push_back(make_parser(name));
 #endif  // C++11+
             m_parsers.back()->update_prog(prog_name());
             return *m_parsers.back();
@@ -8236,7 +8216,7 @@ public:
     {
         m_aliases.clear();
         for (std::size_t i = 0; i < value.size(); ++i) {
-            std::string val = detail::_format_name(value.at(i));
+            std::string const& val = value.at(i);
             if (!val.empty()) {
                 m_aliases.push_back(val);
             }
@@ -9024,7 +9004,7 @@ public:
     set_defaults(std::vector<std::pair<std::string, std::string> > const& pairs)
     {
         for (std::size_t i = 0; i < pairs.size(); ++i) {
-            std::string dest = detail::_format_name(pairs.at(i).first);
+            std::string const& dest = pairs.at(i).first;
             if (dest.empty()) {
                 continue;
             }
