@@ -2873,6 +2873,85 @@ public:
     {
         m_help[std::string()] = std::string();
     }
+
+    /*!
+     *  \brief Construct argument object with parsed arguments
+     *
+     *  \param flag1 First flag
+     *  \param flag2 Second flag
+     *  \param flag3 Third flag
+     *
+     *  \since v1.7.2
+     *
+     *  \return Argument object
+     */
+    explicit
+    Argument(std::string const& flag1, std::string const& flag2,
+             std::string const& flag3)
+        : m_flags(detail::_make_vector(flag1, flag2, flag3)),
+          m_all_flags(m_flags),
+          m_name(),
+          m_action(argparse::store),
+          m_type(NoType),
+          m_default_type(),
+          m_help_type(),
+          m_nargs(NARGS_DEF),
+          m_num_args(1),
+          m_nargs_str("1"),
+          m_const(),
+          m_default(),
+          m_implicit(),
+          m_type_name(),
+          m_choices(),
+          m_required(),
+          m_help(),
+          m_version(),
+          m_metavar(),
+          m_dest(detail::_make_vector(std::string())),
+          m_post_trigger(_ARGPARSE_NULLPTR)
+    {
+        m_help[std::string()] = std::string();
+    }
+
+    /*!
+     *  \brief Construct argument object with parsed arguments
+     *
+     *  \param flag1 First flag
+     *  \param flag2 Second flag
+     *  \param flag3 Third flag
+     *  \param flag4 Fourth flag
+     *
+     *  \since v1.7.2
+     *
+     *  \return Argument object
+     */
+    explicit
+    Argument(std::string const& flag1, std::string const& flag2,
+             std::string const& flag3, std::string const& flag4)
+        : m_flags(detail::_make_vector(flag1, flag2, flag3, flag4)),
+          m_all_flags(m_flags),
+          m_name(),
+          m_action(argparse::store),
+          m_type(NoType),
+          m_default_type(),
+          m_help_type(),
+          m_nargs(NARGS_DEF),
+          m_num_args(1),
+          m_nargs_str("1"),
+          m_const(),
+          m_default(),
+          m_implicit(),
+          m_type_name(),
+          m_choices(),
+          m_required(),
+          m_help(),
+          m_version(),
+          m_metavar(),
+          m_dest(detail::_make_vector(std::string())),
+          m_post_trigger(_ARGPARSE_NULLPTR)
+    {
+        m_help[std::string()] = std::string();
+    }
 #endif  // C++11+
 
     /*!
@@ -5135,6 +5214,44 @@ public:
                                   std::string const& flag2)
     {
         return add_argument(detail::_make_vector(flag1, flag2));
+    }
+
+    /*!
+     *  \brief Add argument with 3 flags
+     *
+     *  \param flag1 First value
+     *  \param flag2 Second value
+     *  \param flag3 Third value
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& add_argument(std::string const& flag1,
+                                  std::string const& flag2,
+                                  std::string const& flag3)
+    {
+        return add_argument(detail::_make_vector(flag1, flag2, flag3));
+    }
+
+    /*!
+     *  \brief Add argument with 4 flags
+     *
+     *  \param flag1 First value
+     *  \param flag2 Second value
+     *  \param flag3 Third value
+     *  \param flag4 Fourth value
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& add_argument(std::string const& flag1,
+                                  std::string const& flag2,
+                                  std::string const& flag3,
+                                  std::string const& flag4)
+    {
+        return add_argument(detail::_make_vector(flag1, flag2, flag3, flag4));
     }
 #endif  // C++11+
 
@@ -8785,6 +8902,44 @@ public:
                                   std::string const& flag2)
     {
         return add_argument(detail::_make_vector(flag1, flag2));
+    }
+
+    /*!
+     *  \brief Add argument with 3 flags
+     *
+     *  \param flag1 First value
+     *  \param flag2 Second value
+     *  \param flag3 Third value
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& add_argument(std::string const& flag1,
+                                  std::string const& flag2,
+                                  std::string const& flag3)
+    {
+        return add_argument(detail::_make_vector(flag1, flag2, flag3));
+    }
+
+    /*!
+     *  \brief Add argument with 4 flags
+     *
+     *  \param flag1 First value
+     *  \param flag2 Second value
+     *  \param flag3 Third value
+     *  \param flag4 Fourth value
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument reference
+     */
+    inline Argument& add_argument(std::string const& flag1,
+                                  std::string const& flag2,
+                                  std::string const& flag3,
+                                  std::string const& flag4)
+    {
+        return add_argument(detail::_make_vector(flag1, flag2, flag3, flag4));
     }
 #endif  // C++11+
 
