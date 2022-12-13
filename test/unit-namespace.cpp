@@ -681,31 +681,46 @@ TEST_CASE("1. to string", "[namespace]")
 
 TEST_CASE("2. get", "[namespace]")
 {
+    std::string bar = "bar";
     std::string foo = "foo";
 
     SECTION("2.1. first long option containing internal -") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo-bar", "--foo");
+        parser.add_argument(argparse::Argument("--bar-foo", "--bar"));
 
-        argparse::Namespace args = parser.parse_args("--foo=" + foo);
+        argparse::Namespace args = parser.parse_args("--foo=" + foo + " --bar=" + bar);
 
         REQUIRE(args.get<std::string>("--foo") == foo);
         REQUIRE(args.get<std::string>("--foo-bar") == foo);
         REQUIRE(args.get<std::string>("foo") == foo);
         REQUIRE(args.get<std::string>("foo-bar") == foo);
         REQUIRE(args.get<std::string>("foo_bar") == foo);
+
+        REQUIRE(args.get<std::string>("--bar") == bar);
+        REQUIRE(args.get<std::string>("--bar-foo") == bar);
+        REQUIRE(args.get<std::string>("bar") == bar);
+        REQUIRE(args.get<std::string>("bar-foo") == bar);
+        REQUIRE(args.get<std::string>("bar_foo") == bar);
     }
 
     SECTION("2.2. second long option containing internal -") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo", "--foo-bar");
+        parser.add_argument(argparse::Argument("--bar", "--bar-foo"));
 
-        argparse::Namespace args = parser.parse_args("--foo=" + foo);
+        argparse::Namespace args = parser.parse_args("--foo=" + foo + " --bar=" + bar);
 
         REQUIRE(args.get<std::string>("--foo") == foo);
         REQUIRE(args.get<std::string>("--foo-bar") == foo);
         REQUIRE(args.get<std::string>("foo") == foo);
         REQUIRE(args.get<std::string>("foo-bar") == foo);
         REQUIRE_THROWS(args.get<std::string>("foo_bar"));
+
+        REQUIRE(args.get<std::string>("--bar") == bar);
+        REQUIRE(args.get<std::string>("--bar-foo") == bar);
+        REQUIRE(args.get<std::string>("bar") == bar);
+        REQUIRE(args.get<std::string>("bar-foo") == bar);
+        REQUIRE_THROWS(args.get<std::string>("bar_foo"));
     }
 }

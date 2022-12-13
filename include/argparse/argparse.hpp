@@ -4987,7 +4987,7 @@ protected:
             std::size_t prefixes = 0;
             is_optional = detail::_is_value_exists(flag.at(0), prefix_chars);
             update_flag_name(flags, prefix_chars, is_optional, flag, prefixes);
-            arg.m_name = flag;
+            arg.m_name = is_optional ? detail::_replace(flag, '-', "_") : flag;
         }
         arg.m_type = is_optional ? Argument::Optional : Argument::Positional;
         // check
