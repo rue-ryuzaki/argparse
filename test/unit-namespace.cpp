@@ -695,12 +695,14 @@ TEST_CASE("2. get", "[namespace]")
         REQUIRE(args.get<std::string>("--foo-bar") == foo);
         REQUIRE(args.get<std::string>("foo") == foo);
         REQUIRE(args.get<std::string>("foo-bar") == foo);
+        REQUIRE(args.exists("foo_bar") == true);
         REQUIRE(args.get<std::string>("foo_bar") == foo);
 
         REQUIRE(args.get<std::string>("--bar") == bar);
         REQUIRE(args.get<std::string>("--bar-foo") == bar);
         REQUIRE(args.get<std::string>("bar") == bar);
         REQUIRE(args.get<std::string>("bar-foo") == bar);
+        REQUIRE(args.exists("bar_foo") == true);
         REQUIRE(args.get<std::string>("bar_foo") == bar);
     }
 
@@ -715,12 +717,14 @@ TEST_CASE("2. get", "[namespace]")
         REQUIRE(args.get<std::string>("--foo-bar") == foo);
         REQUIRE(args.get<std::string>("foo") == foo);
         REQUIRE(args.get<std::string>("foo-bar") == foo);
+        REQUIRE(args.exists("foo_bar") == false);
         REQUIRE_THROWS(args.get<std::string>("foo_bar"));
 
         REQUIRE(args.get<std::string>("--bar") == bar);
         REQUIRE(args.get<std::string>("--bar-foo") == bar);
         REQUIRE(args.get<std::string>("bar") == bar);
         REQUIRE(args.get<std::string>("bar-foo") == bar);
+        REQUIRE(args.exists("bar_foo") == false);
         REQUIRE_THROWS(args.get<std::string>("bar_foo"));
     }
 }
