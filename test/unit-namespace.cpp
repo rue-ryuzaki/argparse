@@ -685,14 +685,12 @@ TEST_CASE("2. get", "[namespace]")
 
     SECTION("2.1. first long option containing internal -") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
-        parser.add_argument("-f", "--foo-bar", "--foo");
+        parser.add_argument("--foo-bar", "--foo");
 
-        argparse::Namespace args = parser.parse_args("-f=" + foo);
+        argparse::Namespace args = parser.parse_args("--foo=" + foo);
 
-        REQUIRE(args.get<std::string>("-f") == foo);
         REQUIRE(args.get<std::string>("--foo") == foo);
         REQUIRE(args.get<std::string>("--foo-bar") == foo);
-        REQUIRE(args.get<std::string>("f") == foo);
         REQUIRE(args.get<std::string>("foo") == foo);
         REQUIRE(args.get<std::string>("foo-bar") == foo);
         REQUIRE(args.get<std::string>("foo_bar") == foo);
@@ -700,14 +698,12 @@ TEST_CASE("2. get", "[namespace]")
 
     SECTION("2.2. second long option containing internal -") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
-        parser.add_argument("-f", "--foo", "--foo-bar");
+        parser.add_argument("--foo", "--foo-bar");
 
-        argparse::Namespace args = parser.parse_args("-f=" + foo);
+        argparse::Namespace args = parser.parse_args("--foo=" + foo);
 
-        REQUIRE(args.get<std::string>("-f") == foo);
         REQUIRE(args.get<std::string>("--foo") == foo);
         REQUIRE(args.get<std::string>("--foo-bar") == foo);
-        REQUIRE(args.get<std::string>("f") == foo);
         REQUIRE(args.get<std::string>("foo") == foo);
         REQUIRE(args.get<std::string>("foo-bar") == foo);
         REQUIRE_THROWS(args.get<std::string>("foo_bar"));
