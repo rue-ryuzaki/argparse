@@ -1468,7 +1468,7 @@ _utf8_size(std::string const& value)
 }
 // -----------------------------------------------------------------------------
 
-// -- translatons support ------------------------------------------------------
+// -- translations support -----------------------------------------------------
 // since v1.7.1
 typedef std::map<std::string, std::string> LanguagePack;
 
