@@ -1873,6 +1873,28 @@ _flag_name(std::string const& str)
     return res;
 }
 
+inline bool
+_is_flag_correct(std::string const& str, bool is_optional)
+{
+    std::string trimmed = _trim_copy(str);
+    if (trimmed.size() != str.size()) {
+        return false;
+    }
+    if (is_optional) {
+        trimmed = _flag_name(trimmed);
+    }
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        if (str.at(i) == '-' || str.at(i) == '_') {
+            continue;
+        }
+        if (std::isspace(static_cast<unsigned char>(str.at(i)))
+                || std::ispunct(static_cast<unsigned char>(str.at(i)))) {
+            return false;
+        }
+    }
+    return true;
+}
+
 inline std::vector<std::string>
 _help_flags(std::string const& prefix_chars)
 {
@@ -2257,6 +2279,18 @@ _print_raw_text_formatter(_HelpFormatter const& formatter,
         os << begin
            << formatter._fill_text(text, width, indent) << end << std::endl;
     }
+}
+
+inline std::string
+_filled_string(std::string const& str, std::size_t limit, char filler = '-')
+{
+    if (str.size() + 2 >= limit) {
+        return _spaces + str;
+    }
+    std::string res = std::string((limit - str.size() - 2) / 2, filler)
+                      + _spaces + str + _spaces;
+    res.resize(limit, filler);
+    return res;
 }
 
 template <class T>
@@ -9623,6 +9657,54 @@ public:
 #endif  // C++17+
 
     /*!
+     *  \brief Run self-test and print report
+     *  to output stream (default: std::cout)
+     *
+     *  \param os Output stream
+     *
+     *  \since v1.7.2
+     *
+     *  \return True if no warnings or errors were found, false otherwise
+     */
+    inline bool self_test(std::ostream& os = std::cout) const
+    {
+        return self_test(std::string(), os);
+    }
+
+    /*!
+     *  \brief Run self-test and print report for selected language
+     *  to output stream (default: std::cout)
+     *
+     *  \param lang Language value
+     *  \param os Output stream
+     *
+     *  \since v1.7.2
+     *
+     *  \return True if no warnings or errors were found, false otherwise
+     */
+    inline bool self_test(std::string const& lang,
+                          std::ostream& os = std::cout) const
+    {
+        std::size_t const limit = 79;
+        char const filler = '-';
+        std::stringstream ss;
+        ss << "cpp-argparse v"
+           << ARGPARSE_VERSION_MAJOR << "."
+           << ARGPARSE_VERSION_MINOR << "."
+           << ARGPARSE_VERSION_PATCH << " self-test report";
+        os << detail::_filled_string(ss.str(), limit, filler) << std::endl;
+        os << detail::_filled_string(
+                  "This report contains parser information and displays "
+                  "diagnostic warnings", limit, detail::_space) << std::endl;
+        os << detail::_filled_string("overview", limit, filler) << std::endl;
+        test_overview(lang, os);
+        os << detail::_filled_string("diagnostics", limit, filler) << std::endl;
+        bool res = test_diagnostics(lang, os);
+        os << detail::_filled_string("end report", limit, filler) << std::endl;
+        return res;
+    }
+
+    /*!
      *  \brief Print a program usage to output stream (default: std::cout)
      *
      *  \param os Output stream
@@ -11416,6 +11498,199 @@ private:
     inline void update_prog(std::string const& parent_prog)
     {
         m_prog = parent_prog + detail::_spaces + m_name;
+    }
+
+    inline void
+    test_overview(std::string const& lang, std::ostream& os) const
+    {
+        if (lang.empty()) {
+            os << "default language" << std::endl;
+        } else {
+            os << "language: " << lang << std::endl;
+        }
+        os << "prog: " << prog() << std::endl;
+        detail::Value<std::string> version;
+        for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
+            pArgument const& arg = m_data->m_arguments.at(i);
+            if (arg->action() == argparse::version) {
+                version = arg->version();
+                break;
+            }
+        }
+        if (version.has_value()) {
+            os << "version: " << version() << std::endl;
+        }
+        std::string tr_usage = detail::_tr(m_usage, lang);
+        if (!tr_usage.empty()) {
+            os << "usage: " << despecify(tr_usage) << std::endl;
+        }
+        std::string tr_description = detail::_tr(m_description, lang);
+        if (!tr_description.empty()) {
+            os << "description: " << despecify(tr_description) << std::endl;
+        }
+        std::string tr_epilog = detail::_tr(m_epilog, lang);
+        if (!tr_epilog.empty()) {
+            os << "epilog: " << despecify(tr_epilog) << std::endl;
+        }
+        os << "prefix_chars: '" << prefix_chars() << "'" << std::endl;
+        if (!fromfile_prefix_chars().empty()) {
+            os << "fromfile_prefix_chars: '" << fromfile_prefix_chars() << "'"
+               << std::endl;
+        }
+        if (m_argument_default.has_value()) {
+            os << "argument_default: " << argument_default() << std::endl;
+        }
+        if (!conflict_handler().empty()) {
+            os << "conflict_handler: " << conflict_handler() << std::endl;
+        }
+        os << "add_help: "
+           << detail::_bool_to_string(add_help()) << std::endl;
+        os << "allow_abbrev: "
+           << detail::_bool_to_string(allow_abbrev()) << std::endl;
+        os << "exit_on_error: "
+           << detail::_bool_to_string(exit_on_error()) << std::endl;
+        if (m_output_width.has_value()) {
+            os << "output_width [override]: " << output_width() << std::endl;
+        } else {
+#ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+            os << "output_width [detected]: " << output_width() << std::endl;
+#else
+            os << "output_width [default]: " << output_width() << std::endl;
+#endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+        }
+        if (m_subparsers) {
+            std::deque<pParser> parsers = m_subparsers->m_parsers;
+            os << "subparsers list:" << std::endl;
+            for (std::size_t i = 0; i < parsers.size(); ++i) {
+                pParser const& parser = parsers.at(i);
+                os << "  " << (i + 1) << ". '" << parser->m_name << "'";
+                std::string aliases;
+                for (std::size_t j = 0; j < parser->aliases().size(); ++j) {
+                    std::string const& alias = parser->aliases().at(j);
+                    detail::_append_value_to("'" + alias + "'", aliases, ", ");
+                }
+                if (!aliases.empty()) {
+                    os << ", aliases: " << aliases;
+                }
+                os << std::endl;
+            }
+        }
+    }
+
+    inline bool
+    test_diagnostics(std::string const& lang, std::ostream& os) const
+    {
+        std::string const status_ok     = "[ OK ]";
+        std::string const status_info   = "[INFO]";
+        std::string const status_warn   = "[WARN]";
+        std::string const status_error  = "[FAIL]";
+        typedef std::pair<std::size_t, std::size_t> WarnErrAmount;
+        WarnErrAmount diagnostics;
+        // check prog
+        if (prog() == "untitled") {
+            ++diagnostics.first;
+            os << status_warn << " used default `prog` value, "
+               <<  "override it or pass command line options" << std::endl;
+        }
+        // check arguments
+        for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
+            pArgument const& arg = m_data->m_arguments.at(i);
+            std::string argument = "argument with ";
+            argument += std::string(arg->dest().empty() ? "options" : "dest");
+            argument += " " + detail::_vector_to_string(
+                            arg->get_argument_flags(), ", ", "'");
+            // check flags
+            bool is_optional = arg->m_type == Argument::Optional;
+            for (std::size_t j = 0; j < arg->flags().size(); ++j) {
+                std::string const& flag = arg->flags().at(j);
+                if (!detail::_is_flag_correct(flag, is_optional)) {
+                    ++diagnostics.first;
+                    os << status_warn << " " << argument << ": flag '"
+                       << flag << "' can be incorrect" << std::endl;
+                }
+            }
+            // check choices
+            for (std::size_t j = 0; j < arg->choices().size(); ++j) {
+                std::string const& choice = arg->choices().at(j);
+                if (choice.size() > 1
+                        && choice.size() != detail::_trim_copy(choice).size()) {
+                    ++diagnostics.first;
+                    os << status_warn << " " << argument << ": choice '"
+                       << choice << "' can be incorrect" << std::endl;
+                }
+            }
+            // check help
+            if (detail::_tr(arg->m_help, lang).empty()) {
+                ++diagnostics.first;
+                os << status_warn << " " << argument
+                   << ": help is not set" << std::endl;
+            }
+            // check metavar
+            if ((arg->action() & (detail::_store_action
+                             | argparse::append_const
+                             | argparse::language))) {
+                std::size_t names_size
+                        = arg->get_argument_name(m_formatter_class).size();
+                if (names_size > 1
+                        && (arg->m_nargs != Argument::NARGS_NUM
+                            || names_size != arg->m_num_args)) {
+                    ++diagnostics.second;
+                    os << status_error << " " << argument << ": length of "
+                       << "metavar tuple does not match nargs" << std::endl;
+                }
+            }
+        }
+        // check subparsers
+        if (m_subparsers) {
+            std::deque<pParser> parsers = m_subparsers->m_parsers;
+            if (parsers.empty()) {
+                ++diagnostics.first;
+                os << status_warn << " subparsers created "
+                   << "but no parsers are added" << std::endl;
+            }
+            // check dest
+            if (m_subparsers->dest().empty()) {
+                os << status_info << " you can specify `dest` for subparsers "
+                   << "to determine used parser" << std::endl;
+            }
+            // check help
+            if (detail::_tr(m_subparsers->m_help, lang).empty()) {
+                ++diagnostics.first;
+                os << status_warn << " help for subparsers is not set"
+                   << std::endl;
+            }
+            for (std::size_t i = 0; i < parsers.size(); ++i) {
+                pParser const& parser = parsers.at(i);
+                // check name
+                if (!detail::_is_flag_correct(parser->m_name, false)) {
+                    ++diagnostics.first;
+                    os << status_warn << " name for parser '"
+                       << parser->m_name << "' can be incorrect" << std::endl;
+                }
+                // check help
+                if (detail::_tr(parser->m_help, lang).empty()) {
+                    ++diagnostics.first;
+                    os << status_warn << " help for parser '"
+                       << parser->m_name << "' is not set" << std::endl;
+                }
+            }
+        }
+        // end diagnostics
+        bool res = true;
+        if (diagnostics.first == 0 && diagnostics.second == 0) {
+            os << status_ok << " no warning or errors detected" << std::endl;
+        } else {
+            res = false;
+            if (diagnostics.first != 0) {
+                os << status_warn << " detected warnings: " << diagnostics.first
+                   << std::endl;
+            }
+            if (diagnostics.second != 0) {
+                os << status_error << " detected errors: " << diagnostics.second
+                   << std::endl;
+            }
+        }
+        return res;
     }
 
 #ifdef _ARGPARSE_CXX_11

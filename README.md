@@ -74,6 +74,7 @@ Legacy GitHub workflows:
   - [ArgumentParser objects](#argumentparser-objects-support)
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
   - [add_argument() actions](#the-add_argument-actions-support)
+- [Self test](#self-test)
 - [Execute unit tests](#execute-unit-tests)
 - [License](#license)
 
@@ -651,6 +652,11 @@ epilog
 - [x] "version" - This expects a version= keyword argument in the add_argument() call, and prints version information and exits when invoked.
 - [x] "extend" - This stores a list, and extends each argument value to the list.
 - [x] argparse::BooleanOptionalAction - Adds support for boolean actions such as --foo and --no-foo
+## Self test
+You can check that you parser is created correctly by calling the ```self_test``` function.
+```cpp
+parser.self_test();
+```
 ## Execute unit tests
 To compile and run the tests, you need to execute
 
