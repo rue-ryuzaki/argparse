@@ -9705,6 +9705,42 @@ public:
     }
 
     /*!
+     *  \brief Print a bash completion to output stream (default: std::cout).
+     *  Copy the contents to ~/.bashrc or create a script file and use it
+     *
+     *  \param os Output stream
+     *
+     *  \since v1.7.2
+     */
+    inline void print_bash_completion(std::ostream& os = std::cout) const
+    {
+        pArguments const optional = m_data->get_optional(false, true);
+        pArguments const positional = m_data->get_positional(false, true);
+        std::vector<std::string> opt;
+        for (std::size_t i = 0; i < optional.size(); ++i) {
+            detail::_insert_vector_to_end(optional.at(i)->flags(), opt);
+        }
+        std::vector<std::string> pos;
+        for (std::size_t i = 0; i < positional.size(); ++i) {
+            detail::_insert_vector_to_end(positional.at(i)->flags(), pos);
+        }
+        if (m_subparsers) {
+            //m_subparsers->parser_names();
+        }
+        if (!opt.empty() || !pos.empty()) {
+            os << "complete";
+            if (!pos.empty()) {
+                os << " -f";
+            }
+            if (!opt.empty()) {
+                os << " -W \"" << detail::_vector_to_string(opt) << "\"";
+            }
+            os << " " << prog();
+            os << std::endl;
+        }
+    }
+
+    /*!
      *  \brief Print a program usage to output stream (default: std::cout)
      *
      *  \param os Output stream
@@ -9829,6 +9865,24 @@ public:
                     m_formatter_class,
                     despecify(detail::_tr(m_epilog, lang)),
                     width, os);
+    }
+
+    /*!
+     *  \brief Return a string containing a bash completion.
+     *  Copy the contents to ~/.bashrc or create a script file and use it
+     *
+     *  \param lang Language value
+     *
+     *  \since v1.7.2
+     *
+     *  \return Bash completion
+     */
+    inline std::string
+    format_bash_completion() const
+    {
+        std::stringstream ss;
+        print_bash_completion(ss);
+        return detail::_trim_copy(ss.str());
     }
 
     /*!
