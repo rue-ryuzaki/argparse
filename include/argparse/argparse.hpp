@@ -9720,16 +9720,38 @@ public:
         for (std::size_t i = 0; i < optional.size(); ++i) {
             detail::_insert_vector_to_end(optional.at(i)->flags(), opt);
         }
-        std::vector<std::string> pos;
+        bool more_args = false;
+        std::size_t min_args = 0;
+        std::size_t one_args = 0;
         for (std::size_t i = 0; i < positional.size(); ++i) {
-            detail::_insert_vector_to_end(positional.at(i)->flags(), pos);
+            pArgument const& arg = positional.at(i);
+            if (!(arg->action() & detail::_store_action)) {
+                continue;
+            }
+            std::size_t min_amount = 0;
+            switch (arg->m_nargs) {
+                case Argument::ZERO_OR_ONE :
+                    ++one_args;
+                    break;
+                case Argument::ONE_OR_MORE :
+                    ++min_amount;
+                    // fallthrough
+                case Argument::ZERO_OR_MORE :
+                    more_args = true;
+                    break;
+                case Argument::REMAINDING :
+                    more_args = true;
+                    break;
+                default :
+                    min_amount += arg->m_num_args;
+                    break;
+            }
+            min_args += min_amount;
         }
-        if (m_subparsers) {
-            //m_subparsers->parser_names();
-        }
-        if (!opt.empty() || !pos.empty()) {
+        bool have_positional = more_args || min_args != 0 || one_args != 0;
+        if (!opt.empty() || have_positional) {
             os << "complete";
-            if (!pos.empty()) {
+            if (have_positional) {
                 os << " -f";
             }
             if (!opt.empty()) {
