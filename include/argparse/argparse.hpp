@@ -9705,6 +9705,68 @@ public:
     }
 
     /*!
+     *  \brief Print a bash completion to output stream (default: std::cout).
+     *  Copy the contents to ~/.bashrc or create a script file and use it
+     *
+     *  \param os Output stream
+     *
+     *  \since v1.7.2
+     */
+    inline void print_bash_completion(std::ostream& os = std::cout) const
+    {
+        pArguments const optional = m_data->get_optional(false, true);
+        pArguments const positional = m_data->get_positional(false, true);
+        std::vector<std::string> options;
+        for (std::size_t i = 0; i < optional.size(); ++i) {
+            detail::_insert_vector_to_end(optional.at(i)->flags(), options);
+        }
+        bool more_args = false;
+        std::size_t min_args = 0;
+        std::size_t one_args = 0;
+        for (std::size_t i = 0; i < positional.size(); ++i) {
+            pArgument const& arg = positional.at(i);
+            if (!(arg->action() & detail::_store_action)) {
+                continue;
+            }
+            std::size_t min_amount = 0;
+            switch (arg->m_nargs) {
+                case Argument::ZERO_OR_ONE :
+                    ++one_args;
+                    break;
+                case Argument::ONE_OR_MORE :
+                    ++min_amount;
+                    // fallthrough
+                case Argument::ZERO_OR_MORE :
+                    more_args = true;
+                    break;
+                case Argument::REMAINDING :
+                    more_args = true;
+                    break;
+                default :
+                    min_amount += arg->m_num_args;
+                    break;
+            }
+            min_args += min_amount;
+        }
+        if (m_subparsers) {
+            detail::_insert_vector_to_end(
+                        m_subparsers->parser_names(), options);
+        }
+        bool have_positional = more_args || min_args != 0 || one_args != 0;
+        if (!options.empty() || have_positional) {
+            os << "complete";
+            if (have_positional) {
+                os << " -f";
+            }
+            if (!options.empty()) {
+                os << " -W \"" << detail::_vector_to_string(options) << "\"";
+            }
+            os << " " << prog();
+            os << std::endl;
+        }
+    }
+
+    /*!
      *  \brief Print a program usage to output stream (default: std::cout)
      *
      *  \param os Output stream
@@ -9829,6 +9891,24 @@ public:
                     m_formatter_class,
                     despecify(detail::_tr(m_epilog, lang)),
                     width, os);
+    }
+
+    /*!
+     *  \brief Return a string containing a bash completion.
+     *  Copy the contents to ~/.bashrc or create a script file and use it
+     *
+     *  \param lang Language value
+     *
+     *  \since v1.7.2
+     *
+     *  \return Bash completion
+     */
+    inline std::string
+    format_bash_completion() const
+    {
+        std::stringstream ss;
+        print_bash_completion(ss);
+        return detail::_trim_copy(ss.str());
     }
 
     /*!
