@@ -9716,9 +9716,9 @@ public:
     {
         pArguments const optional = m_data->get_optional(false, true);
         pArguments const positional = m_data->get_positional(false, true);
-        std::vector<std::string> opt;
+        std::vector<std::string> options;
         for (std::size_t i = 0; i < optional.size(); ++i) {
-            detail::_insert_vector_to_end(optional.at(i)->flags(), opt);
+            detail::_insert_vector_to_end(optional.at(i)->flags(), options);
         }
         bool more_args = false;
         std::size_t min_args = 0;
@@ -9749,13 +9749,13 @@ public:
             min_args += min_amount;
         }
         bool have_positional = more_args || min_args != 0 || one_args != 0;
-        if (!opt.empty() || have_positional) {
+        if (!options.empty() || have_positional) {
             os << "complete";
             if (have_positional) {
                 os << " -f";
             }
-            if (!opt.empty()) {
-                os << " -W \"" << detail::_vector_to_string(opt) << "\"";
+            if (!options.empty()) {
+                os << " -W \"" << detail::_vector_to_string(options) << "\"";
             }
             os << " " << prog();
             os << std::endl;
