@@ -9748,6 +9748,10 @@ public:
             }
             min_args += min_amount;
         }
+        if (m_subparsers) {
+            detail::_insert_vector_to_end(
+                        m_subparsers->parser_names(), options);
+        }
         bool have_positional = more_args || min_args != 0 || one_args != 0;
         if (!options.empty() || have_positional) {
             os << "complete";
