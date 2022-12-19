@@ -9268,6 +9268,23 @@ public:
         return std::string();
     }
 
+#ifdef _ARGPARSE_CXX_11
+    /*!
+     *  \brief Set default values for a specific arguments
+     *
+     *  \param pairs List of pairs: { 'argument flag', 'default value' }
+     *
+     *  \since v1.7.2
+     */
+    inline void
+    set_defaults(
+              std::initializer_list<std::pair<std::string, std::string> > pairs)
+    {
+        set_defaults(
+                    std::vector<std::pair<std::string, std::string> >{ pairs });
+    }
+#endif  // C++11+
+
     /*!
      *  \brief Set default values for a specific arguments
      *
@@ -9329,6 +9346,24 @@ public:
         return parse_args(detail::_split_to_args(args), space);
     }
 
+#ifdef _ARGPARSE_CXX_11
+    /*!
+     *  \brief Parse concrete arguments
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments
+     */
+    inline Namespace parse_args(std::initializer_list<std::string> const& args,
+                                Namespace const& space = Namespace()) const
+    {
+        return parse_args(std::vector<std::string>{ args }, space);
+    }
+#endif  // C++11+
+
     /*!
      *  \brief Parse concrete arguments
      *
@@ -9383,6 +9418,25 @@ public:
     {
         return parse_known_args(detail::_split_to_args(args), space);
     }
+
+#ifdef _ARGPARSE_CXX_11
+    /*!
+     *  \brief Parse known concrete arguments
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments
+     */
+    inline Namespace
+    parse_known_args(std::initializer_list<std::string> const& args,
+                     Namespace const& space = Namespace()) const
+    {
+        return parse_known_args(std::vector<std::string>{ args }, space);
+    }
+#endif  // C++11+
 
     /*!
      *  \brief Parse known concrete arguments
@@ -9439,6 +9493,25 @@ public:
     {
         return parse_intermixed_args(detail::_split_to_args(args), space);
     }
+
+#ifdef _ARGPARSE_CXX_11
+    /*!
+     *  \brief Parse intermixed concrete arguments
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments
+     */
+    inline Namespace
+    parse_intermixed_args(std::initializer_list<std::string> const& args,
+                          Namespace const& space = Namespace()) const
+    {
+        return parse_intermixed_args(std::vector<std::string>{ args }, space);
+    }
+#endif  // C++11+
 
     /*!
      *  \brief Parse intermixed concrete arguments
@@ -9498,6 +9571,26 @@ public:
         return parse_known_intermixed_args(detail::_split_to_args(args), space);
     }
 
+#ifdef _ARGPARSE_CXX_11
+    /*!
+     *  \brief Parse known intermixed concrete arguments
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments
+     */
+    inline Namespace
+    parse_known_intermixed_args(std::initializer_list<std::string> const& args,
+                                Namespace const& space = Namespace()) const
+    {
+        return parse_known_intermixed_args(
+                    std::vector<std::string>{ args }, space);
+    }
+#endif  // C++11+
+
     /*!
      *  \brief Parse known intermixed concrete arguments
      *
@@ -9550,6 +9643,24 @@ public:
                    Namespace const& space = Namespace()) const
     {
         return try_parse_args(detail::_split_to_args(args), space);
+    }
+
+    /*!
+     *  \brief Try parse concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    inline std::optional<Namespace>
+    try_parse_args(std::initializer_list<std::string> const& args,
+                   Namespace const& space = Namespace()) const
+    {
+        return try_parse_args(std::vector<std::string>{ args }, space);
     }
 
     /*!
@@ -9615,6 +9726,24 @@ public:
      *  \param args Arguments to parse
      *  \param space Parsed arguments namespace
      *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    inline std::optional<Namespace>
+    try_parse_known_args(std::initializer_list<std::string> const& args,
+                         Namespace const& space = Namespace()) const
+    {
+        return try_parse_known_args(std::vector<std::string>{ args }, space);
+    }
+
+    /*!
+     *  \brief Try parse known concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
      *  \since v1.7.1
      *
      *  \return Object with parsed arguments or std::nullopt
@@ -9662,6 +9791,25 @@ public:
                               Namespace const& space = Namespace()) const
     {
         return try_parse_intermixed_args(detail::_split_to_args(args), space);
+    }
+
+    /*!
+     *  \brief Try parse intermixed concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    inline std::optional<Namespace>
+    try_parse_intermixed_args(std::initializer_list<std::string> const& args,
+                              Namespace const& space = Namespace()) const
+    {
+        return try_parse_intermixed_args(
+                    std::vector<std::string>{ args }, space);
     }
 
     /*!
@@ -9719,6 +9867,26 @@ public:
     {
         return try_parse_known_intermixed_args(
                     detail::_split_to_args(args), space);
+    }
+
+    /*!
+     *  \brief Try parse known intermixed concrete arguments.
+     *  If arguments can't be parsed, returns std::nullopt.
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments or std::nullopt
+     */
+    inline std::optional<Namespace>
+    try_parse_known_intermixed_args(
+                std::initializer_list<std::string> const& args,
+                Namespace const& space = Namespace()) const
+    {
+        return try_parse_known_intermixed_args(
+                    std::vector<std::string>{ args }, space);
     }
 
     /*!
