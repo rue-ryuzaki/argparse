@@ -3682,6 +3682,20 @@ public:
     {
         return choices(std::vector<std::string>{ value1, value2, args... });
     }
+
+    /*!
+     *  \brief Set argument 'choices' value
+     *
+     *  \param value Choices value
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument reference
+     */
+    Argument& choices(std::initializer_list<std::string> value)
+    {
+        return choices(std::vector<std::string>{ value });
+    }
 #else
     /*!
      *  \brief Set argument 'choices' value
@@ -3852,6 +3866,20 @@ public:
     Argument& metavar(std::string const& value, Args... args)
     {
         return metavar(std::vector<std::string>{ value, args... });
+    }
+
+    /*!
+     *  \brief Set argument 'metavar' value
+     *
+     *  \param value Metavar values
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument reference
+     */
+    Argument& metavar(std::initializer_list<std::string> value)
+    {
+        return metavar(std::vector<std::string>{ value });
     }
 #else
     /*!
@@ -5222,6 +5250,20 @@ public:
     Argument& add_argument(Args... flags)
     {
         return add_argument(std::vector<std::string>{ flags... });
+    }
+
+    /*!
+     *  \brief Add argument with flags
+     *
+     *  \param flags Flag values
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(std::initializer_list<std::string> flags)
+    {
+        return add_argument(std::vector<std::string>{ flags });
     }
 #else
     /*!
@@ -8389,6 +8431,20 @@ public:
     {
         return aliases(std::vector<std::string>{ value, args... });
     }
+
+    /*!
+     *  \brief Set argument parser 'aliases' value (for subparsers)
+     *
+     *  \param value Aliases values
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser& aliases(std::initializer_list<std::string> value)
+    {
+        return aliases(std::vector<std::string>{ value });
+    }
 #else
     /*!
      *  \brief Set argument parser 'aliases' value (for subparsers)
@@ -8467,6 +8523,20 @@ public:
     ArgumentParser& parents(ArgumentParser const& value, Args... args)
     {
         return parents(std::vector<ArgumentParser>{ value, args... });
+    }
+
+    /*!
+     *  \brief Set argument parser 'parents' value
+     *
+     *  \param value Parents values
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser& parents(std::initializer_list<ArgumentParser> value)
+    {
+        return parents(std::vector<ArgumentParser>{ value });
     }
 #else
     /*!
@@ -8910,6 +8980,20 @@ public:
     Argument& add_argument(Args... flags)
     {
         return add_argument(std::vector<std::string>{ flags... });
+    }
+
+    /*!
+     *  \brief Add argument with flags
+     *
+     *  \param flags Flag values
+     *
+     *  \since v1.7.2
+     *
+     *  \return Current argument reference
+     */
+    Argument& add_argument(std::initializer_list<std::string> flags)
+    {
+        return add_argument(std::vector<std::string>{ flags });
     }
 #else
     /*!
