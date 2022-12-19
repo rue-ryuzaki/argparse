@@ -520,7 +520,8 @@ example:
 
 int main(int argc, char* argv[])
 {
-    auto parser = argparse::ArgumentParser()
+    auto parser = argparse::ArgumentParser(argc, argv)
+            .prog("prog")
             .add_help(false)
             .description("description")
             .description("la description", "fr")
@@ -561,7 +562,7 @@ with usage:
 ```
 // default usage
 ./a.out -h
-usage: untitled [-h] [-l {fr,de,cz}] [--foo FOO]
+usage: prog [-h] [-l {fr,de,cz}] [--foo FOO]
 
 description
 
@@ -575,7 +576,7 @@ epilog
 
 // -l fr
 ./a.out -l fr -h
-usage: untitled [-h] [-l {fr,de,cz}] [--foo FOO]
+usage: prog [-h] [-l {fr,de,cz}] [--foo FOO]
 
 la description
 
@@ -589,7 +590,7 @@ arguments facultatifs:
 
 // -l de
 ./a.out -l de -h
-usage: untitled [-h] [-l {fr,de,cz}] [--foo FOO]
+usage: prog [-h] [-l {fr,de,cz}] [--foo FOO]
 
 beschreibung
 
@@ -603,7 +604,7 @@ epilog
 
 // -l cz
 ./a.out -l cz -h
-usage: untitled [-h] [-l {fr,de,cz}] [--foo FOO]
+usage: prog [-h] [-l {fr,de,cz}] [--foo FOO]
 
 popis
 
