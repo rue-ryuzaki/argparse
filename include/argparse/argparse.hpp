@@ -1466,6 +1466,13 @@ _utf8_size(std::string const& value)
     }
     return std::make_pair(true, res);
 }
+
+// since NEXT_RELEASE
+inline bool
+_is_utf8(std::string const& value)
+{
+    return _utf8_size(value).second;
+}
 // -----------------------------------------------------------------------------
 
 // -- translations support -----------------------------------------------------
@@ -11935,6 +11942,11 @@ private:
             bool is_optional = arg->m_type == Argument::Optional;
             for (std::size_t j = 0; j < arg->flags().size(); ++j) {
                 std::string const& flag = arg->flags().at(j);
+                if (!detail::_is_utf8(flag)) {
+                    ++diagnostics.first;
+                    os << status_warn << " " << argument << ": flag '"
+                       << flag << "' is not utf-8" << std::endl;
+                }
                 if (!detail::_is_flag_correct(flag, is_optional)) {
                     ++diagnostics.first;
                     os << status_warn << " " << argument << ": flag '"
@@ -11994,6 +12006,11 @@ private:
             for (std::size_t i = 0; i < parsers.size(); ++i) {
                 pParser const& parser = parsers.at(i);
                 // check name
+                if (!detail::_is_utf8(parser->m_name)) {
+                    ++diagnostics.first;
+                    os << status_warn << " name for parser '"
+                       << parser->m_name << "' is not utf-8" << std::endl;
+                }
                 if (!detail::_is_flag_correct(parser->m_name, false)) {
                     ++diagnostics.first;
                     os << status_warn << " name for parser '"
