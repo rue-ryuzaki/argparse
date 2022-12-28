@@ -11952,6 +11952,37 @@ private:
                     os << status_warn << " " << argument << ": flag '"
                        << flag << "' can be incorrect" << std::endl;
                 }
+                if (flag == detail::_pseudo_arg && arg->dest().empty()) {
+                    ++diagnostics.second;
+                    os << status_error << " " << argument << ": dest= "
+                       << "is required for options like '--'" << std::endl;
+                }
+            }
+            // check dest
+            if (!is_optional) {
+                if (arg->dest().empty() && arg->flags().empty()) {
+                    ++diagnostics.second;
+                    os << status_error << " " << argument << ": missing 1 "
+                       << "required positional argument: 'dest'" << std::endl;
+                }
+                if (!arg->dest().empty() && !arg->flags().empty()) {
+                    ++diagnostics.second;
+                    os << status_error << " " << argument << ": dest supplied "
+                       << "twice for positional argument" << std::endl;
+                }
+            }
+            if (!arg->dest().empty()) {
+                std::string const& flag = arg->dest();
+                if (!detail::_is_utf8(flag)) {
+                    ++diagnostics.first;
+                    os << status_warn << " " << argument << ": dest '"
+                       << flag << "' is not utf-8" << std::endl;
+                }
+                if (!detail::_is_flag_correct(flag, is_optional)) {
+                    ++diagnostics.first;
+                    os << status_warn << " " << argument << ": dest '"
+                       << flag << "' can be incorrect" << std::endl;
+                }
             }
             // check choices
             for (std::size_t j = 0; j < arg->choices().size(); ++j) {
