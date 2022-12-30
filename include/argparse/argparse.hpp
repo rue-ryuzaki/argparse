@@ -1432,7 +1432,7 @@ _utf8_codepoint_size(uint8_t byte)
 }
 
 inline std::pair<bool, std::size_t>
-_utf8_size(std::string const& value, std::ostream& err = std::cerr)
+_utf8_length(std::string const& value, std::ostream& err = std::cerr)
 {
     std::size_t res = 0;
     std::size_t i = 0;
@@ -1472,7 +1472,7 @@ inline bool
 _is_utf8(std::string const& value)
 {
     std::stringstream ss;
-    return _utf8_size(value, ss).second;
+    return _utf8_length(value, ss).second;
 }
 // -----------------------------------------------------------------------------
 
@@ -2196,12 +2196,12 @@ _format_output_func(std::size_t indent, std::size_t width,
                     std::vector<std::string>& res, std::string& value,
                     std::string const& str)
 {
-    std::size_t value_size = _utf8_size(value).second;
+    std::size_t value_size = _utf8_length(value).second;
     if (value_size > indent
-            && value_size + 1 + _utf8_size(str).second > width) {
+            && value_size + 1 + _utf8_length(str).second > width) {
         _store_value_to(value, res);
     }
-    value_size = _utf8_size(value).second;
+    value_size = _utf8_length(value).second;
     if (value_size < indent) {
         value.resize(value.size() + indent - value_size, _space);
         value += str;
@@ -2217,7 +2217,7 @@ _format_output(std::string const& head, std::string const& body,
 {
     std::vector<std::string> res;
     std::string value = head;
-    if (_utf8_size(value).second + interlayer > indent) {
+    if (_utf8_length(value).second + interlayer > indent) {
         _store_value_to(value, res);
     }
     std::vector<std::string> split_str = _split(body, '\n', true);
@@ -2226,7 +2226,7 @@ _format_output(std::string const& head, std::string const& body,
         if (delimiter == '\n') {
             _format_output_func(indent, width, res, value, str);
         } else if (str.empty()) {
-            value.resize(value.size() + indent - _utf8_size(value).second,
+            value.resize(value.size() + indent - _utf8_length(value).second,
                          _space);
             _store_value_to(value, res, true);
         } else {
@@ -2254,7 +2254,7 @@ _help_formatter(std::string const& head,
 
     std::vector<std::string> res;
     std::string value = head;
-    if (_utf8_size(value).second + interlayer > indent) {
+    if (_utf8_length(value).second + interlayer > indent) {
         _store_value_to(value, res);
     }
     if (!help.empty()) {
@@ -2262,7 +2262,7 @@ _help_formatter(std::string const& head,
                 = formatter._split_lines(help, width - indent);
         for (std::size_t i = 0; i < lines.size(); ++i) {
             std::string const& line = lines.at(i);
-            std::size_t value_size = _utf8_size(value).second;
+            std::size_t value_size = _utf8_length(value).second;
             if (value_size < indent) {
                 value.resize(value.size() + indent - value_size, _space);
             }
@@ -4539,7 +4539,7 @@ protected:
         std::string value;
         std::vector<std::string> lines = _split_lines_s(text, width - indent);
         for (std::size_t i = 0; i < lines.size(); ++i) {
-            std::size_t value_size = detail::_utf8_size(value).second;
+            std::size_t value_size = detail::_utf8_length(value).second;
             if (value_size < indent) {
                 value.resize(value.size() + indent - value_size,
                              detail::_space);
@@ -4576,8 +4576,8 @@ protected:
         std::vector<std::string> res;
         std::vector<std::string> split_str = detail::_split_whitespace(text);
         for (std::size_t i = 0; i < split_str.size(); ++i) {
-            if (detail::_utf8_size(value).second + 1
-                    + detail::_utf8_size(split_str.at(i)).second > width) {
+            if (detail::_utf8_length(value).second + 1
+                    + detail::_utf8_length(split_str.at(i)).second > width) {
                 detail::_store_value_to(value, res);
             }
             if (!value.empty()) {
@@ -4614,7 +4614,7 @@ protected:
         std::string value;
         std::vector<std::string> lines = _split_lines_s(text, width - indent);
         for (std::size_t i = 0; i < lines.size(); ++i) {
-            std::size_t value_size = detail::_utf8_size(value).second;
+            std::size_t value_size = detail::_utf8_length(value).second;
             if (value_size < indent) {
                 value.resize(value.size() + indent - value_size,
                              detail::_space);
@@ -4648,12 +4648,12 @@ protected:
                         std::string sub = tab_split_str.at(k);
                         if (sub == "\t") {
                             sub = std::string(
-                                        tab_size - (detail::_utf8_size(
+                                        tab_size - (detail::_utf8_length(
                                                       value).second % tab_size),
                                         detail::_space);
                         }
-                        if (detail::_utf8_size(value).second + 1
-                                + detail::_utf8_size(sub).second > width) {
+                        if (detail::_utf8_length(value).second + 1
+                                + detail::_utf8_length(sub).second > width) {
                             detail::_store_value_to(value, res);
                             if (sub == "\t") {
                                 sub = std::string(tab_size, detail::_space);
@@ -10106,12 +10106,12 @@ public:
         for (std::size_t i = 0; i < positional.size(); ++i) {
             std::string flags
                     = positional.at(i)->flags_to_string(m_formatter_class);
-            detail::_limit_to_min(size, detail::_utf8_size(flags).second);
+            detail::_limit_to_min(size, detail::_utf8_length(flags).second);
         }
         for (std::size_t i = 0; i < optional.size(); ++i) {
             std::string flags
                     = optional.at(i)->flags_to_string(m_formatter_class);
-            detail::_limit_to_min(size, detail::_utf8_size(flags).second);
+            detail::_limit_to_min(size, detail::_utf8_length(flags).second);
         }
         for (std::size_t i = 0; i < m_groups.size(); ++i) {
             m_groups.at(i)->limit_help_flags(m_formatter_class, size);
@@ -11241,7 +11241,7 @@ private:
                                                      args, ",");
                             break;
                         }
-                        if (detail::_utf8_size(flag).second == 2
+                        if (detail::_utf8_length(flag).second == 2
                                 && detail::_starts_with(arg, flag)) {
                             keys.push_back(arg);
                             detail::_append_value_to(detail::_spaces + flag,
@@ -11327,7 +11327,7 @@ private:
         for (std::size_t j = 0; j < args.size() && !argument; ++j) {
             for (std::size_t k = 0; k < args.at(j)->flags().size(); ++k) {
                 std::string const& flag = args.at(j)->flags().at(k);
-                if (detail::_utf8_size(flag).second == 2
+                if (detail::_utf8_length(flag).second == 2
                         && flag.substr(1) == abbrev
                         && flag.at(0) == arg.at(0)) {
                     flags.push_back(flag);
