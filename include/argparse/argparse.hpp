@@ -1432,32 +1432,32 @@ _utf8_codepoint_size(uint8_t byte)
 }
 
 inline std::pair<bool, std::size_t>
-_utf8_size(std::string const& value)
+_utf8_size(std::string const& value, std::ostream& err = std::cerr)
 {
     std::size_t res = 0;
     std::size_t i = 0;
     while (i < value.size()) {
         std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(value[i]));
         if (cp_size == 0) {
-            std::cerr << "argparse error [skip]: invalid code point for string "
-                      << "'" << value << "'" << std::endl;
+            err << "argparse error [skip]: invalid code point for string "
+                << "'" << value << "'" << std::endl;
             return std::make_pair(false, value.size());
         }
         if (i + cp_size > value.size()) {
-            std::cerr << "argparse error [skip]: code point for string '"
-                      << value << "' would be out of bounds" << std::endl;
+            err << "argparse error [skip]: code point for string '"
+                << value << "' would be out of bounds" << std::endl;
             return std::make_pair(false, value.size());
         }
         for (std::size_t n = 1; n < cp_size; ++n) {
             if (value[i + n] == '\0') {
-                std::cerr << "argparse error [skip]: string '" << value << "' "
-                          << "is NUL-terminated in the middle of the code point"
-                          << std::endl;
+                err << "argparse error [skip]: string '" << value << "' "
+                    << "is NUL-terminated in the middle of the code point"
+                    << std::endl;
                 return std::make_pair(false, value.size());
             } else if ((_char_to_u8(value[i + n]) & _utf8_ct_mask)
                                                  != _utf8_ct_bits) {
-                std::cerr << "argparse error [skip]: invalid byte in code point"
-                          << " for string '" << value << "'" << std::endl;
+                err << "argparse error [skip]: invalid byte in code point"
+                    << " for string '" << value << "'" << std::endl;
                 return std::make_pair(false, value.size());
             }
         }
@@ -1471,7 +1471,8 @@ _utf8_size(std::string const& value)
 inline bool
 _is_utf8(std::string const& value)
 {
-    return _utf8_size(value).second;
+    std::stringstream ss;
+    return _utf8_size(value, ss).second;
 }
 // -----------------------------------------------------------------------------
 
@@ -2090,7 +2091,7 @@ _process_quotes(std::deque<char>& quotes, std::string const& value,
 }
 
 inline std::vector<std::string>
-_split_to_args(std::string const& str)
+_split_to_args(std::string const& str, std::ostream& err = std::cerr)
 {
     std::vector<std::string> res;
     std::string value;
@@ -2122,8 +2123,8 @@ _split_to_args(std::string const& str)
     }
     _store_value_to(value, res);
     if (!quotes.empty()) {
-        std::cerr << "argparse error [skip]: possible incorrect string: '"
-                  << str << "'" << std::endl;
+        err << "argparse error [skip]: possible incorrect string: '"
+            << str << "'" << std::endl;
     }
     return res;
 }
