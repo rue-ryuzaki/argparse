@@ -131,7 +131,11 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #define _ARGPARSE_DEFINE_VC_EXTRALEAN
 #endif  // VC_EXTRALEAN
 
+#ifdef _MSC_VER
 #include <Windows.h>
+#else
+#include <windows.h>
+#endif  // _MSC_VER
 
 #ifdef _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 #undef WIN32_LEAN_AND_MEAN
