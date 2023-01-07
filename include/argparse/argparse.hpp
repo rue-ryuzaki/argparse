@@ -3,7 +3,7 @@
 *
 * Argument parser for C++ (ArgumentParser v1.7.2)
 *
-* Copyright (c) 2021-2022 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+* Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
