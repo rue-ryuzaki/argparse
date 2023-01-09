@@ -11946,6 +11946,7 @@ private:
             os << status_warn << " used default `prog` value, "
                <<  "override it or pass command line options" << std::endl;
         }
+        std::map<std::string, std::size_t> dest_args;
         // check arguments
         for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
             pArgument const& arg = m_data->m_arguments.at(i);
@@ -11999,6 +12000,25 @@ private:
                        << flag << "' can be incorrect" << std::endl;
                 }
             }
+            for (std::size_t j = 0; j < arg->get_argument_flags().size(); ++j) {
+                std::string const& flag = arg->get_argument_flags().at(j);
+                if (!flag.empty()) {
+                    if (dest_args.count(flag) != 0) {
+                        if (conflict_handler() == "resolve") {
+                            ++diagnostics.first;
+                            os << status_warn << " " << argument
+                               << ": conflicting option string: '"
+                               << flag << "'" << std::endl;
+                        } else {
+                            ++diagnostics.second;
+                            os << status_error << " " << argument
+                               << ": conflicting option string: '"
+                               << flag << "'" << std::endl;
+                        }
+                    }
+                    ++dest_args[flag];
+                }
+            }
             // check choices
             for (std::size_t j = 0; j < arg->choices().size(); ++j) {
                 std::string const& choice = arg->choices().at(j);
@@ -12010,7 +12030,8 @@ private:
                 }
             }
             // check help
-            if (detail::_tr(arg->m_help, lang).empty()) {
+            if (detail::_tr(arg->m_help, lang).empty()
+                    && !arg->m_help_type.has_value()) {
                 ++diagnostics.first;
                 os << status_warn << " " << argument
                    << ": help is not set" << std::endl;
@@ -12030,18 +12051,61 @@ private:
                 }
             }
         }
+        // check mutually exclusive arguments
+        for (std::size_t i = 0; i < m_mutex_groups.size(); ++i) {
+            MutuallyExclusiveGroup const& group = m_mutex_groups.at(i);
+            for (std::size_t j = 0; j < group.m_data->m_arguments.size(); ++j) {
+                pArgument const& arg = group.m_data->m_arguments.at(j);
+                std::string argument = "argument with ";
+                argument += std::string(arg->dest().empty() ? "options" : "dest");
+                argument += " " + detail::_vector_to_string(
+                                arg->get_argument_flags(), ", ", "'");
+                if (arg->required()) {
+                    ++diagnostics.second;
+                    os << status_error << " " << argument << ": mutually "
+                       << "exclusive arguments must be optional" << std::endl;
+                }
+            }
+        }
         // check subparsers
         if (m_subparsers) {
             std::deque<pParser> parsers = m_subparsers->m_parsers;
             if (parsers.empty()) {
                 ++diagnostics.first;
                 os << status_warn << " subparsers created "
-                   << "but no parsers are added" << std::endl;
+                   << "but no parsers were added" << std::endl;
             }
             // check dest
             if (m_subparsers->dest().empty()) {
                 os << status_info << " you can specify `dest` for subparsers "
                    << "to determine used parser" << std::endl;
+            } else {
+                if (!detail::_is_utf8(m_subparsers->dest())) {
+                    ++diagnostics.first;
+                    os << status_warn << " subparsers dest '"
+                       << m_subparsers->dest() << "' is not utf-8" << std::endl;
+                }
+                if (!detail::_is_flag_correct(m_subparsers->dest(), false)) {
+                    ++diagnostics.first;
+                    os << status_warn << " subparsers dest '"
+                       << m_subparsers->dest() << "' can be incorrect"
+                       << std::endl;
+                }
+                std::string const& flag = m_subparsers->dest();
+                if (dest_args.count(flag) != 0) {
+                    if (conflict_handler() == "resolve") {
+                        ++diagnostics.first;
+                        os << status_warn << " subparsers dest '" << flag
+                           << "': conflicting option string: '"
+                           << flag << "'" << std::endl;
+                    } else {
+                        ++diagnostics.second;
+                        os << status_error << " subparsers dest '" << flag
+                           << "': conflicting option string: '"
+                           << flag << "'" << std::endl;
+                    }
+                }
+                ++dest_args[flag];
             }
             // check help
             if (detail::_tr(m_subparsers->m_help, lang).empty()) {
