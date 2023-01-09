@@ -7704,6 +7704,7 @@ public:
               m_parent_args(),
               m_prog(),
               m_dest(),
+              m_help_type(),
               m_required(false),
               m_help(),
               m_metavar(),
@@ -7808,7 +7809,28 @@ public:
         inline Subparser& help(std::string const& value,
                                std::string const& lang = std::string())
         {
+            if (lang.empty()) {
+                m_help_type.clear();
+            }
             m_help[lang] = value;
+            return *this;
+        }
+
+        /*!
+         *  \brief Suppress subparser 'help' message
+         *
+         *  \param value argparse::SUPPRESS
+         *
+         *  \since NEXT_RELEASE
+         *
+         *  \return Current subparser reference
+         */
+        inline Subparser& help(_SUPPRESS value)
+        {
+            if (value != argparse::SUPPRESS) {
+                throw TypeError("got an unexpected keyword argument 'help'");
+            }
+            m_help_type = value;
             return *this;
         }
 
@@ -8034,6 +8056,7 @@ public:
         std::string m_parent_args;
         std::string m_prog;
         std::string m_dest;
+        detail::Value<_SUPPRESS> m_help_type;
         bool        m_required;
         detail::LanguagePack m_help;
         detail::Value<std::string> m_metavar;
@@ -11802,7 +11825,8 @@ private:
                           true);
         }
         for (std::size_t i = 0; i < positional.size(); ++i) {
-            if (subparser.first && subparser.second == i) {
+            if (subparser.first && subparser.second == i
+                    && !subparser.first->m_help_type.has_value()) {
                 add_arg_usage(res, subparser.first->usage(), true);
             }
             std::string const str = positional.at(i)->usage(m_formatter_class);
@@ -11811,7 +11835,8 @@ private:
             }
             add_arg_usage(res, str, true);
         }
-        if (subparser.first && subparser.second == positional.size()) {
+        if (subparser.first && subparser.second == positional.size()
+                && !subparser.first->m_help_type.has_value()) {
             add_arg_usage(res, subparser.first->usage(), true);
         }
         os << detail::_format_output(head_prog, res, 1, indent, w) << std::endl;
@@ -11820,7 +11845,8 @@ private:
     static bool
     is_subparser_positional(pSubparser const& sub)
     {
-        return sub && sub->title().empty() && sub->description().empty();
+        return sub && sub->title().empty() && sub->description().empty()
+                && !sub->m_help_type.has_value();
     }
 
     static void
@@ -11843,7 +11869,9 @@ private:
                             std::size_t width,
                             std::string const& lang, std::ostream& os)
     {
-        if ((subparser && (group != subparser || !is_positional))
+        if ((subparser && (group != subparser
+                           || (!is_positional
+                               && !subparser->m_help_type.has_value())))
                 || (!subparser && group != subparser)) {
             group->print_help(os, formatter, prog, size, width, lang);
         }
@@ -12108,7 +12136,8 @@ private:
                 ++dest_args[flag];
             }
             // check help
-            if (detail::_tr(m_subparsers->m_help, lang).empty()) {
+            if (detail::_tr(m_subparsers->m_help, lang).empty()
+                    && !m_subparsers->m_help_type.has_value()) {
                 ++diagnostics.first;
                 os << status_warn << " help for subparsers is not set"
                    << std::endl;
