@@ -2757,9 +2757,9 @@ _ARGPARSE_EXPORT class Argument
           m_all_flags(m_flags),
           m_name(name),
           m_action(argparse::store),
-          m_type(type),
           m_default_type(),
           m_help_type(),
+          m_type(type),
           m_nargs(NARGS_DEF),
           m_num_args(1),
           m_nargs_str("1"),
@@ -2768,7 +2768,6 @@ _ARGPARSE_EXPORT class Argument
           m_implicit(),
           m_type_name(),
           m_choices(),
-          m_required(),
           m_help(),
           m_version(),
           m_metavar(),
@@ -2778,7 +2777,8 @@ _ARGPARSE_EXPORT class Argument
 #else
           m_dest(detail::_make_vector(std::string())),
 #endif  // C++11+
-          m_post_trigger(_ARGPARSE_NULLPTR)
+          m_post_trigger(_ARGPARSE_NULLPTR),
+          m_required()
     {
         m_help[std::string()] = std::string();
     }
@@ -2792,9 +2792,9 @@ _ARGPARSE_EXPORT class Argument
           m_all_flags(m_flags),
           m_name(std::move(name)),
           m_action(argparse::store),
-          m_type(type),
           m_default_type(),
           m_help_type(),
+          m_type(type),
           m_nargs(NARGS_DEF),
           m_num_args(1),
           m_nargs_str("1"),
@@ -2803,13 +2803,13 @@ _ARGPARSE_EXPORT class Argument
           m_implicit(),
           m_type_name(),
           m_choices(),
-          m_required(),
           m_help(),
           m_version(),
           m_metavar(),
           m_dest(std::vector<std::string>{ std::string() }),
           m_handle(nullptr),
-          m_post_trigger(nullptr)
+          m_post_trigger(nullptr),
+          m_required()
     {
         m_help[std::string()] = std::string();
     }
@@ -2874,9 +2874,9 @@ public:
           m_all_flags(m_flags),
           m_name(),
           m_action(argparse::store),
-          m_type(NoType),
           m_default_type(),
           m_help_type(),
+          m_type(NoType),
           m_nargs(NARGS_DEF),
           m_num_args(1),
           m_nargs_str("1"),
@@ -2885,12 +2885,12 @@ public:
           m_implicit(),
           m_type_name(),
           m_choices(),
-          m_required(),
           m_help(),
           m_version(),
           m_metavar(),
           m_dest(detail::_make_vector(std::string())),
-          m_post_trigger(_ARGPARSE_NULLPTR)
+          m_post_trigger(_ARGPARSE_NULLPTR),
+          m_required()
     {
         m_help[std::string()] = std::string();
     }
@@ -2909,9 +2909,9 @@ public:
           m_all_flags(m_flags),
           m_name(),
           m_action(argparse::store),
-          m_type(NoType),
           m_default_type(),
           m_help_type(),
+          m_type(NoType),
           m_nargs(NARGS_DEF),
           m_num_args(1),
           m_nargs_str("1"),
@@ -2920,12 +2920,12 @@ public:
           m_implicit(),
           m_type_name(),
           m_choices(),
-          m_required(),
           m_help(),
           m_version(),
           m_metavar(),
           m_dest(detail::_make_vector(std::string())),
-          m_post_trigger(_ARGPARSE_NULLPTR)
+          m_post_trigger(_ARGPARSE_NULLPTR),
+          m_required()
     {
         m_help[std::string()] = std::string();
     }
@@ -2948,9 +2948,9 @@ public:
           m_all_flags(m_flags),
           m_name(),
           m_action(argparse::store),
-          m_type(NoType),
           m_default_type(),
           m_help_type(),
+          m_type(NoType),
           m_nargs(NARGS_DEF),
           m_num_args(1),
           m_nargs_str("1"),
@@ -2959,12 +2959,12 @@ public:
           m_implicit(),
           m_type_name(),
           m_choices(),
-          m_required(),
           m_help(),
           m_version(),
           m_metavar(),
           m_dest(detail::_make_vector(std::string())),
-          m_post_trigger(_ARGPARSE_NULLPTR)
+          m_post_trigger(_ARGPARSE_NULLPTR),
+          m_required()
     {
         m_help[std::string()] = std::string();
     }
@@ -2988,9 +2988,9 @@ public:
           m_all_flags(m_flags),
           m_name(),
           m_action(argparse::store),
-          m_type(NoType),
           m_default_type(),
           m_help_type(),
+          m_type(NoType),
           m_nargs(NARGS_DEF),
           m_num_args(1),
           m_nargs_str("1"),
@@ -2999,12 +2999,12 @@ public:
           m_implicit(),
           m_type_name(),
           m_choices(),
-          m_required(),
           m_help(),
           m_version(),
           m_metavar(),
           m_dest(detail::_make_vector(std::string())),
-          m_post_trigger(_ARGPARSE_NULLPTR)
+          m_post_trigger(_ARGPARSE_NULLPTR),
+          m_required()
     {
         m_help[std::string()] = std::string();
     }
@@ -3026,9 +3026,9 @@ public:
           m_all_flags(m_flags),
           m_name(),
           m_action(argparse::store),
-          m_type(NoType),
           m_default_type(),
           m_help_type(),
+          m_type(NoType),
           m_nargs(NARGS_DEF),
           m_num_args(1),
           m_nargs_str("1"),
@@ -3037,7 +3037,6 @@ public:
           m_implicit(),
           m_type_name(),
           m_choices(),
-          m_required(),
           m_help(),
           m_version(),
           m_metavar(),
@@ -3047,7 +3046,8 @@ public:
 #else
           m_dest(detail::_make_vector(std::string())),
 #endif  // C++11+
-          m_post_trigger(_ARGPARSE_NULLPTR)
+          m_post_trigger(_ARGPARSE_NULLPTR),
+          m_required()
     {
         m_help[std::string()] = std::string();
     }
@@ -3064,9 +3064,9 @@ public:
           m_all_flags(orig.m_all_flags),
           m_name(orig.m_name),
           m_action(orig.m_action),
-          m_type(orig.m_type),
           m_default_type(orig.m_default_type),
           m_help_type(orig.m_help_type),
+          m_type(orig.m_type),
           m_nargs(orig.m_nargs),
           m_num_args(orig.m_num_args),
           m_nargs_str(orig.m_nargs_str),
@@ -3075,7 +3075,6 @@ public:
           m_implicit(orig.m_implicit),
           m_type_name(orig.m_type_name),
           m_choices(orig.m_choices),
-          m_required(orig.m_required),
           m_help(orig.m_help),
           m_version(orig.m_version),
           m_metavar(orig.m_metavar),
@@ -3083,7 +3082,8 @@ public:
 #ifdef _ARGPARSE_CXX_11
           m_handle(orig.m_handle),
 #endif  // C++11+
-          m_post_trigger(orig.m_post_trigger)
+          m_post_trigger(orig.m_post_trigger),
+          m_required(orig.m_required)
     {
         m_help[std::string()] = std::string();
     }
@@ -3101,9 +3101,9 @@ public:
           m_all_flags(std::move(orig.m_all_flags)),
           m_name(std::move(orig.m_name)),
           m_action(std::move(orig.m_action)),
-          m_type(std::move(orig.m_type)),
           m_default_type(std::move(orig.m_default_type)),
           m_help_type(std::move(orig.m_help_type)),
+          m_type(std::move(orig.m_type)),
           m_nargs(std::move(orig.m_nargs)),
           m_num_args(std::move(orig.m_num_args)),
           m_nargs_str(std::move(orig.m_nargs_str)),
@@ -3112,13 +3112,13 @@ public:
           m_implicit(std::move(orig.m_implicit)),
           m_type_name(std::move(orig.m_type_name)),
           m_choices(std::move(orig.m_choices)),
-          m_required(std::move(orig.m_required)),
           m_help(std::move(orig.m_help)),
           m_version(std::move(orig.m_version)),
           m_metavar(std::move(orig.m_metavar)),
           m_dest(std::move(orig.m_dest)),
           m_handle(std::move(orig.m_handle)),
-          m_post_trigger(std::move(orig.m_post_trigger))
+          m_post_trigger(std::move(orig.m_post_trigger)),
+          m_required(std::move(orig.m_required))
     {
         m_help[std::string()] = std::string();
     }
@@ -3138,9 +3138,9 @@ public:
             this->m_all_flags       = rhs.m_all_flags;
             this->m_name            = rhs.m_name;
             this->m_action          = rhs.m_action;
-            this->m_type            = rhs.m_type;
             this->m_default_type    = rhs.m_default_type;
             this->m_help_type       = rhs.m_help_type;
+            this->m_type            = rhs.m_type;
             this->m_nargs           = rhs.m_nargs;
             this->m_num_args        = rhs.m_num_args;
             this->m_nargs_str       = rhs.m_nargs_str;
@@ -3149,7 +3149,6 @@ public:
             this->m_implicit        = rhs.m_implicit;
             this->m_type_name       = rhs.m_type_name;
             this->m_choices         = rhs.m_choices;
-            this->m_required        = rhs.m_required;
             this->m_help            = rhs.m_help;
             this->m_version         = rhs.m_version;
             this->m_metavar         = rhs.m_metavar;
@@ -3158,6 +3157,7 @@ public:
             this->m_handle          = rhs.m_handle;
 #endif  // C++11+
             this->m_post_trigger    = rhs.m_post_trigger;
+            this->m_required        = rhs.m_required;
         }
         return *this;
     }
@@ -3177,9 +3177,9 @@ public:
             this->m_all_flags       = std::move(rhs.m_all_flags);
             this->m_name            = std::move(rhs.m_name);
             this->m_action          = std::move(rhs.m_action);
-            this->m_type            = std::move(rhs.m_type);
             this->m_default_type    = std::move(rhs.m_default_type);
             this->m_help_type       = std::move(rhs.m_help_type);
+            this->m_type            = std::move(rhs.m_type);
             this->m_nargs           = std::move(rhs.m_nargs);
             this->m_num_args        = std::move(rhs.m_num_args);
             this->m_nargs_str       = std::move(rhs.m_nargs_str);
@@ -3188,13 +3188,13 @@ public:
             this->m_implicit        = std::move(rhs.m_implicit);
             this->m_type_name       = std::move(rhs.m_type_name);
             this->m_choices         = std::move(rhs.m_choices);
-            this->m_required        = std::move(rhs.m_required);
             this->m_help            = std::move(rhs.m_help);
             this->m_version         = std::move(rhs.m_version);
             this->m_metavar         = std::move(rhs.m_metavar);
             this->m_dest            = std::move(rhs.m_dest);
             this->m_handle          = std::move(rhs.m_handle);
             this->m_post_trigger    = std::move(rhs.m_post_trigger);
+            this->m_required        = std::move(rhs.m_required);
         }
         return *this;
     }
@@ -4485,9 +4485,9 @@ private:
     std::vector<std::string> m_all_flags;
     std::string m_name;
     Action      m_action;
-    Type        m_type;
     detail::Value<_SUPPRESS> m_default_type;
     detail::Value<_SUPPRESS> m_help_type;
+    Type        m_type;
     Nargs       m_nargs;
     std::size_t m_num_args;
     std::string m_nargs_str;
@@ -4496,7 +4496,6 @@ private:
     detail::Value<std::string> m_implicit;
     detail::Value<std::string> m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
-    detail::Value<bool> m_required;
     detail::LanguagePack m_help;
     detail::Value<std::string> m_version;
     detail::Value<std::vector<std::string> > m_metavar;
@@ -4505,6 +4504,7 @@ private:
     std::function<void(std::string const&)> m_handle;
 #endif  // C++11+
     detail::shared_ptr<_ConflictResolver> m_post_trigger;
+    detail::Value<bool> m_required;
 };
 
 /*!
@@ -7697,25 +7697,23 @@ public:
         friend class ArgumentParser;
 
         explicit
-        Subparser(std::string const& title,
-                  std::string const& description)
+        Subparser(std::string const& title, std::string const& description)
             : _Group(title, description),
               m_parent_prog(),
               m_parent_args(),
               m_prog(),
               m_dest(),
-              m_help_type(),
-              m_required(false),
               m_help(),
               m_metavar(),
-              m_parsers()
+              m_parsers(),
+              m_help_type(),
+              m_required(false)
         {
             m_help[std::string()] = std::string();
         }
 
         static detail::shared_ptr<Subparser>
-        make_subparser(std::string const& title,
-                       std::string const& description)
+        make_subparser(std::string const& title, std::string const& description)
         {
             return detail::make_shared<Subparser>(
                         Subparser(title, description));
@@ -8056,11 +8054,11 @@ public:
         std::string m_parent_args;
         std::string m_prog;
         std::string m_dest;
-        detail::Value<_SUPPRESS> m_help_type;
-        bool        m_required;
         detail::LanguagePack m_help;
         detail::Value<std::string> m_metavar;
         std::deque<pParser> m_parsers;
+        detail::Value<_SUPPRESS> m_help_type;
+        bool        m_required;
     };
 
 private:
@@ -8161,20 +8159,20 @@ public:
           m_prefix_chars(detail::_prefix_chars),
           m_fromfile_prefix_chars(),
           m_argument_default(),
-          m_argument_default_type(),
-          m_allow_abbrev(true),
-          m_exit_on_error(true),
           m_output_width(),
           m_groups(),
           m_mutex_groups(),
           m_default_values(),
           m_parsed_arguments(),
           m_subparsers(_ARGPARSE_NULLPTR),
-          m_subparsers_position()
+          m_subparsers_position(),
 #ifdef _ARGPARSE_CXX_11
-        , m_handle(nullptr),
-          m_parse_handle(nullptr)
+          m_handle(nullptr),
+          m_parse_handle(nullptr),
 #endif  // C++11+
+          m_argument_default_type(),
+          m_allow_abbrev(true),
+          m_exit_on_error(true)
     {
         init_translations();
         set_formatter_class(HelpFormatter());
@@ -8211,20 +8209,20 @@ public:
           m_prefix_chars(detail::_prefix_chars),
           m_fromfile_prefix_chars(),
           m_argument_default(),
-          m_argument_default_type(),
-          m_allow_abbrev(true),
-          m_exit_on_error(true),
           m_output_width(),
           m_groups(),
           m_mutex_groups(),
           m_default_values(),
           m_parsed_arguments(),
           m_subparsers(_ARGPARSE_NULLPTR),
-          m_subparsers_position()
+          m_subparsers_position(),
 #ifdef _ARGPARSE_CXX_11
-        , m_handle(nullptr),
-          m_parse_handle(nullptr)
+          m_handle(nullptr),
+          m_parse_handle(nullptr),
 #endif  // C++11+
+          m_argument_default_type(),
+          m_allow_abbrev(true),
+          m_exit_on_error(true)
     {
         init_translations();
         set_formatter_class(HelpFormatter());
@@ -8262,20 +8260,20 @@ public:
           m_prefix_chars(detail::_prefix_chars),
           m_fromfile_prefix_chars(),
           m_argument_default(),
-          m_argument_default_type(),
-          m_allow_abbrev(true),
-          m_exit_on_error(true),
           m_output_width(),
           m_groups(),
           m_mutex_groups(),
           m_default_values(),
           m_parsed_arguments(),
           m_subparsers(_ARGPARSE_NULLPTR),
-          m_subparsers_position()
+          m_subparsers_position(),
 #ifdef _ARGPARSE_CXX_11
-        , m_handle(nullptr),
-          m_parse_handle(nullptr)
+          m_handle(nullptr),
+          m_parse_handle(nullptr),
 #endif  // C++11+
+          m_argument_default_type(),
+          m_allow_abbrev(true),
+          m_exit_on_error(true)
     {
         init_translations();
         set_formatter_class(HelpFormatter());
@@ -12219,10 +12217,6 @@ private:
     std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
-    detail::Value<_SUPPRESS> m_argument_default_type;
-    bool m_allow_abbrev;
-    bool m_exit_on_error;
-
     detail::Value<std::size_t> m_output_width;
     std::deque<pGroup> m_groups;
     std::deque<MutuallyExclusiveGroup> m_mutex_groups;
@@ -12230,11 +12224,13 @@ private:
     std::vector<std::string> m_parsed_arguments;
     pSubparser m_subparsers;
     std::size_t m_subparsers_position;
-
 #ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
     std::function<void(Namespace const&)> m_parse_handle;
 #endif  // C++11+
+    detail::Value<_SUPPRESS> m_argument_default_type;
+    bool m_allow_abbrev;
+    bool m_exit_on_error;
 };
 }  // namespace argparse
 
