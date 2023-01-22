@@ -2182,7 +2182,30 @@ _vector_to_string(std::vector<std::string> const& vec,
 }
 
 inline std::string
-_matrix_to_string(std::vector<std::vector<std::string> > const& matrix,
+_vector_to_string(std::vector<std::string>::const_iterator begvec,
+                  std::vector<std::string>::const_iterator endvec,
+                  std::string const& separator = _spaces,
+                  std::string const& quotes = std::string(),
+                  bool replace_space = false,
+                  std::string const& none = std::string(),
+                  std::string const& begin = std::string(),
+                  std::string const& end = std::string())
+{
+    typedef std::vector<std::string>::const_iterator value_const_iterator;
+    std::string res;
+    for (value_const_iterator it = begvec; it != endvec; ++it) {
+        std::string val = *it;
+        if (quotes.empty() && replace_space && !_have_quotes(val)) {
+            val = _replace(val, _space, "\\ ");
+        }
+        _append_value_to(quotes + val + quotes, res, separator);
+    }
+    return begin + (res.empty() ? none : res) + end;
+}
+
+inline std::string
+_matrix_to_string(std::vector<std::string> const& values,
+                  std::vector<std::size_t> const& indexes,
                   std::string const& separator = _spaces,
                   std::string const& quotes = std::string(),
                   bool replace_space = false,
@@ -2191,10 +2214,15 @@ _matrix_to_string(std::vector<std::vector<std::string> > const& matrix,
                   std::string const& end = std::string())
 {
     std::string res;
-    for (std::size_t i = 0; i < matrix.size(); ++i) {
-        _append_value_to(_vector_to_string(matrix.at(i), separator, quotes,
-                                           replace_space, none, begin, end),
-                         res, separator);
+    for (std::size_t i = 0; i < indexes.size(); ++i) {
+        typedef std::vector<std::string>::difference_type dtype;
+        _append_value_to(
+                    _vector_to_string(
+                        values.begin() + static_cast<dtype>(
+                                           i == 0 ? 0 : indexes.at(i - 1)),
+                        values.begin() + static_cast<dtype>(indexes.at(i)),
+                        separator, quotes,replace_space, none, begin, end),
+                    res, separator);
     }
     return begin + (res.empty() ? (begin + res + end) : res) + end;
 }
@@ -5708,25 +5736,25 @@ public:
             : m_exists(),
               m_is_default(),
               m_values(),
-              m_matrix()
+              m_indexes()
         { }
 
         explicit
-        mapped_type(bool is_default, std::vector<std::string> const& values)
+        mapped_type(std::vector<std::string> const& values)
             : m_exists(true),
-              m_is_default(is_default),
+              m_is_default(true),
               m_values(values),
-              m_matrix()
+              m_indexes()
         {
-            m_matrix.push_back(m_values);
+            m_indexes.push_back(m_values.size());
         }
 
         inline void clear()
         {
+            m_values.clear();
+            m_indexes.clear();
             m_exists = false;
             m_is_default = false;
-            m_values.clear();
-            m_matrix.clear();
         }
 
         inline bool exists() const _ARGPARSE_NOEXCEPT
@@ -5774,44 +5802,38 @@ public:
 #ifdef _ARGPARSE_CXX_11
         inline void emplace_back(std::string&& value)
         {
-            m_exists = true;
             m_values.emplace_back(std::move(value));
-            push_to_matrix();
+            m_indexes.push_back(m_values.size());
+            m_exists = true;
         }
 #endif  // C++11+
 
         inline void push_back(std::string const& value)
         {
-            m_exists = true;
             m_values.push_back(value);
-            push_to_matrix();
+            m_indexes.push_back(m_values.size());
+            m_exists = true;
         }
 
         inline void push_values(std::vector<std::string> const& values)
         {
-            m_exists = true;
             m_values.reserve(m_values.size() + values.size());
             m_values.insert(m_values.end(), values.begin(), values.end());
-            m_matrix.push_back(values);
+            m_indexes.push_back(m_values.size());
+            m_exists = true;
         }
 
-        inline std::vector<std::vector<std::string> > const&
-        matrix() const _ARGPARSE_NOEXCEPT
+        inline std::vector<std::size_t> const&
+        indexes() const _ARGPARSE_NOEXCEPT
         {
-            return m_matrix;
+            return m_indexes;
         }
 
     private:
-        inline void push_to_matrix()
-        {
-            m_matrix.push_back(
-                        detail::_make_vector<std::string>(m_values.back()));
-        }
-
         bool m_exists;
         bool m_is_default;
         std::vector<std::string> m_values;
-        std::vector<std::vector<std::string> > m_matrix;
+        std::vector<std::size_t> m_indexes;
     };
 
     typedef pArgument                               key_type;
@@ -6269,7 +6291,8 @@ public:
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         typedef typename T::value_type V;
-        std::vector<V> vector = to_vector<V>(args.second());
+        std::vector<V> vector = to_vector<V>(args.second().begin(),
+                                             args.second().end());
         return T(vector.begin(), vector.end());
     }
 
@@ -6395,8 +6418,14 @@ public:
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
         T res;
-        for (std::size_t i = 0; i < args.second.matrix().size(); ++i) {
-            std::vector<VV> vector = to_vector<VV>(args.second.matrix().at(i));
+        for (std::size_t i = 0; i < args.second.indexes().size(); ++i) {
+            typedef std::vector<std::string>::difference_type dtype;
+            std::vector<VV> vector = to_vector<VV>(
+                        args.second().begin()
+                            + static_cast<dtype>(
+                                i == 0 ? 0 : args.second.indexes().at(i - 1)),
+                        args.second().begin()
+                            + static_cast<dtype>(args.second.indexes().at(i)));
             res.push_back(V(vector.begin(), vector.end()));
         }
         return res;
@@ -6428,8 +6457,14 @@ public:
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
         T res;
-        for (std::size_t i = 0; i < args.second.matrix().size(); ++i) {
-            std::vector<VV> vector = to_vector<VV>(args.second.matrix().at(i));
+        for (std::size_t i = 0; i < args.second.indexes().size(); ++i) {
+            typedef std::vector<std::string>::difference_type dtype;
+            std::vector<VV> vector = to_vector<VV>(
+                        args.second().begin()
+                            + static_cast<dtype>(
+                                i == 0 ? 0 : args.second.indexes().at(i - 1)),
+                        args.second().begin()
+                            + static_cast<dtype>(args.second.indexes().at(i)));
             res.push_back(V(std::deque<VV>(vector.begin(), vector.end())));
         }
         return res;
@@ -6822,7 +6857,8 @@ public:
                         args->first->type_name(), detail::Type::basic<T>())) {
             return std::nullopt;
         }
-        auto vector = try_to_vector<typename T::value_type>(args->second());
+        auto vector = try_to_vector<typename T::value_type>(
+                    args->second().begin(), args->second().end());
         if (!vector.operator bool()) {
             return std::nullopt;
         }
@@ -6957,8 +6993,14 @@ public:
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
         T res{};
-        for (auto const& v : args->second.matrix()) {
-            auto vector = try_to_vector<VV>(v);
+        for (std::size_t i = 0; i < args->second.indexes().size(); ++i) {
+            typedef std::vector<std::string>::difference_type dtype;
+            auto vector = try_to_vector<VV>(
+                        args->second().begin()
+                            + static_cast<dtype>(
+                                i == 0 ? 0 : args->second.indexes().at(i - 1)),
+                        args->second().begin()
+                            + static_cast<dtype>(args->second.indexes().at(i)));
             if (!vector.operator bool()) {
                 return std::nullopt;
             }
@@ -6996,8 +7038,14 @@ public:
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
         T res{};
-        for (auto const& v : args->second.matrix()) {
-            auto vector = try_to_vector<VV>(v);
+        for (std::size_t i = 0; i < args->second.indexes().size(); ++i) {
+            typedef std::vector<std::string>::difference_type dtype;
+            auto vector = try_to_vector<VV>(
+                        args->second().begin()
+                            + static_cast<dtype>(
+                                i == 0 ? 0 : args->second.indexes().at(i - 1)),
+                        args->second().begin()
+                            + static_cast<dtype>(args->second.indexes().at(i)));
             if (!vector.operator bool()) {
                 return std::nullopt;
             }
@@ -7234,7 +7282,8 @@ private:
             std::string none = (args.first->m_nargs
                              & (Argument::ZERO_OR_MORE | Argument::REMAINDING))
                     ? std::string() : "None";
-            return detail::_matrix_to_string(args.second.matrix(), ", ",
+            return detail::_matrix_to_string(args.second(),
+                                             args.second.indexes(), ", ",
                                              quotes, false, none, "[", "]");
         }
     }
@@ -7285,17 +7334,20 @@ private:
         return vec;
     }
 
+    typedef std::vector<std::string>::const_iterator value_const_iterator;
+
 #ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                   std::is_constructible<std::string, T>::value
                   || std::is_floating_point<T>::value
                   || std::is_integral<T>::value>::type* = nullptr>
-    std::vector<T> to_vector(std::vector<std::string> const& args) const
+    std::vector<T> to_vector(value_const_iterator beg,
+                             value_const_iterator end) const
 #else
     template <class T>
     std::vector<T> to_vector(
-            std::vector<std::string> const& args,
+            value_const_iterator beg, value_const_iterator end,
             typename detail::enable_if<
                 detail::is_constructible<std::string, T>::value
                 || detail::is_floating_point<T>::value
@@ -7303,9 +7355,9 @@ private:
 #endif  // C++11+
     {
         std::vector<T> vec;
-        vec.reserve(args.size());
-        for (std::size_t i = 0; i < args.size(); ++i) {
-            vec.push_back(to_type<T>(args.at(i)));
+        vec.reserve(static_cast<std::size_t>(end - beg));
+        for (value_const_iterator it = beg; it != end; ++it) {
+            vec.push_back(to_type<T>(*it));
         }
         return vec;
     }
@@ -7316,11 +7368,12 @@ private:
                   !std::is_constructible<std::string, T>::value
                   && !std::is_floating_point<T>::value
                   && !std::is_integral<T>::value>::type* = nullptr>
-    std::vector<T> to_vector(std::vector<std::string> const& args) const
+    std::vector<T> to_vector(value_const_iterator beg,
+                             value_const_iterator end) const
 #else
     template <class T>
     std::vector<T> to_vector(
-            std::vector<std::string> const& args,
+            value_const_iterator beg, value_const_iterator end,
             typename detail::enable_if<
                 !detail::is_constructible<std::string, T>::value
                 && !detail::is_floating_point<T>::value
@@ -7328,12 +7381,12 @@ private:
 #endif  // C++11+
     {
         std::vector<T> vec;
-        if (args.empty()) {
+        if (end == beg) {
             return vec;
         }
         std::string data;
-        for (std::size_t i = 0; i < args.size(); ++i) {
-            std::string value = detail::_remove_quotes(args.at(i));
+        for (value_const_iterator it = beg; it != end; ++it) {
+            std::string value = detail::_remove_quotes(*it);
             if (!data.empty() && !value.empty()) {
                 data += detail::_spaces;
             }
@@ -7514,12 +7567,12 @@ private:
                   || std::is_floating_point<T>::value
                   || std::is_integral<T>::value>::type* = nullptr>
     std::optional<std::vector<T> >
-    try_to_vector(std::vector<std::string> const& args) const
+    try_to_vector(value_const_iterator beg, value_const_iterator end) const
     {
         std::vector<T> vec;
-        vec.reserve(args.size());
-        for (auto const& arg : args) {
-            auto el = try_to_type<T>(arg);
+        vec.reserve(static_cast<std::size_t>(end - beg));
+        for (value_const_iterator it = beg; it != end; ++it) {
+            auto el = try_to_type<T>(*it);
             if (el.operator bool()) {
                 vec.emplace_back(el.value());
             } else {
@@ -7535,15 +7588,15 @@ private:
                   && !std::is_floating_point<T>::value
                   && !std::is_integral<T>::value>::type* = nullptr>
     std::optional<std::vector<T> >
-    try_to_vector(std::vector<std::string> const& args) const
+    try_to_vector(value_const_iterator beg, value_const_iterator end) const
     {
         std::vector<T> vec;
-        if (args.empty()) {
+        if (end == beg) {
             return vec;
         }
         std::string data;
-        for (auto const& arg : args) {
-            auto value = detail::_remove_quotes(arg);
+        for (value_const_iterator it = beg; it != end; ++it) {
+            auto value = detail::_remove_quotes(*it);
             if (!data.empty() && !value.empty()) {
                 data += detail::_spaces;
             }
@@ -11668,15 +11721,14 @@ private:
                             std::vector<std::string>{ pair.first },
                             pair.first, Argument::Positional);
                 arg->default_value(pair.second);
-                storage.create(arg, _Storage::mapped_type(
-                                   true, { pair.second }));
+                storage.create(arg, _Storage::mapped_type({ pair.second }));
 #else
                 pArgument arg = Argument::make_argument(
                             detail::_make_vector(pair.first),
                             pair.first, Argument::Positional);
                 arg->default_value(pair.second);
                 storage.create(arg, _Storage::mapped_type(
-                                   true, detail::_make_vector(pair.second)));
+                                   detail::_make_vector(pair.second)));
 #endif  // C++11+
             }
         }
