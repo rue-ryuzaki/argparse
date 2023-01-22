@@ -1408,7 +1408,7 @@ _make_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
 }
 #endif  // C++11+
 
-// -- utf8 support -------------------------------------------------------------
+// -- utf8 support ------------------------------------------------------------
 // since v1.7.0
 inline uint8_t
 _char_to_u8(char c)
@@ -1488,9 +1488,9 @@ _is_utf8(std::string const& value)
     std::stringstream ss;
     return _utf8_length(value, ss).second;
 }
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-// -- translations support -----------------------------------------------------
+// -- translations support ----------------------------------------------------
 // since v1.7.1
 typedef std::map<std::string, std::string> LanguagePack;
 
@@ -1510,7 +1510,7 @@ _tr(LanguagePack const& pack, std::string const& lang)
     }
     return std::string();
 }
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 inline std::pair<std::size_t, std::size_t>
 _get_terminal_size(bool default_values = false)
@@ -12135,7 +12135,8 @@ private:
             for (std::size_t j = 0; j < group.m_data->m_arguments.size(); ++j) {
                 pArgument const& arg = group.m_data->m_arguments.at(j);
                 std::string argument = "argument with ";
-                argument += std::string(arg->dest().empty() ? "options" : "dest");
+                argument += std::string(arg->dest().empty() ? "options"
+                                                            : "dest");
                 argument += " " + detail::_vector_to_string(
                                 arg->get_argument_flags(), ", ", "'");
                 if (arg->required()) {
