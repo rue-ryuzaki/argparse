@@ -1574,7 +1574,7 @@ _to_upper_codepoint(u32char cp)
      || (0x04ee <= cp && cp <= 0x04f9)
      || (0x1e00 <= cp && cp <= 0x1e95)
      || (0x1ea0 <= cp && cp <= 0x1ef9)) {
-        return cp & ~0x0001;
+        return cp & 0xfffe;
     }
     if ((0x0139 <= cp && cp <= 0x0148)
      || (0x0179 <= cp && cp <= 0x017e)
