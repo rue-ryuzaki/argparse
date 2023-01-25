@@ -1408,12 +1408,48 @@ _make_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
 }
 #endif  // C++11+
 
+inline std::string
+_to_upper(std::string str)
+{
+#ifdef _ARGPARSE_CXX_11
+    std::transform(str.begin(), str.end(), str.begin(),
+                   [] (unsigned char c)
+    { return static_cast<char>(std::toupper(c)); });
+#else
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        str.at(i) = static_cast<char>(
+                        std::toupper(static_cast<unsigned char>(str.at(i))));
+    }
+#endif  // C++11+
+    return str;
+}
+
 // -- utf8 support ------------------------------------------------------------
 // since v1.7.0
 inline uint8_t
 _char_to_u8(char c)
 {
     return static_cast<uint8_t>(c);
+}
+
+inline char
+_u8_to_char(uint8_t c)
+{
+    return static_cast<char>(c);
+}
+
+typedef uint32_t u32char;
+
+inline u32char
+_char_to_u32(char c)
+{
+    return static_cast<u32char>(_char_to_u8(c));
+}
+
+inline char
+_u32_to_char(u32char c)
+{
+    return _u8_to_char(static_cast<uint8_t>(c));
 }
 
 _ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_1b_mask = 0x80;
@@ -1487,6 +1523,204 @@ _is_utf8(std::string const& value)
 {
     std::stringstream ss;
     return _utf8_length(value, ss).second;
+}
+
+// since NEXT_RELEASE
+inline u32char
+_to_upper_codepoint(u32char cp)
+{
+    // IBM's Unicode lowercase to uppercase conversion mapping table
+    if ((0x0061 <= cp && cp <= 0x007a)
+     || (0x00e0 <= cp && cp <= 0x00f6)
+     || (0x00f8 <= cp && cp <= 0x00fe)
+     || (0x03b1 <= cp && cp <= 0x03c1)
+     || (0x03c3 <= cp && cp <= 0x03cb)
+     || (0x0430 <= cp && cp <= 0x044f)
+     || (0xff41 <= cp && cp <= 0xff5a)) {
+        return cp - 0x20;
+    }
+    if ((0x24d0 <= cp && cp <= 0x24e9)) {
+        return cp - 0x1a;
+    }
+    if ((0x0561 <= cp && cp <= 0x0586)
+     || (0x10D0 <= cp && cp <= 0x10f5)) {
+        return cp - 0x30;
+    }
+    if (0x0451 <= cp && cp <= 0x045f) {
+        return cp - 0x50;
+    }
+    if ((0x0100 <= cp && cp <= 0x012f)
+     || (0x0132 <= cp && cp <= 0x0137)
+     || (0x014a <= cp && cp <= 0x0177)
+     || (0x0182 <= cp && cp <= 0x0185)
+     || (0x01a0 <= cp && cp <= 0x01a5)
+     || (0x01de <= cp && cp <= 0x01ef)
+     || (0x01fa <= cp && cp <= 0x0217)
+     || (0x03e2 <= cp && cp <= 0x03ef)
+     || (0x0460 <= cp && cp <= 0x0481)
+     || (0x0490 <= cp && cp <= 0x04bf)
+     || (0x04d0 <= cp && cp <= 0x04eb)
+     || (0x04ee <= cp && cp <= 0x04f9)
+     || (0x1e00 <= cp && cp <= 0x1e95)
+     || (0x1ea0 <= cp && cp <= 0x1ef9)) {
+        return cp & ~0x0001;
+    }
+    if ((0x0139 <= cp && cp <= 0x0148)
+     || (0x0179 <= cp && cp <= 0x017e)
+     || (0x01b3 <= cp && cp <= 0x01b6)
+     || (0x01cd <= cp && cp <= 0x01dc)) {
+        return (cp - 1) | 0x0001;
+    }
+    if ((0x1f00 <= cp && cp <= 0x1f15)
+     || (0x1f20 <= cp && cp <= 0x1f45)
+     || (0x1f51 == cp || cp == 0x1f53)
+     || (0x1f55 == cp || cp == 0x1f57)
+     || (0x1f60 <= cp && cp <= 0x1f67)
+     || (0x1f80 <= cp && cp <= 0x1fa7)
+     || (0x1fb0 <= cp && cp <= 0x1fb1)
+     || (0x1fd0 <= cp && cp <= 0x1fd1)
+     || (0x1fe0 <= cp && cp <= 0x1fe1)) {
+        return cp | 0x0008;
+    }
+    switch (cp) {
+        case 0x00ff :
+            return 0x0178;
+        case 0x0131 :
+            return 0x0049;
+        case 0x0188 :
+        case 0x018c :
+        case 0x0192 :
+        case 0x0199 :
+        case 0x01a8 :
+        case 0x01ad :
+        case 0x01b0 :
+        case 0x01b9 :
+        case 0x01bd :
+        case 0x01f5 :
+        case 0x04c2 :
+        case 0x04c4 :
+        case 0x04c8 :
+        case 0x04cc :
+            return cp - 1;
+        case 0x01c6 :
+        case 0x01c9 :
+        case 0x01cc :
+        case 0x01f3 :
+            return cp - 2;
+        case 0x0253 :
+            return 0x0181;
+        case 0x0254 :
+            return 0x0186;
+        case 0x0257 :
+            return 0x018a;
+        case 0x0258 :
+            return 0x018e;
+        case 0x0259 :
+            return 0x018f;
+        case 0x025b :
+            return 0x0190;
+        case 0x0260 :
+            return 0x0193;
+        case 0x0263 :
+            return 0x0194;
+        case 0x0268 :
+            return 0x0197;
+        case 0x0269 :
+            return 0x0196;
+        case 0x026f :
+            return 0x019c;
+        case 0x0272 :
+            return 0x019d;
+        case 0x0275 :
+            return 0x019f;
+        case 0x0283 :
+            return 0x01a9;
+        case 0x0288 :
+            return 0x01ae;
+        case 0x028a :
+            return 0x01b1;
+        case 0x028b :
+            return 0x01b2;
+        case 0x0292 :
+            return 0x01b7;
+        case 0x03ac :
+            return 0x0386;
+        case 0x03ad :
+            return 0x0388;
+        case 0x03ae :
+            return 0x0389;
+        case 0x03af :
+            return 0x038a;
+        case 0x03cc :
+            return 0x038c;
+        case 0x03cd :
+            return 0x038e;
+        case 0x03ce :
+            return 0x038f;
+        default :
+            return cp;
+    }
+}
+
+// since NEXT_RELEASE
+inline std::string
+_to_u8upper(std::string const& value)
+{
+    std::pair<bool, std::size_t> num_chars = _utf8_length(value);
+    if (!num_chars.first) {
+        return _to_upper(value);
+    }
+    std::string res;
+    std::size_t i = 0;
+    for (std::size_t n = 0; n < num_chars.second; ++n) {
+        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(value[i]));
+        u32char cp;
+        switch (cp_size) {
+            case 1:
+                cp = (_char_to_u32(value[i]) & ~_utf8_1b_mask);
+                break;
+            case 2:
+                cp = ((_char_to_u32(value[i    ]) & ~_utf8_2b_mask) <<  6)
+                   |  (_char_to_u32(value[i + 1]) & ~_utf8_ct_mask);
+                break;
+            case 3:
+                cp = ((_char_to_u32(value[i    ]) & ~_utf8_3b_mask) << 12)
+                   | ((_char_to_u32(value[i + 1]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_u32(value[i + 2]) & ~_utf8_ct_mask);
+                break;
+            case 4:
+                cp = ((_char_to_u32(value[i    ]) & ~_utf8_4b_mask) << 18)
+                   | ((_char_to_u32(value[i + 1]) & ~_utf8_ct_mask) << 12)
+                   | ((_char_to_u32(value[i + 2]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_u32(value[i + 3]) & ~_utf8_ct_mask);
+                break;
+            default:
+                // should never happen
+                break;
+        }
+        i += cp_size;
+        cp = _to_upper_codepoint(cp);
+        if (cp < 0x80) {
+            // one octet
+            res += _u32_to_char(cp);
+        } else if (cp < 0x800) {
+            // two octets
+            res += _u32_to_char((cp >> 6)            | 0xc0);
+            res += _u32_to_char((cp & 0x3f)          | 0x80);
+        } else if (cp < 0x10000) {
+            // three octets
+            res += _u32_to_char((cp >> 12)           | 0xe0);
+            res += _u32_to_char(((cp >> 6) & 0x3f)   | 0x80);
+            res += _u32_to_char((cp & 0x3f)          | 0x80);
+        } else {
+            // four octets
+            res += _u32_to_char((cp >> 18)           | 0xf0);
+            res += _u32_to_char(((cp >> 12) & 0x3f)  | 0x80);
+            res += _u32_to_char(((cp >>  6) & 0x3f)  | 0x80);
+            res += _u32_to_char((cp & 0x3f)          | 0x80);
+        }
+    }
+    return res;
 }
 // ----------------------------------------------------------------------------
 
@@ -1622,22 +1856,6 @@ _trim_copy(std::string const& str)
     std::string res = str;
     _trim(res);
     return res;
-}
-
-inline std::string
-_to_upper(std::string str)
-{
-#ifdef _ARGPARSE_CXX_11
-    std::transform(str.begin(), str.end(), str.begin(),
-                   [] (unsigned char c)
-    { return static_cast<char>(std::toupper(c)); });
-#else
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        str.at(i) = static_cast<char>(
-                        std::toupper(static_cast<unsigned char>(str.at(i))));
-    }
-#endif  // C++11+
-    return str;
 }
 
 template <class T>
@@ -4596,7 +4814,7 @@ protected:
     static std::string
     _get_default_metavar_for_optional_s(Argument const* action)
     {
-        return detail::_to_upper(action->get_dest());
+        return detail::_to_u8upper(action->get_dest());
     }
 
     static std::string
