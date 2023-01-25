@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2021-2022 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+* Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 */
 
 #ifndef _ARGPARSE_TEST_CATCH_DEFINE_H_

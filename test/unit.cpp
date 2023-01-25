@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2021-2022 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+* Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 */
 
 #define CATCH_CONFIG_MAIN
