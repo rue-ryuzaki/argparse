@@ -1537,16 +1537,27 @@ _to_upper_codepoint(u32char cp)
      || (0x03c3 <= cp && cp <= 0x03cb)
      || (0x0430 <= cp && cp <= 0x044f)
      || (0xff41 <= cp && cp <= 0xff5a)) {
+        // 0x0061 - 0x007a: LATIN LETTERS
+        // 0x00e0 - 0x00f6: LATIN LETTERS
+        // 0x00f8 - 0x00fe: LATIN LETTERS
+        // 0x03b1 - 0x03c1: GREEK LETTERS
+        // 0x03c3 - 0x03cb: GREEK LETTERS
+        // 0x0430 - 0x044f: CYRILLIC LETTERS
+        // 0xff41 - 0xff5a: FULLWIDTH LATIN LETTERS
         return cp - 0x20;
     }
     if ((0x24d0 <= cp && cp <= 0x24e9)) {
+        // 0x24d0 - 0x24e9: CIRCLED LATIN LETTERS
         return cp - 0x1a;
     }
     if ((0x0561 <= cp && cp <= 0x0586)
      || (0x10D0 <= cp && cp <= 0x10f5)) {
+        // 0x0561 - 0x0586: ARMENIAN LETTERS
+        // 0x10D0 - 0x10f5: GEORGIAN LETTERS
         return cp - 0x30;
     }
     if (0x0451 <= cp && cp <= 0x045f) {
+        // 0x0451 - 0x045f: CYRILLIC LETTERS
         return cp - 0x50;
     }
     if ((0x0100 <= cp && cp <= 0x012f)
@@ -1580,6 +1591,7 @@ _to_upper_codepoint(u32char cp)
      || (0x1fb0 <= cp && cp <= 0x1fb1)
      || (0x1fd0 <= cp && cp <= 0x1fd1)
      || (0x1fe0 <= cp && cp <= 0x1fe1)) {
+        // GREEK LETTERS
         return cp | 0x0008;
     }
     switch (cp) {
@@ -1674,7 +1686,7 @@ _to_u8upper(std::string const& value)
     std::size_t i = 0;
     for (std::size_t n = 0; n < num_chars.second; ++n) {
         std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(value[i]));
-        u32char cp;
+        u32char cp = 0;
         switch (cp_size) {
             case 1:
                 cp = (_char_to_u32(value[i]) & ~_utf8_1b_mask);
