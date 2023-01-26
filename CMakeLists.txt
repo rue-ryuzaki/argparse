@@ -50,11 +50,24 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+set(DEFERED_CMAKE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@")
+
+CONFIGURE_FILE(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc.in" @ONLY
+)
+install(
+    CODE "configure_file(\"${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc.in\" \"${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc\" @ONLY)"
+)
+
 if (NOT PROJECT_IS_TOP_LEVEL)
     return()
 endif()
 
+set(ARGPARSE_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc)
+
 install(FILES ${ARGPARSE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
+install(FILES ${ARGPARSE_CONFIG} DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig)
 
 set(CPACK_PACKAGE_NAME "cpp-argparse-dev")
 set(CPACK_PACKAGE_MAINTAINER "Mikhail Golubchikov")

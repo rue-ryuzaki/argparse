@@ -1,4 +1,8 @@
-Name: ${PROJECT_NAME}
+prefix=@DEFERED_CMAKE_INSTALL_PREFIX@
+includedir=${prefix}/include
+
+Name: @PROJECT_NAME@
 Description: Python-like header-only C++ argument parser
-URL: ${PROJECT_HOMEPAGE_URL}
-Version: ${PROJECT_VERSION}
+URL: @PROJECT_HOMEPAGE_URL@
+Version: @PROJECT_VERSION@
+Cflags: -I${includedir}
