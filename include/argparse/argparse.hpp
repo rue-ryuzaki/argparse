@@ -1574,12 +1574,17 @@ _to_upper_codepoint(u32char cp)
      || (0x04ee <= cp && cp <= 0x04f9)
      || (0x1e00 <= cp && cp <= 0x1e95)
      || (0x1ea0 <= cp && cp <= 0x1ef9)) {
+        // LATIN LETTERS
+        // 0x03e2 - 0x03ef: COPTIC LETTERS
+        // 0x0460 - 0x04f9: CYRILLIC LETTERS
+        // LATIN LETTERS
         return cp & 0xfffe;
     }
     if ((0x0139 <= cp && cp <= 0x0148)
      || (0x0179 <= cp && cp <= 0x017e)
      || (0x01b3 <= cp && cp <= 0x01b6)
      || (0x01cd <= cp && cp <= 0x01dc)) {
+        // LATIN LETTERS
         return (cp - 1) | 0x0001;
     }
     if ((0x1f00 <= cp && cp <= 0x1f15)
