@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Argument parser for C++ (ArgumentParser v1.7.2)
+* Argument parser for C++ (ArgumentParser v1.7.3)
 *
 * Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 *
@@ -54,7 +54,7 @@
 
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 7
-#define ARGPARSE_VERSION_PATCH 2
+#define ARGPARSE_VERSION_PATCH 3
 
 /*!
  *  This macro turns the version numbers into a numeric value:
@@ -1517,7 +1517,7 @@ _utf8_length(std::string const& value, std::ostream& err = std::cerr)
     return std::make_pair(true, res);
 }
 
-// since NEXT_RELEASE
+// since v1.7.3
 inline bool
 _is_utf8(std::string const& value)
 {
@@ -1525,7 +1525,7 @@ _is_utf8(std::string const& value)
     return _utf8_length(value, ss).second;
 }
 
-// since NEXT_RELEASE
+// since v1.7.3
 inline u32char
 _to_upper_codepoint(u32char cp)
 {
@@ -1679,7 +1679,7 @@ _to_upper_codepoint(u32char cp)
     }
 }
 
-// since NEXT_RELEASE
+// since v1.7.3
 inline std::string
 _to_u8upper(std::string const& value)
 {
@@ -8101,7 +8101,7 @@ public:
          *
          *  \param value argparse::SUPPRESS
          *
-         *  \since NEXT_RELEASE
+         *  \since v1.7.3
          *
          *  \return Current subparser reference
          */
