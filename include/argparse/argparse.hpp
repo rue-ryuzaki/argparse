@@ -2397,26 +2397,6 @@ _bool_to_string(std::string const& str)
 }
 
 inline std::string
-_vector_to_string(std::vector<std::string> const& vec,
-                  std::string const& separator = _spaces,
-                  std::string const& quotes = std::string(),
-                  bool replace_space = false,
-                  std::string const& none = std::string(),
-                  std::string const& begin = std::string(),
-                  std::string const& end = std::string())
-{
-    std::string res;
-    for (std::size_t i = 0; i < vec.size(); ++i) {
-        std::string val = vec.at(i);
-        if (quotes.empty() && replace_space && !_have_quotes(val)) {
-            val = _replace(val, _space, "\\ ");
-        }
-        _append_value_to(quotes + val + quotes, res, separator);
-    }
-    return begin + (res.empty() ? none : res) + end;
-}
-
-inline std::string
 _vector_to_string(std::vector<std::string>::const_iterator begvec,
                   std::vector<std::string>::const_iterator endvec,
                   std::string const& separator = _spaces,
@@ -2436,6 +2416,19 @@ _vector_to_string(std::vector<std::string>::const_iterator begvec,
         _append_value_to(quotes + val + quotes, res, separator);
     }
     return begin + (res.empty() ? none : res) + end;
+}
+
+inline std::string
+_vector_to_string(std::vector<std::string> const& vec,
+                  std::string const& separator = _spaces,
+                  std::string const& quotes = std::string(),
+                  bool replace_space = false,
+                  std::string const& none = std::string(),
+                  std::string const& begin = std::string(),
+                  std::string const& end = std::string())
+{
+    return _vector_to_string(vec.begin(), vec.end(), separator, quotes,
+                             replace_space, none, begin, end);
 }
 
 inline std::string
@@ -2556,7 +2549,7 @@ _print_raw_text_formatter(_HelpFormatter const& formatter,
                           std::string const& text,
                           std::size_t width,
                           std::ostream& os,
-                          std::string const& begin = "\n",
+                          std::string const& begin = std::string("\n"),
                           std::size_t indent = 0,
                           std::string const& end = std::string())
 {
@@ -3529,7 +3522,7 @@ public:
             case argparse::BooleanOptionalAction :
                 m_const.clear("1");
                 m_nargs = NARGS_NUM;
-                m_nargs_str = "0";
+                m_nargs_str = std::string("0");
                 m_num_args = 0;
                 m_choices.clear();
                 break;
@@ -3542,7 +3535,7 @@ public:
             case argparse::append_const :
                 m_const.clear();
                 m_nargs = NARGS_NUM;
-                m_nargs_str = "0";
+                m_nargs_str = std::string("0");
                 m_num_args = 0;
                 m_choices.clear();
                 break;
@@ -3555,7 +3548,7 @@ public:
             case argparse::count :
                 m_const.clear();
                 m_nargs = NARGS_NUM;
-                m_nargs_str = "0";
+                m_nargs_str = std::string("0");
                 m_num_args = 0;
                 m_choices.clear();
                 break;
@@ -3565,7 +3558,7 @@ public:
                 m_const.clear();
                 if (m_num_args == 0) {
                     m_nargs = NARGS_DEF;
-                    m_nargs_str = "1";
+                    m_nargs_str = std::string("1");
                     m_num_args = 1;
                 }
                 break;
@@ -3573,7 +3566,7 @@ public:
                 check_required();
                 m_const.clear();
                 m_nargs = NARGS_DEF;
-                m_nargs_str = "1";
+                m_nargs_str = std::string("1");
                 m_num_args = 1;
                 break;
             default :
@@ -3669,7 +3662,7 @@ public:
             throw TypeError("got an unexpected keyword argument 'nargs'");
         }
         m_nargs = REMAINDING;
-        m_nargs_str = "0";
+        m_nargs_str = std::string("0");
         m_num_args = 0;
         return *this;
     }
@@ -4563,7 +4556,8 @@ private:
 
     inline std::string option_strings() const
     {
-        return "[" + detail::_vector_to_string(flags(), ", ", "'")+ "]";
+        return detail::_vector_to_string(
+                    flags(), ", ", "'", false, "", "[", "]");
     }
 
     inline std::string get_required() const
