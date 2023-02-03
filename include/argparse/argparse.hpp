@@ -1408,22 +1408,6 @@ _make_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
 }
 #endif  // C++11+
 
-inline std::string
-_to_upper(std::string str)
-{
-#ifdef _ARGPARSE_CXX_11
-    std::transform(str.begin(), str.end(), str.begin(),
-                   [] (unsigned char c)
-    { return static_cast<char>(std::toupper(c)); });
-#else
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        str.at(i) = static_cast<char>(
-                        std::toupper(static_cast<unsigned char>(str.at(i))));
-    }
-#endif  // C++11+
-    return str;
-}
-
 // -- utf8 support ------------------------------------------------------------
 // since v1.7.0
 inline uint8_t
@@ -1438,16 +1422,16 @@ _u8_to_char(uint8_t c)
     return static_cast<char>(c);
 }
 
-typedef uint32_t u32char;
+typedef uint32_t unicode;
 
-inline u32char
-_char_to_u32(char c)
+inline unicode
+_char_to_unicode(char c)
 {
-    return static_cast<u32char>(_char_to_u8(c));
+    return static_cast<unicode>(_char_to_u8(c));
 }
 
 inline char
-_u32_to_char(u32char c)
+_unicode_to_char(unicode c)
 {
     return _u8_to_char(static_cast<uint8_t>(c));
 }
@@ -1482,33 +1466,33 @@ _utf8_codepoint_size(uint8_t byte)
 }
 
 inline std::pair<bool, std::size_t>
-_utf8_length(std::string const& value, std::ostream& err = std::cerr)
+_utf8_length(std::string const& str, std::ostream& err = std::cerr)
 {
     std::size_t res = 0;
     std::size_t i = 0;
-    while (i < value.size()) {
-        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(value[i]));
+    while (i < str.size()) {
+        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str[i]));
         if (cp_size == 0) {
             err << "argparse error [skip]: invalid code point for string "
-                << "'" << value << "'" << std::endl;
-            return std::make_pair(false, value.size());
+                << "'" << str << "'" << std::endl;
+            return std::make_pair(false, str.size());
         }
-        if (i + cp_size > value.size()) {
+        if (i + cp_size > str.size()) {
             err << "argparse error [skip]: code point for string '"
-                << value << "' would be out of bounds" << std::endl;
-            return std::make_pair(false, value.size());
+                << str << "' would be out of bounds" << std::endl;
+            return std::make_pair(false, str.size());
         }
         for (std::size_t n = 1; n < cp_size; ++n) {
-            if (value[i + n] == '\0') {
-                err << "argparse error [skip]: string '" << value << "' "
+            if (str[i + n] == '\0') {
+                err << "argparse error [skip]: string '" << str << "' "
                     << "is NUL-terminated in the middle of the code point"
                     << std::endl;
-                return std::make_pair(false, value.size());
-            } else if ((_char_to_u8(value[i + n]) & _utf8_ct_mask)
-                                                 != _utf8_ct_bits) {
+                return std::make_pair(false, str.size());
+            } else if ((_char_to_u8(str[i + n]) & _utf8_ct_mask)
+                                               != _utf8_ct_bits) {
                 err << "argparse error [skip]: invalid byte in code point"
-                    << " for string '" << value << "'" << std::endl;
-                return std::make_pair(false, value.size());
+                    << " for string '" << str << "'" << std::endl;
+                return std::make_pair(false, str.size());
             }
         }
         i += cp_size;
@@ -1519,15 +1503,15 @@ _utf8_length(std::string const& value, std::ostream& err = std::cerr)
 
 // since v1.7.3
 inline bool
-_is_utf8(std::string const& value)
+_is_utf8_string(std::string const& str)
 {
     std::stringstream ss;
-    return _utf8_length(value, ss).second;
+    return _utf8_length(str, ss).second;
 }
 
 // since v1.7.3
-inline u32char
-_to_upper_codepoint(u32char cp)
+inline unicode
+_to_upper_codepoint(unicode cp)
 {
     // IBM's Unicode lowercase to uppercase conversion mapping table
     if ((0x0061 <= cp && cp <= 0x007a)
@@ -1679,37 +1663,47 @@ _to_upper_codepoint(u32char cp)
     }
 }
 
-// since v1.7.3
 inline std::string
-_to_u8upper(std::string const& value)
+_to_upper(std::string const& str)
 {
-    std::pair<bool, std::size_t> num_chars = _utf8_length(value);
-    if (!num_chars.first) {
-        return _to_upper(value);
-    }
+    std::pair<bool, std::size_t> num_chars = _utf8_length(str);
     std::string res;
+    if (!num_chars.first) {
+        res = str;
+#ifdef _ARGPARSE_CXX_11
+        std::transform(res.begin(), res.end(), res.begin(),
+                       [] (unsigned char c)
+        { return static_cast<char>(std::toupper(c)); });
+#else
+        for (std::size_t i = 0; i < res.size(); ++i) {
+            res.at(i) = static_cast<char>(
+                           std::toupper(static_cast<unsigned char>(res.at(i))));
+        }
+#endif  // C++11+
+        return res;
+    }
     std::size_t i = 0;
     for (std::size_t n = 0; n < num_chars.second; ++n) {
-        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(value[i]));
-        u32char cp = 0;
+        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str[i]));
+        unicode cp = 0;
         switch (cp_size) {
             case 1:
-                cp = (_char_to_u32(value[i]) & ~_utf8_1b_mask);
+                cp =  (_char_to_unicode(str[i    ]) & ~_utf8_1b_mask);
                 break;
             case 2:
-                cp = ((_char_to_u32(value[i    ]) & ~_utf8_2b_mask) <<  6)
-                   |  (_char_to_u32(value[i + 1]) & ~_utf8_ct_mask);
+                cp = ((_char_to_unicode(str[i    ]) & ~_utf8_2b_mask) <<  6)
+                   |  (_char_to_unicode(str[i + 1]) & ~_utf8_ct_mask);
                 break;
             case 3:
-                cp = ((_char_to_u32(value[i    ]) & ~_utf8_3b_mask) << 12)
-                   | ((_char_to_u32(value[i + 1]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_u32(value[i + 2]) & ~_utf8_ct_mask);
+                cp = ((_char_to_unicode(str[i    ]) & ~_utf8_3b_mask) << 12)
+                   | ((_char_to_unicode(str[i + 1]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_unicode(str[i + 2]) & ~_utf8_ct_mask);
                 break;
             case 4:
-                cp = ((_char_to_u32(value[i    ]) & ~_utf8_4b_mask) << 18)
-                   | ((_char_to_u32(value[i + 1]) & ~_utf8_ct_mask) << 12)
-                   | ((_char_to_u32(value[i + 2]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_u32(value[i + 3]) & ~_utf8_ct_mask);
+                cp = ((_char_to_unicode(str[i    ]) & ~_utf8_4b_mask) << 18)
+                   | ((_char_to_unicode(str[i + 1]) & ~_utf8_ct_mask) << 12)
+                   | ((_char_to_unicode(str[i + 2]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_unicode(str[i + 3]) & ~_utf8_ct_mask);
                 break;
             default:
                 // should never happen
@@ -1719,22 +1713,22 @@ _to_u8upper(std::string const& value)
         cp = _to_upper_codepoint(cp);
         if (cp < 0x80) {
             // one octet
-            res += _u32_to_char(cp);
+            res += _unicode_to_char(cp);
         } else if (cp < 0x800) {
             // two octets
-            res += _u32_to_char((cp >> 6)            | 0xc0);
-            res += _u32_to_char((cp & 0x3f)          | 0x80);
+            res += _unicode_to_char((cp >> 6)           | 0xc0);
+            res += _unicode_to_char((cp & 0x3f)         | 0x80);
         } else if (cp < 0x10000) {
             // three octets
-            res += _u32_to_char((cp >> 12)           | 0xe0);
-            res += _u32_to_char(((cp >> 6) & 0x3f)   | 0x80);
-            res += _u32_to_char((cp & 0x3f)          | 0x80);
+            res += _unicode_to_char((cp >> 12)          | 0xe0);
+            res += _unicode_to_char(((cp >> 6) & 0x3f)  | 0x80);
+            res += _unicode_to_char((cp & 0x3f)         | 0x80);
         } else {
             // four octets
-            res += _u32_to_char((cp >> 18)           | 0xf0);
-            res += _u32_to_char(((cp >> 12) & 0x3f)  | 0x80);
-            res += _u32_to_char(((cp >>  6) & 0x3f)  | 0x80);
-            res += _u32_to_char((cp & 0x3f)          | 0x80);
+            res += _unicode_to_char((cp >> 18)          | 0xf0);
+            res += _unicode_to_char(((cp >> 12) & 0x3f) | 0x80);
+            res += _unicode_to_char(((cp >>  6) & 0x3f) | 0x80);
+            res += _unicode_to_char((cp & 0x3f)         | 0x80);
         }
     }
     return res;
@@ -4825,7 +4819,7 @@ protected:
     static std::string
     _get_default_metavar_for_optional_s(Argument const* action)
     {
-        return detail::_to_u8upper(action->get_dest());
+        return detail::_to_upper(action->get_dest());
     }
 
     static std::string
@@ -12265,7 +12259,7 @@ private:
             bool is_optional = arg->m_type == Argument::Optional;
             for (std::size_t j = 0; j < arg->flags().size(); ++j) {
                 std::string const& flag = arg->flags().at(j);
-                if (!detail::_is_utf8(flag)) {
+                if (!detail::_is_utf8_string(flag)) {
                     ++diagnostics.first;
                     os << status_warn << " " << argument << ": flag '"
                        << flag << "' is not utf-8" << std::endl;
@@ -12296,7 +12290,7 @@ private:
             }
             if (!arg->dest().empty()) {
                 std::string const& flag = arg->dest();
-                if (!detail::_is_utf8(flag)) {
+                if (!detail::_is_utf8_string(flag)) {
                     ++diagnostics.first;
                     os << status_warn << " " << argument << ": dest '"
                        << flag << "' is not utf-8" << std::endl;
@@ -12388,7 +12382,7 @@ private:
                 os << status_info << " you can specify `dest` for subparsers "
                    << "to determine used parser" << std::endl;
             } else {
-                if (!detail::_is_utf8(m_subparsers->dest())) {
+                if (!detail::_is_utf8_string(m_subparsers->dest())) {
                     ++diagnostics.first;
                     os << status_warn << " subparsers dest '"
                        << m_subparsers->dest() << "' is not utf-8" << std::endl;
@@ -12425,7 +12419,7 @@ private:
             for (std::size_t i = 0; i < parsers.size(); ++i) {
                 pParser const& parser = parsers.at(i);
                 // check name
-                if (!detail::_is_utf8(parser->m_name)) {
+                if (!detail::_is_utf8_string(parser->m_name)) {
                     ++diagnostics.first;
                     os << status_warn << " name for parser '"
                        << parser->m_name << "' is not utf-8" << std::endl;
