@@ -466,263 +466,6 @@ V const& _map_at(std::map<K, V, C, A> const& m, K const& k)
 }
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_11
-using std::shared_ptr;
-using std::make_shared;
-#else
-//  Slightly modified version of the shared_ptr implementation for C++98
-//  from Sébastien Rombauts which is licensed under the MIT License.
-//  See https://github.com/SRombauts/shared_ptr
-class _shared_ptr_count
-{
-public:
-    _shared_ptr_count()
-        : pn(NULL)
-    { }
-
-    _shared_ptr_count(_shared_ptr_count const& orig)
-        : pn(orig.pn)
-    { }
-
-    inline void swap(_shared_ptr_count& lhs) throw()
-    {
-        std::swap(pn, lhs.pn);
-    }
-
-    inline std::size_t use_count() const throw()
-    {
-        std::size_t count = 0;
-        if (pn) {
-            count = *pn;
-        }
-        return count;
-    }
-
-    template <class U>
-    void acquire(U*& p)
-    {
-        if (p) {
-            if (!pn) {
-                try {
-                    pn = new std::size_t(1);
-                } catch (std::bad_alloc&) {
-                    delete p;
-                    p = NULL;
-                    throw;
-                }
-            } else {
-                ++(*pn);
-            }
-        }
-    }
-
-    template <class U>
-    void release(U*& p) throw()
-    {
-        if (pn) {
-            --(*pn);
-            if (*pn == 0) {
-                delete p;
-                delete pn;
-                p = NULL;
-            }
-            pn = NULL;
-        }
-    }
-
-public:
-    std::size_t* pn;
-};
-
-class _shared_ptr_base
-{
-protected:
-    _shared_ptr_base()
-        : pn()
-    { }
-
-    _shared_ptr_base(_shared_ptr_base const& orig)
-        : pn(orig.pn)
-    { }
-
-    _shared_ptr_count pn;
-};
-
-template <class T>
-class shared_ptr : public _shared_ptr_base
-{
-public:
-    typedef T element_type;
-
-    shared_ptr() throw()
-        : _shared_ptr_base(),
-          px(NULL)
-    { }
-
-    explicit shared_ptr(T* p)
-        : _shared_ptr_base(),
-          px(NULL)
-    {
-        acquire(p);
-    }
-
-    explicit shared_ptr(nullptr_t)
-        : _shared_ptr_base(),
-          px(NULL)
-    { }
-
-    template <class U>
-    shared_ptr(shared_ptr<U> const& ptr, T* p)
-        : _shared_ptr_base(ptr),
-          px(NULL)
-    {
-        acquire(p);
-    }
-
-    template <class U>
-    explicit shared_ptr(shared_ptr<U> const& orig) throw()
-        : _shared_ptr_base(orig),
-          px(NULL)
-    {
-        assert(!orig.get() || (orig.use_count() != 0));
-        acquire(static_cast<typename shared_ptr<T>::element_type*>(orig.get()));
-    }
-
-    shared_ptr(shared_ptr const& orig) throw()
-        : _shared_ptr_base(orig),
-          px(NULL)
-    {
-        assert(!orig.px || (orig.use_count() != 0));
-        acquire(orig.px);
-    }
-
-    inline shared_ptr& operator =(shared_ptr ptr) throw()
-    {
-        swap(ptr);
-        return *this;
-    }
-
-    ~shared_ptr() throw()
-    {
-        release();
-    }
-
-    inline void reset() throw()
-    {
-        release();
-    }
-
-    inline void reset(T* p)
-    {
-        assert(!p || (px != p));
-        release();
-        acquire(p);
-    }
-
-    inline void swap(shared_ptr& lhs) throw()
-    {
-        std::swap(px, lhs.px);
-        pn.swap(lhs.pn);
-    }
-
-    inline operator bool() const throw()
-    {
-        return use_count() > 0;
-    }
-
-    inline bool unique() const throw()
-    {
-        return use_count() == 1;
-    }
-
-    inline std::size_t use_count() const throw()
-    {
-        return pn.use_count();
-    }
-
-    inline T& operator *() const throw()
-    {
-        assert(NULL != px);
-        return *px;
-    }
-
-    inline T* operator ->() const throw()
-    {
-        assert(px);
-        return px;
-    }
-
-    inline T* get() const throw()
-    {
-        return px;
-    }
-
-private:
-    inline void acquire(T* p)
-    {
-        pn.acquire(p);
-        px = p;
-    }
-
-    inline void release() throw()
-    {
-        pn.release(px);
-    }
-
-private:
-    T* px;
-};
-
-template <class T, class U>
-bool operator ==(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
-{
-    return (l.get() == r.get());
-}
-
-template <class T, class U>
-bool operator !=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
-{
-    return (l.get() != r.get());
-}
-
-template <class T, class U>
-bool operator <=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
-{
-    return (l.get() <= r.get());
-}
-
-template <class T, class U>
-bool operator <(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
-{
-    return (l.get() < r.get());
-}
-
-template <class T, class U>
-bool operator >=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
-{
-    return (l.get() >= r.get());
-}
-
-template <class T, class U>
-bool operator >(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
-{
-    return (l.get() > r.get());
-}
-
-template <class T>
-shared_ptr<T>
-make_shared(T const& t)
-{
-    return shared_ptr<T>(new T(t));
-}
-
-template <class T, class U>
-shared_ptr<T> _pointer_cast(shared_ptr<U> const& r) throw()
-{
-    return shared_ptr<T>(r);
-}
-#endif  // C++11+
-
 template <class T> struct is_byte_type              { enum { value = false }; };
 template <>        struct is_byte_type<char>         { enum { value = true }; };
 template <>        struct is_byte_type<signed char>  { enum { value = true }; };
@@ -1355,6 +1098,269 @@ template <class T>
 struct is_stl_matrix_queue<std::vector<std::stack           <T> > >:true_type{};
 template <class T>
 struct is_stl_matrix_queue<std::vector<std::queue           <T> > >:true_type{};
+#endif  // C++11+
+
+#ifdef _ARGPARSE_CXX_11
+using std::shared_ptr;
+using std::make_shared;
+#else
+//  Slightly modified version of the shared_ptr implementation for C++98
+//  from Sébastien Rombauts which is licensed under the MIT License.
+//  See https://github.com/SRombauts/shared_ptr
+class _shared_ptr_count
+{
+public:
+    _shared_ptr_count()
+        : pn(NULL)
+    { }
+
+    _shared_ptr_count(_shared_ptr_count const& orig)
+        : pn(orig.pn)
+    { }
+
+    inline void swap(_shared_ptr_count& lhs) throw()
+    {
+        std::swap(pn, lhs.pn);
+    }
+
+    inline std::size_t use_count() const throw()
+    {
+        std::size_t count = 0;
+        if (pn) {
+            count = *pn;
+        }
+        return count;
+    }
+
+    template <class U>
+    void acquire(U*& p)
+    {
+        if (p) {
+            if (!pn) {
+                try {
+                    pn = new std::size_t(1);
+                } catch (std::bad_alloc&) {
+                    delete p;
+                    p = NULL;
+                    throw;
+                }
+            } else {
+                ++(*pn);
+            }
+        }
+    }
+
+    template <class U>
+    void release(U*& p) throw()
+    {
+        if (pn) {
+            --(*pn);
+            if (*pn == 0) {
+                delete p;
+                delete pn;
+                p = NULL;
+            }
+            pn = NULL;
+        }
+    }
+
+public:
+    std::size_t* pn;
+};
+
+class _shared_ptr_base
+{
+protected:
+    _shared_ptr_base()
+        : pn()
+    { }
+
+    _shared_ptr_base(_shared_ptr_base const& orig)
+        : pn(orig.pn)
+    { }
+
+    _shared_ptr_count pn;
+};
+
+template <class T>
+class shared_ptr : public _shared_ptr_base
+{
+public:
+    typedef typename remove_extent<T>::type element_type;
+
+    shared_ptr() throw()
+        : _shared_ptr_base(),
+          px(NULL)
+    { }
+
+    explicit shared_ptr(T* p)
+        : _shared_ptr_base(),
+          px(NULL)
+    {
+        acquire(p);
+    }
+
+    shared_ptr(nullptr_t) throw()
+        : _shared_ptr_base(),
+          px(NULL)
+    { }
+
+    template <class U>
+    explicit shared_ptr(shared_ptr<U> const& ptr, T* p)
+        : _shared_ptr_base(ptr),
+          px(NULL)
+    {
+        acquire(p);
+    }
+
+    template <class U>
+    explicit shared_ptr(shared_ptr<U> const& orig) throw()
+        : _shared_ptr_base(orig),
+          px(NULL)
+    {
+        assert(!orig.get() || (orig.use_count() != 0));
+        acquire(static_cast<typename shared_ptr<T>::element_type*>(orig.get()));
+    }
+
+    shared_ptr(shared_ptr const& orig) throw()
+        : _shared_ptr_base(orig),
+          px(NULL)
+    {
+        assert(!orig.px || (orig.use_count() != 0));
+        acquire(orig.px);
+    }
+
+    inline shared_ptr& operator =(shared_ptr ptr) throw()
+    {
+        swap(ptr);
+        return *this;
+    }
+
+    inline shared_ptr& operator =(nullptr_t) throw()
+    {
+        reset();
+        return *this;
+    }
+
+    ~shared_ptr() throw()
+    {
+        release();
+    }
+
+    inline void reset() throw()
+    {
+        release();
+    }
+
+    inline void reset(T* p)
+    {
+        assert(!p || (px != p));
+        release();
+        acquire(p);
+    }
+
+    inline void swap(shared_ptr& lhs) throw()
+    {
+        std::swap(px, lhs.px);
+        pn.swap(lhs.pn);
+    }
+
+    inline operator bool() const throw()
+    {
+        return use_count() > 0;
+    }
+
+    inline bool unique() const throw()
+    {
+        return use_count() == 1;
+    }
+
+    inline std::size_t use_count() const throw()
+    {
+        return pn.use_count();
+    }
+
+    inline T& operator *() const throw()
+    {
+        assert(NULL != px);
+        return *px;
+    }
+
+    inline T* operator ->() const throw()
+    {
+        assert(px);
+        return px;
+    }
+
+    inline T* get() const throw()
+    {
+        return px;
+    }
+
+private:
+    inline void acquire(T* p)
+    {
+        pn.acquire(p);
+        px = p;
+    }
+
+    inline void release() throw()
+    {
+        pn.release(px);
+    }
+
+private:
+    T* px;
+};
+
+template <class T, class U>
+bool operator ==(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() == r.get());
+}
+
+template <class T, class U>
+bool operator !=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() != r.get());
+}
+
+template <class T, class U>
+bool operator <=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() <= r.get());
+}
+
+template <class T, class U>
+bool operator <(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() < r.get());
+}
+
+template <class T, class U>
+bool operator >=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() >= r.get());
+}
+
+template <class T, class U>
+bool operator >(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
+{
+    return (l.get() > r.get());
+}
+
+template <class T>
+shared_ptr<T>
+make_shared(T const& t)
+{
+    return shared_ptr<T>(new T(t));
+}
+
+template <class T, class U>
+shared_ptr<T> _pointer_cast(shared_ptr<U> const& r) throw()
+{
+    return shared_ptr<T>(r);
+}
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_11
@@ -11606,7 +11612,7 @@ private:
             }
         }
 #endif  // C++11+
-        return it != args.end() ? *it : pArgument(_ARGPARSE_NULLPTR);
+        return it != args.end() ? *it : _ARGPARSE_NULLPTR;
     }
 
     static pArgument const
@@ -11614,7 +11620,7 @@ private:
                              Parsers const& parsers,
                              std::string const& key)
     {
-        return was_pseudo_arg ? pArgument(_ARGPARSE_NULLPTR)
+        return was_pseudo_arg ? _ARGPARSE_NULLPTR
                               : optional_arg_by_flag(parsers, key);
     }
 
