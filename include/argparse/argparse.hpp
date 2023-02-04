@@ -1535,9 +1535,9 @@ _to_upper_codepoint(unicode cp)
         return cp - 0x1a;
     }
     if ((0x0561 <= cp && cp <= 0x0586)
-     || (0x10D0 <= cp && cp <= 0x10f5)) {
+     || (0x10d0 <= cp && cp <= 0x10f5)) {
         // 0x0561 - 0x0586: ARMENIAN LETTERS
-        // 0x10D0 - 0x10f5: GEORGIAN LETTERS
+        // 0x10d0 - 0x10f5: GEORGIAN LETTERS
         return cp - 0x30;
     }
     if (0x0451 <= cp && cp <= 0x045f) {
@@ -1575,8 +1575,8 @@ _to_upper_codepoint(unicode cp)
      || (0x1f20 <= cp && cp <= 0x1f45)
      || (0x1f51 == cp || cp == 0x1f53)
      || (0x1f55 == cp || cp == 0x1f57)
-     || (0x1f60 <= cp && cp <= 0x1f67)
-     || (0x1f80 <= cp && cp <= 0x1fa7)
+     || (0x1f60 <= cp && cp <= 0x1f6f)
+     || (0x1f80 <= cp && cp <= 0x1faf)
      || (0x1fb0 <= cp && cp <= 0x1fb1)
      || (0x1fd0 <= cp && cp <= 0x1fd1)
      || (0x1fe0 <= cp && cp <= 0x1fe1)) {
