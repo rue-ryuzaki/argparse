@@ -1868,7 +1868,7 @@ _trim_copy(std::string const& str)
 }
 
 template <class T>
-std::string
+inline std::string
 _to_string(T const& value)
 {
     std::stringstream ss;
@@ -3105,7 +3105,7 @@ public:
      *  \return Argument object
      */
     explicit
-    Argument(std::initializer_list<std::string> flags)
+    Argument(std::initializer_list<std::string> const& flags)
         : Argument(std::vector<std::string>{ flags })
     { }
 #else
@@ -3742,10 +3742,10 @@ public:
     template <class T,
               typename std::enable_if<
                 !std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Argument& const_value(T const& value)
+    inline Argument& const_value(T const& value)
 #else
     template <class T>
-    Argument& const_value(
+    inline Argument& const_value(
             T const& value,
             typename detail::enable_if<
                 !detail::is_constructible<std::string, T>::value, bool
@@ -3781,10 +3781,10 @@ public:
     template <class T,
               typename std::enable_if<
                 !std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Argument& default_value(T const& value)
+    inline Argument& default_value(T const& value)
 #else
     template <class T>
-    Argument& default_value(
+    inline Argument& default_value(
             T const& value,
             typename detail::enable_if<
                 !detail::is_constructible<std::string, T>::value, bool
@@ -3841,10 +3841,10 @@ public:
     template <class T,
               typename std::enable_if<
                 !std::is_constructible<std::string, T>::value>::type* = nullptr>
-    Argument& implicit_value(T const& value)
+    inline Argument& implicit_value(T const& value)
 #else
     template <class T>
-    Argument& implicit_value(
+    inline Argument& implicit_value(
             T const& value,
             typename detail::enable_if<
                 !detail::is_constructible<std::string, T>::value, bool
@@ -3863,7 +3863,7 @@ public:
      *  \return Current argument reference
      */
     template <class T>
-    Argument& type()
+    inline Argument& type()
     {
         m_type_name = detail::Type::basic<T>();
         return *this;
@@ -3916,7 +3916,7 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
 #endif  // C++11+
-    Argument& choices(std::string const& value)
+    inline Argument& choices(std::string const& value)
     {
         if (!(action() & (detail::_store_action | argparse::language))) {
             throw TypeError("got an unexpected keyword argument 'choices'");
@@ -3947,8 +3947,8 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
-    Argument& choices(std::string const& value1,
-                      std::string const& value2, Args... args)
+    inline Argument& choices(std::string const& value1,
+                             std::string const& value2, Args... args)
     {
         return choices(std::vector<std::string>{ value1, value2, args... });
     }
@@ -3962,7 +3962,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& choices(std::initializer_list<std::string> value)
+    inline Argument& choices(std::initializer_list<std::string> const& value)
     {
         return choices(std::vector<std::string>{ value });
     }
@@ -4133,7 +4133,7 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
-    Argument& metavar(std::string const& value, Args... args)
+    inline Argument& metavar(std::string const& value, Args... args)
     {
         return metavar(std::vector<std::string>{ value, args... });
     }
@@ -4147,7 +4147,7 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& metavar(std::initializer_list<std::string> value)
+    inline Argument& metavar(std::initializer_list<std::string> const& value)
     {
         return metavar(std::vector<std::string>{ value });
     }
@@ -5518,7 +5518,7 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
-    Argument& add_argument(Args... flags)
+    inline Argument& add_argument(Args... flags)
     {
         return add_argument(std::vector<std::string>{ flags... });
     }
@@ -5532,7 +5532,8 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::initializer_list<std::string> flags)
+    inline Argument&
+    add_argument(std::initializer_list<std::string> const& flags)
     {
         return add_argument(std::vector<std::string>{ flags });
     }
@@ -6093,14 +6094,14 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     template <class T>
-    void create(T const& arguments)
+    inline void create(T const& arguments)
     {
         for (auto const& arg : arguments) {
             create(arg);
         }
     }
 #else
-    void create(std::vector<key_type> const& arguments)
+    inline void create(std::vector<key_type> const& arguments)
     {
         for (std::size_t i = 0; i < arguments.size(); ++i) {
             create(arguments.at(i));
@@ -8744,7 +8745,7 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
-    ArgumentParser& aliases(std::string const& value, Args... args)
+    inline ArgumentParser& aliases(std::string const& value, Args... args)
     {
         return aliases(std::vector<std::string>{ value, args... });
     }
@@ -8758,7 +8759,8 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& aliases(std::initializer_list<std::string> value)
+    inline ArgumentParser&
+    aliases(std::initializer_list<std::string> const& value)
     {
         return aliases(std::vector<std::string>{ value });
     }
@@ -8837,7 +8839,7 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
-    ArgumentParser& parents(ArgumentParser const& value, Args... args)
+    inline ArgumentParser& parents(ArgumentParser const& value, Args... args)
     {
         return parents(std::vector<ArgumentParser>{ value, args... });
     }
@@ -8851,7 +8853,8 @@ public:
      *
      *  \return Current argument parser reference
      */
-    ArgumentParser& parents(std::initializer_list<ArgumentParser> value)
+    inline ArgumentParser&
+    parents(std::initializer_list<ArgumentParser> const& value)
     {
         return parents(std::vector<ArgumentParser>{ value });
     }
@@ -8906,7 +8909,7 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
-    ArgumentParser&
+    inline ArgumentParser&
     formatter_class(HelpFormatter const& value, Args... args)
     {
         formatter_class(value);
@@ -8952,7 +8955,7 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
-    ArgumentParser&
+    inline ArgumentParser&
     add_formatter_class(HelpFormatter const& value, Args... args)
     {
         add_formatter_class(value);
@@ -9294,7 +9297,7 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
-    Argument& add_argument(Args... flags)
+    inline Argument& add_argument(Args... flags)
     {
         return add_argument(std::vector<std::string>{ flags... });
     }
@@ -9308,7 +9311,8 @@ public:
      *
      *  \return Current argument reference
      */
-    Argument& add_argument(std::initializer_list<std::string> flags)
+    inline Argument&
+    add_argument(std::initializer_list<std::string> const& flags)
     {
         return add_argument(std::vector<std::string>{ flags });
     }
@@ -9595,7 +9599,7 @@ public:
      */
     inline void
     set_defaults(
-              std::initializer_list<std::pair<std::string, std::string> > pairs)
+       std::initializer_list<std::pair<std::string, std::string> > const& pairs)
     {
         set_defaults(
                     std::vector<std::pair<std::string, std::string> >{ pairs });
