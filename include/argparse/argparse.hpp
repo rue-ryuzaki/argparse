@@ -448,23 +448,15 @@ _const_action = argparse::store_const | argparse::append_const;
 _ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
 
-#ifdef _ARGPARSE_CXX_11
-template <class K, class V, class C, class A>
-V const& _map_at(std::map<K, V, C, A> const& m, K const& k)
-{
-    return m.at(k);
-}
-#else
 template <class K, class V, class C, class A>
 V const& _map_at(std::map<K, V, C, A> const& m, K const& k)
 {
     typename std::map<K, V, C, A>::const_iterator it(m.find(k));
     if (it == m.end()) {
-        throw std::out_of_range("key not found in map");
+        throw std::out_of_range("map::at");
     }
     return it->second;
 }
-#endif  // C++11+
 
 template <class T> struct is_byte_type              { enum { value = false }; };
 template <>        struct is_byte_type<char>         { enum { value = true }; };
