@@ -10451,14 +10451,9 @@ public:
                    << std::endl;
             }
         }
-#ifdef _ARGPARSE_CXX_11
-        for (auto const& group : m_groups) {
-#else
         for (std::size_t i = 0; i < m_groups.size(); ++i) {
-            pGroup const& group = m_groups.at(i);
-#endif  // C++11+
-            print_group(group, subparser, sub_positional, m_formatter_class,
-                        prog(), size, width, lang, os);
+            print_group(m_groups[i], subparser, sub_positional,
+                        m_formatter_class, prog(), size, width, lang, os);
         }
         detail::_print_raw_text_formatter(
                     m_formatter_class,
@@ -11596,18 +11591,12 @@ private:
     optional_arg_by_flag(Parsers const& parsers, std::string const& key)
     {
         pArguments const& args = parsers.back().optional;
-#ifdef _ARGPARSE_CXX_11
-        auto it = std::find_if(args.begin(), args.end(),
-                               [&key] (pArgument const& arg)
-        { return detail::_is_value_exists(key, arg->flags()); });
-#else
         pArguments::const_iterator it = args.begin();
         for ( ; it != args.end(); ++it) {
             if (detail::_is_value_exists(key, (*it)->flags())) {
                 break;
             }
         }
-#endif  // C++11+
         return it != args.end() ? *it : _ARGPARSE_NULLPTR;
     }
 
