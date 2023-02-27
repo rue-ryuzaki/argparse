@@ -1408,27 +1408,27 @@ _make_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
 
 // -- utf8 support ------------------------------------------------------------
 // since v1.7.0
-inline uint8_t
+typedef uint32_t unicode;
+
+inline uint8_t _ARGPARSE_CONSTEXPR
 _char_to_u8(char c)
 {
     return static_cast<uint8_t>(c);
 }
 
-inline char
+inline char _ARGPARSE_CONSTEXPR
 _u8_to_char(uint8_t c)
 {
     return static_cast<char>(c);
 }
 
-typedef uint32_t unicode;
-
-inline unicode
+inline unicode _ARGPARSE_CONSTEXPR
 _char_to_unicode(char c)
 {
     return static_cast<unicode>(_char_to_u8(c));
 }
 
-inline char
+inline char _ARGPARSE_CONSTEXPR
 _unicode_to_char(unicode c)
 {
     return _u8_to_char(static_cast<uint8_t>(c));
