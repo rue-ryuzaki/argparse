@@ -1171,9 +1171,9 @@ struct is_stl_matrix_queue<std::vector<std::queue           <T> > >:true_type{};
 using std::shared_ptr;
 using std::make_shared;
 #else
-//  Slightly modified version of the shared_ptr implementation for C++98
-//  from Sébastien Rombauts which is licensed under the MIT License.
-//  See https://github.com/SRombauts/shared_ptr
+// Slightly modified version of the shared_ptr implementation for C++98
+// from Sébastien Rombauts which is licensed under the MIT License.
+// See https://github.com/SRombauts/shared_ptr
 class _shared_ptr_count
 {
 public:
@@ -1383,37 +1383,37 @@ private:
 template <class T, class U>
 bool operator ==(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
 {
-    return (l.get() == r.get());
+    return l.get() == r.get();
 }
 
 template <class T, class U>
 bool operator !=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
 {
-    return (l.get() != r.get());
+    return l.get() != r.get();
 }
 
 template <class T, class U>
 bool operator <=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
 {
-    return (l.get() <= r.get());
+    return l.get() <= r.get();
 }
 
 template <class T, class U>
 bool operator <(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
 {
-    return (l.get() < r.get());
+    return l.get() < r.get();
 }
 
 template <class T, class U>
 bool operator >=(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
 {
-    return (l.get() >= r.get());
+    return l.get() >= r.get();
 }
 
 template <class T, class U>
 bool operator >(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
 {
-    return (l.get() > r.get());
+    return l.get() > r.get();
 }
 
 template <class T>
@@ -3607,10 +3607,11 @@ public:
                 m_choices.clear();
                 break;
             case argparse::version :
-                this->help("show program's version number and exit");
-                // fallthrough
             case argparse::help :
                 check_required();
+                if (value == argparse::version) {
+                    this->help("show program's version number and exit");
+                }
                 // fallthrough
             case argparse::count :
                 m_const.clear();
@@ -3638,6 +3639,14 @@ public:
                 break;
             default :
                 throw ValueError("unknown action");
+        }
+#ifdef _ARGPARSE_CXX_11
+        if (action() & (argparse::version | argparse::help)) {
+            m_handle = nullptr;
+        }
+#endif  // C++11+
+        if (!(value & detail::_store_const_action)) {
+            m_metavar.clear();
         }
         m_action = value;
         return *this;
@@ -4173,11 +4182,10 @@ public:
      */
     inline Argument& version(std::string const& value)
     {
-        if (action() == argparse::version) {
-            m_version = value;
-        } else {
+        if (action() != argparse::version) {
             throw TypeError("got an unexpected keyword argument 'version'");
         }
+        m_version = value;
         return *this;
     }
 
@@ -4511,14 +4519,6 @@ private:
 
     inline void prepare_action(Action value)
     {
-#ifdef _ARGPARSE_CXX_11
-        if (action() & (argparse::version | argparse::help)) {
-            m_handle = nullptr;
-        }
-#endif  // C++11+
-        if (!(value & detail::_store_const_action)) {
-            m_metavar.clear();
-        }
         if (m_type == Optional && value == argparse::BooleanOptionalAction) {
             make_no_flags();
             if (m_post_trigger) {
