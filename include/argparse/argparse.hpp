@@ -696,7 +696,7 @@ template <class... Args>
 struct is_stl_queue<std::queue                     <Args...> >:std::true_type{};
 
 template <class T>
-struct is_stl_tuple:std::false_type{};
+struct is_stl_tuple                                          :std::false_type{};
 template <class... Args>
 struct is_stl_tuple<std::tuple                     <Args...> >:std::true_type{};
 
@@ -1894,11 +1894,6 @@ _limit_to_max(std::size_t& value, std::size_t to) _ARGPARSE_NOEXCEPT
 inline void
 _ltrim(std::string& str)
 {
-#ifdef _ARGPARSE_CXX_11
-    str.erase(str.begin(),
-              std::find_if(str.begin(), str.end(),
-                           [] (unsigned char c) { return !std::isspace(c); }));
-#else
     std::string::iterator it = str.begin();
     for ( ; it != str.end(); ++it) {
         if (!std::isspace(static_cast<unsigned char>(*it))) {
@@ -1906,17 +1901,11 @@ _ltrim(std::string& str)
         }
     }
     str.erase(str.begin(), it);
-#endif  // C++11+
 }
 
 inline void
 _rtrim(std::string& str)
 {
-#ifdef _ARGPARSE_CXX_11
-    str.erase(std::find_if(str.rbegin(), str.rend(),
-                           [] (unsigned char c)
-    { return !std::isspace(c); }).base(), str.end());
-#else
     std::string::reverse_iterator it = str.rbegin();
     for ( ; it != str.rend(); ++it) {
         if (!std::isspace(static_cast<unsigned char>(*it))) {
@@ -1924,7 +1913,6 @@ _rtrim(std::string& str)
         }
     }
     str.erase(it.base(), str.end());
-#endif  // C++11+
 }
 
 inline void
@@ -2918,6 +2906,8 @@ template <class T>
 class Value
 {
 public:
+    typedef T value_type;
+
     Value()
         : m_value(),
           m_has_value(false)
@@ -6165,22 +6155,12 @@ public:
         }
     }
 
-#ifdef _ARGPARSE_CXX_11
-    template <class T>
-    inline void create(T const& arguments)
-    {
-        for (auto const& arg : arguments) {
-            create(arg);
-        }
-    }
-#else
     inline void create(std::vector<key_type> const& arguments)
     {
         for (std::size_t i = 0; i < arguments.size(); ++i) {
             create(arguments.at(i));
         }
     }
-#endif  // C++11+
 
     inline void have_value(key_type const& arg)
     {
@@ -8305,13 +8285,8 @@ public:
                          std::size_t& limit) const _ARGPARSE_OVERRIDE
         {
             detail::_limit_to_min(limit, flags_to_string().size());
-#ifdef _ARGPARSE_CXX_11
-            for (auto const& p : m_parsers) {
-                std::size_t s = p->m_name.size() + 2;
-#else
             for (std::size_t i = 0; i < m_parsers.size(); ++i) {
                 std::size_t s = m_parsers.at(i)->m_name.size() + 2;
-#endif  // C++11+
                 detail::_limit_to_min(limit, s);
             }
         }
@@ -9516,17 +9491,10 @@ public:
     inline MutuallyExclusiveGroup&
     add_mutually_exclusive_group(bool required = false)
     {
-#ifdef _ARGPARSE_CXX_11
-        m_mutex_groups.emplace_back(
-              MutuallyExclusiveGroup::make_mutex_group(
-                        m_prefix_chars, m_data,
-                        m_argument_default, m_argument_default_type));
-#else
         m_mutex_groups.push_back(
               MutuallyExclusiveGroup::make_mutex_group(
                         m_prefix_chars, m_data,
                         m_argument_default, m_argument_default_type));
-#endif  // C++11+
         return m_mutex_groups.back().required(required);
     }
 
@@ -11068,15 +11036,9 @@ private:
                          pArgument const& arg,
                          std::vector<std::string> const& values) const
     {
-#ifdef _ARGPARSE_CXX_11
-        for (auto const& val : values) {
-            validate_argument_value(parsers, *arg, val);
-        }
-#else
         for (std::size_t i = 0; i < values.size(); ++i) {
             validate_argument_value(parsers, *arg, values.at(i));
         }
-#endif  // C++11+
         parsers.front().storage.store_values(arg, values);
     }
 
@@ -11825,41 +11787,32 @@ private:
 
     static void check_mutex_groups(Parsers const& parsers)
     {
-#ifdef _ARGPARSE_CXX_11
-        for (auto const& info : parsers) {
-            for (auto const& ex : info.parser->m_mutex_groups) {
-#else
         for (std::size_t i = 0; i < parsers.size(); ++i) {
-            ParserInfo const& info = parsers.at(i);
-            for (std::size_t j = 0; j < info.parser->m_mutex_groups.size(); ++j)
-            {
-                MutuallyExclusiveGroup const& ex
-                        = info.parser->m_mutex_groups.at(j);
-#endif  // C++11+
+            ArgumentParser const* parser = parsers.at(i).parser;
+            for (std::size_t j = 0; j < parser->m_mutex_groups.size(); ++j) {
+                MutuallyExclusiveGroup const& g = parser->m_mutex_groups.at(j);
                 std::string args;
                 std::string found;
-                for (std::size_t k = 0; k < ex.m_data->m_arguments.size(); ++k)
-                {
-                    pArgument const& arg = ex.m_data->m_arguments.at(k);
+                for (std::size_t k = 0; k < g.m_data->m_arguments.size(); ++k) {
+                    pArgument const& arg = g.m_data->m_arguments.at(k);
                     std::string flags
                             = detail::_vector_to_string(arg->flags(), "/");
                     args += detail::_spaces + flags;
                     if (!parsers.front().storage.at(arg).empty()) {
                         if (!found.empty()) {
-                            info.parser->throw_error(
-                                        "argument " + flags
-                                        + ": not allowed with argument "
-                                        + found);
+                            parser->throw_error("argument " + flags
+                                                + ": not allowed with argument "
+                                                + found);
                         }
                         found = flags;
                     }
                 }
-                if (ex.required() && found.empty()) {
-                    if (ex.m_data->m_arguments.empty()) {
+                if (g.required() && found.empty()) {
+                    if (g.m_data->m_arguments.empty()) {
                         throw IndexError("list index out of range");
                     }
-                    info.parser->throw_error("one of the arguments"
-                                             + args + " is required");
+                    parser->throw_error("one of the arguments"
+                                        + args + " is required");
                 }
             }
         }
