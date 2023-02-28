@@ -412,7 +412,7 @@ public:
 /*!
  *  \brief IndexError handler
  */
-_ARGPARSE_EXPORT class IndexError : public std::logic_error
+_ARGPARSE_EXPORT class IndexError : public std::out_of_range
 {
 public:
     /*!
@@ -424,7 +424,7 @@ public:
      */
     explicit
     IndexError(std::string const& error)
-        : std::logic_error("IndexError: " + error)
+        : std::out_of_range("IndexError: " + error)
     { }
 };
 
@@ -452,7 +452,7 @@ public:
 /*!
  *  \brief TypeError handler
  */
-_ARGPARSE_EXPORT class TypeError : public std::logic_error
+_ARGPARSE_EXPORT class TypeError : public std::invalid_argument
 {
 public:
     /*!
@@ -464,7 +464,7 @@ public:
      */
     explicit
     TypeError(std::string const& error)
-        : std::logic_error("TypeError: " + error)
+        : std::invalid_argument("TypeError: " + error)
     { }
 };
 
@@ -5322,9 +5322,7 @@ protected:
         for (std::size_t i = 1; i < flags.size(); ++i) {
             // check arguments
             std::string& flag = flags.at(i);
-            if (flag.empty()) {
-                throw IndexError("string index out of range");
-            }
+            check_flag_name(flag);
             if (!detail::_is_value_exists(flag.at(0), prefix_chars)) {
                 // no positional and optional args
                 throw ValueError("invalid option string " + flag
