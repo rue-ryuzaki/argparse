@@ -27,6 +27,8 @@
 #ifndef _ARGPARSE_ARGUMENT_PARSER_HPP_
 #define _ARGPARSE_ARGUMENT_PARSER_HPP_
 
+// -- #undef ------------------------------------------------------------------
+// -- version -----------------------------------------------------------------
 #undef ARGPARSE_VERSION_MAJOR
 #undef ARGPARSE_VERSION_MINOR
 #undef ARGPARSE_VERSION_PATCH
@@ -34,7 +36,32 @@
 #undef ARGPARSE_VERSION_NUM
 #undef ARGPARSE_VERSION_COMPILED
 #undef ARGPARSE_VERSION_AT_LEAST
-
+// -- standard ----------------------------------------------------------------
+#undef _ARGPARSE_CXX_98
+#undef _ARGPARSE_CXX_11
+#undef _ARGPARSE_CXX_14
+#undef _ARGPARSE_CXX_17
+#undef _ARGPARSE_CXX_20
+#undef _ARGPARSE_CXX_23
+// -- attributes --------------------------------------------------------------
+// C++11+
+#undef _ARGPARSE_ATTR_NORETURN
+#undef _ARGPARSE_ATTR_CARRIES_DEPENDENCY
+// C++14+
+#undef _ARGPARSE_ATTR_DEPRECATED
+#undef _ARGPARSE_ATTR_DEPRECATED_REASON
+// C++17+
+#undef _ARGPARSE_ATTR_FALLTHROUGH
+#undef _ARGPARSE_ATTR_MAYBE_UNUSED
+#undef _ARGPARSE_ATTR_NODISCARD
+// C++20+
+#undef _ARGPARSE_ATTR_LIKELY
+#undef _ARGPARSE_ATTR_NODISCARD_REASON
+#undef _ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
+#undef _ARGPARSE_ATTR_UNLIKELY
+// C++23+
+#undef _ARGPARSE_ATTR_ASSUME
+// -- specifiers --------------------------------------------------------------
 #undef _ARGPARSE_CONSTEXPR
 #undef _ARGPARSE_ENUM_TYPE
 #undef _ARGPARSE_EXPORT
@@ -45,13 +72,8 @@
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
 
-#undef _ARGPARSE_CXX_98
-#undef _ARGPARSE_CXX_11
-#undef _ARGPARSE_CXX_14
-#undef _ARGPARSE_CXX_17
-#undef _ARGPARSE_CXX_20
-#undef _ARGPARSE_CXX_23
-
+// -- #define -----------------------------------------------------------------
+// -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 7
 #define ARGPARSE_VERSION_PATCH 3
@@ -76,6 +98,7 @@
 #define ARGPARSE_VERSION_AT_LEAST(X, Y, Z) \
     (ARGPARSE_VERSION_COMPILED >= ARGPARSE_VERSION_NUM(X, Y, Z))
 
+// -- standard ----------------------------------------------------------------
 #ifdef _MSVC_LANG
 #if _MSVC_LANG >= 201103L
 #define _ARGPARSE_CXX_11
@@ -104,6 +127,7 @@
 #endif  // C++20+
 #endif  // _MSVC_LANG
 
+// -- terminal size detection -------------------------------------------------
 #ifdef ARGPARSE_NO_AUTODETECT
 #warning "ARGPARSE_NO_AUTODETECT define is deprecated and will be removed \
 in the next minor release (v1.8.0), \
@@ -164,6 +188,7 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #endif  // _WIN32
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 
+// -- #include ----------------------------------------------------------------
 #ifdef _ARGPARSE_CXX_11
 #include <array>
 #include <cstdint>
@@ -206,6 +231,55 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #include <utility>
 #include <vector>
 
+// -- attributes --------------------------------------------------------------
+#ifdef _ARGPARSE_CXX_11
+#define _ARGPARSE_ATTR_NORETURN             [[noreturn]]
+#define _ARGPARSE_ATTR_CARRIES_DEPENDENCY   [[carries_dependency]]
+#else
+#define _ARGPARSE_ATTR_NORETURN
+#define _ARGPARSE_ATTR_CARRIES_DEPENDENCY
+#endif  // C++11+
+
+#ifdef _ARGPARSE_CXX_14
+#define _ARGPARSE_ATTR_DEPRECATED           [[deprecated]]
+#define _ARGPARSE_ATTR_DEPRECATED_REASON(X) [[deprecated(X)]]
+#else
+#define _ARGPARSE_ATTR_DEPRECATED
+#define _ARGPARSE_ATTR_DEPRECATED_REASON
+#endif  // C++14+
+
+#ifdef _ARGPARSE_CXX_17
+#define _ARGPARSE_ATTR_FALLTHROUGH          [[fallthrough]]
+#define _ARGPARSE_ATTR_MAYBE_UNUSED         [[maybe_unused]]
+#define _ARGPARSE_ATTR_NODISCARD            [[nodiscard]]
+#define _ARGPARSE_ATTR_NODISCARD_REASON(X)  [[nodiscard]]
+#else
+#define _ARGPARSE_ATTR_FALLTHROUGH
+#define _ARGPARSE_ATTR_MAYBE_UNUSED
+#define _ARGPARSE_ATTR_NODISCARD
+#define _ARGPARSE_ATTR_NODISCARD_REASON(X)
+#endif  // C++17+
+
+#ifdef _ARGPARSE_CXX_20
+#undef _ARGPARSE_ATTR_NODISCARD_REASON
+
+#define _ARGPARSE_ATTR_LIKELY               [[likely]]
+#define _ARGPARSE_ATTR_NODISCARD_REASON(X)  [[nodiscard(X)]]
+#define _ARGPARSE_ATTR_NO_UNIQUE_ADDRESS    [[no_unique_address]]
+#define _ARGPARSE_ATTR_UNLIKELY             [[unlikely]]
+#else
+#define _ARGPARSE_ATTR_LIKELY
+#define _ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
+#define _ARGPARSE_ATTR_UNLIKELY
+#endif  // C++20+
+
+#ifdef _ARGPARSE_CXX_23
+#define _ARGPARSE_ATTR_ASSUME(X)            [[assume(X)]]
+#else
+#define _ARGPARSE_ATTR_ASSUME(X)
+#endif  // C++23+
+
+// -- specifiers --------------------------------------------------------------
 #define _ARGPARSE_EXPORT
 
 #ifdef _ARGPARSE_CXX_11
@@ -230,6 +304,7 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #define _ARGPARSE_INLINE_VARIABLE static
 #endif  // C++17+
 
+// -- expand tab size ---------------------------------------------------------
 #ifndef ARGPARSE_TAB_SIZE
 #define ARGPARSE_TAB_SIZE 4
 #endif  // ARGPARSE_TAB_SIZE
@@ -12501,6 +12576,33 @@ private:
 };
 }  // namespace argparse
 
+// -- #undef ------------------------------------------------------------------
+// -- standard ----------------------------------------------------------------
+#undef _ARGPARSE_CXX_98
+#undef _ARGPARSE_CXX_11
+#undef _ARGPARSE_CXX_14
+#undef _ARGPARSE_CXX_17
+#undef _ARGPARSE_CXX_20
+#undef _ARGPARSE_CXX_23
+// -- attributes --------------------------------------------------------------
+// C++11+
+#undef _ARGPARSE_ATTR_NORETURN
+#undef _ARGPARSE_ATTR_CARRIES_DEPENDENCY
+// C++14+
+#undef _ARGPARSE_ATTR_DEPRECATED
+#undef _ARGPARSE_ATTR_DEPRECATED_REASON
+// C++17+
+#undef _ARGPARSE_ATTR_FALLTHROUGH
+#undef _ARGPARSE_ATTR_MAYBE_UNUSED
+#undef _ARGPARSE_ATTR_NODISCARD
+// C++20+
+#undef _ARGPARSE_ATTR_LIKELY
+#undef _ARGPARSE_ATTR_NODISCARD_REASON
+#undef _ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
+#undef _ARGPARSE_ATTR_UNLIKELY
+// C++23+
+#undef _ARGPARSE_ATTR_ASSUME
+// -- specifiers --------------------------------------------------------------
 #undef _ARGPARSE_CONSTEXPR
 #undef _ARGPARSE_ENUM_TYPE
 #undef _ARGPARSE_EXPORT
@@ -12510,12 +12612,5 @@ private:
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
-
-#undef _ARGPARSE_CXX_98
-#undef _ARGPARSE_CXX_11
-#undef _ARGPARSE_CXX_14
-#undef _ARGPARSE_CXX_17
-#undef _ARGPARSE_CXX_20
-#undef _ARGPARSE_CXX_23
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
