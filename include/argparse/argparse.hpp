@@ -4343,6 +4343,7 @@ public:
      *
      *  \return Argument flags values
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::vector<std::string> const& flags() const _ARGPARSE_NOEXCEPT
     {
         return m_all_flags;
@@ -4353,6 +4354,7 @@ public:
      *
      *  \return Argument 'action' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline Action action() const _ARGPARSE_NOEXCEPT
     {
         return m_action;
@@ -4363,6 +4365,7 @@ public:
      *
      *  \return Argument 'nargs' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& nargs() const _ARGPARSE_NOEXCEPT
     {
         return m_nargs_str;
@@ -4373,6 +4376,7 @@ public:
      *
      *  \return Argument 'const' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& const_value() const _ARGPARSE_NOEXCEPT
     {
         return m_const();
@@ -4383,6 +4387,7 @@ public:
      *
      *  \return Argument 'default' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& default_value() const _ARGPARSE_NOEXCEPT
     {
         return m_default();
@@ -4393,6 +4398,7 @@ public:
      *
      *  \return Argument 'implicit' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& implicit_value() const _ARGPARSE_NOEXCEPT
     {
         return m_implicit();
@@ -4403,6 +4409,7 @@ public:
      *
      *  \return Argument 'type' name
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& type_name() const _ARGPARSE_NOEXCEPT
     {
         return m_type_name();
@@ -4413,6 +4420,7 @@ public:
      *
      *  \return Argument 'choices' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::vector<std::string> const& choices() const _ARGPARSE_NOEXCEPT
     {
         return m_choices();
@@ -4423,6 +4431,7 @@ public:
      *
      *  \return Argument 'required' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline bool required() const _ARGPARSE_NOEXCEPT
     {
         return m_required();
@@ -4433,6 +4442,7 @@ public:
      *
      *  \return Argument 'help' message
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& help() const
     {
         return detail::_map_at(m_help, std::string());
@@ -4443,6 +4453,7 @@ public:
      *
      *  \return Argument 'version' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& version() const _ARGPARSE_NOEXCEPT
     {
         return m_version();
@@ -4453,6 +4464,7 @@ public:
      *
      *  \return Argument 'metavar' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string metavar() const
     {
         std::string res = detail::_vector_to_string(m_metavar(), ", ");
@@ -4464,6 +4476,7 @@ public:
      *
      *  \return Argument 'dest' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& dest() const _ARGPARSE_NOEXCEPT
     {
         return m_dest.front();
@@ -5123,6 +5136,7 @@ public:
      *
      *  \return Group 'title' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& title() const
     {
         return detail::_map_at(m_title, std::string());
@@ -5133,6 +5147,7 @@ public:
      *
      *  \return Group 'description' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& description() const
     {
         return detail::_map_at(m_description, std::string());
@@ -5966,6 +5981,7 @@ public:
      *
      *  \return Mutually exclusive group 'required' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline bool required() const _ARGPARSE_NOEXCEPT
     {
         return m_required;
@@ -6431,6 +6447,7 @@ public:
      *
      *  \return true if argument name exists and specified, otherwise false
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline bool exists(std::string const& key) const
     {
         _Storage::const_iterator it = storage().find_arg(key);
@@ -6451,6 +6468,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<detail::is_constructible<std::string, T>::value
                                || detail::is_floating_point<T>::value
                                || detail::is_same<bool, T>::value
@@ -6482,6 +6500,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<detail::is_integral<T>::value
                                && !detail::is_same<bool, T>::value
                                && !detail::is_byte_type<T>::value, T>::type
@@ -6513,6 +6532,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename std::enable_if<
         detail::is_stl_array<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key) const
@@ -6548,6 +6568,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_container<typename detail::decay<T>::type>::value
 #ifdef _ARGPARSE_CXX_11
@@ -6581,6 +6602,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
       detail::is_stl_container_paired<typename detail::decay<T>::type>::value, T
     >::type
@@ -6610,6 +6632,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename std::enable_if<
         detail::is_stl_container_tupled<typename std::decay<T>::type>::value, T
     >::type
@@ -6637,6 +6660,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_map<typename detail::decay<T>::type>::value, T>::type
     get(std::string const& key, char delim = detail::_equal) const
@@ -6675,6 +6699,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_matrix<typename detail::decay<T>::type>::value
      && !detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
@@ -6715,6 +6740,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
     >::type
@@ -6755,6 +6781,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_pair<typename detail::decay<T>::type>::value, T>::type
     get(std::string const& key, char delim = detail::_equal) const
@@ -6794,6 +6821,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_queue<typename detail::decay<T>::type>::value, T>::type
     get(std::string const& key) const
@@ -6820,6 +6848,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename std::enable_if<
         detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key, char delim = detail::_equal) const
@@ -6854,6 +6883,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         !detail::is_constructible<std::string, T>::value
         && !detail::is_floating_point<T>::value
@@ -6895,6 +6925,7 @@ public:
      *
      *  \return Parsed argument value as args string
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string to_args(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
@@ -6945,6 +6976,7 @@ public:
      *
      *  \return Parsed argument value as string
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string
     to_string(std::string const& key,
               std::string const& quotes = std::string()) const
@@ -6983,6 +7015,7 @@ public:
      *
      *  \return Namespace as string
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string to_string() const
     {
         std::string res;
@@ -7017,6 +7050,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         std::is_constructible<std::string, T>::value
         || std::is_floating_point<T>::value
@@ -7046,6 +7080,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         std::is_integral<T>::value
         && !std::is_same<bool, T>::value
@@ -7077,6 +7112,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_array<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -7116,6 +7152,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_container<typename std::decay<T>::type>::value
         && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
@@ -7151,6 +7188,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_container_paired<typename std::decay<T>::type>::value,
     T>::type>
@@ -7183,6 +7221,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_container_tupled<typename std::decay<T>::type>::value,
     T>::type>
@@ -7214,6 +7253,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_map<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -7249,6 +7289,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_matrix<typename std::decay<T>::type>::value
         && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
@@ -7295,6 +7336,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
     T>::type>
@@ -7341,6 +7383,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_pair<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -7385,6 +7428,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_queue<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
@@ -7415,6 +7459,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key, char delim = detail::_equal) const
@@ -7449,6 +7494,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
+    _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         !std::is_constructible<std::string, T>::value
         && !std::is_floating_point<T>::value
@@ -7477,6 +7523,7 @@ public:
      *
      *  \return Unrecognized arguments
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::vector<std::string> const&
     unrecognized_args() const _ARGPARSE_NOEXCEPT
     {
@@ -7488,6 +7535,7 @@ public:
      *
      *  \return Unrecognized arguments as args string
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string unrecognized_args_to_args() const
     {
         return detail::_vector_to_string(unrecognized_args(), detail::_spaces,
@@ -8178,6 +8226,7 @@ public:
          *
          *  \return Subparser 'prog' value
          */
+        _ARGPARSE_ATTR_NODISCARD
         inline std::string const& prog() const _ARGPARSE_NOEXCEPT
         {
             return m_prog;
@@ -8188,6 +8237,7 @@ public:
          *
          *  \return Subparser 'dest' value
          */
+        _ARGPARSE_ATTR_NODISCARD
         inline std::string const& dest() const _ARGPARSE_NOEXCEPT
         {
             return m_dest;
@@ -8198,6 +8248,7 @@ public:
          *
          *  \return Subparser 'required' value
          */
+        _ARGPARSE_ATTR_NODISCARD
         inline bool required() const _ARGPARSE_NOEXCEPT
         {
             return m_required;
@@ -8208,6 +8259,7 @@ public:
          *
          *  \return Subparser 'help' message
          */
+        _ARGPARSE_ATTR_NODISCARD
         inline std::string const& help() const
         {
             return detail::_map_at(m_help, std::string());
@@ -8218,6 +8270,7 @@ public:
          *
          *  \return Subparser 'metavar' value
          */
+        _ARGPARSE_ATTR_NODISCARD
         inline std::string const& metavar() const _ARGPARSE_NOEXCEPT
         {
             return m_metavar();
@@ -8249,6 +8302,7 @@ public:
          *
          *  \return Parser names container
          */
+        _ARGPARSE_ATTR_NODISCARD
         inline std::vector<std::string> parser_names() const
         {
             std::vector<std::string> res;
@@ -9163,6 +9217,7 @@ public:
      *
      *  \return Argument parser 'prog' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& prog() const _ARGPARSE_NOEXCEPT
     {
         return m_prog;
@@ -9173,6 +9228,7 @@ public:
      *
      *  \return Argument parser 'usage' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& usage() const
     {
         return detail::_map_at(m_usage, std::string());
@@ -9185,6 +9241,7 @@ public:
      *
      *  \return Title for argument parser 'usage'
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& usage_title() const
     {
         return detail::_map_at(m_usage_title, std::string());
@@ -9195,6 +9252,7 @@ public:
      *
      *  \return Argument parser 'description' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& description() const
     {
         return detail::_map_at(m_description, std::string());
@@ -9208,6 +9266,7 @@ public:
      *
      *  \return Title for positional arguments
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& positionals_title() const
     {
         return detail::_map_at(m_positionals_title, std::string());
@@ -9220,6 +9279,7 @@ public:
      *
      *  \return Title for optional arguments
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& optionals_title() const
     {
         return detail::_map_at(m_optionals_title, std::string());
@@ -9230,6 +9290,7 @@ public:
      *
      *  \return Argument parser 'epilog' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& epilog() const
     {
         return detail::_map_at(m_epilog, std::string());
@@ -9240,6 +9301,7 @@ public:
      *
      *  \return Argument parser 'help' message
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& help() const
     {
         return detail::_map_at(m_help, std::string());
@@ -9250,6 +9312,7 @@ public:
      *
      *  \return Argument parser 'aliases' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::vector<std::string> const& aliases() const _ARGPARSE_NOEXCEPT
     {
         return m_aliases;
@@ -9260,6 +9323,7 @@ public:
      *
      *  \return Argument parser 'prefix_chars' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& prefix_chars() const _ARGPARSE_NOEXCEPT
     {
         return m_prefix_chars;
@@ -9270,6 +9334,7 @@ public:
      *
      *  \return Argument parser 'fromfile_prefix_chars' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& fromfile_prefix_chars() const _ARGPARSE_NOEXCEPT
     {
         return m_fromfile_prefix_chars;
@@ -9280,6 +9345,7 @@ public:
      *
      *  \return Argument parser 'argument_default' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& argument_default() const _ARGPARSE_NOEXCEPT
     {
         return m_argument_default();
@@ -9290,6 +9356,7 @@ public:
      *
      *  \return Argument parser 'conflict_handler' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string const& conflict_handler() const _ARGPARSE_NOEXCEPT
     {
         return m_data->m_conflict_handler;
@@ -9300,6 +9367,7 @@ public:
      *
      *  \return Argument parser 'add_help' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline bool add_help() const _ARGPARSE_NOEXCEPT
     {
         return m_data->m_add_help;
@@ -9310,6 +9378,7 @@ public:
      *
      *  \return Argument parser 'allow_abbrev' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline bool allow_abbrev() const _ARGPARSE_NOEXCEPT
     {
         return m_allow_abbrev;
@@ -9320,6 +9389,7 @@ public:
      *
      *  \return Argument parser 'exit_on_error' value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline bool exit_on_error() const _ARGPARSE_NOEXCEPT
     {
         return m_exit_on_error;
@@ -9330,6 +9400,7 @@ public:
      *
      *  \return Output width value
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::size_t output_width() const
     {
         return m_output_width.has_value() ? m_output_width()
@@ -9526,6 +9597,7 @@ public:
      *
      *  \return Current subparser pointer or nullptr
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline Subparser* subparsers() const _ARGPARSE_NOEXCEPT
     {
         return m_subparsers.get();
@@ -9587,6 +9659,7 @@ public:
      *
      *  \return Default value for a specific argument
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string get_default(std::string const& dest) const
     {
         pArguments const positional = m_data->get_positional(true, true);
@@ -9677,6 +9750,7 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
 #endif  // C++11+
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_args(Namespace const& space = Namespace()) const
     {
         return parse_args(m_parsed_arguments, space);
@@ -9694,10 +9768,12 @@ public:
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_args(T const& args,
                          Namespace const& space = Namespace()) const
 #else
     template <class T>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_args(
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
@@ -9719,6 +9795,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace parse_args(std::initializer_list<std::string> const& args,
                                 Namespace const& space = Namespace()) const
     {
@@ -9734,6 +9811,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace parse_args(std::vector<std::string> const& args,
                                 Namespace const& space = Namespace()) const
     {
@@ -9750,6 +9828,7 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
 #endif  // C++11+
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_known_args(Namespace const& space = Namespace()) const
     {
         return parse_known_args(m_parsed_arguments, space);
@@ -9767,10 +9846,12 @@ public:
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_known_args(T const& args,
                                Namespace const& space = Namespace()) const
 #else
     template <class T>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_known_args(
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
@@ -9792,6 +9873,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace
     parse_known_args(std::initializer_list<std::string> const& args,
                      Namespace const& space = Namespace()) const
@@ -9808,6 +9890,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace
     parse_known_args(std::vector<std::string> const& args,
                      Namespace const& space = Namespace()) const
@@ -9825,6 +9908,7 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
 #endif  // C++11+
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(m_parsed_arguments, space);
@@ -9842,10 +9926,12 @@ public:
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_intermixed_args(T const& args,
                                     Namespace const& space = Namespace()) const
 #else
     template <class T>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_intermixed_args(
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
@@ -9867,6 +9953,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace
     parse_intermixed_args(std::initializer_list<std::string> const& args,
                           Namespace const& space = Namespace()) const
@@ -9883,6 +9970,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace
     parse_intermixed_args(std::vector<std::string> const& args,
                           Namespace const& space = Namespace()) const
@@ -9900,6 +9988,7 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
 #endif  // C++11+
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(Namespace const& space = Namespace()) const
     {
@@ -9918,11 +10007,13 @@ public:
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(T const& args,
                                 Namespace const& space = Namespace()) const
 #else
     template <class T>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_known_intermixed_args(
             T const& args, Namespace const& space = Namespace(),
             typename detail::enable_if<
@@ -9944,6 +10035,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace
     parse_known_intermixed_args(std::initializer_list<std::string> const& args,
                                 Namespace const& space = Namespace()) const
@@ -9961,6 +10053,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace
     parse_known_intermixed_args(std::vector<std::string> const& args,
                                 Namespace const& space = Namespace()) const
@@ -9980,6 +10073,7 @@ public:
      *  \return Object with parsed arguments or std::nullopt
      */
     template <typename = void>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_args(Namespace const& space = Namespace()) const
     {
@@ -10000,6 +10094,7 @@ public:
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_args(T const& args,
                    Namespace const& space = Namespace()) const
@@ -10018,6 +10113,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
     try_parse_args(std::initializer_list<std::string> const& args,
                    Namespace const& space = Namespace()) const
@@ -10036,6 +10132,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
     try_parse_args(std::vector<std::string> const& args,
                    Namespace const& space = Namespace()) const
@@ -10054,6 +10151,7 @@ public:
      *  \return Object with parsed arguments or std::nullopt
      */
     template <typename = void>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_args(Namespace const& space = Namespace()) const
     {
@@ -10074,6 +10172,7 @@ public:
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_args(T const& args,
                          Namespace const& space = Namespace()) const
@@ -10092,6 +10191,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
     try_parse_known_args(std::initializer_list<std::string> const& args,
                          Namespace const& space = Namespace()) const
@@ -10110,6 +10210,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
     try_parse_known_args(std::vector<std::string> const& args,
                          Namespace const& space = Namespace()) const
@@ -10128,6 +10229,7 @@ public:
      *  \return Object with parsed arguments or std::nullopt
      */
     template <typename = void>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_intermixed_args(Namespace const& space = Namespace()) const
     {
@@ -10148,6 +10250,7 @@ public:
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_intermixed_args(T const& args,
                               Namespace const& space = Namespace()) const
@@ -10166,6 +10269,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
     try_parse_intermixed_args(std::initializer_list<std::string> const& args,
                               Namespace const& space = Namespace()) const
@@ -10185,6 +10289,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
     try_parse_intermixed_args(std::vector<std::string> const& args,
                               Namespace const& space = Namespace()) const
@@ -10203,6 +10308,7 @@ public:
      *  \return Object with parsed arguments or std::nullopt
      */
     template <typename = void>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_intermixed_args(Namespace const& space = Namespace()) const
     {
@@ -10223,6 +10329,7 @@ public:
     template <class T,
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_intermixed_args(T const& args,
                                     Namespace const& space = Namespace()) const
@@ -10242,6 +10349,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
     try_parse_known_intermixed_args(
                 std::initializer_list<std::string> const& args,
@@ -10262,6 +10370,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
     try_parse_known_intermixed_args(std::vector<std::string> const& args,
                                     Namespace const& space = Namespace()) const
@@ -10280,6 +10389,7 @@ public:
      *
      *  \return True if no warnings or errors were found, false otherwise
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline bool self_test(std::ostream& os = std::cout) const
     {
         return self_test(std::string(), os);
@@ -10296,6 +10406,7 @@ public:
      *
      *  \return True if no warnings or errors were found, false otherwise
      */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
     inline bool self_test(std::string const& lang,
                           std::ostream& os = std::cout) const
     {
@@ -10512,6 +10623,7 @@ public:
      *
      *  \return Bash completion
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string
     format_bash_completion() const
     {
@@ -10528,6 +10640,7 @@ public:
      *
      *  \return Program usage for selected language
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string
     format_usage(std::string const& lang = std::string()) const
     {
@@ -10544,6 +10657,7 @@ public:
      *
      *  \return Help message for selected language
      */
+    _ARGPARSE_ATTR_NODISCARD
     inline std::string
     format_help(std::string const& lang = std::string()) const
     {
