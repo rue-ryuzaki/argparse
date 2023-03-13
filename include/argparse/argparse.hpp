@@ -3514,18 +3514,6 @@ public:
 #endif  // C++11+
 
     /*!
-     *  \brief Compare current argument with another one
-     *
-     *  \param rhs Argument to compare
-     *
-     *  \return true if current argument lesser, otherwise false
-     */
-    inline bool operator <(Argument const& rhs) const
-    {
-        return m_flags < rhs.m_flags;
-    }
-
-    /*!
      *  \brief Set argument 'action' value (default: "store")
      *
      *  \param value Action value
