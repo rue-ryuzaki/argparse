@@ -55,15 +55,22 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-set(DEFERED_CMAKE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@")
+if (DEFERED_CMAKE_INSTALL_PREFIX)
+    CONFIGURE_FILE(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc" @ONLY
+    )
+else()
+    set(DEFERED_CMAKE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@")
 
-CONFIGURE_FILE(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc.in" @ONLY
-)
-install(
-    CODE "configure_file(\"${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc.in\" \"${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc\" @ONLY)"
-)
+    CONFIGURE_FILE(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc.in" @ONLY
+    )
+    install(
+        CODE "configure_file(\"${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc.in\" \"${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc\" @ONLY)"
+    )
+endif()
 
 set(ARGPARSE_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc)
 
