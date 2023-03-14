@@ -41,6 +41,11 @@ if (${CMAKE_VERSION} VERSION_LESS "3.19")
 else()
     add_library(argparse INTERFACE ${ARGPARSE_HEADER})
 endif()
+add_library(argparse::argparse ALIAS argparse)
+
+if (NOT PROJECT_IS_TOP_LEVEL)
+    return()
+endif()
 
 include(GNUInstallDirs)
 
@@ -59,10 +64,6 @@ CONFIGURE_FILE(
 install(
     CODE "configure_file(\"${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc.in\" \"${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc\" @ONLY)"
 )
-
-if (NOT PROJECT_IS_TOP_LEVEL)
-    return()
-endif()
 
 set(ARGPARSE_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc)
 
