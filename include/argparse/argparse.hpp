@@ -245,7 +245,7 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #define _ARGPARSE_ATTR_DEPRECATED_REASON(X) [[deprecated(X)]]
 #else
 #define _ARGPARSE_ATTR_DEPRECATED
-#define _ARGPARSE_ATTR_DEPRECATED_REASON
+#define _ARGPARSE_ATTR_DEPRECATED_REASON(X)
 #endif  // C++14+
 
 #ifdef _ARGPARSE_CXX_17
@@ -9002,6 +9002,10 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
+    _ARGPARSE_ATTR_DEPRECATED_REASON
+    ("create custom HelpFormatter class and use "
+     "formatter_class(HelpFormatter) function. "
+     "will be removed in the next minor release (v1.8.0)")
     inline ArgumentParser&
     formatter_class(HelpFormatter const& value, Args... args)
     {
@@ -9032,6 +9036,10 @@ public:
      *
      *  \return Current argument parser reference
      */
+    _ARGPARSE_ATTR_DEPRECATED_REASON
+    ("create custom HelpFormatter class and use "
+     "formatter_class(HelpFormatter) function. "
+     "will be removed in the next minor release (v1.8.0)")
     inline ArgumentParser& add_formatter_class(HelpFormatter const& value)
     {
         apply_formatter_class(value);
@@ -9048,6 +9056,10 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
+    _ARGPARSE_ATTR_DEPRECATED_REASON
+    ("create custom HelpFormatter class and use "
+     "formatter_class(HelpFormatter) function. "
+     "will be removed in the next minor release (v1.8.0)")
     inline ArgumentParser&
     add_formatter_class(HelpFormatter const& value, Args... args)
     {
