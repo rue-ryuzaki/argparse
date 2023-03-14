@@ -1309,6 +1309,13 @@ public:
         return *this;
     }
 
+    template <class U>
+    inline shared_ptr& operator =(shared_ptr<U> const& ptr) throw()
+    {
+        *this = shared_ptr(ptr);
+        return *this;
+    }
+
     ~shared_ptr() throw()
     {
         release();
@@ -1418,15 +1425,16 @@ bool operator >(shared_ptr<T> const& l, shared_ptr<U> const& r) throw()
 
 template <class T>
 shared_ptr<T>
-make_shared(T const& t)
+make_shared()
 {
-    return shared_ptr<T>(new T(t));
+    return shared_ptr<T>(new T());
 }
 
 template <class T, class U>
-shared_ptr<T> _pointer_cast(shared_ptr<U> const& r) throw()
+shared_ptr<T>
+make_shared(U const& u)
 {
-    return shared_ptr<T>(r);
+    return shared_ptr<T>(shared_ptr<U>(new U(u)));
 }
 #endif  // C++11+
 
@@ -5442,12 +5450,7 @@ protected:
         }
         data->m_arguments.push_back(arg);
         if (is_optional) {
-#ifdef _ARGPARSE_CXX_11
             data->m_arguments.back()->m_post_trigger = data;
-#else
-            data->m_arguments.back()->m_post_trigger
-                = detail::_pointer_cast<_ConflictResolver, _ArgumentData>(data);
-#endif  // C++11+
         }
     }
 
@@ -8655,7 +8658,7 @@ public:
 private:
     static pParser make_parser(std::string const& name)
     {
-        pParser res = detail::make_shared<ArgumentParser>(ArgumentParser());
+        pParser res = detail::make_shared<ArgumentParser>();
         res->m_prog.clear();
         res->m_name = name;
         return res;
