@@ -488,18 +488,27 @@ enum _REMAINDER _ARGPARSE_ENUM_TYPE(uint8_t) {} REMAINDER;
 class Argument;
 
 /*!
- *  \brief _HelpFormatter class
+ *  \brief Formatter for generating usage messages and argument help strings
  */
-struct _HelpFormatter
+_ARGPARSE_EXPORT class HelpFormatter
 {
-    std::string (*_fill_text)(std::string const& text, std::size_t width,
-                              std::size_t indent);
-    std::string (*_get_default_metavar_for_optional)(Argument const* action);
-    std::string (*_get_default_metavar_for_positional)(Argument const* action);
-    std::string (*_get_help_string)(Argument const* action,
-                                    std::string const& lang);
-    std::vector<std::string> (*_split_lines)(std::string const& text,
-                                             std::size_t width);
+public:
+    virtual ~HelpFormatter() _ARGPARSE_NOEXCEPT { }
+
+    virtual inline std::string _fill_text(
+                std::string const& /*text*/,
+                std::size_t /*width*/,
+                std::size_t /*indent*/) const;
+    virtual inline std::string _get_default_metavar_for_optional(
+                Argument const* /*action*/) const;
+    virtual inline std::string _get_default_metavar_for_positional(
+                Argument const* /*action*/) const;
+    virtual inline std::string _get_help_string(
+                Argument const* /*action*/,
+                std::string const& /*lang*/) const;
+    virtual inline std::vector<std::string> _split_lines(
+                std::string const& /*text*/,
+                std::size_t /*width*/) const;
 };
 
 namespace detail {
@@ -551,6 +560,7 @@ using std::is_constructible;
 using std::is_floating_point;
 using std::is_integral;
 using std::is_same;
+using std::is_base_of;
 
 template <class T>
 struct is_stl_array                                          :std::false_type{};
@@ -792,6 +802,26 @@ struct integral_constant
 
 typedef integral_constant<bool, true> true_type;
 typedef integral_constant<bool, false> false_type;
+
+template <class B, class D>
+struct Host
+{
+    operator B*() const;
+    operator D*();
+};
+
+template <class B, class D>
+struct is_base_of
+{
+    typedef char yes;
+    typedef int no;
+
+    template <class T>
+    static yes check(D*, T);
+    static no check(B*, int);
+
+    static const bool value = sizeof(check(Host<B, D>(), int())) == sizeof(yes);
+};
 
 template <class T, class U>
 struct is_same                                                    :false_type{};
@@ -2578,7 +2608,7 @@ _format_output(std::string const& head, std::string const& body,
 
 inline std::string
 _help_formatter(std::string const& head,
-                _HelpFormatter const& formatter,
+                HelpFormatter const& formatter,
                 std::string const& help,
                 std::size_t width,
                 std::size_t indent)
@@ -2608,7 +2638,7 @@ _help_formatter(std::string const& head,
 }
 
 inline void
-_print_raw_text_formatter(_HelpFormatter const& formatter,
+_print_raw_text_formatter(HelpFormatter const& formatter,
                           std::string const& text,
                           std::size_t width,
                           std::ostream& os,
@@ -4541,7 +4571,7 @@ private:
         }
     }
 
-    inline std::string usage(_HelpFormatter const& formatter) const
+    inline std::string usage(HelpFormatter const& formatter) const
     {
         std::string res;
         if (m_type == Optional) {
@@ -4557,7 +4587,7 @@ private:
         return res;
     }
 
-    inline std::string flags_to_string(_HelpFormatter const& formatter) const
+    inline std::string flags_to_string(HelpFormatter const& formatter) const
     {
         std::string res;
         if (m_type == Optional) {
@@ -4636,7 +4666,7 @@ private:
         return m_type_name.has_value() ? type_name() : "None";
     }
 
-    inline std::string print(_HelpFormatter const& formatter,
+    inline std::string print(HelpFormatter const& formatter,
                              std::size_t limit,
                              std::size_t width,
                              std::string const& lang) const
@@ -4686,7 +4716,7 @@ private:
     }
 
     inline void process_nargs_suffix(std::string& res,
-                                     _HelpFormatter const& formatter) const
+                                     HelpFormatter const& formatter) const
     {
         if (!(action() & (detail::_store_action
                           | argparse::append_const
@@ -4732,7 +4762,7 @@ private:
     }
 
     inline std::vector<std::string>
-    get_argument_name(_HelpFormatter const& formatter) const
+    get_argument_name(HelpFormatter const& formatter) const
     {
         if (m_metavar.has_value()) {
             return m_metavar();
@@ -4830,102 +4860,67 @@ private:
     detail::Value<bool> m_required;
 };
 
-/*!
- *  \brief Formatter for generating usage messages and argument help strings
- */
-_ARGPARSE_EXPORT class HelpFormatter
+// -- HelpFormatter implementation --------------------------------------------
+inline std::string HelpFormatter::_fill_text(
+            std::string const& text,
+            std::size_t width,
+            std::size_t indent) const
 {
-public:
-    virtual ~HelpFormatter() _ARGPARSE_NOEXCEPT { }
-
-    virtual std::string
-    (*_fill_text() const) (std::string const&, std::size_t, std::size_t)
-    {
-        return _fill_text_s;
-    }
-
-    virtual std::string
-    (*_get_default_metavar_for_optional() const) (Argument const*)
-    {
-        return _get_default_metavar_for_optional_s;
-    }
-
-    virtual std::string
-    (*_get_default_metavar_for_positional() const) (Argument const*)
-    {
-        return _get_default_metavar_for_positional_s;
-    }
-
-    virtual std::string
-    (*_get_help_string() const) (Argument const*, std::string const&)
-    {
-        return _get_help_string_s;
-    }
-
-    virtual std::vector<std::string>
-    (*_split_lines() const) (std::string const&, std::size_t)
-    {
-        return _split_lines_s;
-    }
-
-protected:
-    static std::string
-    _fill_text_s(std::string const& text, std::size_t width, std::size_t indent)
-    {
-        std::vector<std::string> res;
-        std::string value;
-        std::vector<std::string> lines = _split_lines_s(text, width - indent);
-        for (std::size_t i = 0; i < lines.size(); ++i) {
-            std::size_t value_size = detail::_utf8_length(value).second;
-            if (value_size < indent) {
-                value.resize(value.size() + indent - value_size,
-                             detail::_space);
-            }
-            value += lines[i];
-            detail::_store_value_to(value, res, true);
+    std::vector<std::string> res;
+    std::string value;
+    std::vector<std::string> lines = _split_lines(text, width - indent);
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        std::size_t value_size = detail::_utf8_length(value).second;
+        if (value_size < indent) {
+            value.resize(value.size() + indent - value_size,
+                         detail::_space);
         }
-        detail::_store_value_to(value, res);
-        return detail::_vector_to_string(res, "\n");
+        value += lines.at(i);
+        detail::_store_value_to(value, res, true);
     }
+    detail::_store_value_to(value, res);
+    return detail::_vector_to_string(res, "\n");
+}
 
-    static std::string
-    _get_default_metavar_for_optional_s(Argument const* action)
-    {
-        return detail::_to_upper(action->get_dest());
-    }
+inline std::string HelpFormatter::_get_default_metavar_for_optional(
+            Argument const* action) const
+{
+    return detail::_to_upper(action->get_dest());
+}
 
-    static std::string
-    _get_default_metavar_for_positional_s(Argument const* action)
-    {
-        return action->get_dest();
-    }
+inline std::string HelpFormatter::_get_default_metavar_for_positional(
+            Argument const* action) const
+{
+    return action->get_dest();
+}
 
-    static std::string
-    _get_help_string_s(Argument const* action, std::string const& lang)
-    {
-        return detail::_tr(action->m_help, lang);
-    }
+inline std::string HelpFormatter::_get_help_string(
+            Argument const* action,
+            std::string const& lang) const
+{
+    return detail::_tr(action->m_help, lang);
+}
 
-    static std::vector<std::string>
-    _split_lines_s(std::string const& text, std::size_t width)
-    {
-        std::string value;
-        std::vector<std::string> res;
-        std::vector<std::string> split_str = detail::_split_whitespace(text);
-        for (std::size_t i = 0; i < split_str.size(); ++i) {
-            if (detail::_utf8_length(value).second + 1
-                    + detail::_utf8_length(split_str.at(i)).second > width) {
-                detail::_store_value_to(value, res);
-            }
-            if (!value.empty()) {
-                value += detail::_spaces;
-            }
-            value += split_str.at(i);
+inline std::vector<std::string> HelpFormatter::_split_lines(
+            std::string const& text,
+            std::size_t width) const
+{
+    std::string value;
+    std::vector<std::string> res;
+    std::vector<std::string> split_str = detail::_split_whitespace(text);
+    for (std::size_t i = 0; i < split_str.size(); ++i) {
+        if (detail::_utf8_length(value).second + 1
+                + detail::_utf8_length(split_str.at(i)).second > width) {
+            detail::_store_value_to(value, res);
         }
-        detail::_store_value_to(value, res);
-        return res;
+        if (!value.empty()) {
+            value += detail::_spaces;
+        }
+        value += split_str.at(i);
     }
-};
+    detail::_store_value_to(value, res);
+    return res;
+}
 
 /*!
  *  \brief Help message formatter which retains any formatting in descriptions
@@ -4934,22 +4929,16 @@ _ARGPARSE_EXPORT
 class _RawDescriptionHelpFormatter : virtual public HelpFormatter
 {
 public:
-    virtual ~_RawDescriptionHelpFormatter() _ARGPARSE_NOEXCEPT { }
+    ~_RawDescriptionHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
 
-    std::string
-    (*_fill_text() const) (std::string const&, std::size_t,
-                           std::size_t) _ARGPARSE_OVERRIDE
-    {
-        return _fill_text_s;
-    }
-
-protected:
-    static std::string
-    _fill_text_s(std::string const& text, std::size_t width, std::size_t indent)
+    inline std::string _fill_text(
+                std::string const& text,
+                std::size_t width,
+                std::size_t indent) const _ARGPARSE_OVERRIDE
     {
         std::vector<std::string> res;
         std::string value;
-        std::vector<std::string> lines = _split_lines_s(text, width - indent);
+        std::vector<std::string> lines = _split_lines_raw(text, width - indent);
         for (std::size_t i = 0; i < lines.size(); ++i) {
             std::size_t value_size = detail::_utf8_length(value).second;
             if (value_size < indent) {
@@ -4963,8 +4952,9 @@ protected:
         return detail::_vector_to_string(res, "\n");
     }
 
-    static std::vector<std::string>
-    _split_lines_s(std::string const& text, std::size_t width)
+protected:
+    inline std::vector<std::string>
+    _split_lines_raw(std::string const& text, std::size_t width) const
     {
         std::size_t tab_size = ARGPARSE_TAB_SIZE;
         detail::_limit_to_min(tab_size, 2);
@@ -5014,12 +5004,13 @@ _ARGPARSE_EXPORT
 class _RawTextHelpFormatter : virtual public _RawDescriptionHelpFormatter
 {
 public:
-    virtual ~_RawTextHelpFormatter() _ARGPARSE_NOEXCEPT { }
+    ~_RawTextHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
 
-    std::vector<std::string>
-    (*_split_lines() const) (std::string const&, std::size_t) _ARGPARSE_OVERRIDE
+    inline std::vector<std::string> _split_lines(
+                std::string const& text,
+                std::size_t width) const _ARGPARSE_OVERRIDE
     {
-        return _RawDescriptionHelpFormatter::_split_lines_s;
+        return _RawDescriptionHelpFormatter::_split_lines(text, width);
     }
 } _ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
 
@@ -5030,18 +5021,11 @@ _ARGPARSE_EXPORT
 class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
 {
 public:
-    virtual ~_ArgumentDefaultsHelpFormatter() _ARGPARSE_NOEXCEPT { }
+    ~_ArgumentDefaultsHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
 
-    std::string
-    (*_get_help_string() const) (Argument const*,
-                                 std::string const&) _ARGPARSE_OVERRIDE
-    {
-        return _get_help_string_s;
-    }
-
-protected:
-    static std::string
-    _get_help_string_s(Argument const* action, std::string const& lang)
+    inline std::string _get_help_string(
+                Argument const* action,
+                std::string const& lang) const _ARGPARSE_OVERRIDE
     {
         std::string res = detail::_tr(action->m_help, lang);
         if (!res.empty()
@@ -5068,39 +5052,24 @@ _ARGPARSE_EXPORT
 class _MetavarTypeHelpFormatter : virtual public HelpFormatter
 {
 public:
-    virtual ~_MetavarTypeHelpFormatter() _ARGPARSE_NOEXCEPT { }
+    ~_MetavarTypeHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
 
-    std::string
-    (*_get_default_metavar_for_optional() const)
-    (Argument const*) _ARGPARSE_OVERRIDE
-    {
-        return _get_default_metavar_for_optional_s;
-    }
-
-    std::string
-    (*_get_default_metavar_for_positional() const)
-    (Argument const*) _ARGPARSE_OVERRIDE
-    {
-        return _get_default_metavar_for_positional_s;
-    }
-
-protected:
-    static std::string
-    _get_default_metavar_for_optional_s(Argument const* action)
+    inline std::string _get_default_metavar_for_optional(
+                Argument const* action) const _ARGPARSE_OVERRIDE
     {
         if (!action->type_name().empty()) {
             return action->type_name();
         }
-        return HelpFormatter::_get_default_metavar_for_optional_s(action);
+        return HelpFormatter::_get_default_metavar_for_optional(action);
     }
 
-    static std::string
-    _get_default_metavar_for_positional_s(Argument const* action)
+    inline std::string _get_default_metavar_for_positional(
+                Argument const* action) const _ARGPARSE_OVERRIDE
     {
         if (!action->type_name().empty()) {
             return action->type_name();
         }
-        return HelpFormatter::_get_default_metavar_for_positional_s(action);
+        return HelpFormatter::_get_default_metavar_for_positional(action);
     }
 } _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
 
@@ -5150,10 +5119,10 @@ public:
     }
 
 protected:
-    virtual void limit_help_flags(_HelpFormatter const& formatter,
+    virtual void limit_help_flags(HelpFormatter const& formatter,
                                   std::size_t& limit) const                 = 0;
     virtual void print_help(std::ostream& os,
-                            _HelpFormatter const& formatter,
+                            HelpFormatter const& formatter,
                             std::string const& prog,
                             std::size_t limit,
                             std::size_t width,
@@ -5852,7 +5821,7 @@ public:
 
 private:
     inline void
-    limit_help_flags(_HelpFormatter const& formatter,
+    limit_help_flags(HelpFormatter const& formatter,
                      std::size_t& limit) const _ARGPARSE_OVERRIDE
     {
         for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
@@ -5863,7 +5832,7 @@ private:
     }
 
     inline void print_help(std::ostream& os,
-                           _HelpFormatter const& formatter,
+                           HelpFormatter const& formatter,
                            std::string const& prog,
                            std::size_t limit,
                            std::size_t width,
@@ -5996,7 +5965,7 @@ public:
     }
 
 private:
-    inline std::string usage(_HelpFormatter const& formatter) const
+    inline std::string usage(HelpFormatter const& formatter) const
     {
         std::string res;
         for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
@@ -8326,7 +8295,7 @@ public:
         }
 
         inline void
-        limit_help_flags(_HelpFormatter const&,
+        limit_help_flags(HelpFormatter const&,
                          std::size_t& limit) const _ARGPARSE_OVERRIDE
         {
             detail::_limit_to_min(limit, flags_to_string().size());
@@ -8337,7 +8306,7 @@ public:
         }
 
         inline void print_help(std::ostream& os,
-                               _HelpFormatter const& formatter,
+                               HelpFormatter const& formatter,
                                std::string const& prog,
                                std::size_t limit,
                                std::size_t width,
@@ -8374,7 +8343,7 @@ public:
             return "{" + res + "}";
         }
 
-        inline std::string print(_HelpFormatter const& formatter,
+        inline std::string print(HelpFormatter const& formatter,
                                  std::size_t limit, std::size_t width,
                                  std::string const& lang) const
         {
@@ -8434,48 +8403,6 @@ private:
     typedef detail::shared_ptr<Subparser> pSubparser;
     typedef std::pair<pSubparser, std::size_t> SubparserInfo;
 
-    inline void
-    apply_formatter_class(HelpFormatter const& value)
-    {
-        HelpFormatter sample;
-        if (!m_formatter_class._fill_text
-                || sample._fill_text() != value._fill_text()) {
-            m_formatter_class._fill_text = value._fill_text();
-        }
-        if (!m_formatter_class._get_default_metavar_for_optional
-                || sample._get_default_metavar_for_optional()
-                    != value._get_default_metavar_for_optional()) {
-            m_formatter_class._get_default_metavar_for_optional
-                    = value._get_default_metavar_for_optional();
-        }
-        if (!m_formatter_class._get_default_metavar_for_positional
-                || sample._get_default_metavar_for_positional()
-                    != value._get_default_metavar_for_positional()) {
-            m_formatter_class._get_default_metavar_for_positional
-                    = value._get_default_metavar_for_positional();
-        }
-        if (!m_formatter_class._get_help_string
-                || sample._get_help_string() != value._get_help_string()) {
-            m_formatter_class._get_help_string = value._get_help_string();
-        }
-        if (!m_formatter_class._split_lines
-                || sample._split_lines() != value._split_lines()) {
-            m_formatter_class._split_lines = value._split_lines();
-        }
-    }
-
-    inline void
-    set_formatter_class(HelpFormatter const& value)
-    {
-        m_formatter_class._fill_text = value._fill_text();
-        m_formatter_class._get_default_metavar_for_optional
-                = value._get_default_metavar_for_optional();
-        m_formatter_class._get_default_metavar_for_positional
-                = value._get_default_metavar_for_positional();
-        m_formatter_class._get_help_string = value._get_help_string();
-        m_formatter_class._split_lines = value._split_lines();
-    }
-
     inline void read_args(int argc, char const* argv[])
     {
         if (argc > 0 && argv && argv[0]) {
@@ -8490,8 +8417,11 @@ private:
         }
     }
 
-    inline void init_translations()
+    inline void initialize_parser()
     {
+        formatter_class(HelpFormatter());
+        m_data->update_help(true, m_prefix_chars);
+        // init translations
         m_usage[std::string()] = std::string();
         m_usage_title[std::string()] = "usage";
         m_description[std::string()] = std::string();
@@ -8542,10 +8472,8 @@ public:
           m_allow_abbrev(true),
           m_exit_on_error(true)
     {
-        init_translations();
-        set_formatter_class(HelpFormatter());
+        initialize_parser();
         this->prog(prog);
-        m_data->update_help(true, m_prefix_chars);
     }
 
     /*!
@@ -8592,9 +8520,7 @@ public:
           m_allow_abbrev(true),
           m_exit_on_error(true)
     {
-        init_translations();
-        set_formatter_class(HelpFormatter());
-        m_data->update_help(true, m_prefix_chars);
+        initialize_parser();
         read_args(argc, const_cast<char const**>(argv));
         this->prog(prog);
     }
@@ -8643,9 +8569,7 @@ public:
           m_allow_abbrev(true),
           m_exit_on_error(true)
     {
-        init_translations();
-        set_formatter_class(HelpFormatter());
-        m_data->update_help(true, m_prefix_chars);
+        initialize_parser();
         read_args(argc, argv);
         this->prog(prog);
     }
@@ -8986,9 +8910,20 @@ public:
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& formatter_class(HelpFormatter const& value)
+#ifdef _ARGPARSE_CXX_11
+    template <class T, typename detail::enable_if<
+                  detail::is_base_of<HelpFormatter, T>::value>::type* = nullptr>
+    inline ArgumentParser& formatter_class(T const& value)
+#else
+    template <class T>
+    inline ArgumentParser& formatter_class(
+                T const& value, typename detail::enable_if<
+                    detail::is_base_of<HelpFormatter, T>::value
+                    || detail::is_same<HelpFormatter, T>::value, bool
+                >::type = true)
+#endif  // C++11+
     {
-        set_formatter_class(value);
+        m_formatter_class = detail::make_shared<T>(value);
         return *this;
     }
 
@@ -9001,13 +8936,14 @@ public:
      *
      *  \return Current argument parser reference
      */
-    template <class... Args>
-    _ARGPARSE_ATTR_DEPRECATED_REASON
-    ("create custom HelpFormatter class and use "
-     "formatter_class(HelpFormatter) function. "
-     "will be removed in the next minor release (v1.8.0)")
+    template <class T, class... Args, typename detail::enable_if<
+                  detail::is_base_of<HelpFormatter, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_DEPRECATED_REASON(
+                "create custom HelpFormatter class and use "
+                "formatter_class(HelpFormatter) function. "
+                "will be removed in the next minor release (v1.8.0)")
     inline ArgumentParser&
-    formatter_class(HelpFormatter const& value, Args... args)
+    formatter_class(T const& value, Args... args)
     {
         formatter_class(value);
         return add_formatter_class(args...);
@@ -9021,8 +8957,14 @@ public:
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& formatter_class(HelpFormatter const& value1,
-                                           HelpFormatter const& value2)
+    template <class T, class U>
+    inline ArgumentParser& formatter_class(
+                T const& value1, U const& value2, typename detail::enable_if<
+                    (detail::is_base_of<HelpFormatter, T>::value
+                    || detail::is_same<HelpFormatter, T>::value)
+                    && (detail::is_base_of<HelpFormatter, U>::value
+                    || detail::is_same<HelpFormatter, U>::value), bool
+                >::type = true)
     {
         formatter_class(value1);
         return add_formatter_class(value2);
@@ -9036,13 +8978,24 @@ public:
      *
      *  \return Current argument parser reference
      */
-    _ARGPARSE_ATTR_DEPRECATED_REASON
-    ("create custom HelpFormatter class and use "
-     "formatter_class(HelpFormatter) function. "
-     "will be removed in the next minor release (v1.8.0)")
-    inline ArgumentParser& add_formatter_class(HelpFormatter const& value)
+#ifdef _ARGPARSE_CXX_11
+    template <class T, typename detail::enable_if<
+                  detail::is_base_of<HelpFormatter, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_DEPRECATED_REASON(
+                "create custom HelpFormatter class and use "
+                "formatter_class(HelpFormatter) function. "
+                "will be removed in the next minor release (v1.8.0)")
+    inline ArgumentParser& add_formatter_class(T const& value)
+#else
+    template <class T>
+    inline ArgumentParser& add_formatter_class(
+                T const& value, typename detail::enable_if<
+                    detail::is_base_of<HelpFormatter, T>::value
+                    || detail::is_same<HelpFormatter, T>::value, bool
+                >::type = true)
+#endif  // C++11+
     {
-        apply_formatter_class(value);
+        formatter_class(value);
         return *this;
     }
 
@@ -9055,13 +9008,14 @@ public:
      *
      *  \return Current argument parser reference
      */
-    template <class... Args>
-    _ARGPARSE_ATTR_DEPRECATED_REASON
-    ("create custom HelpFormatter class and use "
-     "formatter_class(HelpFormatter) function. "
-     "will be removed in the next minor release (v1.8.0)")
+    template <class T, class... Args, typename detail::enable_if<
+                  detail::is_base_of<HelpFormatter, T>::value>::type* = nullptr>
+    _ARGPARSE_ATTR_DEPRECATED_REASON(
+                "create custom HelpFormatter class and use "
+                "formatter_class(HelpFormatter) function. "
+                "will be removed in the next minor release (v1.8.0)")
     inline ArgumentParser&
-    add_formatter_class(HelpFormatter const& value, Args... args)
+    add_formatter_class(T const& value, Args... args)
     {
         add_formatter_class(value);
         return add_formatter_class(args...);
@@ -9075,8 +9029,14 @@ public:
      *
      *  \return Current argument parser reference
      */
-    inline ArgumentParser& add_formatter_class(HelpFormatter const& value1,
-                                               HelpFormatter const& value2)
+    template <class T, class U>
+    inline ArgumentParser& add_formatter_class(
+                T const& value1, U const& value2, typename detail::enable_if<
+                    (detail::is_base_of<HelpFormatter, T>::value
+                    || detail::is_same<HelpFormatter, T>::value)
+                    && (detail::is_base_of<HelpFormatter, U>::value
+                    || detail::is_same<HelpFormatter, U>::value), bool
+                >::type = true)
     {
         add_formatter_class(value1);
         return add_formatter_class(value2);
@@ -10565,7 +10525,7 @@ public:
         }
         std::size_t width = output_width();
         detail::_print_raw_text_formatter(
-                    m_formatter_class,
+                    *m_formatter_class,
                     despecify(detail::_tr(m_description, lang)),
                     width, os);
         std::size_t size = 0;
@@ -10573,16 +10533,16 @@ public:
         bool sub_positional = is_subparser_positional(subparser);
         for (std::size_t i = 0; i < positional.size(); ++i) {
             std::string flags
-                    = positional.at(i)->flags_to_string(m_formatter_class);
+                    = positional.at(i)->flags_to_string(*m_formatter_class);
             detail::_limit_to_min(size, detail::_utf8_length(flags).second);
         }
         for (std::size_t i = 0; i < optional.size(); ++i) {
             std::string flags
-                    = optional.at(i)->flags_to_string(m_formatter_class);
+                    = optional.at(i)->flags_to_string(*m_formatter_class);
             detail::_limit_to_min(size, detail::_utf8_length(flags).second);
         }
         for (std::size_t i = 0; i < m_groups.size(); ++i) {
-            m_groups.at(i)->limit_help_flags(m_formatter_class, size);
+            m_groups.at(i)->limit_help_flags(*m_formatter_class, size);
         }
         size += 4;
         detail::_limit_to_max(size, argument_name_limit());
@@ -10590,28 +10550,28 @@ public:
             os << "\n" << detail::_tr(m_positionals_title, lang) << ":\n";
             for (std::size_t i = 0; i < positional.size(); ++i) {
                 print_subparser(sub_positional, sub_info, i,
-                                m_formatter_class, size, width, lang, os);
-                os << despecify(positional.at(i)->print(m_formatter_class,
+                                *m_formatter_class, size, width, lang, os);
+                os << despecify(positional.at(i)->print(*m_formatter_class,
                                                         size, width, lang))
                    << std::endl;
             }
             print_subparser(sub_positional, sub_info, positional.size(),
-                            m_formatter_class, size, width, lang, os);
+                            *m_formatter_class, size, width, lang, os);
         }
         if (!optional.empty()) {
             os << "\n" << detail::_tr(m_optionals_title, lang) << ":\n";
             for (std::size_t i = 0; i < optional.size(); ++i) {
                 os << despecify(optional.at(i)->print(
-                                    m_formatter_class, size, width, lang))
+                                    *m_formatter_class, size, width, lang))
                    << std::endl;
             }
         }
         for (std::size_t i = 0; i < m_groups.size(); ++i) {
             print_group(m_groups[i], subparser, sub_positional,
-                        m_formatter_class, prog(), size, width, lang, os);
+                        *m_formatter_class, prog(), size, width, lang, os);
         }
         detail::_print_raw_text_formatter(
-                    m_formatter_class,
+                    *m_formatter_class,
                     despecify(detail::_tr(m_epilog, lang)),
                     width, os);
     }
@@ -12187,7 +12147,7 @@ private:
             if (info.second == i) {
                 break;
             }
-            std::string str = pos.at(i)->usage(m_formatter_class);
+            std::string str = pos.at(i)->usage(*m_formatter_class);
             detail::_append_value_to(str, res);
         }
         return res;
@@ -12224,11 +12184,11 @@ private:
             }
         }
         for (std::size_t i = 0; i < ex_opt.size(); ++i) {
-            add_arg_usage(res, ex_opt.at(i)->usage(m_formatter_class),
+            add_arg_usage(res, ex_opt.at(i)->usage(*m_formatter_class),
                           ex_opt.at(i)->required());
         }
         for (std::size_t i = 0; i < mutex_groups.size(); ++i) {
-            add_arg_usage(res, mutex_groups.at(i).usage(m_formatter_class),
+            add_arg_usage(res, mutex_groups.at(i).usage(*m_formatter_class),
                           true);
         }
         for (std::size_t i = 0; i < positional.size(); ++i) {
@@ -12236,7 +12196,7 @@ private:
                     && !subparser.first->m_help_type.has_value()) {
                 add_arg_usage(res, subparser.first->usage(), true);
             }
-            std::string const str = positional.at(i)->usage(m_formatter_class);
+            std::string const str = positional.at(i)->usage(*m_formatter_class);
             if (str.empty()) {
                 continue;
             }
@@ -12258,7 +12218,7 @@ private:
 
     static void
     print_subparser(bool need_print, SubparserInfo const& subparser,
-                    std::size_t index, _HelpFormatter const& formatter,
+                    std::size_t index, HelpFormatter const& formatter,
                     std::size_t size, std::size_t width,
                     std::string const& lang, std::ostream& os)
     {
@@ -12271,7 +12231,7 @@ private:
     static void print_group(pGroup const& group,
                             pSubparser const& subparser,
                             bool is_positional,
-                            _HelpFormatter const& formatter,
+                            HelpFormatter const& formatter,
                             std::string const& prog, std::size_t size,
                             std::size_t width,
                             std::string const& lang, std::ostream& os)
@@ -12476,7 +12436,7 @@ private:
                              | argparse::append_const
                              | argparse::language))) {
                 std::size_t names_size
-                        = arg->get_argument_name(m_formatter_class).size();
+                        = arg->get_argument_name(*m_formatter_class).size();
                 if (names_size > 1
                         && (arg->m_nargs != Argument::NARGS_NUM
                             || names_size != arg->m_num_args)) {
@@ -12623,7 +12583,7 @@ private:
     detail::LanguagePack m_epilog;
     detail::LanguagePack m_help;
     std::vector<std::string> m_aliases;
-    _HelpFormatter m_formatter_class;
+    detail::shared_ptr<HelpFormatter> m_formatter_class;
     std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
     detail::Value<std::string> m_argument_default;
