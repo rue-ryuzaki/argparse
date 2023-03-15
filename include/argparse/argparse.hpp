@@ -3065,7 +3065,7 @@ struct _ConflictResolver
 {
     virtual ~_ConflictResolver() _ARGPARSE_NOEXCEPT { }
 
-    virtual void check_conflict_arg(Argument const* arg) = 0;
+    virtual void check_conflict_arg(Argument const* arg)                    = 0;
 };
 
 /*!
@@ -4671,7 +4671,7 @@ private:
                              std::size_t width,
                              std::string const& lang) const
     {
-        std::string help = formatter._get_help_string(this, lang);
+        std::string res = formatter._get_help_string(this, lang);
 #ifdef _ARGPARSE_CXX_11
         std::regex const r("%[(]([a-z_]*)[)]s");
         std::smatch match;
@@ -4683,36 +4683,36 @@ private:
             { "%(const)s",          [this] () { return get_const();         } },
             { "%(default)s",        [this] () { return get_default();       } },
             { "%(dest)s",           [this] () { return get_dest();          } },
-            { "%(help)s",           [this] () { return this->help();        } },
+            { "%(help)s",           [this] () { return help();              } },
             { "%(metavar)s",        [this] () { return get_metavar();       } },
             { "%(nargs)s",          [this] () { return get_nargs();         } },
             { "%(option_strings)s", [this] () { return option_strings();    } },
             { "%(required)s",       [this] () { return get_required();      } },
             { "%(type)s",           [this] () { return get_type();          } },
         };
-        while (std::regex_search(help, match, r)) {
+        while (std::regex_search(res, match, r)) {
             text += match.prefix();
             auto specifier = std::string(match[0]);
             auto it = specifiers.find(specifier);
             text += (it != specifiers.end() ? it->second() : specifier);
-            help = match.suffix();
+            res = match.suffix();
         }
-        text += help;
-        std::swap(help, text);
+        text += res;
+        std::swap(res, text);
 #else
-        help = detail::_replace(help, "%(choices)s", get_choices());
-        help = detail::_replace(help, "%(const)s", get_const());
-        help = detail::_replace(help, "%(default)s", get_default());
-        help = detail::_replace(help, "%(dest)s", get_dest());
-        help = detail::_replace(help, "%(metavar)s", get_metavar());
-        help = detail::_replace(help, "%(nargs)s", get_nargs());
-        help = detail::_replace(help, "%(option_strings)s", option_strings());
-        help = detail::_replace(help, "%(required)s", get_required());
-        help = detail::_replace(help, "%(type)s", get_type());
-        help = detail::_replace(help, "%(help)s", this->help());
+        res = detail::_replace(res, "%(choices)s",          get_choices()   );
+        res = detail::_replace(res, "%(const)s",            get_const()     );
+        res = detail::_replace(res, "%(default)s",          get_default()   );
+        res = detail::_replace(res, "%(dest)s",             get_dest()      );
+        res = detail::_replace(res, "%(metavar)s",          get_metavar()   );
+        res = detail::_replace(res, "%(nargs)s",            get_nargs()     );
+        res = detail::_replace(res, "%(option_strings)s",   option_strings());
+        res = detail::_replace(res, "%(required)s",         get_required()  );
+        res = detail::_replace(res, "%(type)s",             get_type()      );
+        res = detail::_replace(res, "%(help)s",             help()          );
 #endif  // C++11+
         return detail::_help_formatter("  " + flags_to_string(formatter),
-                                       formatter, help, width, limit);
+                                       formatter, res, width, limit);
     }
 
     inline void process_nargs_suffix(std::string& res,
