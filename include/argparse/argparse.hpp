@@ -1848,12 +1848,12 @@ _to_upper(std::string const& str)
 
 // -- translations support ----------------------------------------------------
 // since v1.7.1
-typedef std::map<std::string, std::string> LanguagePack;
+typedef std::map<std::string, std::string> TranslationPack;
 
 inline std::string
-_tr(LanguagePack const& pack, std::string const& lang)
+_tr(TranslationPack const& pack, std::string const& lang)
 {
-    LanguagePack::const_iterator it;
+    TranslationPack::const_iterator it;
     if (!lang.empty()) {
         it = pack.find(lang);
         if (it != pack.end()) {
@@ -4849,7 +4849,7 @@ private:
     detail::Value<std::string> m_implicit;
     detail::Value<std::string> m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
-    detail::LanguagePack m_help;
+    detail::TranslationPack m_help;
     detail::Value<std::string> m_version;
     detail::Value<std::vector<std::string> > m_metavar;
     std::vector<std::string> m_dest;
@@ -5128,8 +5128,8 @@ protected:
                             std::size_t width,
                             std::string const& lang) const                  = 0;
 
-    detail::LanguagePack m_title;
-    detail::LanguagePack m_description;
+    detail::TranslationPack m_title;
+    detail::TranslationPack m_description;
 };
 
 /*!
@@ -8391,7 +8391,7 @@ public:
         std::string m_parent_args;
         std::string m_prog;
         std::string m_dest;
-        detail::LanguagePack m_help;
+        detail::TranslationPack m_help;
         detail::Value<std::string> m_metavar;
         std::deque<pParser> m_parsers;
         detail::Value<_SUPPRESS> m_help_type;
@@ -12575,13 +12575,13 @@ private:
     pArgumentData m_data;
     std::string m_name;
     std::string m_prog;
-    detail::LanguagePack m_usage;
-    detail::LanguagePack m_usage_title;
-    detail::LanguagePack m_description;
-    detail::LanguagePack m_positionals_title;
-    detail::LanguagePack m_optionals_title;
-    detail::LanguagePack m_epilog;
-    detail::LanguagePack m_help;
+    detail::TranslationPack m_usage;
+    detail::TranslationPack m_usage_title;
+    detail::TranslationPack m_description;
+    detail::TranslationPack m_positionals_title;
+    detail::TranslationPack m_optionals_title;
+    detail::TranslationPack m_epilog;
+    detail::TranslationPack m_help;
     std::vector<std::string> m_aliases;
     detail::shared_ptr<HelpFormatter> m_formatter_class;
     std::string m_prefix_chars;
