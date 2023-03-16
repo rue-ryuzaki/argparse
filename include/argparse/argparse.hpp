@@ -3025,7 +3025,7 @@ public:
         return !(*this == rhs);
     }
 
-    inline void clear(T const& value = T())
+    inline void reset(T const& value = T())
     {
         m_value     = value;
         m_has_value = false;
@@ -3599,28 +3599,28 @@ public:
         switch (value) {
             case argparse::store_true :
                 if (!m_default.has_value()) {
-                    m_default.clear();
+                    m_default.reset();
                 }
                 // fallthrough
             case argparse::BooleanOptionalAction :
-                m_const.clear("1");
+                m_const.reset("1");
                 m_nargs = NARGS_NUM;
                 m_nargs_str = std::string("0");
                 m_num_args = 0;
-                m_choices.clear();
+                m_choices.reset();
                 break;
             case argparse::store_false :
                 if (!m_default.has_value()) {
-                    m_default.clear("1");
+                    m_default.reset("1");
                 }
                 // fallthrough
             case argparse::store_const :
             case argparse::append_const :
-                m_const.clear();
+                m_const.reset();
                 m_nargs = NARGS_NUM;
                 m_nargs_str = std::string("0");
                 m_num_args = 0;
-                m_choices.clear();
+                m_choices.reset();
                 break;
             case argparse::version :
             case argparse::help :
@@ -3630,16 +3630,16 @@ public:
                 }
                 // fallthrough
             case argparse::count :
-                m_const.clear();
+                m_const.reset();
                 m_nargs = NARGS_NUM;
                 m_nargs_str = std::string("0");
                 m_num_args = 0;
-                m_choices.clear();
+                m_choices.reset();
                 break;
             case argparse::store :
             case argparse::append :
             case argparse::extend :
-                m_const.clear();
+                m_const.reset();
                 if (m_num_args == 0) {
                     m_nargs = NARGS_DEF;
                     m_nargs_str = std::string("1");
@@ -3648,7 +3648,7 @@ public:
                 break;
             case argparse::language :
                 check_required();
-                m_const.clear();
+                m_const.reset();
                 m_nargs = NARGS_DEF;
                 m_nargs_str = std::string("1");
                 m_num_args = 1;
@@ -3662,7 +3662,7 @@ public:
         }
 #endif  // C++11+
         if (!(value & detail::_store_const_action)) {
-            m_metavar.clear();
+            m_metavar.reset();
         }
         m_action = value;
         return *this;
@@ -3909,9 +3909,9 @@ public:
             throw TypeError("got an unexpected keyword argument 'default'");
         }
         if (action() == argparse::store_false) {
-            m_default.clear("1");
+            m_default.reset("1");
         } else {
-            m_default.clear();
+            m_default.reset();
         }
         m_default_type = value;
         return *this;
@@ -3978,7 +3978,7 @@ public:
      */
     inline Argument& type(std::string const& value)
     {
-        m_type_name.clear(value);
+        m_type_name.reset(value);
         return *this;
     }
 
@@ -4167,7 +4167,7 @@ public:
                           std::string const& lang = std::string())
     {
         if (lang.empty()) {
-            m_help_type.clear();
+            m_help_type.reset();
         }
         m_help[lang] = value;
         return *this;
@@ -8144,7 +8144,7 @@ public:
                                std::string const& lang = std::string())
         {
             if (lang.empty()) {
-                m_help_type.clear();
+                m_help_type.reset();
             }
             m_help[lang] = value;
             return *this;
