@@ -1558,22 +1558,13 @@ _ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_4b_bits = 0xf0;
 _ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_mask = 0xc0;
 _ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_bits = 0x80;
 
-inline std::size_t
+inline std::size_t _ARGPARSE_CONSTEXPR
 _utf8_codepoint_size(uint8_t byte)
 {
-    if ((byte & _utf8_1b_mask) == _utf8_1b_bits) {
-        return 1;
-    }
-    if ((byte & _utf8_2b_mask) == _utf8_2b_bits) {
-        return 2;
-    }
-    if ((byte & _utf8_3b_mask) == _utf8_3b_bits) {
-        return 3;
-    }
-    if ((byte & _utf8_4b_mask) == _utf8_4b_bits) {
-        return 4;
-    }
-    return 0;
+    return (byte & _utf8_1b_mask) == _utf8_1b_bits ? 1
+         : (byte & _utf8_2b_mask) == _utf8_2b_bits ? 2
+         : (byte & _utf8_3b_mask) == _utf8_3b_bits ? 3
+         : (byte & _utf8_4b_mask) == _utf8_4b_bits ? 4 : 0;
 }
 
 inline std::pair<bool, std::size_t>
