@@ -1977,7 +1977,8 @@ _trim_sw(std::string const& str)
     for ( ; right > left
           && std::isspace(static_cast<unsigned char>(*right)); --right) {
     }
-    return in.substr(left - in.begin(), 1 + right - left);
+    return in.substr(static_cast<std::size_t>(left - in.begin()),
+                     static_cast<std::size_t>(1 + right - left));
 }
 #else
 inline std::string
@@ -2253,7 +2254,8 @@ _flag_name(std::string_view const& res)
             break;
         }
     }
-    return res.substr(it - res.begin(), res.end() - it);
+    return res.substr(static_cast<std::size_t>(it - res.begin()),
+                      static_cast<std::size_t>(res.end() - it));
 }
 #endif  // C++17+
 
