@@ -2233,12 +2233,12 @@ _is_flag_correct(std::string const& str, bool is_optional)
     if (is_optional) {
         trimmed = _flag_name(trimmed);
     }
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        if (str.at(i) == '-' || str.at(i) == '_') {
+    for (std::size_t i = 0; i < trimmed.size(); ++i) {
+        if (trimmed.at(i) == '-' || trimmed.at(i) == '_') {
             continue;
         }
-        if (std::isspace(static_cast<unsigned char>(str.at(i)))
-                || std::ispunct(static_cast<unsigned char>(str.at(i)))) {
+        if (std::isspace(static_cast<unsigned char>(trimmed.at(i)))
+                || std::ispunct(static_cast<unsigned char>(trimmed.at(i)))) {
             return false;
         }
     }
