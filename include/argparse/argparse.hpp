@@ -1959,6 +1959,35 @@ _trim_copy(std::string const& str)
     return res;
 }
 
+#ifdef _ARGPARSE_CXX_17
+inline std::string_view
+_trim_sw(std::string const& str)
+{
+    std::string_view in = str;
+    auto left = in.begin();
+    for ( ; ; ++left) {
+        if (left == in.end()) {
+            return std::string_view();
+        }
+        if (!std::isspace(static_cast<unsigned char>(*left))) {
+            break;
+        }
+    }
+    auto right = in.end() - 1;
+    for ( ; right > left
+          && std::isspace(static_cast<unsigned char>(*right)); --right) {
+    }
+    return std::string_view(
+                left, static_cast<std::size_t>(std::distance(left, right) + 1));
+}
+#else
+inline std::string
+_trim_sw(std::string const& str)
+{
+    return _trim_copy(str);
+}
+#endif  // C++17+
+
 template <class T>
 inline std::string
 _to_string(T const& value)
@@ -2214,10 +2243,30 @@ _flag_name(std::string const& str)
     return res;
 }
 
+#ifdef _ARGPARSE_CXX_17
+inline std::string_view
+_flag_name(std::string_view const& res)
+{
+    char prefix = res.front();
+    auto it = res.begin();
+    for ( ; it != res.end(); ++it) {
+        if (*it != prefix) {
+            break;
+        }
+    }
+    return std::string_view(
+                it, static_cast<std::size_t>(std::distance(it, res.end())));
+}
+#endif  // C++17+
+
 inline bool
 _is_flag_correct(std::string const& str, bool is_optional)
 {
+#ifdef _ARGPARSE_CXX_17
+    std::string_view trimmed = _trim_sw(str);
+#else
     std::string trimmed = _trim_copy(str);
+#endif  // C++17+
     if (trimmed.size() != str.size()) {
         return false;
     }
