@@ -4540,6 +4540,8 @@ private:
             m_handle(detail::_remove_quotes(str));
         }
     }
+#else
+    inline void handle(std::string const&) const { /* stub */ }
 #endif  // C++11+
 
     inline void validate() const
@@ -6170,9 +6172,7 @@ public:
         } else {
             at(arg).push_back(arg->implicit_value());
             on_process_store(arg, arg->implicit_value());
-#ifdef _ARGPARSE_CXX_11
             arg->handle(arg->implicit_value());
-#endif  // C++11+
         }
     }
 
@@ -6180,9 +6180,7 @@ public:
     {
         at(arg).push_back(value);
         on_process_store(arg, value);
-#ifdef _ARGPARSE_CXX_11
         arg->handle(value);
-#endif  // C++11+
     }
 
     inline void store_values(key_type const& arg,
@@ -6206,9 +6204,7 @@ public:
             if (arg_data.empty()) {
                 arg_data.push_default(value);
                 on_process_store(arg, value);
-#ifdef _ARGPARSE_CXX_11
                 arg->handle(value);
-#endif  // C++11+
             }
         }
     }
@@ -6220,23 +6216,17 @@ public:
             arg_data.clear();
             arg_data.push_back(arg->const_value());
             on_process_store(arg, arg->const_value());
-#ifdef _ARGPARSE_CXX_11
             arg->handle(arg->const_value());
-#endif  // C++11+
             return true;
         } else if (arg->action() == argparse::append_const) {
             at(arg).push_back(arg->const_value());
             on_process_store(arg, arg->const_value());
-#ifdef _ARGPARSE_CXX_11
             arg->handle(arg->const_value());
-#endif  // C++11+
             return true;
         } else if (arg->action() == argparse::count) {
             at(arg).push_back(std::string());
             on_process_store(arg, std::string());
-#ifdef _ARGPARSE_CXX_11
             arg->handle(std::string());
-#endif  // C++11+
             return true;
         }
         return false;
@@ -10860,9 +10850,7 @@ private:
                     bool intermixed,
                     Namespace const& space) const
     {
-#ifdef _ARGPARSE_CXX_11
         handle(prog());
-#endif  // C++11+
         check_namespace(space);
         std::vector<std::string> parsed_arguments
                 = read_args_from_file(in_parsed_arguments);
@@ -11610,9 +11598,7 @@ private:
                                 p.get(),
                                 p.get()->m_data->get_optional(true, true),
                                 _Storage(), p->subparser_info(true, pos)));
-#ifdef _ARGPARSE_CXX_11
                 parsers.back().parser->handle(parsers.back().parser->m_name);
-#endif  // C++11+
                 validate_arguments(p.get()->m_data->get_arguments(true));
 
                 if (!dest.empty()) {
@@ -12585,6 +12571,8 @@ private:
             }
         }
     }
+#else
+    inline void handle(std::string const&) const { /* stub */ }
 #endif  // C++11+
 
     pArgumentData m_data;
