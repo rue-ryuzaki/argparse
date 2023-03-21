@@ -1772,16 +1772,10 @@ _to_upper(std::string const& str)
     std::string res;
     if (!num_chars.first) {
         res = str;
-#ifdef _ARGPARSE_CXX_11
-        std::transform(res.begin(), res.end(), res.begin(),
-                       [] (unsigned char c)
-        { return static_cast<char>(std::toupper(c)); });
-#else
         for (std::size_t i = 0; i < res.size(); ++i) {
             res.at(i) = static_cast<char>(
                            std::toupper(static_cast<unsigned char>(res.at(i))));
         }
-#endif  // C++11+
         return res;
     }
     std::size_t i = 0;
@@ -1924,10 +1918,8 @@ inline void
 _ltrim(std::string& str)
 {
     std::string::iterator it = str.begin();
-    for ( ; it != str.end(); ++it) {
-        if (!std::isspace(static_cast<unsigned char>(*it))) {
-            break;
-        }
+    for ( ; it != str.end()
+          && std::isspace(static_cast<unsigned char>(*it)); ++it) {
     }
     str.erase(str.begin(), it);
 }
@@ -1936,10 +1928,8 @@ inline void
 _rtrim(std::string& str)
 {
     std::string::reverse_iterator it = str.rbegin();
-    for ( ; it != str.rend(); ++it) {
-        if (!std::isspace(static_cast<unsigned char>(*it))) {
-            break;
-        }
+    for ( ; it != str.rend()
+          && std::isspace(static_cast<unsigned char>(*it)); ++it) {
     }
     str.erase(it.base(), str.end());
 }
@@ -2234,10 +2224,7 @@ _flag_name(std::string const& str)
     std::string res = str;
     char prefix = res.at(0);
     std::string::iterator it = res.begin();
-    for ( ; it != res.end(); ++it) {
-        if (*it != prefix) {
-            break;
-        }
+    for ( ; it != res.end() && *it == prefix; ++it) {
     }
     res.erase(res.begin(), it);
     return res;
@@ -2249,10 +2236,7 @@ _flag_name(std::string_view const& res)
 {
     char prefix = res.front();
     auto it = res.begin();
-    for ( ; it != res.end(); ++it) {
-        if (*it != prefix) {
-            break;
-        }
+    for ( ; it != res.end() && *it == prefix; ++it) {
     }
     return res.substr(static_cast<std::size_t>(it - res.begin()),
                       static_cast<std::size_t>(res.end() - it));
@@ -11023,22 +11007,21 @@ private:
     static void
     check_intermixed_remainder(bool intermixed, pArguments const& positional)
     {
+        if (!intermixed) {
+            return;
+        }
 #ifdef _ARGPARSE_CXX_11
-        if (intermixed
-                && std::any_of(positional.begin(), positional.end(),
-                               [] (pArgument const& arg)
+        if (std::any_of(positional.begin(), positional.end(),
+                        [] (pArgument const& arg)
         { return arg->m_nargs == Argument::REMAINDING; })) {
             throw
             TypeError("parse_intermixed_args: positional arg with nargs=...");
         }
 #else
-        if (intermixed) {
-            for (std::size_t i = 0; i < positional.size(); ++i) {
-                if (positional.at(i)->m_nargs == Argument::REMAINDING) {
-                    throw
-                    TypeError(
+        for (std::size_t i = 0; i < positional.size(); ++i) {
+            if (positional.at(i)->m_nargs == Argument::REMAINDING) {
+                throw TypeError(
                         "parse_intermixed_args: positional arg with nargs=...");
-                }
             }
         }
 #endif  // C++11+
@@ -11102,15 +11085,9 @@ private:
 
     static void validate_arguments(pArguments const& args)
     {
-#ifdef _ARGPARSE_CXX_11
-        for (auto const& arg : args) {
-            arg->validate();
-        }
-#else
         for (std::size_t i = 0; i < args.size(); ++i) {
             args.at(i)->validate();
         }
-#endif  // C++11+
     }
 
     inline void validate_argument_value(Parsers const& parsers,
@@ -11643,16 +11620,14 @@ private:
                     auto subparser_arg
                             = Argument::make_argument({ dest }, dest,
                                                       Argument::Positional);
-                    for (auto& info : parsers) {
 #else
                     pArgument subparser_arg
                             = Argument::make_argument(
                                 detail::_make_vector(dest),
                                 dest, Argument::Positional);
-                    for (std::size_t j = 0; j < parsers.size(); ++j) {
-                        ParserInfo& info = parsers.at(j);
 #endif  // C++11+
-                        info.storage.create(subparser_arg);
+                    for (std::size_t j = 0; j < parsers.size(); ++j) {
+                        parsers.at(j).storage.create(subparser_arg);
                     }
                     parsers.front().storage.at(subparser_arg).push_back(name);
                 }
