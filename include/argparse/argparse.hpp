@@ -305,8 +305,10 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #endif  // C++17+
 
 // -- expand tab size ---------------------------------------------------------
-#ifndef ARGPARSE_TAB_SIZE
-#define ARGPARSE_TAB_SIZE 4
+#ifdef ARGPARSE_TAB_SIZE
+#warning "ARGPARSE_TAB_SIZE define is deprecated and will be removed \
+in the next minor release (v1.8.0), \
+override argparse::HelpFormatter::_tab_size()"
 #endif  // ARGPARSE_TAB_SIZE
 
 namespace argparse {
@@ -495,6 +497,7 @@ _ARGPARSE_EXPORT class HelpFormatter
 public:
     virtual ~HelpFormatter() _ARGPARSE_NOEXCEPT { }
 
+    virtual inline std::size_t _tab_size() const { return 4; }
     virtual inline std::string _fill_text(
                 std::string const& /*text*/,
                 std::size_t /*width*/,
@@ -4982,7 +4985,7 @@ protected:
     inline std::vector<std::string>
     _split_lines_raw(std::string const& text, std::size_t width) const
     {
-        std::size_t tab_size = ARGPARSE_TAB_SIZE;
+        std::size_t tab_size = _tab_size();
         detail::_limit_to_min(tab_size, 2);
         std::string value;
         std::vector<std::string> res;
