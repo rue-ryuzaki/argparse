@@ -494,10 +494,20 @@ class Argument;
  */
 _ARGPARSE_EXPORT class HelpFormatter
 {
+    static std::size_t const c_default_tab_size = 4;
+
 public:
+    HelpFormatter()
+        : m_tab_size(c_default_tab_size)
+    { }
     virtual ~HelpFormatter() _ARGPARSE_NOEXCEPT { }
 
-    virtual inline std::size_t _tab_size() const { return 4; }
+    inline void _tab_size(std::size_t value)
+    {
+        m_tab_size = value != 0 ? value : c_default_tab_size;
+    }
+    inline std::size_t _tab_size() const { return m_tab_size; }
+
     virtual inline std::string _fill_text(
                 std::string const& /*text*/,
                 std::size_t /*width*/,
@@ -512,6 +522,9 @@ public:
     virtual inline std::vector<std::string> _split_lines(
                 std::string const& /*text*/,
                 std::size_t /*width*/) const;
+
+private:
+    std::size_t m_tab_size;
 };
 
 namespace detail {
@@ -4979,8 +4992,6 @@ protected:
     inline std::vector<std::string>
     _split_lines_raw(std::string const& text, std::size_t width) const
     {
-        std::size_t tab_size = _tab_size();
-        detail::_limit_to_min(tab_size, 2);
         std::string value;
         std::vector<std::string> res;
         std::vector<std::string> split_str = detail::_split(text, '\n', true);
@@ -4998,15 +5009,15 @@ protected:
                         std::string sub = tab_split_str.at(k);
                         if (sub == "\t") {
                             sub = std::string(
-                                        tab_size - (detail::_utf8_length(
-                                                      value).second % tab_size),
+                                        _tab_size() - (detail::_utf8_length(
+                                                   value).second % _tab_size()),
                                         detail::_space);
                         }
                         if (detail::_utf8_length(value).second + 1
                                 + detail::_utf8_length(sub).second > width) {
                             detail::_store_value_to(value, res);
                             if (sub == "\t") {
-                                sub = std::string(tab_size, detail::_space);
+                                sub = std::string(_tab_size(), detail::_space);
                             }
                         }
                         value += sub;
@@ -9287,6 +9298,19 @@ public:
     inline std::vector<std::string> const& aliases() const _ARGPARSE_NOEXCEPT
     {
         return m_aliases;
+    }
+
+    /*!
+     *  \brief Get argument parser 'formatter_class' value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Argument parser 'formatter_class' value
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    inline HelpFormatter& formatter_class() _ARGPARSE_NOEXCEPT
+    {
+        return *m_formatter_class;
     }
 
     /*!
