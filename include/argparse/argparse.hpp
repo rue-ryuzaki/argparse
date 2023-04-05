@@ -2235,7 +2235,7 @@ _flag_name(std::string const& str)
 
 #ifdef _ARGPARSE_CXX_17
 inline std::string_view
-_flag_name(std::string_view const& res)
+_flag_name(std::string_view res)
 {
     char prefix = res.front();
     auto it = res.begin();
