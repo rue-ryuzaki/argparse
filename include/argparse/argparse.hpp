@@ -2319,10 +2319,7 @@ _make_no_flag(std::string const& str)
 {
     char prefix = str.at(0);
     std::string::const_iterator it = str.begin();
-    for ( ; it != str.end(); ++it) {
-        if (*it != prefix) {
-            break;
-        }
+    for ( ; it != str.end() && *it == prefix; ++it) {
     }
     std::pair<bool, std::string> res
             = std::make_pair(std::distance(str.begin(), it) > 1, str);
@@ -2422,10 +2419,7 @@ _split_equal(std::string const& str, std::string const& prefix)
     std::string::size_type pos;
     if (_is_value_exists(_equal, prefix)) {
         std::string::const_iterator it = str.begin();
-        for ( ; it != str.end(); ++it) {
-            if (*it != _equal) {
-                break;
-            }
+        for ( ; it != str.end() && *it == _equal; ++it) {
         }
         pos = str.find(_equal, static_cast<std::string::size_type>(
                            std::distance(str.begin(), it)));
@@ -8425,10 +8419,7 @@ private:
         if (argc > 0 && argv && argv[0]) {
             m_prog = detail::_file_name(argv[0]);
             m_parsed_arguments.reserve(std::size_t(argc - 1));
-            for (int i = 1; i < argc; ++i) {
-                if (!argv[i]) {
-                    break;
-                }
+            for (int i = 1; i < argc && argv[i]; ++i) {
                 m_parsed_arguments.push_back(std::string(argv[i]));
             }
         }
@@ -11533,12 +11524,11 @@ private:
             std::size_t min_args = 0;
             std::size_t one_args = 0;
             bool more_args = false;
-            for ( ; finish < positional.size(); ++finish) {
-                if (finish_analyze_positional(positional.at(finish), args,
-                                              one_args, more_args, min_args,
-                                              finish == pos, read_all_args)) {
-                    break;
-                }
+            for ( ; finish < positional.size()
+                  && !finish_analyze_positional(positional.at(finish), args,
+                                                one_args, more_args, min_args,
+                                                finish == pos, read_all_args);
+                  ++finish) {
             }
             match_positionals(parsers, pos, positional, args,
                               finish, min_args, one_args, more_args);
@@ -12147,10 +12137,7 @@ private:
         bool add_suppress = false;
         SubparserInfo info = subparser_info(add_suppress);
         pArguments pos = m_data->get_positional(add_suppress, true);
-        for (std::size_t i = 0; i < pos.size(); ++i) {
-            if (info.second == i) {
-                break;
-            }
+        for (std::size_t i = 0; i < pos.size() && i != info.second; ++i) {
             std::string str = pos.at(i)->usage(*m_formatter_class);
             detail::_append_value_to(str, res);
         }
