@@ -19,21 +19,12 @@ Python-like argument parser for C++ projects (with similar syntax).
 This project is a C++ adaptation of Python argparse and supports most of its features (actions, nargs, subparsers, argument groups, help formatting, auto-generated usage and help, and more).
 ## Supported compilers
 C++ support compiler:
- - gcc: 3.4 (ubuntu 8.04, 3.3 don't work) or higher
- - clang: 2.7 (ubuntu 10.04), 3.4 (https://godbolt.org/, 3.3 don't work) or higher
+ - gcc: 3.4 (ubuntu 8.04) or higher
+ - clang: 2.7 (ubuntu 10.04) or higher
  - msvc: no actual data
  - other compilers: no actual data
 
-The parser is not guaranteed to work on older versions of compilers.
-
-Actual GitHub workflows:
- - Ubuntu: gcc (7 up to 12), clang (6 up to 14)
- - macOS: clang (13 on macos-11)
- - Windows: mingw (8.1), clang (11 up to 15), msvc (2019, 2022)
-
-Legacy GitHub workflows:
- - Ubuntu: gcc (4.8, 5, 6), clang (3.9, 4, 5)
- - Windows: msvc2017
+The work of the parser on older versions of compilers is not guaranteed.
 ## Official repositories:
 ```cpp-argparse-dev``` [PPA](https://launchpad.net/~golubchikov-mihail/+archive/ubuntu/cpp-argparse)
 
@@ -44,7 +35,7 @@ Legacy GitHub workflows:
 ### Can be set
 ```ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION``` or ```ARGPARSE_NO_AUTODETECT (deprecated)``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely <Windows.h> on OS Windows)
 
-```ARGPARSE_TAB_SIZE``` - By default, RawDescriptionHelpFormatter and RawTextHelpFormatter replaces tab with 4 spaces expand. You can change amount of expanding spaces.
+```ARGPARSE_TAB_SIZE (deprecated)``` - By default, RawDescriptionHelpFormatter and RawTextHelpFormatter replaces tab with 4 spaces expand. You can change amount of expanding spaces.
 ### Can be read
 ```ARGPARSE_VERSION_MAJOR``` - Major version of the argparse library
 
