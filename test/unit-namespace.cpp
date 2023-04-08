@@ -679,12 +679,64 @@ TEST_CASE("1. to string", "[namespace]")
     }
 }
 
-TEST_CASE("2. get", "[namespace]")
+TEST_CASE("2. exists check", "[namespace]")
+{
+    std::string global_default = "global";
+    std::string local_default = "local";
+    std::string new_default = "default";
+    std::string new_value = "new";
+
+    SECTION("2.1. have default value") {
+        argparse::ArgumentParser parser
+                = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+        parser.add_argument("--bar").action("store").default_value(local_default).help("bar help");
+
+        argparse::Namespace args0 = parser.parse_args(_make_vec());
+        REQUIRE(args0.exists("foo") == true);
+        REQUIRE(args0.exists("bar") == true);
+        REQUIRE(args0.exists("foobar") == false);
+        REQUIRE(args0.get<std::string>("foo") == global_default);
+        REQUIRE(args0.get<std::string>("bar") == local_default);
+    }
+
+    SECTION("2.2. no default value") {
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+        parser.add_argument("--bar").action("store").help("bar help");
+
+        argparse::Namespace args0 = parser.parse_args(_make_vec());
+        REQUIRE(args0.exists("foo") == false);
+        REQUIRE(args0.exists("bar") == false);
+        REQUIRE(args0.exists("foobar") == false);
+        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE(args0.get<std::string>("bar") == "");
+
+#ifdef _ARGPARSE_CXX_11
+        parser.set_defaults({ { "foo", new_default } });
+#else
+        std::vector<std::pair<std::string, std::string> > values;
+        values.push_back(std::make_pair("foo", new_default));
+        parser.set_defaults(values);
+#endif  // C++11+
+
+        argparse::Namespace args1 = parser.parse_args(_make_vec("--bar", new_value));
+        REQUIRE(args1.exists("foo") == true);
+        REQUIRE(args1.exists("bar") == true);
+        REQUIRE(args1.exists("foobar") == false);
+        REQUIRE(args1.get<std::string>("foo") == new_default);
+        REQUIRE(args1.get<std::string>("bar") == new_value);
+    }
+}
+
+TEST_CASE("3. get", "[namespace]")
 {
     std::string bar = "bar";
     std::string foo = "foo";
 
-    SECTION("2.1. first long option containing internal -") {
+    SECTION("3.1. first long option containing internal -") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo-bar", "--foo");
         parser.add_argument(argparse::Argument("--bar-foo", "--bar"));
@@ -706,7 +758,7 @@ TEST_CASE("2. get", "[namespace]")
         REQUIRE(args.get<std::string>("bar_foo") == bar);
     }
 
-    SECTION("2.2. second long option containing internal -") {
+    SECTION("3.2. second long option containing internal -") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("--foo", "--foo-bar");
         parser.add_argument(argparse::Argument("--bar", "--bar-foo"));
@@ -727,4 +779,212 @@ TEST_CASE("2. get", "[namespace]")
         REQUIRE(args.exists("bar_foo") == false);
         REQUIRE_THROWS(args.get<std::string>("bar_foo"));
     }
+}
+
+TEST_CASE("4. value types check", "[namespace]")
+{
+    SECTION("4.1. mapped types") {
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+        parser.add_argument("--bar").action("append").one_or_more().help("bar help");
+
+        argparse::Namespace args0 = parser.parse_args(_make_vec());
+        REQUIRE(args0.exists("foo") == false);
+        REQUIRE(args0.exists("bar") == false);
+        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE(args0.get<std::string>("bar") == "");
+        REQUIRE(args0.get<std::vector<std::string> >("foo").size() == 0);
+        REQUIRE(args0.get<std::vector<std::string> >("bar").size() == 0);
+#ifdef _ARGPARSE_CXX_11
+        REQUIRE(args0.get<std::map<std::string, std::string> >("foo").size() == 0);
+        REQUIRE(args0.get<std::map<std::string, std::string> >("bar").size() == 0);
+#endif  // C++11+
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
+        REQUIRE(args0.try_get<std::string>("bar").operator bool() == false);
+#endif  // C++17+
+
+        // delimiter ':'
+        argparse::Namespace args1 = parser.parse_args(_make_vec("--foo=key:value"));
+        REQUIRE(args1.exists("foo") == true);
+        REQUIRE(args1.exists("bar") == false);
+        REQUIRE(args1.get<std::string>("foo") == "key:value");
+        REQUIRE(args1.get<std::string>("bar") == "");
+        REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE(args1.get<std::vector<std::string> >("bar").size() == 0);
+#ifdef _ARGPARSE_CXX_11
+        REQUIRE(args1.get<std::map<std::string, std::string> >("foo", ':').size() == 1);
+        REQUIRE(args1.get<std::map<std::string, std::string> >("bar", ':').size() == 0);
+        REQUIRE(args1.get<std::map<std::string, std::string> >("foo", ':').at("key") == "value");
+#endif  // C++11+
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args1.try_get<std::string>("bar").operator bool() == false);
+        REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
+        REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
+        REQUIRE(args1.try_get<std::vector<std::string> >("bar")->size() == 0);
+        REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->size() == 1);
+        REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->at("key") == "value");
+#endif  // C++17+
+
+        // delimiter '=', std::unordered_map
+        argparse::Namespace args2
+                = parser.parse_args(_make_vec("--foo=key=value", "--bar", "key1=value1", "key2=value2"));
+        REQUIRE(args2.exists("foo") == true);
+        REQUIRE(args2.exists("bar") == true);
+        REQUIRE(args2.get<std::string>("foo") == "key=value");
+//        REQUIRE(args2.get<std::string>("bar") == "");
+        REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE(args2.get<std::vector<std::string> >("bar").size() == 2);
+#ifdef _ARGPARSE_CXX_11
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("foo").size() == 1);
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").size() == 2);
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("foo").at("key") == "value");
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key1") == "value1");
+        REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key2") == "value2");
+#endif  // C++11+
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args2.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args2.try_get<std::string>("bar").operator bool() == false);
+        REQUIRE(args2.try_get<std::string>("foo").value() == "key=value");
+        REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 1);
+        REQUIRE(args2.try_get<std::vector<std::string> >("bar")->size() == 2);
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("foo")->size() == 1);
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->size() == 2);
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("foo")->at("key") == "value");
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key1") == "value1");
+        REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key2") == "value2");
+#endif  // C++17+
+
+        // delimiter '=', std::multimap
+        argparse::Namespace args3
+                = parser.parse_args(_make_vec("--foo=key=value", "--bar", "key=value1", "key=value2"));
+        REQUIRE(args3.exists("foo") == true);
+        REQUIRE(args3.exists("bar") == true);
+        REQUIRE(args3.get<std::string>("foo") == "key=value");
+//        REQUIRE(args3.get<std::string>("bar") == "");
+        REQUIRE(args3.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE(args3.get<std::vector<std::string> >("bar").size() == 2);
+        REQUIRE((args3.get<std::map<std::string, std::string> >("bar").size() == 1));
+        REQUIRE((args3.get<std::map<std::string, std::string> >("bar").count("key") == 1));
+#ifdef _ARGPARSE_CXX_11
+        REQUIRE(args3.get<std::multimap<std::string, std::string> >("foo").size() == 1);
+        REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").size() == 2);
+        REQUIRE(args3.get<std::multimap<std::string, std::string> >("foo").count("key") == 1);
+        REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").count("key") == 2);
+#endif  // C++11+
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args3.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args3.try_get<std::string>("bar").operator bool() == false);
+        REQUIRE(args3.try_get<std::string>("foo").value() == "key=value");
+        REQUIRE(args3.try_get<std::vector<std::string> >("foo")->size() == 1);
+        REQUIRE(args3.try_get<std::vector<std::string> >("bar")->size() == 2);
+        REQUIRE(args3.try_get<std::map<std::string, std::string> >("bar")->size() == 1);
+        REQUIRE(args3.try_get<std::map<std::string, std::string> >("bar")->count("key") == 1);
+        REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("foo")->size() == 1);
+        REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->size() == 2);
+        REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("foo")->count("key") == 1);
+        REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->count("key") == 2);
+#endif  // C++17+
+    }
+
+    SECTION("4.2. paired types") {
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+
+        argparse::Namespace args0 = parser.parse_args(_make_vec());
+        REQUIRE(args0.exists("foo") == false);
+        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE(args0.get<std::vector<std::string> >("foo").size() == 0);
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
+#endif  // C++17+
+
+        // delimiter ':'
+        argparse::Namespace args1 = parser.parse_args(_make_vec("--foo=key:value"));
+        REQUIRE(args1.exists("foo") == true);
+        REQUIRE(args1.get<std::string>("foo") == "key:value");
+        REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE((args1.get<std::pair<std::string, std::string> >("foo", ':').first == "key"));
+        REQUIRE((args1.get<std::pair<std::string, std::string> >("foo", ':').second == "value"));
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
+        REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
+        REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->first == "key");
+        REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->second == "value");
+#endif  // C++17+
+
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
+
+        parser2.add_argument("--foo").action("store").nargs(2).help("foo help");
+
+        // delimiter ' '
+        argparse::Namespace args2 = parser2.parse_args(_make_vec("--foo", "key", "value"));
+        // or parser2.parse_args("--foo key value");
+        REQUIRE(args2.exists("foo") == true);
+        REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 2);
+        REQUIRE((args2.get<std::pair<std::string, std::string> >("foo", ' ').first == "key"));
+        REQUIRE((args2.get<std::pair<std::string, std::string> >("foo", ' ').second == "value"));
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 2);
+        REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->first == "key");
+        REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->second == "value");
+#endif  // C++17+
+    }
+
+#ifdef _ARGPARSE_CXX_11
+    SECTION("4.3. tuple") {
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action("store").help("foo help");
+
+        argparse::Namespace args0 = parser.parse_args(_make_vec());
+        REQUIRE(args0.exists("foo") == false);
+        REQUIRE(args0.get<std::string>("foo") == "");
+        REQUIRE(args0.get<std::vector<std::string> >("foo").size() == 0);
+
+        // delimiter ':'
+        argparse::Namespace args1 = parser.parse_args({ "--foo=1:value:3" });
+        auto tuple1 = args1.get<std::tuple<int, std::string, int> >("foo", ':');
+        REQUIRE(args1.exists("foo") == true);
+        REQUIRE(args1.get<std::string>("foo") == "1:value:3");
+        REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
+        REQUIRE(std::get<0>(tuple1) == 1);
+        REQUIRE(std::get<1>(tuple1) == "value");
+        REQUIRE(std::get<2>(tuple1) == 3);
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
+        REQUIRE(args1.try_get<std::string>("foo").value() == "1:value:3");
+        REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
+        auto try_tuple1 = args1.try_get<std::tuple<int, std::string, int> >("foo", ':');
+        REQUIRE(std::get<0>(try_tuple1.value()) == 1);
+        REQUIRE(std::get<1>(try_tuple1.value()) == "value");
+        REQUIRE(std::get<2>(try_tuple1.value()) == 3);
+#endif  // C++17+
+
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
+
+        parser2.add_argument("--foo").action("store").nargs(3).help("foo help");
+
+        // delimiter ' '
+        argparse::Namespace args2 = parser2.parse_args({ "--foo", "1", "value", "3" });
+        // or parser2.parse_args("--foo 1 value 3");
+        auto tuple2 = args2.get<std::tuple<int, std::string, int> >("foo", ' ');
+        REQUIRE(args2.exists("foo") == true);
+        REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 3);
+        REQUIRE(std::get<0>(tuple2) == 1);
+        REQUIRE(std::get<1>(tuple2) == "value");
+        REQUIRE(std::get<2>(tuple2) == 3);
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 3);
+        auto try_tuple2 = args2.try_get<std::tuple<int, std::string, int> >("foo", ' ');
+        REQUIRE(std::get<0>(try_tuple2.value()) == 1);
+        REQUIRE(std::get<1>(try_tuple2.value()) == "value");
+        REQUIRE(std::get<2>(try_tuple2.value()) == 3);
+#endif  // C++17+
+    }
+#endif  // C++11+
 }
