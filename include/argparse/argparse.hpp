@@ -11645,7 +11645,9 @@ private:
                 return true;
             }
         }
-        throw_error("invalid choice: '" + name
+        throw_error("argument "
+                    + parsers.back().subparser.first->flags_to_string()
+                    + ": invalid choice: '" + name
                     + "' (choose from " + choices + ")");
         return false;
     }
