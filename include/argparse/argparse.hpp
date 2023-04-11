@@ -4376,7 +4376,7 @@ public:
         if (action() & (argparse::version | argparse::help)) {
             throw TypeError("got an unexpected keyword argument 'handle'");
         }
-        m_handle = func;
+        m_handle = std::move(func);
         return *this;
     }
 
@@ -4390,11 +4390,7 @@ public:
      */
     inline Argument& handle(std::function<void()> func)
     {
-        if (action() & (argparse::version | argparse::help)) {
-            throw TypeError("got an unexpected keyword argument 'handle'");
-        }
-        m_handle = [func] (std::string const&) { func(); };
-        return *this;
+        return handle([func] (std::string const&) { func(); });
     }
 #endif  // C++11+
 
@@ -9617,7 +9613,7 @@ public:
     inline ArgumentParser&
     handle(std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT
     {
-        m_handle = func;
+        m_handle = std::move(func);
         return *this;
     }
 
@@ -9631,8 +9627,7 @@ public:
      */
     inline ArgumentParser& handle(std::function<void()> func) _ARGPARSE_NOEXCEPT
     {
-        m_handle = [func] (std::string const&) { func(); };
-        return *this;
+        return handle([func] (std::string const&) { func(); });
     }
 
     /*!
@@ -9647,7 +9642,7 @@ public:
     inline ArgumentParser&
     handle(std::function<void(Namespace const&)> func) _ARGPARSE_NOEXCEPT
     {
-        m_parse_handle = func;
+        m_parse_handle = std::move(func);
         return *this;
     }
 #endif  // C++11+
