@@ -6427,10 +6427,12 @@ public:
      *
      *  \param key Argument destination name or flag
      *
+     *  \since NEXT_RELEASE
+     *
      *  \return true if argument name exists and specified, otherwise false
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline bool exists(std::string const& key) const
+    inline bool contains(std::string const& key) const
     {
         _Storage::const_iterator it = storage().find_arg(key);
         if (it != storage().end()) {
@@ -6438,6 +6440,19 @@ public:
                     || it->first->action() == argparse::count;
         }
         return false;
+    }
+
+    /*!
+     *  \brief Check if argument name exists and specified in parsed arguments
+     *
+     *  \param key Argument destination name or flag
+     *
+     *  \return true if argument name exists and specified, otherwise false
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    inline bool exists(std::string const& key) const
+    {
+        return contains(key);
     }
 
     /*!
