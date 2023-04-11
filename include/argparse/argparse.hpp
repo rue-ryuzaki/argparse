@@ -4190,10 +4190,10 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'help' message for selected language (default: "")
+     *  \brief Set argument 'help' message for selected language
      *
      *  \param value Help message
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \return Current argument reference
      */
@@ -5805,11 +5805,10 @@ public:
     }
 
     /*!
-     *  \brief Set argument group 'title' value
-     *  for selected language (default: "")
+     *  \brief Set argument group 'title' value for selected language
      *
      *  \param value Title value
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \return Current argument group reference
      */
@@ -5821,11 +5820,10 @@ public:
     }
 
     /*!
-     *  \brief Set argument group 'description' value
-     *  for selected language (default: "")
+     *  \brief Set argument group 'description' value for selected language
      *
      *  \param value Description value
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \return Current argument group reference
      */
@@ -6969,7 +6967,7 @@ public:
      *  \brief Get parsed argument value as string
      *
      *  \param key Argument destination name or flag
-     *  \param quotes Value quotes
+     *  \param quotes Value quotes (default: "")
      *
      *  \return Parsed argument value as string
      */
@@ -8097,11 +8095,10 @@ public:
         using _Group::description;
 
         /*!
-         *  \brief Set subparser 'title' value
-         *  for selected language (default: "")
+         *  \brief Set subparser 'title' value for selected language
          *
          *  \param value Title value
-         *  \param lang Language value
+         *  \param lang Language value (default: "")
          *
          *  \return Current subparser reference
          */
@@ -8113,11 +8110,10 @@ public:
         }
 
         /*!
-         *  \brief Set subparser 'description' value
-         *  for selected language (default: "")
+         *  \brief Set subparser 'description' value for selected language
          *
          *  \param value Description value
-         *  \param lang Language value
+         *  \param lang Language value (default: "")
          *
          *  \return Current subparser reference
          */
@@ -8169,11 +8165,10 @@ public:
         }
 
         /*!
-         *  \brief Set subparser 'help' message
-         *  for selected language (default: "")
+         *  \brief Set subparser 'help' message for selected language
          *
          *  \param value Help message
-         *  \param lang Language value
+         *  \param lang Language value (default: "")
          *
          *  \return Current subparser reference
          */
@@ -8468,9 +8463,8 @@ private:
 public:
     /*!
      *  \brief Construct argument parser with concrete program name
-     *  (default: "untitled")
      *
-     *  \param prog Program name
+     *  \param prog Program name (default: "untitled")
      *
      *  \return Argument parser object
      */
@@ -8517,7 +8511,7 @@ public:
      *
      *  \param argc Number of command line arguments
      *  \param argv Command line arguments data
-     *  \param prog Program name
+     *  \param prog Program name (default: "")
      *
      *  \return Argument parser object
      */
@@ -8566,7 +8560,7 @@ public:
      *
      *  \param argc Number of command line arguments
      *  \param argv Command line arguments data
-     *  \param prog Program name
+     *  \param prog Program name (default: "")
      *
      *  \return Argument parser object
      */
@@ -8642,11 +8636,10 @@ public:
     }
 
     /*!
-     *  \brief Set argument parser 'usage' value
-     *  for selected language (default: "")
+     *  \brief Set argument parser 'usage' value for selected language
      *
      *  \param value Usage value
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \return Current argument parser reference
      */
@@ -8659,10 +8652,10 @@ public:
 
     /*!
      *  \brief Set title for argument parser 'usage' (default: "usage")
-     *  for selected language (default: "")
+     *  for selected language
      *
      *  \param value Title for usage
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \since v1.7.1
      *
@@ -8678,11 +8671,10 @@ public:
     }
 
     /*!
-     *  \brief Set argument parser 'description' value
-     *  for selected language (default: "")
+     *  \brief Set argument parser 'description' value for selected language
      *
      *  \param value Description value
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \return Current argument parser reference
      */
@@ -8695,10 +8687,10 @@ public:
 
     /*!
      *  \brief Set title for positional arguments
-     *  (default: "positional arguments") for selected language (default: "")
+     *  (default: "positional arguments") for selected language
      *
      *  \param value Title for positional arguments
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \since v1.7.0
      *
@@ -8716,10 +8708,10 @@ public:
 
     /*!
      *  \brief Set title for optional arguments
-     *  (default: "options") for selected language (default: "")
+     *  (default: "options") for selected language
      *
      *  \param value Title for optional arguments
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \since v1.7.0
      *
@@ -8736,11 +8728,10 @@ public:
     }
 
     /*!
-     *  \brief Set argument parser 'epilog' value
-     *  for selected language (default: "")
+     *  \brief Set argument parser 'epilog' value for selected language
      *
      *  \param value Epilog value
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \return Current argument parser reference
      */
@@ -8753,10 +8744,10 @@ public:
 
     /*!
      *  \brief Set argument parser 'help' message (for subparsers)
-     *  for selected language (default: "")
+     *  for selected language
      *
      *  \param value Help message
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \return Current argument parser reference
      */
@@ -9545,8 +9536,8 @@ public:
     /*!
      *  \brief Add argument group
      *
-     *  \param title Group title
-     *  \param description Group description
+     *  \param title Group title (default: "")
+     *  \param description Group description (default: "")
      *
      *  \return Current argument group reference
      */
@@ -9565,7 +9556,7 @@ public:
     /*!
      *  \brief Add mutually exclusive group
      *
-     *  \param required Required flag
+     *  \param required Required flag (default: false)
      *
      *  \return Current mutually exclusive group reference
      */
@@ -9753,7 +9744,7 @@ public:
     /*!
      *  \brief Parse command line arguments
      *
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -9770,7 +9761,7 @@ public:
      *  \brief Parse concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -9799,7 +9790,7 @@ public:
      *  \brief Parse concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.2
      *
@@ -9817,7 +9808,7 @@ public:
      *  \brief Parse concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -9831,7 +9822,7 @@ public:
     /*!
      *  \brief Parse known command line arguments
      *
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -9848,7 +9839,7 @@ public:
      *  \brief Parse known concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -9877,7 +9868,7 @@ public:
      *  \brief Parse known concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.2
      *
@@ -9896,7 +9887,7 @@ public:
      *  \brief Parse known concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -9911,7 +9902,7 @@ public:
     /*!
      *  \brief Parse intermixed command line arguments
      *
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -9928,7 +9919,7 @@ public:
      *  \brief Parse intermixed concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -9957,7 +9948,7 @@ public:
      *  \brief Parse intermixed concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.2
      *
@@ -9976,7 +9967,7 @@ public:
      *  \brief Parse intermixed concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -9991,7 +9982,7 @@ public:
     /*!
      *  \brief Parse known intermixed command line arguments
      *
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -10009,7 +10000,7 @@ public:
      *  \brief Parse known intermixed concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -10039,7 +10030,7 @@ public:
      *  \brief Parse known intermixed concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.2
      *
@@ -10059,7 +10050,7 @@ public:
      *  \brief Parse known intermixed concrete arguments
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \return Object with parsed arguments
      */
@@ -10076,7 +10067,7 @@ public:
      *  \brief Try parse command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
      *
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10095,7 +10086,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10117,7 +10108,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.2
      *
@@ -10136,7 +10127,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10154,7 +10145,7 @@ public:
      *  \brief Try parse known command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
      *
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10173,7 +10164,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10195,7 +10186,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.2
      *
@@ -10214,7 +10205,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10232,7 +10223,7 @@ public:
      *  \brief Try parse intermixed command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
      *
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10251,7 +10242,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10273,7 +10264,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.2
      *
@@ -10293,7 +10284,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10311,7 +10302,7 @@ public:
      *  \brief Try parse known intermixed command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
      *
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10330,7 +10321,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10353,7 +10344,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.2
      *
@@ -10374,7 +10365,7 @@ public:
      *  If arguments can't be parsed, returns std::nullopt.
      *
      *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace
+     *  \param space Parsed arguments namespace (default: none)
      *
      *  \since v1.7.1
      *
@@ -10390,10 +10381,9 @@ public:
 #endif  // C++17+
 
     /*!
-     *  \brief Run self-test and print report
-     *  to output stream (default: std::cout)
+     *  \brief Run self-test and print report to output stream
      *
-     *  \param os Output stream
+     *  \param os Output stream (default: std::cout)
      *
      *  \since v1.7.2
      *
@@ -10407,10 +10397,10 @@ public:
 
     /*!
      *  \brief Run self-test and print report for selected language
-     *  to output stream (default: std::cout)
+     *  to output stream
      *
      *  \param lang Language value
-     *  \param os Output stream
+     *  \param os Output stream (default: std::cout)
      *
      *  \since v1.7.2
      *
@@ -10440,10 +10430,10 @@ public:
     }
 
     /*!
-     *  \brief Print a bash completion to output stream (default: std::cout).
+     *  \brief Print a bash completion to output stream.
      *  Copy the contents to ~/.bashrc or create a script file and use it
      *
-     *  \param os Output stream
+     *  \param os Output stream (default: std::cout)
      *
      *  \since v1.7.2
      */
@@ -10502,9 +10492,9 @@ public:
     }
 
     /*!
-     *  \brief Print a program usage to output stream (default: std::cout)
+     *  \brief Print a program usage to output stream
      *
-     *  \param os Output stream
+     *  \param os Output stream (default: std::cout)
      */
     inline void print_usage(std::ostream& os = std::cout) const
     {
@@ -10512,11 +10502,10 @@ public:
     }
 
     /*!
-     *  \brief Print a program usage for selected language
-     *  to output stream (default: std::cout)
+     *  \brief Print a program usage for selected language to output stream
      *
      *  \param lang Language value
-     *  \param os Output stream
+     *  \param os Output stream (default: std::cout)
      *
      *  \since v1.7.1
      */
@@ -10536,9 +10525,9 @@ public:
     }
 
     /*!
-     *  \brief Print a help message to output stream (default: std::cout)
+     *  \brief Print a help message to output stream
      *
-     *  \param os Output stream
+     *  \param os Output stream (default: std::cout)
      */
     inline void print_help(std::ostream& os = std::cout) const
     {
@@ -10546,11 +10535,10 @@ public:
     }
 
     /*!
-     *  \brief Print a help message for selected language
-     *  to output stream (default: std::cout)
+     *  \brief Print a help message for selected language to output stream
      *
      *  \param lang Language value
-     *  \param os Output stream
+     *  \param os Output stream (default: std::cout)
      *
      *  \since v1.7.1
      */
@@ -10643,10 +10631,9 @@ public:
     }
 
     /*!
-     *  \brief Return a string containing a program usage
-     *  for selected language (default: "")
+     *  \brief Return a string containing a program usage for selected language
      *
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \return Program usage for selected language
      */
@@ -10660,10 +10647,9 @@ public:
     }
 
     /*!
-     *  \brief Return a string containing a help message
-     *  for selected language (default: "")
+     *  \brief Return a string containing a help message for selected language
      *
-     *  \param lang Language value
+     *  \param lang Language value (default: "")
      *
      *  \return Help message for selected language
      */
@@ -10680,8 +10666,8 @@ public:
      *  \brief Terminates the program, exiting with the specified status and,
      *  if given, prints a message before that
      *
-     *  \param status Status code
-     *  \param message Error message
+     *  \param status Status code (default: 0)
+     *  \param message Error message (default: "")
      */
     virtual inline void
     exit(int status = 0, std::string const& message = std::string()) const
