@@ -1784,12 +1784,17 @@ _to_upper_codepoint(codepoint cp)
     }
     if (cp == 0x1e9b) return 0x1e60;
     // GREEK EXTENDED
-    if ((0x1f00 <= cp && cp <= 0x1f15) || (0x1f20 <= cp && cp <= 0x1f45)
-     ||  0x1f51 == cp || cp == 0x1f53  ||  0x1f55 == cp || cp == 0x1f57
-     || (0x1f60 <= cp && cp <= 0x1f6f) || (0x1f80 <= cp && cp <= 0x1faf)
-     ||  0x1fb0 == cp || cp == 0x1fb1  ||  0x1fd0 == cp || cp == 0x1fd1
-     || (0x1fe0 <= cp && cp <= 0x1fe1)) {
-        return cp | 0x8;
+    if (!(cp & 8)
+        && ((0x1f00 <= cp && cp <= 0x1f15) || (0x1f20 <= cp && cp <= 0x1f45)
+         || (0x1f60 <= cp && cp <= 0x1f6f) || (0x1f80 <= cp && cp <= 0x1faf))) {
+        return cp + 0x8;
+    }
+    if (!(cp & 8) && (cp & 1) && (0x1f51 <= cp && cp <= 0x1f5f)) {
+        return cp + 0x8;
+    }
+    if (cp == 0x1fb0 || cp == 0x1fb1 || cp == 0x1fd0 || cp == 0x1fd1
+     || cp == 0x1fe0 || cp == 0x1fe1) {
+        return cp + 0x8;
     }
     if (cp == 0x1f70 || cp == 0x1f71) return cp + 0x4a;
     if (0x1f72 <= cp && cp <= 0x1f75) return cp + 0x56;
@@ -1797,11 +1802,9 @@ _to_upper_codepoint(codepoint cp)
     if (cp == 0x1f78 || cp == 0x1f79) return cp + 0x80;
     if (cp == 0x1f7a || cp == 0x1f7b) return cp + 0x70;
     if (cp == 0x1f7c || cp == 0x1f7d) return cp + 0x7e;
-    if (cp == 0x1fb3) return 0x1fbc;
+    if (cp == 0x1fb3 || cp == 0x1fc3 || cp == 0x1ff3) return cp + 0x9;
     if (cp == 0x1fbe) return 0x0399;
-    if (cp == 0x1fc3) return 0x1fcc;
     if (cp == 0x1fe5) return 0x1fec;
-    if (cp == 0x1ff3) return 0x1ffc;
     // LETTERLIKE SYMBOLS
     if (cp == 0x214e) return 0x2132;
     // NUMBER FORMS
