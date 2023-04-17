@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Argument parser for C++ (ArgumentParser v1.7.4)
+* Argument parser for C++ (ArgumentParser v1.7.5)
 *
 * Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 *
@@ -76,7 +76,7 @@
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 7
-#define ARGPARSE_VERSION_PATCH 4
+#define ARGPARSE_VERSION_PATCH 5
 
 /*!
  *  This macro turns the version numbers into a numeric value:
@@ -6520,7 +6520,7 @@ public:
      *
      *  \param key Argument destination name or flag
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.7.5
      *
      *  \return true if argument name exists and specified, otherwise false
      */
@@ -9404,7 +9404,7 @@ public:
     /*!
      *  \brief Get argument parser 'formatter_class' value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.7.5
      *
      *  \return Argument parser 'formatter_class' value
      */
