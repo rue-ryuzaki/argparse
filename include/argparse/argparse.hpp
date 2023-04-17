@@ -1537,7 +1537,7 @@ _make_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
 
 // -- utf8 support ------------------------------------------------------------
 // since v1.7.0
-typedef uint32_t unicode;
+typedef uint32_t codepoint;
 
 inline uint8_t _ARGPARSE_CONSTEXPR
 _char_to_u8(char c)
@@ -1551,14 +1551,14 @@ _u8_to_char(uint8_t c)
     return static_cast<char>(c);
 }
 
-inline unicode _ARGPARSE_CONSTEXPR
-_char_to_unicode(char c)
+inline codepoint _ARGPARSE_CONSTEXPR
+_char_to_codepoint(char c)
 {
-    return static_cast<unicode>(_char_to_u8(c));
+    return static_cast<codepoint>(_char_to_u8(c));
 }
 
 inline char _ARGPARSE_CONSTEXPR
-_unicode_to_char(unicode c)
+_codepoint_to_char(codepoint c)
 {
     return _u8_to_char(static_cast<uint8_t>(c));
 }
@@ -1628,8 +1628,8 @@ _is_utf8_string(std::string const& str)
 }
 
 // since v1.7.3
-inline unicode
-_to_upper_codepoint(unicode cp)
+inline codepoint
+_to_upper_codepoint(codepoint cp)
 {
     // unicode 15 to upper case
     // BASIC LATIN
@@ -1893,25 +1893,25 @@ _to_upper(std::string const& str)
     std::size_t i = 0;
     for (std::size_t n = 0; n < num_chars.second; ++n) {
         std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str[i]));
-        unicode cp = 0;
+        codepoint cp = 0;
         switch (cp_size) {
             case 1:
-                cp =  (_char_to_unicode(str[i    ]) & ~_utf8_1b_mask);
+                cp =  (_char_to_codepoint(str[i    ]) & ~_utf8_1b_mask);
                 break;
             case 2:
-                cp = ((_char_to_unicode(str[i    ]) & ~_utf8_2b_mask) <<  6)
-                   |  (_char_to_unicode(str[i + 1]) & ~_utf8_ct_mask);
+                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_2b_mask) <<  6)
+                   |  (_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask);
                 break;
             case 3:
-                cp = ((_char_to_unicode(str[i    ]) & ~_utf8_3b_mask) << 12)
-                   | ((_char_to_unicode(str[i + 1]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_unicode(str[i + 2]) & ~_utf8_ct_mask);
+                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_3b_mask) << 12)
+                   | ((_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_codepoint(str[i + 2]) & ~_utf8_ct_mask);
                 break;
             case 4:
-                cp = ((_char_to_unicode(str[i    ]) & ~_utf8_4b_mask) << 18)
-                   | ((_char_to_unicode(str[i + 1]) & ~_utf8_ct_mask) << 12)
-                   | ((_char_to_unicode(str[i + 2]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_unicode(str[i + 3]) & ~_utf8_ct_mask);
+                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_4b_mask) << 18)
+                   | ((_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask) << 12)
+                   | ((_char_to_codepoint(str[i + 2]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_codepoint(str[i + 3]) & ~_utf8_ct_mask);
                 break;
             default:
                 // should never happen
@@ -1921,22 +1921,22 @@ _to_upper(std::string const& str)
         cp = _to_upper_codepoint(cp);
         if (cp < 0x80) {
             // one octet
-            res += _unicode_to_char(cp);
+            res += _codepoint_to_char(cp);
         } else if (cp < 0x800) {
             // two octets
-            res += _unicode_to_char((cp >> 6)           | 0xc0);
-            res += _unicode_to_char((cp & 0x3f)         | 0x80);
+            res += _codepoint_to_char((cp >> 6)           | 0xc0);
+            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
         } else if (cp < 0x10000) {
             // three octets
-            res += _unicode_to_char((cp >> 12)          | 0xe0);
-            res += _unicode_to_char(((cp >> 6) & 0x3f)  | 0x80);
-            res += _unicode_to_char((cp & 0x3f)         | 0x80);
+            res += _codepoint_to_char((cp >> 12)          | 0xe0);
+            res += _codepoint_to_char(((cp >> 6) & 0x3f)  | 0x80);
+            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
         } else {
             // four octets
-            res += _unicode_to_char((cp >> 18)          | 0xf0);
-            res += _unicode_to_char(((cp >> 12) & 0x3f) | 0x80);
-            res += _unicode_to_char(((cp >>  6) & 0x3f) | 0x80);
-            res += _unicode_to_char((cp & 0x3f)         | 0x80);
+            res += _codepoint_to_char((cp >> 18)          | 0xf0);
+            res += _codepoint_to_char(((cp >> 12) & 0x3f) | 0x80);
+            res += _codepoint_to_char(((cp >>  6) & 0x3f) | 0x80);
+            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
         }
     }
     return res;
