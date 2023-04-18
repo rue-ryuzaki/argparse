@@ -2462,15 +2462,14 @@ _store_value_to(std::string& value, std::vector<std::string>& res,
 }
 
 inline std::vector<std::string>
-_split(std::string const& str, char sep,
-       bool force = false, bool add_sep = false)
+_split(std::string const& str, char sep, bool add_sep = false)
 {
     std::vector<std::string> res;
     std::string value;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
         if (c == sep) {
-            _store_value_to(value, res, force);
+            _store_value_to(value, res, true);
             if (add_sep) {
                 value = std::string(1, sep);
                 _store_value_to(value, res, true);
@@ -2479,7 +2478,7 @@ _split(std::string const& str, char sep,
             value += c;
         }
     }
-    _store_value_to(value, res);
+    _store_value_to(value, res, true);
     return res;
 }
 
@@ -2716,7 +2715,7 @@ _format_output(std::string const& head, std::string const& body,
     if (_utf8_length(value).second + interlayer > indent) {
         _store_value_to(value, res);
     }
-    std::vector<std::string> split_str = _split(body, '\n', true);
+    std::vector<std::string> split_str = _split(body, '\n');
     for (std::size_t i = 0; i < split_str.size(); ++i) {
         std::string const& str = split_str.at(i);
         if (sep == '\n') {
@@ -2726,7 +2725,7 @@ _format_output(std::string const& head, std::string const& body,
                          _space);
             _store_value_to(value, res, true);
         } else {
-            std::vector<std::string> sub_split_str = _split(str, sep, true);
+            std::vector<std::string> sub_split_str = _split(str, sep);
             for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
                 std::string const& sub = sub_split_str.at(j);
                 _format_output_func(indent, width, res, value, sub);
@@ -5088,17 +5087,17 @@ protected:
     {
         std::string value;
         std::vector<std::string> res;
-        std::vector<std::string> split_str = detail::_split(text, '\n', true);
+        std::vector<std::string> split_str = detail::_split(text, '\n');
         for (std::size_t i = 0; i < split_str.size(); ++i) {
             std::string const& str = split_str.at(i);
             if (str.empty()) {
                 detail::_store_value_to(value, res, true);
             } else {
                 std::vector<std::string> sub_split_str
-                        = detail::_split(str, detail::_space, true, true);
+                        = detail::_split(str, detail::_space, true);
                 for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
                     std::vector<std::string> tab_split_str
-                        = detail::_split(sub_split_str.at(j), '\t', true, true);
+                        = detail::_split(sub_split_str.at(j), '\t', true);
                     for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
                         std::string sub = tab_split_str.at(k);
                         if (sub == "\t") {
