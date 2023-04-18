@@ -2462,17 +2462,17 @@ _store_value_to(std::string& value, std::vector<std::string>& res,
 }
 
 inline std::vector<std::string>
-_split(std::string const& str, char delim,
-       bool force = false, bool add_delim = false)
+_split(std::string const& str, char sep,
+       bool force = false, bool add_sep = false)
 {
     std::vector<std::string> res;
     std::string value;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
-        if (c == delim) {
+        if (c == sep) {
             _store_value_to(value, res, force);
-            if (add_delim) {
-                value = std::string(1, delim);
+            if (add_sep) {
+                value = std::string(1, sep);
                 _store_value_to(value, res, true);
             }
         } else {
@@ -2501,9 +2501,9 @@ _split_whitespace(std::string const& str, bool force = false)
 }
 
 inline std::pair<std::string, std::string>
-_split_delimiter(std::string const& str, char delim)
+_split_separator(std::string const& str, char sep)
 {
-    std::string::size_type pos = str.find(delim);
+    std::string::size_type pos = str.find(sep);
     if (pos != std::string::npos) {
         return std::make_pair(str.substr(0, pos), str.substr(pos + 1));
     } else {
@@ -2709,7 +2709,7 @@ _format_output_func(std::size_t indent, std::size_t width,
 inline std::string
 _format_output(std::string const& head, std::string const& body,
                std::size_t interlayer, std::size_t indent, std::size_t width,
-               char delimiter = '\n')
+               char sep = '\n')
 {
     std::vector<std::string> res;
     std::string value = head;
@@ -2719,15 +2719,14 @@ _format_output(std::string const& head, std::string const& body,
     std::vector<std::string> split_str = _split(body, '\n', true);
     for (std::size_t i = 0; i < split_str.size(); ++i) {
         std::string const& str = split_str.at(i);
-        if (delimiter == '\n') {
+        if (sep == '\n') {
             _format_output_func(indent, width, res, value, str);
         } else if (str.empty()) {
             value.resize(value.size() + indent - _utf8_length(value).second,
                          _space);
             _store_value_to(value, res, true);
         } else {
-            std::vector<std::string> sub_split_str
-                    = _split(str, delimiter, true);
+            std::vector<std::string> sub_split_str = _split(str, sep, true);
             for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
                 std::string const& sub = sub_split_str.at(j);
                 _format_output_func(indent, width, res, value, sub);
@@ -6687,7 +6686,7 @@ public:
      *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value
      */
@@ -6696,7 +6695,7 @@ public:
     typename detail::enable_if<
       detail::is_stl_container_paired<typename detail::decay<T>::type>::value, T
     >::type
-    get(std::string const& key, char delim = detail::_equal) const
+    get(std::string const& key, char sep = detail::_equal) const
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
@@ -6707,7 +6706,7 @@ public:
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
         std::vector<std::pair<K, V> > vector
-                = to_paired_vector<K, V>(args.second(), delim);
+                = to_paired_vector<K, V>(args.second(), sep);
         return T(vector.begin(), vector.end());
     }
 
@@ -6717,7 +6716,7 @@ public:
      *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value
      */
@@ -6726,7 +6725,7 @@ public:
     typename std::enable_if<
         detail::is_stl_container_tupled<typename std::decay<T>::type>::value, T
     >::type
-    get(std::string const& key, char delim = detail::_equal) const
+    get(std::string const& key, char sep = detail::_equal) const
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
@@ -6735,7 +6734,7 @@ public:
             throw TypeError("invalid get type for argument '" + key + "'");
         }
         auto vector = to_tupled_vector<
-                typename T::value_type>(args.second(), delim);
+                typename T::value_type>(args.second(), sep);
         return T(vector.begin(), vector.end());
     }
 #endif  // C++11+
@@ -6745,7 +6744,7 @@ public:
      *  If argument not parsed, returns empty map.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value
      */
@@ -6753,7 +6752,7 @@ public:
     _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_map<typename detail::decay<T>::type>::value, T>::type
-    get(std::string const& key, char delim = detail::_equal) const
+    get(std::string const& key, char sep = detail::_equal) const
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
@@ -6765,14 +6764,14 @@ public:
         typedef typename T::mapped_type V;
 #ifdef _ARGPARSE_CXX_11
         T res{};
-        auto vector = to_paired_vector<K, V>(args.second(), delim);
+        auto vector = to_paired_vector<K, V>(args.second(), sep);
         for (auto const& pair : vector) {
             res.emplace(std::make_pair(pair.first, pair.second));
         }
 #else
         T res;
         std::vector<std::pair<K, V> > vector
-                = to_paired_vector<K, V>(args.second(), delim);
+                = to_paired_vector<K, V>(args.second(), sep);
         for (std::size_t i = 0; i < vector.size(); ++i) {
             res.insert(std::make_pair(vector.at(i).first, vector.at(i).second));
         }
@@ -6866,7 +6865,7 @@ public:
      *  If argument not parsed, returns default pair.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value
      */
@@ -6874,7 +6873,7 @@ public:
     _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_pair<typename detail::decay<T>::type>::value, T>::type
-    get(std::string const& key, char delim = detail::_equal) const
+    get(std::string const& key, char sep = detail::_equal) const
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
@@ -6887,7 +6886,7 @@ public:
         }
         typedef typename T::first_type K;
         typedef typename T::second_type V;
-        if (std::isspace(static_cast<unsigned char>(delim))) {
+        if (std::isspace(static_cast<unsigned char>(sep))) {
             if (args.second.size() != 2) {
                 throw
                 TypeError("invalid data for paired argument '" + key + "'");
@@ -6899,7 +6898,7 @@ public:
             throw
             TypeError("trying to get data from array argument '" + key + "'");
         }
-        return to_pair<K, V>(args.second.front(), delim);
+        return to_pair<K, V>(args.second.front(), sep);
     }
 
     /*!
@@ -6933,7 +6932,7 @@ public:
      *  If argument not parsed, returns empty tuple.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value
      */
@@ -6941,7 +6940,7 @@ public:
     _ARGPARSE_ATTR_NODISCARD
     typename std::enable_if<
         detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
-    get(std::string const& key, char delim = detail::_equal) const
+    get(std::string const& key, char sep = detail::_equal) const
     {
         auto const& args = data(key);
         detail::_check_type_name(args.first->m_type_name,
@@ -6952,7 +6951,7 @@ public:
         if (args.second.empty()) {
             return T();
         }
-        if (std::isspace(static_cast<unsigned char>(delim))) {
+        if (std::isspace(static_cast<unsigned char>(sep))) {
             return to_tuple(detail::type_tag<T>{}, args.second());
         }
         if (args.second.size() != 1) {
@@ -6960,7 +6959,7 @@ public:
             TypeError("trying to get data from array argument '" + key + "'");
         }
         return to_tuple(detail::type_tag<T>{},
-                        detail::_split(args.second.front(), delim));
+                        detail::_split(args.second.front(), sep));
     }
 #endif  // C++11+
 
@@ -7273,7 +7272,7 @@ public:
      *  returns std::nullopt.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -7282,7 +7281,7 @@ public:
     std::optional<typename std::enable_if<
         detail::is_stl_container_paired<typename std::decay<T>::type>::value,
     T>::type>
-    try_get(std::string const& key, char delim = detail::_equal) const
+    try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -7293,7 +7292,7 @@ public:
         }
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
-        auto vector = try_to_paired_vector<K, V>(args->second(), delim);
+        auto vector = try_to_paired_vector<K, V>(args->second(), sep);
         if (!vector.operator bool()) {
             return std::nullopt;
         }
@@ -7306,7 +7305,7 @@ public:
      *  returns std::nullopt.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -7315,7 +7314,7 @@ public:
     std::optional<typename std::enable_if<
         detail::is_stl_container_tupled<typename std::decay<T>::type>::value,
     T>::type>
-    try_get(std::string const& key, char delim = detail::_equal) const
+    try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -7325,7 +7324,7 @@ public:
             return std::nullopt;
         }
         auto vector = try_to_tupled_vector<
-                typename T::value_type>(args->second(), delim);
+                typename T::value_type>(args->second(), sep);
         if (!vector.operator bool()) {
             return std::nullopt;
         }
@@ -7338,7 +7337,7 @@ public:
      *  returns std::nullopt.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -7346,7 +7345,7 @@ public:
     _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_map<typename std::decay<T>::type>::value, T>::type>
-    try_get(std::string const& key, char delim = detail::_equal) const
+    try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -7358,7 +7357,7 @@ public:
         typedef typename T::key_type K;
         typedef typename T::mapped_type V;
         T res{};
-        auto vector = try_to_paired_vector<K, V>(args->second(), delim);
+        auto vector = try_to_paired_vector<K, V>(args->second(), sep);
         if (!vector.operator bool()) {
             return std::nullopt;
         }
@@ -7468,7 +7467,7 @@ public:
      *  returns std::nullopt.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value
      */
@@ -7476,7 +7475,7 @@ public:
     _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_pair<typename std::decay<T>::type>::value, T>::type>
-    try_get(std::string const& key, char delim = detail::_equal) const
+    try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -7490,7 +7489,7 @@ public:
         }
         typedef typename T::first_type K;
         typedef typename T::second_type V;
-        if (std::isspace(static_cast<unsigned char>(delim))) {
+        if (std::isspace(static_cast<unsigned char>(sep))) {
             if (args->second.size() != 2) {
                 return std::nullopt;
             }
@@ -7505,7 +7504,7 @@ public:
         if (args->second.size() != 1) {
             return std::nullopt;
         }
-        return try_to_pair<K, V>(args->second.front(), delim);
+        return try_to_pair<K, V>(args->second.front(), sep);
     }
 
     /*!
@@ -7544,7 +7543,7 @@ public:
      *  returns std::nullopt.
      *
      *  \param key Argument destination name or flag
-     *  \param delim Delimiter
+     *  \param sep Separator (default: '=')
      *
      *  \return Parsed argument value or std::nullopt
      */
@@ -7552,7 +7551,7 @@ public:
     _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
-    try_get(std::string const& key, char delim = detail::_equal) const
+    try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
         if (!args.operator bool()
@@ -7564,14 +7563,14 @@ public:
         if (args->second.empty()) {
             return T();
         }
-        if (std::isspace(static_cast<unsigned char>(delim))) {
+        if (std::isspace(static_cast<unsigned char>(sep))) {
             return try_to_tuple(detail::type_tag<T>{}, args->second());
         }
         if (args->second.size() != 1) {
             return std::nullopt;
         }
         return try_to_tuple(detail::type_tag<T>{},
-                            detail::_split(args->second.front(), delim));
+                            detail::_split(args->second.front(), sep));
     }
 
     /*!
@@ -7717,19 +7716,19 @@ private:
     }
 
     template <class T, class U>
-    std::pair<T, U> to_pair(std::string const& data, char delim) const
+    std::pair<T, U> to_pair(std::string const& data, char sep) const
     {
         std::pair<std::string, std::string> const pair
-                = detail::_split_delimiter(data, delim);
+                = detail::_split_separator(data, sep);
         return std::make_pair(to_type<T>(pair.first), to_type<U>(pair.second));
     }
 
     template <class T, class U>
     std::vector<std::pair<T, U> >
-    to_paired_vector(std::vector<std::string> const& args, char delim) const
+    to_paired_vector(std::vector<std::string> const& args, char sep) const
     {
         std::vector<std::pair<T, U> > vec;
-        if (std::isspace(static_cast<unsigned char>(delim))) {
+        if (std::isspace(static_cast<unsigned char>(sep))) {
             if (args.size() & 1) {
                 throw TypeError("invalid stored argument amount");
             }
@@ -7741,7 +7740,7 @@ private:
         } else {
             vec.reserve(args.size());
             for (std::size_t i = 0; i < args.size(); ++i) {
-                vec.push_back(to_pair<T, U>(args.at(i), delim));
+                vec.push_back(to_pair<T, U>(args.at(i), sep));
             }
         }
         return vec;
@@ -7839,10 +7838,10 @@ private:
 
     template <class T>
     std::vector<T>
-    to_tupled_vector(std::vector<std::string> const& args, char delim) const
+    to_tupled_vector(std::vector<std::string> const& args, char sep) const
     {
         std::vector<T> vec;
-        if (std::isspace(static_cast<unsigned char>(delim))) {
+        if (std::isspace(static_cast<unsigned char>(sep))) {
             auto const size = std::tuple_size<T>{};
             if (size == 0 || args.size() % size != 0) {
                 throw TypeError("invalid stored argument amount");
@@ -7856,9 +7855,9 @@ private:
         } else {
             vec.reserve(args.size());
             std::transform(args.begin(), args.end(), std::back_inserter(vec),
-                           [this, delim] (std::string const& a)
+                           [this, sep] (std::string const& a)
             { return to_tuple(detail::type_tag<T>{},
-                              detail::_split(a, delim)); });
+                              detail::_split(a, sep)); });
         }
         return vec;
     }
@@ -7929,9 +7928,9 @@ private:
 
     template <class T, class U>
     std::optional<std::pair<T, U> >
-    try_to_pair(std::string const& data, char delim) const
+    try_to_pair(std::string const& data, char sep) const
     {
-        auto const pair = detail::_split_delimiter(data, delim);
+        auto const pair = detail::_split_separator(data, sep);
         auto el1 = try_to_type<T>(pair.first);
         auto el2 = try_to_type<U>(pair.second);
         if (el1.operator bool() && el2.operator bool()) {
@@ -7943,10 +7942,10 @@ private:
 
     template <class T, class U>
     std::optional<std::vector<std::pair<T, U> > >
-    try_to_paired_vector(std::vector<std::string> const& args, char delim) const
+    try_to_paired_vector(std::vector<std::string> const& args, char sep) const
     {
         std::vector<std::pair<T, U> > vec;
-        if (std::isspace(static_cast<unsigned char>(delim))) {
+        if (std::isspace(static_cast<unsigned char>(sep))) {
             if (args.size() & 1) {
                 return std::nullopt;
             }
@@ -7963,7 +7962,7 @@ private:
         } else {
             vec.reserve(args.size());
             for (auto const& arg : args) {
-                auto pair = try_to_pair<T, U>(arg, delim);
+                auto pair = try_to_pair<T, U>(arg, sep);
                 if (pair.operator bool()) {
                     vec.emplace_back(pair.value());
                 } else {
@@ -8045,10 +8044,10 @@ private:
 
     template <class T>
     std::optional<std::vector<T> >
-    try_to_tupled_vector(std::vector<std::string> const& args, char delim) const
+    try_to_tupled_vector(std::vector<std::string> const& args, char sep) const
     {
         std::vector<T> vec;
-        if (std::isspace(static_cast<unsigned char>(delim))) {
+        if (std::isspace(static_cast<unsigned char>(sep))) {
             auto const size = std::tuple_size<T>{};
             if (size == 0 || args.size() % size != 0) {
                 return std::nullopt;
@@ -8068,7 +8067,7 @@ private:
             vec.reserve(args.size());
             for (auto const& arg : args) {
                 auto tuple = try_to_tuple(detail::type_tag<T>{},
-                                          detail::_split(arg, delim));
+                                          detail::_split(arg, sep));
                 if (tuple.operator bool()) {
                     vec.emplace_back(tuple.value());
                 } else {
