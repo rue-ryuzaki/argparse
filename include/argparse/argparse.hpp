@@ -5109,7 +5109,7 @@ protected:
                         if (detail::_utf8_length(value).second + 1
                                 + detail::_utf8_length(sub).second > width) {
                             detail::_store_value_to(value, res);
-                            if (sub == "\t") {
+                            if (tab_split_str.at(k) == "\t") {
                                 sub = std::string(_tab_size(), detail::_space);
                             }
                         }
