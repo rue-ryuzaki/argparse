@@ -5137,7 +5137,7 @@ public:
                 std::string const& text,
                 std::size_t width) const _ARGPARSE_OVERRIDE
     {
-        return _RawDescriptionHelpFormatter::_split_lines(text, width);
+        return _RawDescriptionHelpFormatter::_split_lines_raw(text, width);
     }
 } _ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
 
