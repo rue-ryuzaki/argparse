@@ -917,6 +917,16 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->second == "value");
 #endif  // C++17+
 
+        // empty values
+        std::pair<std::string, std::string> pair_first
+                = parser.parse_args("--foo=:value").get<std::pair<std::string, std::string> >("foo", ':');
+        std::pair<std::string, std::string> pair_second
+                = parser.parse_args("--foo=key:").get<std::pair<std::string, std::string> >("foo", ':');
+        REQUIRE(pair_first.first == "");
+        REQUIRE(pair_first.second == "value");
+        REQUIRE(pair_second.first == "key");
+        REQUIRE(pair_second.second == "");
+
         argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
 
         parser2.add_argument("--foo").action("store").nargs(2).help("foo help");
@@ -964,6 +974,23 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(std::get<1>(try_tuple1.value()) == "value");
         REQUIRE(std::get<2>(try_tuple1.value()) == 3);
 #endif  // C++17+
+
+        // empty values
+        auto tuple1beg = parser.parse_args("--foo=:value:3")
+                .get<std::tuple<std::string, std::string, int> >("foo", ':');
+        auto tuple1mid = parser.parse_args("--foo=1::3")
+                .get<std::tuple<int, std::string, int> >("foo", ':');
+        auto tuple1end = parser.parse_args("--foo=1:value:")
+                .get<std::tuple<int, std::string, std::string> >("foo", ':');
+        REQUIRE(std::get<0>(tuple1beg) == "");
+        REQUIRE(std::get<1>(tuple1beg) == "value");
+        REQUIRE(std::get<2>(tuple1beg) == 3);
+        REQUIRE(std::get<0>(tuple1mid) == 1);
+        REQUIRE(std::get<1>(tuple1mid) == "");
+        REQUIRE(std::get<2>(tuple1mid) == 3);
+        REQUIRE(std::get<0>(tuple1end) == 1);
+        REQUIRE(std::get<1>(tuple1end) == "value");
+        REQUIRE(std::get<2>(tuple1end) == "");
 
         argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
 
