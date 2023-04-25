@@ -4,7 +4,7 @@ include(cmake/prelude.cmake)
 
 set(VERSION_MAJOR 1)
 set(VERSION_MINOR 7)
-set(VERSION_PATCH 5)
+set(VERSION_PATCH 6)
 
 if (${CMAKE_VERSION} VERSION_LESS "3.9")
     project("ArgumentParser"
