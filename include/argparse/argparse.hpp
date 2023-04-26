@@ -3566,9 +3566,7 @@ public:
 #endif  // C++11+
           m_post_trigger(orig.m_post_trigger),
           m_required(orig.m_required)
-    {
-        m_help[std::string()] = std::string();
-    }
+    { }
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -3601,9 +3599,7 @@ public:
           m_handle(std::move(orig.m_handle)),
           m_post_trigger(std::move(orig.m_post_trigger)),
           m_required(std::move(orig.m_required))
-    {
-        m_help[std::string()] = std::string();
-    }
+    { }
 #endif  // C++11+
 
     /*!
