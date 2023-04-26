@@ -10490,6 +10490,38 @@ public:
 #endif  // C++17+
 
     /*!
+     *  \brief Check if environment variable with name exists (from envp[])
+     *
+     *  \param name Environment variable name
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return True if environment variable name with exists, false otherwise
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    inline bool have_env(std::string const& name) const
+    {
+        return m_environment_variables.count(name) != 0;
+    }
+
+    /*!
+     *  \brief Get environment variable value (from envp[])
+     *
+     *  \param name Environment variable name
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Environment variable value if exists, empty string otherwise
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    inline std::string get_env(std::string const& name) const
+    {
+        std::map<std::string, std::string>::const_iterator it
+                = m_environment_variables.find(name);
+        return it != m_environment_variables.end() ? it->second : std::string();
+    }
+
+    /*!
      *  \brief Run self-test and print report to output stream
      *
      *  \param os Output stream (default: std::cout)
