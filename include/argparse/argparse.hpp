@@ -3751,7 +3751,7 @@ public:
                 break;
             case argparse::version :
             case argparse::help :
-                check_required();
+                check_action();
                 if (value == argparse::version) {
                     this->help("show program's version number and exit");
                 }
@@ -3774,7 +3774,7 @@ public:
                 }
                 break;
             case argparse::language :
-                check_required();
+                check_action();
                 m_const.reset();
                 m_nargs = NARGS_DEF;
                 m_nargs_str = std::string("1");
@@ -4045,7 +4045,8 @@ public:
     }
 
     /*!
-     *  \brief Set argument 'implicit' value
+     *  \brief Set argument 'implicit' value (used with nargs="?" or "*",
+     *  const_value alternative for optional arguments with nargs="?")
      *
      *  \param value Implicit value
      *
@@ -4058,7 +4059,8 @@ public:
     }
 
     /*!
-     *  \brief Set custom argument 'implicit' value
+     *  \brief Set custom argument 'implicit' value (used with nargs="?" or "*",
+     *  const_value alternative for optional arguments with nargs="?")
      *
      *  \param value Implicit value
      *
@@ -4543,7 +4545,8 @@ public:
     }
 
     /*!
-     *  \brief Get argument 'implicit' value
+     *  \brief Get argument 'implicit' value (used with nargs="?" or "*",
+     *  const_value alternative for optional arguments with nargs="?")
      *
      *  \return Argument 'implicit' value
      */
@@ -4663,11 +4666,11 @@ private:
 #endif  // C++11+
     }
 
-    inline void check_required() const
+    inline void check_action() const
     {
         if (m_type == Positional) {
             // version, help and language actions cannot be positional
-            throw TypeError("got an unexpected keyword argument 'required'");
+            throw TypeError("got an unexpected keyword argument 'action'");
         }
     }
 
@@ -6516,7 +6519,7 @@ public:
      *
      *  \since v1.7.5
      *
-     *  \return true if argument name exists and specified, otherwise false
+     *  \return True if argument name exists and specified, otherwise false
      */
     _ARGPARSE_ATTR_NODISCARD
     inline bool contains(std::string const& key) const
@@ -6534,7 +6537,7 @@ public:
      *
      *  \param key Argument destination name or flag
      *
-     *  \return true if argument name exists and specified, otherwise false
+     *  \return True if argument name exists and specified, otherwise false
      */
     _ARGPARSE_ATTR_NODISCARD
     inline bool exists(std::string const& key) const
@@ -9776,7 +9779,7 @@ public:
                 if (arg->is_suppressed()) {
                     return detail::_suppress;
                 }
-                return arg->m_default();;
+                return arg->m_default();
             }
         }
         for (std::size_t i = 0; i < optional.size(); ++i) {
