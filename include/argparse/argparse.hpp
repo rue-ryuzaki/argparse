@@ -8528,13 +8528,23 @@ private:
     typedef detail::shared_ptr<Subparser> pSubparser;
     typedef std::pair<pSubparser, std::size_t> SubparserInfo;
 
-    inline void read_args(int argc, char const* argv[])
+    inline void read_args(int argc, char const* const argv[])
     {
         if (argc > 0 && argv && argv[0]) {
             m_prog = detail::_file_name(argv[0]);
             m_parsed_arguments.reserve(std::size_t(argc - 1));
             for (int i = 1; i < argc && argv[i]; ++i) {
                 m_parsed_arguments.push_back(std::string(argv[i]));
+            }
+        }
+    }
+
+    inline void read_env(char const* const envp[])
+    {
+        if (envp) {
+            for (int i = 0; envp[i]; ++i) {
+                m_environment_variables.insert(
+                           detail::_split_separator(std::string(envp[i]), '='));
             }
         }
     }
@@ -8583,6 +8593,7 @@ public:
           m_mutex_groups(),
           m_default_values(),
           m_parsed_arguments(),
+          m_environment_variables(),
           m_subparsers(_ARGPARSE_NULLPTR),
           m_subparsers_position(),
 #ifdef _ARGPARSE_CXX_11
@@ -8609,7 +8620,7 @@ public:
      *  \return Argument parser object
      */
     explicit
-    ArgumentParser(int argc, char* argv[],
+    ArgumentParser(int argc, char const* const argv[],
                    std::string const& prog = std::string())
         : m_data(_ArgumentData::make_argument_data()),
           m_name(),
@@ -8631,55 +8642,7 @@ public:
           m_mutex_groups(),
           m_default_values(),
           m_parsed_arguments(),
-          m_subparsers(_ARGPARSE_NULLPTR),
-          m_subparsers_position(),
-#ifdef _ARGPARSE_CXX_11
-          m_handle(nullptr),
-          m_parse_handle(nullptr),
-#endif  // C++11+
-          m_argument_default_type(),
-          m_allow_abbrev(true),
-          m_exit_on_error(true)
-    {
-        initialize_parser();
-        read_args(argc, const_cast<char const**>(argv));
-        this->prog(prog);
-    }
-
-    /*!
-     *  \brief Construct argument parser from command line arguments
-     *  with concrete program name
-     *  (default: "" don't override argv[0] or default program name "untitled")
-     *
-     *  \param argc Number of command line arguments
-     *  \param argv Command line arguments data
-     *  \param prog Program name (default: "")
-     *
-     *  \return Argument parser object
-     */
-    explicit
-    ArgumentParser(int argc, char const* argv[],
-                   std::string const& prog = std::string())
-        : m_data(_ArgumentData::make_argument_data()),
-          m_name(),
-          m_prog("untitled"),
-          m_usage(),
-          m_usage_title(),
-          m_description(),
-          m_positionals_title(),
-          m_optionals_title(),
-          m_epilog(),
-          m_help(),
-          m_aliases(),
-          m_formatter_class(),
-          m_prefix_chars(detail::_prefix_chars),
-          m_fromfile_prefix_chars(),
-          m_argument_default(),
-          m_output_width(),
-          m_groups(),
-          m_mutex_groups(),
-          m_default_values(),
-          m_parsed_arguments(),
+          m_environment_variables(),
           m_subparsers(_ARGPARSE_NULLPTR),
           m_subparsers_position(),
 #ifdef _ARGPARSE_CXX_11
@@ -8692,6 +8655,60 @@ public:
     {
         initialize_parser();
         read_args(argc, argv);
+        this->prog(prog);
+    }
+
+    /*!
+     *  \brief Construct argument parser from command line arguments
+     *  with environment variables and concrete program name
+     *  (default: "" don't override argv[0] or default program name "untitled")
+     *
+     *  \param argc Number of command line arguments
+     *  \param argv Command line arguments data
+     *  \param envp Execution environment variables
+     *  \param prog Program name (default: "")
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Argument parser object
+     */
+    explicit
+    ArgumentParser(int argc, char const* const argv[], char const* const envp[],
+                   std::string const& prog = std::string())
+        : m_data(_ArgumentData::make_argument_data()),
+          m_name(),
+          m_prog("untitled"),
+          m_usage(),
+          m_usage_title(),
+          m_description(),
+          m_positionals_title(),
+          m_optionals_title(),
+          m_epilog(),
+          m_help(),
+          m_aliases(),
+          m_formatter_class(),
+          m_prefix_chars(detail::_prefix_chars),
+          m_fromfile_prefix_chars(),
+          m_argument_default(),
+          m_output_width(),
+          m_groups(),
+          m_mutex_groups(),
+          m_default_values(),
+          m_parsed_arguments(),
+          m_environment_variables(),
+          m_subparsers(_ARGPARSE_NULLPTR),
+          m_subparsers_position(),
+#ifdef _ARGPARSE_CXX_11
+          m_handle(nullptr),
+          m_parse_handle(nullptr),
+#endif  // C++11+
+          m_argument_default_type(),
+          m_allow_abbrev(true),
+          m_exit_on_error(true)
+    {
+        initialize_parser();
+        read_args(argc, argv);
+        read_env(envp);
         this->prog(prog);
     }
 
@@ -12704,6 +12721,7 @@ private:
     std::deque<MutuallyExclusiveGroup> m_mutex_groups;
     std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
+    std::map<std::string, std::string> m_environment_variables;
     pSubparser m_subparsers;
     std::size_t m_subparsers_position;
 #ifdef _ARGPARSE_CXX_11
