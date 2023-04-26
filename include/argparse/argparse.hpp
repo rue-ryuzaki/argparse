@@ -3263,6 +3263,7 @@ _ARGPARSE_EXPORT class Argument
           m_required()
     {
         m_help[std::string()] = std::string();
+        m_required.reset(m_type != Optional);
     }
 
 #ifdef _ARGPARSE_CXX_11
@@ -3294,6 +3295,7 @@ _ARGPARSE_EXPORT class Argument
           m_required()
     {
         m_help[std::string()] = std::string();
+        m_required.reset(m_type != Optional);
     }
 #endif  // C++11+
 
