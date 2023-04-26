@@ -4901,18 +4901,18 @@ private:
         if (m_choices.has_value()) {
             return { "{" + detail::_vector_to_string(choices(), ",") + "}" };
         }
-        return { m_type == Optional
-                    ? formatter._get_default_metavar_for_optional(this)
-                    : formatter._get_default_metavar_for_positional(this) };
+        return { m_type == Positional
+                    ? formatter._get_default_metavar_for_positional(this)
+                    : formatter._get_default_metavar_for_optional(this) };
 #else
         if (m_choices.has_value()) {
             return detail::_make_vector(
                         "{" + detail::_vector_to_string(choices(), ",") + "}");
         }
         return detail::_make_vector(
-                    m_type == Optional
-                      ? formatter._get_default_metavar_for_optional(this)
-                      : formatter._get_default_metavar_for_positional(this));
+                    m_type == Positional
+                      ? formatter._get_default_metavar_for_positional(this)
+                      : formatter._get_default_metavar_for_optional(this));
 #endif  // C++11+
     }
 
@@ -5528,25 +5528,26 @@ protected:
         std::string flag = flags.front();
         check_flag_name(flag);
         std::size_t prefixes = 0;
-        bool is_optional = detail::_is_value_exists(flag.at(0), prefix_chars);
-        update_flag_name(flags, prefix_chars, is_optional, flag, prefixes);
-        if (is_optional) {
+        Argument::Type type = Argument::Positional;
+        if (detail::_is_value_exists(flag.at(0), prefix_chars)) {
+            type = Argument::Optional;
+        }
+        update_flag_name(flags, prefix_chars,
+                         type == Argument::Optional, flag, prefixes);
+        if (type == Argument::Optional) {
             flag = detail::_replace(flag, '-', "_");
         }
 #ifdef _ARGPARSE_CXX_11
         auto arg = Argument::make_argument(
-                    std::move(flags), std::move(flag),
-                    is_optional ? Argument::Optional : Argument::Positional);
+                    std::move(flags), std::move(flag), type);
 #else
-        pArgument arg = Argument::make_argument(
-                    flags, flag,
-                    is_optional ? Argument::Optional : Argument::Positional);
+        pArgument arg = Argument::make_argument(flags, flag, type);
 #endif  // C++11+
-        if (is_optional) {
+        if (type == Argument::Optional) {
             data->check_conflict_arg(arg.get());
         }
         data->m_arguments.push_back(arg);
-        if (is_optional) {
+        if (type == Argument::Optional) {
             data->m_arguments.back()->m_post_trigger = data;
         }
     }
@@ -5556,20 +5557,23 @@ protected:
     {
         Argument arg = argument;
         std::vector<std::string>& flags = arg.m_flags;
-        bool is_optional = false;
+        arg.m_type = Argument::Positional;
         if (flags.empty()) {
             arg.m_name = arg.dest();
         } else {
             std::string flag = flags.front();
             check_flag_name(flag);
             std::size_t prefixes = 0;
-            is_optional = detail::_is_value_exists(flag.at(0), prefix_chars);
-            update_flag_name(flags, prefix_chars, is_optional, flag, prefixes);
-            arg.m_name = is_optional ? detail::_replace(flag, '-', "_") : flag;
+            if (detail::_is_value_exists(flag.at(0), prefix_chars)) {
+                arg.m_type = Argument::Optional;
+            }
+            update_flag_name(flags, prefix_chars,
+                             arg.m_type == Argument::Optional, flag, prefixes);
+            arg.m_name = arg.m_type == Argument::Optional
+                    ? detail::_replace(flag, '-', "_") : flag;
         }
-        arg.m_type = is_optional ? Argument::Optional : Argument::Positional;
         // check
-        if (!is_optional) {
+        if (arg.m_type == Argument::Positional) {
             if (arg.dest().empty() && flags.empty()) {
                 throw
                 TypeError("missing 1 required positional argument: 'dest'");
@@ -5593,7 +5597,7 @@ protected:
                     && !(arg.action() & detail::_const_action)) {
                 throw TypeError("got an unexpected keyword argument 'const'");
             }
-        } else {
+        } else if (arg.m_type == Argument::Optional) {
             if (arg.action() == argparse::BooleanOptionalAction) {
                 arg.make_no_flags();
             }
@@ -5786,9 +5790,8 @@ public:
 protected:
     inline void process_add_argument()
     {
-        bool optional
-                = m_data->m_arguments.back()->m_type == Argument::Optional;
-        if (!optional) {
+        Argument::Type type = m_data->m_arguments.back()->m_type;
+        if (type != Argument::Optional) {
             if (m_is_mutex_group) {
                 m_data->m_arguments.pop_back();
                 throw
@@ -5810,12 +5813,26 @@ protected:
                         m_argument_default_type());
         }
         m_parent_data->m_arguments.push_back(m_data->m_arguments.back());
-        (optional ? m_data->m_optional : m_data->m_positional)
-                .push_back(std::make_pair(m_data->m_arguments.back(),
-                                          !m_is_mutex_group));
-        (optional ? m_parent_data->m_optional : m_parent_data->m_positional)
-                .push_back(std::make_pair(m_data->m_arguments.back(),
-                                          !m_is_mutex_group));
+        switch (type) {
+            case Argument::Positional :
+                m_data->m_positional
+                        .push_back(std::make_pair(m_data->m_arguments.back(),
+                                                  !m_is_mutex_group));
+                m_parent_data->m_positional
+                        .push_back(std::make_pair(m_data->m_arguments.back(),
+                                                  !m_is_mutex_group));
+                break;
+            case Argument::Optional :
+                m_data->m_optional
+                        .push_back(std::make_pair(m_data->m_arguments.back(),
+                                                  !m_is_mutex_group));
+                m_parent_data->m_optional
+                        .push_back(std::make_pair(m_data->m_arguments.back(),
+                                                  !m_is_mutex_group));
+                break;
+            default :
+                break;
+        }
     }
 
     pArgumentData m_data;
@@ -10870,8 +10887,6 @@ private:
 
     inline void process_add_argument()
     {
-        bool optional
-                = m_data->m_arguments.back()->m_type == Argument::Optional;
         if (m_argument_default.has_value()
                 && !m_data->m_arguments.back()->m_default.has_value()
                 && !m_data->m_arguments.back()->m_default_type.has_value()) {
@@ -10881,8 +10896,18 @@ private:
             m_data->m_arguments.back()->default_value(
                         m_argument_default_type());
         }
-        (optional ? m_data->m_optional : m_data->m_positional)
-                .push_back(std::make_pair(m_data->m_arguments.back(), false));
+        switch (m_data->m_arguments.back()->m_type) {
+            case Argument::Positional :
+                m_data->m_positional.push_back(
+                            std::make_pair(m_data->m_arguments.back(), false));
+                break;
+            case Argument::Optional :
+                m_data->m_optional.push_back(
+                            std::make_pair(m_data->m_arguments.back(), false));
+                break;
+            default :
+                break;
+        }
     }
 
     inline Namespace on_parse_arguments(std::vector<std::string> const& args,
@@ -11316,10 +11341,10 @@ private:
         return parsers.front().storage.self_value_stored(arg);
     }
 
-    void storage_optional_store_func(Parsers& parsers,
-                                     std::string const& arg,
-                                     pArgument const& tmp,
-                                     std::size_t n) const
+    inline void storage_optional_store_func(Parsers& parsers,
+                                            std::string const& arg,
+                                            pArgument const& tmp,
+                                            std::size_t n) const
     {
         if (n == 0) {
             switch (tmp->m_nargs) {
@@ -11863,9 +11888,8 @@ private:
     }
 
     static pArgument const
-    optional_arg_by_flag(Parsers const& parsers, std::string const& key)
+    find_arg_by_flag(pArguments const& args, std::string const& key)
     {
-        pArguments const& args = parsers.back().optional;
         pArguments::const_iterator it = args.begin();
         for ( ; it != args.end(); ++it) {
             if (detail::_is_value_exists(key, (*it)->flags())) {
@@ -11880,8 +11904,10 @@ private:
                              Parsers const& parsers,
                              std::string const& key)
     {
-        return was_pseudo_arg ? _ARGPARSE_NULLPTR
-                              : optional_arg_by_flag(parsers, key);
+        if (was_pseudo_arg) {
+            return _ARGPARSE_NULLPTR;
+        }
+        return find_arg_by_flag(parsers.back().optional, key);
     }
 
     static bool
@@ -11949,7 +11975,7 @@ private:
                    = detail::_split_equal(arg,
                                          parsers.back().parser->prefix_chars());
             if (split.size() == 2 && !split.front().empty()
-                    && optional_arg_by_flag(parsers, split.front())) {
+                  && find_arg_by_flag(parsers.back().optional, split.front())) {
                 temp.push_back(arg);
                 return;
             }
@@ -12530,7 +12556,7 @@ private:
                 }
             }
             // check dest
-            if (!is_optional) {
+            if (arg->m_type == Argument::Positional) {
                 if (arg->dest().empty() && arg->flags().empty()) {
                     ++diagnostics.second;
                     os << status_error << " " << argument << ": missing 1 "
