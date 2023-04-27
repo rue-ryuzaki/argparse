@@ -6706,7 +6706,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
-            return T(args.second.size());
+            return static_cast<T>(args.second.size());
         }
         if (args.second.empty()) {
             return T();
@@ -6869,14 +6869,13 @@ public:
         }
         typedef typename T::key_type K;
         typedef typename T::mapped_type V;
+        T res = T();
 #ifdef _ARGPARSE_CXX_11
-        T res{};
         auto vector = to_paired_vector<K, V>(args.second(), sep);
         for (auto const& pair : vector) {
             res.emplace(std::make_pair(pair.first, pair.second));
         }
 #else
-        T res;
         std::vector<std::pair<K, V> > vector
                 = to_paired_vector<K, V>(args.second(), sep);
         for (std::size_t i = 0; i < vector.size(); ++i) {
@@ -6913,7 +6912,7 @@ public:
         }
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
-        T res;
+        T res = T();
         for (std::size_t i = 0; i < args.second.indexes().size(); ++i) {
             typedef std::vector<std::string>::difference_type dtype;
             std::vector<VV> vector = to_vector<VV>(
@@ -6953,7 +6952,7 @@ public:
         }
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
-        T res;
+        T res = T();
         for (std::size_t i = 0; i < args.second.indexes().size(); ++i) {
             typedef std::vector<std::string>::difference_type dtype;
             std::vector<VV> vector = to_vector<VV>(
@@ -7257,7 +7256,6 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->action() == argparse::count
-                || args->second.empty()
                 || args->second.size() != 1
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
@@ -7290,9 +7288,9 @@ public:
             return std::nullopt;
         }
         if (args->first->action() == argparse::count) {
-            return T(args->second.size());
+            return static_cast<T>(args->second.size());
         }
-        if (args->second.empty() || args->second.size() != 1) {
+        if (args->second.size() != 1) {
             return std::nullopt;
         }
         return try_to_type<T>(args->second.front());
@@ -7587,12 +7585,10 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->action() == argparse::count
+                || args->second.empty()
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
             return std::nullopt;
-        }
-        if (args->second.empty()) {
-            return T();
         }
         typedef typename T::first_type K;
         typedef typename T::second_type V;
@@ -7663,12 +7659,10 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->action() == argparse::count
+                || args->second.empty()
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
             return std::nullopt;
-        }
-        if (args->second.empty()) {
-            return T();
         }
         if (std::isspace(static_cast<unsigned char>(sep))) {
             return try_to_tuple(detail::type_tag<T>{}, args->second());
@@ -7706,6 +7700,7 @@ public:
         auto args = try_get_data(key);
         if (!args.operator bool()
                 || args->first->action() == argparse::count
+                || args->second.empty()
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
             return std::nullopt;
@@ -7911,7 +7906,7 @@ private:
             }
             data += value;
         }
-        T res;
+        T res = T();
         std::stringstream ss(data);
         while (!ss.eof()) {
             ss >> res;
@@ -8000,7 +7995,7 @@ private:
             throw TypeError("trying to get data from array argument value '"
                             + data + "'");
         }
-        return T(data.at(0));
+        return static_cast<T>(data.at(0));
     }
 
     template <class T>
@@ -8012,7 +8007,7 @@ private:
         if (data.empty()) {
             return T();
         }
-        T res;
+        T res = T();
         std::stringstream ss(detail::_remove_quotes(data));
         ss >> res;
         if (ss.fail() || !ss.eof()) {
@@ -8121,7 +8116,7 @@ private:
             }
             data += value;
         }
-        T res;
+        T res{};
         std::stringstream ss(data);
         while (!ss.eof()) {
             ss >> res;
@@ -8209,7 +8204,7 @@ private:
         if (data.empty() || data.size() != 1) {
             return std::nullopt;
         }
-        return T(data.front());
+        return static_cast<T>(data.front());
     }
 
     template <class T>
@@ -8220,9 +8215,9 @@ private:
     try_to_type(std::string const& data) const
     {
         if (data.empty()) {
-            return T();
+            return T{};
         }
-        T res;
+        T res{};
         std::stringstream ss(detail::_remove_quotes(data));
         ss >> res;
         if (ss.fail() || !ss.eof()) {
