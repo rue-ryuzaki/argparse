@@ -4369,6 +4369,7 @@ public:
             throw TypeError("got an invalid keyword argument 'metavar'");
         }
         if (!(action() & (detail::_store_const_action
+                          | argparse::language
                           | argparse::BooleanOptionalAction))) {
             throw TypeError("got an unexpected keyword argument 'metavar'");
         }
