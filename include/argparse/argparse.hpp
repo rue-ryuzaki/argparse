@@ -7777,7 +7777,7 @@ private:
     store_actions_to_string(_Storage::value_type const& args,
                             std::string const& quotes) const
     {
-        if ((args.first->action() == argparse::store
+        if (((args.first->action() & (argparse::store | argparse::language))
              && (args.first->m_nargs
                  & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE)))
                 || (!args.second.exists()
