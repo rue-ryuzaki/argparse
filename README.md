@@ -60,6 +60,7 @@ The work of the parser on older versions of compilers is not guaranteed.
 - [Features](#features)
   - [handle (for C++11+)](#handle)
   - [terminal size auto-detection](#terminal-size-auto-detection)
+  - [Operand argument type](#operand-argument)
   - [Argument::implicit_value](#argumentimplicit_value)
   - [Action::language](#actionlanguage)
 - Python API support:
@@ -466,6 +467,51 @@ int main(int argc, char* argv[])
 ```
 ### Terminal size auto-detection
 By default, help output is positioned based on the terminal's width. But you can manually specify the width of the available area using the ArgumentParser::output_width(...) method.
+### Operand argument
+Operand arguments is position independent with required = true (by default). To create operand argument use flag with suffix ```"="``` (indicates, that argument will be operand):
+```cpp
+parser.add_argument("flag=");
+```
+Operand argument restrictions:
+- argument can have only one flag
+- actions "store" and "language"  is allowed
+- nargs is not allowed
+- const_value is not allowed
+- metavar with single value is allowed
+
+Usage example:
+```cpp
+auto parser = argparse::ArgumentParser("test");
+
+parser.add_argument("bar").help("positional argument bar");
+parser.add_argument("--foo").help("optional argument foo");
+parser.add_argument(argparse::Argument("if=").metavar("INPUT").dest("in").help("required operand if"));
+parser.add_argument("of=").required(false).help("operand of");
+
+parser.print_help();
+
+auto args = parser.parse_args("--foo=a if=input of=output bar");
+
+std::cout << args << std::endl;
+std::cout << args.get<std::string>("of") << std::endl;
+```
+with output:
+```
+usage: test [-h] [--foo FOO] if=INPUT [of=OF] bar
+
+positional arguments:
+  bar         positional argument bar
+
+operands:
+  if=INPUT    required operand if
+  of=OF       operand of
+
+options:
+  -h, --help  show this help message and exit
+  --foo FOO   optional argument foo
+Namespace(bar='bar', foo='a', in='input', of='output')
+output
+```
 ### Argument::implicit_value
 The implicit_value argument of add_argument() is used to hold implicit values that are not read from the command line (use with nargs = "?" and "*").
 
@@ -529,14 +575,14 @@ int main(int argc, char* argv[])
             .epilog("epilog", "de")
             .epilog("epilog", "cz");
     parser.add_argument("-h", "--help")
-            .action(argparse::help)
+            .action("help")
             .help("show this help message and exit")
             .help("afficher ce message d'aide et quitter", "fr")
             .help("diese hilfemeldung anzeigen und beenden", "de")
             .help("zobrazit tuto nápovědu a odejít", "cz");
     parser.add_argument("-l", "--lang")
-            .action(argparse::language)
-            .choices({ "fr", "de", "cz" })
+            .action("language")
+            .choices("fr", "de", "cz")
             .help("set language")
             .help("définir la langue", "fr")
             .help("sprache einstellen", "de")
