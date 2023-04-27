@@ -3737,8 +3737,8 @@ public:
     inline Argument& action(Action value)
     {
         if (m_type == Operand
-                && !(value & (detail::_store_action | argparse::language))) {
-            // non-store actions cannot be operand
+                && !(value & (argparse::store | argparse::language))) {
+            // only store and language actions can be operand
             throw TypeError("got an unexpected keyword argument 'action'");
         }
         prepare_action(value);
@@ -5668,9 +5668,8 @@ protected:
                 throw TypeError("got an unexpected keyword argument 'const'");
             }
         } else if (arg.m_type == Argument::Operand) {
-            if (!(arg.action()
-                  & (detail::_store_action | argparse::language))) {
-                // some actions cannot be operand
+            if (!(arg.action() & (argparse::store | argparse::language))) {
+                // only store and language actions can be operand
                 throw TypeError("got an unexpected keyword argument 'action'");
             }
             if (arg.m_nargs != Argument::NARGS_DEF) {
