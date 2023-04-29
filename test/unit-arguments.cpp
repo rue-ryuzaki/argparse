@@ -261,3 +261,46 @@ TEST_CASE("4. optional and positional arguments", "[argument_parser]")
         REQUIRE(args2.get<std::string>("bar") == bar);
     }
 }
+
+TEST_CASE("5. operand arguments", "[argument_parser]")
+{
+    std::string global_default = "global";
+    std::string local_default = "local";
+
+    argparse::ArgumentParser parser = argparse::ArgumentParser().argument_default(global_default).exit_on_error(false);
+    parser.add_argument("foo=").required(false);
+    parser.add_argument("bar=").required(false).default_value(local_default);
+
+    std::string foo = "foo";
+    std::string bar = "bar";
+
+    SECTION("5.1. no arguments") {
+        argparse::Namespace args = parser.parse_args("");
+        REQUIRE(args.get<std::string>("foo=") == global_default);
+        REQUIRE(args.get<std::string>("bar=") == local_default);
+        REQUIRE(args.get<std::string>("foo") == global_default);
+        REQUIRE(args.get<std::string>("bar") == local_default);
+    }
+
+    SECTION("5.2. one argument") {
+        argparse::Namespace args1 = parser.parse_args("foo=" + foo);
+        REQUIRE(args1.get<std::string>("foo=") == foo);
+        REQUIRE(args1.get<std::string>("bar=") == local_default);
+        REQUIRE(args1.get<std::string>("foo") == foo);
+        REQUIRE(args1.get<std::string>("bar") == local_default);
+
+        argparse::Namespace args2 = parser.parse_args("bar=" + bar);
+        REQUIRE(args2.get<std::string>("foo=") == global_default);
+        REQUIRE(args2.get<std::string>("bar=") == bar);
+        REQUIRE(args2.get<std::string>("foo") == global_default);
+        REQUIRE(args2.get<std::string>("bar") == bar);
+    }
+
+    SECTION("5.3. both arguments") {
+        argparse::Namespace args = parser.parse_args(_make_vec("foo=" + foo, "bar=" + bar));
+        REQUIRE(args.get<std::string>("foo=") == foo);
+        REQUIRE(args.get<std::string>("bar=") == bar);
+        REQUIRE(args.get<std::string>("foo") == foo);
+        REQUIRE(args.get<std::string>("bar") == bar);
+    }
+}
