@@ -6501,11 +6501,19 @@ private:
             return it;
         }
         for (it = begin(); it != end(); ++it) {
-            if (it->first->m_type == Argument::Optional
-                    && it->first->dest().empty()) {
+            if (!it->first->dest().empty()) {
+                continue;
+            }
+            if (it->first->m_type == Argument::Optional) {
                 for (std::size_t i = 0; i < it->first->m_flags.size(); ++i) {
                     if (detail::_flag_name(it->first->m_flags.at(i)) == key
                             || it->first->m_name == key) {
+                        return it;
+                    }
+                }
+            } else if (it->first->m_type == Argument::Operand) {
+                for (std::size_t i = 0; i < it->first->m_flags.size(); ++i) {
+                    if (it->first->m_flags.at(i) + "=" == key) {
                         return it;
                     }
                 }
