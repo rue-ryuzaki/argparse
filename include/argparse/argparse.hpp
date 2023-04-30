@@ -4972,6 +4972,36 @@ private:
         }
     }
 
+    inline bool is_match_name(std::string const& value) const
+    {
+        if (!dest().empty()) {
+            return dest() == value;
+        }
+        switch (m_type) {
+            case Positional :
+                return m_name == value;
+            case Operand :
+                for (std::size_t j = 0; j < m_flags.size(); ++j) {
+                    std::string const& flag = m_flags.at(j);
+                    if (flag == value || (flag + "=" == value)) {
+                        return true;
+                    }
+                }
+                return false;
+            case Optional :
+                for (std::size_t j = 0; j < m_flags.size(); ++j) {
+                    std::string const& flag = m_flags.at(j);
+                    if (flag == value || m_name == value
+                            || detail::_flag_name(flag) == value) {
+                        return true;
+                    }
+                }
+                return false;
+            default :
+                return false;
+        }
+    }
+
     inline bool is_suppressed() const _ARGPARSE_NOEXCEPT
     {
         return m_default_type == argparse::SUPPRESS && !m_default.has_value();
@@ -6501,22 +6531,8 @@ private:
             return it;
         }
         for (it = begin(); it != end(); ++it) {
-            if (!it->first->dest().empty()) {
-                continue;
-            }
-            if (it->first->m_type == Argument::Optional) {
-                for (std::size_t i = 0; i < it->first->m_flags.size(); ++i) {
-                    if (detail::_flag_name(it->first->m_flags.at(i)) == key
-                            || it->first->m_name == key) {
-                        return it;
-                    }
-                }
-            } else if (it->first->m_type == Argument::Operand) {
-                for (std::size_t i = 0; i < it->first->m_flags.size(); ++i) {
-                    if (it->first->m_flags.at(i) + "=" == key) {
-                        return it;
-                    }
-                }
+            if (it->first->is_match_name(key)) {
+                return it;
             }
         }
         return end();
@@ -9921,47 +9937,14 @@ public:
     _ARGPARSE_ATTR_NODISCARD
     inline std::string get_default(std::string const& dest) const
     {
-        pArguments const positional = m_data->get_positional(true, true);
-        pArguments const operand = m_data->get_operand(true, true);
-        pArguments const optional = m_data->get_optional(true, true);
-        for (std::size_t i = 0; i < positional.size(); ++i) {
-            pArgument const& arg = positional.at(i);
-            if (detail::_is_value_exists(dest, arg->m_flags)) {
+        pArguments const arguments = m_data->get_arguments(true);
+        for (std::size_t i = 0; i < arguments.size(); ++i) {
+            pArgument const& arg = arguments.at(i);
+            if (arg->is_match_name(dest)) {
                 if (arg->is_suppressed()) {
                     return detail::_suppress;
                 }
                 return arg->m_default();
-            }
-        }
-        for (std::size_t i = 0; i < operand.size(); ++i) {
-            pArgument const& arg = operand.at(i);
-            if (detail::_is_value_exists(dest, arg->m_flags)) {
-                if (arg->is_suppressed()) {
-                    return detail::_suppress;
-                }
-                return arg->m_default();
-            }
-        }
-        for (std::size_t i = 0; i < optional.size(); ++i) {
-            pArgument const& arg = optional.at(i);
-            if (!arg->dest().empty()) {
-                if (arg->dest() == dest) {
-                    if (arg->is_suppressed()) {
-                        return detail::_suppress;
-                    }
-                    return arg->m_default();
-                }
-            } else {
-                for (std::size_t j = 0; j < arg->m_flags.size(); ++j) {
-                    std::string const& flag = arg->m_flags.at(j);
-                    std::string name = detail::_flag_name(flag);
-                    if (flag == dest || name == dest) {
-                        if (arg->is_suppressed()) {
-                            return detail::_suppress;
-                        }
-                        return arg->m_default();
-                    }
-                }
             }
         }
         for (std::size_t i = 0; i < m_default_values.size(); ++i) {
@@ -12465,25 +12448,9 @@ private:
     {
         for (std::size_t i = 0; i < arguments.size(); ++i) {
             pArgument& arg = arguments.at(i);
-            if (arg->m_type == Argument::Positional) {
-                if (detail::_is_value_exists(dest, arg->m_flags)) {
-                    arg->default_value(val);
-                    return true;
-                }
-            } else if (!arg->dest().empty()) {
-                if (arg->dest() == dest) {
-                    arg->default_value(val);
-                    return true;
-                }
-            } else {
-                for (std::size_t j = 0; j < arg->m_flags.size(); ++j) {
-                    std::string const& flag = arg->m_flags.at(j);
-                    std::string name = detail::_flag_name(flag);
-                    if (flag == dest || name == dest) {
-                        arg->default_value(val);
-                        return true;
-                    }
-                }
+            if (arg->is_match_name(dest)) {
+                arg->default_value(val);
+                return true;
             }
         }
         return false;
