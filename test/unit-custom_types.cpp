@@ -4,8 +4,7 @@
 
 #include <iostream>
 
-#include <argparse/argparse.hpp>
-
+#include "./argparse_decl.hpp"
 #include "./catch-define.h"
 
 struct Coord
