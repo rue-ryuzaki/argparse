@@ -523,22 +523,23 @@ public:
     }
     inline std::size_t _tab_size() const { return m_tab_size; }
 
-    virtual inline std::string _fill_text(
-                std::string const& /*text*/,
-                std::size_t /*width*/,
-                std::size_t /*indent*/) const;
-    virtual inline std::string _get_default_metavar_for_optional(
-                Argument const* /*action*/) const;
-    virtual inline std::string _get_default_metavar_for_positional(
-                Argument const* /*action*/) const;
-    virtual inline std::string _get_help_string(
-                Argument const* /*action*/,
-                std::string const& /*lang*/) const;
-    virtual inline std::vector<std::string> _split_lines(
-                std::string const& /*text*/,
-                std::size_t /*width*/) const;
+    virtual std::string _fill_text(
+                std::string const& text,
+                std::size_t width,
+                std::size_t indent) const;
+    virtual std::string _get_default_metavar_for_optional(
+                Argument const* action) const;
+    virtual std::string _get_default_metavar_for_positional(
+                Argument const* action) const;
+    virtual std::string _get_help_string(
+                Argument const* action,
+                std::string const& lang) const;
+    virtual std::vector<std::string> _split_lines(
+                std::string const& text,
+                std::size_t width) const;
 
 private:
+    // -- data ----------------------------------------------------------------
     std::size_t m_tab_size;
 };
 
@@ -4784,68 +4785,6 @@ private:
     detail::shared_ptr<_ConflictResolver> m_post_trigger;
     detail::Value<bool> m_required;
 };
-
-// -- HelpFormatter implementation --------------------------------------------
-inline std::string HelpFormatter::_fill_text(
-            std::string const& text,
-            std::size_t width,
-            std::size_t indent) const
-{
-    std::vector<std::string> res;
-    std::string value;
-    std::vector<std::string> lines = _split_lines(text, width - indent);
-    for (std::size_t i = 0; i < lines.size(); ++i) {
-        std::size_t value_size = detail::_utf8_length(value).second;
-        if (value_size < indent) {
-            value.resize(value.size() + indent - value_size,
-                         detail::_space);
-        }
-        value += lines.at(i);
-        detail::_store_value_to(value, res, true);
-    }
-    detail::_store_value_to(value, res);
-    return detail::_vector_to_string(res, "\n");
-}
-
-inline std::string HelpFormatter::_get_default_metavar_for_optional(
-            Argument const* action) const
-{
-    return detail::_to_upper(action->get_dest());
-}
-
-inline std::string HelpFormatter::_get_default_metavar_for_positional(
-            Argument const* action) const
-{
-    return action->get_dest();
-}
-
-inline std::string HelpFormatter::_get_help_string(
-            Argument const* action,
-            std::string const& lang) const
-{
-    return detail::_tr(action->m_help, lang);
-}
-
-inline std::vector<std::string> HelpFormatter::_split_lines(
-            std::string const& text,
-            std::size_t width) const
-{
-    std::string value;
-    std::vector<std::string> res;
-    std::vector<std::string> split_str = detail::_split_whitespace(text);
-    for (std::size_t i = 0; i < split_str.size(); ++i) {
-        if (detail::_utf8_length(value).second + 1
-                + detail::_utf8_length(split_str.at(i)).second > width) {
-            detail::_store_value_to(value, res);
-        }
-        if (!value.empty()) {
-            value += detail::_spaces;
-        }
-        value += split_str.at(i);
-    }
-    detail::_store_value_to(value, res);
-    return res;
-}
 
 /*!
  *  \brief Help message formatter which retains any formatting in descriptions
@@ -10599,6 +10538,73 @@ private:
 
 // -- implementation ----------------------------------------------------------
 #ifdef _ARGPARSE_INL
+// -- HelpFormatter -----------------------------------------------------------
+_ARGPARSE_INL std::string
+HelpFormatter::_fill_text(
+            std::string const& text,
+            std::size_t width,
+            std::size_t indent) const
+{
+    std::vector<std::string> res;
+    std::string value;
+    std::vector<std::string> lines = _split_lines(text, width - indent);
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        std::size_t value_size = detail::_utf8_length(value).second;
+        if (value_size < indent) {
+            value.resize(value.size() + indent - value_size,
+                         detail::_space);
+        }
+        value += lines.at(i);
+        detail::_store_value_to(value, res, true);
+    }
+    detail::_store_value_to(value, res);
+    return detail::_vector_to_string(res, "\n");
+}
+
+_ARGPARSE_INL std::string
+HelpFormatter::_get_default_metavar_for_optional(
+            Argument const* action) const
+{
+    return detail::_to_upper(action->get_dest());
+}
+
+_ARGPARSE_INL std::string
+HelpFormatter::_get_default_metavar_for_positional(
+            Argument const* action) const
+{
+    return action->get_dest();
+}
+
+_ARGPARSE_INL std::string
+HelpFormatter::_get_help_string(
+            Argument const* action,
+            std::string const& lang) const
+{
+    return detail::_tr(action->m_help, lang);
+}
+
+_ARGPARSE_INL std::vector<std::string>
+HelpFormatter::_split_lines(
+            std::string const& text,
+            std::size_t width) const
+{
+    std::string value;
+    std::vector<std::string> res;
+    std::vector<std::string> split_str = detail::_split_whitespace(text);
+    for (std::size_t i = 0; i < split_str.size(); ++i) {
+        if (detail::_utf8_length(value).second + 1
+                + detail::_utf8_length(split_str.at(i)).second > width) {
+            detail::_store_value_to(value, res);
+        }
+        if (!value.empty()) {
+            value += detail::_spaces;
+        }
+        value += split_str.at(i);
+    }
+    detail::_store_value_to(value, res);
+    return res;
+}
+
 // -- Argument ----------------------------------------------------------------
 _ARGPARSE_INL detail::shared_ptr<Argument>
 Argument::make_argument(
