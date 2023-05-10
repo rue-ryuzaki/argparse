@@ -4945,13 +4945,8 @@ class _Group
 
 protected:
     explicit
-    _Group(std::string const& title, std::string const& description)
-        : m_title(),
-          m_description()
-    {
-        m_title[std::string()] = title;
-        m_description[std::string()] = description;
-    }
+    _Group(std::string const& title,
+                std::string const& description);
 
 public:
     /*!
@@ -4965,10 +4960,8 @@ public:
      *  \return Group 'title' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& title() const
-    {
-        return detail::_map_at(m_title, std::string());
-    }
+    std::string const&
+    title() const;
 
     /*!
      *  \brief Get group 'description' value
@@ -4976,10 +4969,8 @@ public:
      *  \return Group 'description' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& description() const
-    {
-        return detail::_map_at(m_description, std::string());
-    }
+    std::string const&
+    description() const;
 
 protected:
     virtual void
@@ -5009,29 +5000,13 @@ class _ArgumentData : public _ConflictResolver
     friend class ArgumentParser;
     friend class MutuallyExclusiveGroup;
 
-    _ArgumentData()
-        : m_conflict_handler(),
-          m_arguments(),
-          m_optional(),
-          m_operand(),
-          m_positional(),
-          m_add_help(false),
-          m_help_added(false)
-    { }
+    typedef detail::shared_ptr<Argument> pArgument;
+
+    _ArgumentData();
 
     static detail::shared_ptr<_ArgumentData>
     make_argument_data();
 
-protected:
-    typedef detail::shared_ptr<Argument> pArgument;
-
-public:
-    /*!
-     *  \brief Destroy argument data
-     */
-    virtual ~_ArgumentData() _ARGPARSE_NOEXCEPT { }
-
-protected:
     void
     check_conflict_arg(
                 Argument const* arg) _ARGPARSE_OVERRIDE _ARGPARSE_FINAL;
@@ -5116,18 +5091,12 @@ protected:
     typedef detail::shared_ptr<_ArgumentData> pArgumentData;
 
     explicit
-    _ArgumentGroup(std::string& prefix_chars,
-                   pArgumentData& parent_data,
-                   detail::Value<std::string>& argument_default,
-                   detail::Value<_SUPPRESS>& argument_default_type,
-                   bool is_mutex_group)
-        : m_data(_ArgumentData::make_argument_data()),
-          m_prefix_chars(prefix_chars),
-          m_parent_data(parent_data),
-          m_argument_default(argument_default),
-          m_argument_default_type(argument_default_type),
-          m_is_mutex_group(is_mutex_group)
-    { }
+    _ArgumentGroup(
+                std::string& prefix_chars,
+                pArgumentData& parent_data,
+                detail::Value<std::string>& argument_default,
+                detail::Value<_SUPPRESS>& argument_default_type,
+                bool is_mutex_group);
 
 public:
     /*!
@@ -5137,14 +5106,8 @@ public:
      *
      *  \return Argument group object
      */
-    _ArgumentGroup(_ArgumentGroup const& orig)
-        : m_data(orig.m_data),
-          m_prefix_chars(orig.m_prefix_chars),
-          m_parent_data(orig.m_parent_data),
-          m_argument_default(orig.m_argument_default),
-          m_argument_default_type(orig.m_argument_default_type),
-          m_is_mutex_group(orig.m_is_mutex_group)
-    { }
+    _ArgumentGroup(
+                _ArgumentGroup const& orig);
 
     /*!
      *  \brief Destroy argument group object
@@ -5158,18 +5121,8 @@ public:
      *
      *  \return Current argument group reference
      */
-    inline _ArgumentGroup& operator =(_ArgumentGroup const& rhs)
-    {
-        if (this != &rhs) {
-            m_data                  = rhs.m_data;
-            m_prefix_chars          = rhs.m_prefix_chars;
-            m_parent_data           = rhs.m_parent_data;
-            m_argument_default      = rhs.m_argument_default;
-            m_argument_default_type = rhs.m_argument_default_type;
-            m_is_mutex_group        = rhs.m_is_mutex_group;
-        }
-        return *this;
-    }
+    _ArgumentGroup&
+    operator =(_ArgumentGroup const& rhs);
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -5180,7 +5133,8 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
-    inline Argument& add_argument(Args... flags)
+    inline Argument&
+    add_argument(Args... flags)
     {
         return add_argument(std::vector<std::string>{ flags... });
     }
@@ -5194,11 +5148,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument&
-    add_argument(std::initializer_list<std::string> const& flags)
-    {
-        return add_argument(std::vector<std::string>{ flags });
-    }
+    Argument&
+    add_argument(std::initializer_list<std::string> const& flags);
 #else
     /*!
      *  \brief Add argument with flag
@@ -5207,10 +5158,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& add_argument(std::string const& flag)
-    {
-        return add_argument(detail::_make_vector(flag));
-    }
+    Argument&
+    add_argument(std::string const& flag);
 
     /*!
      *  \brief Add argument with 2 flags
@@ -5220,11 +5169,10 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& add_argument(std::string const& flag1,
-                                  std::string const& flag2)
-    {
-        return add_argument(detail::_make_vector(flag1, flag2));
-    }
+    Argument&
+    add_argument(
+                std::string const& flag1,
+                std::string const& flag2);
 
     /*!
      *  \brief Add argument with 3 flags
@@ -5237,12 +5185,11 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& add_argument(std::string const& flag1,
-                                  std::string const& flag2,
-                                  std::string const& flag3)
-    {
-        return add_argument(detail::_make_vector(flag1, flag2, flag3));
-    }
+    Argument&
+    add_argument(
+                std::string const& flag1,
+                std::string const& flag2,
+                std::string const& flag3);
 
     /*!
      *  \brief Add argument with 4 flags
@@ -5256,13 +5203,12 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& add_argument(std::string const& flag1,
-                                  std::string const& flag2,
-                                  std::string const& flag3,
-                                  std::string const& flag4)
-    {
-        return add_argument(detail::_make_vector(flag1, flag2, flag3, flag4));
-    }
+    Argument&
+    add_argument(
+                std::string const& flag1,
+                std::string const& flag2,
+                std::string const& flag3,
+                std::string const& flag4);
 #endif  // C++11+
 
     /*!
@@ -5272,12 +5218,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& add_argument(std::vector<std::string> const& flags)
-    {
-        m_data->create_argument(m_data, flags, m_prefix_chars);
-        process_add_argument();
-        return *m_data->m_arguments.back();
-    }
+    Argument&
+    add_argument(std::vector<std::string> const& flags);
 
 protected:
     void
@@ -5302,16 +5244,13 @@ _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
     friend class ArgumentParser;
 
     explicit
-    ArgumentGroup(std::string const& title,
-                  std::string const& description,
-                  std::string& prefix_chars,
-                  pArgumentData& parent_data,
-                  detail::Value<std::string>& argument_default,
-                  detail::Value<_SUPPRESS>& argument_default_type)
-        : _Group(title, description),
-          _ArgumentGroup(prefix_chars, parent_data,
-                         argument_default, argument_default_type, false)
-    { }
+    ArgumentGroup(
+                std::string const& title,
+                std::string const& description,
+                std::string& prefix_chars,
+                pArgumentData& parent_data,
+                detail::Value<std::string>& argument_default,
+                detail::Value<_SUPPRESS>& argument_default_type);
 
     static detail::shared_ptr<ArgumentGroup>
     make_argument_group(
@@ -5334,10 +5273,7 @@ public:
      *
      *  \return Argument group object
      */
-    ArgumentGroup(ArgumentGroup const& orig)
-        : _Group(orig),
-          _ArgumentGroup(orig)
-    { }
+    ArgumentGroup(ArgumentGroup const& orig);
 
     /*!
      *  \brief Copy argument group object from another argument group
@@ -5346,19 +5282,8 @@ public:
      *
      *  \return Current argument group reference
      */
-    inline ArgumentGroup& operator =(ArgumentGroup const& rhs)
-    {
-        if (this != &rhs) {
-            m_title                 = rhs.m_title;
-            m_description           = rhs.m_description;
-            m_data                  = rhs.m_data;
-            m_prefix_chars          = rhs.m_prefix_chars;
-            m_argument_default      = rhs.m_argument_default;
-            m_argument_default_type = rhs.m_argument_default_type;
-            m_parent_data           = rhs.m_parent_data;
-        }
-        return *this;
-    }
+    ArgumentGroup&
+    operator =(ArgumentGroup const& rhs);
 
     /*!
      *  \brief Set argument group 'title' value for selected language
@@ -5368,12 +5293,9 @@ public:
      *
      *  \return Current argument group reference
      */
-    inline ArgumentGroup& title(std::string const& value,
-                                std::string const& lang = std::string())
-    {
-        m_title[lang] = value;
-        return *this;
-    }
+    ArgumentGroup&
+    title(std::string const& value,
+                std::string const& lang = std::string());
 
     /*!
      *  \brief Set argument group 'description' value for selected language
@@ -5383,12 +5305,9 @@ public:
      *
      *  \return Current argument group reference
      */
-    inline ArgumentGroup& description(std::string const& value,
-                                      std::string const& lang = std::string())
-    {
-        m_description[lang] = value;
-        return *this;
-    }
+    ArgumentGroup&
+    description(std::string const& value,
+                std::string const& lang = std::string());
 
     /*!
      *  \brief Add argument
@@ -5430,14 +5349,11 @@ _ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
     friend class ArgumentParser;
 
     explicit
-    MutuallyExclusiveGroup(std::string& prefix_chars,
-                           pArgumentData& parent_data,
-                           detail::Value<std::string>& argument_default,
-                           detail::Value<_SUPPRESS>& argument_default_type)
-        : _ArgumentGroup(prefix_chars, parent_data,
-                         argument_default, argument_default_type, true),
-          m_required(false)
-    { }
+    MutuallyExclusiveGroup(
+                std::string& prefix_chars,
+                pArgumentData& parent_data,
+                detail::Value<std::string>& argument_default,
+                detail::Value<_SUPPRESS>& argument_default_type);
 
     static MutuallyExclusiveGroup
     make_mutex_group(
@@ -5457,10 +5373,8 @@ public:
      *
      *  \return Mutually exclusive group object
      */
-    MutuallyExclusiveGroup(MutuallyExclusiveGroup const& orig)
-        : _ArgumentGroup(orig),
-          m_required(orig.m_required)
-    { }
+    MutuallyExclusiveGroup(
+                MutuallyExclusiveGroup const& orig);
 
     /*!
      *  \brief Copy mutually exclusive group object from another
@@ -5470,18 +5384,8 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
-    inline MutuallyExclusiveGroup& operator =(MutuallyExclusiveGroup const& rhs)
-    {
-        if (this != &rhs) {
-            m_data                  = rhs.m_data;
-            m_prefix_chars          = rhs.m_prefix_chars;
-            m_parent_data           = rhs.m_parent_data;
-            m_argument_default      = rhs.m_argument_default;
-            m_argument_default_type = rhs.m_argument_default_type;
-            m_required              = rhs.m_required;
-        }
-        return *this;
-    }
+    MutuallyExclusiveGroup&
+    operator =(MutuallyExclusiveGroup const& rhs);
 
     /*!
      *  \brief Set mutually exclusive group 'required' value
@@ -5490,11 +5394,8 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
-    inline MutuallyExclusiveGroup& required(bool value) _ARGPARSE_NOEXCEPT
-    {
-        m_required = value;
-        return *this;
-    }
+    MutuallyExclusiveGroup&
+    required(bool value) _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get mutually exclusive group 'required' value
@@ -5502,10 +5403,8 @@ public:
      *  \return Mutually exclusive group 'required' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline bool required() const _ARGPARSE_NOEXCEPT
-    {
-        return m_required;
-    }
+    bool
+    required() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Add argument
@@ -11025,7 +10924,43 @@ Argument::operator ==(
     return !dest().empty() ? dest() == rhs
                            : detail::_is_value_exists(rhs, m_flags);
 }
+
+// -- _Group ------------------------------------------------------------------
+_Group::_Group(
+            std::string const& title,
+            std::string const& description)
+    : m_title(),
+      m_description()
+{
+    m_title[std::string()] = title;
+    m_description[std::string()] = description;
+}
+
+_ARGPARSE_INL std::string const&
+_Group::title() const
+{
+    return detail::_map_at(m_title, std::string());
+}
+
+_ARGPARSE_INL std::string const&
+_Group::description() const
+{
+    return detail::_map_at(m_description, std::string());
+}
+
 // -- _ArgumentData -----------------------------------------------------------
+_ARGPARSE_INL
+_ArgumentData::_ArgumentData()
+    : m_conflict_handler(),
+      m_arguments(),
+      m_optional(),
+      m_operand(),
+      m_positional(),
+      m_add_help(false),
+      m_help_added(false)
+{
+}
+
 _ARGPARSE_INL detail::shared_ptr<_ArgumentData>
 _ArgumentData::make_argument_data()
 {
@@ -11415,6 +11350,101 @@ _ArgumentData::validate_argument(
 }
 
 // -- _ArgumentGroup ----------------------------------------------------------
+_ARGPARSE_INL
+_ArgumentGroup::_ArgumentGroup(
+            std::string& prefix_chars,
+            pArgumentData& parent_data,
+            detail::Value<std::string>& argument_default,
+            detail::Value<_SUPPRESS>& argument_default_type,
+            bool is_mutex_group)
+    : m_data(_ArgumentData::make_argument_data()),
+      m_prefix_chars(prefix_chars),
+      m_parent_data(parent_data),
+      m_argument_default(argument_default),
+      m_argument_default_type(argument_default_type),
+      m_is_mutex_group(is_mutex_group)
+{
+}
+
+_ARGPARSE_INL
+_ArgumentGroup::_ArgumentGroup(
+            _ArgumentGroup const& orig)
+    : m_data(orig.m_data),
+      m_prefix_chars(orig.m_prefix_chars),
+      m_parent_data(orig.m_parent_data),
+      m_argument_default(orig.m_argument_default),
+      m_argument_default_type(orig.m_argument_default_type),
+      m_is_mutex_group(orig.m_is_mutex_group)
+{
+}
+
+_ARGPARSE_INL _ArgumentGroup&
+_ArgumentGroup::operator =(
+            _ArgumentGroup const& rhs)
+{
+    if (this != &rhs) {
+        m_data                  = rhs.m_data;
+        m_prefix_chars          = rhs.m_prefix_chars;
+        m_parent_data           = rhs.m_parent_data;
+        m_argument_default      = rhs.m_argument_default;
+        m_argument_default_type = rhs.m_argument_default_type;
+        m_is_mutex_group        = rhs.m_is_mutex_group;
+    }
+    return *this;
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Argument&
+_ArgumentGroup::add_argument(
+            std::initializer_list<std::string> const& flags)
+{
+    return add_argument(std::vector<std::string>{ flags });
+}
+#else
+_ARGPARSE_INL Argument&
+_ArgumentGroup::add_argument(
+            std::string const& flag)
+{
+    return add_argument(detail::_make_vector(flag));
+}
+
+_ARGPARSE_INL Argument&
+_ArgumentGroup::add_argument(
+            std::string const& flag1,
+            std::string const& flag2)
+{
+    return add_argument(detail::_make_vector(flag1, flag2));
+}
+
+_ARGPARSE_INL Argument&
+_ArgumentGroup::add_argument(
+            std::string const& flag1,
+            std::string const& flag2,
+            std::string const& flag3)
+{
+    return add_argument(detail::_make_vector(flag1, flag2, flag3));
+}
+
+_ARGPARSE_INL Argument&
+_ArgumentGroup::add_argument(
+            std::string const& flag1,
+            std::string const& flag2,
+            std::string const& flag3,
+            std::string const& flag4)
+{
+    return add_argument(detail::_make_vector(flag1, flag2, flag3, flag4));
+}
+#endif  // C++11+
+
+_ARGPARSE_INL Argument&
+_ArgumentGroup::add_argument(
+            std::vector<std::string> const& flags)
+{
+    m_data->create_argument(m_data, flags, m_prefix_chars);
+    process_add_argument();
+    return *m_data->m_arguments.back();
+}
+
 _ARGPARSE_INL void
 _ArgumentGroup::process_add_argument()
 {
@@ -11470,6 +11500,20 @@ _ArgumentGroup::process_add_argument()
 }
 
 // -- ArgumentGroup -----------------------------------------------------------
+_ARGPARSE_INL
+ArgumentGroup::ArgumentGroup(
+            std::string const& title,
+            std::string const& description,
+            std::string& prefix_chars,
+            pArgumentData& parent_data,
+            detail::Value<std::string>& argument_default,
+            detail::Value<_SUPPRESS>& argument_default_type)
+    : _Group(title, description),
+      _ArgumentGroup(prefix_chars, parent_data,
+                     argument_default, argument_default_type, false)
+{
+}
+
 _ARGPARSE_INL detail::shared_ptr<ArgumentGroup>
 ArgumentGroup::make_argument_group(
             std::string const& title,
@@ -11482,6 +11526,48 @@ ArgumentGroup::make_argument_group(
     return detail::make_shared<ArgumentGroup>(
                 ArgumentGroup(title, description, prefix_chars, parent_data,
                               argument_default, argument_default_type));
+}
+
+_ARGPARSE_INL
+ArgumentGroup::ArgumentGroup(
+            ArgumentGroup const& orig)
+    : _Group(orig),
+      _ArgumentGroup(orig)
+{
+}
+
+_ARGPARSE_INL ArgumentGroup&
+ArgumentGroup::operator =(
+            ArgumentGroup const& rhs)
+{
+    if (this != &rhs) {
+        m_title                 = rhs.m_title;
+        m_description           = rhs.m_description;
+        m_data                  = rhs.m_data;
+        m_prefix_chars          = rhs.m_prefix_chars;
+        m_argument_default      = rhs.m_argument_default;
+        m_argument_default_type = rhs.m_argument_default_type;
+        m_parent_data           = rhs.m_parent_data;
+    }
+    return *this;
+}
+
+_ARGPARSE_INL ArgumentGroup&
+ArgumentGroup::title(
+            std::string const& value,
+            std::string const& lang)
+{
+    m_title[lang] = value;
+    return *this;
+}
+
+_ARGPARSE_INL ArgumentGroup&
+ArgumentGroup::description(
+            std::string const& value,
+            std::string const& lang)
+{
+    m_description[lang] = value;
+    return *this;
 }
 
 _ARGPARSE_INL void
@@ -11526,6 +11612,18 @@ ArgumentGroup::print_help(
 }
 
 // -- MutuallyExclusiveGroup --------------------------------------------------
+_ARGPARSE_INL
+MutuallyExclusiveGroup::MutuallyExclusiveGroup(
+            std::string& prefix_chars,
+            pArgumentData& parent_data,
+            detail::Value<std::string>& argument_default,
+            detail::Value<_SUPPRESS>& argument_default_type)
+    : _ArgumentGroup(prefix_chars, parent_data,
+                     argument_default, argument_default_type, true),
+      m_required(false)
+{
+}
+
 _ARGPARSE_INL MutuallyExclusiveGroup
 MutuallyExclusiveGroup::make_mutex_group(
             std::string& prefix_chars,
@@ -11535,6 +11633,42 @@ MutuallyExclusiveGroup::make_mutex_group(
 {
     return MutuallyExclusiveGroup(prefix_chars, parent_data,
                                   argument_default, argument_default_type);
+}
+
+_ARGPARSE_INL
+MutuallyExclusiveGroup::MutuallyExclusiveGroup(
+            MutuallyExclusiveGroup const& orig)
+    : _ArgumentGroup(orig),
+      m_required(orig.m_required)
+{
+}
+
+_ARGPARSE_INL MutuallyExclusiveGroup&
+MutuallyExclusiveGroup::operator =(
+            MutuallyExclusiveGroup const& rhs)
+{
+    if (this != &rhs) {
+        m_data                  = rhs.m_data;
+        m_prefix_chars          = rhs.m_prefix_chars;
+        m_parent_data           = rhs.m_parent_data;
+        m_argument_default      = rhs.m_argument_default;
+        m_argument_default_type = rhs.m_argument_default_type;
+        m_required              = rhs.m_required;
+    }
+    return *this;
+}
+
+_ARGPARSE_INL MutuallyExclusiveGroup&
+MutuallyExclusiveGroup::required(bool value) _ARGPARSE_NOEXCEPT
+{
+    m_required = value;
+    return *this;
+}
+
+_ARGPARSE_INL bool
+MutuallyExclusiveGroup::required() const _ARGPARSE_NOEXCEPT
+{
+    return m_required;
 }
 
 _ARGPARSE_INL std::string
