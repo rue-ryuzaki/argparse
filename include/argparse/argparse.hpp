@@ -543,6 +543,76 @@ private:
     std::size_t m_tab_size;
 };
 
+/*!
+ *  \brief Help message formatter which retains any formatting in descriptions
+ */
+_ARGPARSE_EXPORT
+class _RawDescriptionHelpFormatter : virtual public HelpFormatter
+{
+public:
+    ~_RawDescriptionHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+
+    std::string
+    _fill_text(std::string const& text,
+                std::size_t width,
+                std::size_t indent) const _ARGPARSE_OVERRIDE;
+
+protected:
+    std::vector<std::string>
+    _split_lines_raw(
+                std::string const& text,
+                std::size_t width) const;
+} _ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
+
+/*!
+ *  \brief Help message formatter which retains formatting of all help text
+ */
+_ARGPARSE_EXPORT
+class _RawTextHelpFormatter : virtual public _RawDescriptionHelpFormatter
+{
+public:
+    ~_RawTextHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+
+    std::vector<std::string>
+    _split_lines(
+                std::string const& text,
+                std::size_t width) const _ARGPARSE_OVERRIDE;
+} _ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
+
+/*!
+ *  \brief Help message formatter which adds default values to argument help
+ */
+_ARGPARSE_EXPORT
+class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
+{
+public:
+    ~_ArgumentDefaultsHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+
+    std::string
+    _get_help_string(
+                Argument const* action,
+                std::string const& lang) const _ARGPARSE_OVERRIDE;
+} _ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
+
+/*!
+ *  \brief Help message formatter which uses the argument 'type' as the default
+ *  metavar value (instead of the argument 'dest')
+ */
+_ARGPARSE_EXPORT
+class _MetavarTypeHelpFormatter : virtual public HelpFormatter
+{
+public:
+    ~_MetavarTypeHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+
+    std::string
+    _get_default_metavar_for_optional(
+                Argument const* action) const _ARGPARSE_OVERRIDE;
+
+    std::string
+    _get_default_metavar_for_positional(
+                Argument const* action) const _ARGPARSE_OVERRIDE;
+} _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
+
 namespace detail {
 _ARGPARSE_INLINE_VARIABLE std::size_t _ARGPARSE_USE_CONSTEXPR _min_width = 33;
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_char      = '-';
@@ -4785,156 +4855,6 @@ private:
     detail::shared_ptr<_ConflictResolver> m_post_trigger;
     detail::Value<bool> m_required;
 };
-
-/*!
- *  \brief Help message formatter which retains any formatting in descriptions
- */
-_ARGPARSE_EXPORT
-class _RawDescriptionHelpFormatter : virtual public HelpFormatter
-{
-public:
-    ~_RawDescriptionHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
-
-    inline std::string _fill_text(
-                std::string const& text,
-                std::size_t width,
-                std::size_t indent) const _ARGPARSE_OVERRIDE
-    {
-        std::vector<std::string> res;
-        std::string value;
-        std::vector<std::string> lines = _split_lines_raw(text, width - indent);
-        for (std::size_t i = 0; i < lines.size(); ++i) {
-            std::size_t value_size = detail::_utf8_length(value).second;
-            if (value_size < indent) {
-                value.resize(value.size() + indent - value_size,
-                             detail::_space);
-            }
-            value += lines.at(i);
-            detail::_store_value_to(value, res, true);
-        }
-        detail::_store_value_to(value, res);
-        return detail::_vector_to_string(res, "\n");
-    }
-
-protected:
-    inline std::vector<std::string>
-    _split_lines_raw(std::string const& text, std::size_t width) const
-    {
-        std::string value;
-        std::vector<std::string> res;
-        std::vector<std::string> split_str = detail::_split(text, '\n');
-        for (std::size_t i = 0; i < split_str.size(); ++i) {
-            std::string const& str = split_str.at(i);
-            if (str.empty()) {
-                detail::_store_value_to(value, res, true);
-            } else {
-                std::vector<std::string> sub_split_str
-                        = detail::_split(str, detail::_space, true);
-                for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
-                    std::vector<std::string> tab_split_str
-                        = detail::_split(sub_split_str.at(j), '\t', true);
-                    for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
-                        std::string sub = tab_split_str.at(k);
-                        if (sub == "\t") {
-                            sub = std::string(
-                                        _tab_size() - (detail::_utf8_length(
-                                                   value).second % _tab_size()),
-                                        detail::_space);
-                        }
-                        if (detail::_utf8_length(value).second + 1
-                                + detail::_utf8_length(sub).second > width) {
-                            detail::_store_value_to(value, res);
-                            if (tab_split_str.at(k) == "\t") {
-                                sub = std::string(_tab_size(), detail::_space);
-                            }
-                        }
-                        value += sub;
-                    }
-                }
-                detail::_store_value_to(value, res);
-            }
-        }
-        detail::_store_value_to(value, res);
-        return res;
-    }
-} _ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
-
-/*!
- *  \brief Help message formatter which retains formatting of all help text
- */
-_ARGPARSE_EXPORT
-class _RawTextHelpFormatter : virtual public _RawDescriptionHelpFormatter
-{
-public:
-    ~_RawTextHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
-
-    inline std::vector<std::string> _split_lines(
-                std::string const& text,
-                std::size_t width) const _ARGPARSE_OVERRIDE
-    {
-        return _RawDescriptionHelpFormatter::_split_lines_raw(text, width);
-    }
-} _ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
-
-/*!
- *  \brief Help message formatter which adds default values to argument help
- */
-_ARGPARSE_EXPORT
-class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
-{
-public:
-    ~_ArgumentDefaultsHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
-
-    inline std::string _get_help_string(
-                Argument const* action,
-                std::string const& lang) const _ARGPARSE_OVERRIDE
-    {
-        std::string res = detail::_tr(action->m_help, lang);
-        if (!res.empty()
-                && !detail::_contains_substr(res, "%(default)s")
-                && !action->is_suppressed()) {
-            if (((action->m_type == Argument::Optional
-                  || action->m_type == Argument::Operand)
-                 || (action->m_nargs & (Argument::ZERO_OR_ONE
-                                        | Argument::ZERO_OR_MORE)))
-                    && !(action->action() & (argparse::help
-                                             | argparse::version
-                                             | argparse::language))) {
-                res += " (default: %(default)s)";
-            }
-        }
-        return res;
-    }
-} _ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
-
-/*!
- *  \brief Help message formatter which uses the argument 'type' as the default
- *  metavar value (instead of the argument 'dest')
- */
-_ARGPARSE_EXPORT
-class _MetavarTypeHelpFormatter : virtual public HelpFormatter
-{
-public:
-    ~_MetavarTypeHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
-
-    inline std::string _get_default_metavar_for_optional(
-                Argument const* action) const _ARGPARSE_OVERRIDE
-    {
-        if (!action->type_name().empty()) {
-            return action->type_name();
-        }
-        return HelpFormatter::_get_default_metavar_for_optional(action);
-    }
-
-    inline std::string _get_default_metavar_for_positional(
-                Argument const* action) const _ARGPARSE_OVERRIDE
-    {
-        if (!action->type_name().empty()) {
-            return action->type_name();
-        }
-        return HelpFormatter::_get_default_metavar_for_positional(action);
-    }
-} _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
 
 /*!
  *  \brief _Group class
@@ -10450,8 +10370,7 @@ HelpFormatter::_fill_text(
     for (std::size_t i = 0; i < lines.size(); ++i) {
         std::size_t value_size = detail::_utf8_length(value).second;
         if (value_size < indent) {
-            value.resize(value.size() + indent - value_size,
-                         detail::_space);
+            value.resize(value.size() + indent - value_size, detail::_space);
         }
         value += lines.at(i);
         detail::_store_value_to(value, res, true);
@@ -10502,6 +10421,124 @@ HelpFormatter::_split_lines(
     }
     detail::_store_value_to(value, res);
     return res;
+}
+
+// -- _RawDescriptionHelpFormatter --------------------------------------------
+_ARGPARSE_INL std::string
+_RawDescriptionHelpFormatter::_fill_text(
+            std::string const& text,
+            std::size_t width,
+            std::size_t indent) const
+{
+    std::vector<std::string> res;
+    std::string value;
+    std::vector<std::string> lines = _split_lines_raw(text, width - indent);
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        std::size_t value_size = detail::_utf8_length(value).second;
+        if (value_size < indent) {
+            value.resize(value.size() + indent - value_size, detail::_space);
+        }
+        value += lines.at(i);
+        detail::_store_value_to(value, res, true);
+    }
+    detail::_store_value_to(value, res);
+    return detail::_vector_to_string(res, "\n");
+}
+
+_ARGPARSE_INL std::vector<std::string>
+_RawDescriptionHelpFormatter::_split_lines_raw(
+            std::string const& text,
+            std::size_t width) const
+{
+    std::string value;
+    std::vector<std::string> res;
+    std::vector<std::string> split_str = detail::_split(text, '\n');
+    for (std::size_t i = 0; i < split_str.size(); ++i) {
+        std::string const& str = split_str.at(i);
+        if (str.empty()) {
+            detail::_store_value_to(value, res, true);
+        } else {
+            std::vector<std::string> sub_split_str
+                    = detail::_split(str, detail::_space, true);
+            for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
+                std::vector<std::string> tab_split_str
+                        = detail::_split(sub_split_str.at(j), '\t', true);
+                for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
+                    std::string sub = tab_split_str.at(k);
+                    if (sub == "\t") {
+                        sub = std::string(
+                                    _tab_size() - (detail::_utf8_length(
+                                                   value).second % _tab_size()),
+                                    detail::_space);
+                    }
+                    if (detail::_utf8_length(value).second + 1
+                            + detail::_utf8_length(sub).second > width) {
+                        detail::_store_value_to(value, res);
+                        if (tab_split_str.at(k) == "\t") {
+                            sub = std::string(_tab_size(), detail::_space);
+                        }
+                    }
+                    value += sub;
+                }
+            }
+            detail::_store_value_to(value, res);
+        }
+    }
+    detail::_store_value_to(value, res);
+    return res;
+}
+
+// -- _RawTextHelpFormatter ---------------------------------------------------
+_ARGPARSE_INL std::vector<std::string>
+_RawTextHelpFormatter::_split_lines(
+            std::string const& text,
+            std::size_t width) const
+{
+    return _RawDescriptionHelpFormatter::_split_lines_raw(text, width);
+}
+
+// -- _ArgumentDefaultsHelpFormatter ------------------------------------------
+_ARGPARSE_INL std::string
+_ArgumentDefaultsHelpFormatter::_get_help_string(
+            Argument const* action,
+            std::string const& lang) const
+{
+    std::string res = detail::_tr(action->m_help, lang);
+    if (!res.empty()
+            && !detail::_contains_substr(res, "%(default)s")
+            && !action->is_suppressed()) {
+        if (((action->m_type == Argument::Optional
+              || action->m_type == Argument::Operand)
+             || (action->m_nargs & (Argument::ZERO_OR_ONE
+                                    | Argument::ZERO_OR_MORE)))
+                && !(action->action() & (argparse::help
+                                         | argparse::version
+                                         | argparse::language))) {
+            res += " (default: %(default)s)";
+        }
+    }
+    return res;
+}
+
+// -- _MetavarTypeHelpFormatter -----------------------------------------------
+_ARGPARSE_INL std::string
+_MetavarTypeHelpFormatter::_get_default_metavar_for_optional(
+            Argument const* action) const
+{
+    if (!action->type_name().empty()) {
+        return action->type_name();
+    }
+    return HelpFormatter::_get_default_metavar_for_optional(action);
+}
+
+_ARGPARSE_INL std::string
+_MetavarTypeHelpFormatter::_get_default_metavar_for_positional(
+            Argument const* action) const
+{
+    if (!action->type_name().empty()) {
+        return action->type_name();
+    }
+    return HelpFormatter::_get_default_metavar_for_positional(action);
 }
 
 // -- Argument ----------------------------------------------------------------
