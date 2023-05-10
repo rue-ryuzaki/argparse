@@ -3331,70 +3331,14 @@ _ARGPARSE_EXPORT class Argument
 
     explicit
     Argument(std::vector<std::string> const& flags,
-             std::string const& name,
-             Type type)
-        : m_flags(flags),
-          m_all_flags(m_flags),
-          m_name(name),
-          m_action(argparse::store),
-          m_default_type(),
-          m_help_type(),
-          m_type(type),
-          m_nargs(NARGS_DEF),
-          m_num_args(1),
-          m_nargs_str("1"),
-          m_const(),
-          m_default(),
-          m_implicit(),
-          m_type_name(),
-          m_choices(),
-          m_help(),
-          m_version(),
-          m_metavar(),
-#ifdef _ARGPARSE_CXX_11
-          m_dest(std::vector<std::string>{ std::string() }),
-          m_handle(nullptr),
-#else
-          m_dest(detail::_make_vector(std::string())),
-#endif  // C++11+
-          m_post_trigger(_ARGPARSE_NULLPTR),
-          m_required()
-    {
-        m_help[std::string()] = std::string();
-        m_required.reset(m_type != Optional);
-    }
+                std::string const& name,
+                Type type);
 
 #ifdef _ARGPARSE_CXX_11
     explicit
     Argument(std::vector<std::string>&& flags,
-             std::string&& name,
-             Type type)
-        : m_flags(std::move(flags)),
-          m_all_flags(m_flags),
-          m_name(std::move(name)),
-          m_action(argparse::store),
-          m_default_type(),
-          m_help_type(),
-          m_type(type),
-          m_nargs(NARGS_DEF),
-          m_num_args(1),
-          m_nargs_str("1"),
-          m_const(),
-          m_default(),
-          m_implicit(),
-          m_type_name(),
-          m_choices(),
-          m_help(),
-          m_version(),
-          m_metavar(),
-          m_dest(std::vector<std::string>{ std::string() }),
-          m_handle(nullptr),
-          m_post_trigger(nullptr),
-          m_required()
-    {
-        m_help[std::string()] = std::string();
-        m_required.reset(m_type != Optional);
-    }
+                std::string&& name,
+                Type type);
 #endif  // C++11+
 
     static detail::shared_ptr<Argument>
@@ -3446,31 +3390,7 @@ public:
      *  \return Argument object
      */
     explicit
-    Argument(std::string const& flag)
-        : m_flags(detail::_make_vector(flag)),
-          m_all_flags(m_flags),
-          m_name(),
-          m_action(argparse::store),
-          m_default_type(),
-          m_help_type(),
-          m_type(NoType),
-          m_nargs(NARGS_DEF),
-          m_num_args(1),
-          m_nargs_str("1"),
-          m_const(),
-          m_default(),
-          m_implicit(),
-          m_type_name(),
-          m_choices(),
-          m_help(),
-          m_version(),
-          m_metavar(),
-          m_dest(detail::_make_vector(std::string())),
-          m_post_trigger(_ARGPARSE_NULLPTR),
-          m_required()
-    {
-        m_help[std::string()] = std::string();
-    }
+    Argument(std::string const& flag);
 
     /*!
      *  \brief Construct argument object with parsed arguments
@@ -3481,31 +3401,8 @@ public:
      *  \return Argument object
      */
     explicit
-    Argument(std::string const& flag1, std::string const& flag2)
-        : m_flags(detail::_make_vector(flag1, flag2)),
-          m_all_flags(m_flags),
-          m_name(),
-          m_action(argparse::store),
-          m_default_type(),
-          m_help_type(),
-          m_type(NoType),
-          m_nargs(NARGS_DEF),
-          m_num_args(1),
-          m_nargs_str("1"),
-          m_const(),
-          m_default(),
-          m_implicit(),
-          m_type_name(),
-          m_choices(),
-          m_help(),
-          m_version(),
-          m_metavar(),
-          m_dest(detail::_make_vector(std::string())),
-          m_post_trigger(_ARGPARSE_NULLPTR),
-          m_required()
-    {
-        m_help[std::string()] = std::string();
-    }
+    Argument(std::string const& flag1,
+                std::string const& flag2);
 
     /*!
      *  \brief Construct argument object with parsed arguments
@@ -3519,32 +3416,9 @@ public:
      *  \return Argument object
      */
     explicit
-    Argument(std::string const& flag1, std::string const& flag2,
-             std::string const& flag3)
-        : m_flags(detail::_make_vector(flag1, flag2, flag3)),
-          m_all_flags(m_flags),
-          m_name(),
-          m_action(argparse::store),
-          m_default_type(),
-          m_help_type(),
-          m_type(NoType),
-          m_nargs(NARGS_DEF),
-          m_num_args(1),
-          m_nargs_str("1"),
-          m_const(),
-          m_default(),
-          m_implicit(),
-          m_type_name(),
-          m_choices(),
-          m_help(),
-          m_version(),
-          m_metavar(),
-          m_dest(detail::_make_vector(std::string())),
-          m_post_trigger(_ARGPARSE_NULLPTR),
-          m_required()
-    {
-        m_help[std::string()] = std::string();
-    }
+    Argument(std::string const& flag1,
+                std::string const& flag2,
+                std::string const& flag3);
 
     /*!
      *  \brief Construct argument object with parsed arguments
@@ -3559,32 +3433,10 @@ public:
      *  \return Argument object
      */
     explicit
-    Argument(std::string const& flag1, std::string const& flag2,
-             std::string const& flag3, std::string const& flag4)
-        : m_flags(detail::_make_vector(flag1, flag2, flag3, flag4)),
-          m_all_flags(m_flags),
-          m_name(),
-          m_action(argparse::store),
-          m_default_type(),
-          m_help_type(),
-          m_type(NoType),
-          m_nargs(NARGS_DEF),
-          m_num_args(1),
-          m_nargs_str("1"),
-          m_const(),
-          m_default(),
-          m_implicit(),
-          m_type_name(),
-          m_choices(),
-          m_help(),
-          m_version(),
-          m_metavar(),
-          m_dest(detail::_make_vector(std::string())),
-          m_post_trigger(_ARGPARSE_NULLPTR),
-          m_required()
-    {
-        m_help[std::string()] = std::string();
-    }
+    Argument(std::string const& flag1,
+                std::string const& flag2,
+                std::string const& flag3,
+                std::string const& flag4);
 #endif  // C++11+
 
     /*!
@@ -3636,32 +3488,7 @@ public:
      *
      *  \return Argument object
      */
-    Argument(Argument const& orig)
-        : m_flags(orig.m_flags),
-          m_all_flags(orig.m_all_flags),
-          m_name(orig.m_name),
-          m_action(orig.m_action),
-          m_default_type(orig.m_default_type),
-          m_help_type(orig.m_help_type),
-          m_type(orig.m_type),
-          m_nargs(orig.m_nargs),
-          m_num_args(orig.m_num_args),
-          m_nargs_str(orig.m_nargs_str),
-          m_const(orig.m_const),
-          m_default(orig.m_default),
-          m_implicit(orig.m_implicit),
-          m_type_name(orig.m_type_name),
-          m_choices(orig.m_choices),
-          m_help(orig.m_help),
-          m_version(orig.m_version),
-          m_metavar(orig.m_metavar),
-          m_dest(orig.m_dest),
-#ifdef _ARGPARSE_CXX_11
-          m_handle(orig.m_handle),
-#endif  // C++11+
-          m_post_trigger(orig.m_post_trigger),
-          m_required(orig.m_required)
-    { }
+    Argument(Argument const& orig);
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -3671,30 +3498,7 @@ public:
      *
      *  \return Argument object
      */
-    Argument(Argument&& orig) _ARGPARSE_NOEXCEPT
-        : m_flags(std::move(orig.m_flags)),
-          m_all_flags(std::move(orig.m_all_flags)),
-          m_name(std::move(orig.m_name)),
-          m_action(std::move(orig.m_action)),
-          m_default_type(std::move(orig.m_default_type)),
-          m_help_type(std::move(orig.m_help_type)),
-          m_type(std::move(orig.m_type)),
-          m_nargs(std::move(orig.m_nargs)),
-          m_num_args(std::move(orig.m_num_args)),
-          m_nargs_str(std::move(orig.m_nargs_str)),
-          m_const(std::move(orig.m_const)),
-          m_default(std::move(orig.m_default)),
-          m_implicit(std::move(orig.m_implicit)),
-          m_type_name(std::move(orig.m_type_name)),
-          m_choices(std::move(orig.m_choices)),
-          m_help(std::move(orig.m_help)),
-          m_version(std::move(orig.m_version)),
-          m_metavar(std::move(orig.m_metavar)),
-          m_dest(std::move(orig.m_dest)),
-          m_handle(std::move(orig.m_handle)),
-          m_post_trigger(std::move(orig.m_post_trigger)),
-          m_required(std::move(orig.m_required))
-    { }
+    Argument(Argument&& orig) _ARGPARSE_NOEXCEPT;
 #endif  // C++11+
 
     /*!
@@ -3704,36 +3508,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& operator =(Argument const& rhs)
-    {
-        if (this != &rhs) {
-            this->m_flags           = rhs.m_flags;
-            this->m_all_flags       = rhs.m_all_flags;
-            this->m_name            = rhs.m_name;
-            this->m_action          = rhs.m_action;
-            this->m_default_type    = rhs.m_default_type;
-            this->m_help_type       = rhs.m_help_type;
-            this->m_type            = rhs.m_type;
-            this->m_nargs           = rhs.m_nargs;
-            this->m_num_args        = rhs.m_num_args;
-            this->m_nargs_str       = rhs.m_nargs_str;
-            this->m_const           = rhs.m_const;
-            this->m_default         = rhs.m_default;
-            this->m_implicit        = rhs.m_implicit;
-            this->m_type_name       = rhs.m_type_name;
-            this->m_choices         = rhs.m_choices;
-            this->m_help            = rhs.m_help;
-            this->m_version         = rhs.m_version;
-            this->m_metavar         = rhs.m_metavar;
-            this->m_dest            = rhs.m_dest;
-#ifdef _ARGPARSE_CXX_11
-            this->m_handle          = rhs.m_handle;
-#endif  // C++11+
-            this->m_post_trigger    = rhs.m_post_trigger;
-            this->m_required        = rhs.m_required;
-        }
-        return *this;
-    }
+    Argument&
+    operator =(Argument const& rhs);
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -3743,34 +3519,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& operator =(Argument&& rhs) _ARGPARSE_NOEXCEPT
-    {
-        if (this != &rhs) {
-            this->m_flags           = std::move(rhs.m_flags);
-            this->m_all_flags       = std::move(rhs.m_all_flags);
-            this->m_name            = std::move(rhs.m_name);
-            this->m_action          = std::move(rhs.m_action);
-            this->m_default_type    = std::move(rhs.m_default_type);
-            this->m_help_type       = std::move(rhs.m_help_type);
-            this->m_type            = std::move(rhs.m_type);
-            this->m_nargs           = std::move(rhs.m_nargs);
-            this->m_num_args        = std::move(rhs.m_num_args);
-            this->m_nargs_str       = std::move(rhs.m_nargs_str);
-            this->m_const           = std::move(rhs.m_const);
-            this->m_default         = std::move(rhs.m_default);
-            this->m_implicit        = std::move(rhs.m_implicit);
-            this->m_type_name       = std::move(rhs.m_type_name);
-            this->m_choices         = std::move(rhs.m_choices);
-            this->m_help            = std::move(rhs.m_help);
-            this->m_version         = std::move(rhs.m_version);
-            this->m_metavar         = std::move(rhs.m_metavar);
-            this->m_dest            = std::move(rhs.m_dest);
-            this->m_handle          = std::move(rhs.m_handle);
-            this->m_post_trigger    = std::move(rhs.m_post_trigger);
-            this->m_required        = std::move(rhs.m_required);
-        }
-        return *this;
-    }
+    Argument&
+    operator =(Argument&& rhs) _ARGPARSE_NOEXCEPT;
 #endif  // C++11+
 
     /*!
@@ -3780,33 +3530,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& action(std::string const& value)
-    {
-        if (value == "store") {
-            return action(argparse::store);
-        } else if (value == "store_const") {
-            return action(argparse::store_const);
-        } else if (value == "store_true") {
-            return action(argparse::store_true);
-        } else if (value == "store_false") {
-            return action(argparse::store_false);
-        } else if (value == "append") {
-            return action(argparse::append);
-        } else if (value == "append_const") {
-            return action(argparse::append_const);
-        } else if (value == "count") {
-            return action(argparse::count);
-        } else if (value == "help") {
-            return action(argparse::help);
-        } else if (value == "version") {
-            return action(argparse::version);
-        } else if (value == "extend") {
-            return action(argparse::extend);
-        } else if (value == "language") {
-            return action(argparse::language);
-        }
-        throw ValueError("unknown action '" + value + "'");
-    }
+    Argument&
+    action(std::string const& value);
 
     /*!
      *  \brief Set argument 'action' value (default: argparse::store)
@@ -3815,85 +3540,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& action(Action value)
-    {
-        if (m_type == Operand
-                && !(value & (argparse::store | argparse::language))) {
-            // only store and language actions can be operand
-            throw TypeError("got an unexpected keyword argument 'action'");
-        }
-        prepare_action(value);
-        switch (value) {
-            case argparse::store_true :
-                if (!m_default.has_value()) {
-                    m_default.reset();
-                }
-                // fallthrough
-            case argparse::BooleanOptionalAction :
-                m_const.reset("1");
-                m_nargs = NARGS_NUM;
-                m_nargs_str = std::string("0");
-                m_num_args = 0;
-                m_choices.reset();
-                break;
-            case argparse::store_false :
-                if (!m_default.has_value()) {
-                    m_default.reset("1");
-                }
-                // fallthrough
-            case argparse::store_const :
-            case argparse::append_const :
-                m_const.reset();
-                m_nargs = NARGS_NUM;
-                m_nargs_str = std::string("0");
-                m_num_args = 0;
-                m_choices.reset();
-                break;
-            case argparse::version :
-            case argparse::help :
-                check_action();
-                if (value == argparse::version) {
-                    this->help("show program's version number and exit");
-                }
-                // fallthrough
-            case argparse::count :
-                m_const.reset();
-                m_nargs = NARGS_NUM;
-                m_nargs_str = std::string("0");
-                m_num_args = 0;
-                m_choices.reset();
-                break;
-            case argparse::store :
-            case argparse::append :
-            case argparse::extend :
-                m_const.reset();
-                if (m_num_args == 0) {
-                    m_nargs = NARGS_DEF;
-                    m_nargs_str = std::string("1");
-                    m_num_args = 1;
-                }
-                break;
-            case argparse::language :
-                check_action();
-                m_const.reset();
-                m_nargs = NARGS_DEF;
-                m_nargs_str = std::string("1");
-                m_num_args = 1;
-                break;
-            default :
-                throw ValueError("unknown action");
-        }
-#ifdef _ARGPARSE_CXX_11
-        if (action() & (argparse::version | argparse::help)) {
-            m_handle = nullptr;
-        }
-#endif  // C++11+
-        if (!(value & detail::_store_const_action)) {
-            m_metavar.reset();
-        }
-        m_action = value;
-        return *this;
-    }
+    Argument&
+    action(Action value);
 
     /*!
      *  \brief Set argument 'nargs' value
@@ -3902,47 +3550,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& nargs(std::size_t value)
-    {
-        if (m_type == Operand) {
-            throw TypeError("got an unexpected keyword argument 'nargs'");
-        }
-        switch (action()) {
-            case argparse::store_const :
-            case argparse::store_true :
-            case argparse::store_false :
-            case argparse::append_const :
-            case argparse::count :
-            case argparse::help :
-            case argparse::version :
-            case argparse::language :
-            case argparse::BooleanOptionalAction :
-                throw TypeError("got an unexpected keyword argument 'nargs'");
-            case argparse::store :
-                if (value == 0) {
-                    throw
-                    ValueError("nargs for store actions must be != 0; if you "
-                               "have nothing to store, actions such as store "
-                               "true or store const may be more appropriate");
-                }
-                break;
-            case argparse::append :
-            case argparse::extend :
-                if (value == 0) {
-                    throw
-                    ValueError("nargs for append actions must be != 0; if arg "
-                               "strings are not supplying the value to append, "
-                             "the append const action may be more appropriate");
-                }
-                break;
-            default:
-                throw ValueError("unknown action");
-        }
-        m_nargs = NARGS_NUM;
-        m_nargs_str = detail::_to_string(value);
-        m_num_args = value;
-        return *this;
-    }
+    Argument&
+    nargs(std::size_t value);
 
     /*!
      *  \brief Set argument 'nargs' value
@@ -3951,24 +3560,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& nargs(std::string const& value)
-    {
-        if (!(action() & detail::_store_action) || m_type == Operand) {
-            throw TypeError("got an unexpected keyword argument 'nargs'");
-        }
-        if (value == "?") {
-            m_nargs = ZERO_OR_ONE;
-        } else if (value == "*") {
-            m_nargs = ZERO_OR_MORE;
-        } else if (value == "+") {
-            m_nargs = ONE_OR_MORE;
-        } else {
-            throw ValueError("invalid nargs value '" + value + "'");
-        }
-        m_nargs_str = value;
-        m_num_args = 1;
-        return *this;
-    }
+    Argument&
+    nargs(std::string const& value);
 
     /*!
      *  \brief Set argument 'nargs' argparse::REMAINDER value
@@ -3977,17 +3570,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& nargs(_REMAINDER value)
-    {
-        if (!(action() & detail::_store_action) || m_type == Operand
-                || value != argparse::REMAINDER) {
-            throw TypeError("got an unexpected keyword argument 'nargs'");
-        }
-        m_nargs = REMAINDING;
-        m_nargs_str = std::string("0");
-        m_num_args = 0;
-        return *this;
-    }
+    Argument&
+    nargs(_REMAINDER value);
 
     /*!
      *  \brief Set argument 'nargs' optional ("?") value
@@ -4046,20 +3630,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& const_value(std::string const& value)
-    {
-        if ((action() & detail::_const_action)
-                || (m_nargs == ZERO_OR_ONE
-                    && (action() & detail::_store_action))) {
-            m_const = value;
-        } else if (m_type == Optional && m_nargs != ZERO_OR_ONE
-                   && (action() & detail::_store_action)) {
-            throw ValueError("nargs must be '?' to supply const");
-        } else {
-            throw TypeError("got an unexpected keyword argument 'const'");
-        }
-        return *this;
-    }
+    Argument&
+    const_value(std::string const& value);
 
     /*!
      *  \brief Set custom argument 'const' value
@@ -4094,11 +3666,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& default_value(std::string const& value)
-    {
-        m_default = value;
-        return *this;
-    }
+    Argument&
+    default_value(std::string const& value);
 
     /*!
      *  \brief Set custom argument 'default' value
@@ -4133,19 +3702,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& default_value(_SUPPRESS value)
-    {
-        if (value != argparse::SUPPRESS) {
-            throw TypeError("got an unexpected keyword argument 'default'");
-        }
-        if (action() == argparse::store_false) {
-            m_default.reset("1");
-        } else {
-            m_default.reset();
-        }
-        m_default_type = value;
-        return *this;
-    }
+    Argument&
+    default_value(_SUPPRESS value);
 
     /*!
      *  \brief Set argument 'implicit' value (used with nargs="?" or "*",
@@ -4155,11 +3713,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& implicit_value(std::string const& value)
-    {
-        m_implicit = value;
-        return *this;
-    }
+    Argument&
+    implicit_value(std::string const& value);
 
     /*!
      *  \brief Set custom argument 'implicit' value (used with nargs="?" or "*",
@@ -4208,11 +3763,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& type(std::string const& value)
-    {
-        m_type_name.reset(value);
-        return *this;
-    }
+    Argument&
+    type(std::string const& value);
 
     /*!
      *  \brief Set argument 'choices' value
@@ -4223,20 +3775,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& choice(std::string const& value)
-    {
-        if (!(action() & (detail::_store_action | argparse::language))) {
-            throw TypeError("got an unexpected keyword argument 'choices'");
-        }
-        std::vector<std::string> values;
-        values.push_back(value);
-#ifdef _ARGPARSE_CXX_11
-        m_choices = std::move(values);
-#else
-        m_choices = values;
-#endif  // C++11+
-        return *this;
-    }
+    Argument&
+    choice(std::string const& value);
 
     /*!
      *  \brief Set argument 'choices' value. Each character is a separate choice
@@ -4294,10 +3834,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& choices(std::initializer_list<std::string> const& value)
-    {
-        return choices(std::vector<std::string>{ value });
-    }
+    Argument&
+    choices(std::initializer_list<std::string> const& value);
 #else
     /*!
      *  \brief Set argument 'choices' value
@@ -4309,11 +3847,9 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& choices(std::string const& value1,
-                             std::string const& value2)
-    {
-        return choices(detail::_make_vector(value1, value2));
-    }
+    Argument&
+    choices(std::string const& value1,
+                std::string const& value2);
 
     /*!
      *  \brief Set argument 'choices' value
@@ -4326,12 +3862,10 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& choices(std::string const& value1,
-                             std::string const& value2,
-                             std::string const& value3)
-    {
-        return choices(detail::_make_vector(value1, value2, value3));
-    }
+    Argument&
+    choices(std::string const& value1,
+                std::string const& value2,
+                std::string const& value3);
 
     /*!
      *  \brief Set argument 'choices' value
@@ -4345,13 +3879,11 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& choices(std::string const& value1,
-                             std::string const& value2,
-                             std::string const& value3,
-                             std::string const& value4)
-    {
-        return choices(detail::_make_vector(value1, value2, value3, value4));
-    }
+    Argument&
+    choices(std::string const& value1,
+                std::string const& value2,
+                std::string const& value3,
+                std::string const& value4);
 #endif  // C++11+
 
     /*!
@@ -4361,14 +3893,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& choices(std::vector<std::string> const& value)
-    {
-        if (!(action() & (detail::_store_action | argparse::language))) {
-            throw TypeError("got an unexpected keyword argument 'choices'");
-        }
-        m_choices = value;
-        return *this;
-    }
+    Argument&
+    choices(std::vector<std::string> const& value);
 
     /*!
      *  \brief Set 'required' value for non-positionals arguments
@@ -4377,15 +3903,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& required(bool value)
-    {
-        if (m_type == Positional) {
-            throw
-            TypeError("'required' is an invalid argument for positionals");
-        }
-        m_required = value;
-        return *this;
-    }
+    Argument&
+    required(bool value);
 
     /*!
      *  \brief Set argument 'help' message for selected language
@@ -4395,15 +3914,9 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& help(std::string const& value,
-                          std::string const& lang = std::string())
-    {
-        if (lang.empty()) {
-            m_help_type.reset();
-        }
-        m_help[lang] = value;
-        return *this;
-    }
+    Argument&
+    help(std::string const& value,
+                std::string const& lang = std::string());
 
     /*!
      *  \brief Suppress argument 'help' message
@@ -4412,14 +3925,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& help(_SUPPRESS value)
-    {
-        if (value != argparse::SUPPRESS) {
-            throw TypeError("got an unexpected keyword argument 'help'");
-        }
-        m_help_type = value;
-        return *this;
-    }
+    Argument&
+    help(_SUPPRESS value);
 
     /*!
      *  \brief Set argument 'version' for arguments with 'version' action
@@ -4428,14 +3935,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& version(std::string const& value)
-    {
-        if (action() != argparse::version) {
-            throw TypeError("got an unexpected keyword argument 'version'");
-        }
-        m_version = value;
-        return *this;
-    }
+    Argument&
+    version(std::string const& value);
 
     /*!
      *  \brief Set argument 'metavar' value
@@ -4444,19 +3945,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& metavar(std::vector<std::string> const& value)
-    {
-        if (m_type == Operand && value.size() != 1) {
-            throw TypeError("got an invalid keyword argument 'metavar'");
-        }
-        if (!(action() & (detail::_store_const_action
-                          | argparse::language
-                          | argparse::BooleanOptionalAction))) {
-            throw TypeError("got an unexpected keyword argument 'metavar'");
-        }
-        m_metavar = value;
-        return *this;
-    }
+    Argument&
+    metavar(std::vector<std::string> const& value);
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -4482,10 +3972,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& metavar(std::initializer_list<std::string> const& value)
-    {
-        return metavar(std::vector<std::string>{ value });
-    }
+    Argument&
+    metavar(std::initializer_list<std::string> const& value);
 #else
     /*!
      *  \brief Set argument 'metavar' value
@@ -4494,10 +3982,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& metavar(std::string const& value)
-    {
-        return metavar(detail::_make_vector(value));
-    }
+    Argument&
+    metavar(std::string const& value);
 
     /*!
      *  \brief Set argument 'metavar' value
@@ -4507,11 +3993,9 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& metavar(std::string const& value1,
-                             std::string const& value2)
-    {
-        return metavar(detail::_make_vector(value1, value2));
-    }
+    Argument&
+    metavar(std::string const& value1,
+                std::string const& value2);
 
     /*!
      *  \brief Set argument 'metavar' value
@@ -4522,12 +4006,10 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& metavar(std::string const& value1,
-                             std::string const& value2,
-                             std::string const& value3)
-    {
-        return metavar(detail::_make_vector(value1, value2, value3));
-    }
+    Argument&
+    metavar(std::string const& value1,
+                std::string const& value2,
+                std::string const& value3);
 
     /*!
      *  \brief Set argument 'metavar' value
@@ -4539,13 +4021,11 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& metavar(std::string const& value1,
-                             std::string const& value2,
-                             std::string const& value3,
-                             std::string const& value4)
-    {
-        return metavar(detail::_make_vector(value1, value2, value3, value4));
-    }
+    Argument&
+    metavar(std::string const& value1,
+                std::string const& value2,
+                std::string const& value3,
+                std::string const& value4);
 #endif  // C++11+
 
     /*!
@@ -4555,14 +4035,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& dest(std::string const& value)
-    {
-        if (m_type == Positional && !m_flags.empty()) {
-            throw ValueError("dest supplied twice for positional argument");
-        }
-        m_dest.front() = value;
-        return *this;
-    }
+    Argument&
+    dest(std::string const& value);
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -4573,14 +4047,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& handle(std::function<void(std::string const&)> func)
-    {
-        if (action() & (argparse::version | argparse::help)) {
-            throw TypeError("got an unexpected keyword argument 'handle'");
-        }
-        m_handle = std::move(func);
-        return *this;
-    }
+    Argument&
+    handle(std::function<void(std::string const&)> func);
 
     /*!
      *  \brief Set argument 'handle' value.
@@ -4590,10 +4058,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& handle(std::function<void()> func)
-    {
-        return handle([func] (std::string const&) { func(); });
-    }
+    Argument&
+    handle(std::function<void()> func);
 #endif  // C++11+
 
     /*!
@@ -4602,10 +4068,8 @@ public:
      *  \return Argument flags values
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::vector<std::string> const& flags() const _ARGPARSE_NOEXCEPT
-    {
-        return m_all_flags;
-    }
+    std::vector<std::string> const&
+    flags() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'action' value (default: argparse::store)
@@ -4613,10 +4077,8 @@ public:
      *  \return Argument 'action' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline Action action() const _ARGPARSE_NOEXCEPT
-    {
-        return m_action;
-    }
+    Action
+    action() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'nargs' value
@@ -4624,10 +4086,8 @@ public:
      *  \return Argument 'nargs' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& nargs() const _ARGPARSE_NOEXCEPT
-    {
-        return m_nargs_str;
-    }
+    std::string const&
+    nargs() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'const' value
@@ -4635,10 +4095,8 @@ public:
      *  \return Argument 'const' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& const_value() const _ARGPARSE_NOEXCEPT
-    {
-        return m_const();
-    }
+    std::string const&
+    const_value() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'default' value
@@ -4646,10 +4104,8 @@ public:
      *  \return Argument 'default' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& default_value() const _ARGPARSE_NOEXCEPT
-    {
-        return m_default();
-    }
+    std::string const&
+    default_value() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'implicit' value (used with nargs="?" or "*",
@@ -4658,10 +4114,8 @@ public:
      *  \return Argument 'implicit' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& implicit_value() const _ARGPARSE_NOEXCEPT
-    {
-        return m_implicit();
-    }
+    std::string const&
+    implicit_value() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'type' name (for MetavarTypeHelpFormatter)
@@ -4669,10 +4123,8 @@ public:
      *  \return Argument 'type' name
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& type_name() const _ARGPARSE_NOEXCEPT
-    {
-        return m_type_name();
-    }
+    std::string const&
+    type_name() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'choices' value
@@ -4680,10 +4132,8 @@ public:
      *  \return Argument 'choices' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::vector<std::string> const& choices() const _ARGPARSE_NOEXCEPT
-    {
-        return m_choices();
-    }
+    std::vector<std::string> const&
+    choices() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'required' value
@@ -4691,10 +4141,8 @@ public:
      *  \return Argument 'required' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline bool required() const _ARGPARSE_NOEXCEPT
-    {
-        return m_required();
-    }
+    bool
+    required() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'help' message
@@ -4702,10 +4150,8 @@ public:
      *  \return Argument 'help' message
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& help() const
-    {
-        return detail::_map_at(m_help, std::string());
-    }
+    std::string const&
+    help() const;
 
     /*!
      *  \brief Get argument 'version' value
@@ -4713,10 +4159,8 @@ public:
      *  \return Argument 'version' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& version() const _ARGPARSE_NOEXCEPT
-    {
-        return m_version();
-    }
+    std::string const&
+    version() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'metavar' value
@@ -4724,11 +4168,8 @@ public:
      *  \return Argument 'metavar' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string metavar() const
-    {
-        std::string res = detail::_vector_to_string(m_metavar(), ", ");
-        return m_metavar().size() > 1 ? ("[" + res + "]") : res;
-    }
+    std::string
+    metavar() const;
 
     /*!
      *  \brief Get argument 'dest' value
@@ -4736,10 +4177,8 @@ public:
      *  \return Argument 'dest' value
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string const& dest() const _ARGPARSE_NOEXCEPT
-    {
-        return m_dest.front();
-    }
+    std::string const&
+    dest() const _ARGPARSE_NOEXCEPT;
 
 private:
     void
@@ -10542,6 +9981,76 @@ _MetavarTypeHelpFormatter::_get_default_metavar_for_positional(
 }
 
 // -- Argument ----------------------------------------------------------------
+_ARGPARSE_INL
+Argument::Argument(
+            std::vector<std::string> const& flags,
+            std::string const& name,
+            Type type)
+    : m_flags(flags),
+      m_all_flags(m_flags),
+      m_name(name),
+      m_action(argparse::store),
+      m_default_type(),
+      m_help_type(),
+      m_type(type),
+      m_nargs(NARGS_DEF),
+      m_num_args(1),
+      m_nargs_str("1"),
+      m_const(),
+      m_default(),
+      m_implicit(),
+      m_type_name(),
+      m_choices(),
+      m_help(),
+      m_version(),
+      m_metavar(),
+#ifdef _ARGPARSE_CXX_11
+      m_dest(std::vector<std::string>{ std::string() }),
+      m_handle(nullptr),
+#else
+      m_dest(detail::_make_vector(std::string())),
+#endif  // C++11+
+      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_required()
+{
+    m_help[std::string()] = std::string();
+    m_required.reset(m_type != Optional);
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL
+Argument::Argument(
+            std::vector<std::string>&& flags,
+            std::string&& name,
+            Type type)
+    : m_flags(std::move(flags)),
+      m_all_flags(m_flags),
+      m_name(std::move(name)),
+      m_action(argparse::store),
+      m_default_type(),
+      m_help_type(),
+      m_type(type),
+      m_nargs(NARGS_DEF),
+      m_num_args(1),
+      m_nargs_str("1"),
+      m_const(),
+      m_default(),
+      m_implicit(),
+      m_type_name(),
+      m_choices(),
+      m_help(),
+      m_version(),
+      m_metavar(),
+      m_dest(std::vector<std::string>{ std::string() }),
+      m_handle(nullptr),
+      m_post_trigger(nullptr),
+      m_required()
+{
+    m_help[std::string()] = std::string();
+    m_required.reset(m_type != Optional);
+}
+#endif  // C++11+
+
 _ARGPARSE_INL detail::shared_ptr<Argument>
 Argument::make_argument(
             std::vector<std::string> const& flags,
@@ -10562,6 +10071,778 @@ Argument::make_argument(
                 Argument(std::move(flags), std::move(name), type));
 }
 #endif  // C++11+
+
+#ifndef _ARGPARSE_CXX_11
+_ARGPARSE_INL
+Argument::Argument(
+            std::string const& flag)
+    : m_flags(detail::_make_vector(flag)),
+      m_all_flags(m_flags),
+      m_name(),
+      m_action(argparse::store),
+      m_default_type(),
+      m_help_type(),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
+      m_num_args(1),
+      m_nargs_str("1"),
+      m_const(),
+      m_default(),
+      m_implicit(),
+      m_type_name(),
+      m_choices(),
+      m_help(),
+      m_version(),
+      m_metavar(),
+      m_dest(detail::_make_vector(std::string())),
+      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_required()
+{
+    m_help[std::string()] = std::string();
+}
+
+_ARGPARSE_INL
+Argument::Argument(
+            std::string const& flag1,
+            std::string const& flag2)
+    : m_flags(detail::_make_vector(flag1, flag2)),
+      m_all_flags(m_flags),
+      m_name(),
+      m_action(argparse::store),
+      m_default_type(),
+      m_help_type(),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
+      m_num_args(1),
+      m_nargs_str("1"),
+      m_const(),
+      m_default(),
+      m_implicit(),
+      m_type_name(),
+      m_choices(),
+      m_help(),
+      m_version(),
+      m_metavar(),
+      m_dest(detail::_make_vector(std::string())),
+      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_required()
+{
+    m_help[std::string()] = std::string();
+}
+
+_ARGPARSE_INL
+Argument::Argument(
+            std::string const& flag1,
+            std::string const& flag2,
+            std::string const& flag3)
+    : m_flags(detail::_make_vector(flag1, flag2, flag3)),
+      m_all_flags(m_flags),
+      m_name(),
+      m_action(argparse::store),
+      m_default_type(),
+      m_help_type(),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
+      m_num_args(1),
+      m_nargs_str("1"),
+      m_const(),
+      m_default(),
+      m_implicit(),
+      m_type_name(),
+      m_choices(),
+      m_help(),
+      m_version(),
+      m_metavar(),
+      m_dest(detail::_make_vector(std::string())),
+      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_required()
+{
+    m_help[std::string()] = std::string();
+}
+
+_ARGPARSE_INL
+Argument::Argument(
+            std::string const& flag1,
+            std::string const& flag2,
+            std::string const& flag3,
+            std::string const& flag4)
+    : m_flags(detail::_make_vector(flag1, flag2, flag3, flag4)),
+      m_all_flags(m_flags),
+      m_name(),
+      m_action(argparse::store),
+      m_default_type(),
+      m_help_type(),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
+      m_num_args(1),
+      m_nargs_str("1"),
+      m_const(),
+      m_default(),
+      m_implicit(),
+      m_type_name(),
+      m_choices(),
+      m_help(),
+      m_version(),
+      m_metavar(),
+      m_dest(detail::_make_vector(std::string())),
+      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_required()
+{
+    m_help[std::string()] = std::string();
+}
+#endif  // C++11-
+
+_ARGPARSE_INL
+Argument::Argument(
+            Argument const& orig)
+    : m_flags(orig.m_flags),
+      m_all_flags(orig.m_all_flags),
+      m_name(orig.m_name),
+      m_action(orig.m_action),
+      m_default_type(orig.m_default_type),
+      m_help_type(orig.m_help_type),
+      m_type(orig.m_type),
+      m_nargs(orig.m_nargs),
+      m_num_args(orig.m_num_args),
+      m_nargs_str(orig.m_nargs_str),
+      m_const(orig.m_const),
+      m_default(orig.m_default),
+      m_implicit(orig.m_implicit),
+      m_type_name(orig.m_type_name),
+      m_choices(orig.m_choices),
+      m_help(orig.m_help),
+      m_version(orig.m_version),
+      m_metavar(orig.m_metavar),
+      m_dest(orig.m_dest),
+#ifdef _ARGPARSE_CXX_11
+      m_handle(orig.m_handle),
+#endif  // C++11+
+      m_post_trigger(orig.m_post_trigger),
+      m_required(orig.m_required)
+{
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL
+Argument::Argument(
+            Argument&& orig) _ARGPARSE_NOEXCEPT
+    : m_flags(std::move(orig.m_flags)),
+      m_all_flags(std::move(orig.m_all_flags)),
+      m_name(std::move(orig.m_name)),
+      m_action(std::move(orig.m_action)),
+      m_default_type(std::move(orig.m_default_type)),
+      m_help_type(std::move(orig.m_help_type)),
+      m_type(std::move(orig.m_type)),
+      m_nargs(std::move(orig.m_nargs)),
+      m_num_args(std::move(orig.m_num_args)),
+      m_nargs_str(std::move(orig.m_nargs_str)),
+      m_const(std::move(orig.m_const)),
+      m_default(std::move(orig.m_default)),
+      m_implicit(std::move(orig.m_implicit)),
+      m_type_name(std::move(orig.m_type_name)),
+      m_choices(std::move(orig.m_choices)),
+      m_help(std::move(orig.m_help)),
+      m_version(std::move(orig.m_version)),
+      m_metavar(std::move(orig.m_metavar)),
+      m_dest(std::move(orig.m_dest)),
+      m_handle(std::move(orig.m_handle)),
+      m_post_trigger(std::move(orig.m_post_trigger)),
+      m_required(std::move(orig.m_required))
+{
+}
+#endif  // C++11+
+
+_ARGPARSE_INL Argument&
+Argument::operator =(
+            Argument const& rhs)
+{
+    if (this != &rhs) {
+        this->m_flags           = rhs.m_flags;
+        this->m_all_flags       = rhs.m_all_flags;
+        this->m_name            = rhs.m_name;
+        this->m_action          = rhs.m_action;
+        this->m_default_type    = rhs.m_default_type;
+        this->m_help_type       = rhs.m_help_type;
+        this->m_type            = rhs.m_type;
+        this->m_nargs           = rhs.m_nargs;
+        this->m_num_args        = rhs.m_num_args;
+        this->m_nargs_str       = rhs.m_nargs_str;
+        this->m_const           = rhs.m_const;
+        this->m_default         = rhs.m_default;
+        this->m_implicit        = rhs.m_implicit;
+        this->m_type_name       = rhs.m_type_name;
+        this->m_choices         = rhs.m_choices;
+        this->m_help            = rhs.m_help;
+        this->m_version         = rhs.m_version;
+        this->m_metavar         = rhs.m_metavar;
+        this->m_dest            = rhs.m_dest;
+#ifdef _ARGPARSE_CXX_11
+        this->m_handle          = rhs.m_handle;
+#endif  // C++11+
+        this->m_post_trigger    = rhs.m_post_trigger;
+        this->m_required        = rhs.m_required;
+    }
+    return *this;
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Argument&
+Argument::operator =(
+            Argument&& rhs) _ARGPARSE_NOEXCEPT
+{
+    if (this != &rhs) {
+        this->m_flags           = std::move(rhs.m_flags);
+        this->m_all_flags       = std::move(rhs.m_all_flags);
+        this->m_name            = std::move(rhs.m_name);
+        this->m_action          = std::move(rhs.m_action);
+        this->m_default_type    = std::move(rhs.m_default_type);
+        this->m_help_type       = std::move(rhs.m_help_type);
+        this->m_type            = std::move(rhs.m_type);
+        this->m_nargs           = std::move(rhs.m_nargs);
+        this->m_num_args        = std::move(rhs.m_num_args);
+        this->m_nargs_str       = std::move(rhs.m_nargs_str);
+        this->m_const           = std::move(rhs.m_const);
+        this->m_default         = std::move(rhs.m_default);
+        this->m_implicit        = std::move(rhs.m_implicit);
+        this->m_type_name       = std::move(rhs.m_type_name);
+        this->m_choices         = std::move(rhs.m_choices);
+        this->m_help            = std::move(rhs.m_help);
+        this->m_version         = std::move(rhs.m_version);
+        this->m_metavar         = std::move(rhs.m_metavar);
+        this->m_dest            = std::move(rhs.m_dest);
+        this->m_handle          = std::move(rhs.m_handle);
+        this->m_post_trigger    = std::move(rhs.m_post_trigger);
+        this->m_required        = std::move(rhs.m_required);
+    }
+    return *this;
+}
+#endif  // C++11+
+
+_ARGPARSE_INL Argument&
+Argument::action(
+            std::string const& value)
+{
+    if (value == "store") {
+        return action(argparse::store);
+    } else if (value == "store_const") {
+        return action(argparse::store_const);
+    } else if (value == "store_true") {
+        return action(argparse::store_true);
+    } else if (value == "store_false") {
+        return action(argparse::store_false);
+    } else if (value == "append") {
+        return action(argparse::append);
+    } else if (value == "append_const") {
+        return action(argparse::append_const);
+    } else if (value == "count") {
+        return action(argparse::count);
+    } else if (value == "help") {
+        return action(argparse::help);
+    } else if (value == "version") {
+        return action(argparse::version);
+    } else if (value == "extend") {
+        return action(argparse::extend);
+    } else if (value == "language") {
+        return action(argparse::language);
+    }
+    throw ValueError("unknown action '" + value + "'");
+}
+
+_ARGPARSE_INL Argument&
+Argument::action(
+            Action value)
+{
+    if (m_type == Operand
+            && !(value & (argparse::store | argparse::language))) {
+        // only store and language actions can be operand
+        throw TypeError("got an unexpected keyword argument 'action'");
+    }
+    prepare_action(value);
+    switch (value) {
+        case argparse::store_true :
+            if (!m_default.has_value()) {
+                m_default.reset();
+            }
+            // fallthrough
+        case argparse::BooleanOptionalAction :
+            m_const.reset("1");
+            m_nargs = NARGS_NUM;
+            m_nargs_str = std::string("0");
+            m_num_args = 0;
+            m_choices.reset();
+            break;
+        case argparse::store_false :
+            if (!m_default.has_value()) {
+                m_default.reset("1");
+            }
+            // fallthrough
+        case argparse::store_const :
+        case argparse::append_const :
+            m_const.reset();
+            m_nargs = NARGS_NUM;
+            m_nargs_str = std::string("0");
+            m_num_args = 0;
+            m_choices.reset();
+            break;
+        case argparse::version :
+        case argparse::help :
+            check_action();
+            if (value == argparse::version) {
+                this->help("show program's version number and exit");
+            }
+            // fallthrough
+        case argparse::count :
+            m_const.reset();
+            m_nargs = NARGS_NUM;
+            m_nargs_str = std::string("0");
+            m_num_args = 0;
+            m_choices.reset();
+            break;
+        case argparse::store :
+        case argparse::append :
+        case argparse::extend :
+            m_const.reset();
+            if (m_num_args == 0) {
+                m_nargs = NARGS_DEF;
+                m_nargs_str = std::string("1");
+                m_num_args = 1;
+            }
+            break;
+        case argparse::language :
+            check_action();
+            m_const.reset();
+            m_nargs = NARGS_DEF;
+            m_nargs_str = std::string("1");
+            m_num_args = 1;
+            break;
+        default :
+            throw ValueError("unknown action");
+    }
+#ifdef _ARGPARSE_CXX_11
+    if (action() & (argparse::version | argparse::help)) {
+        m_handle = nullptr;
+    }
+#endif  // C++11+
+    if (!(value & detail::_store_const_action)) {
+        m_metavar.reset();
+    }
+    m_action = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::nargs(
+            std::size_t value)
+{
+    if (m_type == Operand) {
+        throw TypeError("got an unexpected keyword argument 'nargs'");
+    }
+    switch (action()) {
+        case argparse::store_const :
+        case argparse::store_true :
+        case argparse::store_false :
+        case argparse::append_const :
+        case argparse::count :
+        case argparse::help :
+        case argparse::version :
+        case argparse::language :
+        case argparse::BooleanOptionalAction :
+            throw TypeError("got an unexpected keyword argument 'nargs'");
+        case argparse::store :
+            if (value == 0) {
+                throw
+                ValueError("nargs for store actions must be != 0; if you "
+                           "have nothing to store, actions such as store "
+                           "true or store const may be more appropriate");
+            }
+            break;
+        case argparse::append :
+        case argparse::extend :
+            if (value == 0) {
+                throw
+                ValueError("nargs for append actions must be != 0; if arg "
+                           "strings are not supplying the value to append, "
+                           "the append const action may be more appropriate");
+            }
+            break;
+        default:
+            throw ValueError("unknown action");
+    }
+    m_nargs = NARGS_NUM;
+    m_nargs_str = detail::_to_string(value);
+    m_num_args = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::nargs(
+            std::string const& value)
+{
+    if (!(action() & detail::_store_action) || m_type == Operand) {
+        throw TypeError("got an unexpected keyword argument 'nargs'");
+    }
+    if (value == "?") {
+        m_nargs = ZERO_OR_ONE;
+    } else if (value == "*") {
+        m_nargs = ZERO_OR_MORE;
+    } else if (value == "+") {
+        m_nargs = ONE_OR_MORE;
+    } else {
+        throw ValueError("invalid nargs value '" + value + "'");
+    }
+    m_nargs_str = value;
+    m_num_args = 1;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::nargs(
+            _REMAINDER value)
+{
+    if (!(action() & detail::_store_action) || m_type == Operand
+            || value != argparse::REMAINDER) {
+        throw TypeError("got an unexpected keyword argument 'nargs'");
+    }
+    m_nargs = REMAINDING;
+    m_nargs_str = std::string("0");
+    m_num_args = 0;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::const_value(
+            std::string const& value)
+{
+    if ((action() & detail::_const_action)
+            || (m_nargs == ZERO_OR_ONE
+                && (action() & detail::_store_action))) {
+        m_const = value;
+    } else if (m_type == Optional && m_nargs != ZERO_OR_ONE
+               && (action() & detail::_store_action)) {
+        throw ValueError("nargs must be '?' to supply const");
+    } else {
+        throw TypeError("got an unexpected keyword argument 'const'");
+    }
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::default_value(
+            std::string const& value)
+{
+    m_default = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::default_value(
+            _SUPPRESS value)
+{
+    if (value != argparse::SUPPRESS) {
+        throw TypeError("got an unexpected keyword argument 'default'");
+    }
+    if (action() == argparse::store_false) {
+        m_default.reset("1");
+    } else {
+        m_default.reset();
+    }
+    m_default_type = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::implicit_value(
+            std::string const& value)
+{
+    m_implicit = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::type(
+            std::string const& value)
+{
+    m_type_name.reset(value);
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::choice(
+            std::string const& value)
+{
+    if (!(action() & (detail::_store_action | argparse::language))) {
+        throw TypeError("got an unexpected keyword argument 'choices'");
+    }
+    std::vector<std::string> values;
+    values.push_back(value);
+#ifdef _ARGPARSE_CXX_11
+    m_choices = std::move(values);
+#else
+    m_choices = values;
+#endif  // C++11+
+    return *this;
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Argument&
+Argument::choices(
+            std::initializer_list<std::string> const& value)
+{
+    return choices(std::vector<std::string>{ value });
+}
+#else
+_ARGPARSE_INL Argument&
+Argument::choices(
+            std::string const& value1,
+            std::string const& value2)
+{
+    return choices(detail::_make_vector(value1, value2));
+}
+
+_ARGPARSE_INL Argument&
+Argument::choices(
+            std::string const& value1,
+            std::string const& value2,
+            std::string const& value3)
+{
+    return choices(detail::_make_vector(value1, value2, value3));
+}
+
+_ARGPARSE_INL Argument&
+Argument::choices(
+            std::string const& value1,
+            std::string const& value2,
+            std::string const& value3,
+            std::string const& value4)
+{
+    return choices(detail::_make_vector(value1, value2, value3, value4));
+}
+#endif  // C++11+
+
+_ARGPARSE_INL Argument&
+Argument::choices(
+            std::vector<std::string> const& value)
+{
+    if (!(action() & (detail::_store_action | argparse::language))) {
+        throw TypeError("got an unexpected keyword argument 'choices'");
+    }
+    m_choices = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::required(
+            bool value)
+{
+    if (m_type == Positional) {
+        throw TypeError("'required' is an invalid argument for positionals");
+    }
+    m_required = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::help(
+            std::string const& value,
+            std::string const& lang)
+{
+    if (lang.empty()) {
+        m_help_type.reset();
+    }
+    m_help[lang] = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::help(
+            _SUPPRESS value)
+{
+    if (value != argparse::SUPPRESS) {
+        throw TypeError("got an unexpected keyword argument 'help'");
+    }
+    m_help_type = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::version(
+            std::string const& value)
+{
+    if (action() != argparse::version) {
+        throw TypeError("got an unexpected keyword argument 'version'");
+    }
+    m_version = value;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::metavar(
+            std::vector<std::string> const& value)
+{
+    if (m_type == Operand && value.size() != 1) {
+        throw TypeError("got an invalid keyword argument 'metavar'");
+    }
+    if (!(action() & (detail::_store_const_action
+                      | argparse::language
+                      | argparse::BooleanOptionalAction))) {
+        throw TypeError("got an unexpected keyword argument 'metavar'");
+    }
+    m_metavar = value;
+    return *this;
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Argument&
+Argument::metavar(
+            std::initializer_list<std::string> const& value)
+{
+    return metavar(std::vector<std::string>{ value });
+}
+#else
+_ARGPARSE_INL Argument&
+Argument::metavar(
+            std::string const& value)
+{
+    return metavar(detail::_make_vector(value));
+}
+
+_ARGPARSE_INL Argument&
+Argument::metavar(
+            std::string const& value1,
+            std::string const& value2)
+{
+    return metavar(detail::_make_vector(value1, value2));
+}
+
+_ARGPARSE_INL Argument&
+Argument::metavar(
+            std::string const& value1,
+            std::string const& value2,
+            std::string const& value3)
+{
+    return metavar(detail::_make_vector(value1, value2, value3));
+}
+
+_ARGPARSE_INL Argument&
+Argument::metavar(
+            std::string const& value1,
+            std::string const& value2,
+            std::string const& value3,
+            std::string const& value4)
+{
+    return metavar(detail::_make_vector(value1, value2, value3, value4));
+}
+#endif  // C++11+
+
+_ARGPARSE_INL Argument&
+Argument::dest(
+            std::string const& value)
+{
+    if (m_type == Positional && !m_flags.empty()) {
+        throw ValueError("dest supplied twice for positional argument");
+    }
+    m_dest.front() = value;
+    return *this;
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Argument&
+Argument::handle(
+            std::function<void(std::string const&)> func)
+{
+    if (action() & (argparse::version | argparse::help)) {
+        throw TypeError("got an unexpected keyword argument 'handle'");
+    }
+    m_handle = std::move(func);
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::handle(
+            std::function<void()> func)
+{
+    return handle([func] (std::string const&) { func(); });
+}
+#endif  // C++11+
+
+_ARGPARSE_INL std::vector<std::string> const&
+Argument::flags() const _ARGPARSE_NOEXCEPT
+{
+    return m_all_flags;
+}
+
+_ARGPARSE_INL Action
+Argument::action() const _ARGPARSE_NOEXCEPT
+{
+    return m_action;
+}
+
+_ARGPARSE_INL std::string const&
+Argument::nargs() const _ARGPARSE_NOEXCEPT
+{
+    return m_nargs_str;
+}
+
+_ARGPARSE_INL std::string const&
+Argument::const_value() const _ARGPARSE_NOEXCEPT
+{
+    return m_const();
+}
+
+_ARGPARSE_INL std::string const&
+Argument::default_value() const _ARGPARSE_NOEXCEPT
+{
+    return m_default();
+}
+
+_ARGPARSE_INL std::string const&
+Argument::implicit_value() const _ARGPARSE_NOEXCEPT
+{
+    return m_implicit();
+}
+
+_ARGPARSE_INL std::string const&
+Argument::type_name() const _ARGPARSE_NOEXCEPT
+{
+    return m_type_name();
+}
+
+_ARGPARSE_INL std::vector<std::string> const&
+Argument::choices() const _ARGPARSE_NOEXCEPT
+{
+    return m_choices();
+}
+
+_ARGPARSE_INL bool
+Argument::required() const _ARGPARSE_NOEXCEPT
+{
+    return m_required();
+}
+
+_ARGPARSE_INL std::string const&
+Argument::help() const
+{
+    return detail::_map_at(m_help, std::string());
+}
+
+_ARGPARSE_INL std::string const&
+Argument::version() const _ARGPARSE_NOEXCEPT
+{
+    return m_version();
+}
+
+_ARGPARSE_INL std::string
+Argument::metavar() const
+{
+    std::string res = detail::_vector_to_string(m_metavar(), ", ");
+    return m_metavar().size() > 1 ? ("[" + res + "]") : res;
+}
+
+_ARGPARSE_INL std::string const&
+Argument::dest() const _ARGPARSE_NOEXCEPT
+{
+    return m_dest.front();
+}
 
 #ifdef _ARGPARSE_CXX_11
 _ARGPARSE_INL void
