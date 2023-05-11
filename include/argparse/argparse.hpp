@@ -5069,30 +5069,19 @@ _ARGPARSE_EXPORT class Namespace
     friend class ArgumentParser;
 
     explicit
-    Namespace(_Storage const& storage = _Storage())
-        : m_storage(storage),
-          m_unrecognized_args()
-    { }
+    Namespace(_Storage const& storage = _Storage());
 
     explicit
-    Namespace(_Storage const& storage, std::vector<std::string> const& args)
-        : m_storage(storage),
-          m_unrecognized_args(args)
-    { }
+    Namespace(_Storage const& storage,
+                std::vector<std::string> const& args);
 
 #ifdef _ARGPARSE_CXX_11
     explicit
-    Namespace(_Storage&& storage) _ARGPARSE_NOEXCEPT
-        : m_storage(std::move(storage)),
-          m_unrecognized_args()
-    { }
+    Namespace(_Storage&& storage) _ARGPARSE_NOEXCEPT;
 
     explicit
     Namespace(_Storage&& storage,
-              std::vector<std::string>&& args) _ARGPARSE_NOEXCEPT
-        : m_storage(std::move(storage)),
-          m_unrecognized_args(std::move(args))
-    { }
+                std::vector<std::string>&& args) _ARGPARSE_NOEXCEPT;
 #endif  // C++11+
 
 public:
@@ -5106,15 +5095,8 @@ public:
      *  \return True if argument name exists and specified, otherwise false
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline bool contains(std::string const& key) const
-    {
-        _Storage::const_iterator it = storage().find_arg(key);
-        if (it != storage().end()) {
-            return !it->second.empty()
-                    || it->first->action() == argparse::count;
-        }
-        return false;
-    }
+    bool
+    contains(std::string const& key) const;
 
     /*!
      *  \brief Check if argument name exists and specified in parsed arguments
@@ -5124,10 +5106,8 @@ public:
      *  \return True if argument name exists and specified, otherwise false
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline bool exists(std::string const& key) const
-    {
-        return contains(key);
-    }
+    bool
+    exists(std::string const& key) const;
 
     /*!
      *  \brief Get parsed argument value as boolean, byte, floating point
@@ -5583,10 +5563,8 @@ public:
      *
      *  \param os Output stream
      */
-    inline void print(std::ostream& os = std::cout) const
-    {
-        os << to_string() << std::endl;
-    }
+    void
+    print(std::ostream& os = std::cout) const;
 
     /*!
      *  \brief Get parsed argument value as args string
@@ -5596,47 +5574,8 @@ public:
      *  \return Parsed argument value as args string
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string to_args(std::string const& key) const
-    {
-        _Storage::value_type const& args = data(key);
-        switch (args.first->action()) {
-            case argparse::store_const :
-                if (args.second.empty()) {
-                    return std::string();
-                }
-                if (args.second.size() != 1) {
-                    throw TypeError("trying to get data from array argument '"
-                                    + key + "'");
-                }
-                return detail::_have_quotes(args.second.front())
-                        ? args.second.front()
-                        : detail::_replace(args.second.front(),
-                                           detail::_space, "\\ ");
-            case argparse::store_true :
-            case argparse::store_false :
-                if (args.second.empty()) {
-                    return detail::_bool_to_string(args.first->default_value());
-                }
-                if (args.second.size() != 1) {
-                    throw TypeError("trying to get data from array argument '"
-                                    + key + "'");
-                }
-                return detail::_bool_to_string(args.second.front());
-            case argparse::count :
-                return detail::_to_string(args.second.size());
-            case argparse::store :
-            case argparse::append :
-            case argparse::append_const :
-            case argparse::extend :
-            case argparse::language :
-                return detail::_vector_to_string(args.second(), detail::_spaces,
-                                                 std::string(), true);
-            case argparse::BooleanOptionalAction :
-                return boolean_option_to_args(key, args);
-            default :
-                throw ValueError("action not supported");
-        }
-    }
+    std::string
+    to_args(std::string const& key) const;
 
     /*!
      *  \brief Get parsed argument value as string
@@ -5647,38 +5586,9 @@ public:
      *  \return Parsed argument value as string
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string
+    std::string
     to_string(std::string const& key,
-              std::string const& quotes = std::string()) const
-    {
-        _Storage::value_type const& args = data(key);
-        switch (args.first->action()) {
-            case argparse::store_const :
-                if (args.second.empty()) {
-                    return std::string("None");
-                }
-                if (args.second.size() != 1) {
-                    throw TypeError("trying to get data from array argument '"
-                                    + key + "'");
-                }
-                return quotes + args.second.front() + quotes;
-            case argparse::store_true :
-            case argparse::store_false :
-            case argparse::BooleanOptionalAction :
-                return boolean_option_to_string(key, args, quotes);
-            case argparse::count :
-                return args.second.empty()
-                        ? "None" : detail::_to_string(args.second.size());
-            case argparse::store :
-            case argparse::append :
-            case argparse::append_const :
-            case argparse::extend :
-            case argparse::language :
-                return store_actions_to_string(args, quotes);
-            default :
-                throw ValueError("action not supported");
-        }
-    }
+                std::string const& quotes = std::string()) const;
 
     /*!
      *  \brief Get namespace as string
@@ -5686,27 +5596,8 @@ public:
      *  \return Namespace as string
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string to_string() const
-    {
-        std::string res;
-        for (_Storage::const_iterator it
-             = storage().begin(); it != storage().end(); ++it) {
-            _Storage::value_type const& pair = *it;
-            std::vector<std::string> const& flags
-                    = pair.first->get_argument_flags();
-            if (flags.empty()) {
-                continue;
-            }
-            detail::_append_value_to(pair.first->get_dest() + detail::_equals
-                                    + to_string(flags.front(), "'"), res, ", ");
-        }
-        if (!m_unrecognized_args.has_value()) {
-            return "Namespace(" + res + ")";
-        }
-        std::string unknown_args
-                = detail::_vector_to_string(unrecognized_args(), ", ", "'");
-        return "(Namespace(" + res + "), [" + unknown_args + "])";
-    }
+    std::string
+    to_string() const;
 
 #ifdef _ARGPARSE_CXX_17
     /*!
@@ -6190,11 +6081,8 @@ public:
      *  \return Unrecognized arguments
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::vector<std::string> const&
-    unrecognized_args() const _ARGPARSE_NOEXCEPT
-    {
-        return m_unrecognized_args();
-    }
+    std::vector<std::string> const&
+    unrecognized_args() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get unrecognized arguments as args string
@@ -6202,11 +6090,8 @@ public:
      *  \return Unrecognized arguments as args string
      */
     _ARGPARSE_ATTR_NODISCARD
-    inline std::string unrecognized_args_to_args() const
-    {
-        return detail::_vector_to_string(unrecognized_args(), detail::_spaces,
-                                         std::string(), true);
-    }
+    std::string
+    unrecognized_args_to_args() const;
 
 private:
     std::string
@@ -6641,6 +6526,7 @@ private:
     }
 #endif  // C++17+
 
+    // -- data ----------------------------------------------------------------
     _Storage m_storage;
     detail::Value<std::vector<std::string> > m_unrecognized_args;
 };
@@ -11521,6 +11407,181 @@ _Storage::on_process_store(
 }
 
 // -- Namespace ---------------------------------------------------------------
+_ARGPARSE_INL
+Namespace::Namespace(
+            _Storage const& storage)
+    : m_storage(storage),
+      m_unrecognized_args()
+{
+}
+
+_ARGPARSE_INL
+Namespace::Namespace(
+            _Storage const& storage,
+            std::vector<std::string> const& args)
+    : m_storage(storage),
+      m_unrecognized_args(args)
+{
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL
+Namespace::Namespace(
+            _Storage&& storage) _ARGPARSE_NOEXCEPT
+    : m_storage(std::move(storage)),
+      m_unrecognized_args()
+{
+}
+
+_ARGPARSE_INL
+Namespace::Namespace(
+            _Storage&& storage,
+            std::vector<std::string>&& args) _ARGPARSE_NOEXCEPT
+    : m_storage(std::move(storage)),
+      m_unrecognized_args(std::move(args))
+{
+}
+#endif  // C++11+
+
+_ARGPARSE_INL bool
+Namespace::contains(
+            std::string const& key) const
+{
+    _Storage::const_iterator it = storage().find_arg(key);
+    if (it != storage().end()) {
+        return !it->second.empty() || it->first->action() == argparse::count;
+    }
+    return false;
+}
+
+_ARGPARSE_INL bool
+Namespace::exists(
+            std::string const& key) const
+{
+    return contains(key);
+}
+
+_ARGPARSE_INL void
+Namespace::print(
+            std::ostream& os) const
+{
+    os << to_string() << std::endl;
+}
+
+_ARGPARSE_INL std::string
+Namespace::to_args(
+            std::string const& key) const
+{
+    _Storage::value_type const& args = data(key);
+    switch (args.first->action()) {
+        case argparse::store_const :
+            if (args.second.empty()) {
+                return std::string();
+            }
+            if (args.second.size() != 1) {
+                throw TypeError("trying to get data from array argument '"
+                                + key + "'");
+            }
+            return detail::_have_quotes(args.second.front())
+                    ? args.second.front()
+                    : detail::_replace(args.second.front(),
+                                       detail::_space, "\\ ");
+        case argparse::store_true :
+        case argparse::store_false :
+            if (args.second.empty()) {
+                return detail::_bool_to_string(args.first->default_value());
+            }
+            if (args.second.size() != 1) {
+                throw TypeError("trying to get data from array argument '"
+                                + key + "'");
+            }
+            return detail::_bool_to_string(args.second.front());
+        case argparse::count :
+            return detail::_to_string(args.second.size());
+        case argparse::store :
+        case argparse::append :
+        case argparse::append_const :
+        case argparse::extend :
+        case argparse::language :
+            return detail::_vector_to_string(args.second(), detail::_spaces,
+                                             std::string(), true);
+        case argparse::BooleanOptionalAction :
+            return boolean_option_to_args(key, args);
+        default :
+            throw ValueError("action not supported");
+    }
+}
+
+_ARGPARSE_INL std::string
+Namespace::to_string(
+            std::string const& key,
+            std::string const& quotes) const
+{
+    _Storage::value_type const& args = data(key);
+    switch (args.first->action()) {
+        case argparse::store_const :
+            if (args.second.empty()) {
+                return std::string("None");
+            }
+            if (args.second.size() != 1) {
+                throw TypeError("trying to get data from array argument '"
+                                + key + "'");
+            }
+            return quotes + args.second.front() + quotes;
+        case argparse::store_true :
+        case argparse::store_false :
+        case argparse::BooleanOptionalAction :
+            return boolean_option_to_string(key, args, quotes);
+        case argparse::count :
+            return args.second.empty()
+                    ? "None" : detail::_to_string(args.second.size());
+        case argparse::store :
+        case argparse::append :
+        case argparse::append_const :
+        case argparse::extend :
+        case argparse::language :
+            return store_actions_to_string(args, quotes);
+        default :
+            throw ValueError("action not supported");
+    }
+}
+
+_ARGPARSE_INL std::string
+Namespace::to_string() const
+{
+    std::string res;
+    for (_Storage::const_iterator it
+         = storage().begin(); it != storage().end(); ++it) {
+        _Storage::value_type const& pair = *it;
+        std::vector<std::string> const& flags
+                = pair.first->get_argument_flags();
+        if (flags.empty()) {
+            continue;
+        }
+        detail::_append_value_to(pair.first->get_dest() + detail::_equals
+                                + to_string(flags.front(), "'"), res, ", ");
+    }
+    if (!m_unrecognized_args.has_value()) {
+        return "Namespace(" + res + ")";
+    }
+    std::string unknown_args
+            = detail::_vector_to_string(unrecognized_args(), ", ", "'");
+    return "(Namespace(" + res + "), [" + unknown_args + "])";
+}
+
+_ARGPARSE_INL std::vector<std::string> const&
+Namespace::unrecognized_args() const _ARGPARSE_NOEXCEPT
+{
+    return m_unrecognized_args();
+}
+
+_ARGPARSE_INL std::string
+Namespace::unrecognized_args_to_args() const
+{
+    return detail::_vector_to_string(unrecognized_args(), detail::_spaces,
+                                     std::string(), true);
+}
+
 _ARGPARSE_INL std::string
 Namespace::boolean_option_to_args(
             std::string const& key,
