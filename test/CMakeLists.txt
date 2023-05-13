@@ -15,11 +15,19 @@ set_target_properties(argparse_impl PROPERTIES
 )
 
 file(GLOB files "unit-*.cpp")
-
 foreach(file ${files})
     get_filename_component(file_basename ${file} NAME_WE)
     string(REGEX REPLACE "unit-([^$]+)" "test-\\1" testcase ${file_basename})
 
     add_executable(${testcase} $<TARGET_OBJECTS:catch_main> $<TARGET_OBJECTS:argparse_impl> ${file})
+    add_test(${testcase} ${testcase})
+endforeach()
+
+file(GLOB files "unit_single-*.cpp")
+foreach(file ${files})
+    get_filename_component(file_basename ${file} NAME_WE)
+    string(REGEX REPLACE "unit_single-([^$]+)" "test-\\1" testcase ${file_basename})
+
+    add_executable(${testcase} $<TARGET_OBJECTS:catch_main> ${file})
     add_test(${testcase} ${testcase})
 endforeach()

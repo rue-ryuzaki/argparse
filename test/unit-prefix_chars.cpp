@@ -5,11 +5,11 @@
 #include "./argparse_decl.hpp"
 #include "./catch-define.h"
 
-TEST_CASE("16. prefix chars '='", "[argument_parser]")
+TEST_CASE("1. prefix chars '='", "[argument_parser]")
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser().prefix_chars("=").exit_on_error(false);
 
-    SECTION("16.1. without store actions") {
+    SECTION("1.1. without store actions") {
         parser.add_argument(_make_vec("=f", "==foo")).action("store_true").help("foo help");
         parser.add_argument("==bar").action("store_false").help("bar help");
 
@@ -24,7 +24,7 @@ TEST_CASE("16. prefix chars '='", "[argument_parser]")
         REQUIRE(args1.get<bool>("bar") == false);
     }
 
-    SECTION("16.2. with store actions") {
+    SECTION("1.2. with store actions") {
         parser.add_argument(_make_vec("=f", "==foo")).action("store").help("foo help");
         parser.add_argument("==bar").action("store").help("bar help");
 
