@@ -1621,563 +1621,10 @@ _make_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
 }
 #endif  // C++11+
 
-// -- utf8 support ------------------------------------------------------------
-// since v1.7.0
-typedef uint32_t codepoint;
-
-inline uint8_t _ARGPARSE_CONSTEXPR
-_char_to_u8(char c)
-{
-    return static_cast<uint8_t>(c);
-}
-
-inline char _ARGPARSE_CONSTEXPR
-_u8_to_char(uint8_t c)
-{
-    return static_cast<char>(c);
-}
-
-inline codepoint _ARGPARSE_CONSTEXPR
-_char_to_codepoint(char c)
-{
-    return static_cast<codepoint>(_char_to_u8(c));
-}
-
-inline char _ARGPARSE_CONSTEXPR
-_codepoint_to_char(codepoint c)
-{
-    return _u8_to_char(static_cast<uint8_t>(c));
-}
-
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_1b_mask = 0x80;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_1b_bits = 0x00;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_2b_mask = 0xe0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_2b_bits = 0xc0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_3b_mask = 0xf0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_3b_bits = 0xe0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_4b_mask = 0xf8;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_4b_bits = 0xf0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_mask = 0xc0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_bits = 0x80;
-
-inline std::size_t _ARGPARSE_CONSTEXPR
-_utf8_codepoint_size(uint8_t byte)
-{
-    return (byte & _utf8_1b_mask) == _utf8_1b_bits ? 1
-         : (byte & _utf8_2b_mask) == _utf8_2b_bits ? 2
-         : (byte & _utf8_3b_mask) == _utf8_3b_bits ? 3
-         : (byte & _utf8_4b_mask) == _utf8_4b_bits ? 4 : 0;
-}
-
-inline std::pair<bool, std::size_t>
-_utf8_length(std::string const& str, std::ostream& err = std::cerr)
-{
-    std::size_t res = 0;
-    std::size_t i = 0;
-    while (i < str.size()) {
-        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str[i]));
-        if (cp_size == 0) {
-            err << "argparse error [skip]: invalid code point for string "
-                << "'" << str << "'" << std::endl;
-            return std::make_pair(false, str.size());
-        }
-        if (i + cp_size > str.size()) {
-            err << "argparse error [skip]: code point for string '"
-                << str << "' would be out of bounds" << std::endl;
-            return std::make_pair(false, str.size());
-        }
-        for (std::size_t n = 1; n < cp_size; ++n) {
-            if (str[i + n] == '\0') {
-                err << "argparse error [skip]: string '" << str << "' "
-                    << "is NUL-terminated in the middle of the code point"
-                    << std::endl;
-                return std::make_pair(false, str.size());
-            } else if ((_char_to_u8(str[i + n]) & _utf8_ct_mask)
-                                               != _utf8_ct_bits) {
-                err << "argparse error [skip]: invalid byte in code point"
-                    << " for string '" << str << "'" << std::endl;
-                return std::make_pair(false, str.size());
-            }
-        }
-        i += cp_size;
-        ++res;
-    }
-    return std::make_pair(true, res);
-}
-
-// since v1.7.3
-inline bool
-_is_utf8_string(std::string const& str)
-{
-    std::stringstream ss;
-    return _utf8_length(str, ss).second;
-}
-
-// since v1.7.3
-inline codepoint
-_to_upper_codepoint(codepoint cp)
-{
-    // unicode 15 to upper case
-    // BASIC LATIN
-    if (0x0061 <= cp && cp <= 0x007a) return cp - 0x20;
-    // LATIN-1 SUPPLEMENT
-    if (cp == 0x00b5) return 0x039c;
-    if ((0x00e0 <= cp && cp <= 0x00f6) || (0x00f8 <= cp && cp <= 0x00fe)) {
-        return cp - 0x20;
-    }
-    if (cp == 0x00ff) return 0x0178;
-    // LATIN EXTENDED-A
-    if ((cp & 1)
-        && ((0x0100 <= cp && cp <= 0x012f) || (0x0132 <= cp && cp <= 0x0137)
-         || (0x014a <= cp && cp <= 0x0177))) {
-        return cp - 0x1;
-    }
-    if (cp == 0x0131) return 0x0049;
-    if (!(cp & 1)
-        && ((0x0139 <= cp && cp <= 0x0148) || (0x0179 <= cp && cp <= 0x017e))) {
-        return cp - 0x1;
-    }
-    if (cp == 0x017f) return 0x0053;
-    // LATIN EXTENDED-B
-    if (cp == 0x0180) return 0x0243;
-    if ((cp & 1)
-        && ((0x0182 <= cp && cp <= 0x0185) || (0x01a0 <= cp && cp <= 0x01a5)
-         || (0x01de <= cp && cp <= 0x01ef) || (0x01fa <= cp && cp <= 0x021f)
-         || (0x0222 <= cp && cp <= 0x0233) || (0x0246 <= cp && cp <= 0x024f))) {
-        return cp - 0x1;
-    }
-    if (cp == 0x0188 || cp == 0x018c || cp == 0x0192 || cp == 0x0199) {
-        return cp - 0x1;
-    }
-    if (cp == 0x0195) return 0x01f6;
-    if (cp == 0x019a) return 0x023d;
-    if (cp == 0x019e) return 0x0220;
-    if (cp == 0x01a8 || cp == 0x01ad || cp == 0x01b0
-     || cp == 0x01b9 || cp == 0x01bd) {
-        return cp - 0x1;
-    }
-    if (!(cp & 1)
-        && ((0x01b3 <= cp && cp <= 0x01b6) || (0x01cd <= cp && cp <= 0x01dc))) {
-        return cp - 0x1;
-    }
-    if (cp == 0x01bf) return 0x01f7;
-    if (cp == 0x01c5 || cp == 0x01c6) return 0x01c4;
-    if (cp == 0x01c8 || cp == 0x01c9) return 0x01c7;
-    if (cp == 0x01cb || cp == 0x01cc) return 0x01ca;
-    if (cp == 0x01dd) return 0x018e;
-    if (cp == 0x01f2 || cp == 0x01f3) return 0x01f1;
-    if (cp == 0x01f5 || cp == 0x01f9) return cp - 0x1;
-    if (cp == 0x023c || cp == 0x0242) return cp - 0x1;
-    if (cp == 0x023f || cp == 0x0240) return cp + 0x2a3f;
-    // IPA EXTENSIONS
-    if (cp == 0x0250) return 0x2c6f;
-    if (cp == 0x0251) return 0x2c6d;
-    if (cp == 0x0252) return 0x2c70;
-    if (cp == 0x0253) return 0x0181;
-    if (cp == 0x0254) return 0x0186;
-    if (cp == 0x0256 || cp == 0x0257) return cp - 0xcd;
-    if (cp == 0x0259) return 0x018f;
-    if (cp == 0x025b) return 0x0190;
-    if (cp == 0x025c) return 0xa7ab;
-    if (cp == 0x0260) return 0x0193;
-    if (cp == 0x0261) return 0xa7ac;
-    if (cp == 0x0263) return 0x0194;
-    if (cp == 0x0265) return 0xa78d;
-    if (cp == 0x0266) return 0xa7aa;
-    if (cp == 0x0268) return 0x0197;
-    if (cp == 0x0269) return 0x0196;
-    if (cp == 0x026a) return 0xa7ae;
-    if (cp == 0x026b) return 0x2c62;
-    if (cp == 0x026c) return 0xa7ad;
-    if (cp == 0x026f) return 0x019c;
-    if (cp == 0x0271) return 0x2c6e;
-    if (cp == 0x0272) return 0x019d;
-    if (cp == 0x0275) return 0x019f;
-    if (cp == 0x027d) return 0x2c64;
-    if (cp == 0x0280 || cp == 0x0283 || cp == 0x0288) return cp - 0xda;
-    if (cp == 0x0282) return 0xa7c5;
-    if (cp == 0x0287) return 0xa7b1;
-    if (cp == 0x0289) return 0x0244;
-    if (cp == 0x028a || cp == 0x028b) return cp - 0xd9;
-    if (cp == 0x028c) return 0x0245;
-    if (cp == 0x0292) return 0x01b7;
-    if (cp == 0x029d) return 0xa7b2;
-    if (cp == 0x029e) return 0xa7b0;
-    // COMBINING DIACRITICAL MARKS
-    if (cp == 0x0345) return 0x0399;
-    // BASIC GREEK
-    if (cp == 0x0371 || cp == 0x0373 || cp == 0x0377) return cp - 0x1;
-    if (0x037b <= cp && cp <= 0x037d) return cp + 0x82;
-    if (cp == 0x03ac) return 0x0386;
-    if (0x03ad <= cp && cp <= 0x03af) return cp - 0x25;
-    if ((0x03b1 <= cp && cp <= 0x03c1) || (0x03c3 <= cp && cp <= 0x03cb)) {
-        return cp - 0x20;
-    }
-    if (cp == 0x03c2) return 0x03a3;
-    if (cp == 0x03cc) return 0x038c;
-    if (cp == 0x03cd || cp == 0x03ce) return cp - 0x3f;
-    // GREEK SYMBOLS AND COPTIC
-    if (cp == 0x03d0) return 0x0392;
-    if (cp == 0x03d1) return 0x0398;
-    if (cp == 0x03d5) return 0x03a6;
-    if (cp == 0x03d6) return 0x03a0;
-    if (cp == 0x03d7) return 0x03cf;
-    if ((cp & 1) && ((0x03d8 <= cp && cp <= 0x03ef))) return cp - 0x1;
-    if (cp == 0x03f0) return 0x039a;
-    if (cp == 0x03f1) return 0x03a1;
-    if (cp == 0x03f2) return 0x03f9;
-    if (cp == 0x03f3) return 0x037f;
-    if (cp == 0x03f5) return 0x0395;
-    if (cp == 0x03f8 || cp == 0x03fb) return cp - 0x1;
-    // CYRILLIC
-    if (0x0430 <= cp && cp <= 0x044f) return cp - 0x20;
-    if (0x0450 <= cp && cp <= 0x045f) return cp - 0x50;
-    if ((cp & 1)
-        && ((0x0460 <= cp && cp <= 0x0481) || (0x048a <= cp && cp <= 0x04bf)
-         || (0x04d0 <= cp && cp <= 0x04ff))) {
-        return cp - 0x1;
-    }
-    if (!(cp & 1) && (0x04c1 <= cp && cp <= 0x04ce)) return cp - 0x1;
-    if (cp == 0x04cf) return 0x04c0;
-    // CYRILLIC SUPPLEMENT
-    if ((cp & 1) && (0x0500 <= cp && cp <= 0x052f)) return cp - 0x1;
-    // ARMENIAN
-    if (0x0561 <= cp && cp <= 0x0586) return cp - 0x30;
-    // GEORGIAN
-    if ((0x10d0 <= cp && cp <= 0x10fa) || (0x10fd <= cp && cp <= 0x10ff)) {
-        return cp + 0xbc0;
-    }
-    // CHEROKEE
-    if (0x13f8 <= cp && cp <= 0x13fd) return cp - 0x8;
-    // CYRILLIC
-    if (cp == 0x1c80) return 0x0412;
-    if (cp == 0x1c81) return 0x0414;
-    if (cp == 0x1c82) return 0x041e;
-    if (cp == 0x1c83) return 0x0421;
-    if (cp == 0x1c84 || cp == 0x1c85) return 0x0422;
-    if (cp == 0x1c86) return 0x042a;
-    if (cp == 0x1c87) return 0x0462;
-    if (cp == 0x1c88) return 0xa64a;
-    // PHONETIC EXTENSIONS
-    if (cp == 0x1d79) return 0xa77d;
-    if (cp == 0x1d7d) return 0x2c63;
-    if (cp == 0x1d8e) return 0xa7c6;
-    // LATIN EXTENDED ADDITIONAL
-    if ((cp & 1)
-        && ((0x1e00 <= cp && cp <= 0x1e95) || (0x1ea0 <= cp && cp <= 0x1ef9)
-         || (0x1efa <= cp && cp <= 0x1eff))) {
-        return cp - 0x1;
-    }
-    if (cp == 0x1e9b) return 0x1e60;
-    // GREEK EXTENDED
-    if (!(cp & 8)
-        && ((0x1f00 <= cp && cp <= 0x1f15) || (0x1f20 <= cp && cp <= 0x1f45)
-         || (0x1f60 <= cp && cp <= 0x1f6f) || (0x1f80 <= cp && cp <= 0x1faf))) {
-        return cp + 0x8;
-    }
-    if (!(cp & 8) && (cp & 1) && (0x1f51 <= cp && cp <= 0x1f5f)) {
-        return cp + 0x8;
-    }
-    if (cp == 0x1fb0 || cp == 0x1fb1 || cp == 0x1fd0 || cp == 0x1fd1
-     || cp == 0x1fe0 || cp == 0x1fe1) {
-        return cp + 0x8;
-    }
-    if (cp == 0x1f70 || cp == 0x1f71) return cp + 0x4a;
-    if (0x1f72 <= cp && cp <= 0x1f75) return cp + 0x56;
-    if (cp == 0x1f76 || cp == 0x1f77) return cp + 0x64;
-    if (cp == 0x1f78 || cp == 0x1f79) return cp + 0x80;
-    if (cp == 0x1f7a || cp == 0x1f7b) return cp + 0x70;
-    if (cp == 0x1f7c || cp == 0x1f7d) return cp + 0x7e;
-    if (cp == 0x1fb3 || cp == 0x1fc3 || cp == 0x1ff3) return cp + 0x9;
-    if (cp == 0x1fbe) return 0x0399;
-    if (cp == 0x1fe5) return 0x1fec;
-    // LETTERLIKE SYMBOLS
-    if (cp == 0x214e) return 0x2132;
-    // NUMBER FORMS
-    if (0x2170 <= cp && cp <= 0x217f) return cp - 0x10;
-    if (cp == 0x2184) return cp - 0x1;
-    // ENCLOSED ALPHANUMERICS : CIRCLED LATIN
-    if (0x24d0 <= cp && cp <= 0x24e9) return cp - 0x1a;
-    // GLAGOLITIC
-    if (0x2c30 <= cp && cp <= 0x2c5f) return cp - 0x30;
-    // LATIN EXTENDED-C
-    if ((cp & 1)
-        && ((0x2c60 <= cp && cp <= 0x2c61) || (0x2c72 <= cp && cp <= 0x2c73))) {
-        return cp - 0x1;
-    }
-    if (cp == 0x2c65) return 0x023a;
-    if (cp == 0x2c66) return 0x023e;
-    if (!(cp & 1)
-        && ((0x2c67 <= cp && cp <= 0x2c6c) || (0x2c75 <= cp && cp <= 0x2c76))) {
-        return cp - 0x1;
-    }
-    // COPTIC
-    if ((cp & 1)
-        && ((0x2c80 <= cp && cp <= 0x2ce3) || (0x2cf2 <= cp && cp <= 0x2cf3))) {
-        return cp - 0x1;
-    }
-    if (!(cp & 1) && (0x2ceb <= cp && cp <= 0x2cee)) return cp - 0x1;
-    // GEORGIAN SUPPLEMENT
-    if ((0x2d00 <= cp && cp <= 0x2d25) || cp == 0x2d27 || cp == 0x2d2d) {
-        return cp - 0x1c60;
-    }
-    // CYRILLIC SUPPLEMENT 2
-    if ((cp & 1)
-        && ((0xa640 <= cp && cp <= 0xa66d) || (0xa680 <= cp && cp <= 0xa69b))) {
-        return cp - 0x1;
-    }
-    // LATIN EXTENDED-D
-    if ((cp & 1)
-        && ((0xa722 <= cp && cp <= 0xa72f) || (0xa732 <= cp && cp <= 0xa76f)
-         || (0xa77e <= cp && cp <= 0xa787) || (0xa790 <= cp && cp <= 0xa793)
-         || (0xa796 <= cp && cp <= 0xa7a9) || (0xa7b4 <= cp && cp <= 0xa7c3)
-         || (0xa7d0 <= cp && cp <= 0xa7d1) || (0xa7d6 <= cp && cp <= 0xa7d9))) {
-        return cp - 0x1;
-    }
-    if (!(cp & 1)
-        && ((0xa779 <= cp && cp <= 0xa77c) || (0xa78b <= cp && cp <= 0xa78c)
-         || (0xa7c7 <= cp && cp <= 0xa7ca) || (0xa7f5 <= cp && cp <= 0xa7f6))) {
-        return cp - 0x1;
-    }
-    if (cp == 0xa794) return cp + 0x30;
-    // LATIN SMALL LETTER CHI
-    if (cp == 0xab53) return 0xa7b3;
-    // CHEROKEE
-    if (0xab70 <= cp && cp <= 0xabbf) return cp - 0x97d0;
-    // HALFWIDTH AND FULLWIDTH FORMS
-    if (0xff41 <= cp && cp <= 0xff5a) return cp - 0x20;
-    // DESERET
-    if (0x10428 <= cp && cp <= 0x1044f) return cp - 0x28;
-    // OSAGE
-    if (0x104d8 <= cp && cp <= 0x104fb) return cp - 0x28;
-    // CAUCASIAN ALBANIAN
-    if ((0x10597 <= cp && cp <= 0x105a1) || (0x105a3 <= cp && cp <= 0x105b1)
-     || (0x105b3 <= cp && cp <= 0x105b9) || (0x105bb <= cp && cp <= 0x105bc)) {
-        return cp - 0x27;
-    }
-    // OLD HUNGARIAN
-    if (0x10cc0 <= cp && cp <= 0x10cf2) return cp - 0x40;
-    // WARANG CITI
-    if (0x118c0 <= cp && cp <= 0x118df) return cp - 0x20;
-    // MEDEFAIDRIN
-    if (0x16e60 <= cp && cp <= 0x16e7f) return cp - 0x20;
-    // ADLAM
-    if (0x1e922 <= cp && cp <= 0x1e943) return cp - 0x22;
-    return cp;
-}
-
-inline std::string
-_to_upper(std::string const& str)
-{
-    std::pair<bool, std::size_t> num_chars = _utf8_length(str);
-    std::string res;
-    if (!num_chars.first) {
-        res = str;
-        for (std::size_t i = 0; i < res.size(); ++i) {
-            res.at(i) = static_cast<char>(
-                           std::toupper(static_cast<unsigned char>(res.at(i))));
-        }
-        return res;
-    }
-    std::size_t i = 0;
-    for (std::size_t n = 0; n < num_chars.second; ++n) {
-        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str[i]));
-        codepoint cp = 0;
-        switch (cp_size) {
-            case 1:
-                cp =  (_char_to_codepoint(str[i    ]) & ~_utf8_1b_mask);
-                break;
-            case 2:
-                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_2b_mask) <<  6)
-                   |  (_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask);
-                break;
-            case 3:
-                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_3b_mask) << 12)
-                   | ((_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_codepoint(str[i + 2]) & ~_utf8_ct_mask);
-                break;
-            case 4:
-                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_4b_mask) << 18)
-                   | ((_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask) << 12)
-                   | ((_char_to_codepoint(str[i + 2]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_codepoint(str[i + 3]) & ~_utf8_ct_mask);
-                break;
-            default:
-                // should never happen
-                break;
-        }
-        i += cp_size;
-        cp = _to_upper_codepoint(cp);
-        if (cp < 0x80) {
-            // one octet
-            res += _codepoint_to_char(cp);
-        } else if (cp < 0x800) {
-            // two octets
-            res += _codepoint_to_char((cp >> 6)           | 0xc0);
-            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
-        } else if (cp < 0x10000) {
-            // three octets
-            res += _codepoint_to_char((cp >> 12)          | 0xe0);
-            res += _codepoint_to_char(((cp >> 6) & 0x3f)  | 0x80);
-            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
-        } else {
-            // four octets
-            res += _codepoint_to_char((cp >> 18)          | 0xf0);
-            res += _codepoint_to_char(((cp >> 12) & 0x3f) | 0x80);
-            res += _codepoint_to_char(((cp >>  6) & 0x3f) | 0x80);
-            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
-        }
-    }
-    return res;
-}
-// ----------------------------------------------------------------------------
-
 // -- translations support ----------------------------------------------------
 // since v1.7.1
 typedef std::map<std::string, std::string> TranslationPack;
-
-inline std::string
-_tr(TranslationPack const& pack, std::string const& lang)
-{
-    TranslationPack::const_iterator it;
-    if (!lang.empty()) {
-        it = pack.find(lang);
-        if (it != pack.end()) {
-            return it->second;
-        }
-    }
-    it = pack.find(std::string());
-    if (it != pack.end()) {
-        return it->second;
-    }
-    return std::string();
-}
 // ----------------------------------------------------------------------------
-
-inline std::pair<std::size_t, std::size_t>
-_get_terminal_size(bool default_values = false)
-{
-    std::size_t width  = 80;
-    std::size_t height = 24;
-    if (default_values) {
-        return std::make_pair(width, height);
-    }
-#ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
-#if defined(_WIN32)
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
-        width = static_cast<std::size_t>
-                (csbi.srWindow.Right - csbi.srWindow.Left + 1);
-        height = static_cast<std::size_t>
-                (csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
-        if (width < _min_width && width != 0) {
-            width = _min_width;
-        }
-    }
-#else  // UNIX
-#if defined(TIOCGSIZE)
-    struct ttysize w;
-    if (ioctl(STDOUT_FILENO, TIOCGSIZE, &w) >= 0) {
-        width = static_cast<std::size_t>(w.ts_cols);
-        height = static_cast<std::size_t>(w.ts_lines);
-        if (width < _min_width && width != 0) {
-            width = _min_width;
-        }
-    }
-#elif defined(TIOCGWINSZ)
-    struct winsize w;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) >= 0) {
-        width = static_cast<std::size_t>(w.ws_col);
-        height = static_cast<std::size_t>(w.ws_row);
-        if (width < _min_width && width != 0) {
-            width = _min_width;
-        }
-    }
-#endif  // TIOCGSIZE
-#endif  // _WIN32
-#endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
-    return std::make_pair(width, height);
-}
-
-inline void
-_limit_to_min(std::size_t& value, std::size_t to) _ARGPARSE_NOEXCEPT
-{
-    if (value < to) {
-        value = to;
-    }
-}
-
-inline void
-_limit_to_max(std::size_t& value, std::size_t to) _ARGPARSE_NOEXCEPT
-{
-    if (value > to) {
-        value = to;
-    }
-}
-
-inline void
-_ltrim(std::string& str)
-{
-    std::string::iterator it = str.begin();
-    for ( ; it != str.end()
-          && std::isspace(static_cast<unsigned char>(*it)); ++it) {
-    }
-    str.erase(str.begin(), it);
-}
-
-inline void
-_rtrim(std::string& str)
-{
-    std::string::reverse_iterator it = str.rbegin();
-    for ( ; it != str.rend()
-          && std::isspace(static_cast<unsigned char>(*it)); ++it) {
-    }
-    str.erase(it.base(), str.end());
-}
-
-inline void
-_trim(std::string& str)
-{
-    _ltrim(str);
-    _rtrim(str);
-}
-
-inline std::string
-_trim_copy(std::string const& str)
-{
-    std::string res = str;
-    _trim(res);
-    return res;
-}
-
-#ifdef _ARGPARSE_CXX_17
-inline std::string_view
-_trim_sw(std::string const& str)
-{
-    std::string_view in = str;
-    auto left = in.begin();
-    for ( ; ; ++left) {
-        if (left == in.end()) {
-            return std::string_view();
-        }
-        if (!std::isspace(static_cast<unsigned char>(*left))) {
-            break;
-        }
-    }
-    auto right = in.end() - 1;
-    for ( ; right > left
-          && std::isspace(static_cast<unsigned char>(*right)); --right) {
-    }
-    return in.substr(static_cast<std::size_t>(left - in.begin()),
-                     static_cast<std::size_t>(1 + right - left));
-}
-#else
-inline std::string
-_trim_sw(std::string const& str)
-{
-    return _trim_copy(str);
-}
-#endif  // C++17+
 
 template <class T>
 inline std::string
@@ -2188,37 +1635,8 @@ _to_string(T const& value)
     return ss.str();
 }
 
-inline std::string
-_file_name(std::string const& path)
-{
-    return path.substr(path.find_last_of("/\\") + 1);
-}
-
-inline bool
-_have_quotes(std::string const& str)
-{
-    return str.size() > 1 && str.at(0) == str.at(str.size() - 1)
-            && (str.at(0) == '\'' || str.at(0) == '\"');
-}
-
-inline void
-_resolve_conflict(std::string const& str, std::vector<std::string>& values)
-{
-    std::vector<std::string>::iterator it
-            = std::find(values.begin(), values.end(), str);
-    if (it != values.end()) {
-        values.erase(it);
-    }
-}
-
-inline void
-_resolve_conflict(std::vector<std::string> const& vec,
-                  std::vector<std::string>& values)
-{
-    for (std::size_t i = 0; i < vec.size(); ++i) {
-        _resolve_conflict(vec[i], values);
-    }
-}
+bool
+_have_quotes(std::string const& str);
 
 #ifdef _ARGPARSE_CXX_11
 template <class T = std::string>
@@ -2235,88 +1653,22 @@ _remove_quotes(std::string const& str)
 }
 #endif  // C++11+
 
-inline bool
-_contains_substr(std::string const& str, std::string const& substr)
-{
-#ifdef _ARGPARSE_CXX_23
-    return str.contains(substr);
-#else
-    return str.find(substr) != std::string::npos;
-#endif  // C++23+
-}
+std::string
+_replace(std::string str,
+            char old,
+            std::string const& value);
 
-inline std::string
-_get_punct(std::string const& str)
-{
-    std::string res;
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        if (std::ispunct(static_cast<unsigned char>(str.at(i)))) {
-            res += str.at(i);
-        }
-    }
-    return res;
-}
-
-inline std::string
-_replace(std::string str, char old, std::string const& value)
-{
-    std::string::size_type pos = str.find(old);
-    while (pos != std::string::npos) {
-        str.replace(pos, 1, value);
-        pos = str.find(old, pos + value.size());
-    }
-    return str;
-}
-
-inline std::string
-_replace(std::string str, std::string const& old, std::string const& value)
-{
-    std::string::size_type pos = str.find(old);
-    while (pos != std::string::npos) {
-        str.replace(pos, old.length(), value);
-        pos = str.find(old, pos + value.size());
-    }
-    return str;
-}
+std::string
+_replace(std::string str,
+            std::string const& old,
+            std::string const& value);
 
 #ifdef _ARGPARSE_CXX_11
-inline std::string
+std::string
 _replace(std::string const& str,
-         std::function<bool(unsigned char)> func, std::string const& value)
-{
-    std::string res;
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        char c = str.at(i);
-        if (func(static_cast<unsigned char>(c))) {
-            res += value;
-        } else {
-            res += c;
-        }
-    }
-    return res;
-}
+            std::function<bool(unsigned char)> func,
+            std::string const& value);
 #endif  // C++11+
-
-inline bool
-_starts_with(std::string const& str, std::string const& value)
-{
-#ifdef _ARGPARSE_CXX_20
-    return str.starts_with(value);
-#else
-    return str.compare(0, value.size(), value) == 0;
-#endif  // C++20+
-}
-
-inline bool
-_ends_with(std::string const& str, std::string const& value)
-{
-#ifdef _ARGPARSE_CXX_20
-    return str.ends_with(value);
-#else
-    return str.size() >= value.size()
-            && 0 == str.compare(str.size() - value.size(), value.size(), value);
-#endif  // C++20+
-}
 
 template <class T>
 bool
@@ -2430,467 +1782,45 @@ _move_vector_replace_at(std::vector<T>& from, std::vector<T>& to, std::size_t i)
 #endif  // C++11+
 }
 
-inline std::string
-_flag_name(std::string const& str)
-{
-    std::string res = str;
-    char prefix = res.at(0);
-    std::string::iterator it = res.begin();
-    for ( ; it != res.end() && *it == prefix; ++it) {
-    }
-    res.erase(res.begin(), it);
-    return res;
-}
+std::vector<std::string>
+_split(std::string const& str,
+            char sep,
+            bool add_sep = false);
 
-#ifdef _ARGPARSE_CXX_17
-inline std::string_view
-_flag_name(std::string_view res)
-{
-    char prefix = res.front();
-    auto it = res.begin();
-    for ( ; it != res.end() && *it == prefix; ++it) {
-    }
-    return res.substr(static_cast<std::size_t>(it - res.begin()),
-                      static_cast<std::size_t>(res.end() - it));
-}
-#endif  // C++17+
+std::pair<std::string, std::string>
+_split_separator(
+            std::string const& str,
+            char sep);
 
-inline bool
-_is_flag_correct(std::string const& str, bool is_optional)
-{
-#ifdef _ARGPARSE_CXX_17
-    std::string_view trimmed = _trim_sw(str);
-#else
-    std::string trimmed = _trim_copy(str);
-#endif  // C++17+
-    if (trimmed.size() != str.size()) {
-        return false;
-    }
-    if (is_optional) {
-        trimmed = _flag_name(trimmed);
-    }
-    for (std::size_t i = 0; i < trimmed.size(); ++i) {
-        if (trimmed.at(i) == '-' || trimmed.at(i) == '_') {
-            continue;
-        }
-        if (std::isspace(static_cast<unsigned char>(trimmed.at(i)))
-                || std::ispunct(static_cast<unsigned char>(trimmed.at(i)))) {
-            return false;
-        }
-    }
-    return true;
-}
+std::vector<std::string>
+_split_to_args(
+            std::string const& str,
+            std::ostream& err = std::cerr);
 
-inline std::vector<std::string>
-_help_flags(std::string const& prefix_chars)
-{
-    char prefix = _is_value_exists(_prefix_char, prefix_chars)
-            ? _prefix_char : prefix_chars.at(0);
-#ifdef _ARGPARSE_CXX_11
-    return { std::string(1, prefix) + "h", std::string(2, prefix) + "help" };
-#else
-    return _make_vector(std::string(1, prefix) + "h",
-                        std::string(2, prefix) + "help");
-#endif  // C++11+
-}
+bool
+_string_to_bool(
+            std::string const& str) _ARGPARSE_NOEXCEPT;
 
-inline bool
-_is_negative_number(std::string const& str)
-{
-    double value;
-    std::stringstream ss(str);
-    ss >> value;
-    return !ss.fail() && ss.eof() && value < 0;
-}
+std::string
+_vector_to_string(
+            std::vector<std::string>::const_iterator begvec,
+            std::vector<std::string>::const_iterator endvec,
+            std::string const& separator = _spaces,
+            std::string const& quotes = std::string(),
+            bool replace_space = false,
+            std::string const& none = std::string(),
+            std::string const& begin = std::string(),
+            std::string const& end = std::string());
 
-inline bool
-_is_optional(std::string const& arg,
-             std::string const& prefix_chars,
-             bool have_negative_args,
-             bool was_pseudo_arg)
-{
-    return _is_value_exists(arg.at(0), prefix_chars) && !was_pseudo_arg
-            && (have_negative_args || !_is_negative_number(arg));
-}
-
-inline bool
-_not_optional(std::string const& arg,
-              std::string const& prefix_chars,
-              bool have_negative_args,
-              bool was_pseudo_arg)
-{
-    return !_is_value_exists(arg.at(0), prefix_chars) || was_pseudo_arg
-            || (!have_negative_args && _is_negative_number(arg));
-}
-
-inline std::pair<bool, std::string>
-_make_no_flag(std::string const& str)
-{
-    char prefix = str.at(0);
-    std::string::const_iterator it = str.begin();
-    for ( ; it != str.end() && *it == prefix; ++it) {
-    }
-    std::pair<bool, std::string> res
-            = std::make_pair(std::distance(str.begin(), it) > 1, str);
-    if (res.first) {
-        res.second.insert(static_cast<std::string::size_type>(2), "no-");
-    }
-    return res;
-}
-
-inline void
-_append_value_to(std::string const& value, std::string& str,
-                 std::string const& separator = _spaces, bool force = false)
-{
-    if (!str.empty() || force) {
-        str += separator;
-    }
-    str += value;
-}
-
-inline void
-_store_value_to(std::string& value, std::vector<std::string>& res,
-                bool force = false)
-{
-    if (!value.empty() || force) {
-        res.push_back(value);
-        value.clear();
-    }
-}
-
-inline std::vector<std::string>
-_split(std::string const& str, char sep, bool add_sep = false)
-{
-    std::vector<std::string> res;
-    std::string value;
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        char c = str.at(i);
-        if (c == sep) {
-            _store_value_to(value, res, true);
-            if (add_sep) {
-                value = std::string(1, sep);
-                _store_value_to(value, res, true);
-            }
-        } else {
-            value += c;
-        }
-    }
-    _store_value_to(value, res, true);
-    return res;
-}
-
-inline std::vector<std::string>
-_split_whitespace(std::string const& str, bool force = false)
-{
-    std::vector<std::string> res;
-    std::string value;
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        char c = str.at(i);
-        if (std::isspace(static_cast<unsigned char>(c))) {
-            _store_value_to(value, res, force);
-        } else {
-            value += c;
-        }
-    }
-    _store_value_to(value, res);
-    return res;
-}
-
-inline std::pair<std::string, std::string>
-_split_separator(std::string const& str, char sep)
-{
-    std::string::size_type pos = str.find(sep);
-    if (pos != std::string::npos) {
-        return std::make_pair(str.substr(0, pos), str.substr(pos + 1));
-    } else {
-        return std::make_pair(str, std::string());
-    }
-}
-
-inline std::vector<std::string>
-_split_equal(std::string const& str, std::string const& prefix)
-{
-#ifdef _ARGPARSE_CXX_11
-    std::string::size_type pos = _is_value_exists(_equal, prefix)
-            ? str.find(_equal, static_cast<std::string::size_type>(
-                         std::distance(str.begin(),
-                                       std::find_if(str.begin(),
-                                                    str.end(), [] (char c)
-    { return c != _equal; }))))
-            : str.find(_equal);
-    if (pos != std::string::npos) {
-        return { str.substr(0, pos), str.substr(pos + 1) };
-    } else {
-        return { str };
-    }
-#else
-    std::string::size_type pos;
-    if (_is_value_exists(_equal, prefix)) {
-        std::string::const_iterator it = str.begin();
-        for ( ; it != str.end() && *it == _equal; ++it) {
-        }
-        pos = str.find(_equal, static_cast<std::string::size_type>(
-                           std::distance(str.begin(), it)));
-    } else {
-        pos = str.find(_equal);
-    }
-    if (pos != std::string::npos) {
-        return _make_vector(str.substr(0, pos), str.substr(pos + 1));
-    } else {
-        return _make_vector(str);
-    }
-#endif  // C++11+
-}
-
-inline void
-_process_quotes(std::deque<char>& quotes, std::string const& value,
-                std::string const& str, char c, std::size_t i)
-{
-    if (c == '\"' || c == '\'') {
-        if (!quotes.empty()
-                && quotes.back() == c
-                && (i == str.size()
-                    || std::isspace(static_cast<unsigned char>(str.at(i)))
-                    || std::ispunct(static_cast<unsigned char>(str.at(i))))) {
-            quotes.pop_back();
-        } else if (value.empty()
-                   || std::ispunct(static_cast<unsigned char>(
-                                       value.at(value.size() - 1)))) {
-            quotes.push_back(c);
-        }
-    }
-}
-
-inline std::vector<std::string>
-_split_to_args(std::string const& str, std::ostream& err = std::cerr)
-{
-    std::vector<std::string> res;
-    std::string value;
-    std::deque<char> quotes;
-    bool skip = false;
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        char c = str.at(i);
-        if (!skip && c == '\\') {
-            // skip space
-            skip = true;
-            if (i + 1 == str.size()) {
-                value += c;
-                break;
-            }
-            if (str[i + 1] != _space) {
-                value += c;
-            }
-            continue;
-        }
-        if (((c == _space && !skip)
-             || (c != _space && std::isspace(static_cast<unsigned char>(c))))
-                && quotes.empty()) {
-            _store_value_to(value, res);
-        } else {
-            _process_quotes(quotes, value, str, c, i + 1);
-            value += c;
-        }
-        skip = false;
-    }
-    _store_value_to(value, res);
-    if (!quotes.empty()) {
-        err << "argparse error [skip]: possible incorrect string: '"
-            << str << "'" << std::endl;
-    }
-    return res;
-}
-
-inline bool
-_string_to_bool(std::string const& str) _ARGPARSE_NOEXCEPT
-{
-    return !str.empty();
-}
-
-inline std::string
-_bool_to_string(bool value)
-{
-    return value ? "true" : "false";
-}
-
-inline std::string
-_bool_to_string(std::string const& str)
-{
-    return _bool_to_string(_string_to_bool(str));
-}
-
-inline std::string
-_vector_to_string(std::vector<std::string>::const_iterator begvec,
-                  std::vector<std::string>::const_iterator endvec,
-                  std::string const& separator = _spaces,
-                  std::string const& quotes = std::string(),
-                  bool replace_space = false,
-                  std::string const& none = std::string(),
-                  std::string const& begin = std::string(),
-                  std::string const& end = std::string())
-{
-    typedef std::vector<std::string>::const_iterator value_const_iterator;
-    std::string res;
-    for (value_const_iterator it = begvec; it != endvec; ++it) {
-        std::string val = *it;
-        if (quotes.empty() && replace_space && !_have_quotes(val)) {
-            val = _replace(val, _space, "\\ ");
-        }
-        _append_value_to(quotes + val + quotes, res, separator);
-    }
-    return begin + (res.empty() ? none : res) + end;
-}
-
-inline std::string
-_vector_to_string(std::vector<std::string> const& vec,
-                  std::string const& separator = _spaces,
-                  std::string const& quotes = std::string(),
-                  bool replace_space = false,
-                  std::string const& none = std::string(),
-                  std::string const& begin = std::string(),
-                  std::string const& end = std::string())
-{
-    return _vector_to_string(vec.begin(), vec.end(), separator, quotes,
-                             replace_space, none, begin, end);
-}
-
-inline std::string
-_matrix_to_string(std::vector<std::string> const& values,
-                  std::vector<std::size_t> const& indexes,
-                  std::string const& separator = _spaces,
-                  std::string const& quotes = std::string(),
-                  bool replace_space = false,
-                  std::string const& none = std::string(),
-                  std::string const& begin = std::string(),
-                  std::string const& end = std::string())
-{
-    std::string res;
-    for (std::size_t i = 0; i < indexes.size(); ++i) {
-        typedef std::vector<std::string>::difference_type dtype;
-        _append_value_to(
-                    _vector_to_string(
-                        values.begin() + static_cast<dtype>(
-                                           i == 0 ? 0 : indexes.at(i - 1)),
-                        values.begin() + static_cast<dtype>(indexes.at(i)),
-                        separator, quotes,replace_space, none, begin, end),
-                    res, separator);
-    }
-    return begin + (res.empty() ? (begin + res + end) : res) + end;
-}
-
-inline std::string
-_ignore_explicit(std::string const& arg, std::string const& value)
-{
-    return "argument " + arg + ": ignored explicit argument '" + value + "'";
-}
-
-inline void
-_format_output_func(std::size_t indent, std::size_t width,
-                    std::vector<std::string>& res, std::string& value,
-                    std::string const& str)
-{
-    std::size_t value_size = _utf8_length(value).second;
-    if (value_size > indent
-            && value_size + 1 + _utf8_length(str).second > width) {
-        _store_value_to(value, res);
-    }
-    value_size = _utf8_length(value).second;
-    if (value_size < indent) {
-        value.resize(value.size() + indent - value_size, _space);
-        value += str;
-    } else {
-        value += _spaces + str;
-    }
-}
-
-inline std::string
-_format_output(std::string const& head, std::string const& body,
-               std::size_t interlayer, std::size_t indent, std::size_t width,
-               char sep = '\n')
-{
-    std::vector<std::string> res;
-    std::string value = head;
-    if (_utf8_length(value).second + interlayer > indent) {
-        _store_value_to(value, res);
-    }
-    std::vector<std::string> split_str = _split(body, '\n');
-    for (std::size_t i = 0; i < split_str.size(); ++i) {
-        std::string const& str = split_str.at(i);
-        if (sep == '\n') {
-            _format_output_func(indent, width, res, value, str);
-        } else if (str.empty()) {
-            value.resize(value.size() + indent - _utf8_length(value).second,
-                         _space);
-            _store_value_to(value, res, true);
-        } else {
-            std::vector<std::string> sub_split_str = _split(str, sep);
-            for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
-                std::string const& sub = sub_split_str.at(j);
-                _format_output_func(indent, width, res, value, sub);
-            }
-            _store_value_to(value, res);
-        }
-    }
-    _store_value_to(value, res);
-    return _vector_to_string(res, "\n");
-}
-
-inline std::string
-_help_formatter(std::string const& head,
-                HelpFormatter const& formatter,
-                std::string const& help,
-                std::size_t width,
-                std::size_t indent)
-{
-    std::size_t const interlayer = 2;
-
-    std::vector<std::string> res;
-    std::string value = head;
-    if (_utf8_length(value).second + interlayer > indent) {
-        _store_value_to(value, res);
-    }
-    if (!help.empty()) {
-        std::vector<std::string> lines
-                = formatter._split_lines(help, width - indent);
-        for (std::size_t i = 0; i < lines.size(); ++i) {
-            std::string const& line = lines.at(i);
-            std::size_t value_size = _utf8_length(value).second;
-            if (value_size < indent) {
-                value.resize(value.size() + indent - value_size, _space);
-            }
-            value += line;
-            _store_value_to(value, res, true);
-        }
-    }
-    _store_value_to(value, res);
-    return _vector_to_string(res, "\n");
-}
-
-inline void
-_print_raw_text_formatter(HelpFormatter const& formatter,
-                          std::string const& text,
-                          std::size_t width,
-                          std::ostream& os,
-                          std::string const& begin = std::string("\n"),
-                          std::size_t indent = 0,
-                          std::string const& end = std::string())
-{
-    if (!text.empty()) {
-        os << begin
-           << formatter._fill_text(text, width, indent) << end << std::endl;
-    }
-}
-
-inline std::string
-_filled_string(std::string const& str, std::size_t limit, char filler = '-')
-{
-    if (str.size() + 2 >= limit) {
-        return _spaces + str;
-    }
-    std::string res = std::string((limit - str.size() - 2) / 2, filler)
-                      + _spaces + str + _spaces;
-    res.resize(limit, filler);
-    return res;
-}
+std::string
+_vector_to_string(
+            std::vector<std::string> const& vec,
+            std::string const& separator = _spaces,
+            std::string const& quotes = std::string(),
+            bool replace_space = false,
+            std::string const& none = std::string(),
+            std::string const& begin = std::string(),
+            std::string const& end = std::string());
 
 template <class T>
 std::string
@@ -9048,6 +7978,1207 @@ private:
 
 // -- implementation ----------------------------------------------------------
 #ifdef _ARGPARSE_INL
+namespace detail {
+// -- utf8 support ------------------------------------------------------------
+// since v1.7.0
+typedef uint32_t codepoint;
+
+_ARGPARSE_INL uint8_t _ARGPARSE_CONSTEXPR
+_char_to_u8(char c)
+{
+    return static_cast<uint8_t>(c);
+}
+
+_ARGPARSE_INL char _ARGPARSE_CONSTEXPR
+_u8_to_char(uint8_t c)
+{
+    return static_cast<char>(c);
+}
+
+_ARGPARSE_INL codepoint _ARGPARSE_CONSTEXPR
+_char_to_codepoint(char c)
+{
+    return static_cast<codepoint>(_char_to_u8(c));
+}
+
+_ARGPARSE_INL char _ARGPARSE_CONSTEXPR
+_codepoint_to_char(codepoint c)
+{
+    return _u8_to_char(static_cast<uint8_t>(c));
+}
+
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_1b_mask = 0x80;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_1b_bits = 0x00;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_2b_mask = 0xe0;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_2b_bits = 0xc0;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_3b_mask = 0xf0;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_3b_bits = 0xe0;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_4b_mask = 0xf8;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_4b_bits = 0xf0;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_mask = 0xc0;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_bits = 0x80;
+
+_ARGPARSE_INL std::size_t _ARGPARSE_CONSTEXPR
+_utf8_codepoint_size(uint8_t byte)
+{
+    return (byte & _utf8_1b_mask) == _utf8_1b_bits ? 1
+         : (byte & _utf8_2b_mask) == _utf8_2b_bits ? 2
+         : (byte & _utf8_3b_mask) == _utf8_3b_bits ? 3
+         : (byte & _utf8_4b_mask) == _utf8_4b_bits ? 4 : 0;
+}
+
+_ARGPARSE_INL std::pair<bool, std::size_t>
+_utf8_length(std::string const& str, std::ostream& err = std::cerr)
+{
+    std::size_t res = 0;
+    std::size_t i = 0;
+    while (i < str.size()) {
+        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str[i]));
+        if (cp_size == 0) {
+            err << "argparse error [skip]: invalid code point for string "
+                << "'" << str << "'" << std::endl;
+            return std::make_pair(false, str.size());
+        }
+        if (i + cp_size > str.size()) {
+            err << "argparse error [skip]: code point for string '"
+                << str << "' would be out of bounds" << std::endl;
+            return std::make_pair(false, str.size());
+        }
+        for (std::size_t n = 1; n < cp_size; ++n) {
+            if (str[i + n] == '\0') {
+                err << "argparse error [skip]: string '" << str << "' "
+                    << "is NUL-terminated in the middle of the code point"
+                    << std::endl;
+                return std::make_pair(false, str.size());
+            } else if ((_char_to_u8(str[i + n]) & _utf8_ct_mask)
+                                               != _utf8_ct_bits) {
+                err << "argparse error [skip]: invalid byte in code point"
+                    << " for string '" << str << "'" << std::endl;
+                return std::make_pair(false, str.size());
+            }
+        }
+        i += cp_size;
+        ++res;
+    }
+    return std::make_pair(true, res);
+}
+
+// since v1.7.3
+_ARGPARSE_INL bool
+_is_utf8_string(
+            std::string const& str)
+{
+    std::stringstream ss;
+    return _utf8_length(str, ss).second;
+}
+
+// since v1.7.3
+_ARGPARSE_INL codepoint
+_to_upper_codepoint(
+            codepoint cp)
+{
+    // unicode 15 to upper case
+    // BASIC LATIN
+    if (0x0061 <= cp && cp <= 0x007a) return cp - 0x20;
+    // LATIN-1 SUPPLEMENT
+    if (cp == 0x00b5) return 0x039c;
+    if ((0x00e0 <= cp && cp <= 0x00f6) || (0x00f8 <= cp && cp <= 0x00fe)) {
+        return cp - 0x20;
+    }
+    if (cp == 0x00ff) return 0x0178;
+    // LATIN EXTENDED-A
+    if ((cp & 1)
+        && ((0x0100 <= cp && cp <= 0x012f) || (0x0132 <= cp && cp <= 0x0137)
+         || (0x014a <= cp && cp <= 0x0177))) {
+        return cp - 0x1;
+    }
+    if (cp == 0x0131) return 0x0049;
+    if (!(cp & 1)
+        && ((0x0139 <= cp && cp <= 0x0148) || (0x0179 <= cp && cp <= 0x017e))) {
+        return cp - 0x1;
+    }
+    if (cp == 0x017f) return 0x0053;
+    // LATIN EXTENDED-B
+    if (cp == 0x0180) return 0x0243;
+    if ((cp & 1)
+        && ((0x0182 <= cp && cp <= 0x0185) || (0x01a0 <= cp && cp <= 0x01a5)
+         || (0x01de <= cp && cp <= 0x01ef) || (0x01fa <= cp && cp <= 0x021f)
+         || (0x0222 <= cp && cp <= 0x0233) || (0x0246 <= cp && cp <= 0x024f))) {
+        return cp - 0x1;
+    }
+    if (cp == 0x0188 || cp == 0x018c || cp == 0x0192 || cp == 0x0199) {
+        return cp - 0x1;
+    }
+    if (cp == 0x0195) return 0x01f6;
+    if (cp == 0x019a) return 0x023d;
+    if (cp == 0x019e) return 0x0220;
+    if (cp == 0x01a8 || cp == 0x01ad || cp == 0x01b0
+     || cp == 0x01b9 || cp == 0x01bd) {
+        return cp - 0x1;
+    }
+    if (!(cp & 1)
+        && ((0x01b3 <= cp && cp <= 0x01b6) || (0x01cd <= cp && cp <= 0x01dc))) {
+        return cp - 0x1;
+    }
+    if (cp == 0x01bf) return 0x01f7;
+    if (cp == 0x01c5 || cp == 0x01c6) return 0x01c4;
+    if (cp == 0x01c8 || cp == 0x01c9) return 0x01c7;
+    if (cp == 0x01cb || cp == 0x01cc) return 0x01ca;
+    if (cp == 0x01dd) return 0x018e;
+    if (cp == 0x01f2 || cp == 0x01f3) return 0x01f1;
+    if (cp == 0x01f5 || cp == 0x01f9) return cp - 0x1;
+    if (cp == 0x023c || cp == 0x0242) return cp - 0x1;
+    if (cp == 0x023f || cp == 0x0240) return cp + 0x2a3f;
+    // IPA EXTENSIONS
+    if (cp == 0x0250) return 0x2c6f;
+    if (cp == 0x0251) return 0x2c6d;
+    if (cp == 0x0252) return 0x2c70;
+    if (cp == 0x0253) return 0x0181;
+    if (cp == 0x0254) return 0x0186;
+    if (cp == 0x0256 || cp == 0x0257) return cp - 0xcd;
+    if (cp == 0x0259) return 0x018f;
+    if (cp == 0x025b) return 0x0190;
+    if (cp == 0x025c) return 0xa7ab;
+    if (cp == 0x0260) return 0x0193;
+    if (cp == 0x0261) return 0xa7ac;
+    if (cp == 0x0263) return 0x0194;
+    if (cp == 0x0265) return 0xa78d;
+    if (cp == 0x0266) return 0xa7aa;
+    if (cp == 0x0268) return 0x0197;
+    if (cp == 0x0269) return 0x0196;
+    if (cp == 0x026a) return 0xa7ae;
+    if (cp == 0x026b) return 0x2c62;
+    if (cp == 0x026c) return 0xa7ad;
+    if (cp == 0x026f) return 0x019c;
+    if (cp == 0x0271) return 0x2c6e;
+    if (cp == 0x0272) return 0x019d;
+    if (cp == 0x0275) return 0x019f;
+    if (cp == 0x027d) return 0x2c64;
+    if (cp == 0x0280 || cp == 0x0283 || cp == 0x0288) return cp - 0xda;
+    if (cp == 0x0282) return 0xa7c5;
+    if (cp == 0x0287) return 0xa7b1;
+    if (cp == 0x0289) return 0x0244;
+    if (cp == 0x028a || cp == 0x028b) return cp - 0xd9;
+    if (cp == 0x028c) return 0x0245;
+    if (cp == 0x0292) return 0x01b7;
+    if (cp == 0x029d) return 0xa7b2;
+    if (cp == 0x029e) return 0xa7b0;
+    // COMBINING DIACRITICAL MARKS
+    if (cp == 0x0345) return 0x0399;
+    // BASIC GREEK
+    if (cp == 0x0371 || cp == 0x0373 || cp == 0x0377) return cp - 0x1;
+    if (0x037b <= cp && cp <= 0x037d) return cp + 0x82;
+    if (cp == 0x03ac) return 0x0386;
+    if (0x03ad <= cp && cp <= 0x03af) return cp - 0x25;
+    if ((0x03b1 <= cp && cp <= 0x03c1) || (0x03c3 <= cp && cp <= 0x03cb)) {
+        return cp - 0x20;
+    }
+    if (cp == 0x03c2) return 0x03a3;
+    if (cp == 0x03cc) return 0x038c;
+    if (cp == 0x03cd || cp == 0x03ce) return cp - 0x3f;
+    // GREEK SYMBOLS AND COPTIC
+    if (cp == 0x03d0) return 0x0392;
+    if (cp == 0x03d1) return 0x0398;
+    if (cp == 0x03d5) return 0x03a6;
+    if (cp == 0x03d6) return 0x03a0;
+    if (cp == 0x03d7) return 0x03cf;
+    if ((cp & 1) && ((0x03d8 <= cp && cp <= 0x03ef))) return cp - 0x1;
+    if (cp == 0x03f0) return 0x039a;
+    if (cp == 0x03f1) return 0x03a1;
+    if (cp == 0x03f2) return 0x03f9;
+    if (cp == 0x03f3) return 0x037f;
+    if (cp == 0x03f5) return 0x0395;
+    if (cp == 0x03f8 || cp == 0x03fb) return cp - 0x1;
+    // CYRILLIC
+    if (0x0430 <= cp && cp <= 0x044f) return cp - 0x20;
+    if (0x0450 <= cp && cp <= 0x045f) return cp - 0x50;
+    if ((cp & 1)
+        && ((0x0460 <= cp && cp <= 0x0481) || (0x048a <= cp && cp <= 0x04bf)
+         || (0x04d0 <= cp && cp <= 0x04ff))) {
+        return cp - 0x1;
+    }
+    if (!(cp & 1) && (0x04c1 <= cp && cp <= 0x04ce)) return cp - 0x1;
+    if (cp == 0x04cf) return 0x04c0;
+    // CYRILLIC SUPPLEMENT
+    if ((cp & 1) && (0x0500 <= cp && cp <= 0x052f)) return cp - 0x1;
+    // ARMENIAN
+    if (0x0561 <= cp && cp <= 0x0586) return cp - 0x30;
+    // GEORGIAN
+    if ((0x10d0 <= cp && cp <= 0x10fa) || (0x10fd <= cp && cp <= 0x10ff)) {
+        return cp + 0xbc0;
+    }
+    // CHEROKEE
+    if (0x13f8 <= cp && cp <= 0x13fd) return cp - 0x8;
+    // CYRILLIC
+    if (cp == 0x1c80) return 0x0412;
+    if (cp == 0x1c81) return 0x0414;
+    if (cp == 0x1c82) return 0x041e;
+    if (cp == 0x1c83) return 0x0421;
+    if (cp == 0x1c84 || cp == 0x1c85) return 0x0422;
+    if (cp == 0x1c86) return 0x042a;
+    if (cp == 0x1c87) return 0x0462;
+    if (cp == 0x1c88) return 0xa64a;
+    // PHONETIC EXTENSIONS
+    if (cp == 0x1d79) return 0xa77d;
+    if (cp == 0x1d7d) return 0x2c63;
+    if (cp == 0x1d8e) return 0xa7c6;
+    // LATIN EXTENDED ADDITIONAL
+    if ((cp & 1)
+        && ((0x1e00 <= cp && cp <= 0x1e95) || (0x1ea0 <= cp && cp <= 0x1ef9)
+         || (0x1efa <= cp && cp <= 0x1eff))) {
+        return cp - 0x1;
+    }
+    if (cp == 0x1e9b) return 0x1e60;
+    // GREEK EXTENDED
+    if (!(cp & 8)
+        && ((0x1f00 <= cp && cp <= 0x1f15) || (0x1f20 <= cp && cp <= 0x1f45)
+         || (0x1f60 <= cp && cp <= 0x1f6f) || (0x1f80 <= cp && cp <= 0x1faf))) {
+        return cp + 0x8;
+    }
+    if (!(cp & 8) && (cp & 1) && (0x1f51 <= cp && cp <= 0x1f5f)) {
+        return cp + 0x8;
+    }
+    if (cp == 0x1fb0 || cp == 0x1fb1 || cp == 0x1fd0 || cp == 0x1fd1
+     || cp == 0x1fe0 || cp == 0x1fe1) {
+        return cp + 0x8;
+    }
+    if (cp == 0x1f70 || cp == 0x1f71) return cp + 0x4a;
+    if (0x1f72 <= cp && cp <= 0x1f75) return cp + 0x56;
+    if (cp == 0x1f76 || cp == 0x1f77) return cp + 0x64;
+    if (cp == 0x1f78 || cp == 0x1f79) return cp + 0x80;
+    if (cp == 0x1f7a || cp == 0x1f7b) return cp + 0x70;
+    if (cp == 0x1f7c || cp == 0x1f7d) return cp + 0x7e;
+    if (cp == 0x1fb3 || cp == 0x1fc3 || cp == 0x1ff3) return cp + 0x9;
+    if (cp == 0x1fbe) return 0x0399;
+    if (cp == 0x1fe5) return 0x1fec;
+    // LETTERLIKE SYMBOLS
+    if (cp == 0x214e) return 0x2132;
+    // NUMBER FORMS
+    if (0x2170 <= cp && cp <= 0x217f) return cp - 0x10;
+    if (cp == 0x2184) return cp - 0x1;
+    // ENCLOSED ALPHANUMERICS : CIRCLED LATIN
+    if (0x24d0 <= cp && cp <= 0x24e9) return cp - 0x1a;
+    // GLAGOLITIC
+    if (0x2c30 <= cp && cp <= 0x2c5f) return cp - 0x30;
+    // LATIN EXTENDED-C
+    if ((cp & 1)
+        && ((0x2c60 <= cp && cp <= 0x2c61) || (0x2c72 <= cp && cp <= 0x2c73))) {
+        return cp - 0x1;
+    }
+    if (cp == 0x2c65) return 0x023a;
+    if (cp == 0x2c66) return 0x023e;
+    if (!(cp & 1)
+        && ((0x2c67 <= cp && cp <= 0x2c6c) || (0x2c75 <= cp && cp <= 0x2c76))) {
+        return cp - 0x1;
+    }
+    // COPTIC
+    if ((cp & 1)
+        && ((0x2c80 <= cp && cp <= 0x2ce3) || (0x2cf2 <= cp && cp <= 0x2cf3))) {
+        return cp - 0x1;
+    }
+    if (!(cp & 1) && (0x2ceb <= cp && cp <= 0x2cee)) return cp - 0x1;
+    // GEORGIAN SUPPLEMENT
+    if ((0x2d00 <= cp && cp <= 0x2d25) || cp == 0x2d27 || cp == 0x2d2d) {
+        return cp - 0x1c60;
+    }
+    // CYRILLIC SUPPLEMENT 2
+    if ((cp & 1)
+        && ((0xa640 <= cp && cp <= 0xa66d) || (0xa680 <= cp && cp <= 0xa69b))) {
+        return cp - 0x1;
+    }
+    // LATIN EXTENDED-D
+    if ((cp & 1)
+        && ((0xa722 <= cp && cp <= 0xa72f) || (0xa732 <= cp && cp <= 0xa76f)
+         || (0xa77e <= cp && cp <= 0xa787) || (0xa790 <= cp && cp <= 0xa793)
+         || (0xa796 <= cp && cp <= 0xa7a9) || (0xa7b4 <= cp && cp <= 0xa7c3)
+         || (0xa7d0 <= cp && cp <= 0xa7d1) || (0xa7d6 <= cp && cp <= 0xa7d9))) {
+        return cp - 0x1;
+    }
+    if (!(cp & 1)
+        && ((0xa779 <= cp && cp <= 0xa77c) || (0xa78b <= cp && cp <= 0xa78c)
+         || (0xa7c7 <= cp && cp <= 0xa7ca) || (0xa7f5 <= cp && cp <= 0xa7f6))) {
+        return cp - 0x1;
+    }
+    if (cp == 0xa794) return cp + 0x30;
+    // LATIN SMALL LETTER CHI
+    if (cp == 0xab53) return 0xa7b3;
+    // CHEROKEE
+    if (0xab70 <= cp && cp <= 0xabbf) return cp - 0x97d0;
+    // HALFWIDTH AND FULLWIDTH FORMS
+    if (0xff41 <= cp && cp <= 0xff5a) return cp - 0x20;
+    // DESERET
+    if (0x10428 <= cp && cp <= 0x1044f) return cp - 0x28;
+    // OSAGE
+    if (0x104d8 <= cp && cp <= 0x104fb) return cp - 0x28;
+    // CAUCASIAN ALBANIAN
+    if ((0x10597 <= cp && cp <= 0x105a1) || (0x105a3 <= cp && cp <= 0x105b1)
+     || (0x105b3 <= cp && cp <= 0x105b9) || (0x105bb <= cp && cp <= 0x105bc)) {
+        return cp - 0x27;
+    }
+    // OLD HUNGARIAN
+    if (0x10cc0 <= cp && cp <= 0x10cf2) return cp - 0x40;
+    // WARANG CITI
+    if (0x118c0 <= cp && cp <= 0x118df) return cp - 0x20;
+    // MEDEFAIDRIN
+    if (0x16e60 <= cp && cp <= 0x16e7f) return cp - 0x20;
+    // ADLAM
+    if (0x1e922 <= cp && cp <= 0x1e943) return cp - 0x22;
+    return cp;
+}
+
+_ARGPARSE_INL std::string
+_to_upper(std::string const& str)
+{
+    std::pair<bool, std::size_t> num_chars = _utf8_length(str);
+    std::string res;
+    if (!num_chars.first) {
+        res = str;
+        for (std::size_t i = 0; i < res.size(); ++i) {
+            res.at(i) = static_cast<char>(
+                           std::toupper(static_cast<unsigned char>(res.at(i))));
+        }
+        return res;
+    }
+    std::size_t i = 0;
+    for (std::size_t n = 0; n < num_chars.second; ++n) {
+        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str[i]));
+        codepoint cp = 0;
+        switch (cp_size) {
+            case 1:
+                cp =  (_char_to_codepoint(str[i    ]) & ~_utf8_1b_mask);
+                break;
+            case 2:
+                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_2b_mask) <<  6)
+                   |  (_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask);
+                break;
+            case 3:
+                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_3b_mask) << 12)
+                   | ((_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_codepoint(str[i + 2]) & ~_utf8_ct_mask);
+                break;
+            case 4:
+                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_4b_mask) << 18)
+                   | ((_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask) << 12)
+                   | ((_char_to_codepoint(str[i + 2]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_codepoint(str[i + 3]) & ~_utf8_ct_mask);
+                break;
+            default:
+                // should never happen
+                break;
+        }
+        i += cp_size;
+        cp = _to_upper_codepoint(cp);
+        if (cp < 0x80) {
+            // one octet
+            res += _codepoint_to_char(cp);
+        } else if (cp < 0x800) {
+            // two octets
+            res += _codepoint_to_char((cp >> 6)           | 0xc0);
+            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
+        } else if (cp < 0x10000) {
+            // three octets
+            res += _codepoint_to_char((cp >> 12)          | 0xe0);
+            res += _codepoint_to_char(((cp >> 6) & 0x3f)  | 0x80);
+            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
+        } else {
+            // four octets
+            res += _codepoint_to_char((cp >> 18)          | 0xf0);
+            res += _codepoint_to_char(((cp >> 12) & 0x3f) | 0x80);
+            res += _codepoint_to_char(((cp >>  6) & 0x3f) | 0x80);
+            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
+        }
+    }
+    return res;
+}
+// ----------------------------------------------------------------------------
+
+// -- translations support ----------------------------------------------------
+// since v1.7.1
+_ARGPARSE_INL std::string
+_tr(TranslationPack const& pack,
+            std::string const& lang)
+{
+    TranslationPack::const_iterator it;
+    if (!lang.empty()) {
+        it = pack.find(lang);
+        if (it != pack.end()) {
+            return it->second;
+        }
+    }
+    it = pack.find(std::string());
+    if (it != pack.end()) {
+        return it->second;
+    }
+    return std::string();
+}
+// ----------------------------------------------------------------------------
+
+_ARGPARSE_INL std::pair<std::size_t, std::size_t>
+_get_terminal_size(
+            bool default_values = false)
+{
+    std::size_t width  = 80;
+    std::size_t height = 24;
+    if (default_values) {
+        return std::make_pair(width, height);
+    }
+#ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+#if defined(_WIN32)
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+        width = static_cast<std::size_t>
+                (csbi.srWindow.Right - csbi.srWindow.Left + 1);
+        height = static_cast<std::size_t>
+                (csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
+        if (width < _min_width && width != 0) {
+            width = _min_width;
+        }
+    }
+#else  // UNIX
+#if defined(TIOCGSIZE)
+    struct ttysize w;
+    if (ioctl(STDOUT_FILENO, TIOCGSIZE, &w) >= 0) {
+        width = static_cast<std::size_t>(w.ts_cols);
+        height = static_cast<std::size_t>(w.ts_lines);
+        if (width < _min_width && width != 0) {
+            width = _min_width;
+        }
+    }
+#elif defined(TIOCGWINSZ)
+    struct winsize w;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) >= 0) {
+        width = static_cast<std::size_t>(w.ws_col);
+        height = static_cast<std::size_t>(w.ws_row);
+        if (width < _min_width && width != 0) {
+            width = _min_width;
+        }
+    }
+#endif  // TIOCGSIZE
+#endif  // _WIN32
+#endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+    return std::make_pair(width, height);
+}
+
+_ARGPARSE_INL void
+_limit_to_min(
+            std::size_t& value,
+            std::size_t to) _ARGPARSE_NOEXCEPT
+{
+    if (value < to) {
+        value = to;
+    }
+}
+
+_ARGPARSE_INL void
+_limit_to_max(
+            std::size_t& value,
+            std::size_t to) _ARGPARSE_NOEXCEPT
+{
+    if (value > to) {
+        value = to;
+    }
+}
+
+_ARGPARSE_INL void
+_ltrim(std::string& str)
+{
+    std::string::iterator it = str.begin();
+    for ( ; it != str.end()
+          && std::isspace(static_cast<unsigned char>(*it)); ++it) {
+    }
+    str.erase(str.begin(), it);
+}
+
+_ARGPARSE_INL void
+_rtrim(std::string& str)
+{
+    std::string::reverse_iterator it = str.rbegin();
+    for ( ; it != str.rend()
+          && std::isspace(static_cast<unsigned char>(*it)); ++it) {
+    }
+    str.erase(it.base(), str.end());
+}
+
+_ARGPARSE_INL void
+_trim(std::string& str)
+{
+    _ltrim(str);
+    _rtrim(str);
+}
+
+_ARGPARSE_INL std::string
+_trim_copy(std::string const& str)
+{
+    std::string res = str;
+    _trim(res);
+    return res;
+}
+
+#ifdef _ARGPARSE_CXX_17
+_ARGPARSE_INL std::string_view
+_trim_sw(std::string const& str)
+{
+    std::string_view in = str;
+    auto left = in.begin();
+    for ( ; ; ++left) {
+        if (left == in.end()) {
+            return std::string_view();
+        }
+        if (!std::isspace(static_cast<unsigned char>(*left))) {
+            break;
+        }
+    }
+    auto right = in.end() - 1;
+    for ( ; right > left
+          && std::isspace(static_cast<unsigned char>(*right)); --right) {
+    }
+    return in.substr(static_cast<std::size_t>(left - in.begin()),
+                     static_cast<std::size_t>(1 + right - left));
+}
+#else
+_ARGPARSE_INL std::string
+_trim_sw(std::string const& str)
+{
+    return _trim_copy(str);
+}
+#endif  // C++17+
+
+_ARGPARSE_INL std::string
+_file_name(std::string const& path)
+{
+    return path.substr(path.find_last_of("/\\") + 1);
+}
+
+_ARGPARSE_INL void
+_resolve_conflict(
+            std::string const& str,
+            std::vector<std::string>& values)
+{
+    std::vector<std::string>::iterator it
+            = std::find(values.begin(), values.end(), str);
+    if (it != values.end()) {
+        values.erase(it);
+    }
+}
+
+_ARGPARSE_INL void
+_resolve_conflict(
+            std::vector<std::string> const& vec,
+            std::vector<std::string>& values)
+{
+    for (std::size_t i = 0; i < vec.size(); ++i) {
+        _resolve_conflict(vec[i], values);
+    }
+}
+
+_ARGPARSE_INL std::string
+_get_punct(std::string const& str)
+{
+    std::string res;
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        if (std::ispunct(static_cast<unsigned char>(str.at(i)))) {
+            res += str.at(i);
+        }
+    }
+    return res;
+}
+
+_ARGPARSE_INL bool
+_have_quotes(std::string const& str)
+{
+    return str.size() > 1 && str.at(0) == str.at(str.size() - 1)
+            && (str.at(0) == '\'' || str.at(0) == '\"');
+}
+
+_ARGPARSE_INL std::string
+_replace(std::string str,
+            char old,
+            std::string const& value)
+{
+    std::string::size_type pos = str.find(old);
+    while (pos != std::string::npos) {
+        str.replace(pos, 1, value);
+        pos = str.find(old, pos + value.size());
+    }
+    return str;
+}
+
+_ARGPARSE_INL std::string
+_replace(std::string str,
+            std::string const& old,
+            std::string const& value)
+{
+    std::string::size_type pos = str.find(old);
+    while (pos != std::string::npos) {
+        str.replace(pos, old.length(), value);
+        pos = str.find(old, pos + value.size());
+    }
+    return str;
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL std::string
+_replace(std::string const& str,
+            std::function<bool(unsigned char)> func,
+            std::string const& value)
+{
+    std::string res;
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        char c = str.at(i);
+        if (func(static_cast<unsigned char>(c))) {
+            res += value;
+        } else {
+            res += c;
+        }
+    }
+    return res;
+}
+#endif  // C++11+
+
+_ARGPARSE_INL bool
+_contains_substr(
+            std::string const& str,
+            std::string const& substr)
+{
+#ifdef _ARGPARSE_CXX_23
+    return str.contains(substr);
+#else
+    return str.find(substr) != std::string::npos;
+#endif  // C++23+
+}
+
+_ARGPARSE_INL bool
+_starts_with(
+            std::string const& str,
+            std::string const& value)
+{
+#ifdef _ARGPARSE_CXX_20
+    return str.starts_with(value);
+#else
+    return str.compare(0, value.size(), value) == 0;
+#endif  // C++20+
+}
+
+_ARGPARSE_INL bool
+_ends_with(std::string const& str,
+            std::string const& value)
+{
+#ifdef _ARGPARSE_CXX_20
+    return str.ends_with(value);
+#else
+    return str.size() >= value.size()
+            && 0 == str.compare(str.size() - value.size(), value.size(), value);
+#endif  // C++20+
+}
+
+_ARGPARSE_INL std::string
+_flag_name(std::string const& str)
+{
+    std::string res = str;
+    char prefix = res.at(0);
+    std::string::iterator it = res.begin();
+    for ( ; it != res.end() && *it == prefix; ++it) {
+    }
+    res.erase(res.begin(), it);
+    return res;
+}
+
+#ifdef _ARGPARSE_CXX_17
+_ARGPARSE_INL std::string_view
+_flag_name(std::string_view res)
+{
+    char prefix = res.front();
+    auto it = res.begin();
+    for ( ; it != res.end() && *it == prefix; ++it) {
+    }
+    return res.substr(static_cast<std::size_t>(it - res.begin()),
+                      static_cast<std::size_t>(res.end() - it));
+}
+#endif  // C++17+
+
+_ARGPARSE_INL bool
+_is_flag_correct(
+            std::string const& str,
+            bool is_optional)
+{
+#ifdef _ARGPARSE_CXX_17
+    std::string_view trimmed = _trim_sw(str);
+#else
+    std::string trimmed = _trim_copy(str);
+#endif  // C++17+
+    if (trimmed.size() != str.size()) {
+        return false;
+    }
+    if (is_optional) {
+        trimmed = _flag_name(trimmed);
+    }
+    for (std::size_t i = 0; i < trimmed.size(); ++i) {
+        if (trimmed.at(i) == '-' || trimmed.at(i) == '_') {
+            continue;
+        }
+        if (std::isspace(static_cast<unsigned char>(trimmed.at(i)))
+                || std::ispunct(static_cast<unsigned char>(trimmed.at(i)))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+_ARGPARSE_INL std::vector<std::string>
+_help_flags(std::string const& prefix_chars)
+{
+    char prefix = _is_value_exists(_prefix_char, prefix_chars)
+            ? _prefix_char : prefix_chars.at(0);
+#ifdef _ARGPARSE_CXX_11
+    return { std::string(1, prefix) + "h", std::string(2, prefix) + "help" };
+#else
+    return _make_vector(std::string(1, prefix) + "h",
+                        std::string(2, prefix) + "help");
+#endif  // C++11+
+}
+
+_ARGPARSE_INL std::pair<bool, std::string>
+_make_no_flag(
+            std::string const& str)
+{
+    char prefix = str.at(0);
+    std::string::const_iterator it = str.begin();
+    for ( ; it != str.end() && *it == prefix; ++it) {
+    }
+    std::pair<bool, std::string> res
+            = std::make_pair(std::distance(str.begin(), it) > 1, str);
+    if (res.first) {
+        res.second.insert(static_cast<std::string::size_type>(2), "no-");
+    }
+    return res;
+}
+
+_ARGPARSE_INL bool
+_is_negative_number(
+            std::string const& str)
+{
+    double value;
+    std::stringstream ss(str);
+    ss >> value;
+    return !ss.fail() && ss.eof() && value < 0;
+}
+
+_ARGPARSE_INL bool
+_is_optional(
+            std::string const& arg,
+            std::string const& prefix_chars,
+            bool have_negative_args,
+            bool was_pseudo_arg)
+{
+    return _is_value_exists(arg.at(0), prefix_chars) && !was_pseudo_arg
+            && (have_negative_args || !_is_negative_number(arg));
+}
+
+_ARGPARSE_INL bool
+_not_optional(
+            std::string const& arg,
+            std::string const& prefix_chars,
+            bool have_negative_args,
+            bool was_pseudo_arg)
+{
+    return !_is_value_exists(arg.at(0), prefix_chars) || was_pseudo_arg
+            || (!have_negative_args && _is_negative_number(arg));
+}
+
+_ARGPARSE_INL void
+_append_value_to(
+            std::string const& value,
+            std::string& str,
+            std::string const& separator = _spaces,
+            bool force = false)
+{
+    if (!str.empty() || force) {
+        str += separator;
+    }
+    str += value;
+}
+
+_ARGPARSE_INL void
+_store_value_to(
+            std::string& value,
+            std::vector<std::string>& res,
+            bool force = false)
+{
+    if (!value.empty() || force) {
+        res.push_back(value);
+        value.clear();
+    }
+}
+
+_ARGPARSE_INL std::vector<std::string>
+_split(std::string const& str,
+            char sep,
+            bool add_sep)
+{
+    std::vector<std::string> res;
+    std::string value;
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        char c = str.at(i);
+        if (c == sep) {
+            _store_value_to(value, res, true);
+            if (add_sep) {
+                value = std::string(1, sep);
+                _store_value_to(value, res, true);
+            }
+        } else {
+            value += c;
+        }
+    }
+    _store_value_to(value, res, true);
+    return res;
+}
+
+_ARGPARSE_INL std::vector<std::string>
+_split_whitespace(
+            std::string const& str,
+            bool force = false)
+{
+    std::vector<std::string> res;
+    std::string value;
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        char c = str.at(i);
+        if (std::isspace(static_cast<unsigned char>(c))) {
+            _store_value_to(value, res, force);
+        } else {
+            value += c;
+        }
+    }
+    _store_value_to(value, res);
+    return res;
+}
+
+_ARGPARSE_INL std::pair<std::string, std::string>
+_split_separator(
+            std::string const& str,
+            char sep)
+{
+    std::string::size_type pos = str.find(sep);
+    if (pos != std::string::npos) {
+        return std::make_pair(str.substr(0, pos), str.substr(pos + 1));
+    } else {
+        return std::make_pair(str, std::string());
+    }
+}
+
+_ARGPARSE_INL std::vector<std::string>
+_split_equal(
+            std::string const& str,
+            std::string const& prefix)
+{
+#ifdef _ARGPARSE_CXX_11
+    std::string::size_type pos = _is_value_exists(_equal, prefix)
+            ? str.find(_equal, static_cast<std::string::size_type>(
+                         std::distance(str.begin(),
+                                       std::find_if(str.begin(),
+                                                    str.end(), [] (char c)
+    { return c != _equal; }))))
+            : str.find(_equal);
+    if (pos != std::string::npos) {
+        return { str.substr(0, pos), str.substr(pos + 1) };
+    } else {
+        return { str };
+    }
+#else
+    std::string::size_type pos;
+    if (_is_value_exists(_equal, prefix)) {
+        std::string::const_iterator it = str.begin();
+        for ( ; it != str.end() && *it == _equal; ++it) {
+        }
+        pos = str.find(_equal, static_cast<std::string::size_type>(
+                           std::distance(str.begin(), it)));
+    } else {
+        pos = str.find(_equal);
+    }
+    if (pos != std::string::npos) {
+        return _make_vector(str.substr(0, pos), str.substr(pos + 1));
+    } else {
+        return _make_vector(str);
+    }
+#endif  // C++11+
+}
+
+_ARGPARSE_INL void
+_process_quotes(
+            std::deque<char>& quotes,
+            std::string const& value,
+            std::string const& str,
+            char c,
+            std::size_t i)
+{
+    if (c == '\"' || c == '\'') {
+        if (!quotes.empty()
+                && quotes.back() == c
+                && (i == str.size()
+                    || std::isspace(static_cast<unsigned char>(str.at(i)))
+                    || std::ispunct(static_cast<unsigned char>(str.at(i))))) {
+            quotes.pop_back();
+        } else if (value.empty()
+                   || std::ispunct(static_cast<unsigned char>(
+                                       value.at(value.size() - 1)))) {
+            quotes.push_back(c);
+        }
+    }
+}
+
+_ARGPARSE_INL std::vector<std::string>
+_split_to_args(
+            std::string const& str,
+            std::ostream& err)
+{
+    std::vector<std::string> res;
+    std::string value;
+    std::deque<char> quotes;
+    bool skip = false;
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        char c = str.at(i);
+        if (!skip && c == '\\') {
+            // skip space
+            skip = true;
+            if (i + 1 == str.size()) {
+                value += c;
+                break;
+            }
+            if (str[i + 1] != _space) {
+                value += c;
+            }
+            continue;
+        }
+        if (((c == _space && !skip)
+             || (c != _space && std::isspace(static_cast<unsigned char>(c))))
+                && quotes.empty()) {
+            _store_value_to(value, res);
+        } else {
+            _process_quotes(quotes, value, str, c, i + 1);
+            value += c;
+        }
+        skip = false;
+    }
+    _store_value_to(value, res);
+    if (!quotes.empty()) {
+        err << "argparse error [skip]: possible incorrect string: '"
+            << str << "'" << std::endl;
+    }
+    return res;
+}
+
+_ARGPARSE_INL bool
+_string_to_bool(
+            std::string const& str) _ARGPARSE_NOEXCEPT
+{
+    return !str.empty();
+}
+
+_ARGPARSE_INL std::string
+_bool_to_string(
+            bool value)
+{
+    return value ? "true" : "false";
+}
+
+_ARGPARSE_INL std::string
+_bool_to_string(
+            std::string const& str)
+{
+    return _bool_to_string(_string_to_bool(str));
+}
+
+_ARGPARSE_INL std::string
+_vector_to_string(
+            std::vector<std::string>::const_iterator begvec,
+            std::vector<std::string>::const_iterator endvec,
+            std::string const& separator,
+            std::string const& quotes,
+            bool replace_space,
+            std::string const& none,
+            std::string const& begin,
+            std::string const& end)
+{
+    typedef std::vector<std::string>::const_iterator value_const_iterator;
+    std::string res;
+    for (value_const_iterator it = begvec; it != endvec; ++it) {
+        std::string val = *it;
+        if (quotes.empty() && replace_space && !_have_quotes(val)) {
+            val = _replace(val, _space, "\\ ");
+        }
+        _append_value_to(quotes + val + quotes, res, separator);
+    }
+    return begin + (res.empty() ? none : res) + end;
+}
+
+_ARGPARSE_INL std::string
+_vector_to_string(
+            std::vector<std::string> const& vec,
+            std::string const& separator,
+            std::string const& quotes,
+            bool replace_space,
+            std::string const& none,
+            std::string const& begin,
+            std::string const& end)
+{
+    return _vector_to_string(vec.begin(), vec.end(), separator, quotes,
+                             replace_space, none, begin, end);
+}
+
+_ARGPARSE_INL std::string
+_matrix_to_string(
+            std::vector<std::string> const& values,
+            std::vector<std::size_t> const& indexes,
+            std::string const& separator = _spaces,
+            std::string const& quotes = std::string(),
+            bool replace_space = false,
+            std::string const& none = std::string(),
+            std::string const& begin = std::string(),
+            std::string const& end = std::string())
+{
+    std::string res;
+    for (std::size_t i = 0; i < indexes.size(); ++i) {
+        typedef std::vector<std::string>::difference_type dtype;
+        _append_value_to(
+                    _vector_to_string(
+                        values.begin() + static_cast<dtype>(
+                                           i == 0 ? 0 : indexes.at(i - 1)),
+                        values.begin() + static_cast<dtype>(indexes.at(i)),
+                        separator, quotes,replace_space, none, begin, end),
+                    res, separator);
+    }
+    return begin + (res.empty() ? (begin + res + end) : res) + end;
+}
+
+_ARGPARSE_INL std::string
+_ignore_explicit(
+            std::string const& arg,
+            std::string const& value)
+{
+    return "argument " + arg + ": ignored explicit argument '" + value + "'";
+}
+
+_ARGPARSE_INL void
+_format_output_func(
+            std::size_t indent,
+            std::size_t width,
+            std::vector<std::string>& res,
+            std::string& value,
+            std::string const& str)
+{
+    std::size_t value_size = _utf8_length(value).second;
+    if (value_size > indent
+            && value_size + 1 + _utf8_length(str).second > width) {
+        _store_value_to(value, res);
+    }
+    value_size = _utf8_length(value).second;
+    if (value_size < indent) {
+        value.resize(value.size() + indent - value_size, _space);
+        value += str;
+    } else {
+        value += _spaces + str;
+    }
+}
+
+_ARGPARSE_INL std::string
+_format_output(
+            std::string const& head,
+            std::string const& body,
+            std::size_t interlayer,
+            std::size_t indent,
+            std::size_t width,
+            char sep = '\n')
+{
+    std::vector<std::string> res;
+    std::string value = head;
+    if (_utf8_length(value).second + interlayer > indent) {
+        _store_value_to(value, res);
+    }
+    std::vector<std::string> split_str = _split(body, '\n');
+    for (std::size_t i = 0; i < split_str.size(); ++i) {
+        std::string const& str = split_str.at(i);
+        if (sep == '\n') {
+            _format_output_func(indent, width, res, value, str);
+        } else if (str.empty()) {
+            value.resize(value.size() + indent - _utf8_length(value).second,
+                         _space);
+            _store_value_to(value, res, true);
+        } else {
+            std::vector<std::string> sub_split_str = _split(str, sep);
+            for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
+                std::string const& sub = sub_split_str.at(j);
+                _format_output_func(indent, width, res, value, sub);
+            }
+            _store_value_to(value, res);
+        }
+    }
+    _store_value_to(value, res);
+    return _vector_to_string(res, "\n");
+}
+
+_ARGPARSE_INL std::string
+_help_formatter(
+            std::string const& head,
+            HelpFormatter const& formatter,
+            std::string const& help,
+            std::size_t width,
+            std::size_t indent)
+{
+    std::size_t const interlayer = 2;
+
+    std::vector<std::string> res;
+    std::string value = head;
+    if (_utf8_length(value).second + interlayer > indent) {
+        _store_value_to(value, res);
+    }
+    if (!help.empty()) {
+        std::vector<std::string> lines
+                = formatter._split_lines(help, width - indent);
+        for (std::size_t i = 0; i < lines.size(); ++i) {
+            std::string const& line = lines.at(i);
+            std::size_t value_size = _utf8_length(value).second;
+            if (value_size < indent) {
+                value.resize(value.size() + indent - value_size, _space);
+            }
+            value += line;
+            _store_value_to(value, res, true);
+        }
+    }
+    _store_value_to(value, res);
+    return _vector_to_string(res, "\n");
+}
+
+_ARGPARSE_INL void
+_print_raw_text_formatter(
+            HelpFormatter const& formatter,
+            std::string const& text,
+            std::size_t width,
+            std::ostream& os,
+            std::string const& begin = std::string("\n"),
+            std::size_t indent = 0,
+            std::string const& end = std::string())
+{
+    if (!text.empty()) {
+        os << begin
+           << formatter._fill_text(text, width, indent) << end << std::endl;
+    }
+}
+
+_ARGPARSE_INL std::string
+_filled_string(
+            std::string const& str,
+            std::size_t limit,
+            char filler = '-')
+{
+    if (str.size() + 2 >= limit) {
+        return _spaces + str;
+    }
+    std::string res = std::string((limit - str.size() - 2) / 2, filler)
+                      + _spaces + str + _spaces;
+    res.resize(limit, filler);
+    return res;
+}
+}  // namespace detail
+
 // -- HelpFormatter -----------------------------------------------------------
 _ARGPARSE_INL std::string
 HelpFormatter::_fill_text(
