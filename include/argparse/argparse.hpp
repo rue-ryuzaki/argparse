@@ -1784,13 +1784,13 @@ _move_vector_replace_at(std::vector<T>& from, std::vector<T>& to, std::size_t i)
 
 std::vector<std::string>
 _split(std::string const& str,
-            char sep,
-            bool add_sep = false);
+            std::string const& sep,
+            int32_t maxsplit = -1);
 
-std::pair<std::string, std::string>
-_split_separator(
+std::vector<std::string>
+_split_lines(
             std::string const& str,
-            char sep);
+            bool keepends = false);
 
 std::vector<std::string>
 _split_to_args(
@@ -4449,8 +4449,9 @@ public:
             throw
             TypeError("trying to get data from array argument '" + key + "'");
         }
-        return to_tuple(detail::type_tag<T>{},
-                        detail::_split(args.second.front(), sep));
+        return to_tuple(
+                    detail::type_tag<T>{},
+                    detail::_split(args.second.front(), std::string(1, sep)));
     }
 #endif  // C++11+
 
@@ -4966,8 +4967,9 @@ public:
         if (args->second.size() != 1) {
             return std::nullopt;
         }
-        return try_to_tuple(detail::type_tag<T>{},
-                            detail::_split(args->second.front(), sep));
+        return try_to_tuple(
+                    detail::type_tag<T>{},
+                    detail::_split(args->second.front(), std::string(1, sep)));
     }
 
     /*!
@@ -5049,9 +5051,10 @@ private:
     template <class T, class U>
     std::pair<T, U> to_pair(std::string const& data, char sep) const
     {
-        std::pair<std::string, std::string> const pair
-                = detail::_split_separator(data, sep);
-        return std::make_pair(to_type<T>(pair.first), to_type<U>(pair.second));
+        std::vector<std::string> pair
+                = detail::_split(data, std::string(1, sep), 1);
+        pair.resize(2);
+        return std::make_pair(to_type<T>(pair.at(0)), to_type<U>(pair.at(1)));
     }
 
     template <class T, class U>
@@ -5188,7 +5191,7 @@ private:
             std::transform(args.begin(), args.end(), std::back_inserter(vec),
                            [this, sep] (std::string const& a)
             { return to_tuple(detail::type_tag<T>{},
-                              detail::_split(a, sep)); });
+                              detail::_split(a, std::string(1, sep))); });
         }
         return vec;
     }
@@ -5261,9 +5264,10 @@ private:
     std::optional<std::pair<T, U> >
     try_to_pair(std::string const& data, char sep) const
     {
-        auto const pair = detail::_split_separator(data, sep);
-        auto el1 = try_to_type<T>(pair.first);
-        auto el2 = try_to_type<U>(pair.second);
+        auto pair = detail::_split(data, std::string(1, sep), 1);
+        pair.resize(2);
+        auto el1 = try_to_type<T>(pair.at(0));
+        auto el2 = try_to_type<U>(pair.at(1));
         if (el1.operator bool() && el2.operator bool()) {
             return std::make_pair(el1.value(), el2.value());
         } else {
@@ -5397,8 +5401,9 @@ private:
         } else {
             vec.reserve(args.size());
             for (auto const& arg : args) {
-                auto tuple = try_to_tuple(detail::type_tag<T>{},
-                                          detail::_split(arg, sep));
+                auto tuple = try_to_tuple(
+                            detail::type_tag<T>{},
+                            detail::_split(arg, std::string(1, sep)));
                 if (tuple.operator bool()) {
                     vec.emplace_back(tuple.value());
                 } else {
@@ -8812,57 +8817,55 @@ _store_value_to(
 
 _ARGPARSE_INL std::vector<std::string>
 _split(std::string const& str,
-            char sep,
-            bool add_sep)
+            std::string const& sep,
+            int32_t maxsplit)
 {
     std::vector<std::string> res;
     std::string value;
+    int32_t split = 0;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
-        if (c == sep) {
-            _store_value_to(value, res, true);
-            if (add_sep) {
-                value = std::string(1, sep);
+        if (sep.empty()) {
+            if (std::isspace(static_cast<unsigned char>(c))
+                    && (maxsplit < 0 || split < maxsplit)) {
                 _store_value_to(value, res, true);
+                ++split;
+            } else {
+                value += c;
             }
         } else {
-            value += c;
+            if (_is_value_exists(c, sep) && (maxsplit < 0 || split < maxsplit)) {
+                _store_value_to(value, res, true);
+                ++split;
+            } else {
+                value += c;
+            }
         }
     }
-    _store_value_to(value, res, true);
+    res.push_back(value);
     return res;
 }
 
 _ARGPARSE_INL std::vector<std::string>
-_split_whitespace(
+_split_lines(
             std::string const& str,
-            bool force = false)
+            bool keepends)
 {
     std::vector<std::string> res;
     std::string value;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
-        if (std::isspace(static_cast<unsigned char>(c))) {
-            _store_value_to(value, res, force);
+        if (c == '\n') {
+            if (keepends) {
+                value += c;
+            }
+            _store_value_to(value, res, true);
         } else {
             value += c;
         }
     }
     _store_value_to(value, res);
     return res;
-}
-
-_ARGPARSE_INL std::pair<std::string, std::string>
-_split_separator(
-            std::string const& str,
-            char sep)
-{
-    std::string::size_type pos = str.find(sep);
-    if (pos != std::string::npos) {
-        return std::make_pair(str.substr(0, pos), str.substr(pos + 1));
-    } else {
-        return std::make_pair(str, std::string());
-    }
 }
 
 _ARGPARSE_INL std::vector<std::string>
@@ -9086,17 +9089,17 @@ _format_output(
             std::size_t interlayer,
             std::size_t indent,
             std::size_t width,
-            char sep = '\n')
+            std::string const& sep = std::string("\n"))
 {
     std::vector<std::string> res;
     std::string value = head;
     if (_utf8_length(value).second + interlayer > indent) {
         _store_value_to(value, res);
     }
-    std::vector<std::string> split_str = _split(body, '\n');
+    std::vector<std::string> split_str = _split_lines(body);
     for (std::size_t i = 0; i < split_str.size(); ++i) {
         std::string const& str = split_str.at(i);
-        if (sep == '\n') {
+        if (sep == "\n") {
             _format_output_func(indent, width, res, value, str);
         } else if (str.empty()) {
             value.resize(value.size() + indent - _utf8_length(value).second,
@@ -9230,13 +9233,13 @@ HelpFormatter::_split_lines(
 {
     std::string value;
     std::vector<std::string> res;
-    std::vector<std::string> split_str = detail::_split_whitespace(text);
+    std::vector<std::string> split_str = detail::_split(text, "");
     for (std::size_t i = 0; i < split_str.size(); ++i) {
         if (detail::_utf8_length(value).second + 1
                 + detail::_utf8_length(split_str.at(i)).second > width) {
             detail::_store_value_to(value, res);
         }
-        if (!value.empty()) {
+        if (!value.empty() && !split_str.at(i).empty()) {
             value += detail::_spaces;
         }
         value += split_str.at(i);
@@ -9274,31 +9277,37 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
 {
     std::string value;
     std::vector<std::string> res;
-    std::vector<std::string> split_str = detail::_split(text, '\n');
+    std::vector<std::string> split_str = detail::_split_lines(text);
     for (std::size_t i = 0; i < split_str.size(); ++i) {
         std::string const& str = split_str.at(i);
         if (str.empty()) {
             detail::_store_value_to(value, res, true);
         } else {
             std::vector<std::string> sub_split_str
-                    = detail::_split(str, detail::_space, true);
+                    = detail::_split(str, detail::_spaces);
             for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
+                if (j != 0) {
+                    value += " ";
+                }
                 std::vector<std::string> tab_split_str
-                        = detail::_split(sub_split_str.at(j), '\t', true);
+                        = detail::_split(sub_split_str.at(j), "\t");
                 for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
-                    std::string sub = tab_split_str.at(k);
-                    if (sub == "\t") {
-                        sub = std::string(
+                    if (k != 0) {
+                        std::string sub = std::string(
                                     _tab_size() - (detail::_utf8_length(
                                                    value).second % _tab_size()),
                                     detail::_space);
+                        if (detail::_utf8_length(value).second + 1
+                                + detail::_utf8_length(sub).second > width) {
+                            detail::_store_value_to(value, res);
+                            sub = std::string(_tab_size(), detail::_space);
+                        }
+                        value += sub;
                     }
+                    std::string sub = tab_split_str.at(k);
                     if (detail::_utf8_length(value).second + 1
                             + detail::_utf8_length(sub).second > width) {
                         detail::_store_value_to(value, res);
-                        if (tab_split_str.at(k) == "\t") {
-                            sub = std::string(_tab_size(), detail::_space);
-                        }
                     }
                     value += sub;
                 }
@@ -12110,8 +12119,11 @@ ArgumentParser::read_env(
 {
     if (envp) {
         for (int i = 0; envp[i]; ++i) {
+            std::vector<std::string> pair
+                    = detail::_split(std::string(envp[i]), detail::_equals, 1);
+            pair.resize(2);
             m_environment_variables.insert(
-                       detail::_split_separator(std::string(envp[i]), '='));
+                        std::make_pair(pair.at(0), pair.at(1)));
         }
     }
 }
@@ -14208,7 +14220,7 @@ ArgumentParser::is_not_operand(
             std::string const& key)
 {
     return was_pseudo_arg || !find_arg_by_flag(
-                args, detail::_split_separator(key, detail::_equal).first);
+                args, detail::_split(key, detail::_equals, 1).front());
 }
 
 _ARGPARSE_INL bool
