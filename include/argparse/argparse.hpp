@@ -1641,20 +1641,12 @@ _to_string(T const& value)
 bool
 _have_quotes(std::string const& str);
 
-#ifdef _ARGPARSE_CXX_11
-template <class T = std::string>
-typename std::enable_if<std::is_constructible<std::string, T>::value, T>::type
+template <class T>
+typename enable_if<is_constructible<std::string, T>::value, T>::type
 _remove_quotes(std::string const& str)
 {
     return _have_quotes(str) ? T(str).substr(1, str.size() - 2) : T(str);
 }
-#else
-inline std::string
-_remove_quotes(std::string const& str)
-{
-    return _have_quotes(str) ? str.substr(1, str.size() - 2) : str;
-}
-#endif  // C++11+
 
 std::string
 _replace(std::string str,
@@ -1856,10 +1848,7 @@ class Type
 public:
 #ifdef _ARGPARSE_CXX_11
     template <class T, typename std::enable_if<
-                  std::is_same<std::string, T>::value
-#ifdef _ARGPARSE_CXX_17
-                  || std::is_same<std::string_view, T>::value
-#endif  // C++17+
+                  is_constructible<std::string, T>::value
                   || is_stl_pair<T>::value
                   || is_stl_tuple<T>::value>::type* = nullptr>
     static std::string
@@ -1888,10 +1877,7 @@ public:
     }
 
     template <class T, typename std::enable_if<
-                  !std::is_same<std::string, T>::value
-#ifdef _ARGPARSE_CXX_17
-                  && !std::is_same<std::string_view, T>::value
-#endif  // C++17+
+                  !is_constructible<std::string, T>::value
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
@@ -1942,10 +1928,7 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     template <class T, typename std::enable_if<
-#ifdef _ARGPARSE_CXX_17
-                  std::is_same<std::string_view, T>::value ||
-#endif  // C++17+
-                  std::is_same<std::string, T>::value>::type* = nullptr>
+                  is_constructible<std::string, T>::value>::type* = nullptr>
     static std::string
     name()
     {
@@ -2005,10 +1988,7 @@ public:
     }
 
     template <class T, typename std::enable_if<
-                  !std::is_same<std::string, T>::value
-#ifdef _ARGPARSE_CXX_17
-                  && !std::is_same<std::string_view, T>::value
-#endif  // C++17+
+                  !is_constructible<std::string, T>::value
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
@@ -5131,7 +5111,7 @@ private:
         }
         std::string data;
         for (value_const_iterator it = beg; it != end; ++it) {
-            std::string value = detail::_remove_quotes(*it);
+            std::string value = detail::_remove_quotes<std::string>(*it);
             if (!data.empty() && !value.empty()) {
                 data += detail::_spaces;
             }
@@ -5201,11 +5181,7 @@ private:
         detail::is_constructible<std::string, T>::value, T>::type
     to_type(std::string const& data) const
     {
-#ifdef _ARGPARSE_CXX_11
         return detail::_remove_quotes<T>(data);
-#else
-        return detail::_remove_quotes(data);
-#endif  // C++11+
     }
 
     template <class T>
@@ -5239,7 +5215,7 @@ private:
             return T();
         }
         T res = T();
-        std::stringstream ss(detail::_remove_quotes(data));
+        std::stringstream ss(detail::_remove_quotes<std::string>(data));
         ss >> res;
         if (ss.fail() || !ss.eof()) {
             throw TypeError("invalid " + detail::Type::name<T>()
@@ -5342,7 +5318,7 @@ private:
         }
         std::string data;
         for (value_const_iterator it = beg; it != end; ++it) {
-            auto value = detail::_remove_quotes(*it);
+            auto value = detail::_remove_quotes<std::string>(*it);
             if (!data.empty() && !value.empty()) {
                 data += detail::_spaces;
             }
@@ -5451,7 +5427,7 @@ private:
             return T{};
         }
         T res{};
-        std::stringstream ss(detail::_remove_quotes(data));
+        std::stringstream ss(detail::_remove_quotes<std::string>(data));
         ss >> res;
         if (ss.fail() || !ss.eof()) {
             return std::nullopt;
@@ -10230,7 +10206,7 @@ Argument::handle(
             std::string const& str) const
 {
     if (m_handle) {
-        m_handle(detail::_remove_quotes(str));
+        m_handle(detail::_remove_quotes<std::string>(str));
     }
 }
 #else
@@ -13466,7 +13442,7 @@ ArgumentParser::validate_argument_value(
 {
     detail::Value<std::vector<std::string> > const& choices = arg.m_choices;
     if (choices.has_value()) {
-        std::string str = detail::_remove_quotes(value);
+        std::string str = detail::_remove_quotes<std::string>(value);
         if (!str.empty() && !detail::_is_value_exists(str, choices())) {
             std::string values
                     = detail::_vector_to_string(choices(), ", ", "'");
@@ -15006,7 +14982,7 @@ ArgumentParser::handle(
             std::string const& str) const
 {
     if (m_handle) {
-        m_handle(detail::_remove_quotes(str));
+        m_handle(detail::_remove_quotes<std::string>(str));
     }
 }
 
