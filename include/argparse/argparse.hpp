@@ -10575,6 +10575,7 @@ Argument::operator ==(
 }
 
 // -- _Group ------------------------------------------------------------------
+_ARGPARSE_INL
 _Group::_Group(
             std::string const& title,
             std::string const& description)
