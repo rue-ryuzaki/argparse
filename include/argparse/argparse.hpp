@@ -4531,7 +4531,7 @@ public:
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.size() != 1
                 || !detail::_is_type_name_correct(args->first->type_name(),
@@ -4559,7 +4559,7 @@ public:
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || !detail::_is_type_name_correct(args->first->type_name(),
                                                   detail::Type::name<T>())) {
             return std::nullopt;
@@ -4589,14 +4589,14 @@ public:
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
             return std::nullopt;
         }
         auto vector = try_to_vector<typename T::value_type>(args->second());
-        if (!vector.operator bool()) {
+        if (!vector.has_value()) {
             return std::nullopt;
         }
         T res{};
@@ -4634,7 +4634,7 @@ public:
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
@@ -4642,7 +4642,7 @@ public:
         }
         auto vector = try_to_vector<typename T::value_type>(
                     args->second().begin(), args->second().end());
-        if (!vector.operator bool()) {
+        if (!vector.has_value()) {
             return std::nullopt;
         }
         return T(vector.value().begin(), vector.value().end());
@@ -4666,7 +4666,7 @@ public:
     try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
@@ -4675,7 +4675,7 @@ public:
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
         auto vector = try_to_paired_vector<K, V>(args->second(), sep);
-        if (!vector.operator bool()) {
+        if (!vector.has_value()) {
             return std::nullopt;
         }
         return T(vector.value().begin(), vector.value().end());
@@ -4699,7 +4699,7 @@ public:
     try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
@@ -4707,7 +4707,7 @@ public:
         }
         auto vector = try_to_tupled_vector<
                 typename T::value_type>(args->second(), sep);
-        if (!vector.operator bool()) {
+        if (!vector.has_value()) {
             return std::nullopt;
         }
         return T(vector.value().begin(), vector.value().end());
@@ -4730,7 +4730,7 @@ public:
     try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
@@ -4740,7 +4740,7 @@ public:
         typedef typename T::mapped_type V;
         T res{};
         auto vector = try_to_paired_vector<K, V>(args->second(), sep);
-        if (!vector.operator bool()) {
+        if (!vector.has_value()) {
             return std::nullopt;
         }
         for (auto const& pair : vector.value()) {
@@ -4768,7 +4768,7 @@ public:
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() != argparse::append
                 || !(args->first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
@@ -4788,7 +4788,7 @@ public:
                                 i == 0 ? 0 : args->second.indexes().at(i - 1)),
                         args->second().begin()
                             + static_cast<dtype>(args->second.indexes().at(i)));
-            if (!vector.operator bool()) {
+            if (!vector.has_value()) {
                 return std::nullopt;
             }
             res.push_back(V(vector.value().begin(), vector.value().end()));
@@ -4814,7 +4814,7 @@ public:
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() != argparse::append
                 || !(args->first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
@@ -4834,7 +4834,7 @@ public:
                                 i == 0 ? 0 : args->second.indexes().at(i - 1)),
                         args->second().begin()
                             + static_cast<dtype>(args->second.indexes().at(i)));
-            if (!vector.operator bool()) {
+            if (!vector.has_value()) {
                 return std::nullopt;
             }
             res.push_back(V(std::deque<VV>(vector.value().begin(),
@@ -4860,7 +4860,7 @@ public:
     try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.empty()
                 || !detail::_is_type_name_correct(args->first->type_name(),
@@ -4875,7 +4875,7 @@ public:
             }
             auto el1 = try_to_type<K>(args->second.at(0));
             auto el2 = try_to_type<V>(args->second.at(1));
-            if (el1.operator bool() && el2.operator bool()) {
+            if (el1.has_value() && el2.has_value()) {
                 return std::make_pair(el1.value(), el2.value());
             } else {
                 return std::nullopt;
@@ -4903,7 +4903,7 @@ public:
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_name_correct(
                         args->first->type_name(), detail::Type::basic<T>())) {
@@ -4911,7 +4911,7 @@ public:
         }
         typedef typename T::value_type V;
         auto vector = try_to_vector<V>(args->second());
-        if (!vector.operator bool()) {
+        if (!vector.has_value()) {
             return std::nullopt;
         }
         return T(std::deque<V>(vector.value().begin(), vector.value().end()));
@@ -4934,7 +4934,7 @@ public:
     try_get(std::string const& key, char sep = detail::_equal) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.empty()
                 || !detail::_is_type_name_correct(args->first->type_name(),
@@ -4976,7 +4976,7 @@ public:
     try_get(std::string const& key) const
     {
         auto args = try_get_data(key);
-        if (!args.operator bool()
+        if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.empty()
                 || !detail::_is_type_name_correct(args->first->type_name(),
@@ -5244,7 +5244,7 @@ private:
         pair.resize(2);
         auto el1 = try_to_type<T>(pair.at(0));
         auto el2 = try_to_type<U>(pair.at(1));
-        if (el1.operator bool() && el2.operator bool()) {
+        if (el1.has_value() && el2.has_value()) {
             return std::make_pair(el1.value(), el2.value());
         } else {
             return std::nullopt;
@@ -5264,7 +5264,7 @@ private:
             for (std::size_t i = 0; i < args.size(); i += 2) {
                 auto el1 = try_to_type<T>(args.at(i));
                 auto el2 = try_to_type<U>(args.at(i + 1));
-                if (el1.operator bool() && el2.operator bool()) {
+                if (el1.has_value() && el2.has_value()) {
                     vec.emplace_back(std::make_pair(el1.value(), el2.value()));
                 } else {
                     return std::nullopt;
@@ -5274,11 +5274,10 @@ private:
             vec.reserve(args.size());
             for (auto const& arg : args) {
                 auto pair = try_to_pair<T, U>(arg, sep);
-                if (pair.operator bool()) {
-                    vec.emplace_back(pair.value());
-                } else {
+                if (!pair.has_value()) {
                     return std::nullopt;
                 }
+                vec.emplace_back(pair.value());
             }
         }
         return vec;
@@ -5296,11 +5295,10 @@ private:
         vec.reserve(static_cast<std::size_t>(end - beg));
         for (value_const_iterator it = beg; it != end; ++it) {
             auto el = try_to_type<T>(*it);
-            if (el.operator bool()) {
-                vec.emplace_back(el.value());
-            } else {
+            if (!el.has_value()) {
                 return std::nullopt;
             }
+            vec.emplace_back(el.value());
         }
         return vec;
     }
@@ -5368,11 +5366,10 @@ private:
                 std::vector<std::string> temp
                         = { args.begin() + i, args.begin() + i + size };
                 auto tuple = try_to_tuple(detail::type_tag<T>{}, temp);
-                if (tuple.operator bool()) {
-                    vec.emplace_back(tuple.value());
-                } else {
+                if (!tuple.has_value()) {
                     return std::nullopt;
                 }
+                vec.emplace_back(tuple.value());
             }
         } else {
             vec.reserve(args.size());
@@ -5380,11 +5377,10 @@ private:
                 auto tuple = try_to_tuple(
                             detail::type_tag<T>{},
                             detail::_split(arg, std::string(1, sep)));
-                if (tuple.operator bool()) {
-                    vec.emplace_back(tuple.value());
-                } else {
+                if (!tuple.has_value()) {
                     return std::nullopt;
                 }
+                vec.emplace_back(tuple.value());
             }
         }
         return vec;
@@ -5669,7 +5665,8 @@ public:
 
         std::string
         print(HelpFormatter const& formatter,
-                    std::size_t limit, std::size_t width,
+                    std::size_t limit,
+                    std::size_t width,
                     std::string const& lang) const;
 
         // -- data ------------------------------------------------------------
