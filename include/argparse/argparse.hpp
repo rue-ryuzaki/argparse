@@ -11075,13 +11075,13 @@ _ArgumentGroup::add_argument(
 _ARGPARSE_INL void
 _ArgumentGroup::process_add_argument()
 {
+    if (m_data->m_arguments.back()->required() && m_is_mutex_group) {
+        m_data->m_arguments.pop_back();
+        throw ValueError("mutually exclusive arguments must be optional");
+    }
     Argument::Type type = m_data->m_arguments.back()->m_type;
-    if (type != Argument::Optional) {
-        if (m_is_mutex_group) {
-            m_data->m_arguments.pop_back();
-            throw ValueError("mutually exclusive arguments must be optional");
-        }
-    } else if (m_parent_data->m_conflict_handler == "resolve") {
+    if (type == Argument::Optional
+            && m_parent_data->m_conflict_handler == "resolve") {
         for (std::size_t i = 0; i < m_parent_data->m_optional.size(); ++i) {
             m_parent_data->m_optional.at(i).first->resolve_conflict_flags(
                         m_data->m_arguments.back()->flags());
@@ -14223,11 +14223,11 @@ ArgumentParser::check_mutex_groups(
     for (std::size_t i = 0; i < parsers.size(); ++i) {
         ArgumentParser const* parser = parsers.at(i).parser;
         for (std::size_t j = 0; j < parser->m_mutex_groups.size(); ++j) {
-            MutuallyExclusiveGroup const& g = parser->m_mutex_groups.at(j);
+            MutuallyExclusiveGroup const& group = parser->m_mutex_groups.at(j);
             std::string args;
             std::string found;
-            for (std::size_t k = 0; k < g.m_data->m_arguments.size(); ++k) {
-                pArgument const& arg = g.m_data->m_arguments.at(k);
+            for (std::size_t k = 0; k < group.m_data->m_arguments.size(); ++k) {
+                pArgument const& arg = group.m_data->m_arguments.at(k);
                 std::string flags
                         = detail::_vector_to_string(arg->flags(), "/");
                 args += detail::_spaces + flags;
@@ -14240,8 +14240,8 @@ ArgumentParser::check_mutex_groups(
                     found = flags;
                 }
             }
-            if (g.required() && found.empty()) {
-                if (g.m_data->m_arguments.empty()) {
+            if (group.required() && found.empty()) {
+                if (group.m_data->m_arguments.empty()) {
                     throw IndexError("list index out of range");
                 }
                 parser->throw_error(
