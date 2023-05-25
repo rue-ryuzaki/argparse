@@ -11075,10 +11075,6 @@ _ArgumentGroup::add_argument(
 _ARGPARSE_INL void
 _ArgumentGroup::process_add_argument()
 {
-    if (m_data->m_arguments.back()->required() && m_is_mutex_group) {
-        m_data->m_arguments.pop_back();
-        throw ValueError("mutually exclusive arguments must be optional");
-    }
     Argument::Type type = m_data->m_arguments.back()->m_type;
     if (type == Argument::Optional
             && m_parent_data->m_conflict_handler == "resolve") {
@@ -14517,7 +14513,7 @@ _ARGPARSE_INL void
 ArgumentParser::print_custom_usage(
             pArguments const& positional,
             pArguments const& operand,
-            pArguments const& optional,
+            pArguments const& options,
             std::deque<MutuallyExclusiveGroup> const& mutex_groups,
             SubparserInfo const& subparser,
             std::string const& prog,
@@ -14529,23 +14525,28 @@ ArgumentParser::print_custom_usage(
     std::size_t indent
             = 1 + (w > detail::_min_width ? head_prog : usage_title).size();
     std::string res;
-    pArguments ex_opt = optional;
+    pArguments ex_options = options;
+    pArguments ex_operand = operand;
     for (std::size_t i = 0; i < mutex_groups.size(); ++i) {
         for (std::size_t j = 0;
              j < mutex_groups.at(i).m_data->m_arguments.size(); ++j) {
-            ex_opt.erase(std::remove(
-                             ex_opt.begin(), ex_opt.end(),
-                             mutex_groups.at(i).m_data->m_arguments.at(j)),
-                         ex_opt.end());
+            ex_options.erase(std::remove(
+                                 ex_options.begin(), ex_options.end(),
+                                 mutex_groups.at(i).m_data->m_arguments.at(j)),
+                             ex_options.end());
+            ex_operand.erase(std::remove(
+                                 ex_operand.begin(), ex_operand.end(),
+                                 mutex_groups.at(i).m_data->m_arguments.at(j)),
+                             ex_operand.end());
         }
     }
-    for (std::size_t i = 0; i < ex_opt.size(); ++i) {
-        add_arg_usage(res, ex_opt.at(i)->usage(*m_formatter),
-                      ex_opt.at(i)->required());
+    for (std::size_t i = 0; i < ex_options.size(); ++i) {
+        add_arg_usage(res, ex_options.at(i)->usage(*m_formatter),
+                      ex_options.at(i)->required());
     }
-    for (std::size_t i = 0; i < operand.size(); ++i) {
-        add_arg_usage(res, operand.at(i)->usage(*m_formatter),
-                      operand.at(i)->required());
+    for (std::size_t i = 0; i < ex_operand.size(); ++i) {
+        add_arg_usage(res, ex_operand.at(i)->usage(*m_formatter),
+                      ex_operand.at(i)->required());
     }
     for (std::size_t i = 0; i < mutex_groups.size(); ++i) {
         add_arg_usage(res, mutex_groups.at(i).usage(*m_formatter), true);
