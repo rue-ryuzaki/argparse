@@ -523,24 +523,34 @@ public:
     { }
     virtual ~HelpFormatter() _ARGPARSE_NOEXCEPT { }
 
-    inline void _tab_size(std::size_t value)
+    inline void
+    _tab_size(std::size_t value) _ARGPARSE_NOEXCEPT
     {
         m_tab_size = value != 0 ? value : c_default_tab_size;
     }
-    inline std::size_t _tab_size() const { return m_tab_size; }
 
-    virtual std::string _fill_text(
-                std::string const& text,
+    inline std::size_t
+    _tab_size() const _ARGPARSE_NOEXCEPT
+    {
+        return m_tab_size;
+    }
+
+    virtual std::string
+    _fill_text(std::string const& text,
                 std::size_t width,
                 std::size_t indent) const;
-    virtual std::string _get_default_metavar_for_optional(
+    virtual std::string
+    _get_default_metavar_for_optional(
                 Argument const* action) const;
-    virtual std::string _get_default_metavar_for_positional(
+    virtual std::string
+    _get_default_metavar_for_positional(
                 Argument const* action) const;
-    virtual std::string _get_help_string(
+    virtual std::string
+    _get_help_string(
                 Argument const* action,
                 std::string const& lang) const;
-    virtual std::vector<std::string> _split_lines(
+    virtual std::vector<std::string>
+    _split_lines(
                 std::string const& text,
                 std::size_t width) const;
 
