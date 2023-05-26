@@ -1678,6 +1678,11 @@ _replace(std::string const& str,
             std::string const& value);
 #endif  // C++11+
 
+std::string
+_join(std::vector<std::string> const& values,
+            std::string const& separator = _spaces,
+            std::string const& quotes = std::string());
+
 template <class T>
 bool
 _is_value_exists(T const& value, std::vector<T> const& vec)
@@ -1808,27 +1813,6 @@ _split_to_args(
 bool
 _string_to_bool(
             std::string const& str) _ARGPARSE_NOEXCEPT;
-
-std::string
-_vector_to_string(
-            std::vector<std::string>::const_iterator begvec,
-            std::vector<std::string>::const_iterator endvec,
-            std::string const& separator = _spaces,
-            std::string const& quotes = std::string(),
-            bool replace_space = false,
-            std::string const& none = std::string(),
-            std::string const& begin = std::string(),
-            std::string const& end = std::string());
-
-std::string
-_vector_to_string(
-            std::vector<std::string> const& vec,
-            std::string const& separator = _spaces,
-            std::string const& quotes = std::string(),
-            bool replace_space = false,
-            std::string const& none = std::string(),
-            std::string const& begin = std::string(),
-            std::string const& end = std::string());
 
 template <class T>
 std::string
@@ -4476,7 +4460,7 @@ public:
         if (args.first->action() == argparse::count) {
             throw TypeError("invalid get type for argument '" + key + "'");
         }
-        return to_type<T>(detail::_vector_to_string(args.second()));
+        return to_type<T>(detail::_join(args.second()));
     }
 
     /*!
@@ -4993,7 +4977,7 @@ public:
                                                   detail::Type::name<T>())) {
             return std::nullopt;
         }
-        return try_to_type<T>(detail::_vector_to_string(args->second()));
+        return try_to_type<T>(detail::_join(args->second()));
     }
 #endif  // C++17+
 
@@ -8758,14 +8742,28 @@ _not_optional(
             || (!have_negative_args && _is_negative_number(arg));
 }
 
+_ARGPARSE_INL std::string
+_join(std::vector<std::string> const& values,
+            std::string const& separator,
+            std::string const& quotes)
+{
+    if (values.empty()) {
+        return std::string();
+    }
+    std::string res = quotes + values.front() + quotes;
+    for (std::size_t i = 1; i < values.size(); ++i) {
+        res += separator + quotes + values.at(i) + quotes;
+    }
+    return res;
+}
+
 _ARGPARSE_INL void
 _append_value_to(
             std::string const& value,
             std::string& str,
-            std::string const& separator = _spaces,
-            bool force = false)
+            std::string const& separator = _spaces)
 {
-    if (!str.empty() || force) {
+    if (!str.empty()) {
         str += separator;
     }
     str += value;
@@ -8962,12 +8960,12 @@ _ARGPARSE_INL std::string
 _vector_to_string(
             std::vector<std::string>::const_iterator begvec,
             std::vector<std::string>::const_iterator endvec,
-            std::string const& separator,
-            std::string const& quotes,
-            bool replace_space,
-            std::string const& none,
-            std::string const& begin,
-            std::string const& end)
+            std::string const& separator = _spaces,
+            std::string const& quotes = std::string(),
+            bool replace_space = false,
+            std::string const& none = std::string(),
+            std::string const& begin = std::string(),
+            std::string const& end = std::string())
 {
     typedef std::vector<std::string>::const_iterator value_const_iterator;
     std::string res;
@@ -8984,12 +8982,12 @@ _vector_to_string(
 _ARGPARSE_INL std::string
 _vector_to_string(
             std::vector<std::string> const& vec,
-            std::string const& separator,
-            std::string const& quotes,
-            bool replace_space,
-            std::string const& none,
-            std::string const& begin,
-            std::string const& end)
+            std::string const& separator = _spaces,
+            std::string const& quotes = std::string(),
+            bool replace_space = false,
+            std::string const& none = std::string(),
+            std::string const& begin = std::string(),
+            std::string const& end = std::string())
 {
     return _vector_to_string(vec.begin(), vec.end(), separator, quotes,
                              replace_space, none, begin, end);
@@ -9082,7 +9080,7 @@ _format_output(
         }
     }
     _store_value_to(value, res);
-    return _vector_to_string(res, "\n");
+    return _join(res, "\n");
 }
 
 _ARGPARSE_INL std::string
@@ -9114,7 +9112,7 @@ _help_formatter(
         }
     }
     _store_value_to(value, res);
-    return _vector_to_string(res, "\n");
+    return _join(res, "\n");
 }
 
 _ARGPARSE_INL void
@@ -9168,7 +9166,7 @@ HelpFormatter::_fill_text(
         detail::_store_value_to(value, res, true);
     }
     detail::_store_value_to(value, res);
-    return detail::_vector_to_string(res, "\n");
+    return detail::_join(res, "\n");
 }
 
 _ARGPARSE_INL std::string
@@ -9234,7 +9232,7 @@ _RawDescriptionHelpFormatter::_fill_text(
         detail::_store_value_to(value, res, true);
     }
     detail::_store_value_to(value, res);
-    return detail::_vector_to_string(res, "\n");
+    return detail::_join(res, "\n");
 }
 
 _ARGPARSE_INL std::vector<std::string>
@@ -10186,7 +10184,7 @@ Argument::version() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string
 Argument::metavar() const
 {
-    std::string res = detail::_vector_to_string(m_metavar(), ", ");
+    std::string res = detail::_join(m_metavar(), ", ");
     return m_metavar().size() > 1 ? ("[" + res + "]") : res;
 }
 
@@ -10268,14 +10266,12 @@ Argument::usage(
     std::string res;
     if (m_type == Optional) {
         if (action() == argparse::BooleanOptionalAction) {
-            for (std::size_t i = 0; i < flags().size(); ++i) {
-                detail::_append_value_to(flags().at(i), res, " | ");
-            }
+            res = detail::_join(flags(), " | ");
         } else {
-            res += m_flags.front();
+            res = m_flags.front();
         }
     } else if (m_type == Operand) {
-        res += m_flags.front();
+        res = m_flags.front();
     }
     process_nargs_suffix(res, formatter);
     return res;
@@ -10294,8 +10290,8 @@ Argument::flags_to_string(
     } else {
         std::vector<std::string> names = get_argument_name(formatter);
         res += names.size() > 1
-                ? ("[" + detail::_vector_to_string(names, ", ") + "]")
-                : detail::_vector_to_string(names);
+                ? ("[" + detail::_join(names, ", ") + "]")
+                : detail::_join(names);
     }
     return res;
 }
@@ -10303,8 +10299,7 @@ Argument::flags_to_string(
 _ARGPARSE_INL std::string
 Argument::get_choices() const
 {
-    return m_choices.has_value()
-            ? detail::_vector_to_string(choices(), ", ") : "None";
+    return m_choices.has_value() ? detail::_join(choices(), ", ") : "None";
 }
 
 _ARGPARSE_INL std::string
@@ -10442,8 +10437,7 @@ Argument::process_nargs_suffix(
         names.resize(m_num_args, names.front());
     }
     std::string name = names_size > 1
-            ? ("[" + detail::_vector_to_string(names, ", ") + "]")
-            : detail::_vector_to_string(names);
+            ? ("[" + detail::_join(names, ", ") + "]") : detail::_join(names);
     if (m_type == Optional && !name.empty()) {
         res += detail::_spaces;
     }
@@ -10481,15 +10475,14 @@ Argument::get_argument_name(
     }
 #ifdef _ARGPARSE_CXX_11
     if (m_choices.has_value()) {
-        return { "{" + detail::_vector_to_string(choices(), ",") + "}" };
+        return { "{" + detail::_join(choices(), ",") + "}" };
     }
     return { m_type == Positional
                 ? formatter._get_default_metavar_for_positional(this)
                 : formatter._get_default_metavar_for_optional(this) };
 #else
     if (m_choices.has_value()) {
-        return detail::_make_vector(
-                    "{" + detail::_vector_to_string(choices(), ",") + "}");
+        return detail::_make_vector("{" + detail::_join(choices(), ",") + "}");
     }
     return detail::_make_vector(
                 m_type == Positional
@@ -10829,15 +10822,13 @@ _ArgumentData::check_conflicting_option(
         }
     }
     if (conflict_options.size() == 1) {
-        throw ArgumentError(
-                    "argument " + detail::_vector_to_string(arg->flags(), "/")
-                    + ": conflicting option string: "
-                    + conflict_options.front());
+        throw ArgumentError("argument " + detail::_join(arg->flags(), "/")
+                            + ": conflicting option string: "
+                            + conflict_options.front());
     } else if (conflict_options.size() > 1) {
-        throw ArgumentError(
-                    "argument " + detail::_vector_to_string(arg->flags(), "/")
-                    + ": conflicting option strings: "
-                    + detail::_vector_to_string(conflict_options, ", "));
+        throw ArgumentError("argument " + detail::_join(arg->flags(), "/")
+                            + ": conflicting option strings: "
+                            + detail::_join(conflict_options, ", "));
     }
 }
 
@@ -11621,8 +11612,7 @@ Namespace::to_string() const
     if (!m_unrecognized_args.has_value()) {
         return "Namespace(" + res + ")";
     }
-    std::string unknown_args
-            = detail::_vector_to_string(unrecognized_args(), ", ", "'");
+    std::string unknown_args = detail::_join(unrecognized_args(), ", ", "'");
     return "(Namespace(" + res + "), [" + unknown_args + "])";
 }
 
@@ -11973,7 +11963,7 @@ ArgumentParser::Subparser::print(
         auto help = detail::_tr(p->m_help, lang);
         if (!help.empty()) {
             std::string name = "    " + p->m_name;
-            auto alias = detail::_vector_to_string(p->aliases(), ", ");
+            auto alias = detail::_join(p->aliases(), ", ");
             if (!alias.empty()) {
                 name += " (" + alias + ")";
             }
@@ -11988,7 +11978,7 @@ ArgumentParser::Subparser::print(
         std::string help = detail::_tr(p->m_help, lang);
         if (!help.empty()) {
             std::string name = "    " + p->m_name;
-            std::string alias = detail::_vector_to_string(p->aliases(), ", ");
+            std::string alias = detail::_join(p->aliases(), ", ");
             if (!alias.empty()) {
                 name += " (" + alias + ")";
             }
@@ -12893,7 +12883,7 @@ ArgumentParser::print_bash_completion(
             os << " -f";
         }
         if (!options.empty()) {
-            os << " -W \"" << detail::_vector_to_string(options) << "\"";
+            os << " -W \"" << detail::_join(options) << "\"";
         }
         os << " " << prog();
         os << std::endl;
@@ -13398,8 +13388,7 @@ ArgumentParser::validate_argument_value(
     if (choices.has_value()) {
         std::string str = detail::_remove_quotes<std::string>(value);
         if (!str.empty() && !detail::_is_value_exists(str, choices())) {
-            std::string values
-                    = detail::_vector_to_string(choices(), ", ", "'");
+            std::string values = detail::_join(choices(), ", ", "'");
             parsers.back().parser->throw_error(
                         "argument " + arg.m_flags.front()
                         + ": invalid choice: '" + str
@@ -14224,8 +14213,7 @@ ArgumentParser::check_mutex_groups(
             std::string found;
             for (std::size_t k = 0; k < group.m_data->m_arguments.size(); ++k) {
                 pArgument const& arg = group.m_data->m_arguments.at(k);
-                std::string flags
-                        = detail::_vector_to_string(arg->flags(), "/");
+                std::string flags = detail::_join(arg->flags(), "/");
                 args += detail::_spaces + flags;
                 if (!parsers.front().storage.at(arg).empty()) {
                     if (!found.empty()) {
@@ -14256,8 +14244,7 @@ ArgumentParser::process_optionals_required(
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
         if (arg->required() && storage.at(arg).empty()) {
-            std::string args = detail::_vector_to_string(arg->flags(), "/");
-            required_args.push_back(args);
+            required_args.push_back(detail::_join(arg->flags(), "/"));
         }
     }
 }
@@ -14287,10 +14274,7 @@ ArgumentParser::process_required_check(
     std::vector<std::string> required_args;
     process_optionals_required(required_args, parser.optional, storage);
     process_optionals_required(required_args, parser.operand, storage);
-    std::string args;
-    for (std::size_t i = 0; i < required_args.size(); ++i) {
-        detail::_append_value_to(required_args[i], args, ", ");
-    }
+    std::string args = detail::_join(required_args, ", ");
     if (!args.empty()) {
         parser.parser->throw_error(
                     "the following arguments are required: " + args);
@@ -14362,8 +14346,7 @@ ArgumentParser::check_unrecognized_args(
             std::vector<std::string> const& args) const
 {
     if (!only_known && !args.empty()) {
-        throw_error("unrecognized arguments: "
-                    + detail::_vector_to_string(args));
+        throw_error("unrecognized arguments: " + detail::_join(args));
     }
 }
 
@@ -14685,11 +14668,7 @@ ArgumentParser::test_overview(
         for (std::size_t i = 0; i < parsers.size(); ++i) {
             pParser const& parser = parsers.at(i);
             os << "  " << (i + 1) << ". '" << parser->m_name << "'";
-            std::string aliases;
-            for (std::size_t j = 0; j < parser->aliases().size(); ++j) {
-                std::string const& alias = parser->aliases().at(j);
-                detail::_append_value_to("'" + alias + "'", aliases, ", ");
-            }
+            std::string aliases = detail::_join(parser->aliases(), ", ", "'");
             if (!aliases.empty()) {
                 os << ", aliases: " << aliases;
             }
@@ -14721,8 +14700,7 @@ ArgumentParser::test_diagnostics(
         pArgument const& arg = m_data->m_arguments.at(i);
         std::string argument = "argument with ";
         argument += std::string(arg->dest().empty() ? "options" : "dest");
-        argument += " " + detail::_vector_to_string(
-                    arg->get_argument_flags(), ", ", "'");
+        argument += " " + detail::_join(arg->get_argument_flags(), ", ", "'");
         // check flags
         bool is_optional = arg->m_type == Argument::Optional;
         for (std::size_t j = 0; j < arg->flags().size(); ++j) {
@@ -14825,7 +14803,7 @@ ArgumentParser::test_diagnostics(
             pArgument const& arg = group.m_data->m_arguments.at(j);
             std::string argument = "argument with ";
             argument += std::string(arg->dest().empty() ? "options" : "dest");
-            argument += " " + detail::_vector_to_string(
+            argument += " " + detail::_join(
                             arg->get_argument_flags(), ", ", "'");
             if (arg->required()) {
                 ++diagnostics.second;
