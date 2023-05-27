@@ -60,7 +60,8 @@ The work of the parser on older versions of compilers is not guaranteed.
 - [Features](#features)
   - [handle (for C++11+)](#handle)
   - [terminal size auto-detection](#terminal-size-auto-detection)
-  - [Operand argument type](#operand-argument)
+  - [environment variables](#environment-variables)
+  - [operand argument type](#operand-argument)
   - [Argument::implicit_value](#argumentimplicit_value)
   - [Action::language](#actionlanguage)
 - Python API support:
@@ -68,8 +69,8 @@ The work of the parser on older versions of compilers is not guaranteed.
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
   - [add_argument() actions](#the-add_argument-actions-support)
 - Utils:
-  - [Bash completion](#bash-completion)
-  - [Self test](#self-test)
+  - [bash completion](#bash-completion)
+  - [self test](#self-test)
 - [Execute unit tests](#execute-unit-tests)
 - [License](#license)
 
@@ -467,14 +468,30 @@ int main(int argc, char* argv[])
 ```
 ### Terminal size auto-detection
 By default, help output is positioned based on the terminal's width. But you can manually specify the width of the available area using the ArgumentParser::output_width(...) method.
+### Environment variables
+ArgumentParser can hold environment variables (from envp[]) and have ```have_env``` and ```get_env``` functions to work with them
+```cpp
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char* argv[], char* envp[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv, envp);
+    if (parser.have_env("FOO")) {
+        std::cout << parser.get_env("FOO") << std::endl;
+    }
+    return 0;
+}
+```
 ### Operand argument
-Operand arguments is position independent with required = true (by default). To create operand argument use flag with suffix ```"="``` (indicates, that argument will be operand):
+Operand arguments is position independent with required = true (by default). To create operand argument use flag with suffix ```=``` (indicates, that argument will be operand):
 ```cpp
 parser.add_argument("flag=");
 ```
 Operand argument restrictions:
 - argument can have only one flag
-- actions "store" and "language"  is allowed
+- actions "store" and "language" is allowed
 - nargs is not allowed
 - const_value is not allowed
 - metavar with single value is allowed
