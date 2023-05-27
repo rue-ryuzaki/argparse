@@ -2174,6 +2174,7 @@ public:
     inline T const& operator()()const _ARGPARSE_NOEXCEPT { return m_value; }
 
 private:
+    // -- data ----------------------------------------------------------------
     T       m_value;
     bool    m_has_value;
 };
@@ -2575,7 +2576,8 @@ public:
      *  \return Current argument reference
      */
     Argument&
-    default_value(std::string const& value);
+    default_value(
+                std::string const& value);
 
     /*!
      *  \brief Set custom argument 'default' value
@@ -2611,7 +2613,8 @@ public:
      *  \return Current argument reference
      */
     Argument&
-    default_value(_SUPPRESS value);
+    default_value(
+                _SUPPRESS value);
 
     /*!
      *  \brief Set argument 'implicit' value (used with nargs="?" or "*",
@@ -2622,7 +2625,8 @@ public:
      *  \return Current argument reference
      */
     Argument&
-    implicit_value(std::string const& value);
+    implicit_value(
+                std::string const& value);
 
     /*!
      *  \brief Set custom argument 'implicit' value (used with nargs="?" or "*",
@@ -12378,14 +12382,16 @@ ArgumentParser::fromfile_prefix_chars(
 }
 
 _ARGPARSE_INL ArgumentParser&
-ArgumentParser::argument_default(std::string const& value)
+ArgumentParser::argument_default(
+            std::string const& value)
 {
     m_argument_default = value;
     return *this;
 }
 
 _ARGPARSE_INL ArgumentParser&
-ArgumentParser::argument_default(_SUPPRESS value)
+ArgumentParser::argument_default(
+            _SUPPRESS value)
 {
     if (value != argparse::SUPPRESS) {
         throw
@@ -12396,7 +12402,8 @@ ArgumentParser::argument_default(_SUPPRESS value)
 }
 
 _ARGPARSE_INL ArgumentParser&
-ArgumentParser::conflict_handler(std::string const& value)
+ArgumentParser::conflict_handler(
+            std::string const& value)
 {
     if (value != "resolve") {
         throw AttributeError("'ArgumentParser' object has no attribute "
@@ -12407,28 +12414,32 @@ ArgumentParser::conflict_handler(std::string const& value)
 }
 
 _ARGPARSE_INL ArgumentParser&
-ArgumentParser::add_help(bool value)
+ArgumentParser::add_help(
+            bool value)
 {
     m_data->update_help(value, m_prefix_chars);
     return *this;
 }
 
 _ARGPARSE_INL ArgumentParser&
-ArgumentParser::allow_abbrev(bool value) _ARGPARSE_NOEXCEPT
+ArgumentParser::allow_abbrev(
+            bool value) _ARGPARSE_NOEXCEPT
 {
     m_allow_abbrev = value;
     return *this;
 }
 
 _ARGPARSE_INL ArgumentParser&
-ArgumentParser::exit_on_error(bool value) _ARGPARSE_NOEXCEPT
+ArgumentParser::exit_on_error(
+            bool value) _ARGPARSE_NOEXCEPT
 {
     m_exit_on_error = value;
     return *this;
 }
 
 _ARGPARSE_INL ArgumentParser&
-ArgumentParser::output_width(std::size_t value) _ARGPARSE_NOEXCEPT
+ArgumentParser::output_width(
+            std::size_t value) _ARGPARSE_NOEXCEPT
 {
     m_output_width = value;
     if (m_output_width() < detail::_min_width) {
