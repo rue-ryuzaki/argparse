@@ -45,10 +45,6 @@ else()
 endif()
 add_library(argparse::argparse ALIAS argparse)
 
-if (NOT PROJECT_IS_TOP_LEVEL)
-    return()
-endif()
-
 include(GNUInstallDirs)
 
 target_include_directories(
@@ -56,6 +52,10 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+if (NOT PROJECT_IS_TOP_LEVEL)
+    return()
+endif()
 
 if (DEFERED_CMAKE_INSTALL_PREFIX)
     CONFIGURE_FILE(
