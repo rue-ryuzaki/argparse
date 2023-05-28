@@ -34,6 +34,8 @@ if (NOT CMAKE_CXX_STANDARD)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include_directories(include)
+
 set(ARGPARSE_HEADER include/argparse/argparse.hpp)
 
 if (${CMAKE_VERSION} VERSION_LESS "3.19")

@@ -1,8 +1,7 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../third_party")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../include")
 
 add_library(catch_main OBJECT "unit.cpp")
-add_library(argparse_impl OBJECT "argparse_impl.cpp")
+add_library(argparse_impl OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/../src/argparse_impl.cpp")
 
 set_target_properties(catch_main PROPERTIES
     COMPILE_DEFINITIONS "$<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>"

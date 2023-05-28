@@ -2,7 +2,7 @@
 * Copyright (c) 2022-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 */
 
-#include "./argparse_decl.hpp"
+#include <argparse/argparse_decl.hpp>
 #include "./catch-define.h"
 
 TEST_CASE("1. utf8 abbreviations", "[argument_parser]")
