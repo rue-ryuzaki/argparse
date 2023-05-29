@@ -129,6 +129,21 @@
 #endif  // C++20+
 #endif  // _MSVC_LANG
 
+// -- static building ---------------------------------------------------------
+#undef _ARGPARSE_INL
+#ifdef ARGPARSE_DECLARATION
+// header
+#undef ARGPARSE_IMPLEMENTATION
+#else
+#ifdef ARGPARSE_IMPLEMENTATION
+// static build
+#define _ARGPARSE_INL
+#else
+// single-header
+#define _ARGPARSE_INL inline
+#endif  // ARGPARSE_IMPLEMENTATION
+#endif  // ARGPARSE_DECLARATION
+
 // -- terminal size detection -------------------------------------------------
 #ifdef ARGPARSE_NO_AUTODETECT
 #warning "ARGPARSE_NO_AUTODETECT define is deprecated and will be removed \
@@ -142,6 +157,7 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #define ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 
+#ifdef _ARGPARSE_INL
 #ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #if defined(_WIN32)
 #undef _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
@@ -189,6 +205,7 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #include <unistd.h>
 #endif  // _WIN32
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+#endif  // _ARGPARSE_INL
 
 // -- #include ----------------------------------------------------------------
 #ifdef _ARGPARSE_CXX_11
@@ -316,21 +333,6 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 in the next minor release (v1.8.0), \
 override argparse::HelpFormatter::_tab_size()"
 #endif  // ARGPARSE_TAB_SIZE
-
-// -- static building ---------------------------------------------------------
-#undef _ARGPARSE_INL
-#ifdef ARGPARSE_DECLARATION
-// header
-#undef ARGPARSE_IMPLEMENTATION
-#else
-#ifdef ARGPARSE_IMPLEMENTATION
-// static build
-#define _ARGPARSE_INL
-#else
-// single-header
-#define _ARGPARSE_INL inline
-#endif  // ARGPARSE_IMPLEMENTATION
-#endif  // ARGPARSE_DECLARATION
 
 namespace argparse {
 #ifdef _ARGPARSE_CXX_11
@@ -14825,7 +14827,7 @@ ArgumentParser::test_diagnostics(
     }
     // check subparsers
     if (m_subparsers) {
-        std::deque<pParser> parsers = m_subparsers->m_parsers;
+        std::deque<pParser> const& parsers = m_subparsers->m_parsers;
         if (parsers.empty()) {
             ++diagnostics.first;
             os << status_warn << " subparsers created "
