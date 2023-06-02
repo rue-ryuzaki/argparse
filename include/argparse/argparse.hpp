@@ -1591,14 +1591,14 @@ make_shared(U const& u)
 #ifdef _ARGPARSE_CXX_11
 template <class T = std::string, class... Args>
 std::vector<T>
-_make_vector(Args... args)
+_vector(Args... args)
 {
     return std::vector<T>{ args... };
 }
 #else
 template <class T>
 std::vector<T>
-_make_vector(T const& arg1)
+_vector(T const& arg1)
 {
     std::vector<T> res;
     res.push_back(arg1);
@@ -1607,7 +1607,7 @@ _make_vector(T const& arg1)
 
 template <class T>
 std::vector<T>
-_make_vector(T const& arg1, T const& arg2)
+_vector(T const& arg1, T const& arg2)
 {
     std::vector<T> res;
     res.push_back(arg1);
@@ -1617,7 +1617,7 @@ _make_vector(T const& arg1, T const& arg2)
 
 template <class T>
 std::vector<T>
-_make_vector(T const& arg1, T const& arg2, T const& arg3)
+_vector(T const& arg1, T const& arg2, T const& arg3)
 {
     std::vector<T> res;
     res.push_back(arg1);
@@ -1628,7 +1628,7 @@ _make_vector(T const& arg1, T const& arg2, T const& arg3)
 
 template <class T>
 std::vector<T>
-_make_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
+_vector(T const& arg1, T const& arg2, T const& arg3, T const& arg4)
 {
     std::vector<T> res;
     res.push_back(arg1);
@@ -1672,13 +1672,6 @@ std::string
 _replace(std::string str,
             std::string const& old,
             std::string const& value);
-
-#ifdef _ARGPARSE_CXX_11
-std::string
-_replace(std::string const& str,
-            std::function<bool(unsigned char)> func,
-            std::string const& value);
-#endif  // C++11+
 
 std::string
 _join(std::vector<std::string> const& values,
@@ -2193,8 +2186,8 @@ _check_type_name(Value<std::string> const& expected,
                  std::string const& received)
 {
     if (expected.has_value() && !_is_type_name_correct(expected(), received)) {
-        throw TypeError("type_name mismatch: expected '" + expected() + "'"
-                        + ", received '" + received + "'");
+        throw TypeError("type_name mismatch: expected '" + expected.value()
+                        + "', received '" + received + "'");
     }
 }
 }  // namespace detail
@@ -2386,7 +2379,7 @@ public:
           m_dest(std::vector<std::string>{ std::string() }),
           m_handle(nullptr),
 #else
-          m_dest(detail::_make_vector(std::string())),
+          m_dest(detail::_vector(std::string())),
 #endif  // C++11+
           m_post_trigger(_ARGPARSE_NULLPTR),
           m_required()
@@ -8579,25 +8572,6 @@ _replace(std::string str,
     return str;
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL std::string
-_replace(std::string const& str,
-            std::function<bool(unsigned char)> func,
-            std::string const& value)
-{
-    std::string res;
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        char c = str.at(i);
-        if (func(static_cast<unsigned char>(c))) {
-            res += value;
-        } else {
-            res += c;
-        }
-    }
-    return res;
-}
-#endif  // C++11+
-
 _ARGPARSE_INL bool
 _contains_substr(
             std::string const& str,
@@ -8695,8 +8669,8 @@ _help_flags(std::string const& prefix_chars)
 #ifdef _ARGPARSE_CXX_11
     return { std::string(1, prefix) + "h", std::string(2, prefix) + "help" };
 #else
-    return _make_vector(std::string(1, prefix) + "h",
-                        std::string(2, prefix) + "help");
+    return _vector(std::string(1, prefix) + "h",
+                   std::string(2, prefix) + "help");
 #endif  // C++11+
 }
 
@@ -8870,9 +8844,9 @@ _split_equal(
         pos = str.find(_equal);
     }
     if (pos != std::string::npos) {
-        return _make_vector(str.substr(0, pos), str.substr(pos + 1));
+        return _vector(str.substr(0, pos), str.substr(pos + 1));
     } else {
-        return _make_vector(str);
+        return _vector(str);
     }
 #endif  // C++11+
 }
@@ -9371,7 +9345,7 @@ Argument::Argument(
       m_dest(std::vector<std::string>{ std::string() }),
       m_handle(nullptr),
 #else
-      m_dest(detail::_make_vector(std::string())),
+      m_dest(detail::_vector(std::string())),
 #endif  // C++11+
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
@@ -9439,7 +9413,7 @@ Argument::make_argument(
 _ARGPARSE_INL
 Argument::Argument(
             std::string const& flag)
-    : m_flags(detail::_make_vector(flag)),
+    : m_flags(detail::_vector(flag)),
       m_all_flags(m_flags),
       m_name(),
       m_action(argparse::store),
@@ -9457,7 +9431,7 @@ Argument::Argument(
       m_help(),
       m_version(),
       m_metavar(),
-      m_dest(detail::_make_vector(std::string())),
+      m_dest(detail::_vector(std::string())),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9468,7 +9442,7 @@ _ARGPARSE_INL
 Argument::Argument(
             std::string const& flag1,
             std::string const& flag2)
-    : m_flags(detail::_make_vector(flag1, flag2)),
+    : m_flags(detail::_vector(flag1, flag2)),
       m_all_flags(m_flags),
       m_name(),
       m_action(argparse::store),
@@ -9486,7 +9460,7 @@ Argument::Argument(
       m_help(),
       m_version(),
       m_metavar(),
-      m_dest(detail::_make_vector(std::string())),
+      m_dest(detail::_vector(std::string())),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9498,7 +9472,7 @@ Argument::Argument(
             std::string const& flag1,
             std::string const& flag2,
             std::string const& flag3)
-    : m_flags(detail::_make_vector(flag1, flag2, flag3)),
+    : m_flags(detail::_vector(flag1, flag2, flag3)),
       m_all_flags(m_flags),
       m_name(),
       m_action(argparse::store),
@@ -9516,7 +9490,7 @@ Argument::Argument(
       m_help(),
       m_version(),
       m_metavar(),
-      m_dest(detail::_make_vector(std::string())),
+      m_dest(detail::_vector(std::string())),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9529,7 +9503,7 @@ Argument::Argument(
             std::string const& flag2,
             std::string const& flag3,
             std::string const& flag4)
-    : m_flags(detail::_make_vector(flag1, flag2, flag3, flag4)),
+    : m_flags(detail::_vector(flag1, flag2, flag3, flag4)),
       m_all_flags(m_flags),
       m_name(),
       m_action(argparse::store),
@@ -9547,7 +9521,7 @@ Argument::Argument(
       m_help(),
       m_version(),
       m_metavar(),
-      m_dest(detail::_make_vector(std::string())),
+      m_dest(detail::_vector(std::string())),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9952,7 +9926,7 @@ Argument::choices(
             std::string const& value1,
             std::string const& value2)
 {
-    return choices(detail::_make_vector(value1, value2));
+    return choices(detail::_vector(value1, value2));
 }
 
 _ARGPARSE_INL Argument&
@@ -9961,7 +9935,7 @@ Argument::choices(
             std::string const& value2,
             std::string const& value3)
 {
-    return choices(detail::_make_vector(value1, value2, value3));
+    return choices(detail::_vector(value1, value2, value3));
 }
 
 _ARGPARSE_INL Argument&
@@ -9971,7 +9945,7 @@ Argument::choices(
             std::string const& value3,
             std::string const& value4)
 {
-    return choices(detail::_make_vector(value1, value2, value3, value4));
+    return choices(detail::_vector(value1, value2, value3, value4));
 }
 #endif  // C++11+
 
@@ -10059,7 +10033,7 @@ _ARGPARSE_INL Argument&
 Argument::metavar(
             std::string const& value)
 {
-    return metavar(detail::_make_vector(value));
+    return metavar(detail::_vector(value));
 }
 
 _ARGPARSE_INL Argument&
@@ -10067,7 +10041,7 @@ Argument::metavar(
             std::string const& value1,
             std::string const& value2)
 {
-    return metavar(detail::_make_vector(value1, value2));
+    return metavar(detail::_vector(value1, value2));
 }
 
 _ARGPARSE_INL Argument&
@@ -10076,7 +10050,7 @@ Argument::metavar(
             std::string const& value2,
             std::string const& value3)
 {
-    return metavar(detail::_make_vector(value1, value2, value3));
+    return metavar(detail::_vector(value1, value2, value3));
 }
 
 _ARGPARSE_INL Argument&
@@ -10086,7 +10060,7 @@ Argument::metavar(
             std::string const& value3,
             std::string const& value4)
 {
-    return metavar(detail::_make_vector(value1, value2, value3, value4));
+    return metavar(detail::_vector(value1, value2, value3, value4));
 }
 #endif  // C++11+
 
@@ -10320,8 +10294,8 @@ Argument::get_default() const
     if (!m_default.has_value() && (action() & detail::_bool_action)) {
         return detail::_bool_to_string(m_default());
     } else {
-        return (m_default.has_value() || !m_default().empty()) ? m_default()
-                                                               : "None";
+        return (m_default.has_value() || !m_default().empty())
+                ? m_default.value() : "None";
     }
 }
 
@@ -10477,7 +10451,7 @@ Argument::get_argument_name(
             HelpFormatter const& formatter) const
 {
     if (m_metavar.has_value()) {
-        return m_metavar();
+        return m_metavar.value();
     }
 #ifdef _ARGPARSE_CXX_11
     if (m_choices.has_value()) {
@@ -10488,9 +10462,9 @@ Argument::get_argument_name(
                 : formatter._get_default_metavar_for_optional(this) };
 #else
     if (m_choices.has_value()) {
-        return detail::_make_vector("{" + detail::_join(choices(), ",") + "}");
+        return detail::_vector("{" + detail::_join(choices(), ",") + "}");
     }
-    return detail::_make_vector(
+    return detail::_vector(
                 m_type == Positional
                   ? formatter._get_default_metavar_for_positional(this)
                   : formatter._get_default_metavar_for_optional(this));
@@ -11029,7 +11003,7 @@ _ARGPARSE_INL Argument&
 _ArgumentGroup::add_argument(
             std::string const& flag)
 {
-    return add_argument(detail::_make_vector(flag));
+    return add_argument(detail::_vector(flag));
 }
 
 _ARGPARSE_INL Argument&
@@ -11037,7 +11011,7 @@ _ArgumentGroup::add_argument(
             std::string const& flag1,
             std::string const& flag2)
 {
-    return add_argument(detail::_make_vector(flag1, flag2));
+    return add_argument(detail::_vector(flag1, flag2));
 }
 
 _ARGPARSE_INL Argument&
@@ -11046,7 +11020,7 @@ _ArgumentGroup::add_argument(
             std::string const& flag2,
             std::string const& flag3)
 {
-    return add_argument(detail::_make_vector(flag1, flag2, flag3));
+    return add_argument(detail::_vector(flag1, flag2, flag3));
 }
 
 _ARGPARSE_INL Argument&
@@ -11056,7 +11030,7 @@ _ArgumentGroup::add_argument(
             std::string const& flag3,
             std::string const& flag4)
 {
-    return add_argument(detail::_make_vector(flag1, flag2, flag3, flag4));
+    return add_argument(detail::_vector(flag1, flag2, flag3, flag4));
 }
 #endif  // C++11+
 
@@ -11083,7 +11057,7 @@ _ArgumentGroup::process_add_argument()
     if (m_argument_default.has_value()
             && !m_data->m_arguments.back()->m_default.has_value()
             && !m_data->m_arguments.back()->m_default_type.has_value()) {
-        m_data->m_arguments.back()->default_value(m_argument_default());
+        m_data->m_arguments.back()->default_value(m_argument_default.value());
     }
     if (m_argument_default_type.has_value()) {
         m_data->m_arguments.back()->default_value(m_argument_default_type());
@@ -12295,7 +12269,7 @@ _ARGPARSE_INL ArgumentParser&
 ArgumentParser::aliases(
             std::string const& value)
 {
-    return aliases(detail::_make_vector(value));
+    return aliases(detail::_vector(value));
 }
 
 _ARGPARSE_INL ArgumentParser&
@@ -12303,7 +12277,7 @@ ArgumentParser::aliases(
             std::string const& value1,
             std::string const& value2)
 {
-    return aliases(detail::_make_vector(value1, value2));
+    return aliases(detail::_vector(value1, value2));
 }
 #endif  // C++11+
 
@@ -12351,7 +12325,7 @@ _ARGPARSE_INL ArgumentParser&
 ArgumentParser::parents(
             ArgumentParser const& value)
 {
-    return parents(detail::_make_vector(value));
+    return parents(detail::_vector(value));
 }
 
 _ARGPARSE_INL ArgumentParser&
@@ -12359,7 +12333,7 @@ ArgumentParser::parents(
             ArgumentParser const& value1,
             ArgumentParser const& value2)
 {
-    return parents(detail::_make_vector(value1, value2));
+    return parents(detail::_vector(value1, value2));
 }
 #endif  // C++11+
 
@@ -12561,7 +12535,7 @@ ArgumentParser::exit_on_error() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::size_t
 ArgumentParser::output_width() const
 {
-    return m_output_width.has_value() ? m_output_width()
+    return m_output_width.has_value() ? m_output_width.value()
                                       : detail::_get_terminal_size().first;
 }
 
@@ -12577,7 +12551,7 @@ _ARGPARSE_INL Argument&
 ArgumentParser::add_argument(
             std::string const& flag)
 {
-    return add_argument(detail::_make_vector(flag));
+    return add_argument(detail::_vector(flag));
 }
 
 _ARGPARSE_INL Argument&
@@ -12585,7 +12559,7 @@ ArgumentParser::add_argument(
             std::string const& flag1,
             std::string const& flag2)
 {
-    return add_argument(detail::_make_vector(flag1, flag2));
+    return add_argument(detail::_vector(flag1, flag2));
 }
 
 _ARGPARSE_INL Argument&
@@ -12594,7 +12568,7 @@ ArgumentParser::add_argument(
             std::string const& flag2,
             std::string const& flag3)
 {
-    return add_argument(detail::_make_vector(flag1, flag2, flag3));
+    return add_argument(detail::_vector(flag1, flag2, flag3));
 }
 
 _ARGPARSE_INL Argument&
@@ -12604,7 +12578,7 @@ ArgumentParser::add_argument(
             std::string const& flag3,
             std::string const& flag4)
 {
-    return add_argument(detail::_make_vector(flag1, flag2, flag3, flag4));
+    return add_argument(detail::_vector(flag1, flag2, flag3, flag4));
 }
 #endif  // C++11+
 
@@ -13063,7 +13037,7 @@ _ARGPARSE_INL std::vector<std::string>
 ArgumentParser::convert_arg_line_to_args(
             std::string const& arg_line) const
 {
-    return detail::_make_vector(arg_line);
+    return detail::_vector(arg_line);
 }
 
 _ARGPARSE_INL void
@@ -13089,7 +13063,7 @@ ArgumentParser::process_add_argument()
     if (m_argument_default.has_value()
             && !m_data->m_arguments.back()->m_default.has_value()
             && !m_data->m_arguments.back()->m_default_type.has_value()) {
-        m_data->m_arguments.back()->default_value(m_argument_default());
+        m_data->m_arguments.back()->default_value(m_argument_default.value());
     }
     if (m_argument_default_type.has_value()) {
         m_data->m_arguments.back()->default_value(m_argument_default_type());
@@ -13299,8 +13273,7 @@ ArgumentParser::check_mutex_arguments() const
     for (std::size_t i = 0; i < m_mutex_groups.size(); ++i) {
         MutuallyExclusiveGroup const& group = m_mutex_groups.at(i);
         for (std::size_t j = 0; j < group.m_data->m_arguments.size(); ++j) {
-            pArgument const& arg = group.m_data->m_arguments.at(j);
-            if (arg->required()) {
+            if (group.m_data->m_arguments.at(j)->required()) {
                 throw
                 ValueError("mutually exclusive arguments must be optional");
             }
@@ -13400,8 +13373,8 @@ ArgumentParser::validate_argument_value(
     detail::Value<std::vector<std::string> > const& choices = arg.m_choices;
     if (choices.has_value()) {
         std::string str = detail::_remove_quotes<std::string>(value);
-        if (!str.empty() && !detail::_is_value_exists(str, choices())) {
-            std::string values = detail::_join(choices(), ", ", "'");
+        if (!str.empty() && !detail::_is_value_exists(str, choices.value())) {
+            std::string values = detail::_join(choices.value(), ", ", "'");
             parsers.back().parser->throw_error(
                         "argument " + arg.m_flags.front()
                         + ": invalid choice: '" + str
@@ -13464,7 +13437,7 @@ ArgumentParser::storage_store_default_value(
 {
     detail::Value<std::string> const& value = arg->m_default;
     if (value.has_value()) {
-        parsers.front().storage.store_default_value(arg, value());
+        parsers.front().storage.store_default_value(arg, value.value());
     }
 }
 
@@ -13940,7 +13913,7 @@ ArgumentParser::try_capture_parser(
 
             if (!dest.empty()) {
                 pArgument subparser_arg
-                        = Argument::make_argument(detail::_make_vector(dest),
+                        = Argument::make_argument(detail::_vector(dest),
                                                   dest, Argument::Positional);
                 for (std::size_t j = 0; j < parsers.size(); ++j) {
                     parsers.at(j).storage.create(subparser_arg);
@@ -14284,13 +14257,12 @@ ArgumentParser::process_required_check(
             ParserInfo const& parser,
             _Storage const& storage)
 {
-    std::vector<std::string> required_args;
-    process_optionals_required(required_args, parser.optional, storage);
-    process_optionals_required(required_args, parser.operand, storage);
-    std::string args = detail::_join(required_args, ", ");
-    if (!args.empty()) {
-        parser.parser->throw_error(
-                    "the following arguments are required: " + args);
+    std::vector<std::string> required;
+    process_optionals_required(required, parser.optional, storage);
+    process_optionals_required(required, parser.operand, storage);
+    if (!required.empty()) {
+        parser.parser->throw_error("the following arguments are required: "
+                                   + detail::_join(required, ", "));
     }
 }
 
@@ -14378,11 +14350,11 @@ ArgumentParser::default_values_post_trigger(
                         || it->first->m_type == Argument::Operand)) {
                 detail::Value<std::string> const& dv = it->first->m_default;
                 if (dv.has_value()) {
-                    it->second.push_default(dv());
-                    storage.on_process_store(it->first, dv());
+                    it->second.push_default(dv.value());
+                    storage.on_process_store(it->first, dv.value());
                 } else if (it->first->action() & detail::_bool_action) {
-                    it->second.push_back(dv());
-                    storage.on_process_store(it->first, dv());
+                    it->second.push_back(dv.value());
+                    storage.on_process_store(it->first, dv.value());
                 }
             }
         }
@@ -14393,11 +14365,11 @@ ArgumentParser::default_values_post_trigger(
                 = m_default_values.at(i);
         if (!storage.exists_arg(pair.first)) {
             pArgument arg = Argument::make_argument(
-                        detail::_make_vector(pair.first),
+                        detail::_vector(pair.first),
                         pair.first, Argument::Positional);
             arg->default_value(pair.second);
             storage.create(arg, _Storage::mapped_type(
-                               detail::_make_vector(pair.second)));
+                               detail::_vector(pair.second)));
         }
     }
 }
@@ -14490,8 +14462,7 @@ ArgumentParser::subparser_prog_args() const
     SubparserInfo info = subparser_info(add_suppress);
     pArguments pos = m_data->get_positional(add_suppress, true);
     for (std::size_t i = 0; i < pos.size() && i != info.second; ++i) {
-        std::string str = pos.at(i)->usage(*m_formatter);
-        detail::_append_value_to(str, res);
+        detail::_append_value_to(pos.at(i)->usage(*m_formatter), res);
     }
     return res;
 }
@@ -14676,7 +14647,7 @@ ArgumentParser::test_overview(
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
     }
     if (m_subparsers) {
-        std::deque<pParser> parsers = m_subparsers->m_parsers;
+        std::deque<pParser> const& parsers = m_subparsers->m_parsers;
         os << "subparsers list:" << std::endl;
         for (std::size_t i = 0; i < parsers.size(); ++i) {
             pParser const& parser = parsers.at(i);
@@ -14781,12 +14752,11 @@ ArgumentParser::test_diagnostics(
         }
         // check choices
         for (std::size_t j = 0; j < arg->choices().size(); ++j) {
-            std::string const& choice = arg->choices().at(j);
-            if (choice.size() > 1
-                    && choice.size() != detail::_trim_sw(choice).size()) {
+            std::string const& str = arg->choices().at(j);
+            if (str.size() > 1 && str.size() != detail::_trim_sw(str).size()) {
                 ++diagnostics.first;
                 os << status_warn << " " << argument << ": choice '"
-                   << choice << "' can be incorrect" << std::endl;
+                   << str << "' can be incorrect" << std::endl;
             }
         }
         // check help
