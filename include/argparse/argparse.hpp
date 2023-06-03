@@ -9279,9 +9279,7 @@ _ArgumentDefaultsHelpFormatter::_get_help_string(
             std::string const& lang) const
 {
     std::string res = detail::_tr(action->m_help, lang);
-    if (!res.empty()
-            && !detail::_contains_substr(res, "%(default)s")
-            && !action->is_suppressed()) {
+    if (!res.empty() && !detail::_contains_substr(res, "%(default)s")) {
         if (((action->m_type == Argument::Optional
               || action->m_type == Argument::Operand)
              || (action->m_nargs & (Argument::ZERO_OR_ONE
