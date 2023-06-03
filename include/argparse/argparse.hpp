@@ -9286,9 +9286,7 @@ _ArgumentDefaultsHelpFormatter::_get_help_string(
               || action->m_type == Argument::Operand)
              || (action->m_nargs & (Argument::ZERO_OR_ONE
                                     | Argument::ZERO_OR_MORE)))
-                && !(action->action() & (argparse::help
-                                         | argparse::version
-                                         | argparse::language))) {
+                && !(action->action() & (argparse::help | argparse::version))) {
             res += " (default: %(default)s)";
         }
     }
