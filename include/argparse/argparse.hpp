@@ -3845,8 +3845,7 @@ class _Storage
 
     void
     store_default_value(
-                key_type const& arg,
-                std::string const& value);
+                key_type const& arg);
 
     bool
     self_value_stored(
@@ -11353,15 +11352,16 @@ _Storage::store_values(
 
 _ARGPARSE_INL void
 _Storage::store_default_value(
-            key_type const& arg,
-            std::string const& value)
+            key_type const& arg)
 {
-    if (arg->action() & (argparse::store | argparse::BooleanOptionalAction)) {
+    if (arg->m_default.has_value()
+            && (arg->action()
+                & (argparse::store | argparse::BooleanOptionalAction))) {
         mapped_type& arg_data = at(arg);
         if (arg_data.empty()) {
-            arg_data.push_default(value);
-            on_process_store(arg, value);
-            arg->handle(value);
+            arg_data.push_default(arg->m_default.value());
+            on_process_store(arg, arg->m_default.value());
+            arg->handle(arg->m_default.value());
         }
     }
 }
@@ -13374,11 +13374,10 @@ ArgumentParser::validate_argument_value(
     if (choices.has_value()) {
         std::string str = detail::_remove_quotes<std::string>(value);
         if (!str.empty() && !detail::_is_value_exists(str, choices.value())) {
-            std::string values = detail::_join(choices.value(), ", ", "'");
             parsers.back().parser->throw_error(
                         "argument " + arg.m_flags.front()
-                        + ": invalid choice: '" + str
-                        + "' (choose from " + values + ")");
+                        + ": invalid choice: '" + str + "' (choose from "
+                        + detail::_join(choices.value(), ", ", "'") + ")");
         }
     }
 }
@@ -13435,10 +13434,7 @@ ArgumentParser::storage_store_default_value(
             Parsers& parsers,
             pArgument const& arg) const
 {
-    detail::Value<std::string> const& value = arg->m_default;
-    if (value.has_value()) {
-        parsers.front().storage.store_default_value(arg, value.value());
-    }
+    parsers.front().storage.store_default_value(arg);
 }
 
 _ARGPARSE_INL bool
