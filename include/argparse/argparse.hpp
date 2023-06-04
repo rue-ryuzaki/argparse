@@ -235,20 +235,19 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #include <map>
 #include <memory>
 #include <numeric>
-#ifdef _ARGPARSE_CXX_17
-#include <optional>
-#endif  // C++17+
 #include <queue>
 #include <set>
 #include <sstream>
 #include <stack>
 #include <stdexcept>
 #include <string>
-#ifdef _ARGPARSE_CXX_17
-#include <string_view>
-#endif  // C++17+
 #include <utility>
 #include <vector>
+
+#ifdef _ARGPARSE_CXX_17
+#include <optional>
+#include <string_view>
+#endif  // C++17+
 
 // -- attributes --------------------------------------------------------------
 #ifdef _ARGPARSE_CXX_11
@@ -2167,6 +2166,11 @@ public:
     inline bool     has_value() const _ARGPARSE_NOEXCEPT { return m_has_value; }
     inline T const& value()     const _ARGPARSE_NOEXCEPT { return m_value; }
     inline T const& operator()()const _ARGPARSE_NOEXCEPT { return m_value; }
+
+    inline T const  value_or(T const& value) const _ARGPARSE_NOEXCEPT
+    {
+        return has_value() ? this->value() : value;
+    }
 
 private:
     // -- data ----------------------------------------------------------------
@@ -8767,21 +8771,21 @@ _split(std::string const& str,
 {
     std::vector<std::string> res;
     std::string value;
-    int32_t cnt = 0;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
         if (sep.empty()) {
             if (std::isspace(static_cast<unsigned char>(c))
-                    && (maxsplit < 0 || cnt < maxsplit)) {
+                    && (maxsplit < 0
+                        || static_cast<int32_t>(res.size()) < maxsplit)) {
                 _store_value_to(value, res, true);
-                ++cnt;
             } else {
                 value += c;
             }
         } else {
-            if (_is_value_exists(c, sep) && (maxsplit < 0 || cnt < maxsplit)) {
+            if (_is_value_exists(c, sep)
+                    && (maxsplit < 0
+                        || static_cast<int32_t>(res.size()) < maxsplit)) {
                 _store_value_to(value, res, true);
-                ++cnt;
             } else {
                 value += c;
             }
@@ -10280,7 +10284,7 @@ Argument::get_choices() const
 _ARGPARSE_INL std::string
 Argument::get_const() const
 {
-    return m_const.has_value() ? const_value() : "None";
+    return m_const.value_or("None");
 }
 
 _ARGPARSE_INL std::string
@@ -10337,7 +10341,7 @@ Argument::get_required() const
 _ARGPARSE_INL std::string
 Argument::get_type() const
 {
-    return m_type_name.has_value() ? type_name() : "None";
+    return m_type_name.value_or("None");
 }
 
 _ARGPARSE_INL std::string
@@ -11194,8 +11198,8 @@ ArgumentGroup::print_help(
             os << std::endl;
         }
         for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
-            os << m_data->m_arguments.at(i)->print(formatter, limit,
-                                                   width, lang) << std::endl;
+            os << m_data->m_arguments.at(i)->print(
+                      formatter, limit, width, lang) << std::endl;
         }
     }
 }
@@ -11513,14 +11517,8 @@ Namespace::to_args(
                                        detail::_space, "\\ ");
         case argparse::store_true :
         case argparse::store_false :
-            if (args.second.empty()) {
-                return detail::_bool_to_string(args.first->default_value());
-            }
-            if (args.second.size() != 1) {
-                throw TypeError("trying to get data from array argument '"
-                                + key + "'");
-            }
-            return detail::_bool_to_string(args.second.front());
+        case argparse::BooleanOptionalAction :
+            return boolean_option_to_args(key, args);
         case argparse::count :
             return detail::_to_string(args.second.size());
         case argparse::store :
@@ -11530,8 +11528,6 @@ Namespace::to_args(
         case argparse::language :
             return detail::_vector_to_string(args.second(), detail::_spaces,
                                              std::string(), true);
-        case argparse::BooleanOptionalAction :
-            return boolean_option_to_args(key, args);
         default :
             throw ValueError("action not supported");
     }
@@ -11616,7 +11612,8 @@ Namespace::boolean_option_to_args(
     if (args.second.size() != 1) {
         throw TypeError("trying to get data from array argument '" + key + "'");
     }
-    return args.second.front() == args.first->const_value()
+    return (args.first->action() != argparse::BooleanOptionalAction
+            || args.second.front() == args.first->const_value())
            ? detail::_bool_to_string(args.second.front()) : args.second.front();
 }
 
@@ -12413,10 +12410,7 @@ _ARGPARSE_INL ArgumentParser&
 ArgumentParser::output_width(
             std::size_t value) _ARGPARSE_NOEXCEPT
 {
-    m_output_width = value;
-    if (m_output_width() < detail::_min_width) {
-        m_output_width = detail::_min_width;
-    }
+    m_output_width = value < detail::_min_width ? detail::_min_width : value;
     return *this;
 }
 
@@ -12531,8 +12525,8 @@ ArgumentParser::exit_on_error() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::size_t
 ArgumentParser::output_width() const
 {
-    return m_output_width.has_value() ? m_output_width.value()
-                                      : detail::_get_terminal_size().first;
+    return m_output_width.has_value()
+            ? m_output_width.value() : detail::_get_terminal_size().first;
 }
 
 #ifdef _ARGPARSE_CXX_11
@@ -12605,7 +12599,7 @@ ArgumentParser::add_mutually_exclusive_group(
             bool required)
 {
     m_mutex_groups.push_back(
-          MutuallyExclusiveGroup::make_mutex_group(
+                MutuallyExclusiveGroup::make_mutex_group(
                     m_prefix_chars, m_data,
                     m_argument_default, m_argument_default_type));
     return m_mutex_groups.back().required(required);
@@ -12922,9 +12916,8 @@ ArgumentParser::print_help(
     if (!tr_usage.empty()) {
         os << tr_usage_title << " " << despecify(tr_usage) << std::endl;
     } else {
-        print_custom_usage(
-                    positional_all, operand_all, optional_all,
-                    m_mutex_groups, sub_info, prog(), tr_usage_title, os);
+        print_custom_usage(positional_all, operand_all, optional_all,
+                          m_mutex_groups, sub_info, prog(), tr_usage_title, os);
     }
     std::size_t width = output_width();
     detail::_print_raw_text_formatter(
@@ -13201,8 +13194,8 @@ ArgumentParser::parse_arguments(
                     // fallthrough
                 case argparse::append :
                 case argparse::extend :
-                    storage_optional_store(parsers, equals, parsed_arguments, i,
-                                           was_pseudo_arg, arg, tmp);
+                    storage_optional_store(parsers, equals, parsed_arguments,
+                                           i, was_pseudo_arg, arg, tmp);
                     break;
                 case argparse::help :
                     process_optional_help(parsers, equals, arg);
@@ -13212,8 +13205,8 @@ ArgumentParser::parse_arguments(
                     break;
                 case argparse::language :
                     parsers.front().storage.at(tmp).clear();
-                    storage_optional_store(parsers, equals, parsed_arguments, i,
-                                           was_pseudo_arg, arg, tmp);
+                    storage_optional_store(parsers, equals, parsed_arguments,
+                                           i, was_pseudo_arg, arg, tmp);
                     parsers.back().lang
                             = parsers.front().storage.at(tmp).front();
                     break;
@@ -13891,7 +13884,7 @@ ArgumentParser::try_capture_parser(
     std::string const& dest = parsers.back().subparser.first->dest();
     for (std::size_t i = 0;
          i < parsers.back().subparser.first->m_parsers.size(); ++i) {
-        pParser& p = parsers.back().subparser.first->m_parsers.at(i);
+        pParser const& p = parsers.back().subparser.first->m_parsers.at(i);
         detail::_append_value_to("'" + p->m_name + "'", choices, ", ");
         for (std::size_t j = 0; j < p->aliases().size(); ++j) {
             std::string const& alias = p->aliases().at(j);
@@ -13902,7 +13895,6 @@ ArgumentParser::try_capture_parser(
                                          p->subparser_info(true, pos)));
             parsers.back().parser->handle(parsers.back().parser->m_name);
             validate_arguments(p.get()->m_data->get_arguments(true));
-
             if (!dest.empty()) {
                 pArgument subparser_arg
                         = Argument::make_argument(detail::_vector(dest),
@@ -14452,9 +14444,9 @@ ArgumentParser::subparser_prog_args() const
     std::string res;
     bool add_suppress = false;
     SubparserInfo info = subparser_info(add_suppress);
-    pArguments pos = m_data->get_positional(add_suppress, true);
-    for (std::size_t i = 0; i < pos.size() && i != info.second; ++i) {
-        detail::_append_value_to(pos.at(i)->usage(*m_formatter), res);
+    pArguments args = m_data->get_positional(add_suppress, true);
+    for (std::size_t i = 0; i < args.size() && i != info.second; ++i) {
+        detail::_append_value_to(args.at(i)->usage(*m_formatter), res);
     }
     return res;
 }
@@ -14825,22 +14817,27 @@ ArgumentParser::test_diagnostics(
         }
         for (std::size_t i = 0; i < parsers.size(); ++i) {
             pParser const& parser = parsers.at(i);
+            std::string const& name = parser->m_name;
             // check name
-            if (!detail::_is_utf8_string(parser->m_name)) {
+            if (!detail::_is_utf8_string(name)) {
                 ++diagnostics.first;
                 os << _warn << " name for parser '"
-                   << parser->m_name << "' is not utf-8\n";
+                   << name << "' is not utf-8\n";
             }
-            if (!detail::_is_flag_correct(parser->m_name, false)) {
+            if (!name.empty()
+                    && detail::_is_value_exists(name.at(0), m_prefix_chars)) {
+                ++diagnostics.first;
+                os << _warn << " name for parser '" << name << "' incorrect, "
+                   << "started with prefix chars '" << m_prefix_chars << "'\n";
+            } else if (!detail::_is_flag_correct(name, false)) {
                 ++diagnostics.first;
                 os << _warn << " name for parser '"
-                   << parser->m_name << "' can be incorrect\n";
+                   << name << "' can be incorrect\n";
             }
             // check help
             if (detail::_tr(parser->m_help, lang).empty()) {
                 ++diagnostics.first;
-                os << _warn << " help for parser '"
-                   << parser->m_name << "' is not set\n";
+                os << _warn << " help for parser '" << name << "' is not set\n";
             }
         }
     }
