@@ -36,7 +36,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(include)
 
-set(ARGPARSE_HEADER include/argparse/argparse.hpp)
+file(GLOB ARGPARSE_HEADER "include/argparse/argparse*.hpp")
 
 if (${CMAKE_VERSION} VERSION_LESS "3.19")
     add_library(argparse INTERFACE)
@@ -52,6 +52,26 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+option(ARGPARSE_STATIC "Build argparse as static lib" OFF)
+
+if (ARGPARSE_STATIC)
+    message("Build argparse as static lib")
+
+    foreach(DEFINITION ${ARGPARSE_STATIC_DEFINITIONS})
+        if (NOT ${DEFINITION} STREQUAL "ARGPARSE_DECLARATION")
+            add_compile_definitions(${DEFINITION})
+        endif()
+    endforeach()
+
+    add_library(argparse_static STATIC src/argparse_impl.cpp)
+
+    target_include_directories(
+        argparse_static PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
+endif()
 
 if (NOT PROJECT_IS_TOP_LEVEL)
     return()
