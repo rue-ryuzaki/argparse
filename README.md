@@ -85,7 +85,7 @@ Additional documentation can be found on the [argparse Wiki](https://github.com/
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv)
             .prog("FooBar")
@@ -137,7 +137,7 @@ See [supported actions](https://github.com/rue-ryuzaki/argparse#the-add_argument
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv).add_help(false);
 
@@ -168,17 +168,17 @@ int main(int argc, char* argv[])
 ```
 ## Nargs example
 Supported nargs:
-- "?" or zero_ore_one() or optional(), argument must have zero or one value
-- "*" or zero_or_more(), argument must have zero or more values
-- "+" or one_or_more(), argument must have one or more values
-- N (positive number), argument must have N values
-- argparse::REMAINDER or remainder(), all the remaining command-line arguments are gathered into a list
+- ```"?"``` or ```zero_ore_one()``` or ```optional()```, argument must have zero or one value
+- ```"*"``` or ```zero_or_more()```, argument must have zero or more values
+- ```"+"``` or ```one_or_more()```, argument must have one or more values
+- ```N``` (positive number), argument must have N values
+- ```argparse::REMAINDER``` or ```remainder()```, all the remaining command-line arguments are gathered into a list
 ```cpp
 #include <iostream>
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
 
@@ -214,7 +214,7 @@ Check if value exists first (Namespace::exists()), or use Namespace::try_get<>()
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
     parser.add_argument("--foo").action("store_true").help("foo help");
@@ -249,7 +249,7 @@ You can group arguments into groups, each with its own title and description.
 ```cpp
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv).add_help(false);
 
@@ -280,11 +280,11 @@ int main(int argc, char* argv[])
 - plain C arrays
 - C++17+ types and containers (std::span)
 ### Note:
-For types with std::pair and std::tuple (also for std::map) needs to specify delimiter (by default it '=') between key and value (for std::pair/std::map) / values (for std::tuple). For space delimiter (' ') all values are parsed from separated command line arguments, otherwise from individual command line argument.
+For types with std::pair and std::tuple (also for std::map) needs to specify delimiter (by default it ```'='```) between key and value (for std::pair/std::map) / values (for std::tuple). For space delimiter ```' '``` all values are parsed from separated command line arguments, otherwise from individual command line argument.
 
 For example:
-- ':' : auto args = parser.parse_args("--foo key1:value1 'key2':'value2'"); args.get<std::map<std::string, std::string> >("foo", ':');
-- ' ' : auto args = parser.parse_args("--foo key1 value1 'key2' 'value2'"); args.get<std::vector<std::pair<std::string, std::string> > >("foo", ' ');
+- ```':'``` : auto args = parser.parse_args("--foo key1:value1 'key2':'value2'"); args.get<std::map<std::string, std::string> >("foo", ':');
+- ```' '``` : auto args = parser.parse_args("--foo key1 value1 'key2' 'value2'"); args.get<std::vector<std::pair<std::string, std::string> > >("foo", ' ');
 ## Custom type example
 ### Namespace::get<>
 Required std::istream& operator >>(std::istream& is, Type& t).
@@ -331,7 +331,7 @@ inline std::ostream& operator <<(std::ostream& os, Coord const& c)
     return os;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser();
     // it's recommended to pass each custom type value in quotes: 'value1 value2 ...'
@@ -358,7 +358,7 @@ Called when the parser is executed and passed the namespace of the parser.
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
     parser.add_argument("--foo").action("store_true").help("foo help");
@@ -395,7 +395,7 @@ Called when the parser is executed and passed the value of the parser.
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
     parser.add_argument("--foo").action("store_true").help("foo help");
@@ -431,7 +431,7 @@ Preferably for value-independent arguments (Action: "store_true", "store_false" 
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
     parser.add_argument("--foo").action("store_true").help("foo help")
@@ -444,7 +444,7 @@ int main(int argc, char* argv[])
 ```
 #### Argument::handle(std::function<void(std::string)> func)
 Called when the argument is present and passed the value of the argument.
-Preferably for value-dependent arguments (Action: "store", "store_const", "append", "append_const" or "extend")
+Preferably for value-dependent arguments (Action: "store", "language", "store_const", "append", "append_const" or "extend")
 
 For value-independent arguments gets const value (Action: "store_true", "store_false") or empty string (Action: "count")
 ```cpp
@@ -452,7 +452,7 @@ For value-independent arguments gets const value (Action: "store_true", "store_f
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
     parser.add_argument("--foo").action("store").help("foo help")
@@ -473,7 +473,7 @@ ArgumentParser can hold environment variables (from envp[]) and have ```have_env
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[], char* envp[])
+int main(int argc, char const* const argv[], char const* const envp[])
 {
     auto parser = argparse::ArgumentParser(argc, argv, envp);
     if (parser.have_env("FOO")) {
@@ -528,9 +528,9 @@ Namespace(bar='bar', foo='a', in='input', of='output')
 output
 ```
 ### Argument::implicit_value
-The implicit_value argument of add_argument() is used to hold implicit values that are not read from the command line (use with nargs = "?" and "*").
+The ```implicit_value``` argument of add_argument() is used to hold implicit values that are not read from the command line (use with nargs = ```"?"``` and ```"*"```).
 
-This is an alternative for the const_value (for optional arguments it works only for nargs = "?").
+This is an alternative for the ```const_value``` (for optional arguments it works only for nargs = ```"?"```).
 
 example:
 ```cpp
@@ -538,7 +538,7 @@ example:
 
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv);
     parser.add_argument("--foo").nargs("?").implicit_value("bar").default_value("foo");
@@ -571,7 +571,7 @@ example:
 ```cpp
 #include <argparse/argparse.hpp>
 
-int main(int argc, char* argv[])
+int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser(argc, argv)
             .prog("prog")
@@ -670,28 +670,28 @@ volitelné argumenty:
 epilog
 ```
 ## ArgumentParser objects support
-- [x] prog - The name of the program (default: argv[0] or "untitled")
+- [x] prog - The name of the program (default: ```argv[0]``` or ```"untitled"```)
 - [x] usage - The string describing the program usage (default: generated from arguments added to parser)
-- [x] description - Text to display before the argument help (default: "")
-- [x] epilog - Text to display after the argument help (default: "")
+- [x] description - Text to display before the argument help (default: ```""```)
+- [x] epilog - Text to display after the argument help (default: ```""```)
 - [x] parents - A list of ArgumentParser objects whose arguments should also be included
 - [x] formatter_class - A class for customizing the help output
-- [x] prefix_chars - The set of characters that prefix optional arguments (default: "-")
-- [x] fromfile_prefix_chars - The set of characters that prefix files from which additional arguments should be read (default: "")
-- [x] argument_default - The global default value for arguments (default: none)
-- [x] conflict_handler - The strategy for resolving conflicting optionals (usually unnecessary, otherwise set "resolve")
-- [x] add_help - Add a -h/--help option to the parser (default: true)
-- [x] allow_abbrev - Allows long options to be abbreviated if the abbreviation is unambiguous. (default: true)
-- [x] exit_on_error - Determines whether or not ArgumentParser exits with error info when an error occurs. (default: true)
+- [x] prefix_chars - The set of characters that prefix optional arguments (default: ```"-"```)
+- [x] fromfile_prefix_chars - The set of characters that prefix files from which additional arguments should be read (default: ```""```)
+- [x] argument_default - The global default value for arguments (default: ```""```)
+- [x] conflict_handler - The strategy for resolving conflicting optionals (usually unnecessary, otherwise set ```"resolve"```)
+- [x] add_help - Add a ```-h/--help``` option to the parser (default: ```true```)
+- [x] allow_abbrev - Allows long options to be abbreviated if the abbreviation is unambiguous. (default: ```true```)
+- [x] exit_on_error - Determines whether or not ArgumentParser exits with error info when an error occurs. (default: ```true```)
 ## The add_argument(name or flags) method support
-- [x] name or flags - Either a name or a list of option strings, e.g. foo or -f, --foo.
+- [x] name or flags - Either a name or a list of option strings, e.g. ```foo```, ```foo=``` or ```-f, --foo```.
 - [x] action - The basic type of action to be taken when this argument is encountered at the command line.
 - [x] nargs - The number of command-line arguments that should be consumed.
 - [x] const - A constant value required by some action and nargs selections.
 - [x] default - The value produced if the argument is absent from the command line and if it is absent from the namespace object.
 - [x] type - The type to which the command-line argument should be converted (for MetavarTypeHelpFormatter and Namespace::get<T> type check).
 - [x] choices - A container of the allowable values for the argument.
-- [x] required - Whether or not the command-line option may be omitted (optionals only).
+- [x] required - Whether or not the command-line option may be omitted (optionals and operands only).
 - [x] help - A brief description of what the argument does.
 - [x] metavar - A name for the argument in usage messages.
 - [x] dest - The name of the attribute to be added to the object returned by parse_args().
@@ -705,7 +705,7 @@ epilog
 - [x] "help" - This prints a complete help message for all the options in the current parser and then exits.
 - [x] "version" - This expects a version= keyword argument in the add_argument() call, and prints version information and exits when invoked.
 - [x] "extend" - This stores a list, and extends each argument value to the list.
-- [x] argparse::BooleanOptionalAction - Adds support for boolean actions such as --foo and --no-foo
+- [x] argparse::BooleanOptionalAction - Adds support for boolean actions such as ```--foo``` and ```--no-foo```
 ## Bash completion
 ArgumentParser can help you to create bash completion file for your program (this function is experimental):
 ```cpp
