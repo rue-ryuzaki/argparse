@@ -247,8 +247,6 @@ int main(int argc, char* argv[])
 ## Argument groups example
 You can group arguments into groups, each with its own title and description.
 ```cpp
-#include <iostream>
-
 #include <argparse/argparse.hpp>
 
 int main(int argc, char* argv[])
@@ -571,8 +569,6 @@ Allows you to add support for displaying help in multiple languages.
 
 example:
 ```cpp
-#include <iostream>
-
 #include <argparse/argparse.hpp>
 
 int main(int argc, char* argv[])
@@ -743,12 +739,12 @@ The class is licensed under the [MIT License](https://opensource.org/licenses/MI
 
 Copyright &copy; 2021-2023 [Golubchikov Mihail](https://github.com/rue-ryuzaki)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 * * *
 
-The class contains a slightly modified version of the shared_ptr implementation for C++98 from Sébastien Rombauts which is licensed under the [MIT License](https://opensource.org/licenses/MIT) (see above). Copyright &copy; 2012-2019 [Sébastien Rombauts](https://github.com/SRombauts)
+The class contains a slightly modified version of the [shared_ptr implementation for C++98 from Sébastien Rombauts](https://github.com/SRombauts/shared_ptr) which is licensed under the [MIT License](https://opensource.org/licenses/MIT) (see above). Copyright &copy; 2012-2019 [Sébastien Rombauts](https://github.com/SRombauts)
