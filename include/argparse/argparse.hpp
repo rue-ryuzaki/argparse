@@ -145,15 +145,8 @@
 #endif  // ARGPARSE_DECLARATION
 
 // -- terminal size detection -------------------------------------------------
-#ifdef ARGPARSE_NO_AUTODETECT
-#warning "ARGPARSE_NO_AUTODETECT define is deprecated and will be removed \
-in the next minor release (v1.8.0), \
-use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
-#endif  // ARGPARSE_NO_AUTODETECT
-
 #undef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
-#if !defined ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION \
- && !defined ARGPARSE_NO_AUTODETECT
+#if !defined ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION
 #define ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 
@@ -325,13 +318,6 @@ use ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION define"
 #else
 #define _ARGPARSE_INLINE_VARIABLE static
 #endif  // C++17+
-
-// -- expand tab size ---------------------------------------------------------
-#ifdef ARGPARSE_TAB_SIZE
-#warning "ARGPARSE_TAB_SIZE define is deprecated and will be removed \
-in the next minor release (v1.8.0), \
-override argparse::HelpFormatter::_tab_size()"
-#endif  // ARGPARSE_TAB_SIZE
 
 namespace argparse {
 #ifdef _ARGPARSE_CXX_11
@@ -6014,122 +6000,6 @@ public:
         m_formatter = detail::make_shared<T>(value);
         return *this;
     }
-
-#ifdef _ARGPARSE_CXX_11
-    /*!
-     *  \brief Set argument parser 'formatter_class' value
-     *
-     *  \param value HelpFormatter value
-     *  \param args HelpFormatter values
-     *
-     *  \return Current argument parser reference
-     */
-    template <class T, class... Args, typename detail::enable_if<
-                  detail::is_base_of<HelpFormatter, T>::value>::type* = nullptr>
-    _ARGPARSE_ATTR_DEPRECATED_REASON(
-                "create custom HelpFormatter class and use "
-                "formatter_class(HelpFormatter) function. "
-                "will be removed in the next minor release (v1.8.0)")
-    inline ArgumentParser&
-    formatter_class(T const& value, Args... args)
-    {
-        formatter_class(value);
-        return add_formatter_class(args...);
-    }
-#else
-    /*!
-     *  \brief Set argument parser 'formatter_class' value
-     *
-     *  \param value1 HelpFormatter value1
-     *  \param value2 HelpFormatter value2
-     *
-     *  \return Current argument parser reference
-     */
-    template <class T, class U>
-    inline ArgumentParser& formatter_class(
-                T const& value1, U const& value2, typename detail::enable_if<
-                    (detail::is_base_of<HelpFormatter, T>::value
-                    || detail::is_same<HelpFormatter, T>::value)
-                    && (detail::is_base_of<HelpFormatter, U>::value
-                    || detail::is_same<HelpFormatter, U>::value), bool
-                >::type = true)
-    {
-        formatter_class(value1);
-        return add_formatter_class(value2);
-    }
-#endif  // C++11+
-
-    /*!
-     *  \brief Add argument parser 'formatter_class' value
-     *
-     *  \param value HelpFormatter value
-     *
-     *  \return Current argument parser reference
-     */
-#ifdef _ARGPARSE_CXX_11
-    template <class T, typename detail::enable_if<
-                  detail::is_base_of<HelpFormatter, T>::value>::type* = nullptr>
-    _ARGPARSE_ATTR_DEPRECATED_REASON(
-                "create custom HelpFormatter class and use "
-                "formatter_class(HelpFormatter) function. "
-                "will be removed in the next minor release (v1.8.0)")
-    inline ArgumentParser& add_formatter_class(T const& value)
-#else
-    template <class T>
-    inline ArgumentParser& add_formatter_class(
-                T const& value, typename detail::enable_if<
-                    detail::is_base_of<HelpFormatter, T>::value
-                    || detail::is_same<HelpFormatter, T>::value, bool
-                >::type = true)
-#endif  // C++11+
-    {
-        formatter_class(value);
-        return *this;
-    }
-
-#ifdef _ARGPARSE_CXX_11
-    /*!
-     *  \brief Add argument parser 'formatter_class' value
-     *
-     *  \param value HelpFormatter value
-     *  \param args HelpFormatter values
-     *
-     *  \return Current argument parser reference
-     */
-    template <class T, class... Args, typename detail::enable_if<
-                  detail::is_base_of<HelpFormatter, T>::value>::type* = nullptr>
-    _ARGPARSE_ATTR_DEPRECATED_REASON(
-                "create custom HelpFormatter class and use "
-                "formatter_class(HelpFormatter) function. "
-                "will be removed in the next minor release (v1.8.0)")
-    inline ArgumentParser&
-    add_formatter_class(T const& value, Args... args)
-    {
-        add_formatter_class(value);
-        return add_formatter_class(args...);
-    }
-#else
-    /*!
-     *  \brief Add argument parser 'formatter_class' value
-     *
-     *  \param value1 HelpFormatter value1
-     *  \param value2 HelpFormatter value2
-     *
-     *  \return Current argument parser reference
-     */
-    template <class T, class U>
-    inline ArgumentParser& add_formatter_class(
-                T const& value1, U const& value2, typename detail::enable_if<
-                    (detail::is_base_of<HelpFormatter, T>::value
-                    || detail::is_same<HelpFormatter, T>::value)
-                    && (detail::is_base_of<HelpFormatter, U>::value
-                    || detail::is_same<HelpFormatter, U>::value), bool
-                >::type = true)
-    {
-        add_formatter_class(value1);
-        return add_formatter_class(value2);
-    }
-#endif  // C++11+
 
     /*!
      *  \brief Set argument parser 'prefix_chars' value (default: "-")
