@@ -2164,22 +2164,15 @@ private:
     bool    m_has_value;
 };
 
-inline bool
-_is_type_name_correct(std::string const& expected,
-                      std::string const& received) _ARGPARSE_NOEXCEPT
-{
-    return expected.empty() || received == expected;
-}
+bool
+_is_type_name_correct(
+            std::string const& expected,
+            std::string const& received) _ARGPARSE_NOEXCEPT;
 
-inline void
-_check_type_name(Value<std::string> const& expected,
-                 std::string const& received)
-{
-    if (expected.has_value() && !_is_type_name_correct(expected(), received)) {
-        throw TypeError("type_name mismatch: expected '" + expected.value()
-                        + "', received '" + received + "'");
-    }
-}
+void
+_check_type_name(
+            Value<std::string> const& expected,
+            std::string const& received);
 }  // namespace detail
 
 /*!
@@ -2472,7 +2465,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& optional()
+    inline Argument&
+    optional()
     {
         return nargs("?");
     }
@@ -2482,7 +2476,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& zero_or_one()
+    inline Argument&
+    zero_or_one()
     {
         return nargs("?");
     }
@@ -2492,7 +2487,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& zero_or_more()
+    inline Argument&
+    zero_or_more()
     {
         return nargs("*");
     }
@@ -2502,7 +2498,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& one_or_more()
+    inline Argument&
+    one_or_more()
     {
         return nargs("+");
     }
@@ -2512,7 +2509,8 @@ public:
      *
      *  \return Current argument reference
      */
-    inline Argument& remainder()
+    inline Argument&
+    remainder()
     {
         return nargs(argparse::REMAINDER);
     }
@@ -2538,14 +2536,15 @@ public:
     template <class T,
               typename std::enable_if<
                 !std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Argument& const_value(T const& value)
+    inline Argument&
+    const_value(T const& value)
 #else
     template <class T>
-    inline Argument& const_value(
-            T const& value,
-            typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value, bool
-            >::type = true)
+    inline Argument&
+    const_value(T const& value,
+                typename detail::enable_if<
+                    !detail::is_constructible<std::string, T>::value, bool
+                >::type = true)
 #endif  // C++11+
     {
         const_value(detail::_to_string<T>(value));
@@ -2575,14 +2574,17 @@ public:
     template <class T,
               typename std::enable_if<
                 !std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Argument& default_value(T const& value)
+    inline Argument&
+    default_value(
+                T const& value)
 #else
     template <class T>
-    inline Argument& default_value(
-            T const& value,
-            typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value, bool
-            >::type = true)
+    inline Argument&
+    default_value(
+                T const& value,
+                typename detail::enable_if<
+                    !detail::is_constructible<std::string, T>::value, bool
+                >::type = true)
 #endif  // C++11+
     {
         m_default = detail::_to_string<T>(value);
@@ -2625,14 +2627,17 @@ public:
     template <class T,
               typename std::enable_if<
                 !std::is_constructible<std::string, T>::value>::type* = nullptr>
-    inline Argument& implicit_value(T const& value)
+    inline Argument&
+    implicit_value(
+                T const& value)
 #else
     template <class T>
-    inline Argument& implicit_value(
-            T const& value,
-            typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value, bool
-            >::type = true)
+    inline Argument&
+    implicit_value(
+                T const& value,
+                typename detail::enable_if<
+                    !detail::is_constructible<std::string, T>::value, bool
+                >::type = true)
 #endif  // C++11+
     {
         m_implicit = detail::_to_string<T>(value);
@@ -2647,7 +2652,8 @@ public:
      *  \return Current argument reference
      */
     template <class T>
-    inline Argument& type()
+    inline Argument&
+    type()
     {
         m_type_name = detail::Type::basic<T>();
         return *this;
@@ -2685,7 +2691,8 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
 #endif  // C++11+
-    inline Argument& choices(std::string const& value)
+    inline Argument&
+    choices(std::string const& value)
     {
         if (!(action() & (detail::_store_action | argparse::language))) {
             throw TypeError("got an unexpected keyword argument 'choices'");
@@ -2712,8 +2719,10 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
-    inline Argument& choices(std::string const& value1,
-                             std::string const& value2, Args... args)
+    inline Argument&
+    choices(std::string const& value1,
+                std::string const& value2,
+                Args... args)
     {
         return choices(std::vector<std::string>{ value1, value2, args... });
     }
@@ -2851,7 +2860,9 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
-    inline Argument& metavar(std::string const& value, Args... args)
+    inline Argument&
+    metavar(std::string const& value,
+                Args... args)
     {
         return metavar(std::vector<std::string>{ value, args... });
     }
@@ -3131,8 +3142,9 @@ private:
                 std::string const& lang) const;
 
     void
-    process_nargs_suffix(std::string& res,
-                         HelpFormatter const& formatter) const;
+    process_nargs_suffix(
+                std::string& res,
+                HelpFormatter const& formatter) const;
 
     std::vector<std::string>
     get_argument_name(
@@ -3165,30 +3177,30 @@ private:
     operator ==(std::string const& rhs) const;
 
     // -- data ----------------------------------------------------------------
-    std::vector<std::string> m_flags;
-    std::vector<std::string> m_all_flags;
-    std::string m_name;
-    Action      m_action;
-    detail::Value<_SUPPRESS> m_default_type;
-    detail::Value<_SUPPRESS> m_help_type;
-    Type        m_type;
-    Nargs       m_nargs;
-    std::size_t m_num_args;
-    std::string m_nargs_str;
-    detail::Value<std::string> m_const;
-    detail::Value<std::string> m_default;
-    detail::Value<std::string> m_implicit;
-    detail::Value<std::string> m_type_name;
+    std::vector<std::string>    m_flags;
+    std::vector<std::string>    m_all_flags;
+    std::string                 m_name;
+    Action                      m_action;
+    detail::Value<_SUPPRESS>    m_default_type;
+    detail::Value<_SUPPRESS>    m_help_type;
+    Type                        m_type;
+    Nargs                       m_nargs;
+    std::size_t                 m_num_args;
+    std::string                 m_nargs_str;
+    detail::Value<std::string>  m_const;
+    detail::Value<std::string>  m_default;
+    detail::Value<std::string>  m_implicit;
+    detail::Value<std::string>  m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
-    detail::TranslationPack m_help;
-    detail::Value<std::string> m_version;
+    detail::TranslationPack     m_help;
+    detail::Value<std::string>  m_version;
     detail::Value<std::vector<std::string> > m_metavar;
-    std::vector<std::string> m_dest;
+    std::vector<std::string>    m_dest;
 #ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
 #endif  // C++11+
     detail::shared_ptr<_ConflictResolver> m_post_trigger;
-    detail::Value<bool> m_required;
+    detail::Value<bool>         m_required;
 };
 
 /*!
@@ -3574,7 +3586,8 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
 #endif  // C++11+
-    inline ArgumentGroup& add_argument(Argument const& argument)
+    inline ArgumentGroup&
+    add_argument(Argument const& argument)
     {
         m_data->validate_argument(Argument(argument), m_prefix_chars);
         process_add_argument();
@@ -3671,7 +3684,8 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <typename = void>
 #endif  // C++11+
-    inline MutuallyExclusiveGroup& add_argument(Argument const& argument)
+    inline MutuallyExclusiveGroup&
+    add_argument(Argument const& argument)
     {
         m_data->validate_argument(Argument(argument), m_prefix_chars);
         process_add_argument();
@@ -3716,7 +3730,8 @@ class _Storage
             m_indexes.push_back(m_values.size());
         }
 
-        inline void clear()
+        inline void
+        clear()
         {
             m_values.clear();
             m_indexes.clear();
@@ -3724,18 +3739,21 @@ class _Storage
             m_is_default = false;
         }
 
-        inline bool exists() const _ARGPARSE_NOEXCEPT
+        inline bool
+        exists() const _ARGPARSE_NOEXCEPT
         {
             return m_exists;
         }
 
-        inline void push_default(std::string const& value)
+        inline void
+        push_default(std::string const& value)
         {
             m_is_default = true;
             push_back(value);
         }
 
-        inline bool is_default() const _ARGPARSE_NOEXCEPT
+        inline bool
+        is_default() const _ARGPARSE_NOEXCEPT
         {
             return m_is_default;
         }
@@ -3746,28 +3764,33 @@ class _Storage
             return m_values;
         }
 
-        inline std::size_t size() const _ARGPARSE_NOEXCEPT
+        inline std::size_t
+        size() const _ARGPARSE_NOEXCEPT
         {
             return m_values.size();
         }
 
-        inline bool empty() const _ARGPARSE_NOEXCEPT
+        inline bool
+        empty() const _ARGPARSE_NOEXCEPT
         {
             return m_values.empty();
         }
 
-        inline std::string const& front() const _ARGPARSE_NOEXCEPT
+        inline std::string const&
+        front() const _ARGPARSE_NOEXCEPT
         {
             return m_values.front();
         }
 
-        inline std::string const& at(std::size_t i) const
+        inline std::string const&
+        at(std::size_t i) const
         {
             return m_values.at(i);
         }
 
 #ifdef _ARGPARSE_CXX_11
-        inline void emplace_back(std::string&& value)
+        inline void
+        emplace_back(std::string&& value)
         {
             m_values.emplace_back(std::move(value));
             m_indexes.push_back(m_values.size());
@@ -3775,14 +3798,16 @@ class _Storage
         }
 #endif  // C++11+
 
-        inline void push_back(std::string const& value)
+        inline void
+        push_back(std::string const& value)
         {
             m_values.push_back(value);
             m_indexes.push_back(m_values.size());
             m_exists = true;
         }
 
-        inline void push_values(std::vector<std::string> const& values)
+        inline void
+        push_values(std::vector<std::string> const& values)
         {
             m_values.reserve(m_values.size() + values.size());
             m_values.insert(m_values.end(), values.begin(), values.end());
@@ -3841,25 +3866,29 @@ class _Storage
     self_value_stored(
                 key_type const& arg);
 
-    inline bool exists_arg(std::string const& key) const
+    inline bool
+    exists_arg(std::string const& key) const
     {
         const_iterator it = find_arg(key);
         return it != end();
     }
 
-    inline bool exists(std::string const& key) const
+    inline bool
+    exists(std::string const& key) const
     {
         const_iterator it = find(key);
         return it != end();
     }
 
-    inline bool exists(key_type const& key) const
+    inline bool
+    exists(key_type const& key) const
     {
         const_iterator it = find(key);
         return it != end();
     }
 
-    inline value_type const& at(std::string const& key) const
+    inline value_type const&
+    at(std::string const& key) const
     {
         const_iterator it = find(key);
         if (it == end()) {
@@ -3868,7 +3897,8 @@ class _Storage
         return *it;
     }
 
-    inline mapped_type& at(key_type const& key)
+    inline mapped_type&
+    at(key_type const& key)
     {
         iterator it = find(key);
         if (it == end()) {
@@ -3877,7 +3907,8 @@ class _Storage
         return it->second;
     }
 
-    inline mapped_type const& at(key_type const& key) const
+    inline mapped_type const&
+    at(key_type const& key) const
     {
         const_iterator it = find(key);
         if (it == end()) {
@@ -3895,7 +3926,8 @@ class _Storage
     inline const_iterator
                     end()   const _ARGPARSE_NOEXCEPT { return m_data.end(); }
 
-    inline const_iterator find_arg(std::string const& key) const
+    inline const_iterator
+    find_arg(std::string const& key) const
     {
         const_iterator it = find(key);
         if (it != end()) {
@@ -3909,7 +3941,8 @@ class _Storage
         return end();
     }
 
-    inline const_iterator find(std::string const& key) const
+    inline const_iterator
+    find(std::string const& key) const
     {
         for (const_iterator it = begin(); it != end(); ++it) {
             if (*(it->first) == key) {
@@ -3919,7 +3952,8 @@ class _Storage
         return end();
     }
 
-    inline const_iterator find(key_type const& key) const
+    inline const_iterator
+    find(key_type const& key) const
     {
         for (const_iterator it = begin(); it != end(); ++it) {
             if (it->first == key) {
@@ -3929,7 +3963,8 @@ class _Storage
         return end();
     }
 
-    inline iterator find(key_type const& key)
+    inline iterator
+    find(key_type const& key)
     {
         for (iterator it = begin(); it != end(); ++it) {
             if (it->first == key) {
@@ -5011,7 +5046,8 @@ private:
     storage() const _ARGPARSE_NOEXCEPT;
 
     template <class T, class U>
-    std::pair<T, U> to_pair(std::string const& data, char sep) const
+    std::pair<T, U>
+    to_pair(std::string const& data, char sep) const
     {
         std::vector<std::string> pair
                 = detail::_split(data, std::string(1, sep), 1);
@@ -5428,7 +5464,8 @@ private:
  *
  *  \return Output stream reference
  */
-inline std::ostream& operator <<(std::ostream& os, Namespace const& obj)
+inline std::ostream&
+operator <<(std::ostream& os, Namespace const& obj)
 {
     os << obj.to_string();
     return os;
@@ -5877,7 +5914,9 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
-    inline ArgumentParser& aliases(std::string const& value, Args... args)
+    inline ArgumentParser&
+    aliases(std::string const& value,
+                Args... args)
     {
         return aliases(std::vector<std::string>{ value, args... });
     }
@@ -5937,7 +5976,9 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
-    inline ArgumentParser& parents(ArgumentParser const& value, Args... args)
+    inline ArgumentParser&
+    parents(ArgumentParser const& value,
+                Args... args)
     {
         return parents(std::vector<ArgumentParser>{ value, args... });
     }
@@ -5987,10 +6028,12 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <class T, typename detail::enable_if<
                   detail::is_base_of<HelpFormatter, T>::value>::type* = nullptr>
-    inline ArgumentParser& formatter_class(T const& value)
+    inline ArgumentParser&
+    formatter_class(T const& value)
 #else
     template <class T>
-    inline ArgumentParser& formatter_class(
+    inline ArgumentParser&
+    formatter_class(
                 T const& value, typename detail::enable_if<
                     detail::is_base_of<HelpFormatter, T>::value
                     || detail::is_same<HelpFormatter, T>::value, bool
@@ -6519,7 +6562,8 @@ public:
     template <typename = void>
 #endif  // C++11+
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_args(Namespace const& space = Namespace()) const
+    Namespace
+    parse_args(Namespace const& space = Namespace()) const
     {
         return parse_args(m_parsed_arguments, space);
     }
@@ -6537,8 +6581,9 @@ public:
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_args(T const& args,
-                         Namespace const& space = Namespace()) const
+    Namespace
+    parse_args(T const& args,
+                Namespace const& space = Namespace()) const
 #else
     template <class T>
     _ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6564,8 +6609,9 @@ public:
      *  \return Object with parsed arguments
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    inline Namespace parse_args(std::initializer_list<std::string> const& args,
-                                Namespace const& space = Namespace()) const
+    inline Namespace
+    parse_args(std::initializer_list<std::string> const& args,
+                Namespace const& space = Namespace()) const
     {
         return parse_args(std::vector<std::string>{ args }, space);
     }
@@ -6595,7 +6641,9 @@ public:
     template <typename = void>
 #endif  // C++11+
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_known_args(Namespace const& space = Namespace()) const
+    Namespace
+    parse_known_args(
+                Namespace const& space = Namespace()) const
     {
         return parse_known_args(m_parsed_arguments, space);
     }
@@ -6613,16 +6661,19 @@ public:
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_known_args(T const& args,
-                               Namespace const& space = Namespace()) const
+    Namespace
+    parse_known_args(
+                T const& args,
+                Namespace const& space = Namespace()) const
 #else
     template <class T>
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_known_args(
-            T const& args, Namespace const& space = Namespace(),
-            typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value, bool
-            >::type = true) const
+    Namespace
+    parse_known_args(
+                T const& args, Namespace const& space = Namespace(),
+                typename detail::enable_if<
+                    detail::is_constructible<std::string, T>::value, bool
+                >::type = true) const
 #endif  // C++11+
     {
         return parse_known_args(detail::_split_to_args(args), space);
@@ -6641,8 +6692,9 @@ public:
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace
-    parse_known_args(std::initializer_list<std::string> const& args,
-                     Namespace const& space = Namespace()) const
+    parse_known_args(
+                std::initializer_list<std::string> const& args,
+                Namespace const& space = Namespace()) const
     {
         return parse_known_args(std::vector<std::string>{ args }, space);
     }
@@ -6673,7 +6725,9 @@ public:
     template <typename = void>
 #endif  // C++11+
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_intermixed_args(Namespace const& space = Namespace()) const
+    Namespace
+    parse_intermixed_args(
+                Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(m_parsed_arguments, space);
     }
@@ -6691,16 +6745,19 @@ public:
               typename std::enable_if<
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_intermixed_args(T const& args,
-                                    Namespace const& space = Namespace()) const
+    Namespace
+    parse_intermixed_args(
+                T const& args,
+                Namespace const& space = Namespace()) const
 #else
     template <class T>
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_intermixed_args(
-            T const& args, Namespace const& space = Namespace(),
-            typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value, bool
-            >::type = true) const
+    Namespace
+    parse_intermixed_args(
+                T const& args, Namespace const& space = Namespace(),
+                typename detail::enable_if<
+                    detail::is_constructible<std::string, T>::value, bool
+                >::type = true) const
 #endif  // C++11+
     {
         return parse_intermixed_args(detail::_split_to_args(args), space);
@@ -6719,8 +6776,9 @@ public:
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace
-    parse_intermixed_args(std::initializer_list<std::string> const& args,
-                          Namespace const& space = Namespace()) const
+    parse_intermixed_args(
+                std::initializer_list<std::string> const& args,
+                Namespace const& space = Namespace()) const
     {
         return parse_intermixed_args(std::vector<std::string>{ args }, space);
     }
@@ -6752,7 +6810,8 @@ public:
 #endif  // C++11+
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
-    parse_known_intermixed_args(Namespace const& space = Namespace()) const
+    parse_known_intermixed_args(
+                Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(m_parsed_arguments, space);
     }
@@ -6771,16 +6830,17 @@ public:
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
-    parse_known_intermixed_args(T const& args,
-                                Namespace const& space = Namespace()) const
+    parse_known_intermixed_args(
+                T const& args,
+                Namespace const& space = Namespace()) const
 #else
     template <class T>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace parse_known_intermixed_args(
-            T const& args, Namespace const& space = Namespace(),
-            typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value, bool
-            >::type = true) const
+                T const& args, Namespace const& space = Namespace(),
+                typename detail::enable_if<
+                    detail::is_constructible<std::string, T>::value, bool
+                >::type = true) const
 #endif  // C++11+
     {
         return parse_known_intermixed_args(detail::_split_to_args(args), space);
@@ -6799,8 +6859,9 @@ public:
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
     inline Namespace
-    parse_known_intermixed_args(std::initializer_list<std::string> const& args,
-                                Namespace const& space = Namespace()) const
+    parse_known_intermixed_args(
+                std::initializer_list<std::string> const& args,
+                Namespace const& space = Namespace()) const
     {
         return parse_known_intermixed_args(
                     std::vector<std::string>{ args }, space);
@@ -6835,7 +6896,8 @@ public:
     template <typename = void>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
-    try_parse_args(Namespace const& space = Namespace()) const
+    try_parse_args(
+                Namespace const& space = Namespace()) const
     {
         return try_parse_args(m_parsed_arguments, space);
     }
@@ -6856,8 +6918,9 @@ public:
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
-    try_parse_args(T const& args,
-                   Namespace const& space = Namespace()) const
+    try_parse_args(
+                T const& args,
+                Namespace const& space = Namespace()) const
     {
         return try_parse_args(detail::_split_to_args(args), space);
     }
@@ -6875,8 +6938,9 @@ public:
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
-    try_parse_args(std::initializer_list<std::string> const& args,
-                   Namespace const& space = Namespace()) const
+    try_parse_args(
+                std::initializer_list<std::string> const& args,
+                Namespace const& space = Namespace()) const
     {
         return try_parse_args(std::vector<std::string>{ args }, space);
     }
@@ -6911,7 +6975,8 @@ public:
     template <typename = void>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
-    try_parse_known_args(Namespace const& space = Namespace()) const
+    try_parse_known_args(
+                Namespace const& space = Namespace()) const
     {
         return try_parse_known_args(m_parsed_arguments, space);
     }
@@ -6932,8 +6997,9 @@ public:
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
-    try_parse_known_args(T const& args,
-                         Namespace const& space = Namespace()) const
+    try_parse_known_args(
+                T const& args,
+                Namespace const& space = Namespace()) const
     {
         return try_parse_known_args(detail::_split_to_args(args), space);
     }
@@ -6951,8 +7017,9 @@ public:
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
-    try_parse_known_args(std::initializer_list<std::string> const& args,
-                         Namespace const& space = Namespace()) const
+    try_parse_known_args(
+                std::initializer_list<std::string> const& args,
+                Namespace const& space = Namespace()) const
     {
         return try_parse_known_args(std::vector<std::string>{ args }, space);
     }
@@ -6987,7 +7054,8 @@ public:
     template <typename = void>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
-    try_parse_intermixed_args(Namespace const& space = Namespace()) const
+    try_parse_intermixed_args(
+                Namespace const& space = Namespace()) const
     {
         return try_parse_intermixed_args(m_parsed_arguments, space);
     }
@@ -7008,8 +7076,9 @@ public:
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
-    try_parse_intermixed_args(T const& args,
-                              Namespace const& space = Namespace()) const
+    try_parse_intermixed_args(
+                T const& args,
+                Namespace const& space = Namespace()) const
     {
         return try_parse_intermixed_args(detail::_split_to_args(args), space);
     }
@@ -7027,8 +7096,9 @@ public:
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
     inline std::optional<Namespace>
-    try_parse_intermixed_args(std::initializer_list<std::string> const& args,
-                              Namespace const& space = Namespace()) const
+    try_parse_intermixed_args(
+                std::initializer_list<std::string> const& args,
+                Namespace const& space = Namespace()) const
     {
         return try_parse_intermixed_args(
                     std::vector<std::string>{ args }, space);
@@ -7064,7 +7134,8 @@ public:
     template <typename = void>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
-    try_parse_known_intermixed_args(Namespace const& space = Namespace()) const
+    try_parse_known_intermixed_args(
+                Namespace const& space = Namespace()) const
     {
         return try_parse_known_intermixed_args(m_parsed_arguments, space);
     }
@@ -7085,8 +7156,9 @@ public:
                  std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
-    try_parse_known_intermixed_args(T const& args,
-                                    Namespace const& space = Namespace()) const
+    try_parse_known_intermixed_args(
+                T const& args,
+                Namespace const& space = Namespace()) const
     {
         return try_parse_known_intermixed_args(
                     detail::_split_to_args(args), space);
@@ -8484,25 +8556,24 @@ _ends_with(std::string const& str,
 _ARGPARSE_INL std::string
 _flag_name(std::string const& str)
 {
-    std::string res = str;
-    char prefix = res.at(0);
-    std::string::iterator it = res.begin();
-    for ( ; it != res.end() && *it == prefix; ++it) {
+    char prefix = str.at(0);
+    std::string::const_iterator it = str.begin();
+    for ( ; it != str.end() && *it == prefix; ++it) {
     }
-    res.erase(res.begin(), it);
-    return res;
+    return str.substr(static_cast<std::size_t>(std::distance(str.begin(), it)),
+                      static_cast<std::size_t>(std::distance(it, str.end())));
 }
 
 #ifdef _ARGPARSE_CXX_17
 _ARGPARSE_INL std::string_view
-_flag_name(std::string_view res)
+_flag_name(std::string_view str)
 {
-    char prefix = res.front();
-    auto it = res.begin();
-    for ( ; it != res.end() && *it == prefix; ++it) {
+    char prefix = str.front();
+    auto it = str.begin();
+    for ( ; it != str.end() && *it == prefix; ++it) {
     }
-    return res.substr(static_cast<std::size_t>(std::distance(res.begin(), it)),
-                      static_cast<std::size_t>(std::distance(it, res.end())));
+    return str.substr(static_cast<std::size_t>(std::distance(str.begin(), it)),
+                      static_cast<std::size_t>(std::distance(it, str.end())));
 }
 #endif  // C++17+
 
@@ -8997,6 +9068,25 @@ _filled_string(
                       + _spaces + str + _spaces;
     res.resize(limit, filler);
     return res;
+}
+
+_ARGPARSE_INL bool
+_is_type_name_correct(
+            std::string const& expected,
+            std::string const& received) _ARGPARSE_NOEXCEPT
+{
+    return expected.empty() || received == expected;
+}
+
+_ARGPARSE_INL void
+_check_type_name(
+            Value<std::string> const& expected,
+            std::string const& received)
+{
+    if (expected.has_value() && !_is_type_name_correct(expected(), received)) {
+        throw TypeError("type_name mismatch: expected '" + expected.value()
+                        + "', received '" + received + "'");
+    }
 }
 }  // namespace detail
 
