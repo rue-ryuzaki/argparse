@@ -2223,13 +2223,6 @@ _ARGPARSE_EXPORT class Argument
                 std::string const& name,
                 Type type);
 
-#ifdef _ARGPARSE_CXX_11
-    explicit
-    Argument(std::vector<std::string>&& flags,
-                std::string&& name,
-                Type type);
-#endif  // C++11+
-
     static detail::shared_ptr<Argument>
     make_argument(
                 std::vector<std::string> const& flags,
@@ -2237,6 +2230,11 @@ _ARGPARSE_EXPORT class Argument
                 Type type);
 
 #ifdef _ARGPARSE_CXX_11
+    explicit
+    Argument(std::vector<std::string>&& flags,
+                std::string&& name,
+                Type type);
+
     static detail::shared_ptr<Argument>
     make_argument(
                 std::vector<std::string>&& flags,
@@ -8763,20 +8761,6 @@ _split_equal(
             std::string const& str,
             std::string const& prefix)
 {
-#ifdef _ARGPARSE_CXX_11
-    std::string::size_type pos = _is_value_exists(_equal, prefix)
-            ? str.find(_equal, static_cast<std::string::size_type>(
-                         std::distance(str.begin(),
-                                       std::find_if(str.begin(),
-                                                    str.end(), [] (char c)
-    { return c != _equal; }))))
-            : str.find(_equal);
-    if (pos != std::string::npos) {
-        return { str.substr(0, pos), str.substr(pos + 1) };
-    } else {
-        return { str };
-    }
-#else
     std::string::size_type pos;
     if (_is_value_exists(_equal, prefix)) {
         std::string::const_iterator it = str.begin();
@@ -8792,7 +8776,6 @@ _split_equal(
     } else {
         return _vector(str);
     }
-#endif  // C++11+
 }
 
 _ARGPARSE_INL void
@@ -9313,6 +9296,15 @@ Argument::Argument(
     m_required.reset(m_type != Optional);
 }
 
+_ARGPARSE_INL detail::shared_ptr<Argument>
+Argument::make_argument(
+            std::vector<std::string> const& flags,
+            std::string const& name,
+            Type type)
+{
+    return detail::make_shared<Argument>(Argument(flags, name, type));
+}
+
 #ifdef _ARGPARSE_CXX_11
 _ARGPARSE_INL
 Argument::Argument(
@@ -9345,18 +9337,7 @@ Argument::Argument(
     m_help[std::string()] = std::string();
     m_required.reset(m_type != Optional);
 }
-#endif  // C++11+
 
-_ARGPARSE_INL detail::shared_ptr<Argument>
-Argument::make_argument(
-            std::vector<std::string> const& flags,
-            std::string const& name,
-            Type type)
-{
-    return detail::make_shared<Argument>(Argument(flags, name, type));
-}
-
-#ifdef _ARGPARSE_CXX_11
 _ARGPARSE_INL detail::shared_ptr<Argument>
 Argument::make_argument(
             std::vector<std::string>&& flags,
@@ -10410,14 +10391,6 @@ Argument::get_argument_name(
     if (m_metavar.has_value()) {
         return m_metavar.value();
     }
-#ifdef _ARGPARSE_CXX_11
-    if (m_choices.has_value()) {
-        return { "{" + detail::_join(choices(), ",") + "}" };
-    }
-    return { m_type == Positional
-                ? formatter._get_default_metavar_for_positional(this)
-                : formatter._get_default_metavar_for_optional(this) };
-#else
     if (m_choices.has_value()) {
         return detail::_vector("{" + detail::_join(choices(), ",") + "}");
     }
@@ -10425,7 +10398,6 @@ Argument::get_argument_name(
                 m_type == Positional
                   ? formatter._get_default_metavar_for_positional(this)
                   : formatter._get_default_metavar_for_optional(this));
-#endif  // C++11+
 }
 
 _ARGPARSE_INL std::vector<std::string> const&
@@ -11246,12 +11218,8 @@ _Storage::create(
     }
     std::vector<std::string> const& arg_flags = key->flags();
     bool have_key = false;
-#ifdef _ARGPARSE_CXX_11
-    for (auto& pair : m_data) {
-#else
     for (std::size_t i = 0; i < m_data.size(); ++i) {
         value_type& pair = m_data.at(i);
-#endif  // C++11+
         have_key |= (key == pair.first);
         if (key != pair.first) {
             pair.first->resolve_conflict_flags(arg_flags);
@@ -11883,24 +11851,6 @@ ArgumentParser::Subparser::print(
     std::string res = detail::_help_formatter(
                 "  " + flags_to_string(), formatter,
                 detail::_tr(m_help, lang), width, limit);
-#ifdef _ARGPARSE_CXX_11
-    return std::accumulate(m_parsers.begin(), m_parsers.end(),
-                           res, [formatter, limit, width, &lang]
-                           (std::string const& str, pParser const& p)
-    {
-        auto help = detail::_tr(p->m_help, lang);
-        if (!help.empty()) {
-            std::string name = "    " + p->m_name;
-            auto alias = detail::_join(p->aliases(), ", ");
-            if (!alias.empty()) {
-                name += " (" + alias + ")";
-            }
-            return str + "\n" + detail::_help_formatter(
-                        name, formatter, help, width, limit);
-        }
-        return str;
-    });
-#else
     for (std::size_t i = 0; i < m_parsers.size(); ++i) {
         pParser const& p = m_parsers.at(i);
         std::string help = detail::_tr(p->m_help, lang);
@@ -11915,7 +11865,6 @@ ArgumentParser::Subparser::print(
         }
     }
     return res;
-#endif  // C++11+
 }
 
 // -- ArgumentParser ----------------------------------------------------------
