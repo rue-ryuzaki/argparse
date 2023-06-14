@@ -72,6 +72,7 @@
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_RVAL
+#undef _ARGPARSE_TYPENAME_VOID
 #undef _ARGPARSE_USE_CONSTEXPR
 
 // -- #define -----------------------------------------------------------------
@@ -302,6 +303,7 @@
 #define _ARGPARSE_ENUM_TYPE(X) : X
 #define _ARGPARSE_MOVE(X) std::move(X)
 #define _ARGPARSE_RVAL &&
+#define _ARGPARSE_TYPENAME_VOID template <typename = void>
 #else
 #define _ARGPARSE_FINAL
 #define _ARGPARSE_NOEXCEPT
@@ -311,6 +313,7 @@
 #define _ARGPARSE_ENUM_TYPE(X)
 #define _ARGPARSE_MOVE(X) X
 #define _ARGPARSE_RVAL const&
+#define _ARGPARSE_TYPENAME_VOID
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_17
@@ -2333,9 +2336,7 @@ public:
      *
      *  \return Argument object
      */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
+    _ARGPARSE_TYPENAME_VOID
     explicit
     Argument(std::vector<std::string> const& flags)
         : m_flags(flags),
@@ -2686,9 +2687,7 @@ public:
      *
      *  \return Current argument reference
      */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
+    _ARGPARSE_TYPENAME_VOID
     inline Argument&
     choices(std::string const& value)
     {
@@ -3581,9 +3580,7 @@ public:
      *
      *  \return Current argument group reference
      */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
+    _ARGPARSE_TYPENAME_VOID
     inline ArgumentGroup&
     add_argument(Argument const& argument)
     {
@@ -3679,9 +3676,7 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
+    _ARGPARSE_TYPENAME_VOID
     inline MutuallyExclusiveGroup&
     add_argument(Argument const& argument)
     {
@@ -6420,9 +6415,7 @@ public:
      *
      *  \return Current parser reference
      */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
+    _ARGPARSE_TYPENAME_VOID
     inline ArgumentParser&
     add_argument(Argument const& argument)
     {
@@ -6556,9 +6549,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
+    _ARGPARSE_TYPENAME_VOID
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_args(Namespace const& space = Namespace()) const
@@ -6635,9 +6626,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
+    _ARGPARSE_TYPENAME_VOID
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_args(
@@ -6719,9 +6708,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
+    _ARGPARSE_TYPENAME_VOID
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_intermixed_args(
@@ -6803,9 +6790,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-#ifdef _ARGPARSE_CXX_11
-    template <typename = void>
-#endif  // C++11+
+    _ARGPARSE_TYPENAME_VOID
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(
@@ -14835,6 +14820,7 @@ ArgumentParser::handle(std::string const&) const { /* stub */ }
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_RVAL
+#undef _ARGPARSE_TYPENAME_VOID
 #undef _ARGPARSE_USE_CONSTEXPR
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
