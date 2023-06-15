@@ -1762,7 +1762,7 @@ _get_type_name()
     return res.substr(pos, res.find(';', pos) - pos);
 #else
     return res.substr(pos, res.find(',', pos) - pos);
-#endif  // __GNUC__ >= 4.7
+#endif  // __GNUC__, GCC >= 4.7
 #else
     return std::string();
 #endif  // _MSC_VER
@@ -2391,7 +2391,7 @@ public:
     /*!
      *  \brief Set argument 'nargs' value
      *
-     *  \param value Nargs value : "?", "*", "+"
+     *  \param value Nargs value: "?", "*", "+"
      *
      *  \return Current argument reference
      */
@@ -2412,6 +2412,8 @@ public:
      *  \brief Suppress argument 'nargs' value
      *
      *  \param value argparse::SUPPRESS
+     *
+     *  \since NEXT_RELEASE
      *
      *  \return Current argument reference
      */
@@ -10673,6 +10675,7 @@ Argument::error_nargs(
         case ZERO_OR_ONE :
         case ZERO_OR_MORE :
         case REMAINDING :
+        case SUPPRESSING :
         default :
             return std::string();
     }
