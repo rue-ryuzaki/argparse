@@ -2187,6 +2187,7 @@ _ARGPARSE_EXPORT class Argument
         ZERO_OR_ONE     = 0x08,  // "?"
         ZERO_OR_MORE    = 0x10,  // "*"
         REMAINDING      = 0x20,  // argparse::REMAINDER
+        SUPPRESSING     = 0x40,  // argparse::SUPPRESS
     };
 
     enum Type _ARGPARSE_ENUM_TYPE(uint8_t)
@@ -2398,7 +2399,7 @@ public:
     nargs(std::string const& value);
 
     /*!
-     *  \brief Set argument 'nargs' argparse::REMAINDER value
+     *  \brief Set argument 'nargs' value
      *
      *  \param value argparse::REMAINDER
      *
@@ -2406,6 +2407,16 @@ public:
      */
     Argument&
     nargs(_REMAINDER value);
+
+    /*!
+     *  \brief Suppress argument 'nargs' value
+     *
+     *  \param value argparse::SUPPRESS
+     *
+     *  \return Current argument reference
+     */
+    Argument&
+    nargs(_SUPPRESS value);
 
     /*!
      *  \brief Set argument 'nargs' optional ("?") value
@@ -9985,6 +9996,20 @@ Argument::nargs(
 }
 
 _ARGPARSE_INL Argument&
+Argument::nargs(
+        _SUPPRESS value)
+{
+    if (!(action() & detail::_store_action) || m_type == Operand
+            || value != argparse::SUPPRESS) {
+        throw TypeError("got an unexpected keyword argument 'nargs'");
+    }
+    m_nargs = SUPPRESSING;
+    m_nargs_str = std::string("0");
+    m_num_args = 0;
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
 Argument::const_value(
         std::string const& value)
 {
@@ -10482,6 +10507,8 @@ Argument::get_nargs() const
             return m_nargs_str;
         case REMAINDING :
             return "...";
+        case SUPPRESSING :
+            return "";
         default :
             return "Undefined";
     }
@@ -10578,7 +10605,7 @@ Argument::process_nargs_suffix(
     }
     std::string const name = names_size > 1
             ? ("[" + detail::_join(names, ", ") + "]") : detail::_join(names);
-    if (m_type == Optional && !name.empty()) {
+    if (m_type == Optional && !name.empty() && m_nargs != SUPPRESSING) {
         res += detail::_spaces;
     }
     if (m_type == Operand && !name.empty()) {
@@ -10601,6 +10628,7 @@ Argument::process_nargs_suffix(
         case REMAINDING :
             res += "...";
             break;
+        case SUPPRESSING :
         default :
             break;
     }
@@ -11759,6 +11787,7 @@ Namespace::store_actions_to_string(
              & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE)))
             || (!args.second.exists()
                 && args.first->m_type == Argument::Optional)
+            || args.first->m_nargs == Argument::SUPPRESSING
             || args.second.is_default()) {
         return detail::_vector_to_string(args.second(), ", ",
                                          quotes, false, "None");
@@ -13461,7 +13490,8 @@ ArgumentParser::validate_argument_value(
         std::string const& value) const
 {
     detail::Value<std::vector<std::string> > const& choices = arg.m_choices;
-    if (choices.has_value()) {
+    if (!(arg.m_nargs & (Argument::REMAINDING | Argument::SUPPRESSING))
+            && choices.has_value()) {
         std::string str = detail::_remove_quotes<std::string>(value);
         if (!str.empty() && !detail::_exists(str, choices.value())) {
             parser->throw_error(
@@ -14371,7 +14401,7 @@ ArgumentParser::skip_positional_required_check(
         storage_store_default_value(parsers, arg);
         return true;
     }
-    if (arg->m_nargs == Argument::REMAINDING) {
+    if (arg->m_nargs & (Argument::REMAINDING | Argument::SUPPRESSING)) {
         return true;
     }
     return false;
