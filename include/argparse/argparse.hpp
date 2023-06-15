@@ -4014,14 +4014,13 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         if (args.second.empty()) {
             return T();
         }
         if (args.second.size() != 1) {
-            throw
-            TypeError("trying to get data from array argument '" + key + "'");
+            throw TypeError("got a data-array for argument '" + key + "'");
         }
         return to_type<T>(args.second.front());
     }
@@ -4051,8 +4050,7 @@ public:
             return T();
         }
         if (args.second.size() != 1) {
-            throw
-            TypeError("trying to get data from array argument '" + key + "'");
+            throw TypeError("got a data-array for argument '" + key + "'");
         }
         return to_type<T>(args.second.front());
     }
@@ -4076,7 +4074,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         auto vector = to_vector<typename T::value_type>(args.second());
         T res{};
@@ -4119,7 +4117,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         typedef typename T::value_type V;
         std::vector<V> vector = to_vector<V>(args.second().begin(),
@@ -4148,7 +4146,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
@@ -4179,7 +4177,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         auto vector = to_tupled_vector<
                 typename T::value_type>(args.second(), sep);
@@ -4207,7 +4205,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         typedef typename T::key_type K;
         typedef typename T::mapped_type V;
@@ -4243,7 +4241,7 @@ public:
                 || !(args.first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
@@ -4283,7 +4281,7 @@ public:
                 || !(args.first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         typedef typename T::value_type V;
         typedef typename T::value_type::value_type VV;
@@ -4321,7 +4319,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         if (args.second.empty()) {
             return T();
@@ -4337,8 +4335,7 @@ public:
                                   to_type<V>(args.second.at(1)));
         }
         if (args.second.size() != 1) {
-            throw
-            TypeError("trying to get data from array argument '" + key + "'");
+            throw TypeError("got a data-array for argument '" + key + "'");
         }
         return to_pair<K, V>(args.second.front(), sep);
     }
@@ -4361,7 +4358,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         typedef typename T::value_type V;
         std::vector<V> vector = to_vector<V>(args.second());
@@ -4389,7 +4386,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         if (args.second.empty()) {
             return T();
@@ -4398,8 +4395,7 @@ public:
             return to_tuple(detail::type_tag<T>{}, args.second());
         }
         if (args.second.size() != 1) {
-            throw
-            TypeError("trying to get data from array argument '" + key + "'");
+            throw TypeError("got a data-array for argument '" + key + "'");
         }
         return to_tuple(
                     detail::type_tag<T>{},
@@ -4436,7 +4432,7 @@ public:
         detail::_check_type_name(args.first->m_type_name,
                                  detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
-            throw TypeError("invalid get type for argument '" + key + "'");
+            throw TypeError("got an invalid type for argument '" + key + "'");
         }
         return to_type<T>(detail::_join(args.second()));
     }
@@ -5192,8 +5188,7 @@ private:
             return T();
         }
         if (data.size() != 1) {
-            throw TypeError("trying to get data from array argument value '"
-                            + data + "'");
+            throw TypeError("got a data-array in value '" + data + "'");
         }
         return static_cast<T>(data.at(0));
     }
@@ -11649,8 +11644,7 @@ Namespace::to_args(
                 return std::string();
             }
             if (args.second.size() != 1) {
-                throw TypeError("trying to get data from array argument '"
-                                + key + "'");
+                throw TypeError("got a data-array for argument '" + key + "'");
             }
             return detail::_have_quotes(args.second.front())
                     ? args.second.front()
@@ -11686,8 +11680,7 @@ Namespace::to_string(
                 return std::string("None");
             }
             if (args.second.size() != 1) {
-                throw TypeError("trying to get data from array argument '"
-                                + key + "'");
+                throw TypeError("got a data-array for argument '" + key + "'");
             }
             return quotes + args.second.front() + quotes;
         case argparse::store_true :
@@ -11751,7 +11744,7 @@ Namespace::boolean_option_to_args(
         return detail::_bool_to_string(args.first->default_value());
     }
     if (args.second.size() != 1) {
-        throw TypeError("trying to get data from array argument '" + key + "'");
+        throw TypeError("got a data-array for argument '" + key + "'");
     }
     return (args.first->action() != argparse::BooleanOptionalAction
             || args.second.front() == args.first->const_value())
@@ -11769,8 +11762,7 @@ Namespace::boolean_option_to_string(
                 ? "None" : detail::_bool_to_string(args.first->default_value());
     }
     if (args.second.size() != 1) {
-        throw
-        TypeError("trying to get data from array argument '" + key + "'");
+        throw TypeError("got a data-array for argument '" + key + "'");
     }
     return args.second.is_default()
             ? quotes + args.second.front() + quotes
