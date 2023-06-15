@@ -72,7 +72,6 @@
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_RVAL
-#undef _ARGPARSE_TYPENAME_VOID
 #undef _ARGPARSE_USE_CONSTEXPR
 
 // -- #define -----------------------------------------------------------------
@@ -303,7 +302,6 @@
 #define _ARGPARSE_ENUM_TYPE(X) : X
 #define _ARGPARSE_MOVE(X) std::move(X)
 #define _ARGPARSE_RVAL &&
-#define _ARGPARSE_TYPENAME_VOID template <typename = void>
 #else
 #define _ARGPARSE_FINAL
 #define _ARGPARSE_NOEXCEPT
@@ -313,7 +311,6 @@
 #define _ARGPARSE_ENUM_TYPE(X)
 #define _ARGPARSE_MOVE(X) X
 #define _ARGPARSE_RVAL const&
-#define _ARGPARSE_TYPENAME_VOID
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_17
@@ -2315,38 +2312,8 @@ public:
      *
      *  \return Argument object
      */
-    _ARGPARSE_TYPENAME_VOID
     explicit
-    Argument(std::vector<std::string> const& flags)
-        : m_flags(flags),
-          m_all_flags(m_flags),
-          m_name(),
-          m_action(argparse::store),
-          m_default_type(),
-          m_help_type(),
-          m_type(NoType),
-          m_nargs(NARGS_DEF),
-          m_num_args(1),
-          m_nargs_str("1"),
-          m_const(),
-          m_default(),
-          m_implicit(),
-          m_type_name(),
-          m_choices(),
-          m_help(),
-          m_version(),
-          m_metavar(),
-#ifdef _ARGPARSE_CXX_11
-          m_dest(std::vector<std::string>{ std::string() }),
-          m_handle(nullptr),
-#else
-          m_dest(detail::_vector(std::string())),
-#endif  // C++11+
-          m_post_trigger(_ARGPARSE_NULLPTR),
-          m_required()
-    {
-        m_help[std::string()] = std::string();
-    }
+    Argument(std::vector<std::string> const& flags);
 
     /*!
      *  \brief Construct argument object from another argument
@@ -2670,21 +2637,8 @@ public:
      *
      *  \return Current argument reference
      */
-    _ARGPARSE_TYPENAME_VOID
-    inline Argument&
-    choices(std::string const& value)
-    {
-        if (!(action() & (detail::_store_action | argparse::language))) {
-            throw TypeError("got an unexpected keyword argument 'choices'");
-        }
-        std::vector<std::string> values;
-        values.reserve(value.size());
-        for (std::size_t i = 0; i < value.size(); ++i) {
-            values.push_back(std::string(1, value.at(i)));
-        }
-        m_choices = _ARGPARSE_MOVE(values);
-        return *this;
-    }
+    Argument&
+    choices(std::string const& value);
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -3557,15 +3511,9 @@ public:
      *
      *  \return Current argument group reference
      */
-    _ARGPARSE_TYPENAME_VOID
-    inline ArgumentGroup&
+    ArgumentGroup&
     add_argument(
-            Argument const& argument)
-    {
-        m_data->validate_argument(Argument(argument), m_prefix_chars);
-        process_add_argument();
-        return *this;
-    }
+            Argument const& argument);
 
 private:
     void
@@ -3656,15 +3604,9 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
-    _ARGPARSE_TYPENAME_VOID
-    inline MutuallyExclusiveGroup&
+    MutuallyExclusiveGroup&
     add_argument(
-            Argument const& argument)
-    {
-        m_data->validate_argument(Argument(argument), m_prefix_chars);
-        process_add_argument();
-        return *this;
-    }
+            Argument const& argument);
 
 private:
     std::string
@@ -6476,15 +6418,9 @@ public:
      *
      *  \return Current parser reference
      */
-    _ARGPARSE_TYPENAME_VOID
-    inline ArgumentParser&
+    ArgumentParser&
     add_argument(
-            Argument const& argument)
-    {
-        m_data->validate_argument(Argument(argument), prefix_chars());
-        process_add_argument();
-        return *this;
-    }
+            Argument const& argument);
 
     /*!
      *  \brief Add argument group
@@ -6612,7 +6548,6 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_TYPENAME_VOID
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_args(
@@ -6693,7 +6628,6 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_TYPENAME_VOID
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_args(
@@ -6775,7 +6709,6 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_TYPENAME_VOID
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_intermixed_args(
@@ -6857,7 +6790,6 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_TYPENAME_VOID
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(
@@ -9705,6 +9637,39 @@ Argument::Argument(
 
 _ARGPARSE_INL
 Argument::Argument(
+        std::vector<std::string> const& flags)
+    : m_flags(flags),
+      m_all_flags(m_flags),
+      m_name(),
+      m_action(argparse::store),
+      m_default_type(),
+      m_help_type(),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
+      m_num_args(1),
+      m_nargs_str("1"),
+      m_const(),
+      m_default(),
+      m_implicit(),
+      m_type_name(),
+      m_choices(),
+      m_help(),
+      m_version(),
+      m_metavar(),
+#ifdef _ARGPARSE_CXX_11
+      m_dest(std::vector<std::string>{ std::string() }),
+      m_handle(nullptr),
+#else
+      m_dest(detail::_vector(std::string())),
+#endif  // C++11+
+      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_required()
+{
+    m_help[std::string()] = std::string();
+}
+
+_ARGPARSE_INL
+Argument::Argument(
         Argument const& orig)
     : m_flags(orig.m_flags),
       m_all_flags(orig.m_all_flags),
@@ -10083,6 +10048,21 @@ Argument::choice(
     }
     std::vector<std::string> values;
     values.push_back(value);
+    m_choices = _ARGPARSE_MOVE(values);
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::choices(std::string const& value)
+{
+    if (!(action() & (detail::_store_action | argparse::language))) {
+        throw TypeError("got an unexpected keyword argument 'choices'");
+    }
+    std::vector<std::string> values;
+    values.reserve(value.size());
+    for (std::size_t i = 0; i < value.size(); ++i) {
+        values.push_back(std::string(1, value.at(i)));
+    }
     m_choices = _ARGPARSE_MOVE(values);
     return *this;
 }
@@ -11283,6 +11263,15 @@ ArgumentGroup::description(
     return *this;
 }
 
+_ARGPARSE_INL ArgumentGroup&
+ArgumentGroup::add_argument(
+        Argument const& argument)
+{
+    m_data->validate_argument(Argument(argument), m_prefix_chars);
+    process_add_argument();
+    return *this;
+}
+
 _ARGPARSE_INL void
 ArgumentGroup::limit_help_flags(
         HelpFormatter const& formatter,
@@ -11382,6 +11371,15 @@ _ARGPARSE_INL bool
 MutuallyExclusiveGroup::required() const _ARGPARSE_NOEXCEPT
 {
     return m_required;
+}
+
+_ARGPARSE_INL MutuallyExclusiveGroup&
+MutuallyExclusiveGroup::add_argument(
+        Argument const& argument)
+{
+    m_data->validate_argument(Argument(argument), m_prefix_chars);
+    process_add_argument();
+    return *this;
 }
 
 _ARGPARSE_INL std::string
@@ -12673,6 +12671,15 @@ ArgumentParser::add_argument(
     m_data->create_argument(m_data, flags, prefix_chars());
     process_add_argument();
     return *m_data->m_arguments.back();
+}
+
+_ARGPARSE_INL ArgumentParser&
+ArgumentParser::add_argument(
+        Argument const& argument)
+{
+    m_data->validate_argument(Argument(argument), prefix_chars());
+    process_add_argument();
+    return *this;
 }
 
 _ARGPARSE_INL ArgumentGroup&
@@ -15014,7 +15021,6 @@ ArgumentParser::handle(std::string const&) const { /* stub */ }
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_RVAL
-#undef _ARGPARSE_TYPENAME_VOID
 #undef _ARGPARSE_USE_CONSTEXPR
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
