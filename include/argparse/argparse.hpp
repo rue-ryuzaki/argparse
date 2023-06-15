@@ -10829,12 +10829,8 @@ _ArgumentData::get_arguments(
 {
     std::vector<pArgument> res;
     res.reserve(m_arguments.size());
-#ifdef _ARGPARSE_CXX_11
-    for (auto const& arg : m_arguments) {
-#else
     for (std::size_t i = 0; i < m_arguments.size(); ++i) {
         pArgument const& arg = m_arguments.at(i);
-#endif  // C++11+
         if ((add_suppress || !arg->m_help_type.has_value())
                 && (arg->m_type != Argument::Optional
                     || !arg->flags().empty())) {
@@ -10851,12 +10847,8 @@ _ArgumentData::get_optional(
 {
     std::vector<pArgument> res;
     res.reserve(m_optional.size());
-#ifdef _ARGPARSE_CXX_11
-    for (auto const& pair : m_optional) {
-#else
     for (std::size_t i = 0; i < m_optional.size(); ++i) {
         std::pair<pArgument, bool> const& pair = m_optional.at(i);
-#endif  // C++11+
         if ((add_suppress || !pair.first->m_help_type.has_value())
                 && (add_group || !pair.second)
                 && !pair.first->flags().empty()) {
@@ -10873,12 +10865,8 @@ _ArgumentData::get_operand(
 {
     std::vector<pArgument> res;
     res.reserve(m_operand.size());
-#ifdef _ARGPARSE_CXX_11
-    for (auto const& pair : m_operand) {
-#else
     for (std::size_t i = 0; i < m_operand.size(); ++i) {
         std::pair<pArgument, bool> const& pair = m_operand.at(i);
-#endif  // C++11+
         if ((add_suppress || !pair.first->m_help_type.has_value())
                 && (add_group || !pair.second)) {
             res.push_back(pair.first);
@@ -10894,12 +10882,8 @@ _ArgumentData::get_positional(
 {
     std::vector<pArgument> res;
     res.reserve(m_positional.size());
-#ifdef _ARGPARSE_CXX_11
-    for (auto const& pair : m_positional) {
-#else
     for (std::size_t i = 0; i < m_positional.size(); ++i) {
         std::pair<pArgument, bool> const& pair = m_positional.at(i);
-#endif  // C++11+
         if ((add_suppress || !pair.first->m_help_type.has_value())
                 && (add_group || !pair.second)) {
             res.push_back(pair.first);
