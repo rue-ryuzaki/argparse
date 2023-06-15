@@ -5046,7 +5046,8 @@ private:
     template <class T>
     std::vector<T>
     to_vector(
-            value_const_iterator beg, value_const_iterator end,
+            value_const_iterator beg,
+            value_const_iterator end,
             typename detail::enable_if<
                 detail::is_constructible<std::string, T>::value
                 || detail::is_floating_point<T>::value
@@ -5075,7 +5076,8 @@ private:
     template <class T>
     std::vector<T>
     to_vector(
-            value_const_iterator beg, value_const_iterator end,
+            value_const_iterator beg,
+            value_const_iterator end,
             typename detail::enable_if<
                 !detail::is_constructible<std::string, T>::value
                 && !detail::is_floating_point<T>::value
@@ -5401,7 +5403,7 @@ private:
     try_to_type(
             std::string const& data) const _ARGPARSE_NOEXCEPT
     {
-        if (data.empty() || data.size() != 1) {
+        if (data.size() != 1) {
             return std::nullopt;
         }
         return static_cast<T>(data.front());
@@ -9221,9 +9223,8 @@ _update_flag_name(
         _update_flag_name_func(flag_name, flag_name, prefixes);
     } else if (flags.size() > 1) {
         // no positional multiflag
-        throw ValueError("invalid option string " + flags.front()
-                         + ": must starts with a character '"
-                         + prefix_chars + "'");
+        throw ValueError("invalid option string " + flags.front() + ": must "
+                         + "starts with a character '" + prefix_chars + "'");
     }
     for (std::size_t i = 1; i < flags.size(); ++i) {
         // check arguments
@@ -13464,7 +13465,8 @@ ArgumentParser::validate_argument_value(
         std::string str = detail::_remove_quotes<std::string>(value);
         if (!str.empty() && !detail::_exists(str, choices.value())) {
             parser->throw_error(
-                        "argument " + arg.m_flags.front()
+                        "argument " + (arg.m_flags.empty()
+                                       ? arg.dest() : arg.m_flags.front())
                         + ": invalid choice: '" + str + "' (choose from "
                         + detail::_join(choices.value(), ", ", "'") + ")");
         }
