@@ -1,4 +1,8 @@
 /*
+*  __            __   __  __   __   __   __  __   __
+* |   _|_ _|_   |  | |   |  | |  | |  | |   |__  |__|
+* |__  |   |    \_/| |   \__| |_/  \_/| |    __| \__
+*                         __| |
 * MIT License
 *
 * Declaration header for C++ Argument parser
