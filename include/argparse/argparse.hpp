@@ -14841,7 +14841,7 @@ ArgumentParser::test_diagnostics(
                 if (dest_args.count(flag) != 0) {
                     if (conflict_handler() == "resolve") {
                         ++diagnostics.first;
-                        os << _warn << " " << argument
+                        os << _warn << " " << argument << " resolve"
                            << ": conflicting option string: '" << flag << "'\n";
                     } else {
                         ++diagnostics.second;
@@ -14859,7 +14859,14 @@ ArgumentParser::test_diagnostics(
                 ++diagnostics.first;
                 os << _warn << " " << argument << ": choice '"
                    << str << "' can be incorrect\n";
+            } else if (str.empty()) {
+                ++diagnostics.first;
+                os << _warn << " " << argument << ": empty choice\n";
             }
+        }
+        if (arg->m_choices.has_value() && arg->choices().empty()) {
+            ++diagnostics.first;
+            os << _warn << " " << argument << ": empty choices\n";
         }
         // check help
         if (detail::_tr(arg->m_help, lang).empty()
