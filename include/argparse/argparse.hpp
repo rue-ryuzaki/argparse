@@ -2152,6 +2152,11 @@ void
 _check_type(
         Value<std::string> const& expected,
         std::string const& received);
+
+void
+_check_non_count_action(
+        std::string const& key,
+        Action action);
 }  // namespace detail
 
 /*!
@@ -4016,9 +4021,7 @@ public:
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         if (args.second.empty()) {
             return T();
         }
@@ -4074,9 +4077,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         auto vector = to_vector<typename T::value_type>(args.second());
         T res{};
         if (res.size() != vector.size()) {
@@ -4116,9 +4117,7 @@ public:
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         typedef typename T::value_type V;
         std::vector<V> vector = to_vector<V>(args.second().begin(),
                                              args.second().end());
@@ -4144,9 +4143,7 @@ public:
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
         std::vector<std::pair<K, V> > vector
@@ -4174,9 +4171,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         auto vector = to_tupled_vector<
                 typename T::value_type>(args.second(), sep);
         return T(vector.begin(), vector.end());
@@ -4201,9 +4196,7 @@ public:
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         typedef typename T::key_type K;
         typedef typename T::mapped_type V;
         T res = T();
@@ -4312,9 +4305,7 @@ public:
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         if (args.second.empty()) {
             return T();
         }
@@ -4350,9 +4341,7 @@ public:
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         typedef typename T::value_type V;
         std::vector<V> vector = to_vector<V>(args.second());
         return T(std::deque<V>(vector.begin(), vector.end()));
@@ -4377,9 +4366,7 @@ public:
     {
         auto const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         if (args.second.empty()) {
             return T();
         }
@@ -4422,9 +4409,7 @@ public:
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
-        if (args.first->action() == argparse::count) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
+        detail::_check_non_count_action(key, args.first->action());
         return to_type<T>(detail::_join(args.second()));
     }
 
@@ -7710,13 +7695,13 @@ private:
             Parsers const& parsers);
 
     static void
-    process_optionals_required(
+    process_required_arguments(
             std::vector<std::string>& required_args,
-            pArguments const& optional,
+            pArguments const& arguments,
             _Storage const& storage);
 
     static void
-    process_subparser_required(
+    process_required_subparser(
             bool required,
             std::size_t pos,
             SubparserInfo const& info,
@@ -9167,6 +9152,16 @@ _check_type(
     if (expected.has_value() && !_is_type_correct(expected(), received)) {
         throw TypeError("type_name mismatch: expected '" + expected.value()
                         + "', received '" + received + "'");
+    }
+}
+
+_ARGPARSE_INL void
+_check_non_count_action(
+        std::string const& key,
+        Action action)
+{
+    if (action == argparse::count) {
+        throw TypeError("got an invalid type for count argument '" + key + "'");
     }
 }
 
@@ -14298,13 +14293,13 @@ ArgumentParser::check_mutex_groups(
 }
 
 _ARGPARSE_INL void
-ArgumentParser::process_optionals_required(
+ArgumentParser::process_required_arguments(
         std::vector<std::string>& required_args,
-        pArguments const& optional,
+        pArguments const& arguments,
         _Storage const& storage)
 {
-    for (std::size_t i = 0; i < optional.size(); ++i) {
-        pArgument const& arg = optional.at(i);
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
+        pArgument const& arg = arguments.at(i);
         if (arg->required() && storage.at(arg).empty()) {
             required_args.push_back(detail::_join(arg->flags(), "/"));
         }
@@ -14312,7 +14307,7 @@ ArgumentParser::process_optionals_required(
 }
 
 _ARGPARSE_INL void
-ArgumentParser::process_subparser_required(
+ArgumentParser::process_required_subparser(
         bool required,
         std::size_t pos,
         SubparserInfo const& info,
@@ -14333,8 +14328,8 @@ ArgumentParser::process_required_check(
         _Storage const& storage)
 {
     std::vector<std::string> required;
-    process_optionals_required(required, info.optional, storage);
-    process_optionals_required(required, info.operand, storage);
+    process_required_arguments(required, info.optional, storage);
+    process_required_arguments(required, info.operand, storage);
     if (!required.empty()) {
         info.parser->throw_error("the following arguments are required: "
                                  + detail::_join(required, ", "));
@@ -14372,21 +14367,21 @@ ArgumentParser::check_required_args(
 {
     std::deque<ParserInfo>::reverse_iterator it = parsers.rbegin();
     std::vector<std::string> required;
-    process_optionals_required(required, it->optional, parsers.front().storage);
-    process_optionals_required(required, it->operand, parsers.front().storage);
+    process_required_arguments(required, it->optional, parsers.front().storage);
+    process_required_arguments(required, it->operand, parsers.front().storage);
     SubparserInfo const& info = it->subparser;
     bool sub_required = info.first && info.first->required();
     if (!required.empty() || pos < positional.size() || sub_required) {
         std::string args;
         for ( ; pos < positional.size(); ++pos) {
-            process_subparser_required(sub_required, pos, info, args);
+            process_required_subparser(sub_required, pos, info, args);
             pArgument const& arg = positional.at(pos);
             if (args.empty() && skip_positional_required_check(parsers, arg)) {
                 continue;
             }
             detail::_append_value_to(arg->m_flags.front(), args, ", ");
         }
-        process_subparser_required(sub_required, pos, info, args);
+        process_required_subparser(sub_required, pos, info, args);
         for (std::size_t i = 0; i < required.size(); ++i) {
             detail::_append_value_to(required.at(i), args, ", ");
         }
