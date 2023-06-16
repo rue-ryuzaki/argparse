@@ -10238,7 +10238,11 @@ _ARGPARSE_INL Argument&
 Argument::handle(
         std::function<void()> func)
 {
-    return handle([func] (std::string const&) { func(); });
+    if (action() & (argparse::version | argparse::help)) {
+        throw TypeError("got an unexpected keyword argument 'handle'");
+    }
+    m_handle = std::bind([](std::function<void()>& f){ f(); }, std::move(func));
+    return *this;
 }
 #endif  // C++11+
 
@@ -12719,7 +12723,8 @@ _ARGPARSE_INL ArgumentParser&
 ArgumentParser::handle(
         std::function<void()> func) _ARGPARSE_NOEXCEPT
 {
-    return handle([func] (std::string const&) { func(); });
+    m_handle = std::bind([](std::function<void()>& f){ f(); }, std::move(func));
+    return *this;
 }
 
 _ARGPARSE_INL ArgumentParser&
