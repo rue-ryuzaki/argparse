@@ -75,7 +75,6 @@
 #undef _ARGPARSE_NOEXCEPT
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
-#undef _ARGPARSE_RVAL
 #undef _ARGPARSE_USE_CONSTEXPR
 
 // -- #define -----------------------------------------------------------------
@@ -305,7 +304,6 @@
 #define _ARGPARSE_USE_CONSTEXPR constexpr
 #define _ARGPARSE_ENUM_TYPE(X) : X
 #define _ARGPARSE_MOVE(X) std::move(X)
-#define _ARGPARSE_RVAL &&
 #else
 #define _ARGPARSE_FINAL
 #define _ARGPARSE_NOEXCEPT
@@ -314,7 +312,6 @@
 #define _ARGPARSE_USE_CONSTEXPR const
 #define _ARGPARSE_ENUM_TYPE(X)
 #define _ARGPARSE_MOVE(X) X
-#define _ARGPARSE_RVAL const&
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_17
@@ -1311,9 +1308,13 @@ struct is_stl_matrix_queue<std::vector<std::queue           <T> > >:true_type{};
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_11
+template <class T>  struct rval { typedef T&& type; };
+
 using std::shared_ptr;
 using std::make_shared;
 #else
+template <class T>  struct rval { typedef T const& type; };
+
 // Slightly modified version of the shared_ptr implementation for C++98
 // from Sébastien Rombauts which is licensed under the MIT License.
 // See https://github.com/SRombauts/shared_ptr
@@ -7476,8 +7477,8 @@ private:
     static Namespace
     create_namespace(
             bool only_known,
-            _Storage _ARGPARSE_RVAL storage,
-            std::vector<std::string> _ARGPARSE_RVAL unrecognized_args);
+            detail::rval<_Storage>::type storage,
+            detail::rval<std::vector<std::string> >::type unrecognized_args);
 
     static bool
     negative_numbers_presented(
@@ -13397,8 +13398,8 @@ ArgumentParser::process_split_equal(
 _ARGPARSE_INL Namespace
 ArgumentParser::create_namespace(
         bool only_known,
-        _Storage _ARGPARSE_RVAL storage,
-        std::vector<std::string> _ARGPARSE_RVAL unrecognized_args)
+        detail::rval<_Storage>::type storage,
+        detail::rval<std::vector<std::string> >::type unrecognized_args)
 {
     if (only_known) {
         return Namespace(_ARGPARSE_MOVE(storage),
@@ -14985,7 +14986,6 @@ ArgumentParser::handle(std::string const&) const { /* stub */ }
 #undef _ARGPARSE_NOEXCEPT
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
-#undef _ARGPARSE_RVAL
 #undef _ARGPARSE_USE_CONSTEXPR
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
