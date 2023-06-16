@@ -1893,8 +1893,7 @@ public:
     static std::string
     name()
     {
-        auto str = _get_type_name<T>();
-        str = _replace(str, "__1::", std::string());
+        auto str = _replace(_get_type_name<T>(), "__1::", std::string());
         return str.substr(0, str.find('<')) + "<" + name<typename T::key_type>()
                 + ", " + name<typename T::mapped_type>() + ">";
     }
@@ -1953,8 +1952,7 @@ public:
     static std::string
     name(typename enable_if<is_stl_map<T>::value, bool>::type = true)
     {
-        std::string str = _get_type_name<T>();
-        str = _replace(str, "__1::", std::string());
+        std::string str = _replace(_get_type_name<T>(), "__1::", std::string());
         return str.substr(0, str.find('<')) + "<" + name<typename T::key_type>()
                 + ", " + name<typename T::mapped_type>() + ">";
     }
@@ -14959,11 +14957,10 @@ ArgumentParser::test_diagnostics(
         }
     }
     // end diagnostics
-    bool res = true;
-    if (diagnostics.first == 0 && diagnostics.second == 0) {
+    bool res = diagnostics.first == 0 && diagnostics.second == 0;
+    if (res) {
         os << _ok << " no warning or errors detected\n";
     } else {
-        res = false;
         if (diagnostics.first != 0) {
             os << _warn << " detected warnings: " << diagnostics.first << "\n";
         }

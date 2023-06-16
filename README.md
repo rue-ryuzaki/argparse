@@ -33,9 +33,11 @@ The work of the parser on older versions of compilers is not guaranteed.
 ```cpp-argparse-dev``` [MacPorts](https://ports.macports.org/port/cpp-argparse-dev)
 ## Available macros:
 ### Can be set
-```ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION``` or ```ARGPARSE_NO_AUTODETECT (deprecated)``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely <Windows.h> on OS Windows)
+```ARGPARSE_IMPLEMENTATION``` - Use to build argparse library to object. To avoid `multiple definition of ...` use argparse declaration header.
 
-```ARGPARSE_TAB_SIZE (deprecated)``` - By default, RawDescriptionHelpFormatter and RawTextHelpFormatter replaces tab with 4 spaces expand. You can change amount of expanding spaces.
+```ARGPARSE_DECLARATION``` - Use argparse library as a declaration header. You can use ```#include <argparse/argparse_decl.hpp>``` instead of ```#include <argparse/argparse.hpp>```
+
+```ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely <Windows.h> on OS Windows). Does not make sense to use with ```ARGPARSE_DECLARATION```
 ### Can be read
 ```ARGPARSE_VERSION_MAJOR``` - Major version of the argparse library
 
