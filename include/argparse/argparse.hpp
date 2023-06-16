@@ -2144,12 +2144,12 @@ private:
 };
 
 bool
-_is_type_name_correct(
+_is_type_correct(
         std::string const& expected,
         std::string const& received) _ARGPARSE_NOEXCEPT;
 
 void
-_check_type_name(
+_check_type(
         Value<std::string> const& expected,
         std::string const& received);
 }  // namespace detail
@@ -4015,8 +4015,7 @@ public:
     get(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::name<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4045,8 +4044,7 @@ public:
     get(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::name<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
             return static_cast<T>(args.second.size());
         }
@@ -4075,8 +4073,7 @@ public:
     get(std::string const& key) const
     {
         auto const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::basic<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4118,8 +4115,7 @@ public:
     get(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::basic<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4147,8 +4143,7 @@ public:
             char sep = detail::_equal) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::basic<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4178,8 +4173,7 @@ public:
             char sep = detail::_equal) const
     {
         auto const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::basic<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4206,8 +4200,7 @@ public:
             char sep = detail::_equal) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::basic<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4239,8 +4232,7 @@ public:
     get(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::basic<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         if (args.first->action() != argparse::append
                 || !(args.first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
@@ -4279,8 +4271,7 @@ public:
     get(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::basic<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         if (args.first->action() != argparse::append
                 || !(args.first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
@@ -4320,8 +4311,7 @@ public:
             char sep = detail::_equal) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::name<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4359,8 +4349,7 @@ public:
     get(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::basic<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4387,8 +4376,7 @@ public:
             char sep = detail::_equal) const
     {
         auto const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::name<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4433,8 +4421,7 @@ public:
     get(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type_name(args.first->m_type_name,
-                                 detail::Type::name<T>());
+        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
             throw TypeError("got an invalid type for argument '" + key + "'");
         }
@@ -4506,8 +4493,8 @@ public:
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.size() != 1
-                || !detail::_is_type_name_correct(args->first->type_name(),
-                                                  detail::Type::name<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::name<T>())) {
             return std::nullopt;
         }
         return try_to_type<T>(args->second.front());
@@ -4532,8 +4519,8 @@ public:
     {
         auto args = try_get_data(key);
         if (!args.has_value()
-                || !detail::_is_type_name_correct(args->first->type_name(),
-                                                  detail::Type::name<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::name<T>())) {
             return std::nullopt;
         }
         if (args->first->action() == argparse::count) {
@@ -4563,8 +4550,8 @@ public:
         auto args = try_get_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
-                || !detail::_is_type_name_correct(
-                        args->first->type_name(), detail::Type::basic<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::basic<T>())) {
             return std::nullopt;
         }
         auto vector = try_to_vector<typename T::value_type>(args->second());
@@ -4608,8 +4595,8 @@ public:
         auto args = try_get_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
-                || !detail::_is_type_name_correct(
-                        args->first->type_name(), detail::Type::basic<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::basic<T>())) {
             return std::nullopt;
         }
         auto vector = try_to_vector<typename T::value_type>(
@@ -4641,8 +4628,8 @@ public:
         auto args = try_get_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
-                || !detail::_is_type_name_correct(
-                        args->first->type_name(), detail::Type::basic<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::basic<T>())) {
             return std::nullopt;
         }
         typedef typename T::value_type::first_type K;
@@ -4675,8 +4662,8 @@ public:
         auto args = try_get_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
-                || !detail::_is_type_name_correct(
-                        args->first->type_name(), detail::Type::basic<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::basic<T>())) {
             return std::nullopt;
         }
         auto vector = try_to_tupled_vector<
@@ -4707,8 +4694,8 @@ public:
         auto args = try_get_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
-                || !detail::_is_type_name_correct(
-                        args->first->type_name(), detail::Type::basic<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::basic<T>())) {
             return std::nullopt;
         }
         typedef typename T::key_type K;
@@ -4748,8 +4735,8 @@ public:
                 || !(args->first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))
-                || !detail::_is_type_name_correct(
-                        args->first->type_name(), detail::Type::basic<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::basic<T>())) {
             return std::nullopt;
         }
         typedef typename T::value_type V;
@@ -4794,8 +4781,8 @@ public:
                 || !(args->first->m_nargs
                      & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
                         | Argument::ZERO_OR_MORE))
-                || !detail::_is_type_name_correct(
-                        args->first->type_name(), detail::Type::basic<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::basic<T>())) {
             return std::nullopt;
         }
         typedef typename T::value_type V;
@@ -4839,8 +4826,8 @@ public:
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.empty()
-                || !detail::_is_type_name_correct(args->first->type_name(),
-                                                  detail::Type::name<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::name<T>())) {
             return std::nullopt;
         }
         typedef typename T::first_type K;
@@ -4881,8 +4868,8 @@ public:
         auto args = try_get_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
-                || !detail::_is_type_name_correct(
-                        args->first->type_name(), detail::Type::basic<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::basic<T>())) {
             return std::nullopt;
         }
         typedef typename T::value_type V;
@@ -4914,8 +4901,8 @@ public:
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.empty()
-                || !detail::_is_type_name_correct(args->first->type_name(),
-                                                  detail::Type::name<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::name<T>())) {
             return std::nullopt;
         }
         if (std::isspace(static_cast<unsigned char>(sep))) {
@@ -4956,8 +4943,8 @@ public:
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.empty()
-                || !detail::_is_type_name_correct(args->first->type_name(),
-                                                  detail::Type::name<T>())) {
+                || !detail::_is_type_correct(args->first->type_name(),
+                                             detail::Type::name<T>())) {
             return std::nullopt;
         }
         return try_to_type<T>(detail::_join(args->second()));
@@ -9165,7 +9152,7 @@ _filled_string(
 }
 
 _ARGPARSE_INL bool
-_is_type_name_correct(
+_is_type_correct(
         std::string const& expected,
         std::string const& received) _ARGPARSE_NOEXCEPT
 {
@@ -9173,11 +9160,11 @@ _is_type_name_correct(
 }
 
 _ARGPARSE_INL void
-_check_type_name(
+_check_type(
         Value<std::string> const& expected,
         std::string const& received)
 {
-    if (expected.has_value() && !_is_type_name_correct(expected(), received)) {
+    if (expected.has_value() && !_is_type_correct(expected(), received)) {
         throw TypeError("type_name mismatch: expected '" + expected.value()
                         + "', received '" + received + "'");
     }
