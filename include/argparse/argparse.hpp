@@ -7773,9 +7773,6 @@ private:
             std::string const& value);
 
     std::size_t
-    argument_name_limit() const;
-
-    std::size_t
     argument_help_limit() const;
 
     SubparserInfo
@@ -7813,18 +7810,6 @@ private:
             SubparserInfo const& info,
             std::size_t index,
             HelpFormatter const& formatter,
-            std::size_t size,
-            std::size_t width,
-            std::string const& lang,
-            std::ostream& os);
-
-    static void
-    print_group(
-            pGroup const& group,
-            pSubparser const& info,
-            bool is_positional,
-            HelpFormatter const& formatter,
-            std::string const& prog,
             std::size_t size,
             std::size_t width,
             std::string const& lang,
@@ -12059,7 +12044,7 @@ ArgumentParser::Subparser::print(
             if (!alias.empty()) {
                 name += " (" + alias + ")";
             }
-            return res += "\n" + detail::_help_formatter(
+            res += "\n" + detail::_help_formatter(
                         name, formatter, help, width, limit);
         }
     }
@@ -13057,7 +13042,7 @@ ArgumentParser::print_help(
         m_groups.at(i)->limit_help_flags(*m_formatter, size);
     }
     size += 4;
-    detail::_limit_to_max(size, argument_name_limit());
+    detail::_limit_to_max(size, output_width() - argument_help_limit());
     if (!positional.empty() || sub_positional) {
         os << "\n" << detail::_tr(m_positionals_title, lang) << ":\n";
         for (std::size_t i = 0; i < positional.size(); ++i) {
@@ -13084,8 +13069,12 @@ ArgumentParser::print_help(
         }
     }
     for (std::size_t i = 0; i < m_groups.size(); ++i) {
-        print_group(m_groups[i], subparser, sub_positional,
-                    *m_formatter, prog(), size, width, lang, os);
+        if (!subparser || (m_groups[i] != subparser
+                           || (!sub_positional
+                               && !subparser->m_help_type.has_value()))) {
+            m_groups[i]->print_help(
+                        os, *m_formatter, prog(), size, width, lang);
+        }
     }
     detail::_print_raw_text_formatter(
                *m_formatter, despecify(detail::_tr(m_epilog, lang)), width, os);
@@ -14520,12 +14509,6 @@ ArgumentParser::is_default_value_stored(
 }
 
 _ARGPARSE_INL std::size_t
-ArgumentParser::argument_name_limit() const
-{
-    return output_width() - argument_help_limit();
-}
-
-_ARGPARSE_INL std::size_t
 ArgumentParser::argument_help_limit() const
 {
     std::size_t width = output_width();
@@ -14656,25 +14639,6 @@ ArgumentParser::print_subparser(
 {
     if (need_print && info.second == index) {
         os << info.first->print(formatter, size, width, lang) << std::endl;
-    }
-}
-
-_ARGPARSE_INL void
-ArgumentParser::print_group(
-        pGroup const& group,
-        pSubparser const& info,
-        bool is_positional,
-        HelpFormatter const& formatter,
-        std::string const& prog,
-        std::size_t size,
-        std::size_t width,
-        std::string const& lang,
-        std::ostream& os)
-{
-    if ((info && (group != info
-                       || (!is_positional && !info->m_help_type.has_value())))
-            || (!info && group != info)) {
-        group->print_help(os, formatter, prog, size, width, lang);
     }
 }
 
@@ -14915,7 +14879,7 @@ ArgumentParser::test_diagnostics(
             if (dest_args.count(flag) != 0) {
                 if (conflict_handler() == "resolve") {
                     ++diagnostics.first;
-                    os << _warn << " subparsers dest '" << flag
+                    os << _warn << " subparsers dest '" << flag << " resolve"
                        << "': conflicting option string: '" << flag << "'\n";
                 } else {
                     ++diagnostics.second;
