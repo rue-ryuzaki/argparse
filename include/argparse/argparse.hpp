@@ -1634,7 +1634,7 @@ template <class T = std::string, class... Args>
 std::vector<T>
 _vector(Args... args)
 {
-    return std::vector<T>{ args... };
+    return std::vector<T>{ std::move(args)... };
 }
 #else
 template <class T>
