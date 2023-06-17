@@ -7361,45 +7361,16 @@ private:
         ParserInfo(
                 ArgumentParser const* parser,
                 _Storage const& storage,
-                SubparserInfo const& subparser)
-            : parser(parser),
-              optional(parser->m_data->get_optional(true, true)),
-              operand(parser->m_data->get_operand(true, true)),
-              storage(storage),
-              subparser(subparser),
-              lang(),
-              have_negative_args()
-        {
-            have_negative_args
-                 = negative_numbers_presented(optional, parser->prefix_chars());
-        }
+                SubparserInfo const& subparser,
+                pArguments const& optional,
+                pArguments const& operand);
 
         ParserInfo(
-                ParserInfo const& orig)
-            : parser(orig.parser),
-              optional(orig.optional),
-              operand(orig.operand),
-              storage(orig.storage),
-              subparser(orig.subparser),
-              lang(orig.lang),
-              have_negative_args(orig.have_negative_args)
-        { }
+                ParserInfo const& orig);
 
-        inline ParserInfo&
+        ParserInfo&
         operator =(
-                ParserInfo const& rhs)
-        {
-            if (this != &rhs) {
-                parser              = rhs.parser;
-                optional            = rhs.optional;
-                operand             = rhs.operand;
-                storage             = rhs.storage;
-                subparser           = rhs.subparser;
-                lang                = rhs.lang;
-                have_negative_args  = rhs.have_negative_args;
-            }
-            return *this;
-        }
+                ParserInfo const& rhs);
 
         // -- data ------------------------------------------------------------
         ArgumentParser const* parser;
@@ -7411,6 +7382,12 @@ private:
         bool have_negative_args;
     };
     typedef std::deque<ParserInfo> Parsers;
+
+    static ParserInfo
+    parser_info(
+            ArgumentParser const* parser,
+            _Storage const& storage,
+            SubparserInfo const& subparser);
 
     void
     throw_error(
@@ -13121,6 +13098,64 @@ ArgumentParser::convert_arg_line_to_args(
     return detail::_vector(arg_line);
 }
 
+_ARGPARSE_INL
+ArgumentParser::ParserInfo::ParserInfo(
+        ArgumentParser const* parser,
+        _Storage const& storage,
+        SubparserInfo const& subparser,
+        pArguments const& optional,
+        pArguments const& operand)
+    : parser(parser),
+      optional(optional),
+      operand(operand),
+      storage(storage),
+      subparser(subparser),
+      lang(),
+      have_negative_args()
+{
+    have_negative_args
+            = negative_numbers_presented(optional, parser->prefix_chars());
+}
+
+_ARGPARSE_INL
+ArgumentParser::ParserInfo::ParserInfo(
+        ParserInfo const& orig)
+    : parser(orig.parser),
+      optional(orig.optional),
+      operand(orig.operand),
+      storage(orig.storage),
+      subparser(orig.subparser),
+      lang(orig.lang),
+      have_negative_args(orig.have_negative_args)
+{ }
+
+_ARGPARSE_INL ArgumentParser::ParserInfo&
+ArgumentParser::ParserInfo::operator =(
+        ParserInfo const& rhs)
+{
+    if (this != &rhs) {
+        parser              = rhs.parser;
+        optional            = rhs.optional;
+        operand             = rhs.operand;
+        storage             = rhs.storage;
+        subparser           = rhs.subparser;
+        lang                = rhs.lang;
+        have_negative_args  = rhs.have_negative_args;
+    }
+    return *this;
+}
+
+_ARGPARSE_INL ArgumentParser::ParserInfo
+ArgumentParser::parser_info(
+        ArgumentParser const* parser,
+        _Storage const& storage,
+        SubparserInfo const& subparser)
+{
+    return ParserInfo(parser, storage, subparser,
+                      parser->m_data->get_optional(true, true),
+                      parser->m_data->get_operand(true, true));
+}
+
 _ARGPARSE_INL void
 ArgumentParser::throw_error(
         std::string const& message,
@@ -13249,7 +13284,7 @@ ArgumentParser::parse_arguments(
     std::vector<std::string> parsed_arguments = read_args_from_file(in_args);
 
     Parsers parsers;
-    parsers.push_back(ParserInfo(this, space.storage(), subparser_info(true)));
+    parsers.push_back(parser_info(this, space.storage(), subparser_info(true)));
 
     check_mutex_arguments();
     check_intermixed_subparser(intermixed, parsers.back().subparser.first);
@@ -13988,8 +14023,8 @@ ArgumentParser::try_capture_parser(
             detail::_append_value_to("'" + alias + "'", choices, ", ");
         }
         if (p->m_name == name || detail::_exists(name, p->aliases())) {
-            parsers.push_back(ParserInfo(p.get(), _Storage(),
-                                         p->subparser_info(true, pos)));
+            parsers.push_back(parser_info(p.get(), _Storage(),
+                                          p->subparser_info(true, pos)));
             parsers.back().parser->handle(parsers.back().parser->m_name);
             validate_arguments(p.get()->m_data->get_arguments(true));
             if (!dest.empty()) {
