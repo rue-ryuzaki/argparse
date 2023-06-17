@@ -5,7 +5,7 @@
 *                         __| |
 * MIT License
 *
-* Argument parser for C++ (ArgumentParser v1.7.6)
+* Argument parser for C++ (ArgumentParser v1.8.0)
 *
 * Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 *
@@ -80,8 +80,8 @@
 // -- #define -----------------------------------------------------------------
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
-#define ARGPARSE_VERSION_MINOR 7
-#define ARGPARSE_VERSION_PATCH 6
+#define ARGPARSE_VERSION_MINOR 8
+#define ARGPARSE_VERSION_PATCH 0
 
 /*!
  *  This macro turns the version numbers into a numeric value:
@@ -2409,7 +2409,7 @@ public:
      *
      *  \param value argparse::SUPPRESS
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.8.0
      *
      *  \return Current argument reference
      */
@@ -5714,7 +5714,7 @@ public:
      *  \param envp Execution environment variables
      *  \param prog Program name (default: "")
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.8.0
      *
      *  \return Argument parser object
      */
@@ -5804,7 +5804,7 @@ public:
      *  \param value Title for operand arguments
      *  \param lang Language value (default: "")
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.8.0
      *
      *  \return Current argument parser reference
      */
@@ -6154,7 +6154,7 @@ public:
     /*!
      *  \brief Get title for operand arguments (default: "operands")
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.8.0
      *
      *  \return Title for operand arguments
      */
@@ -7163,7 +7163,7 @@ public:
      *
      *  \param name Environment variable name
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.8.0
      *
      *  \return True if environment variable name with exists, false otherwise
      */
@@ -7176,7 +7176,7 @@ public:
      *
      *  \param name Environment variable name
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.8.0
      *
      *  \return Environment variable value if exists, empty string otherwise
      */
