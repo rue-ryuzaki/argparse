@@ -991,10 +991,8 @@ struct is_array<T[]>                                               :true_type{};
 template <class T>
 struct decay
 {
-private:
     typedef typename remove_reference<T>::type U;
 
-public:
     typedef typename conditional<
         is_array<U>::value,
         typename remove_extent<U>::type*,
@@ -1015,7 +1013,7 @@ template <class T,
           class AT_2 = void,
           class AT_3 = void,
           class AT_4 = void>
-class _is_constructible_impl
+struct _is_constructible_impl
 {
     typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
     typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
@@ -1042,13 +1040,12 @@ class _is_constructible_impl
     template <class, class, class, class, class>
     static int test(...);
 
-public:
     static const bool value
               = (sizeof(test<T, AU_1, AU_2, AU_3, AU_4>(NULL)) == sizeof(bool));
 };
 
 template <class T, class AT_1, class AT_2, class AT_3>
-class _is_constructible_impl<T, AT_1, AT_2, AT_3, void>
+struct _is_constructible_impl<T, AT_1, AT_2, AT_3, void>
 {
     typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
     typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
@@ -1072,13 +1069,12 @@ class _is_constructible_impl<T, AT_1, AT_2, AT_3, void>
     template <class, class, class, class>
     static int test(...);
 
-public:
     static const bool value
                     = (sizeof(test<T, AU_1, AU_2, AU_3>(NULL)) == sizeof(bool));
 };
 
 template <class T, class AT_1, class AT_2>
-class _is_constructible_impl<T, AT_1, AT_2, void, void>
+struct _is_constructible_impl<T, AT_1, AT_2, void, void>
 {
     typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
     typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
@@ -1099,13 +1095,12 @@ class _is_constructible_impl<T, AT_1, AT_2, void, void>
     template <class, class, class>
     static int test(...);
 
-public:
     static const bool value
                           = (sizeof(test<T, AU_1, AU_2>(NULL)) == sizeof(bool));
 };
 
 template <class T, class AT_1>
-class _is_constructible_impl<T, AT_1, void, void, void>
+struct _is_constructible_impl<T, AT_1, void, void, void>
 {
     typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
 
@@ -1123,24 +1118,23 @@ class _is_constructible_impl<T, AT_1, void, void, void>
     template <class, class>
     static int test(...);
 
-public:
     static const bool value = (sizeof(test<T, AU_1>(NULL)) == sizeof(bool));
 };
 
 template <class T>
-class _is_constructible_impl<T, void, void, void, void>
+struct _is_constructible_impl<T, void, void, void, void>
 {
     template <class C_T>
     static C_T testFun(C_T);
 
     template <class C_T>
     static bool test(
-            typename enable_if<sizeof(C_T) == sizeof(testFun(C_T()))>::type*);
+            typename enable_if<sizeof(C_T)
+                    == sizeof(_is_constructible_impl::testFun(C_T()))>::type*);
 
     template <class>
     static int test(...);
 
-public:
     static const bool value = (sizeof(test<T>(NULL)) == sizeof(bool));
 };
 
@@ -1149,14 +1143,13 @@ template <class T,
           class AT_2 = void,
           class AT_3 = void,
           class AT_4 = void>
-class _is_constructible_impl_ptr
+struct _is_constructible_impl_ptr
 {
-public:
     static const bool value = false;
 };
 
 template <class T, class AT_1>
-class _is_constructible_impl_ptr<T, AT_1,
+struct _is_constructible_impl_ptr<T, AT_1,
         typename enable_if<is_pointer<
             typename remove_reference<T>::type>::value, void>::type, void, void>
 {
@@ -1166,15 +1159,13 @@ class _is_constructible_impl_ptr<T, AT_1,
     template <class>
     static int test(...);
 
-public:
     static const bool value
                    = (sizeof(test<T>(static_cast<AT_1>(NULL))) == sizeof(bool));
 };
 
 template <class T>
-class _is_constructible_impl_ptr<T, void, void, void, void>
+struct _is_constructible_impl_ptr<T, void, void, void, void>
 {
-public:
     static const bool value = true;
 };
 
@@ -1183,11 +1174,10 @@ template <class T,
           class AT_2 = void,
           class AT_3 = void,
           class AT_4 = void>
-class is_constructible
+struct is_constructible
 {
     typedef typename _replace_array_with_pointer<T>::type U;
 
-public:
     static const bool value = (
         is_pointer<typename remove_reference<U>::type>::value
                 ? _is_constructible_impl_ptr<U, AT_1, AT_2, AT_3, AT_4>::value
@@ -1196,16 +1186,14 @@ public:
 };
 
 template <>
-class is_constructible<std::string, _SUPPRESS >
+struct is_constructible<std::string, _SUPPRESS >
 {
-public:
     static const bool value = false;
 };
 
 template <>
-class is_constructible<std::string, std::vector<std::string> >
+struct is_constructible<std::string, std::vector<std::string> >
 {
-public:
     static const bool value = false;
 };
 
