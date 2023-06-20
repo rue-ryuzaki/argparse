@@ -2992,7 +2992,7 @@ public:
     required() const _ARGPARSE_NOEXCEPT;
 
     /*!
-     *  \brief Get argument 'help' message
+     *  \brief Get argument 'help' message for default language
      *
      *  \return Argument 'help' message
      */
@@ -3168,7 +3168,7 @@ public:
     virtual ~_Group() _ARGPARSE_NOEXCEPT { }
 
     /*!
-     *  \brief Get group 'title' value
+     *  \brief Get group 'title' value for default language
      *
      *  \return Group 'title' value
      */
@@ -3177,7 +3177,7 @@ public:
     title() const;
 
     /*!
-     *  \brief Get group 'description' value
+     *  \brief Get group 'description' value for default language
      *
      *  \return Group 'description' value
      */
@@ -5573,7 +5573,7 @@ public:
         required() const _ARGPARSE_NOEXCEPT;
 
         /*!
-         *  \brief Get subparser 'help' message
+         *  \brief Get subparser 'help' message for default language
          *
          *  \return Subparser 'help' message
          */
@@ -6112,7 +6112,7 @@ public:
     std::string const& prog() const _ARGPARSE_NOEXCEPT;
 
     /*!
-     *  \brief Get argument parser 'usage' value
+     *  \brief Get argument parser 'usage' value for default language
      *
      *  \return Argument parser 'usage' value
      */
@@ -6120,7 +6120,8 @@ public:
     std::string const& usage() const;
 
     /*!
-     *  \brief Get title for argument parser 'usage' (default: "usage")
+     *  \brief Get title for argument parser 'usage' for default language
+     *  (default: "usage")
      *
      *  \since v1.7.1
      *
@@ -6131,7 +6132,7 @@ public:
     usage_title() const;
 
     /*!
-     *  \brief Get argument parser 'description' value
+     *  \brief Get argument parser 'description' value for default language
      *
      *  \return Argument parser 'description' value
      */
@@ -6140,7 +6141,7 @@ public:
     description() const;
 
     /*!
-     *  \brief Get title for positional arguments
+     *  \brief Get title for positional arguments for default language
      *  (default: "positional arguments")
      *
      *  \since v1.7.0
@@ -6152,7 +6153,8 @@ public:
     positionals_title() const;
 
     /*!
-     *  \brief Get title for operand arguments (default: "operands")
+     *  \brief Get title for operand arguments for default language
+     *  (default: "operands")
      *
      *  \since v1.8.0
      *
@@ -6163,7 +6165,8 @@ public:
     operands_title() const;
 
     /*!
-     *  \brief Get title for optional arguments (default: "options")
+     *  \brief Get title for optional arguments for default language
+     *  (default: "options")
      *
      *  \since v1.7.0
      *
@@ -6174,7 +6177,7 @@ public:
     optionals_title() const;
 
     /*!
-     *  \brief Get argument parser 'epilog' value
+     *  \brief Get argument parser 'epilog' value for default language
      *
      *  \return Argument parser 'epilog' value
      */
@@ -6183,7 +6186,8 @@ public:
     epilog() const;
 
     /*!
-     *  \brief Get argument parser 'help' message (for subparsers)
+     *  \brief Get argument parser 'help' message for default language
+     *  (for subparsers)
      *
      *  \return Argument parser 'help' message
      */
@@ -7186,6 +7190,7 @@ public:
 
     /*!
      *  \brief Run self-test and print report to output stream
+     *  for default language
      *
      *  \param os Output stream (default: std::cout)
      *
@@ -7228,7 +7233,7 @@ public:
             std::ostream& os = std::cout) const;
 
     /*!
-     *  \brief Print a program usage to output stream
+     *  \brief Print a program usage for default language to output stream
      *
      *  \param os Output stream (default: std::cout)
      */
@@ -7250,7 +7255,7 @@ public:
             std::ostream& os = std::cout) const;
 
     /*!
-     *  \brief Print a help message to output stream
+     *  \brief Print a help message for default language to output stream
      *
      *  \param os Output stream (default: std::cout)
      */
@@ -7343,6 +7348,10 @@ public:
             std::string const& arg_line) const;
 
 private:
+    static std::string
+    default_language(
+            ArgumentParser const* parser);
+
     struct ParserInfo
     {
         explicit
@@ -12463,49 +12472,49 @@ ArgumentParser::prog() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string const&
 ArgumentParser::usage() const
 {
-    return detail::_map_at(m_usage, std::string());
+    return detail::_map_at(m_usage, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::usage_title() const
 {
-    return detail::_map_at(m_usage_title, std::string());
+    return detail::_map_at(m_usage_title, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::description() const
 {
-    return detail::_map_at(m_description, std::string());
+    return detail::_map_at(m_description, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::positionals_title() const
 {
-    return detail::_map_at(m_positionals_title, std::string());
+    return detail::_map_at(m_positionals_title, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::operands_title() const
 {
-    return detail::_map_at(m_operands_title, std::string());
+    return detail::_map_at(m_operands_title, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::optionals_title() const
 {
-    return detail::_map_at(m_optionals_title, std::string());
+    return detail::_map_at(m_optionals_title, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::epilog() const
 {
-    return detail::_map_at(m_epilog, std::string());
+    return detail::_map_at(m_epilog, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::help() const
 {
-    return detail::_map_at(m_help, std::string());
+    return detail::_map_at(m_help, default_language(this));
 }
 
 _ARGPARSE_INL std::vector<std::string> const&
@@ -12836,9 +12845,10 @@ ArgumentParser::self_test(
 
 _ARGPARSE_INL bool
 ArgumentParser::self_test(
-        std::string const& lang,
+        std::string const& language,
         std::ostream& os) const
 {
+    std::string lang = !language.empty() ? language : default_language(this);
     std::size_t const limit = 79;
     char const filler = '-';
     std::stringstream ss;
@@ -12929,9 +12939,10 @@ ArgumentParser::print_usage(
 
 _ARGPARSE_INL void
 ArgumentParser::print_usage(
-        std::string const& lang,
+        std::string const& language,
         std::ostream& os) const
 {
+    std::string lang = !language.empty() ? language : default_language(this);
     std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
     std::string tr_usage = detail::_tr(m_usage, lang);
     if (!tr_usage.empty()) {
@@ -12954,9 +12965,10 @@ ArgumentParser::print_help(
 
 _ARGPARSE_INL void
 ArgumentParser::print_help(
-        std::string const& lang,
+        std::string const& language,
         std::ostream& os) const
 {
+    std::string lang = !language.empty() ? language : default_language(this);
     pArguments const positional_all = m_data->get_positional(false, true);
     pArguments const operand_all = m_data->get_operand(false, true);
     pArguments const optional_all = m_data->get_optional(false, true);
@@ -13086,6 +13098,23 @@ ArgumentParser::convert_arg_line_to_args(
     return detail::_vector(arg_line);
 }
 
+_ARGPARSE_INL std::string
+ArgumentParser::default_language(
+        ArgumentParser const* parser)
+{
+    std::string res;
+    if (parser) {
+        for (std::size_t i = 0; i < parser->m_data->m_arguments.size(); ++i) {
+            pArgument const& arg = parser->m_data->m_arguments.at(i);
+            if (arg->action() == argparse::language
+                    && arg->m_default.has_value()) {
+                res = arg->m_default.value();
+            }
+        }
+    }
+    return res;
+}
+
 _ARGPARSE_INL
 ArgumentParser::ParserInfo::ParserInfo(
         ArgumentParser const* parser,
@@ -13101,6 +13130,7 @@ ArgumentParser::ParserInfo::ParserInfo(
       lang(),
       have_negative_args()
 {
+    lang = default_language(parser);
     have_negative_args
             = negative_numbers_presented(optional, parser->prefix_chars());
 }
@@ -13150,7 +13180,7 @@ ArgumentParser::throw_error(
         std::string const& lang,
         std::ostream& os) const
 {
-    print_usage(lang, os);
+    print_usage(!lang.empty() ? lang : default_language(this), os);
     throw std::logic_error(prog() + ": error: " + message);
 }
 
@@ -14444,7 +14474,7 @@ ArgumentParser::default_values_post_trigger(
                 it = storage.erase(it);
                 continue;
             }
-            if (!(it->first->action() & (argparse::count | argparse::language))
+            if (it->first->action() != argparse::count
                     && (it->first->m_type == Argument::Optional
                         || it->first->m_type == Argument::Operand)) {
                 detail::Value<std::string> const& dv = it->first->m_default;
