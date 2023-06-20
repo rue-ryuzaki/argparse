@@ -14612,8 +14612,8 @@ ArgumentParser::print_custom_usage(
 {
     std::size_t const w = output_width();
     std::string head_prog = usage_title + " " + prog;
-    std::size_t indent
-            = 1 + (w > detail::_min_width ? head_prog : usage_title).size();
+    std::size_t indent = 1 + detail::_utf8_length(
+                w > detail::_min_width ? head_prog : usage_title).second;
     std::string res;
     pArguments ex_options = options;
     pArguments ex_operand = operand;
