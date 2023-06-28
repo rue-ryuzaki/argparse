@@ -60,7 +60,10 @@ x86/
 # QtCreator
 *.autosave
 
-# QtCreator CMake
+# QMake
+*.pro.user*
+
+# CMake
 CMakeLists.txt.*
 
 # Others
