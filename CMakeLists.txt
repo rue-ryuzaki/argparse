@@ -65,6 +65,7 @@ if (ARGPARSE_STATIC)
     endforeach()
 
     add_library(argparse_static STATIC src/argparse_impl.cpp)
+    add_library(argparse::argparse_static ALIAS argparse_static)
 
     target_include_directories(
         argparse_static PUBLIC
