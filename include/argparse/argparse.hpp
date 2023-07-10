@@ -6028,6 +6028,19 @@ public:
             std::string const& value);
 
     /*!
+     *  \brief Set argument parser 'comment_prefix_chars' value
+     *
+     *  \param value Comment prefix chars values (only punctuation characters)
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    comment_prefix_chars(
+            std::string const& value);
+
+    /*!
      *  \brief Set argument parser 'argument_default' value
      *
      *  \param value Argument default value
@@ -6232,6 +6245,17 @@ public:
     _ARGPARSE_ATTR_NODISCARD
     std::string const&
     fromfile_prefix_chars() const _ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Get argument parser 'comment_prefix_chars' value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Argument parser 'comment_prefix_chars' value
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    std::string const&
+    comment_prefix_chars() const _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'argument_default' value
@@ -7803,6 +7827,7 @@ private:
     detail::shared_ptr<HelpFormatter> m_formatter;
     std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
+    std::string m_comment_prefix_chars;
     detail::Value<std::string> m_argument_default;
     detail::Value<std::size_t> m_output_width;
     std::deque<pGroup> m_groups;
@@ -12085,6 +12110,7 @@ ArgumentParser::ArgumentParser(
       m_formatter(),
       m_prefix_chars(detail::_prefix_chars),
       m_fromfile_prefix_chars(),
+      m_comment_prefix_chars(),
       m_argument_default(),
       m_output_width(),
       m_groups(),
@@ -12126,6 +12152,7 @@ ArgumentParser::ArgumentParser(
       m_formatter(),
       m_prefix_chars(detail::_prefix_chars),
       m_fromfile_prefix_chars(),
+      m_comment_prefix_chars(),
       m_argument_default(),
       m_output_width(),
       m_groups(),
@@ -12169,6 +12196,7 @@ ArgumentParser::ArgumentParser(
       m_formatter(),
       m_prefix_chars(detail::_prefix_chars),
       m_fromfile_prefix_chars(),
+      m_comment_prefix_chars(),
       m_argument_default(),
       m_output_width(),
       m_groups(),
@@ -12400,6 +12428,14 @@ ArgumentParser::fromfile_prefix_chars(
 }
 
 _ARGPARSE_INL ArgumentParser&
+ArgumentParser::comment_prefix_chars(
+        std::string const& value)
+{
+    m_comment_prefix_chars = detail::_get_punct(value);
+    return *this;
+}
+
+_ARGPARSE_INL ArgumentParser&
 ArgumentParser::argument_default(
         std::string const& value)
 {
@@ -12539,6 +12575,12 @@ _ARGPARSE_INL std::string const&
 ArgumentParser::fromfile_prefix_chars() const _ARGPARSE_NOEXCEPT
 {
     return m_fromfile_prefix_chars;
+}
+
+_ARGPARSE_INL std::string const&
+ArgumentParser::comment_prefix_chars() const _ARGPARSE_NOEXCEPT
+{
+    return m_comment_prefix_chars;
 }
 
 _ARGPARSE_INL std::string const&
@@ -13286,6 +13328,22 @@ ArgumentParser::read_args_from_file(
                 detail::_move_replace_at(args, res, i);
             }
         }
+    }
+    if (!comment_prefix_chars().empty()) {
+        // remove comments
+        std::vector<std::string>::iterator first = res.begin();
+        std::vector<std::string>::iterator it = first;
+        while (first != res.end()) {
+            if (first->empty()
+                    || !detail::_exists(first->at(0), comment_prefix_chars())) {
+                if (it != first) {
+                    *it = _ARGPARSE_MOVE(*first);
+                }
+                ++it;
+            }
+            ++first;
+        }
+        res.erase(it, res.end());
     }
     return res;
 }
@@ -14714,6 +14772,9 @@ ArgumentParser::test_overview(
     os << "prefix_chars: '" << prefix_chars() << "'\n";
     if (!fromfile_prefix_chars().empty()) {
         os << "fromfile_prefix_chars: '" << fromfile_prefix_chars() << "'\n";
+    }
+    if (!comment_prefix_chars().empty()) {
+        os << "comment_prefix_chars: '" << comment_prefix_chars() << "'\n";
     }
     if (m_argument_default.has_value()) {
         os << "argument_default: " << argument_default() << "\n";

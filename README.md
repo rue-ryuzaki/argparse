@@ -66,6 +66,7 @@ The work of the parser on older versions of compilers is not guaranteed.
   - [operand argument type](#operand-argument)
   - [Argument::implicit_value](#argumentimplicit_value)
   - [Action::language](#actionlanguage)
+  - [comment_prefix_chars](#comment_prefix_chars)
 - Python API support:
   - [ArgumentParser objects](#argumentparser-objects-support)
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
@@ -670,6 +671,34 @@ volitelné argumenty:
   --foo FOO             foo pomoc
 
 epilog
+```
+### comment_prefix_chars
+ArgumentParser allows you to load command line arguments from a file. But sometimes situations may arise when you need to disable some arguments or add comments.
+
+You can create new parser class and override ```convert_arg_line_to_args``` function:
+```
+class CommentArgumentParser : public argparse::ArgumentParser
+{
+public:
+    using argparse::ArgumentParser::ArgumentParser;
+
+    inline std::vector<std::string>
+    convert_arg_line_to_args(
+            std::string const& arg_line) const override
+    {
+        if (arg_line.starts_with("#")) {
+            return {};
+        }
+        return ArgumentParser::convert_arg_line_to_args(arg_line);
+    }
+};
+```
+or use comment_prefix_chars (this will also skip command line arguments if your shell doesn't use those special characters):
+```
+auto parser = argparse::ArgumentParser(argc, argv)
+            .prog("prog")
+            .fromfile_prefix_chars("@")
+            .comment_prefix_chars("#");
 ```
 ## ArgumentParser objects support
 - [x] prog - The name of the program (default: ```argv[0]``` or ```"untitled"```)
