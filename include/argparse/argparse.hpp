@@ -8078,7 +8078,7 @@ _is_utf8_string(
         std::string const& str)
 {
     std::stringstream ss;
-    return _utf8_length(str, ss).second;
+    return _utf8_length(str, ss).first;
 }
 
 // since v1.7.3
