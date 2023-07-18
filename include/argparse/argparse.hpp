@@ -8000,14 +8000,14 @@ _u8_to_char(
 }
 
 _ARGPARSE_INL codepoint _ARGPARSE_CONSTEXPR
-_char_to_codepoint(
+_char_to_u32(
         char c)
 {
     return static_cast<codepoint>(_char_to_u8(c));
 }
 
 _ARGPARSE_INL char _ARGPARSE_CONSTEXPR
-_codepoint_to_char(
+_u32_to_char(
         codepoint c)
 {
     return _u8_to_char(static_cast<uint8_t>(c));
@@ -8023,6 +8023,7 @@ _ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_4b_mask = 0xf8;
 _ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_4b_bits = 0xf0;
 _ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_mask = 0xc0;
 _ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_bits = 0x80;
+_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_invm = 0x3f;
 
 _ARGPARSE_INL std::size_t _ARGPARSE_CONSTEXPR
 _utf8_codepoint_size(
@@ -8354,22 +8355,22 @@ _to_upper(std::string const& str)
         codepoint cp = 0;
         switch (cp_size) {
             case 1:
-                cp =  (_char_to_codepoint(str[i    ]) & ~_utf8_1b_mask);
+                cp =  (_char_to_u32(str[i    ]) & ~_utf8_1b_mask);
                 break;
             case 2:
-                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_2b_mask) <<  6)
-                   |  (_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask);
+                cp = ((_char_to_u32(str[i    ]) & ~_utf8_2b_mask) <<  6)
+                   |  (_char_to_u32(str[i + 1]) & ~_utf8_ct_mask);
                 break;
             case 3:
-                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_3b_mask) << 12)
-                   | ((_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_codepoint(str[i + 2]) & ~_utf8_ct_mask);
+                cp = ((_char_to_u32(str[i    ]) & ~_utf8_3b_mask) << 12)
+                   | ((_char_to_u32(str[i + 1]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_u32(str[i + 2]) & ~_utf8_ct_mask);
                 break;
             case 4:
-                cp = ((_char_to_codepoint(str[i    ]) & ~_utf8_4b_mask) << 18)
-                   | ((_char_to_codepoint(str[i + 1]) & ~_utf8_ct_mask) << 12)
-                   | ((_char_to_codepoint(str[i + 2]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_codepoint(str[i + 3]) & ~_utf8_ct_mask);
+                cp = ((_char_to_u32(str[i    ]) & ~_utf8_4b_mask) << 18)
+                   | ((_char_to_u32(str[i + 1]) & ~_utf8_ct_mask) << 12)
+                   | ((_char_to_u32(str[i + 2]) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_u32(str[i + 3]) & ~_utf8_ct_mask);
                 break;
             default:
                 // should never happen
@@ -8379,22 +8380,22 @@ _to_upper(std::string const& str)
         cp = _to_upper_codepoint(cp);
         if (cp < 0x80) {
             // one octet
-            res += _codepoint_to_char(cp);
+            res += _u32_to_char(cp);
         } else if (cp < 0x800) {
             // two octets
-            res += _codepoint_to_char((cp >> 6)           | 0xc0);
-            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
+            res += _u32_to_char((cp >> 6)                    | _utf8_2b_bits);
+            res += _u32_to_char((cp         & _utf8_ct_invm) | _utf8_ct_bits);
         } else if (cp < 0x10000) {
             // three octets
-            res += _codepoint_to_char((cp >> 12)          | 0xe0);
-            res += _codepoint_to_char(((cp >> 6) & 0x3f)  | 0x80);
-            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
+            res += _u32_to_char((cp >> 12)                   | _utf8_3b_bits);
+            res += _u32_to_char(((cp >> 6)  & _utf8_ct_invm) | _utf8_ct_bits);
+            res += _u32_to_char((cp         & _utf8_ct_invm) | _utf8_ct_bits);
         } else {
             // four octets
-            res += _codepoint_to_char((cp >> 18)          | 0xf0);
-            res += _codepoint_to_char(((cp >> 12) & 0x3f) | 0x80);
-            res += _codepoint_to_char(((cp >>  6) & 0x3f) | 0x80);
-            res += _codepoint_to_char((cp & 0x3f)         | 0x80);
+            res += _u32_to_char((cp >> 18)                   | _utf8_4b_bits);
+            res += _u32_to_char(((cp >> 12) & _utf8_ct_invm) | _utf8_ct_bits);
+            res += _u32_to_char(((cp >>  6) & _utf8_ct_invm) | _utf8_ct_bits);
+            res += _u32_to_char((cp         & _utf8_ct_invm) | _utf8_ct_bits);
         }
     }
     return res;
