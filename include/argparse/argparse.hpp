@@ -5,7 +5,7 @@
 *                         __| |
 * MIT License
 *
-* Argument parser for C++ (ArgumentParser v1.8.0)
+* Argument parser for C++ (ArgumentParser v1.8.1)
 *
 * Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 *
@@ -81,7 +81,7 @@
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 8
-#define ARGPARSE_VERSION_PATCH 0
+#define ARGPARSE_VERSION_PATCH 1
 
 /*!
  *  This macro turns the version numbers into a numeric value:
@@ -6032,7 +6032,7 @@ public:
      *
      *  \param value Comment prefix chars values (only punctuation characters)
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.8.1
      *
      *  \return Current argument parser reference
      */
@@ -6249,7 +6249,7 @@ public:
     /*!
      *  \brief Get argument parser 'comment_prefix_chars' value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.8.1
      *
      *  \return Argument parser 'comment_prefix_chars' value
      */
