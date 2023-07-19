@@ -14827,6 +14827,30 @@ ArgumentParser::test_diagnostics(
         os << _warn << " used default `prog` value, "
            << "override it or pass command line options\n";
     }
+    // check prefix chars
+    if (!fromfile_prefix_chars().empty()) {
+        for (std::size_t i = 0; i < fromfile_prefix_chars().size(); ++i) {
+            char c = fromfile_prefix_chars().at(i);
+            if (detail::_exists(c, prefix_chars())) {
+                ++diagnostics.first;
+                os << _warn << " fromfile prefix char '" << std::string(1, c)
+                   << "' exists in prefix_chars\n";
+            }
+        }
+        for (std::size_t i = 0; i < comment_prefix_chars().size(); ++i) {
+            char c = comment_prefix_chars().at(i);
+            if (detail::_exists(c, prefix_chars())) {
+                ++diagnostics.first;
+                os << _warn << " comment prefix char '" << std::string(1, c)
+                   << "' exists in prefix_chars\n";
+            }
+            if (detail::_exists(c, fromfile_prefix_chars())) {
+                ++diagnostics.first;
+                os << _warn << " comment prefix char '" << std::string(1, c)
+                   << "' exists in fromfile_prefix_chars\n";
+            }
+        }
+    }
     std::map<std::string, std::size_t> dest_args;
     // check arguments
     for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
