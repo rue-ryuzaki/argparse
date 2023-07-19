@@ -676,7 +676,7 @@ epilog
 ArgumentParser allows you to load command line arguments from a file. But sometimes situations may arise when you need to disable some arguments or add comments.
 
 You can create new parser class and override ```convert_arg_line_to_args``` function:
-```
+```cpp
 class CommentArgumentParser : public argparse::ArgumentParser
 {
 public:
@@ -694,7 +694,7 @@ public:
 };
 ```
 or use comment_prefix_chars (this will also skip command line arguments if your shell doesn't use those special characters):
-```
+```cpp
 auto parser = argparse::ArgumentParser(argc, argv)
             .prog("prog")
             .fromfile_prefix_chars("@")
