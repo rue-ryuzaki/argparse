@@ -11929,9 +11929,12 @@ _ARGPARSE_INL std::vector<std::string>
 ArgumentParser::Subparser::parser_names() const
 {
     std::vector<std::string> res;
-    res.reserve(m_parsers.size());
+    res.reserve(2 * m_parsers.size());
     for (std::size_t i = 0; i < m_parsers.size(); ++i) {
         res.push_back(m_parsers.at(i)->m_name);
+        for (std::size_t j = 0; j < m_parsers.at(i)->aliases().size(); ++j) {
+            res.push_back(m_parsers.at(i)->aliases().at(j));
+        }
     }
     return res;
 }
