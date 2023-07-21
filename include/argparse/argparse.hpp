@@ -7373,6 +7373,10 @@ public:
 
 private:
     static std::string
+    bash_completion(
+            ArgumentParser const* parser);
+
+    static std::string
     default_language(
             ArgumentParser const* parser);
 
@@ -12918,62 +12922,21 @@ _ARGPARSE_INL void
 ArgumentParser::print_bash_completion(
         std::ostream& os) const
 {
-    pArguments const optional = m_data->get_optional(false, true);
-    pArguments const operand = m_data->get_operand(false, true);
-    pArguments const positional = m_data->get_positional(false, true);
-    std::vector<std::string> options;
-    for (std::size_t i = 0; i < optional.size(); ++i) {
-        detail::_insert_to_end(optional.at(i)->flags(), options);
+    std::string completion = bash_completion(this);
+    os << "function _" << prog() << "_()\n";
+    os << "{\n";
+    if (!completion.empty()) {
+        os << "  COMPREPLY=($(compgen" << completion
+           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
     }
-    for (std::size_t i = 0; i < operand.size(); ++i) {
-        detail::_insert_to_end(operand.at(i)->flags(), options);
-    }
-    bool more_args = false;
-    std::size_t min_args = 0;
-    std::size_t one_args = 0;
-    for (std::size_t i = 0; i < positional.size(); ++i) {
-        pArgument const& arg = positional.at(i);
-        if (!(arg->action() & detail::_store_action)) {
-            continue;
-        }
-        std::size_t min_amount = 0;
-        switch (arg->m_nargs) {
-            case Argument::NARGS_DEF :
-            case Argument::NARGS_NUM :
-                min_amount += arg->m_num_args;
-                break;
-            case Argument::ZERO_OR_ONE :
-                ++one_args;
-                break;
-            case Argument::ONE_OR_MORE :
-                ++min_amount;
-                // fallthrough
-            case Argument::ZERO_OR_MORE :
-                more_args = true;
-                break;
-            case Argument::REMAINDING :
-                more_args = true;
-                break;
-            default :
-                break;
-        }
-        min_args += min_amount;
-    }
-    if (m_subparsers) {
-        detail::_insert_to_end(m_subparsers->parser_names(), options);
-    }
-    bool have_positional = more_args || min_args != 0 || one_args != 0;
-    if (!options.empty() || have_positional) {
-        os << "complete";
-        if (have_positional) {
-            os << " -f";
-        }
-        if (!options.empty()) {
-            os << " -W \"" << detail::_join(options) << "\"";
-        }
-        os << " " << prog();
-        os << std::endl;
-    }
+    os << "  return\n";
+    os << "}\n\n";
+    os << "function _" << prog() << "()\n";
+    os << "{\n";
+    os << "  _" << prog() << "_\n";
+    os << "  return\n";
+    os << "}\n\n";
+    os << "complete -F _" << prog() << " " << prog() << std::endl;
 }
 
 _ARGPARSE_INL void
@@ -13142,6 +13105,65 @@ ArgumentParser::convert_arg_line_to_args(
         std::string const& arg_line) const
 {
     return detail::_vector(arg_line);
+}
+
+_ARGPARSE_INL std::string
+ArgumentParser::bash_completion(
+        ArgumentParser const* parser)
+{
+    pArguments const optional = parser->m_data->get_optional(false, true);
+    pArguments const operand = parser->m_data->get_operand(false, true);
+    pArguments const positional = parser->m_data->get_positional(false, true);
+    std::vector<std::string> options;
+    for (std::size_t i = 0; i < optional.size(); ++i) {
+        detail::_insert_to_end(optional.at(i)->flags(), options);
+    }
+    for (std::size_t i = 0; i < operand.size(); ++i) {
+        detail::_insert_to_end(operand.at(i)->flags(), options);
+    }
+    bool more_args = false;
+    std::size_t min_args = 0;
+    std::size_t one_args = 0;
+    for (std::size_t i = 0; i < positional.size(); ++i) {
+        pArgument const& arg = positional.at(i);
+        if (!(arg->action() & detail::_store_action)) {
+            continue;
+        }
+        std::size_t min_amount = 0;
+        switch (arg->m_nargs) {
+            case Argument::NARGS_DEF :
+            case Argument::NARGS_NUM :
+                min_amount += arg->m_num_args;
+                break;
+            case Argument::ZERO_OR_ONE :
+                ++one_args;
+                break;
+            case Argument::ONE_OR_MORE :
+                ++min_amount;
+                // fallthrough
+            case Argument::ZERO_OR_MORE :
+                more_args = true;
+                break;
+            case Argument::REMAINDING :
+                more_args = true;
+                break;
+            default :
+                break;
+        }
+        min_args += min_amount;
+    }
+    if (parser->m_subparsers) {
+        detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
+    }
+    bool have_positional = more_args || min_args != 0 || one_args != 0;
+    std::string res;
+    if (have_positional) {
+        res += " -df";
+    }
+    if (!options.empty()) {
+        res += " -W \"" + detail::_join(options) + "\"";
+    }
+    return res;
 }
 
 _ARGPARSE_INL std::string
