@@ -12922,6 +12922,20 @@ _ARGPARSE_INL void
 ArgumentParser::print_bash_completion(
         std::ostream& os) const
 {
+    if (m_subparsers) {
+        for (std::size_t i = 0; i < m_subparsers->m_parsers.size(); ++i) {
+            pParser const& parser = m_subparsers->m_parsers.at(i);
+            os << "function _" << prog() << "_" << parser->m_name << "()\n";
+            os << "{\n";
+            std::string subcompletion = bash_completion(parser.get());
+            if (!subcompletion.empty()) {
+                os << "  COMPREPLY=($(compgen" << subcompletion
+                   << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+            }
+            os << "  return\n";
+            os << "}\n\n";
+        }
+    }
     std::string completion = bash_completion(this);
     os << "function _" << prog() << "_()\n";
     os << "{\n";
@@ -12933,6 +12947,25 @@ ArgumentParser::print_bash_completion(
     os << "}\n\n";
     os << "function _" << prog() << "()\n";
     os << "{\n";
+    os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
+    os << "    case \"${COMP_WORDS[$i]}\" in\n";
+    if (m_subparsers) {
+        for (std::size_t i = 0; i < m_subparsers->m_parsers.size(); ++i) {
+            pParser const& parser = m_subparsers->m_parsers.at(i);
+            for (std::size_t j = 0; j < parser->aliases().size(); ++j) {
+                os << "      \"" << parser->aliases().at(j) << "\")\n";
+                os << "        ;&\n";
+            }
+            os << "      \"" << parser->m_name << "\")\n";
+            os << "        _" << prog() << "_" << parser->m_name << "\n";
+            os << "        return\n";
+            os << "        ;;\n";
+        }
+    }
+    os << "      *)\n";
+    os << "        ;;\n";
+    os << "    esac\n";
+    os << "  done\n";
     os << "  _" << prog() << "_\n";
     os << "  return\n";
     os << "}\n\n";
