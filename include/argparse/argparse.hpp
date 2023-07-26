@@ -13715,6 +13715,9 @@ ArgumentParser::storage_optional_store_func(
                     storage_have_value(parsers, tmp);
                 }
                 break;
+            case Argument::SUPPRESSING :
+                storage_store_default_value(parsers, tmp);
+                break;
             case Argument::ZERO_OR_MORE :
             case Argument::REMAINDING :
             default :
@@ -13749,15 +13752,15 @@ ArgumentParser::storage_optional_store(
                 break;
             } else {
                 std::string const& next = args.at(i);
-                if (next.empty()
-                        || tmp->m_nargs == Argument::REMAINDING
-                        || (is_not_operand(
-                                was_pseudo_arg, parsers.back().operand, next)
-                            && detail::_not_optional(
-                                next,
-                                parsers.back().parser->prefix_chars(),
-                                parsers.back().have_negative_args,
-                                was_pseudo_arg))) {
+                if (tmp->m_nargs != Argument::SUPPRESSING
+                        && (tmp->m_nargs == Argument::REMAINDING
+                            || (is_not_operand(
+                                   was_pseudo_arg, parsers.back().operand, next)
+                                && detail::_not_optional(
+                                    next,
+                                    parsers.back().parser->prefix_chars(),
+                                    parsers.back().have_negative_args,
+                                    was_pseudo_arg)))) {
                     values.push_back(next);
                     ++n;
                 } else {
@@ -13773,6 +13776,10 @@ ArgumentParser::storage_optional_store(
             storage_store_values(parsers, tmp, values);
         }
     } else {
+        if (tmp->m_nargs == Argument::SUPPRESSING) {
+            parsers.back().parser->throw_error(
+                       detail::_ignore_explicit(equals.front(), equals.back()));
+        }
         if (tmp->m_nargs != Argument::NARGS_DEF && tmp->m_num_args > 1) {
             parsers.back().parser->throw_error(tmp->error_nargs(arg));
         }
@@ -13844,7 +13851,8 @@ ArgumentParser::match_positional_minimum(
     if (storage_is_positional_arg_stored(parsers, arg)) {
         return;
     }
-    if (arg->action() == argparse::BooleanOptionalAction) {
+    if (arg->action() == argparse::BooleanOptionalAction
+            || arg->m_nargs == Argument::SUPPRESSING) {
         storage_store_default_value(parsers, arg);
         return;
     }
@@ -13880,7 +13888,8 @@ ArgumentParser::match_positional_more_zero(
     if (storage_is_positional_arg_stored(parsers, arg)) {
         return;
     }
-    if (arg->action() == argparse::BooleanOptionalAction) {
+    if (arg->action() == argparse::BooleanOptionalAction
+            || arg->m_nargs == Argument::SUPPRESSING) {
         storage_store_default_value(parsers, arg);
         return;
     }
@@ -13927,7 +13936,8 @@ ArgumentParser::match_positional_optional(
     if (storage_is_positional_arg_stored(parsers, arg)) {
         return;
     }
-    if (arg->action() == argparse::BooleanOptionalAction) {
+    if (arg->action() == argparse::BooleanOptionalAction
+            || arg->m_nargs == Argument::SUPPRESSING) {
         storage_store_default_value(parsers, arg);
         return;
     }
@@ -13968,7 +13978,8 @@ ArgumentParser::match_positional_default(
     if (storage_is_positional_arg_stored(parsers, arg)) {
         return;
     }
-    if (arg->action() == argparse::BooleanOptionalAction) {
+    if (arg->action() == argparse::BooleanOptionalAction
+            || arg->m_nargs == Argument::SUPPRESSING) {
         storage_store_default_value(parsers, arg);
         return;
     }
@@ -14378,15 +14389,13 @@ ArgumentParser::process_positional_args(
             break;
         } else {
             std::string const& next = parsed_arguments.at(i);
-            if (next.empty()
-                    || remainder
-                    || (is_not_operand(
-                            was_pseudo_arg, parsers.back().operand, next)
-                        && detail::_not_optional(
-                            next,
-                            parsers.back().parser->prefix_chars(),
-                            parsers.back().have_negative_args,
-                            was_pseudo_arg))) {
+            if (remainder || (is_not_operand(
+                                  was_pseudo_arg, parsers.back().operand, next)
+                              && detail::_not_optional(
+                                  next,
+                                  parsers.back().parser->prefix_chars(),
+                                  parsers.back().have_negative_args,
+                                  was_pseudo_arg))) {
                 args.push_back(next);
             } else {
                 --i;
@@ -14500,7 +14509,8 @@ ArgumentParser::skip_positional_required_check(
         throw TypeError("'NoneType' object is not iterable");
     }
     if ((arg->m_nargs & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE))
-            || arg->action() == argparse::BooleanOptionalAction) {
+            || arg->action() == argparse::BooleanOptionalAction
+            || arg->m_nargs == Argument::SUPPRESSING) {
         storage_store_default_value(parsers, arg);
         return true;
     }
