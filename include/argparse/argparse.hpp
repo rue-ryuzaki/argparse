@@ -7373,7 +7373,7 @@ public:
 
 private:
     static std::string
-    bash_completion(
+    bash_completion_args(
             ArgumentParser const* parser);
 
     static std::string
@@ -12927,7 +12927,7 @@ ArgumentParser::print_bash_completion(
             pParser const& parser = m_subparsers->m_parsers.at(i);
             os << "function _" << prog() << "_" << parser->m_name << "()\n";
             os << "{\n";
-            std::string subcompletion = bash_completion(parser.get());
+            std::string subcompletion = bash_completion_args(parser.get());
             if (!subcompletion.empty()) {
                 os << "  COMPREPLY=($(compgen" << subcompletion
                    << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
@@ -12936,7 +12936,7 @@ ArgumentParser::print_bash_completion(
             os << "}\n\n";
         }
     }
-    std::string completion = bash_completion(this);
+    std::string completion = bash_completion_args(this);
     os << "function _" << prog() << "_()\n";
     os << "{\n";
     if (!completion.empty()) {
@@ -13141,59 +13141,39 @@ ArgumentParser::convert_arg_line_to_args(
 }
 
 _ARGPARSE_INL std::string
-ArgumentParser::bash_completion(
+ArgumentParser::bash_completion_args(
         ArgumentParser const* parser)
 {
     pArguments const optional = parser->m_data->get_optional(false, true);
     pArguments const operand = parser->m_data->get_operand(false, true);
     pArguments const positional = parser->m_data->get_positional(false, true);
     std::vector<std::string> options;
+    bool have_fs_args = false;
     for (std::size_t i = 0; i < optional.size(); ++i) {
-        detail::_insert_to_end(optional.at(i)->flags(), options);
+        pArgument const& arg = optional.at(i);
+        detail::_insert_to_end(arg->flags(), options);
+        have_fs_args = have_fs_args || (arg->m_nargs != Argument::SUPPRESSING
+             && (arg->action() & (detail::_store_action | argparse::language)));
     }
     for (std::size_t i = 0; i < operand.size(); ++i) {
-        for (std::size_t j = 0; j < operand.at(i)->flags().size(); ++j) {
-            options.push_back(operand.at(i)->flags().at(j) + "=");
+        pArgument const& arg = operand.at(i);
+        for (std::size_t j = 0; j < arg->flags().size(); ++j) {
+            options.push_back(arg->flags().at(j) + "=");
             options.push_back(options.back() + "A");
         }
     }
-    bool more_args = false;
-    std::size_t min_args = 0;
-    std::size_t one_args = 0;
     for (std::size_t i = 0; i < positional.size(); ++i) {
         pArgument const& arg = positional.at(i);
         if (!(arg->action() & detail::_store_action)) {
             continue;
         }
-        std::size_t min_amount = 0;
-        switch (arg->m_nargs) {
-            case Argument::NARGS_DEF :
-            case Argument::NARGS_NUM :
-                min_amount += arg->m_num_args;
-                break;
-            case Argument::ZERO_OR_ONE :
-                ++one_args;
-                break;
-            case Argument::ONE_OR_MORE :
-                ++min_amount;
-                // fallthrough
-            case Argument::ZERO_OR_MORE :
-                more_args = true;
-                break;
-            case Argument::REMAINDING :
-                more_args = true;
-                break;
-            default :
-                break;
-        }
-        min_args += min_amount;
+        have_fs_args = have_fs_args || (arg->m_nargs != Argument::SUPPRESSING);
     }
     if (parser->m_subparsers) {
         detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
     }
-    bool have_positional = more_args || min_args != 0 || one_args != 0;
     std::string res;
-    if (have_positional) {
+    if (have_fs_args) {
         res += " -df";
     }
     if (!options.empty()) {
