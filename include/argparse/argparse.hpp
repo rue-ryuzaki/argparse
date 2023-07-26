@@ -13152,7 +13152,10 @@ ArgumentParser::bash_completion(
         detail::_insert_to_end(optional.at(i)->flags(), options);
     }
     for (std::size_t i = 0; i < operand.size(); ++i) {
-        detail::_insert_to_end(operand.at(i)->flags(), options);
+        for (std::size_t j = 0; j < operand.at(i)->flags().size(); ++j) {
+            options.push_back(operand.at(i)->flags().at(j) + "=");
+            options.push_back(options.back() + "A");
+        }
     }
     bool more_args = false;
     std::size_t min_args = 0;
