@@ -7372,8 +7372,17 @@ public:
             std::string const& arg_line) const;
 
 private:
-    static std::string
-    bash_completion_args(
+    struct CompletionInfo
+    {
+        CompletionInfo();
+
+        // -- data ------------------------------------------------------------
+        std::string args;
+        std::vector<std::pair<pArgument, std::string> > options;
+    };
+
+    static CompletionInfo
+    bash_completion_info(
             ArgumentParser const* parser);
 
     static std::string
@@ -12927,20 +12936,66 @@ ArgumentParser::print_bash_completion(
             pParser const& parser = m_subparsers->m_parsers.at(i);
             os << "function _" << prog() << "_" << parser->m_name << "()\n";
             os << "{\n";
-            std::string subcompletion = bash_completion_args(parser.get());
-            if (!subcompletion.empty()) {
-                os << "  COMPREPLY=($(compgen" << subcompletion
+            CompletionInfo subcompletion = bash_completion_info(parser.get());
+            if (!subcompletion.options.empty()) {
+                os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
+                for (std::size_t j = 0; j < subcompletion.options.size(); ++j) {
+                    std::pair<pArgument, std::string> const& pr
+                            = subcompletion.options.at(j);
+                    for (std::size_t k = 0; k < pr.first->flags().size(); ++k) {
+                        os << "    \"" << pr.first->flags().at(k) << "\")\n";
+                        if (k + 1 != pr.first->flags().size()) {
+                            os << "      ;&\n";
+                        } else {
+                            if (!pr.second.empty()) {
+                                os << "      COMPREPLY=($(compgen" << pr.second
+                                  << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+                            }
+                            os << "      return\n";
+                            os << "      ;;\n";
+                        }
+                    }
+                }
+                os << "    *)\n";
+                os << "      ;;\n";
+                os << "  esac\n";
+            }
+            if (!subcompletion.args.empty()) {
+                os << "  COMPREPLY=($(compgen" << subcompletion.args
                    << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
             }
             os << "  return\n";
             os << "}\n\n";
         }
     }
-    std::string completion = bash_completion_args(this);
+    CompletionInfo completion = bash_completion_info(this);
     os << "function _" << prog() << "_()\n";
     os << "{\n";
-    if (!completion.empty()) {
-        os << "  COMPREPLY=($(compgen" << completion
+    if (!completion.options.empty()) {
+        os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
+        for (std::size_t j = 0; j < completion.options.size(); ++j) {
+            std::pair<pArgument, std::string> const& pr
+                    = completion.options.at(j);
+            for (std::size_t k = 0; k < pr.first->flags().size(); ++k) {
+                os << "    \"" << pr.first->flags().at(k) << "\")\n";
+                if (k + 1 != pr.first->flags().size()) {
+                    os << "      ;&\n";
+                } else {
+                    if (!pr.second.empty()) {
+                        os << "      COMPREPLY=($(compgen" << pr.second
+                           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+                    }
+                    os << "      return\n";
+                    os << "      ;;\n";
+                }
+            }
+        }
+        os << "    *)\n";
+        os << "      ;;\n";
+        os << "  esac\n";
+    }
+    if (!completion.args.empty()) {
+        os << "  COMPREPLY=($(compgen" << completion.args
            << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
     }
     os << "  return\n";
@@ -13140,20 +13195,36 @@ ArgumentParser::convert_arg_line_to_args(
     return detail::_vector(arg_line);
 }
 
-_ARGPARSE_INL std::string
-ArgumentParser::bash_completion_args(
+_ARGPARSE_INL
+ArgumentParser::CompletionInfo::CompletionInfo()
+    : args(),
+      options()
+{ }
+
+_ARGPARSE_INL ArgumentParser::CompletionInfo
+ArgumentParser::bash_completion_info(
         ArgumentParser const* parser)
 {
+    CompletionInfo res;
     pArguments const optional = parser->m_data->get_optional(false, true);
     pArguments const operand = parser->m_data->get_operand(false, true);
     pArguments const positional = parser->m_data->get_positional(false, true);
+    res.options.reserve(optional.size());
     std::vector<std::string> options;
-    bool have_fs_args = false;
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
         detail::_insert_to_end(arg->flags(), options);
-        have_fs_args = have_fs_args || (arg->m_nargs != Argument::SUPPRESSING
-             && (arg->action() & (detail::_store_action | argparse::language)));
+        res.options.push_back(std::make_pair(arg, std::string()));
+        if (arg->m_nargs != Argument::SUPPRESSING
+                && (arg->action()
+                    & (detail::_store_action | argparse::language))) {
+            if (!arg->choices().empty()) {
+                res.options.back().second
+                        = " -W \"" + detail::_join(arg->choices()) + "\"";
+            } else {
+                res.options.back().second = " -df";
+            }
+        }
     }
     for (std::size_t i = 0; i < operand.size(); ++i) {
         pArgument const& arg = operand.at(i);
@@ -13162,6 +13233,7 @@ ArgumentParser::bash_completion_args(
             options.push_back(options.back() + "A");
         }
     }
+    bool have_fs_args = false;
     for (std::size_t i = 0; i < positional.size(); ++i) {
         pArgument const& arg = positional.at(i);
         if (!(arg->action() & detail::_store_action)) {
@@ -13172,12 +13244,11 @@ ArgumentParser::bash_completion_args(
     if (parser->m_subparsers) {
         detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
     }
-    std::string res;
     if (have_fs_args) {
-        res += " -df";
+        res.args += " -df";
     }
     if (!options.empty()) {
-        res += " -W \"" + detail::_join(options) + "\"";
+        res.args += " -W \"" + detail::_join(options) + "\"";
     }
     return res;
 }
