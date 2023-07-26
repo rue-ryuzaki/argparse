@@ -8739,7 +8739,7 @@ _is_optional(
         bool have_negative_args,
         bool was_pseudo_arg)
 {
-    return _exists(arg.at(0), prefix_chars) && !was_pseudo_arg
+    return !arg.empty() && _exists(arg.at(0), prefix_chars) && !was_pseudo_arg
             && (have_negative_args || !_is_negative_number(arg));
 }
 
@@ -8750,7 +8750,7 @@ _not_optional(
         bool have_negative_args,
         bool was_pseudo_arg)
 {
-    return !_exists(arg.at(0), prefix_chars) || was_pseudo_arg
+    return arg.empty() || !_exists(arg.at(0), prefix_chars) || was_pseudo_arg
             || (!have_negative_args && _is_negative_number(arg));
 }
 
