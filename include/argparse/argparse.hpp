@@ -7385,6 +7385,13 @@ private:
     bash_completion_info(
             ArgumentParser const* parser);
 
+    static void
+    print_parser_completion(
+            ArgumentParser const* parser,
+            std::string const& prog,
+            bool is_root,
+            std::ostream& os = std::cout);
+
     static std::string
     default_language(
             ArgumentParser const* parser);
@@ -12936,99 +12943,7 @@ ArgumentParser::print_bash_completion(
        << ARGPARSE_VERSION_MAJOR << "."
        << ARGPARSE_VERSION_MINOR << "."
        << ARGPARSE_VERSION_PATCH << "\n\n";
-    if (m_subparsers) {
-        for (std::size_t i = 0; i < m_subparsers->m_parsers.size(); ++i) {
-            pParser const& parser = m_subparsers->m_parsers.at(i);
-            os << "function _" << prog() << "_" << parser->m_name << "()\n";
-            os << "{\n";
-            CompletionInfo subcompletion = bash_completion_info(parser.get());
-            if (!subcompletion.options.empty()) {
-                os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
-                for (std::size_t j = 0; j < subcompletion.options.size(); ++j) {
-                    std::pair<pArgument, std::string> const& pr
-                            = subcompletion.options.at(j);
-                    for (std::size_t k = 0; k < pr.first->flags().size(); ++k) {
-                        os << "    \"" << pr.first->flags().at(k) << "\")\n";
-                        if (k + 1 != pr.first->flags().size()) {
-                            os << "      ;&\n";
-                        } else {
-                            if (!pr.second.empty()) {
-                                os << "      COMPREPLY=($(compgen" << pr.second
-                                  << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
-                            }
-                            os << "      return\n";
-                            os << "      ;;\n";
-                        }
-                    }
-                }
-                os << "    *)\n";
-                os << "      ;;\n";
-                os << "  esac\n";
-            }
-            if (!subcompletion.args.empty()) {
-                os << "  COMPREPLY=($(compgen" << subcompletion.args
-                   << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
-            }
-            os << "  return\n";
-            os << "}\n\n";
-        }
-    }
-    CompletionInfo completion = bash_completion_info(this);
-    os << "function _" << prog() << "_()\n";
-    os << "{\n";
-    if (!completion.options.empty()) {
-        os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
-        for (std::size_t j = 0; j < completion.options.size(); ++j) {
-            std::pair<pArgument, std::string> const& pr
-                    = completion.options.at(j);
-            for (std::size_t k = 0; k < pr.first->flags().size(); ++k) {
-                os << "    \"" << pr.first->flags().at(k) << "\")\n";
-                if (k + 1 != pr.first->flags().size()) {
-                    os << "      ;&\n";
-                } else {
-                    if (!pr.second.empty()) {
-                        os << "      COMPREPLY=($(compgen" << pr.second
-                           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
-                    }
-                    os << "      return\n";
-                    os << "      ;;\n";
-                }
-            }
-        }
-        os << "    *)\n";
-        os << "      ;;\n";
-        os << "  esac\n";
-    }
-    if (!completion.args.empty()) {
-        os << "  COMPREPLY=($(compgen" << completion.args
-           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
-    }
-    os << "  return\n";
-    os << "}\n\n";
-    os << "function _" << prog() << "()\n";
-    os << "{\n";
-    os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
-    os << "    case \"${COMP_WORDS[$i]}\" in\n";
-    if (m_subparsers) {
-        for (std::size_t i = 0; i < m_subparsers->m_parsers.size(); ++i) {
-            pParser const& parser = m_subparsers->m_parsers.at(i);
-            for (std::size_t j = 0; j < parser->aliases().size(); ++j) {
-                os << "      \"" << parser->aliases().at(j) << "\")\n";
-                os << "        ;&\n";
-            }
-            os << "      \"" << parser->m_name << "\")\n";
-            os << "        _" << prog() << "_" << parser->m_name << "\n";
-            os << "        return\n";
-            os << "        ;;\n";
-        }
-    }
-    os << "      *)\n";
-    os << "        ;;\n";
-    os << "    esac\n";
-    os << "  done\n";
-    os << "  _" << prog() << "_\n";
-    os << "  return\n";
-    os << "}\n\n";
+    print_parser_completion(this, prog(), true, os);
     os << "complete -F _" << prog() << " " << prog() << std::endl;
 }
 
@@ -13256,6 +13171,112 @@ ArgumentParser::bash_completion_info(
         res.args += " -W \"" + detail::_join(options) + "\"";
     }
     return res;
+}
+
+_ARGPARSE_INL void
+ArgumentParser::print_parser_completion(
+        ArgumentParser const* p,
+        std::string const& prog,
+        bool is_root,
+        std::ostream& os)
+{
+    CompletionInfo completion = bash_completion_info(p);
+    if (p->m_subparsers) {
+        for (std::size_t i = 0; i < p->m_subparsers->m_parsers.size(); ++i) {
+            pParser const& parser = p->m_subparsers->m_parsers.at(i);
+            print_parser_completion(
+                        parser.get(), prog + "_" + parser->m_name, false, os);
+        }
+        os << "function _" << prog << "_()\n";
+        os << "{\n";
+        if (!completion.options.empty()) {
+            os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
+            for (std::size_t j = 0; j < completion.options.size(); ++j) {
+                std::pair<pArgument, std::string> const& pr
+                        = completion.options.at(j);
+                for (std::size_t k = 0; k < pr.first->flags().size(); ++k) {
+                    os << "    \"" << pr.first->flags().at(k) << "\")\n";
+                    if (k + 1 != pr.first->flags().size()) {
+                        os << "      ;&\n";
+                    } else {
+                        if (!pr.second.empty()) {
+                            os << "      COMPREPLY=($(compgen" << pr.second
+                               << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+                        }
+                        os << "      return\n";
+                        os << "      ;;\n";
+                    }
+                }
+            }
+            os << "    *)\n";
+            os << "      ;;\n";
+            os << "  esac\n";
+        }
+        if (!completion.args.empty()) {
+            os << "  COMPREPLY=($(compgen" << completion.args
+               << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+        }
+        os << "  return\n";
+        os << "}\n\n";
+        os << "function _" << prog << "()\n";
+        os << "{\n";
+        if (is_root) {
+            os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
+        } else {
+            os << "  for (( i=$1; i < ${COMP_CWORD}; ((++i)) )); do\n";
+        }
+        os << "    case \"${COMP_WORDS[$i]}\" in\n";
+        for (std::size_t i = 0; i < p->m_subparsers->m_parsers.size(); ++i) {
+            pParser const& parser = p->m_subparsers->m_parsers.at(i);
+            for (std::size_t j = 0; j < parser->aliases().size(); ++j) {
+                os << "      \"" << parser->aliases().at(j) << "\")\n";
+                os << "        ;&\n";
+            }
+            os << "      \"" << parser->m_name << "\")\n";
+            os << "        _" << prog << "_" << parser->m_name << " $((i+1))\n";
+            os << "        return\n";
+            os << "        ;;\n";
+        }
+        os << "      *)\n";
+        os << "        ;;\n";
+        os << "    esac\n";
+        os << "  done\n";
+        os << "  _" << prog << "_\n";
+        os << "  return\n";
+        os << "}\n\n";
+    } else {
+        os << "function _" << prog << "()\n";
+        os << "{\n";
+        if (!completion.options.empty()) {
+            os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
+            for (std::size_t j = 0; j < completion.options.size(); ++j) {
+                std::pair<pArgument, std::string> const& pr
+                        = completion.options.at(j);
+                for (std::size_t k = 0; k < pr.first->flags().size(); ++k) {
+                    os << "    \"" << pr.first->flags().at(k) << "\")\n";
+                    if (k + 1 != pr.first->flags().size()) {
+                        os << "      ;&\n";
+                    } else {
+                        if (!pr.second.empty()) {
+                            os << "      COMPREPLY=($(compgen" << pr.second
+                               << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+                        }
+                        os << "      return\n";
+                        os << "      ;;\n";
+                    }
+                }
+            }
+            os << "    *)\n";
+            os << "      ;;\n";
+            os << "  esac\n";
+        }
+        if (!completion.args.empty()) {
+            os << "  COMPREPLY=($(compgen" << completion.args
+               << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+        }
+        os << "  return\n";
+        os << "}\n\n";
+    }
 }
 
 _ARGPARSE_INL std::string
