@@ -12931,6 +12931,11 @@ _ARGPARSE_INL void
 ArgumentParser::print_bash_completion(
         std::ostream& os) const
 {
+    os << "# bash completion for " << prog() << "\n";
+    os << "# generated with cpp-argparse v"
+       << ARGPARSE_VERSION_MAJOR << "."
+       << ARGPARSE_VERSION_MINOR << "."
+       << ARGPARSE_VERSION_PATCH << "\n\n";
     if (m_subparsers) {
         for (std::size_t i = 0; i < m_subparsers->m_parsers.size(); ++i) {
             pParser const& parser = m_subparsers->m_parsers.at(i);
