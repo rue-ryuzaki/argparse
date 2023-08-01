@@ -14213,8 +14213,12 @@ ArgumentParser::try_capture_parser(
             detail::_append_value_to("'" + alias + "'", choices, ", ");
         }
         if (p->m_name == name || detail::_exists(name, p->aliases())) {
+            std::string lang = parsers.back().lang;
             parsers.push_back(parser_info(p.get(), _Storage(),
                                           p->subparser_info(true, pos)));
+            if (!lang.empty()) {
+                parsers.back().lang = lang;
+            }
             parsers.back().parser->handle(parsers.back().parser->m_name);
             validate_arguments(p.get()->m_data->get_arguments(true));
             if (!dest.empty()) {
