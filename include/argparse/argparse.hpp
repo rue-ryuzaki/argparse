@@ -14573,13 +14573,13 @@ ArgumentParser::skip_positional_required_check(
             && arg->m_nargs == Argument::ZERO_OR_ONE) {
         throw TypeError("'NoneType' object is not iterable");
     }
-    if ((arg->m_nargs & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE))
-            || arg->action() == argparse::BooleanOptionalAction
-            || arg->m_nargs == Argument::SUPPRESSING) {
+    if ((arg->m_nargs & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE
+                         | Argument::SUPPRESSING))
+            || arg->action() == argparse::BooleanOptionalAction) {
         storage_store_default_value(parsers, arg);
         return true;
     }
-    if (arg->m_nargs & (Argument::REMAINDING | Argument::SUPPRESSING)) {
+    if (arg->m_nargs == Argument::REMAINDING) {
         return true;
     }
     return false;
