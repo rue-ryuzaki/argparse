@@ -117,6 +117,9 @@
 #if _MSVC_LANG >= 202002L
 #define _ARGPARSE_CXX_20
 #endif  // C++20+
+#if _MSVC_LANG >= 202302L
+#define _ARGPARSE_CXX_23
+#endif  // C++23+
 #else
 #if __cplusplus >= 201103L
 #define _ARGPARSE_CXX_11
@@ -130,6 +133,9 @@
 #if __cplusplus >= 202002L
 #define _ARGPARSE_CXX_20
 #endif  // C++20+
+#if __cplusplus >= 202302L
+#define _ARGPARSE_CXX_23
+#endif  // C++23+
 #endif  // _MSVC_LANG
 
 // -- static building ---------------------------------------------------------
