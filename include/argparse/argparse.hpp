@@ -7802,7 +7802,7 @@ private:
             pArguments const& positional,
             pArguments const& operand,
             pArguments const& optional,
-            std::deque<MutuallyExclusiveGroup> const& mutex_groups,
+            std::list<MutuallyExclusiveGroup> const& mutex_groups,
             SubparserInfo const& info,
             std::string const& prog,
             std::string const& usage_title,
@@ -7867,8 +7867,8 @@ private:
     std::string m_comment_prefix_chars;
     detail::Value<std::string> m_argument_default;
     detail::Value<std::size_t> m_output_width;
-    std::deque<pGroup> m_groups;
-    std::deque<MutuallyExclusiveGroup> m_mutex_groups;
+    std::list<pGroup> m_groups;
+    std::list<MutuallyExclusiveGroup> m_mutex_groups;
     std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
     std::list<std::pair<std::string, std::string> > m_env_variables;
@@ -12411,12 +12411,11 @@ ArgumentParser::parents(
             m_subparsers->update_prog(prog(), subparser_prog_args());
         }
         m_data->merge_arguments(*parent.m_data.get());
-        for (std::size_t j = 0; j < parent.m_groups.size(); ++j) {
-            m_groups.push_back(parent.m_groups.at(j));
-        }
-        for (std::size_t j = 0; j < parent.m_mutex_groups.size(); ++j) {
-            m_mutex_groups.push_back(parent.m_mutex_groups.at(j));
-        }
+        m_groups.insert(m_groups.end(),
+                        parent.m_groups.begin(), parent.m_groups.end());
+        m_mutex_groups.insert(m_mutex_groups.end(),
+                              parent.m_mutex_groups.begin(),
+                              parent.m_mutex_groups.end());
         for (std::size_t j = 0; j < parent.m_default_values.size(); ++j) {
             m_default_values.push_back(parent.m_default_values.at(j));
         }
@@ -13055,8 +13054,9 @@ ArgumentParser::print_help(
         std::string str = optional.at(i)->flags_to_string(*m_formatter);
         detail::_limit_to_min(size, detail::_utf8_length(str).second);
     }
-    for (std::size_t i = 0; i < m_groups.size(); ++i) {
-        m_groups.at(i)->limit_help_flags(*m_formatter, size);
+    for (std::list<pGroup>::const_iterator it
+         = m_groups.begin(); it != m_groups.end(); ++it) {
+        (*it)->limit_help_flags(*m_formatter, size);
     }
     size += 4;
     detail::_limit_to_max(size, output_width() - argument_help_limit());
@@ -13085,12 +13085,12 @@ ArgumentParser::print_help(
                                 *m_formatter, size, width, lang)) << std::endl;
         }
     }
-    for (std::size_t i = 0; i < m_groups.size(); ++i) {
-        if (!subparser || (m_groups[i] != subparser
+    for (std::list<pGroup>::const_iterator it
+         = m_groups.begin(); it != m_groups.end(); ++it) {
+        if (!subparser || ((*it) != subparser
                            || (!sub_positional
                                && !subparser->m_help_type.has_value()))) {
-            m_groups[i]->print_help(
-                        os, *m_formatter, prog(), size, width, lang);
+            (*it)->print_help(os, *m_formatter, prog(), size, width, lang);
         }
     }
     detail::_print_raw_text_formatter(
@@ -13597,10 +13597,10 @@ ArgumentParser::check_namespace(
 _ARGPARSE_INL void
 ArgumentParser::check_mutex_arguments() const
 {
-    for (std::size_t i = 0; i < m_mutex_groups.size(); ++i) {
-        MutuallyExclusiveGroup const& group = m_mutex_groups.at(i);
-        for (std::size_t j = 0; j < group.m_data->m_arguments.size(); ++j) {
-            if (group.m_data->m_arguments.at(j)->required()) {
+    for (std::list<MutuallyExclusiveGroup>::const_iterator it
+         = m_mutex_groups.begin(); it != m_mutex_groups.end(); ++it) {
+        for (std::size_t j = 0; j < (*it).m_data->m_arguments.size(); ++j) {
+            if ((*it).m_data->m_arguments.at(j)->required()) {
                 throw
                 ValueError("mutually exclusive arguments must be optional");
             }
@@ -14525,12 +14525,13 @@ ArgumentParser::check_mutex_groups(
 {
     for (std::size_t i = 0; i < parsers.size(); ++i) {
         ArgumentParser const* parser = parsers.at(i).parser;
-        for (std::size_t j = 0; j < parser->m_mutex_groups.size(); ++j) {
-            MutuallyExclusiveGroup const& group = parser->m_mutex_groups.at(j);
+        for (std::list<MutuallyExclusiveGroup>::const_iterator it
+             = parser->m_mutex_groups.begin();
+             it != parser->m_mutex_groups.end(); ++it) {
             std::string args;
             std::string found;
-            for (std::size_t k = 0; k < group.m_data->m_arguments.size(); ++k) {
-                pArgument const& arg = group.m_data->m_arguments.at(k);
+            for (std::size_t k = 0; k < (*it).m_data->m_arguments.size(); ++k) {
+                pArgument const& arg = (*it).m_data->m_arguments.at(k);
                 std::string flags = detail::_join(arg->flags(), "/");
                 args += detail::_spaces + flags;
                 if (!parsers.front().storage.at(arg).empty()) {
@@ -14541,8 +14542,8 @@ ArgumentParser::check_mutex_groups(
                     found = flags;
                 }
             }
-            if (group.required() && found.empty()) {
-                if (group.m_data->m_arguments.empty()) {
+            if ((*it).required() && found.empty()) {
+                if ((*it).m_data->m_arguments.empty()) {
                     throw IndexError("list index out of range");
                 }
                 parser->throw_error(
@@ -14806,7 +14807,7 @@ ArgumentParser::print_custom_usage(
         pArguments const& positional,
         pArguments const& operand,
         pArguments const& options,
-        std::deque<MutuallyExclusiveGroup> const& mutex_groups,
+        std::list<MutuallyExclusiveGroup> const& mutex_groups,
         SubparserInfo const& info,
         std::string const& prog,
         std::string const& usage_title,
@@ -14819,16 +14820,16 @@ ArgumentParser::print_custom_usage(
     std::string res;
     pArguments ex_options = options;
     pArguments ex_operand = operand;
-    for (std::size_t i = 0; i < mutex_groups.size(); ++i) {
-        for (std::size_t j = 0;
-             j < mutex_groups.at(i).m_data->m_arguments.size(); ++j) {
+    for (std::list<MutuallyExclusiveGroup>::const_iterator it
+         = mutex_groups.begin(); it != mutex_groups.end(); ++it) {
+        for (std::size_t j = 0; j < (*it).m_data->m_arguments.size(); ++j) {
             ex_options.erase(std::remove(
                                  ex_options.begin(), ex_options.end(),
-                                 mutex_groups.at(i).m_data->m_arguments.at(j)),
+                                 (*it).m_data->m_arguments.at(j)),
                              ex_options.end());
             ex_operand.erase(std::remove(
                                  ex_operand.begin(), ex_operand.end(),
-                                 mutex_groups.at(i).m_data->m_arguments.at(j)),
+                                 (*it).m_data->m_arguments.at(j)),
                              ex_operand.end());
         }
     }
@@ -14840,8 +14841,9 @@ ArgumentParser::print_custom_usage(
         add_arg_usage(res, ex_operand.at(i)->usage(*m_formatter),
                       ex_operand.at(i)->required());
     }
-    for (std::size_t i = 0; i < mutex_groups.size(); ++i) {
-        add_arg_usage(res, mutex_groups.at(i).usage(*m_formatter), true);
+    for (std::list<MutuallyExclusiveGroup>::const_iterator it
+         = mutex_groups.begin(); it != mutex_groups.end(); ++it) {
+        add_arg_usage(res, (*it).usage(*m_formatter), true);
     }
     for (std::size_t i = 0; i < positional.size(); ++i) {
         if (info.first && info.second == i
@@ -15108,10 +15110,10 @@ ArgumentParser::test_diagnostics(
         }
     }
     // check mutually exclusive arguments
-    for (std::size_t i = 0; i < m_mutex_groups.size(); ++i) {
-        MutuallyExclusiveGroup const& group = m_mutex_groups.at(i);
-        for (std::size_t j = 0; j < group.m_data->m_arguments.size(); ++j) {
-            pArgument const& arg = group.m_data->m_arguments.at(j);
+    for (std::list<MutuallyExclusiveGroup>::const_iterator it
+         = m_mutex_groups.begin(); it != m_mutex_groups.end(); ++it) {
+        for (std::size_t j = 0; j < (*it).m_data->m_arguments.size(); ++j) {
+            pArgument const& arg = (*it).m_data->m_arguments.at(j);
             std::string argument = "argument with ";
             argument += std::string(arg->dest().empty() ? "options" : "dest");
             argument += " " + detail::_join(
