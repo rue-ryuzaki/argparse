@@ -7219,6 +7219,17 @@ public:
     get_env(std::string const& name) const;
 
     /*!
+     *  \brief Get environment variables list (from envp[])
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Environment variable values list
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    std::list<std::pair<std::string, std::string> > const&
+    list_env() const;
+
+    /*!
      *  \brief Run self-test and print report to output stream
      *  for default language
      *
@@ -7860,7 +7871,7 @@ private:
     std::deque<MutuallyExclusiveGroup> m_mutex_groups;
     std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
-    std::map<std::string, std::string> m_env_variables;
+    std::list<std::pair<std::string, std::string> > m_env_variables;
     pSubparser m_subparsers;
     std::size_t m_subparsers_position;
 #ifdef _ARGPARSE_CXX_11
@@ -12101,7 +12112,7 @@ ArgumentParser::read_env(
             std::vector<std::string> pair
                     = detail::_split(std::string(envp[i]), detail::_equals, 1);
             pair.resize(2);
-            m_env_variables.insert(std::make_pair(pair.at(0), pair.at(1)));
+            m_env_variables.push_back(std::make_pair(pair.at(0), pair.at(1)));
         }
     }
 }
@@ -12896,16 +12907,34 @@ _ARGPARSE_INL bool
 ArgumentParser::have_env(
         std::string const& name) const
 {
-    return m_env_variables.count(name) != 0;
+    std::list<std::pair<std::string, std::string> >::const_iterator it
+            = m_env_variables.begin();
+    for ( ; it != m_env_variables.end(); ++it) {
+        if (it->first == name) {
+            break;
+        }
+    }
+    return it != m_env_variables.end();
 }
 
 _ARGPARSE_INL std::string
 ArgumentParser::get_env(
         std::string const& name) const
 {
-    std::map<std::string, std::string>::const_iterator it
-            = m_env_variables.find(name);
+    std::list<std::pair<std::string, std::string> >::const_iterator it
+            = m_env_variables.begin();
+    for ( ; it != m_env_variables.end(); ++it) {
+        if (it->first == name) {
+            break;
+        }
+    }
     return it != m_env_variables.end() ? it->second : std::string();
+}
+
+_ARGPARSE_INL std::list<std::pair<std::string, std::string> > const&
+ArgumentParser::list_env() const
+{
+    return m_env_variables;
 }
 
 _ARGPARSE_INL bool
