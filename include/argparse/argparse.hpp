@@ -3220,6 +3220,8 @@ class _ArgumentData : public _ConflictResolver
     friend class MutuallyExclusiveGroup;
 
     typedef detail::shared_ptr<Argument> pArgument;
+    typedef std::list<pArgument>::const_iterator arg_iterator;
+    typedef std::list<std::pair<pArgument, bool> >::const_iterator sub_iterator;
 
     _ArgumentData();
 
@@ -3275,10 +3277,10 @@ class _ArgumentData : public _ConflictResolver
 
     // -- data ----------------------------------------------------------------
     std::string m_conflict_handler;
-    std::deque<pArgument> m_arguments;
-    std::deque<std::pair<pArgument, bool> > m_optional;
-    std::deque<std::pair<pArgument, bool> > m_operand;
-    std::deque<std::pair<pArgument, bool> > m_positional;
+    std::list<pArgument> m_arguments;
+    std::list<std::pair<pArgument, bool> > m_optional;
+    std::list<std::pair<pArgument, bool> > m_operand;
+    std::list<std::pair<pArgument, bool> > m_positional;
     bool m_add_help;
     bool m_help_added;
 };
@@ -3291,6 +3293,8 @@ class _ArgumentGroup
 protected:
     typedef detail::shared_ptr<Argument> pArgument;
     typedef detail::shared_ptr<_ArgumentData> pArgumentData;
+    typedef std::list<pArgument>::const_iterator arg_iterator;
+    typedef std::list<std::pair<pArgument, bool> >::const_iterator sub_iterator;
 
     explicit
     _ArgumentGroup(
@@ -5439,6 +5443,10 @@ _ARGPARSE_EXPORT class ArgumentParser
     typedef detail::shared_ptr<_ArgumentData> pArgumentData;
     typedef detail::shared_ptr<_Group> pGroup;
     typedef detail::shared_ptr<ArgumentParser> pParser;
+    typedef std::list<pArgument>::const_iterator arg_iterator;
+    typedef std::list<std::pair<pArgument, bool> >::const_iterator sub_iterator;
+    typedef std::list<pGroup>::const_iterator grp_iterator;
+    typedef std::list<MutuallyExclusiveGroup>::const_iterator mtx_it;
 
 public:
     /*!
@@ -7776,7 +7784,7 @@ private:
 
     static bool
     is_default_value_stored(
-            std::deque<pArgument>& arguments,
+            std::list<pArgument>& arguments,
             std::string const& dest,
             std::string const& value);
 
@@ -10790,13 +10798,12 @@ _ARGPARSE_INL void
 _ArgumentData::check_conflict_arg(
         Argument const* arg)
 {
-    for (std::size_t i = 0; i < m_optional.size(); ++i) {
-        std::pair<pArgument, bool>& opt = m_optional.at(i);
-        if (opt.first.get() == arg) {
+    for (sub_iterator it = m_optional.begin(); it != m_optional.end(); ++it) {
+        if ((*it).first.get() == arg) {
             return;
         }
-        check_conflicting_option(arg, opt.first->m_all_flags);
-        check_conflicting_option(arg, opt.first->m_flags);
+        check_conflicting_option(arg, (*it).first->m_all_flags);
+        check_conflicting_option(arg, (*it).first->m_flags);
     }
 }
 
@@ -10818,9 +10825,9 @@ _ArgumentData::update_help(
                 = detail::_vector(std::string(1, prefix) + "h",
                                   std::string(2, prefix) + "help");
         if (m_conflict_handler == "resolve") {
-            for (std::size_t i = 0; i < m_optional.size(); ++i) {
-                std::pair<pArgument, bool> const& pair = m_optional.at(i);
-                detail::_resolve_conflict(pair.first->flags(), help_flags);
+            for (sub_iterator it = m_optional.begin();
+                 it != m_optional.end(); ++it) {
+                detail::_resolve_conflict((*it).first->flags(), help_flags);
             }
         }
         if (!help_flags.empty()) {
@@ -10840,12 +10847,11 @@ _ArgumentData::get_arguments(
 {
     std::vector<pArgument> res;
     res.reserve(m_arguments.size());
-    for (std::size_t i = 0; i < m_arguments.size(); ++i) {
-        pArgument const& arg = m_arguments.at(i);
-        if ((add_suppress || !arg->m_help_type.has_value())
-                && (arg->m_type != Argument::Optional
-                    || !arg->flags().empty())) {
-            res.push_back(arg);
+    for (arg_iterator it = m_arguments.begin(); it != m_arguments.end(); ++it) {
+        if ((add_suppress || !(*it)->m_help_type.has_value())
+                && ((*it)->m_type != Argument::Optional
+                    || !(*it)->flags().empty())) {
+            res.push_back(*it);
         }
     }
     return res;
@@ -10858,12 +10864,11 @@ _ArgumentData::get_optional(
 {
     std::vector<pArgument> res;
     res.reserve(m_optional.size());
-    for (std::size_t i = 0; i < m_optional.size(); ++i) {
-        std::pair<pArgument, bool> const& pair = m_optional.at(i);
-        if ((add_suppress || !pair.first->m_help_type.has_value())
-                && (add_group || !pair.second)
-                && !pair.first->flags().empty()) {
-            res.push_back(pair.first);
+    for (sub_iterator it = m_optional.begin(); it != m_optional.end(); ++it) {
+        if ((add_suppress || !(*it).first->m_help_type.has_value())
+                && (add_group || !(*it).second)
+                && !(*it).first->flags().empty()) {
+            res.push_back((*it).first);
         }
     }
     return res;
@@ -10876,11 +10881,10 @@ _ArgumentData::get_operand(
 {
     std::vector<pArgument> res;
     res.reserve(m_operand.size());
-    for (std::size_t i = 0; i < m_operand.size(); ++i) {
-        std::pair<pArgument, bool> const& pair = m_operand.at(i);
-        if ((add_suppress || !pair.first->m_help_type.has_value())
-                && (add_group || !pair.second)) {
-            res.push_back(pair.first);
+    for (sub_iterator it = m_operand.begin(); it != m_operand.end(); ++it) {
+        if ((add_suppress || !(*it).first->m_help_type.has_value())
+                && (add_group || !(*it).second)) {
+            res.push_back((*it).first);
         }
     }
     return res;
@@ -10893,11 +10897,10 @@ _ArgumentData::get_positional(
 {
     std::vector<pArgument> res;
     res.reserve(m_positional.size());
-    for (std::size_t i = 0; i < m_positional.size(); ++i) {
-        std::pair<pArgument, bool> const& pair = m_positional.at(i);
-        if ((add_suppress || !pair.first->m_help_type.has_value())
-                && (add_group || !pair.second)) {
-            res.push_back(pair.first);
+    for (sub_iterator i = m_positional.begin(); i != m_positional.end(); ++i) {
+        if ((add_suppress || !(*i).first->m_help_type.has_value())
+                && (add_group || !(*i).second)) {
+            res.push_back((*i).first);
         }
     }
     return res;
@@ -10934,21 +10937,17 @@ _ArgumentData::check_conflicting_option(
 
 _ARGPARSE_INL void
 _ArgumentData::merge_arguments(
-        _ArgumentData const& data)
+        _ArgumentData const& d)
 {
-    for (std::size_t i = 0; i < data.m_optional.size(); ++i) {
-        check_conflict_arg(data.m_optional.at(i).first.get());
-        m_optional.push_back(data.m_optional.at(i));
+    for (sub_iterator i = d.m_optional.begin(); i != d.m_optional.end(); ++i) {
+        check_conflict_arg((*i).first.get());
+        m_optional.push_back(*i);
     }
-    for (std::size_t i = 0; i < data.m_operand.size(); ++i) {
-        m_operand.push_back(data.m_operand.at(i));
-    }
-    for (std::size_t i = 0; i < data.m_positional.size(); ++i) {
-        m_positional.push_back(data.m_positional.at(i));
-    }
-    for (std::size_t i = 0; i < data.m_arguments.size(); ++i) {
-        m_arguments.push_back(data.m_arguments.at(i));
-    }
+    m_operand.insert(m_operand.end(), d.m_operand.begin(), d.m_operand.end());
+    m_positional.insert(m_positional.end(),
+                        d.m_positional.begin(), d.m_positional.end());
+    m_arguments.insert(m_arguments.end(),
+                       d.m_arguments.begin(), d.m_arguments.end());
 }
 
 _ARGPARSE_INL void
@@ -11170,8 +11169,9 @@ _ArgumentGroup::process_add_argument()
     Argument::Type type = m_data->m_arguments.back()->m_type;
     if (type == Argument::Optional
             && m_parent_data->m_conflict_handler == "resolve") {
-        for (std::size_t i = 0; i < m_parent_data->m_optional.size(); ++i) {
-            m_parent_data->m_optional.at(i).first->resolve_conflict_flags(
+        for (sub_iterator it = m_parent_data->m_optional.begin();
+             it != m_parent_data->m_optional.end(); ++it) {
+            (*it).first->resolve_conflict_flags(
                         m_data->m_arguments.back()->flags());
         }
     }
@@ -11299,10 +11299,9 @@ ArgumentGroup::limit_help_flags(
         HelpFormatter const& formatter,
         std::size_t& limit) const
 {
-    for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
-        detail::_limit_to_min(
-                    limit, m_data->m_arguments
-                                     .at(i)->flags_to_string(formatter).size());
+    for (arg_iterator it = m_data->m_arguments.begin();
+         it != m_data->m_arguments.end(); ++it) {
+        detail::_limit_to_min(limit, (*it)->flags_to_string(formatter).size());
     }
 }
 
@@ -11328,9 +11327,9 @@ ArgumentGroup::print_help(
         if (!m_data->m_arguments.empty()) {
             os << std::endl;
         }
-        for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
-            os << m_data->m_arguments.at(i)->print(
-                      formatter, limit, width, lang) << std::endl;
+        for (arg_iterator it = m_data->m_arguments.begin();
+             it != m_data->m_arguments.end(); ++it) {
+            os << (*it)->print(formatter, limit, width, lang) << std::endl;
         }
     }
 }
@@ -11409,9 +11408,9 @@ MutuallyExclusiveGroup::usage(
         HelpFormatter const& formatter) const
 {
     std::string res;
-    for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
-        detail::_append_value_to(
-                    m_data->m_arguments.at(i)->usage(formatter), res, " | ");
+    for (arg_iterator it = m_data->m_arguments.begin();
+         it != m_data->m_arguments.end(); ++it) {
+        detail::_append_value_to((*it)->usage(formatter), res, " | ");
     }
     return res.empty() ? res : (m_required ? "(" + res + ")" : "[" + res + "]");
 }
@@ -13054,8 +13053,7 @@ ArgumentParser::print_help(
         std::string str = optional.at(i)->flags_to_string(*m_formatter);
         detail::_limit_to_min(size, detail::_utf8_length(str).second);
     }
-    for (std::list<pGroup>::const_iterator it
-         = m_groups.begin(); it != m_groups.end(); ++it) {
+    for (grp_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
         (*it)->limit_help_flags(*m_formatter, size);
     }
     size += 4;
@@ -13085,8 +13083,7 @@ ArgumentParser::print_help(
                                 *m_formatter, size, width, lang)) << std::endl;
         }
     }
-    for (std::list<pGroup>::const_iterator it
-         = m_groups.begin(); it != m_groups.end(); ++it) {
+    for (grp_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
         if (!subparser || ((*it) != subparser
                            || (!sub_positional
                                && !subparser->m_help_type.has_value()))) {
@@ -13284,11 +13281,11 @@ ArgumentParser::default_language(
 {
     std::string res;
     if (parser) {
-        for (std::size_t i = 0; i < parser->m_data->m_arguments.size(); ++i) {
-            pArgument const& arg = parser->m_data->m_arguments.at(i);
-            if (arg->action() == argparse::language
-                    && arg->m_default.has_value()) {
-                res = arg->m_default.value();
+        for (arg_iterator it = parser->m_data->m_arguments.begin();
+             it != parser->m_data->m_arguments.end(); ++it) {
+            if ((*it)->action() == argparse::language
+                    && (*it)->m_default.has_value()) {
+                res = (*it)->m_default.value();
             }
         }
     }
@@ -13597,10 +13594,10 @@ ArgumentParser::check_namespace(
 _ARGPARSE_INL void
 ArgumentParser::check_mutex_arguments() const
 {
-    for (std::list<MutuallyExclusiveGroup>::const_iterator it
-         = m_mutex_groups.begin(); it != m_mutex_groups.end(); ++it) {
-        for (std::size_t j = 0; j < (*it).m_data->m_arguments.size(); ++j) {
-            if ((*it).m_data->m_arguments.at(j)->required()) {
+    for (mtx_it i = m_mutex_groups.begin(); i != m_mutex_groups.end(); ++i) {
+        for (arg_iterator j = (*i).m_data->m_arguments.begin();
+             j != (*i).m_data->m_arguments.end(); ++j) {
+            if ((*j)->required()) {
                 throw
                 ValueError("mutually exclusive arguments must be optional");
             }
@@ -14525,16 +14522,15 @@ ArgumentParser::check_mutex_groups(
 {
     for (std::size_t i = 0; i < parsers.size(); ++i) {
         ArgumentParser const* parser = parsers.at(i).parser;
-        for (std::list<MutuallyExclusiveGroup>::const_iterator it
-             = parser->m_mutex_groups.begin();
-             it != parser->m_mutex_groups.end(); ++it) {
+        for (mtx_it j = parser->m_mutex_groups.begin();
+             j != parser->m_mutex_groups.end(); ++j) {
             std::string args;
             std::string found;
-            for (std::size_t k = 0; k < (*it).m_data->m_arguments.size(); ++k) {
-                pArgument const& arg = (*it).m_data->m_arguments.at(k);
-                std::string flags = detail::_join(arg->flags(), "/");
+            for (arg_iterator k = (*j).m_data->m_arguments.begin();
+                 k != (*j).m_data->m_arguments.end(); ++k) {
+                std::string flags = detail::_join((*k)->flags(), "/");
                 args += detail::_spaces + flags;
-                if (!parsers.front().storage.at(arg).empty()) {
+                if (!parsers.front().storage.at(*k).empty()) {
                     if (!found.empty()) {
                         parser->throw_error("argument " + flags + ": not "
                                             + "allowed with argument " + found);
@@ -14542,8 +14538,8 @@ ArgumentParser::check_mutex_groups(
                     found = flags;
                 }
             }
-            if ((*it).required() && found.empty()) {
-                if ((*it).m_data->m_arguments.empty()) {
+            if ((*j).required() && found.empty()) {
+                if ((*j).m_data->m_arguments.empty()) {
                     throw IndexError("list index out of range");
                 }
                 parser->throw_error(
@@ -14738,14 +14734,13 @@ ArgumentParser::namespace_post_trigger(
 
 _ARGPARSE_INL bool
 ArgumentParser::is_default_value_stored(
-        std::deque<pArgument>& arguments,
+        std::list<pArgument>& arguments,
         std::string const& dest,
         std::string const& value)
 {
-    for (std::size_t i = 0; i < arguments.size(); ++i) {
-        pArgument& arg = arguments.at(i);
-        if (arg->is_match_name(dest)) {
-            arg->default_value(value);
+    for (arg_iterator it = arguments.begin(); it != arguments.end(); ++it) {
+        if ((*it)->is_match_name(dest)) {
+            (*it)->default_value(value);
             return true;
         }
     }
@@ -14773,9 +14768,11 @@ ArgumentParser::subparser_info(
         std::size_t offset) const
 {
     SubparserInfo res = std::make_pair(m_subparsers, offset);
-    for (std::size_t i = 0; i < m_subparsers_position; ++i) {
-        res.second += (add_suppress
-                 || !m_data->m_positional.at(i).first->m_help_type.has_value());
+    std::size_t i = 0;
+    for (sub_iterator it = m_data->m_positional.begin();
+         it != m_data->m_positional.end() && i < m_subparsers_position;
+         ++it, ++i) {
+        res.second += (add_suppress || !(*it).first->m_help_type.has_value());
     }
     return res;
 }
@@ -14820,16 +14817,14 @@ ArgumentParser::print_custom_usage(
     std::string res;
     pArguments ex_options = options;
     pArguments ex_operand = operand;
-    for (std::list<MutuallyExclusiveGroup>::const_iterator it
-         = mutex_groups.begin(); it != mutex_groups.end(); ++it) {
-        for (std::size_t j = 0; j < (*it).m_data->m_arguments.size(); ++j) {
+    for (mtx_it i = mutex_groups.begin(); i != mutex_groups.end(); ++i) {
+        for (arg_iterator j = (*i).m_data->m_arguments.begin();
+             j != (*i).m_data->m_arguments.end(); ++j) {
             ex_options.erase(std::remove(
-                                 ex_options.begin(), ex_options.end(),
-                                 (*it).m_data->m_arguments.at(j)),
+                                 ex_options.begin(), ex_options.end(), *j),
                              ex_options.end());
             ex_operand.erase(std::remove(
-                                 ex_operand.begin(), ex_operand.end(),
-                                 (*it).m_data->m_arguments.at(j)),
+                                 ex_operand.begin(), ex_operand.end(), *j),
                              ex_operand.end());
         }
     }
@@ -14841,9 +14836,8 @@ ArgumentParser::print_custom_usage(
         add_arg_usage(res, ex_operand.at(i)->usage(*m_formatter),
                       ex_operand.at(i)->required());
     }
-    for (std::list<MutuallyExclusiveGroup>::const_iterator it
-         = mutex_groups.begin(); it != mutex_groups.end(); ++it) {
-        add_arg_usage(res, (*it).usage(*m_formatter), true);
+    for (mtx_it i = mutex_groups.begin(); i != mutex_groups.end(); ++i) {
+        add_arg_usage(res, (*i).usage(*m_formatter), true);
     }
     for (std::size_t i = 0; i < positional.size(); ++i) {
         if (info.first && info.second == i
@@ -14905,10 +14899,10 @@ ArgumentParser::test_overview(
         os << "language: " << lang << "\n";
     }
     os << "prog: " << prog() << "\n";
-    for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
-        pArgument const& arg = m_data->m_arguments.at(i);
-        if (arg->action() == argparse::version) {
-            os << "version: " << arg->version() << "\n";
+    for (arg_iterator it = m_data->m_arguments.begin();
+         it != m_data->m_arguments.end(); ++it) {
+        if ((*it)->action() == argparse::version) {
+            os << "version: " << (*it)->version() << "\n";
         }
     }
     std::string tr_usage = detail::_tr(m_usage, lang);
@@ -15006,8 +15000,9 @@ ArgumentParser::test_diagnostics(
     }
     std::map<std::string, std::size_t> dest_args;
     // check arguments
-    for (std::size_t i = 0; i < m_data->m_arguments.size(); ++i) {
-        pArgument const& arg = m_data->m_arguments.at(i);
+    for (arg_iterator i = m_data->m_arguments.begin();
+         i != m_data->m_arguments.end(); ++i) {
+        pArgument const& arg = *i;
         std::string argument = "argument with ";
         argument += std::string(arg->dest().empty() ? "options" : "dest");
         argument += " " + detail::_join(arg->get_argument_flags(), ", ", "'");
@@ -15110,15 +15105,14 @@ ArgumentParser::test_diagnostics(
         }
     }
     // check mutually exclusive arguments
-    for (std::list<MutuallyExclusiveGroup>::const_iterator it
-         = m_mutex_groups.begin(); it != m_mutex_groups.end(); ++it) {
-        for (std::size_t j = 0; j < (*it).m_data->m_arguments.size(); ++j) {
-            pArgument const& arg = (*it).m_data->m_arguments.at(j);
+    for (mtx_it i = m_mutex_groups.begin(); i != m_mutex_groups.end(); ++i) {
+        for (arg_iterator j = (*i).m_data->m_arguments.begin();
+             j != (*i).m_data->m_arguments.end(); ++j) {
             std::string argument = "argument with ";
-            argument += std::string(arg->dest().empty() ? "options" : "dest");
+            argument += std::string((*j)->dest().empty() ? "options" : "dest");
             argument += " " + detail::_join(
-                            arg->get_argument_flags(), ", ", "'");
-            if (arg->required()) {
+                            (*j)->get_argument_flags(), ", ", "'");
+            if ((*j)->required()) {
                 ++diagnostics.second;
                 os << _error << " " << argument << ": mutually "
                    << "exclusive arguments must be optional\n";
