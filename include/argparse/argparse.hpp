@@ -5443,6 +5443,7 @@ _ARGPARSE_EXPORT class ArgumentParser
     typedef detail::shared_ptr<_ArgumentData> pArgumentData;
     typedef detail::shared_ptr<_Group> pGroup;
     typedef detail::shared_ptr<ArgumentParser> pParser;
+    typedef std::list<pParser>::const_iterator prs_iterator;
     typedef std::list<pArgument>::const_iterator arg_iterator;
     typedef std::list<std::pair<pArgument, bool> >::const_iterator sub_iterator;
     typedef std::list<pGroup>::const_iterator grp_iterator;
@@ -5666,7 +5667,7 @@ public:
         std::string m_dest;
         detail::TranslationPack m_help;
         detail::Value<std::string> m_metavar;
-        std::deque<pParser> m_parsers;
+        std::list<pParser> m_parsers;
         detail::Value<_SUPPRESS> m_help_type;
         bool        m_required;
     };
@@ -11965,10 +11966,10 @@ ArgumentParser::Subparser::parser_names() const
 {
     std::vector<std::string> res;
     res.reserve(2 * m_parsers.size());
-    for (std::size_t i = 0; i < m_parsers.size(); ++i) {
-        res.push_back(m_parsers.at(i)->m_name);
-        for (std::size_t j = 0; j < m_parsers.at(i)->aliases().size(); ++j) {
-            res.push_back(m_parsers.at(i)->aliases().at(j));
+    for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
+        res.push_back((*it)->m_name);
+        for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
+            res.push_back((*it)->aliases().at(a));
         }
     }
     return res;
@@ -11980,8 +11981,8 @@ ArgumentParser::Subparser::limit_help_flags(
         std::size_t& limit) const
 {
     detail::_limit_to_min(limit, flags_to_string().size());
-    for (std::size_t i = 0; i < m_parsers.size(); ++i) {
-        detail::_limit_to_min(limit, m_parsers.at(i)->m_name.size() + 2);
+    for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
+        detail::_limit_to_min(limit, (*it)->m_name.size() + 2);
     }
 }
 
@@ -12022,8 +12023,8 @@ ArgumentParser::Subparser::update_prog(
     m_parent_prog = parent_prog;
     m_parent_args = parent_args;
     std::string const program = prog_name();
-    for (std::size_t i = 0; i < m_parsers.size(); ++i) {
-        m_parsers.at(i)->update_prog(program);
+    for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
+        (*it)->update_prog(program);
     }
 }
 
@@ -12040,11 +12041,10 @@ ArgumentParser::Subparser::flags_to_string() const
         return metavar();
     }
     std::string res;
-    for (std::size_t i = 0; i < m_parsers.size(); ++i) {
-        pParser const& p = m_parsers.at(i);
-        detail::_append_value_to(p->m_name, res, ",");
-        for (std::size_t j = 0; j < p->aliases().size(); ++j) {
-            detail::_append_value_to(p->aliases().at(j), res, ",");
+    for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
+        detail::_append_value_to((*it)->m_name, res, ",");
+        for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
+            detail::_append_value_to((*it)->aliases().at(a), res, ",");
         }
     }
     return "{" + res + "}";
@@ -12060,12 +12060,11 @@ ArgumentParser::Subparser::print(
     std::string res = detail::_help_formatter(
                 "  " + flags_to_string(), formatter,
                 detail::_tr(m_help, lang), width, limit);
-    for (std::size_t i = 0; i < m_parsers.size(); ++i) {
-        pParser const& p = m_parsers.at(i);
-        std::string help = detail::_tr(p->m_help, lang);
+    for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
+        std::string help = detail::_tr((*it)->m_help, lang);
         if (!help.empty()) {
-            std::string name = "    " + p->m_name;
-            std::string alias = detail::_join(p->aliases(), ", ");
+            std::string name = "    " + (*it)->m_name;
+            std::string alias = detail::_join((*it)->aliases(), ", ");
             if (!alias.empty()) {
                 name += " (" + alias + ")";
             }
@@ -13212,10 +13211,10 @@ ArgumentParser::print_parser_completion(
         std::ostream& os)
 {
     if (p->m_subparsers) {
-        for (std::size_t i = 0; i < p->m_subparsers->m_parsers.size(); ++i) {
-            pParser const& parser = p->m_subparsers->m_parsers.at(i);
+        for (prs_iterator it = p->m_subparsers->m_parsers.begin();
+             it != p->m_subparsers->m_parsers.end(); ++it) {
             print_parser_completion(
-                        parser.get(), prog + "_" + parser->m_name, false, os);
+                        (*it).get(), prog + "_" + (*it)->m_name, false, os);
         }
     }
     os << "function _" << prog << "()\n";
@@ -13227,14 +13226,14 @@ ArgumentParser::print_parser_completion(
             os << "  for (( i=$1; i < ${COMP_CWORD}; ((++i)) )); do\n";
         }
         os << "    case \"${COMP_WORDS[$i]}\" in\n";
-        for (std::size_t i = 0; i < p->m_subparsers->m_parsers.size(); ++i) {
-            pParser const& parser = p->m_subparsers->m_parsers.at(i);
-            for (std::size_t j = 0; j < parser->aliases().size(); ++j) {
-                os << "      \"" << parser->aliases().at(j) << "\")\n";
+        for (prs_iterator it = p->m_subparsers->m_parsers.begin();
+             it != p->m_subparsers->m_parsers.end(); ++it) {
+            for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
+                os << "      \"" << (*it)->aliases().at(a) << "\")\n";
                 os << "        ;&\n";
             }
-            os << "      \"" << parser->m_name << "\")\n";
-            os << "        _" << prog << "_" << parser->m_name << " $((i+1))\n";
+            os << "      \"" << (*it)->m_name << "\")\n";
+            os << "        _" << prog << "_" << (*it)->m_name << " $((i+1))\n";
             os << "        return\n";
             os << "        ;;\n";
         }
@@ -14235,23 +14234,22 @@ ArgumentParser::try_capture_parser(
     std::string const& name = args.front();
     std::string const& dest = parsers.back().subparser.first->dest();
     std::string choices;
-    for (std::size_t i = 0;
-         i < parsers.back().subparser.first->m_parsers.size(); ++i) {
-        pParser const& p = parsers.back().subparser.first->m_parsers.at(i);
-        detail::_append_value_to("'" + p->m_name + "'", choices, ", ");
-        for (std::size_t j = 0; j < p->aliases().size(); ++j) {
-            std::string const& alias = p->aliases().at(j);
+    for (prs_iterator it = parsers.back().subparser.first->m_parsers.begin();
+         it != parsers.back().subparser.first->m_parsers.end(); ++it) {
+        detail::_append_value_to("'" + (*it)->m_name + "'", choices, ", ");
+        for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
+            std::string const& alias = (*it)->aliases().at(a);
             detail::_append_value_to("'" + alias + "'", choices, ", ");
         }
-        if (p->m_name == name || detail::_exists(name, p->aliases())) {
+        if ((*it)->m_name == name || detail::_exists(name, (*it)->aliases())) {
             std::string lang = parsers.back().lang;
-            parsers.push_back(parser_info(p.get(), _Storage(),
-                                          p->subparser_info(true, pos)));
+            parsers.push_back(parser_info((*it).get(), _Storage(),
+                                          (*it)->subparser_info(true, pos)));
             if (!lang.empty()) {
                 parsers.back().lang = lang;
             }
             parsers.back().parser->handle(parsers.back().parser->m_name);
-            validate_arguments(p.get()->m_data->get_arguments(true));
+            validate_arguments((*it)->m_data->get_arguments(true));
             if (!dest.empty()) {
                 pArgument subparser_arg
                         = Argument::make_argument(detail::_vector(dest),
@@ -14942,12 +14940,12 @@ ArgumentParser::test_overview(
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
     }
     if (m_subparsers) {
-        std::deque<pParser> const& parsers = m_subparsers->m_parsers;
+        std::list<pParser> const& parsers = m_subparsers->m_parsers;
         os << "subparsers list:\n";
-        for (std::size_t i = 0; i < parsers.size(); ++i) {
-            pParser const& parser = parsers.at(i);
-            os << "  " << (i + 1) << ". '" << parser->m_name << "'";
-            std::string aliases = detail::_join(parser->aliases(), ", ", "'");
+        std::size_t i = 0;
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            os << "  " << (++i) << ". '" << (*it)->m_name << "'";
+            std::string aliases = detail::_join((*it)->aliases(), ", ", "'");
             if (!aliases.empty()) {
                 os << ", aliases: " << aliases;
             }
@@ -15120,7 +15118,7 @@ ArgumentParser::test_diagnostics(
     }
     // check subparsers
     if (m_subparsers) {
-        std::deque<pParser> const& parsers = m_subparsers->m_parsers;
+        std::list<pParser> const& parsers = m_subparsers->m_parsers;
         if (parsers.empty()) {
             ++diagnostics.first;
             os << _warn << " subparsers created but no parsers were added\n";
@@ -15160,9 +15158,8 @@ ArgumentParser::test_diagnostics(
             ++diagnostics.first;
             os << _warn << " help for subparsers is not set\n";
         }
-        for (std::size_t i = 0; i < parsers.size(); ++i) {
-            pParser const& parser = parsers.at(i);
-            std::string const& name = parser->m_name;
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            std::string const& name = (*it)->m_name;
             // check name
             if (!detail::_is_utf8_string(name)) {
                 ++diagnostics.first;
@@ -15179,7 +15176,7 @@ ArgumentParser::test_diagnostics(
                    << name << "' can be incorrect\n";
             }
             // check help
-            if (detail::_tr(parser->m_help, lang).empty()) {
+            if (detail::_tr((*it)->m_help, lang).empty()) {
                 ++diagnostics.first;
                 os << _warn << " help for parser '" << name << "' is not set\n";
             }
