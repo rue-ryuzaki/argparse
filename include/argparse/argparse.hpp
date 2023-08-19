@@ -3771,7 +3771,7 @@ class _Storage
 
     typedef pArgument                               key_type;
     typedef std::pair<key_type, mapped_type>        value_type;
-    typedef std::deque<value_type>                  map_type;
+    typedef std::list<value_type>                   map_type;
     typedef map_type::iterator                      iterator;
     typedef map_type::const_iterator                const_iterator;
 
@@ -11426,11 +11426,10 @@ _Storage::create(
     }
     std::vector<std::string> const& arg_flags = key->flags();
     bool have_key = false;
-    for (std::size_t i = 0; i < m_data.size(); ++i) {
-        value_type& pair = m_data.at(i);
-        have_key |= (key == pair.first);
-        if (key != pair.first) {
-            pair.first->resolve_conflict_flags(arg_flags);
+    for (const_iterator it = m_data.begin(); it != m_data.end(); ++it) {
+        have_key |= (key == (*it).first);
+        if (key != (*it).first) {
+            (*it).first->resolve_conflict_flags(arg_flags);
         }
     }
     if (!have_key) {
