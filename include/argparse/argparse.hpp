@@ -7448,7 +7448,8 @@ private:
         std::string lang;
         bool have_negative_args;
     };
-    typedef std::deque<ParserInfo> Parsers;
+    typedef std::list<ParserInfo> Parsers;
+    typedef std::list<ParserInfo>::iterator pi_iterator;
 
     static ParserInfo
     parser_info(
@@ -7560,7 +7561,7 @@ private:
     storage_store_n_values(
             Parsers& parsers,
             pArgument const& arg,
-            std::deque<std::string>& arguments,
+            std::list<std::string>& arguments,
             std::size_t n) const;
 
     void
@@ -7613,20 +7614,20 @@ private:
     void
     match_positional_minimum(
             Parsers& parsers,
-            std::deque<std::string>& arguments,
+            std::list<std::string>& arguments,
             pArgument const& arg) const;
 
     void
     match_positional_more_zero(
             Parsers& parsers,
-            std::deque<std::string>& arguments,
+            std::list<std::string>& arguments,
             pArgument const& arg,
             std::size_t& over_args) const;
 
     void
     match_positional_optional(
             Parsers& parsers,
-            std::deque<std::string>& arguments,
+            std::list<std::string>& arguments,
             pArgument const& arg,
             std::size_t& over_args,
             std::size_t one_args) const;
@@ -7634,7 +7635,7 @@ private:
     void
     match_positional_default(
             Parsers& parsers,
-            std::deque<std::string>& arguments,
+            std::list<std::string>& arguments,
             pArgument const& arg) const;
 
     void
@@ -7642,7 +7643,7 @@ private:
             Parsers& parsers,
             std::size_t& pos,
             pArguments const& positional,
-            std::deque<std::string>& arguments,
+            std::list<std::string>& arguments,
             std::size_t finish,
             std::size_t min_args,
             std::size_t one_args,
@@ -7651,7 +7652,7 @@ private:
     static bool
     finish_analyze_positional(
             pArgument const& arg,
-            std::deque<std::string> const& args,
+            std::list<std::string> const& args,
             std::size_t& one_args,
             bool& more_args,
             std::size_t& min_args,
@@ -7664,7 +7665,7 @@ private:
             std::size_t& pos,
             pArguments const& positional,
             std::vector<std::string>& unrecognized_args,
-            std::deque<std::string>& args,
+            std::list<std::string>& args,
             bool read_all_args = true) const;
 
     bool
@@ -7673,7 +7674,7 @@ private:
             std::size_t& pos,
             pArguments& positional,
             std::vector<std::string>& unrecognized_args,
-            std::deque<std::string>& args,
+            std::list<std::string>& args,
             bool read_all_args) const;
 
     void
@@ -7730,7 +7731,7 @@ private:
             Parsers& parsers,
             bool was_pseudo_arg,
             bool intermixed,
-            std::deque<std::string>& intermixed_args,
+            std::list<std::string>& intermixed_args,
             std::size_t& pos,
             pArguments& positional,
             std::vector<std::string>& unrecognized_args) const;
@@ -7900,8 +7901,8 @@ namespace detail {
 template <class T>
 void
 _insert_to_end(
-        std::deque<T> const& from,
-        std::deque<T>& to)
+        std::list<T> const& from,
+        std::list<T>& to)
 {
     if (!from.empty()) {
         to.insert(to.end(), from.begin(), from.end());
@@ -7911,7 +7912,7 @@ _insert_to_end(
 template <class T>
 void
 _insert_to_end(
-        std::deque<T> const& from,
+        std::list<T> const& from,
         std::vector<T>& to)
 {
     if (!from.empty()) {
@@ -7933,7 +7934,7 @@ _insert_to_end(
 template <class T>
 void
 _move_insert_to_end(
-        std::deque<T>& from,
+        std::list<T>& from,
         std::vector<T>& to)
 {
 #ifdef _ARGPARSE_CXX_11
@@ -10944,11 +10945,9 @@ _ArgumentData::merge_arguments(
         check_conflict_arg((*i).first.get());
         m_optional.push_back(*i);
     }
-    m_operand.insert(m_operand.end(), d.m_operand.begin(), d.m_operand.end());
-    m_positional.insert(m_positional.end(),
-                        d.m_positional.begin(), d.m_positional.end());
-    m_arguments.insert(m_arguments.end(),
-                       d.m_arguments.begin(), d.m_arguments.end());
+    detail::_insert_to_end(d.m_operand, m_operand);
+    detail::_insert_to_end(d.m_positional, m_positional);
+    detail::_insert_to_end(d.m_arguments, m_arguments);
 }
 
 _ARGPARSE_INL void
@@ -12408,14 +12407,9 @@ ArgumentParser::parents(
             m_subparsers->update_prog(prog(), subparser_prog_args());
         }
         m_data->merge_arguments(*parent.m_data.get());
-        m_groups.insert(m_groups.end(),
-                        parent.m_groups.begin(), parent.m_groups.end());
-        m_mutex_groups.insert(m_mutex_groups.end(),
-                              parent.m_mutex_groups.begin(),
-                              parent.m_mutex_groups.end());
-        for (std::size_t j = 0; j < parent.m_default_values.size(); ++j) {
-            m_default_values.push_back(parent.m_default_values.at(j));
-        }
+        detail::_insert_to_end(parent.m_groups, m_groups);
+        detail::_insert_to_end(parent.m_mutex_groups, m_mutex_groups);
+        detail::_insert_to_end(parent.m_default_values, m_default_values);
     }
     return *this;
 }
@@ -13505,7 +13499,7 @@ ArgumentParser::parse_arguments(
     parsers.back().storage.create(m_data->get_arguments(true));
 
     std::vector<std::string> unrecognized_args;
-    std::deque<std::string> intermixed_args;
+    std::list<std::string> intermixed_args;
 
     bool was_pseudo_arg = false;
     std::size_t pos = 0;
@@ -13740,7 +13734,7 @@ _ARGPARSE_INL void
 ArgumentParser::storage_store_n_values(
         Parsers& parsers,
         pArgument const& arg,
-        std::deque<std::string>& arguments,
+        std::list<std::string>& arguments,
         std::size_t n) const
 {
     std::vector<std::string> values;
@@ -13936,7 +13930,7 @@ ArgumentParser::process_optional_version(
 _ARGPARSE_INL void
 ArgumentParser::match_positional_minimum(
         Parsers& parsers,
-        std::deque<std::string>& arguments,
+        std::list<std::string>& arguments,
         pArgument const& arg) const
 {
     if (storage_is_positional_arg_stored(parsers, arg)) {
@@ -13972,7 +13966,7 @@ ArgumentParser::match_positional_minimum(
 _ARGPARSE_INL void
 ArgumentParser::match_positional_more_zero(
         Parsers& parsers,
-        std::deque<std::string>& arguments,
+        std::list<std::string>& arguments,
         pArgument const& arg,
         std::size_t& over_args) const
 {
@@ -14019,7 +14013,7 @@ ArgumentParser::match_positional_more_zero(
 _ARGPARSE_INL void
 ArgumentParser::match_positional_optional(
         Parsers& parsers,
-        std::deque<std::string>& arguments,
+        std::list<std::string>& arguments,
         pArgument const& arg,
         std::size_t& over_args,
         std::size_t one_args) const
@@ -14063,7 +14057,7 @@ ArgumentParser::match_positional_optional(
 _ARGPARSE_INL void
 ArgumentParser::match_positional_default(
         Parsers& parsers,
-        std::deque<std::string>& arguments,
+        std::list<std::string>& arguments,
         pArgument const& arg) const
 {
     if (storage_is_positional_arg_stored(parsers, arg)) {
@@ -14090,7 +14084,7 @@ ArgumentParser::match_positionals(
         Parsers& parsers,
         std::size_t& pos,
         pArguments const& positional,
-        std::deque<std::string>& arguments,
+        std::list<std::string>& arguments,
         std::size_t finish,
         std::size_t min_args,
         std::size_t one_args,
@@ -14125,7 +14119,7 @@ ArgumentParser::match_positionals(
 _ARGPARSE_INL bool
 ArgumentParser::finish_analyze_positional(
         pArgument const& arg,
-        std::deque<std::string> const& args,
+        std::list<std::string> const& args,
         std::size_t& one_args,
         bool& more_args,
         std::size_t& min_args,
@@ -14172,7 +14166,7 @@ ArgumentParser::match_args_partial(
         std::size_t& pos,
         pArguments const& positional,
         std::vector<std::string>& unrecognized_args,
-        std::deque<std::string>& args,
+        std::list<std::string>& args,
         bool read_all_args) const
 {
     if (pos < positional.size()) {
@@ -14200,7 +14194,7 @@ ArgumentParser::try_capture_parser(
         std::size_t& pos,
         pArguments& positional,
         std::vector<std::string>& unrecognized_args,
-        std::deque<std::string>& args,
+        std::list<std::string>& args,
         bool read_all_args) const
 {
     std::size_t finish = pos;
@@ -14254,13 +14248,13 @@ ArgumentParser::try_capture_parser(
                 pArgument subparser_arg
                         = Argument::make_argument(detail::_vector(dest),
                                                   dest, Argument::Positional);
-                for (std::size_t j = 0; j < parsers.size(); ++j) {
-                    parsers.at(j).storage.create(subparser_arg);
+                for (pi_iterator j = parsers.begin(); j != parsers.end(); ++j) {
+                    (*j).storage.create(subparser_arg);
                 }
                 parsers.front().storage.at(subparser_arg).push_back(name);
             }
-            for (std::size_t j = 0; j < parsers.size(); ++j) {
-                parsers.at(j).storage.create(
+            for (pi_iterator j = parsers.begin(); j != parsers.end(); ++j) {
+                (*j).storage.create(
                             parsers.back().parser->m_data->get_arguments(true));
             }
             pArguments sub_positional
@@ -14469,12 +14463,12 @@ ArgumentParser::process_positional_args(
         Parsers& parsers,
         bool was_pseudo_arg,
         bool intermixed,
-        std::deque<std::string>& intermixed_args,
+        std::list<std::string>& intermixed_args,
         std::size_t& pos,
         pArguments& positional,
         std::vector<std::string>& unrecognized_args) const
 {
-    std::deque<std::string> args;
+    std::list<std::string> args;
     args.push_back(parsed_arguments.at(i));
     bool remainder = pos < positional.size()
             && positional.at(pos)->m_nargs == Argument::REMAINDING;
@@ -14517,10 +14511,9 @@ _ARGPARSE_INL void
 ArgumentParser::check_mutex_groups(
         Parsers const& parsers)
 {
-    for (std::size_t i = 0; i < parsers.size(); ++i) {
-        ArgumentParser const* parser = parsers.at(i).parser;
-        for (mtx_it j = parser->m_mutex_groups.begin();
-             j != parser->m_mutex_groups.end(); ++j) {
+    for (Parsers::const_iterator i = parsers.begin(); i != parsers.end(); ++i) {
+        for (mtx_it j = (*i).parser->m_mutex_groups.begin();
+             j != (*i).parser->m_mutex_groups.end(); ++j) {
             std::string args;
             std::string found;
             for (arg_iterator k = (*j).m_data->m_arguments.begin();
@@ -14529,7 +14522,7 @@ ArgumentParser::check_mutex_groups(
                 args += detail::_spaces + flags;
                 if (!parsers.front().storage.at(*k).empty()) {
                     if (!found.empty()) {
-                        parser->throw_error("argument " + flags + ": not "
+                        (*i).parser->throw_error("argument " + flags + ": not "
                                             + "allowed with argument " + found);
                     }
                     found = flags;
@@ -14539,7 +14532,7 @@ ArgumentParser::check_mutex_groups(
                 if ((*j).m_data->m_arguments.empty()) {
                     throw IndexError("list index out of range");
                 }
-                parser->throw_error(
+                (*i).parser->throw_error(
                             "one of the arguments" + args + " is required");
             }
         }
@@ -14620,7 +14613,7 @@ ArgumentParser::check_required_args(
         std::size_t& pos,
         pArguments const& positional) const
 {
-    std::deque<ParserInfo>::reverse_iterator it = parsers.rbegin();
+    std::list<ParserInfo>::reverse_iterator it = parsers.rbegin();
     std::vector<std::string> required;
     process_required_arguments(required, it->optional, parsers.front().storage);
     process_required_arguments(required, it->operand, parsers.front().storage);
@@ -14708,19 +14701,20 @@ ArgumentParser::namespace_post_trigger(
 {
     parsers.front().parser->parse_handle(
                 only_known, parsers.front().storage, unrecognized_args);
-    for (std::size_t i = 1; i < parsers.size(); ++i) {
-        auto const& storage = parsers.at(i - 1).storage;
-        auto& sub_storage = parsers.at(i).storage;
+    auto p = parsers.begin();
+    auto const* storage = &(*p).storage;
+    for (++p; p != parsers.end(); ++p) {
+        auto& sub_storage = (*p).storage;
         for (auto it = sub_storage.begin(); it != sub_storage.end(); ) {
-            if (storage.exists(it->first)) {
-                it->second = storage.at(it->first);
+            if (storage->exists(it->first)) {
+                it->second = storage->at(it->first);
                 ++it;
             } else {
                 it = sub_storage.erase(it);
             }
         }
-        parsers.at(i).parser->parse_handle(
-                    only_known, sub_storage, unrecognized_args);
+        (*p).parser->parse_handle(only_known, sub_storage, unrecognized_args);
+        storage = &(*p).storage;
     }
 }
 #else
