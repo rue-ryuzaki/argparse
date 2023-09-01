@@ -22,12 +22,7 @@ endif()
 set(PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
 
 include(cmake/project-is-top-level.cmake)
-
-if (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /EHsc")
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wold-style-cast -Wextra -Wundef -Wsign-compare -Wconversion -Wpointer-arith -Weffc++ -Wnon-virtual-dtor -Wsign-conversion")
-endif()
+include(cmake/warnings.cmake)
 
 if (NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 11)
@@ -79,7 +74,7 @@ if (NOT PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (DEFERED_CMAKE_INSTALL_PREFIX)
-    CONFIGURE_FILE(
+    configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
         "${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc" @ONLY
     )
@@ -87,7 +82,7 @@ else()
     set(_MARK "@")
     set(DEFERED_CMAKE_INSTALL_PREFIX "${_MARK}CMAKE_INSTALL_PREFIX${_MARK}")
 
-    CONFIGURE_FILE(
+    configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
         "${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc.in" @ONLY
     )
