@@ -3820,7 +3820,7 @@ class _Storage
     {
         const_iterator it = find(key);
         if (it == end()) {
-            throw std::logic_error("key '" + key + "' not found");
+            throw std::out_of_range("key '" + key + "' not found");
         }
         return *it;
     }
@@ -3830,7 +3830,7 @@ class _Storage
     {
         iterator it = find(key);
         if (it == end()) {
-            throw std::logic_error("key '" + key->m_name + "' not found");
+            throw std::out_of_range("key '" + key->m_name + "' not found");
         }
         return it->second;
     }
@@ -3840,7 +3840,7 @@ class _Storage
     {
         const_iterator it = find(key);
         if (it == end()) {
-            throw std::logic_error("key '" + key->m_name + "' not found");
+            throw std::out_of_range("key '" + key->m_name + "' not found");
         }
         return it->second;
     }
