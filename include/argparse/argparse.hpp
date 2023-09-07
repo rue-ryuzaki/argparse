@@ -646,18 +646,6 @@ _const_action = argparse::store_const | argparse::append_const;
 _ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
 
-template <class K, class V, class C, class A>
-V const&
-_map_at(std::map<K, V, C, A> const& m,
-        K const& k)
-{
-    typename std::map<K, V, C, A>::const_iterator it(m.find(k));
-    if (it == m.end()) {
-        throw std::out_of_range("map::at");
-    }
-    return it->second;
-}
-
 template <class T> struct is_byte_type              { enum { value = false }; };
 template <>        struct is_byte_type<char>         { enum { value = true }; };
 template <>        struct is_byte_type<signed char>  { enum { value = true }; };
@@ -8465,6 +8453,17 @@ _tr(TranslationPack const& pack,
     it = pack.find(std::string());
     return it != pack.end() ? it->second : std::string();
 }
+
+_ARGPARSE_INL std::string const&
+_tr_at(TranslationPack const& map,
+        TranslationPack::key_type const& key)
+{
+    TranslationPack::const_iterator it = map.find(key);
+    if (it == map.end()) {
+        throw std::out_of_range("argparse: translation at '" + key + "'");
+    }
+    return it->second;
+}
 // ----------------------------------------------------------------------------
 
 _ARGPARSE_INL std::pair<std::size_t, std::size_t>
@@ -10350,7 +10349,7 @@ Argument::required() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string const&
 Argument::help() const
 {
-    return detail::_map_at(m_help, std::string());
+    return detail::_tr_at(m_help, std::string());
 }
 
 _ARGPARSE_INL std::string const&
@@ -10768,13 +10767,13 @@ _Group::_Group(
 _ARGPARSE_INL std::string const&
 _Group::title() const
 {
-    return detail::_map_at(m_title, std::string());
+    return detail::_tr_at(m_title, std::string());
 }
 
 _ARGPARSE_INL std::string const&
 _Group::description() const
 {
-    return detail::_map_at(m_description, std::string());
+    return detail::_tr_at(m_description, std::string());
 }
 
 // -- _ArgumentData -----------------------------------------------------------
@@ -11939,7 +11938,7 @@ ArgumentParser::Subparser::required() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string const&
 ArgumentParser::Subparser::help() const
 {
-    return detail::_map_at(m_help, std::string());
+    return detail::_tr_at(m_help, std::string());
 }
 
 _ARGPARSE_INL std::string const&
@@ -12539,49 +12538,49 @@ ArgumentParser::prog() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string const&
 ArgumentParser::usage() const
 {
-    return detail::_map_at(m_usage, default_language(this));
+    return detail::_tr_at(m_usage, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::usage_title() const
 {
-    return detail::_map_at(m_usage_title, default_language(this));
+    return detail::_tr_at(m_usage_title, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::description() const
 {
-    return detail::_map_at(m_description, default_language(this));
+    return detail::_tr_at(m_description, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::positionals_title() const
 {
-    return detail::_map_at(m_positionals_title, default_language(this));
+    return detail::_tr_at(m_positionals_title, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::operands_title() const
 {
-    return detail::_map_at(m_operands_title, default_language(this));
+    return detail::_tr_at(m_operands_title, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::optionals_title() const
 {
-    return detail::_map_at(m_optionals_title, default_language(this));
+    return detail::_tr_at(m_optionals_title, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::epilog() const
 {
-    return detail::_map_at(m_epilog, default_language(this));
+    return detail::_tr_at(m_epilog, default_language(this));
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::help() const
 {
-    return detail::_map_at(m_help, default_language(this));
+    return detail::_tr_at(m_help, default_language(this));
 }
 
 _ARGPARSE_INL std::vector<std::string> const&
