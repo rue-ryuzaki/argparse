@@ -1670,7 +1670,103 @@ _vector(T const& arg1,
 
 // -- translations support ----------------------------------------------------
 // since v1.7.1
-typedef std::map<std::string, std::string> TranslationPack;
+class TranslationPack
+{
+public:
+    // -- types ---------------------------------------------------------------
+    typedef std::string                         key_type;
+    typedef std::string                         mapped_type;
+    typedef std::pair<key_type, mapped_type>    value_type;
+    typedef std::list<value_type>               map_type;
+    typedef map_type::iterator                  iterator;
+    typedef map_type::const_iterator            const_iterator;
+
+    TranslationPack()
+        : m_data()
+    { }
+
+    inline iterator
+    begin() _ARGPARSE_NOEXCEPT
+    {
+        return m_data.begin();
+    }
+
+    inline iterator
+    end() _ARGPARSE_NOEXCEPT
+    {
+        return m_data.end();
+    }
+
+    inline const_iterator
+    begin() const _ARGPARSE_NOEXCEPT
+    {
+        return m_data.begin();
+    }
+
+    inline const_iterator
+    end() const _ARGPARSE_NOEXCEPT
+    {
+        return m_data.end();
+    }
+
+    inline mapped_type&
+    operator [](
+            key_type const& key)
+    {
+        iterator it = find(key);
+        if (it == end()) {
+            it = m_data.insert(end(), value_type());
+        }
+        return it->second;
+    }
+
+    inline mapped_type&
+    at(key_type const& key)
+    {
+        iterator it = find(key);
+        if (it == end()) {
+            throw std::out_of_range("argparse: translation at '" + key + "'");
+        }
+        return it->second;
+    }
+
+    inline mapped_type const&
+    at(key_type const& key) const
+    {
+        const_iterator it = find(key);
+        if (it == end()) {
+            throw std::out_of_range("argparse: translation at '" + key + "'");
+        }
+        return it->second;
+    }
+
+    inline const_iterator
+    find(key_type const& key) const
+    {
+        for (const_iterator it = begin(); it != end(); ++it) {
+            if (it->first == key) {
+                return it;
+            }
+        }
+        return end();
+    }
+
+    inline iterator
+    find(key_type const& key)
+    {
+        for (iterator it = begin(); it != end(); ++it) {
+            if (it->first == key) {
+                return it;
+            }
+        }
+        return end();
+    }
+
+private:
+    // -- data ----------------------------------------------------------------
+    map_type m_data;
+};
+
 // ----------------------------------------------------------------------------
 
 template <class T>
@@ -8454,15 +8550,11 @@ _tr(TranslationPack const& pack,
     return it != pack.end() ? it->second : std::string();
 }
 
-_ARGPARSE_INL std::string const&
+_ARGPARSE_INL TranslationPack::mapped_type const&
 _tr_at(TranslationPack const& map,
         TranslationPack::key_type const& key)
 {
-    TranslationPack::const_iterator it = map.find(key);
-    if (it == map.end()) {
-        throw std::out_of_range("argparse: translation at '" + key + "'");
-    }
-    return it->second;
+    return map.at(key);
 }
 // ----------------------------------------------------------------------------
 
