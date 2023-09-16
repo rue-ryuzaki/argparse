@@ -3125,9 +3125,6 @@ private:
     validate() const;
 
     void
-    check_action() const;
-
-    void
     prepare_action(
             Action value);
 
@@ -9305,6 +9302,16 @@ _check_non_count_action(
 }
 
 _ARGPARSE_INL void
+_check_argument_type(
+        bool is_positional)
+{
+    if (is_positional) {
+        // version, help and language actions cannot be positional
+        throw TypeError("got an unexpected keyword argument 'action'");
+    }
+}
+
+_ARGPARSE_INL void
 _check_flag_name(
             std::string const& flag)
 {
@@ -9977,7 +9984,7 @@ Argument::action(
             break;
         case argparse::version :
         case argparse::help :
-            check_action();
+            detail::_check_argument_type(m_type == Positional);
             if (value == argparse::version) {
                 this->help("show program's version number and exit");
             }
@@ -10000,7 +10007,7 @@ Argument::action(
             }
             break;
         case argparse::language :
-            check_action();
+            detail::_check_argument_type(m_type == Positional);
             m_const.reset();
             m_nargs = NARGS_DEF;
             m_nargs_str = std::string("1");
@@ -10490,15 +10497,6 @@ Argument::validate() const
         if (m_flags.at(i) == detail::_pseudo_arg) {
             throw ValueError("dest= is required for options like '--'");
         }
-    }
-}
-
-_ARGPARSE_INL void
-Argument::check_action() const
-{
-    if (m_type == Positional) {
-        // version, help and language actions cannot be positional
-        throw TypeError("got an unexpected keyword argument 'action'");
     }
 }
 
