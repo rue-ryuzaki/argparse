@@ -7772,20 +7772,9 @@ private:
             Parsers const& parsers);
 
     static pArgument const
-    find_arg_by_flag(
-            pArguments const& args,
-            std::string const& key);
-
-    static pArgument const
     get_optional_arg_by_flag(
             bool was_pseudo_arg,
             ParserInfo const& info,
-            std::string const& key);
-
-    static bool
-    is_not_operand(
-            bool was_pseudo_arg,
-            pArguments const& args,
             std::string const& key);
 
     static bool
@@ -7977,8 +7966,10 @@ private:
 // -- implementation ----------------------------------------------------------
 #ifdef _ARGPARSE_INL
 namespace detail {
-// -- templates ---------------------------------------------------------------
+typedef detail::shared_ptr<Argument> pArgument;
+typedef std::vector<pArgument> pArguments;
 
+// -- templates ---------------------------------------------------------------
 template <class T>
 void
 _insert_to_end(
@@ -9360,6 +9351,27 @@ _update_flag_name(
         }
         _update_flag_name_func(flag, flag_name, prefixes);
     }
+}
+
+_ARGPARSE_INL pArgument const
+_find_arg_by_flag(
+        pArguments const& args,
+        std::string const& key)
+{
+    pArguments::const_iterator it = args.begin();
+    for ( ; it != args.end() && !_exists(key, (*it)->flags()); ++it) {
+    }
+    return it != args.end() ? *it : _ARGPARSE_NULLPTR;
+}
+
+_ARGPARSE_INL bool
+_is_not_operand(
+        bool was_pseudo_arg,
+        pArguments const& args,
+        std::string const& key)
+{
+    return was_pseudo_arg || !_find_arg_by_flag(
+                args, _split(key, detail::_equals, 1).front());
 }
 }  // namespace detail
 
@@ -13928,7 +13940,7 @@ ArgumentParser::storage_optional_store(
                 std::string const& next = args.at(i);
                 if (tmp->m_nargs != Argument::SUPPRESSING
                         && (tmp->m_nargs == Argument::REMAINDING
-                            || (is_not_operand(
+                            || (detail::_is_not_operand(
                                    was_pseudo_arg, parsers.back().operand, next)
                                 && detail::_not_optional(
                                     next,
@@ -14429,17 +14441,6 @@ ArgumentParser::is_remainder_positional(
 }
 
 _ARGPARSE_INL ArgumentParser::pArgument const
-ArgumentParser::find_arg_by_flag(
-        pArguments const& args,
-        std::string const& key)
-{
-    pArguments::const_iterator it = args.begin();
-    for ( ; it != args.end() && !detail::_exists(key, (*it)->flags()); ++it) {
-    }
-    return it != args.end() ? *it : _ARGPARSE_NULLPTR;
-}
-
-_ARGPARSE_INL ArgumentParser::pArgument const
 ArgumentParser::get_optional_arg_by_flag(
         bool was_pseudo_arg,
         ParserInfo const& info,
@@ -14448,18 +14449,8 @@ ArgumentParser::get_optional_arg_by_flag(
     if (was_pseudo_arg) {
         return _ARGPARSE_NULLPTR;
     }
-    pArgument const opt = find_arg_by_flag(info.optional, key);
-    return opt ? opt : find_arg_by_flag(info.operand, key);
-}
-
-_ARGPARSE_INL bool
-ArgumentParser::is_not_operand(
-        bool was_pseudo_arg,
-        pArguments const& args,
-        std::string const& key)
-{
-    return was_pseudo_arg || !find_arg_by_flag(
-                args, detail::_split(key, detail::_equals, 1).front());
+    pArgument const opt = detail::_find_arg_by_flag(info.optional, key);
+    return opt ? opt : detail::_find_arg_by_flag(info.operand, key);
 }
 
 _ARGPARSE_INL bool
@@ -14520,7 +14511,7 @@ ArgumentParser::separate_arg_abbrev(
         std::vector<std::string> const split
              = detail::_split_equal(arg, info.parser->prefix_chars());
         if (split.size() == 2 && !split.front().empty()
-              && find_arg_by_flag(info.optional, split.front())) {
+              && detail::_find_arg_by_flag(info.optional, split.front())) {
             temp.push_back(arg);
             return;
         }
@@ -14566,7 +14557,7 @@ ArgumentParser::process_positional_args(
             break;
         } else {
             std::string const& next = parsed_arguments.at(i);
-            if (remainder || (is_not_operand(
+            if (remainder || (detail::_is_not_operand(
                                   was_pseudo_arg, parsers.back().operand, next)
                               && detail::_not_optional(
                                   next,
