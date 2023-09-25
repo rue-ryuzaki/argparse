@@ -115,8 +115,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-#        version: [11, 12, 13, 14, 15]
-        version: [11, 15]
+#        version: [11, 12, 13, 14, 16]
+        version: [11, 16]
         standard: [98, 11, 14, 17, 20]
 
     steps:
@@ -141,7 +141,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [16]
+        version: [17]
         standard: [98, 11, 14, 17, 20]
 
     steps:
