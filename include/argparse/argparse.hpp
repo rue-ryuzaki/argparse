@@ -7499,9 +7499,8 @@ private:
             bool is_root,
             std::ostream& os = std::cout);
 
-    static std::string
-    default_language(
-            ArgumentParser const* parser);
+    std::string
+    default_language() const;
 
     struct ParserInfo
     {
@@ -12640,49 +12639,49 @@ ArgumentParser::prog() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string const&
 ArgumentParser::usage() const
 {
-    return detail::_tr_at(m_usage, default_language(this));
+    return detail::_tr_at(m_usage, default_language());
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::usage_title() const
 {
-    return detail::_tr_at(m_usage_title, default_language(this));
+    return detail::_tr_at(m_usage_title, default_language());
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::description() const
 {
-    return detail::_tr_at(m_description, default_language(this));
+    return detail::_tr_at(m_description, default_language());
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::positionals_title() const
 {
-    return detail::_tr_at(m_positionals_title, default_language(this));
+    return detail::_tr_at(m_positionals_title, default_language());
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::operands_title() const
 {
-    return detail::_tr_at(m_operands_title, default_language(this));
+    return detail::_tr_at(m_operands_title, default_language());
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::optionals_title() const
 {
-    return detail::_tr_at(m_optionals_title, default_language(this));
+    return detail::_tr_at(m_optionals_title, default_language());
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::epilog() const
 {
-    return detail::_tr_at(m_epilog, default_language(this));
+    return detail::_tr_at(m_epilog, default_language());
 }
 
 _ARGPARSE_INL std::string const&
 ArgumentParser::help() const
 {
-    return detail::_tr_at(m_help, default_language(this));
+    return detail::_tr_at(m_help, default_language());
 }
 
 _ARGPARSE_INL std::vector<std::string> const&
@@ -13040,7 +13039,7 @@ ArgumentParser::self_test(
         std::string const& language,
         std::ostream& os) const
 {
-    std::string lang = !language.empty() ? language : default_language(this);
+    std::string lang = !language.empty() ? language : default_language();
     std::size_t const limit = 79;
     char const filler = '-';
     std::stringstream ss;
@@ -13085,7 +13084,7 @@ ArgumentParser::print_usage(
         std::string const& language,
         std::ostream& os) const
 {
-    std::string lang = !language.empty() ? language : default_language(this);
+    std::string lang = !language.empty() ? language : default_language();
     std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
     std::string tr_usage = detail::_tr(m_usage, lang);
     if (!tr_usage.empty()) {
@@ -13111,7 +13110,7 @@ ArgumentParser::print_help(
         std::string const& language,
         std::ostream& os) const
 {
-    std::string lang = !language.empty() ? language : default_language(this);
+    std::string lang = !language.empty() ? language : default_language();
     pArguments const positional_all = m_data->get_positional(false, true);
     pArguments const operand_all = m_data->get_operand(false, true);
     pArguments const optional_all = m_data->get_optional(false, true);
@@ -13369,17 +13368,14 @@ ArgumentParser::print_parser_completion(
 }
 
 _ARGPARSE_INL std::string
-ArgumentParser::default_language(
-        ArgumentParser const* parser)
+ArgumentParser::default_language() const
 {
     std::string res;
-    if (parser) {
-        for (arg_iterator it = parser->m_data->m_arguments.begin();
-             it != parser->m_data->m_arguments.end(); ++it) {
-            if ((*it)->action() == argparse::language
-                    && (*it)->m_default.has_value()) {
-                res = (*it)->m_default.value();
-            }
+    for (arg_iterator it = m_data->m_arguments.begin();
+         it != m_data->m_arguments.end(); ++it) {
+        if ((*it)->action() == argparse::language
+                && (*it)->m_default.has_value()) {
+            res = (*it)->m_default.value();
         }
     }
     return res;
@@ -13400,7 +13396,7 @@ ArgumentParser::ParserInfo::ParserInfo(
       lang(),
       have_negative_args()
 {
-    lang = default_language(parser);
+    lang = parser->default_language();
     have_negative_args
             = negative_numbers_presented(optional, parser->prefix_chars());
 }
@@ -13450,7 +13446,7 @@ ArgumentParser::throw_error(
         std::string const& lang,
         std::ostream& os) const
 {
-    print_usage(!lang.empty() ? lang : default_language(this), os);
+    print_usage(!lang.empty() ? lang : default_language(), os);
     throw std::logic_error(prog() + ": error: " + message);
 }
 
