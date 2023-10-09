@@ -7316,6 +7316,9 @@ public:
      *  \return True if environment variable name with exists, false otherwise
      */
     _ARGPARSE_ATTR_NODISCARD
+    _ARGPARSE_ATTR_DEPRECATED_REASON(
+            "use ArgumentParser::has_env function. "
+            "will be removed in the next minor release (v1.9.0)")
     bool
     have_env(std::string const& name) const;
 
