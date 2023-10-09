@@ -7298,6 +7298,19 @@ public:
      *
      *  \param name Environment variable name
      *
+     *  \since NEXT_RELEASE
+     *
+     *  \return True if environment variable name with exists, false otherwise
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    bool
+    has_env(std::string const& name) const;
+
+    /*!
+     *  \brief Check if environment variable with name exists (from envp[])
+     *
+     *  \param name Environment variable name
+     *
      *  \since v1.8.0
      *
      *  \return True if environment variable name with exists, false otherwise
@@ -13011,17 +13024,21 @@ ArgumentParser::try_parse_known_intermixed_args(
 #endif  // C++17+
 
 _ARGPARSE_INL bool
-ArgumentParser::have_env(
+ArgumentParser::has_env(
         std::string const& name) const
 {
     std::list<std::pair<std::string, std::string> >::const_iterator it
             = m_env_variables.begin();
-    for ( ; it != m_env_variables.end(); ++it) {
-        if (it->first == name) {
-            break;
-        }
+    for ( ; it != m_env_variables.end() && it->first != name; ++it) {
     }
     return it != m_env_variables.end();
+}
+
+_ARGPARSE_INL bool
+ArgumentParser::have_env(
+        std::string const& name) const
+{
+    return has_env(name);
 }
 
 _ARGPARSE_INL std::string
@@ -13030,10 +13047,7 @@ ArgumentParser::get_env(
 {
     std::list<std::pair<std::string, std::string> >::const_iterator it
             = m_env_variables.begin();
-    for ( ; it != m_env_variables.end(); ++it) {
-        if (it->first == name) {
-            break;
-        }
+    for ( ; it != m_env_variables.end() && it->first != name; ++it) {
     }
     return it != m_env_variables.end() ? it->second : std::string();
 }
