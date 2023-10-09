@@ -6566,6 +6566,17 @@ public:
     Subparser*
     subparsers() const _ARGPARSE_NOEXCEPT;
 
+    /*!
+     *  \brief Check if subparsers are present
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return True if subparsers are present, false otherwise
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    bool
+    has_subparsers() const _ARGPARSE_NOEXCEPT;
+
 #ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set argument parser 'handle' function.
@@ -12363,7 +12374,7 @@ ArgumentParser::prog(
 {
     if (!value.empty()) {
         m_prog = value;
-        if (m_subparsers) {
+        if (has_subparsers()) {
             m_subparsers->update_prog(prog(), subparser_prog_args());
         }
     }
@@ -12497,8 +12508,8 @@ ArgumentParser::parents(
         if (this == &parent) {
             continue;
         }
-        if (parent.m_subparsers) {
-            if (m_subparsers) {
+        if (parent.has_subparsers()) {
+            if (has_subparsers()) {
                 throw_error("cannot have multiple subparser arguments");
             }
             m_subparsers_position
@@ -12841,7 +12852,7 @@ ArgumentParser::add_subparsers(
         std::string const& title,
         std::string const& description)
 {
-    if (m_subparsers) {
+    if (has_subparsers()) {
         throw_error("cannot have multiple subparser arguments");
     }
     m_subparsers_position = m_data->m_positional.size();
@@ -12853,6 +12864,12 @@ ArgumentParser::add_subparsers(
 
 _ARGPARSE_INL ArgumentParser::Subparser*
 ArgumentParser::subparsers() const _ARGPARSE_NOEXCEPT
+{
+    return m_subparsers.get();
+}
+
+_ARGPARSE_INL bool
+ArgumentParser::has_subparsers() const _ARGPARSE_NOEXCEPT
 {
     return m_subparsers.get();
 }
@@ -13285,7 +13302,7 @@ ArgumentParser::bash_completion_info(
         }
         have_fs_args = have_fs_args || (arg->m_nargs != Argument::SUPPRESSING);
     }
-    if (parser->m_subparsers) {
+    if (parser->has_subparsers()) {
         detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
     }
     if (have_fs_args) {
@@ -13304,7 +13321,7 @@ ArgumentParser::print_parser_completion(
         bool is_root,
         std::ostream& os)
 {
-    if (p->m_subparsers) {
+    if (p->has_subparsers()) {
         for (prs_iterator it = p->m_subparsers->m_parsers.begin();
              it != p->m_subparsers->m_parsers.end(); ++it) {
             print_parser_completion(
@@ -13313,7 +13330,7 @@ ArgumentParser::print_parser_completion(
     }
     os << "function _" << prog << "()\n";
     os << "{\n";
-    if (p->m_subparsers) {
+    if (p->has_subparsers()) {
         if (is_root) {
             os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
         } else {
@@ -15009,7 +15026,7 @@ ArgumentParser::test_overview(
         os << "output_width [default]: " << output_width() << "\n";
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
     }
-    if (m_subparsers) {
+    if (has_subparsers()) {
         std::list<pParser> const& parsers = m_subparsers->m_parsers;
         os << "subparsers list:\n";
         std::size_t i = 0;
@@ -15187,7 +15204,7 @@ ArgumentParser::test_diagnostics(
         }
     }
     // check subparsers
-    if (m_subparsers) {
+    if (has_subparsers()) {
         std::list<pParser> const& parsers = m_subparsers->m_parsers;
         if (parsers.empty()) {
             ++diagnostics.first;
