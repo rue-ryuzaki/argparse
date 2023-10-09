@@ -470,7 +470,7 @@ int main(int argc, char const* const argv[])
 ### Terminal size auto-detection
 By default, help output is positioned based on the terminal's width. But you can manually specify the width of the available area using the ArgumentParser::output_width(...) method.
 ### Environment variables
-ArgumentParser can hold environment variables (from envp[]) and have ```have_env``` and ```get_env``` functions to work with them
+ArgumentParser can hold environment variables (from envp[]) and have ```has_env``` and ```get_env``` functions to work with them
 ```cpp
 #include <iostream>
 
@@ -479,7 +479,7 @@ ArgumentParser can hold environment variables (from envp[]) and have ```have_env
 int main(int argc, char const* const argv[], char const* const envp[])
 {
     auto parser = argparse::ArgumentParser(argc, argv, envp);
-    if (parser.have_env("FOO")) {
+    if (parser.has_env("FOO")) {
         std::cout << parser.get_env("FOO") << std::endl;
     }
     return 0;
