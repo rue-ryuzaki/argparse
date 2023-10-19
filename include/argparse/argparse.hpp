@@ -13356,17 +13356,15 @@ ArgumentParser::print_parser_completion(
         os << "    case \"${COMP_WORDS[$i]}\" in\n";
         for (prs_iterator it = p->m_subparsers->m_parsers.begin();
              it != p->m_subparsers->m_parsers.end(); ++it) {
-            for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
-                os << "      \"" << (*it)->aliases().at(a) << "\")\n";
-                os << "        ;&\n";
+            std::string name = "\"" + (*it)->m_name + "\"";
+            if (!(*it)->aliases().empty()) {
+                name += "|" + detail::_join((*it)->aliases(), "|", "\"");
             }
-            os << "      \"" << (*it)->m_name << "\")\n";
+            os << "      " << name << ")\n";
             os << "        _" << prog << "_" << (*it)->m_name << " $((i+1))\n";
-            os << "        return\n";
-            os << "        ;;\n";
+            os << "        return;;\n";
         }
-        os << "      *)\n";
-        os << "        ;;\n";
+        os << "      *);;\n";
         os << "    esac\n";
         os << "  done\n";
     }
@@ -13374,23 +13372,15 @@ ArgumentParser::print_parser_completion(
     if (!info.options.empty()) {
         os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
         for (std::size_t j = 0; j < info.options.size(); ++j) {
-            std::pair<pArgument, std::string> const& pr = info.options.at(j);
-            for (std::size_t k = 0; k < pr.first->flags().size(); ++k) {
-                os << "    \"" << pr.first->flags().at(k) << "\")\n";
-                if (k + 1 != pr.first->flags().size()) {
-                    os << "      ;&\n";
-                } else {
-                    if (!pr.second.empty()) {
-                        os << "      COMPREPLY=($(compgen" << pr.second
-                           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
-                    }
-                    os << "      return\n";
-                    os << "      ;;\n";
-                }
+            std::pair<pArgument, std::string> const& a = info.options.at(j);
+            os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
+            if (!a.second.empty()) {
+                os << "      COMPREPLY=($(compgen" << a.second
+                   << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
             }
+            os << "      return;;\n";
         }
-        os << "    *)\n";
-        os << "      ;;\n";
+        os << "    *);;\n";
         os << "  esac\n";
     }
     if (!info.args.empty()) {
