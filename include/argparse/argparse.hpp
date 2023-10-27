@@ -1788,7 +1788,7 @@ typename enable_if<is_constructible<std::string, T>::value, T>::type
 _remove_quotes(
         std::string const& str)
 {
-    return _have_quotes(str) ? T(str).substr(1, str.size() - 2) : T(str);
+    return _have_quotes(str) ? T(str.substr(1, str.size() - 2)) : T(str);
 }
 
 std::string
