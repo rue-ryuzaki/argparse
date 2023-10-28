@@ -3000,6 +3000,10 @@ public:
      *
      *  \return Current argument reference
      */
+    _ARGPARSE_ATTR_DEPRECATED_REASON(
+            "use parameterized Argument::handle("
+            "std::function<void(std::string const&)>) function. "
+            "will be removed in the next minor release (v1.9.0)")
     Argument&
     handle(std::function<void()> func);
 #endif  // C++11+
@@ -6610,6 +6614,10 @@ public:
      *
      *  \return Current argument parser reference
      */
+    _ARGPARSE_ATTR_DEPRECATED_REASON(
+            "use parameterized ArgumentParser::handle("
+            "std::function<void(std::string const&)>) function. "
+            "will be removed in the next minor release (v1.9.0)")
     ArgumentParser&
     handle(std::function<void()> func) _ARGPARSE_NOEXCEPT;
 #endif  // C++11+
