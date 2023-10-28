@@ -2975,7 +2975,6 @@ public:
     Argument&
     dest(std::string const& value);
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set argument 'handle' value.
      *  Called when the argument is present and passed the value of the argument
@@ -2984,9 +2983,15 @@ public:
      *
      *  \return Current argument reference
      */
+#ifdef _ARGPARSE_CXX_11
     Argument&
     handle(std::function<void(std::string const&)> func);
+#else
+    Argument&
+    handle(void (*func)(std::string const&));
+#endif  // C++11+
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set argument 'handle' value.
      *  Called when the argument is present
@@ -3231,6 +3236,8 @@ private:
     std::vector<std::string>    m_dest;
 #ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
+#else
+    void (*m_handle)(std::string const&);
 #endif  // C++11+
     detail::shared_ptr<_ConflictResolver> m_post_trigger;
     detail::Value<bool>         m_required;
@@ -6577,7 +6584,6 @@ public:
     bool
     has_subparsers() const _ARGPARSE_NOEXCEPT;
 
-#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set argument parser 'handle' function.
      *  Called when the parser is executed and passed the value of the
@@ -6587,9 +6593,15 @@ public:
      *
      *  \return Current argument parser reference
      */
+#ifdef _ARGPARSE_CXX_11
     ArgumentParser&
     handle(std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT;
+#else
+    ArgumentParser&
+    handle(void (*func)(std::string const&)) _ARGPARSE_NOEXCEPT;
+#endif  // C++11+
 
+#ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Set argument parser 'handle' function.
      *  Called when the parser is executed.
@@ -6600,6 +6612,7 @@ public:
      */
     ArgumentParser&
     handle(std::function<void()> func) _ARGPARSE_NOEXCEPT;
+#endif  // C++11+
 
     /*!
      *  \brief Set argument parser 'handle' function.
@@ -6610,8 +6623,12 @@ public:
      *
      *  \return Current argument parser reference
      */
+#ifdef _ARGPARSE_CXX_11
     ArgumentParser&
     handle(std::function<void(Namespace const&)> func) _ARGPARSE_NOEXCEPT;
+#else
+    ArgumentParser&
+    handle(void (*func)(Namespace const&)) _ARGPARSE_NOEXCEPT;
 #endif  // C++11+
 
     /*!
@@ -7946,13 +7963,11 @@ private:
     void
     handle(std::string const& str) const;
 
-#ifdef _ARGPARSE_CXX_11
     void
     parse_handle(
             bool only_known,
             _Storage const& storage,
             std::vector<std::string> const& unrecognized_args) const;
-#endif  // C++11+
 
     // -- data ----------------------------------------------------------------
     pArgumentData m_data;
@@ -7983,6 +7998,9 @@ private:
 #ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
     std::function<void(Namespace const&)> m_parse_handle;
+#else
+    void (*m_handle)(std::string const&);
+    void (*m_parse_handle)(Namespace const&);
 #endif  // C++11+
     detail::Value<_SUPPRESS> m_argument_default_type;
     bool m_allow_abbrev;
@@ -9613,10 +9631,10 @@ Argument::Argument(
       m_metavar(),
 #ifdef _ARGPARSE_CXX_11
       m_dest(std::vector<std::string>{ std::string() }),
-      m_handle(nullptr),
 #else
       m_dest(detail::_vector(std::string())),
 #endif  // C++11+
+      m_handle(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9700,6 +9718,7 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
+      m_handle(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9729,6 +9748,7 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
+      m_handle(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9759,6 +9779,7 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
+      m_handle(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9790,6 +9811,7 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
+      m_handle(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9820,10 +9842,10 @@ Argument::Argument(
       m_metavar(),
 #ifdef _ARGPARSE_CXX_11
       m_dest(std::vector<std::string>{ std::string() }),
-      m_handle(nullptr),
 #else
       m_dest(detail::_vector(std::string())),
 #endif  // C++11+
+      m_handle(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9852,9 +9874,7 @@ Argument::Argument(
       m_version(orig.m_version),
       m_metavar(orig.m_metavar),
       m_dest(orig.m_dest),
-#ifdef _ARGPARSE_CXX_11
       m_handle(orig.m_handle),
-#endif  // C++11+
       m_post_trigger(orig.m_post_trigger),
       m_required(orig.m_required)
 {
@@ -9884,9 +9904,7 @@ Argument::operator =(
         this->m_version         = rhs.m_version;
         this->m_metavar         = rhs.m_metavar;
         this->m_dest            = rhs.m_dest;
-#ifdef _ARGPARSE_CXX_11
         this->m_handle          = rhs.m_handle;
-#endif  // C++11+
         this->m_post_trigger    = rhs.m_post_trigger;
         this->m_required        = rhs.m_required;
     }
@@ -10054,11 +10072,9 @@ Argument::action(
         default :
             throw ValueError("unknown action");
     }
-#ifdef _ARGPARSE_CXX_11
     if (action() & (argparse::version | argparse::help)) {
-        m_handle = nullptr;
+        m_handle = _ARGPARSE_NULLPTR;
     }
-#endif  // C++11+
     if (!(value & detail::_store_const_action)) {
         m_metavar.reset();
     }
@@ -10427,6 +10443,17 @@ Argument::handle(
     m_handle = std::bind([](std::function<void()>& f){ f(); }, std::move(func));
     return *this;
 }
+#else
+_ARGPARSE_INL Argument&
+Argument::handle(
+        void (*func)(std::string const&))
+{
+    if (action() & (argparse::version | argparse::help)) {
+        throw TypeError("got an unexpected keyword argument 'handle'");
+    }
+    m_handle = func;
+    return *this;
+}
 #endif  // C++11+
 
 _ARGPARSE_INL std::vector<std::string> const&
@@ -10508,7 +10535,6 @@ Argument::dest() const _ARGPARSE_NOEXCEPT
     return m_dest.front();
 }
 
-#ifdef _ARGPARSE_CXX_11
 _ARGPARSE_INL void
 Argument::handle(
         std::string const& str) const
@@ -10517,10 +10543,6 @@ Argument::handle(
         m_handle(detail::_remove_quotes<std::string>(str));
     }
 }
-#else
-_ARGPARSE_INL void
-Argument::handle(std::string const&) const { /* stub */ }
-#endif  // C++11+
 
 _ARGPARSE_INL void
 Argument::validate() const
@@ -11604,11 +11626,9 @@ _Storage::store_values(
 {
     at(key).push_values(values);
     on_process_store(key, values);
-#ifdef _ARGPARSE_CXX_11
-    for (auto const& value : values) {
-        key->handle(value);
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        key->handle(values.at(i));
     }
-#endif  // C++11+
 }
 
 _ARGPARSE_INL void
@@ -12284,10 +12304,8 @@ ArgumentParser::ArgumentParser(
       m_env_variables(),
       m_subparsers(_ARGPARSE_NULLPTR),
       m_subparsers_position(),
-#ifdef _ARGPARSE_CXX_11
-      m_handle(nullptr),
-      m_parse_handle(nullptr),
-#endif  // C++11+
+      m_handle(_ARGPARSE_NULLPTR),
+      m_parse_handle(_ARGPARSE_NULLPTR),
       m_argument_default_type(),
       m_allow_abbrev(true),
       m_exit_on_error(true)
@@ -12326,10 +12344,8 @@ ArgumentParser::ArgumentParser(
       m_env_variables(),
       m_subparsers(_ARGPARSE_NULLPTR),
       m_subparsers_position(),
-#ifdef _ARGPARSE_CXX_11
-      m_handle(nullptr),
-      m_parse_handle(nullptr),
-#endif  // C++11+
+      m_handle(_ARGPARSE_NULLPTR),
+      m_parse_handle(_ARGPARSE_NULLPTR),
       m_argument_default_type(),
       m_allow_abbrev(true),
       m_exit_on_error(true)
@@ -12370,10 +12386,8 @@ ArgumentParser::ArgumentParser(
       m_env_variables(),
       m_subparsers(_ARGPARSE_NULLPTR),
       m_subparsers_position(),
-#ifdef _ARGPARSE_CXX_11
-      m_handle(nullptr),
-      m_parse_handle(nullptr),
-#endif  // C++11+
+      m_handle(_ARGPARSE_NULLPTR),
+      m_parse_handle(_ARGPARSE_NULLPTR),
       m_argument_default_type(),
       m_allow_abbrev(true),
       m_exit_on_error(true)
@@ -12912,6 +12926,22 @@ ArgumentParser::handle(
         std::function<void(Namespace const&)> func) _ARGPARSE_NOEXCEPT
 {
     m_parse_handle = std::move(func);
+    return *this;
+}
+#else
+_ARGPARSE_INL ArgumentParser&
+ArgumentParser::handle(
+        void (*func)(std::string const&)) _ARGPARSE_NOEXCEPT
+{
+    m_handle = func;
+    return *this;
+}
+
+_ARGPARSE_INL ArgumentParser&
+ArgumentParser::handle(
+        void (*func)(Namespace const&)) _ARGPARSE_NOEXCEPT
+{
+    m_parse_handle = func;
     return *this;
 }
 #endif  // C++11+
@@ -14792,7 +14822,6 @@ ArgumentParser::default_values_post_trigger(
     }
 }
 
-#ifdef _ARGPARSE_CXX_11
 _ARGPARSE_INL void
 ArgumentParser::namespace_post_trigger(
         Parsers& parsers,
@@ -14801,11 +14830,12 @@ ArgumentParser::namespace_post_trigger(
 {
     parsers.front().parser->parse_handle(
                 only_known, parsers.front().storage, unrecognized_args);
-    auto p = parsers.begin();
-    auto const* storage = &(*p).storage;
+    pi_iterator p = parsers.begin();
+    _Storage const* storage = &(*p).storage;
     for (++p; p != parsers.end(); ++p) {
-        auto& sub_storage = (*p).storage;
-        for (auto it = sub_storage.begin(); it != sub_storage.end(); ) {
+        _Storage& sub_storage = (*p).storage;
+        for (_Storage::iterator it = sub_storage.begin();
+             it != sub_storage.end(); ) {
             if (storage->exists(it->first)) {
                 it->second = storage->at(it->first);
                 ++it;
@@ -14817,11 +14847,6 @@ ArgumentParser::namespace_post_trigger(
         storage = &(*p).storage;
     }
 }
-#else
-_ARGPARSE_INL void
-ArgumentParser::namespace_post_trigger(
-        Parsers&, bool, std::vector<std::string> const&) { /* stub */ }
-#endif  // C++11+
 
 _ARGPARSE_INL bool
 ArgumentParser::is_default_value_stored(
@@ -15291,7 +15316,6 @@ ArgumentParser::test_diagnostics(
     return res;
 }
 
-#ifdef _ARGPARSE_CXX_11
 _ARGPARSE_INL void
 ArgumentParser::handle(
         std::string const& str) const
@@ -15315,10 +15339,6 @@ ArgumentParser::parse_handle(
         }
     }
 }
-#else
-_ARGPARSE_INL void
-ArgumentParser::handle(std::string const&) const { /* stub */ }
-#endif  // C++11+
 #endif  // _ARGPARSE_INL
 }  // namespace argparse
 
