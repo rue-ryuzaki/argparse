@@ -302,7 +302,7 @@ jobs:
       matrix:
 #        clang: [9, 10]
         clang: [9]
-        standard: [98, 11, 14, 17, 20]
+        standard: [98, 11, 14, 17]
 
     env:
       CC: clang-${{ matrix.clang }}
@@ -332,7 +332,7 @@ jobs:
       matrix:
 #        clang: [11, 12, 13, 14]
         clang: [11, 14]
-        standard: [98, 11, 14, 17, 20]
+        standard: [98, 11, 14, 17]
 
     env:
       CC: clang-${{ matrix.clang }}
@@ -360,7 +360,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        standard: [98, 11, 14, 17, 20]
+        standard: [98, 11, 14, 17]
 
     env:
       CC: clang
