@@ -60,7 +60,7 @@ The work of the parser on older versions of compilers is not guaranteed.
 - [Namespace::get<> types support](#namespaceget-types-support--try_get-with-stdoptional-since-c17)
   - [custom types](#custom-type-example)
 - [Features](#features)
-  - [handle (for C++11+)](#handle)
+  - [handle](#handle)
   - [terminal size auto-detection](#terminal-size-auto-detection)
   - [environment variables](#environment-variables)
   - [operand argument type](#operand-argument)
@@ -354,7 +354,7 @@ int main(int argc, char const* const argv[])
 ```
 ## Features
 ### Handle
-#### ArgumentParser::handle(std::function<void(argparse::Namespace)> func)
+#### ArgumentParser::handle(std::function<void(argparse::Namespace const&)> func)
 Called when the parser is executed and passed the namespace of the parser.
 ```cpp
 #include <iostream>
@@ -389,9 +389,7 @@ int main(int argc, char const* const argv[])
     return 0;
 }
 ```
-#### ArgumentParser::handle(std::function<void()> func)
-Called when the parser is executed.
-#### ArgumentParser::handle(std::function<void(std::string)> func)
+#### ArgumentParser::handle(std::function<void(std::string const&)> func)
 Called when the parser is executed and passed the value of the parser.
 ```cpp
 #include <iostream>
@@ -406,7 +404,7 @@ int main(int argc, char const* const argv[])
     auto& subparsers = parser.add_subparsers().help("sub-command help");
 
     auto& parser_a = subparsers.add_parser("a").help("a help")
-            .handle([] () { std::cout << "Parser A handle" << std::endl; });
+            .handle([] (std::string const&) { std::cout << "Parser A handle" << std::endl; });
     parser_a.add_argument("bar").help("bar help");
 
     auto& parser_b = subparsers.add_parser("b").help("b help")
@@ -426,26 +424,7 @@ int main(int argc, char const* const argv[])
     return 0;
 }
 ```
-#### Argument::handle(std::function<void()> func)
-Called when the argument is present.
-Preferably for value-independent arguments (Action: "store_true", "store_false" or "count")
-```cpp
-#include <iostream>
-
-#include <argparse/argparse.hpp>
-
-int main(int argc, char const* const argv[])
-{
-    auto parser = argparse::ArgumentParser(argc, argv);
-    parser.add_argument("--foo").action("store_true").help("foo help")
-            .handle([] () { std::cout << "Foo handle" << std::endl; });
-
-    parser.parse_args();
-
-    return 0;
-}
-```
-#### Argument::handle(std::function<void(std::string)> func)
+#### Argument::handle(std::function<void(std::string const&)> func)
 Called when the argument is present and passed the value of the argument.
 Preferably for value-dependent arguments (Action: "store", "language", "store_const", "append", "append_const" or "extend")
 
