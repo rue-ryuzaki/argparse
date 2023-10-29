@@ -2985,10 +2985,10 @@ public:
      */
 #ifdef _ARGPARSE_CXX_11
     Argument&
-    handle(std::function<void(std::string const&)> func);
+    handle(std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT;
 #else
     Argument&
-    handle(void (*func)(std::string const&));
+    handle(void (*func)(std::string const&)) _ARGPARSE_NOEXCEPT;
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_11
@@ -3005,7 +3005,7 @@ public:
             "std::function<void(std::string const&)>) function. "
             "will be removed in the next minor release (v1.9.0)")
     Argument&
-    handle(std::function<void()> func);
+    handle(std::function<void()> func) _ARGPARSE_NOEXCEPT;
 #endif  // C++11+
 
     /*!
@@ -7734,7 +7734,8 @@ private:
     process_optional_help(
             ParserInfo const& info,
             std::vector<std::string> const& equals,
-            std::string const& arg) const;
+            std::string const& arg,
+            pArgument const& tmp) const;
 
     void
     process_optional_version(
@@ -10432,33 +10433,24 @@ Argument::dest(
 #ifdef _ARGPARSE_CXX_11
 _ARGPARSE_INL Argument&
 Argument::handle(
-        std::function<void(std::string const&)> func)
+        std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT
 {
-    if (action() & (argparse::version | argparse::help)) {
-        throw TypeError("got an unexpected keyword argument 'handle'");
-    }
     m_handle = std::move(func);
     return *this;
 }
 
 _ARGPARSE_INL Argument&
 Argument::handle(
-        std::function<void()> func)
+        std::function<void()> func) _ARGPARSE_NOEXCEPT
 {
-    if (action() & (argparse::version | argparse::help)) {
-        throw TypeError("got an unexpected keyword argument 'handle'");
-    }
     m_handle = std::bind([](std::function<void()>& f){ f(); }, std::move(func));
     return *this;
 }
 #else
 _ARGPARSE_INL Argument&
 Argument::handle(
-        void (*func)(std::string const&))
+        void (*func)(std::string const&)) _ARGPARSE_NOEXCEPT
 {
-    if (action() & (argparse::version | argparse::help)) {
-        throw TypeError("got an unexpected keyword argument 'handle'");
-    }
     m_handle = func;
     return *this;
 }
@@ -13685,7 +13677,7 @@ ArgumentParser::parse_arguments(
                                            i, was_pseudo_arg, arg, tmp);
                     break;
                 case argparse::help :
-                    process_optional_help(parsers.back(), equals, arg);
+                    process_optional_help(parsers.back(), equals, arg, tmp);
                     break;
                 case argparse::version :
                     process_optional_version(parsers.back(), equals, arg, tmp);
@@ -14056,13 +14048,15 @@ _ARGPARSE_INL void
 ArgumentParser::process_optional_help(
         ParserInfo const& info,
         std::vector<std::string> const& equals,
-        std::string const& arg) const
+        std::string const& arg,
+        pArgument const& tmp) const
 {
     if (equals.size() != 1) {
         info.parser->throw_error(
                     detail::_ignore_explicit(arg, equals.back()), info.lang);
     }
     // print help and exit
+    tmp->handle(std::string());
     info.parser->print_help(info.lang);
     ::exit(0);
 }
@@ -14082,6 +14076,8 @@ ArgumentParser::process_optional_version(
         throw
         AttributeError("'ArgumentParser' object has no attribute 'version'");
     }
+    // print version and exit
+    tmp->handle(std::string());
     std::cout << despecify(tmp->version()) << std::endl;
     ::exit(0);
 }
