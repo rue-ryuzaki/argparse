@@ -2718,6 +2718,19 @@ public:
     type(std::string const& value);
 
     /*!
+     *  \brief Set argument 'type' factory function.
+     *  Called in Namespace::get<> and Namespace::try_get<>
+     *
+     *  \param func Type factory function
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    Argument&
+    type(void (*func)(void*, std::string const&)) _ARGPARSE_NOEXCEPT;
+
+    /*!
      *  \brief Set argument 'choices' value
      *
      *  \param value Choice value
@@ -3243,6 +3256,7 @@ private:
 #else
     void (*m_handle)(std::string const&);
 #endif  // C++11+
+    void (*m_factory)(void*, std::string const&);
     detail::shared_ptr<_ConflictResolver> m_post_trigger;
     detail::Value<bool>         m_required;
 };
@@ -9644,6 +9658,7 @@ Argument::Argument(
       m_dest(detail::_vector(std::string())),
 #endif  // C++11+
       m_handle(_ARGPARSE_NULLPTR),
+      m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9686,6 +9701,7 @@ Argument::Argument(
       m_metavar(),
       m_dest(std::vector<std::string>{ std::string() }),
       m_handle(nullptr),
+      m_factory(nullptr),
       m_post_trigger(nullptr),
       m_required()
 {
@@ -9728,6 +9744,7 @@ Argument::Argument(
       m_metavar(),
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
+      m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9758,6 +9775,7 @@ Argument::Argument(
       m_metavar(),
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
+      m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9789,6 +9807,7 @@ Argument::Argument(
       m_metavar(),
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
+      m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9821,6 +9840,7 @@ Argument::Argument(
       m_metavar(),
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
+      m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9855,6 +9875,7 @@ Argument::Argument(
       m_dest(detail::_vector(std::string())),
 #endif  // C++11+
       m_handle(_ARGPARSE_NULLPTR),
+      m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
       m_required()
 {
@@ -9884,6 +9905,7 @@ Argument::Argument(
       m_metavar(orig.m_metavar),
       m_dest(orig.m_dest),
       m_handle(orig.m_handle),
+      m_factory(orig.m_factory),
       m_post_trigger(orig.m_post_trigger),
       m_required(orig.m_required)
 {
@@ -9914,6 +9936,7 @@ Argument::operator =(
         this->m_metavar         = rhs.m_metavar;
         this->m_dest            = rhs.m_dest;
         this->m_handle          = rhs.m_handle;
+        this->m_factory         = rhs.m_factory;
         this->m_post_trigger    = rhs.m_post_trigger;
         this->m_required        = rhs.m_required;
     }
@@ -9944,6 +9967,7 @@ Argument::Argument(
       m_metavar(std::move(orig.m_metavar)),
       m_dest(std::move(orig.m_dest)),
       m_handle(std::move(orig.m_handle)),
+      m_factory(std::move(orig.m_factory)),
       m_post_trigger(std::move(orig.m_post_trigger)),
       m_required(std::move(orig.m_required))
 {
@@ -9974,6 +9998,7 @@ Argument::operator =(
         this->m_metavar         = std::move(rhs.m_metavar);
         this->m_dest            = std::move(rhs.m_dest);
         this->m_handle          = std::move(rhs.m_handle);
+        this->m_factory         = std::move(rhs.m_factory);
         this->m_post_trigger    = std::move(rhs.m_post_trigger);
         this->m_required        = std::move(rhs.m_required);
     }
@@ -10237,6 +10262,14 @@ Argument::type(
         std::string const& value)
 {
     m_type_name.reset(value);
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::type(
+        void (*func)(void*, std::string const&)) _ARGPARSE_NOEXCEPT
+{
+    m_factory = _ARGPARSE_MOVE(func);
     return *this;
 }
 
