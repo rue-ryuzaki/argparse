@@ -2976,7 +2976,7 @@ public:
     dest(std::string const& value);
 
     /*!
-     *  \brief Set argument 'handle' value.
+     *  \brief Set argument 'handle' function.
      *  Called when the argument is present and passed the value of the argument
      *
      *  \param func Handle function
@@ -2993,7 +2993,7 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
-     *  \brief Set argument 'handle' value.
+     *  \brief Set argument 'handle' function.
      *  Called when the argument is present
      *
      *  \param func Handle function
