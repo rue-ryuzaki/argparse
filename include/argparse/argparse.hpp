@@ -646,17 +646,7 @@ _const_action = argparse::store_const | argparse::append_const;
 _ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
 
-template <class T> struct is_byte_type              { enum { value = false }; };
-template <>        struct is_byte_type<char>         { enum { value = true }; };
-template <>        struct is_byte_type<signed char>  { enum { value = true }; };
-template <>        struct is_byte_type<unsigned char>{ enum { value = true }; };
-#ifdef _ARGPARSE_CXX_17
-template <>        struct is_byte_type<std::byte>    { enum { value = true }; };
-#endif  // C++17+
-#ifdef _ARGPARSE_CXX_20
-template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
-#endif  // C++20+
-
+// -- standard type traits ----------------------------------------------------
 #ifdef _ARGPARSE_CXX_11
 using std::decay;
 using std::enable_if;
@@ -665,160 +655,20 @@ using std::is_floating_point;
 using std::is_integral;
 using std::is_same;
 using std::is_base_of;
-
-template <class T>
-struct is_stl_array                                          :std::false_type{};
-template <class T, std::size_t N>
-struct is_stl_array<std::array                     <T, N> >   :std::true_type{};
-
-template <class T>
-struct is_stl_container                                      :std::false_type{};
-template <class... Args>
-struct is_stl_container<std::deque                 <Args...> >:std::true_type{};
-template <class... Args>
-struct is_stl_container<std::forward_list          <Args...> >:std::true_type{};
-template <class... Args>
-struct is_stl_container<std::list                  <Args...> >:std::true_type{};
-template <class... Args>
-struct is_stl_container<std::multiset              <Args...> >:std::true_type{};
-template <class... Args>
-struct is_stl_container<std::priority_queue        <Args...> >:std::true_type{};
-template <class... Args>
-struct is_stl_container<std::set                   <Args...> >:std::true_type{};
-template <class... Args>
-struct is_stl_container<std::vector                <Args...> >:std::true_type{};
-template <class... Args>
-struct is_stl_container<std::unordered_multiset    <Args...> >:std::true_type{};
-template <class... Args>
-struct is_stl_container<std::unordered_set         <Args...> >:std::true_type{};
-
-template <class T, typename U = void>
-struct is_stl_container_paired                               :std::false_type{};
-template <class _1st, class _2nd, template <class...> class container>
-struct is_stl_container_paired<container<std::pair<_1st, _2nd> > >
-                                                              :std::true_type{};
-
-template <class T, typename U = void>
-struct is_stl_container_tupled                               :std::false_type{};
-template <class... Args, template <class...> class container>
-struct is_stl_container_tupled<container<std::tuple<Args...> > >
-                                                              :std::true_type{};
+using std::false_type;
+using std::true_type;
 
 template <class...>
 struct voider { using type = void; };
+
 template <class... T>
 using void_t = typename voider<T...>::type;
-
-template <class T, typename U = void>
-struct is_stl_map                                            :std::false_type{};
-template <class T>
-struct is_stl_map<T, void_t<typename T::key_type,
-                                    typename T::mapped_type> >:std::true_type{};
-
-template <class T>
-struct is_stl_matrix                                         :std::false_type{};
-template <class... Args>
-struct is_stl_matrix<std::deque<std::deque       <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::deque<std::forward_list<Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::deque<std::list        <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::deque<std::multiset    <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::deque<std::priority_queue
-                                                 <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::deque<std::set         <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::deque<std::vector      <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::deque<std::unordered_multiset
-                                                 <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::deque<std::unordered_set
-                                                 <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::list<std::deque        <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::list<std::forward_list <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::list<std::list         <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::list<std::multiset     <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::list<std::priority_queue
-                                                 <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::list<std::set          <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::list<std::vector       <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::list<std::unordered_multiset
-                                                 <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::list<std::unordered_set<Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::vector<std::deque      <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::vector<std::forward_list
-                                                 <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::vector<std::list       <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::vector<std::multiset   <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::vector<std::priority_queue
-                                                 <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::vector<std::set        <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::vector<std::vector     <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::vector<std::unordered_multiset
-                                                 <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix<std::vector<std::unordered_set
-                                                 <Args...> > >:std::true_type{};
-
-template <class T>
-struct is_stl_matrix_queue                                   :std::false_type{};
-template <class... Args>
-struct is_stl_matrix_queue<std::deque<std::stack <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix_queue<std::deque<std::queue <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix_queue<std::list<std::stack  <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix_queue<std::list<std::queue  <Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix_queue<std::vector<std::stack<Args...> > >:std::true_type{};
-template <class... Args>
-struct is_stl_matrix_queue<std::vector<std::queue<Args...> > >:std::true_type{};
-
-template <class T, typename U = void>
-struct is_stl_pair                                           :std::false_type{};
-template <class T>
-struct is_stl_pair<T, void_t<typename T::first_type,
-                                    typename T::second_type> >:std::true_type{};
-
-template <class T>
-struct is_stl_queue                                          :std::false_type{};
-template <class... Args>
-struct is_stl_queue<std::stack                     <Args...> >:std::true_type{};
-template <class... Args>
-struct is_stl_queue<std::queue                     <Args...> >:std::true_type{};
-
-template <class T>
-struct is_stl_tuple                                          :std::false_type{};
-template <class... Args>
-struct is_stl_tuple<std::tuple                     <Args...> >:std::true_type{};
 
 template <class T>
 struct type_tag{};
 
 template <class T, T... Ints>
-struct integer_sequence{};
+struct integer_sequence { };
 
 template <class T, T N, typename = void>
 struct make_integer_sequence_impl
@@ -828,15 +678,19 @@ struct make_integer_sequence_impl
 
     template <T... Prev>
     struct tmp<integer_sequence<T, Prev...> >
-    { using type = integer_sequence<T, Prev..., N - 1>; };
+    {
+        using type = integer_sequence<T, Prev..., N - 1>;
+    };
 
     using type
       = typename tmp<typename make_integer_sequence_impl<T, N - 1>::type>::type;
 };
 
 template <class T, T N>
-struct make_integer_sequence_impl<T, N, typename std::enable_if<N == 0>::type>
-{ using type = integer_sequence<T>; };
+struct make_integer_sequence_impl<T, N, typename enable_if<N == 0>::type>
+{
+    using type = integer_sequence<T>;
+};
 
 template <class T, T N>
 using make_integer_sequence = typename make_integer_sequence_impl<T, N>::type;
@@ -908,7 +762,7 @@ typedef integral_constant<bool, true> true_type;
 typedef integral_constant<bool, false> false_type;
 
 template <class B, class D>
-struct Host
+struct _is_base_of_helper
 {
     operator B*() const;
     operator D*();
@@ -924,7 +778,8 @@ struct is_base_of
     static yes check(D*, T);
     static no check(B*, int);
 
-    static const bool value = sizeof(check(Host<B, D>(), int())) == sizeof(yes);
+    static const bool value
+              = sizeof(check(_is_base_of_helper<B, D>(), int())) == sizeof(yes);
 };
 
 template <class T, class U>
@@ -1191,29 +1046,21 @@ struct is_constructible<std::string, std::vector<std::string> >
     static const bool value = false;
 };
 
-template <class T>
-struct is_stl_container                                           :false_type{};
-template <class T>
-struct is_stl_container<std::deque                            <T> >:true_type{};
-template <class T>
-struct is_stl_container<std::list                             <T> >:true_type{};
-template <class T>
-struct is_stl_container<std::multiset                         <T> >:true_type{};
-template <class T>
-struct is_stl_container<std::priority_queue                   <T> >:true_type{};
-template <class T>
-struct is_stl_container<std::set                              <T> >:true_type{};
-template <class T>
-struct is_stl_container<std::vector                           <T> >:true_type{};
-
-template <class T, typename U = void>
-struct is_stl_container_paired                                    :false_type{};
-template <class _1st, class _2nd, template <class T, class U> class container>
-struct is_stl_container_paired<container<std::pair<_1st, _2nd>,
-                         std::allocator<std::pair<_1st, _2nd> > > >:true_type{};
-
 template <class T, class U>
 struct voider { typedef void type; };
+#endif  // C++11+
+
+// -- library type traits -----------------------------------------------------
+template <class T> struct is_byte_type              { enum { value = false }; };
+template <>        struct is_byte_type<char>         { enum { value = true }; };
+template <>        struct is_byte_type<signed char>  { enum { value = true }; };
+template <>        struct is_byte_type<unsigned char>{ enum { value = true }; };
+#ifdef _ARGPARSE_CXX_17
+template <>        struct is_byte_type<std::byte>    { enum { value = true }; };
+#endif  // C++17+
+#ifdef _ARGPARSE_CXX_20
+template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
+#endif  // C++20+
 
 template <class T, typename U = void>
 struct is_stl_map                                                 :false_type{};
@@ -1228,14 +1075,146 @@ struct is_stl_pair<T, typename voider<typename T::first_type,
                                     typename T::second_type>::type>:true_type{};
 
 template <class T>
-struct is_stl_queue                                               :false_type{};
-template <class T>
-struct is_stl_queue<std::stack                                <T> >:true_type{};
-template <class T>
-struct is_stl_queue<std::queue                                <T> >:true_type{};
-
+struct is_stl_container                                           :false_type{};
+template <class T, typename U = void>
+struct is_stl_container_paired                                    :false_type{};
 template <class T>
 struct is_stl_matrix                                              :false_type{};
+template <class T>
+struct is_stl_matrix_queue                                        :false_type{};
+template <class T>
+struct is_stl_queue                                               :false_type{};
+
+#ifdef _ARGPARSE_CXX_11
+template <class T>
+struct is_stl_array                                               :false_type{};
+template <class T, std::size_t N>
+struct is_stl_array<std::array                          <T, N> >   :true_type{};
+
+template <class... Args>
+struct is_stl_container<std::deque                      <Args...> >:true_type{};
+template <class... Args>
+struct is_stl_container<std::forward_list               <Args...> >:true_type{};
+template <class... Args>
+struct is_stl_container<std::list                       <Args...> >:true_type{};
+template <class... Args>
+struct is_stl_container<std::multiset                   <Args...> >:true_type{};
+template <class... Args>
+struct is_stl_container<std::priority_queue             <Args...> >:true_type{};
+template <class... Args>
+struct is_stl_container<std::set                        <Args...> >:true_type{};
+template <class... Args>
+struct is_stl_container<std::vector                     <Args...> >:true_type{};
+template <class... Args>
+struct is_stl_container<std::unordered_multiset         <Args...> >:true_type{};
+template <class... Args>
+struct is_stl_container<std::unordered_set              <Args...> >:true_type{};
+
+template <class _1st, class _2nd, template <class...> class container>
+struct is_stl_container_paired<container<std::pair<_1st, _2nd> > > :true_type{};
+
+template <class T, typename U = void>
+struct is_stl_container_tupled                                    :false_type{};
+template <class... Args, template <class...> class container>
+struct is_stl_container_tupled<container<std::tuple<Args...> > >   :true_type{};
+
+template <class... Args>
+struct is_stl_matrix<std::deque<std::deque            <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::forward_list     <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::list             <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::multiset         <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::priority_queue   <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::set              <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::vector           <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::unordered_multiset
+                                                      <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::deque<std::unordered_set    <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::deque             <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::forward_list      <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::list              <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::multiset          <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::priority_queue    <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::set               <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::vector            <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::unordered_multiset<Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::list<std::unordered_set     <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::deque           <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::forward_list    <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::list            <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::multiset        <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::priority_queue  <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::set             <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::vector          <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::unordered_multiset
+                                                      <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix<std::vector<std::unordered_set   <Args...> > >:true_type{};
+
+template <class... Args>
+struct is_stl_matrix_queue<std::deque<std::stack      <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::deque<std::queue      <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::list<std::stack       <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::list<std::queue       <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::vector<std::stack     <Args...> > >:true_type{};
+template <class... Args>
+struct is_stl_matrix_queue<std::vector<std::queue     <Args...> > >:true_type{};
+
+template <class... Args>
+struct is_stl_queue<std::stack                          <Args...> >:true_type{};
+template <class... Args>
+struct is_stl_queue<std::queue                          <Args...> >:true_type{};
+
+template <class T>
+struct is_stl_tuple                                               :false_type{};
+template <class... Args>
+struct is_stl_tuple<std::tuple                          <Args...> >:true_type{};
+#else
+template <class T>
+struct is_stl_container<std::deque                            <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::list                             <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::multiset                         <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::priority_queue                   <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::set                              <T> >:true_type{};
+template <class T>
+struct is_stl_container<std::vector                           <T> >:true_type{};
+
+template <class _1st, class _2nd, template <class T, class U> class container>
+struct is_stl_container_paired<container<std::pair<_1st, _2nd>,
+                         std::allocator<std::pair<_1st, _2nd> > > >:true_type{};
+
 template <class T>
 struct is_stl_matrix<std::deque<std::deque                  <T> > >:true_type{};
 template <class T>
@@ -1274,8 +1253,6 @@ template <class T>
 struct is_stl_matrix<std::vector<std::vector                <T> > >:true_type{};
 
 template <class T>
-struct is_stl_matrix_queue                                        :false_type{};
-template <class T>
 struct is_stl_matrix_queue<std::deque<std::stack            <T> > >:true_type{};
 template <class T>
 struct is_stl_matrix_queue<std::deque<std::queue            <T> > >:true_type{};
@@ -1287,6 +1264,11 @@ template <class T>
 struct is_stl_matrix_queue<std::vector<std::stack           <T> > >:true_type{};
 template <class T>
 struct is_stl_matrix_queue<std::vector<std::queue           <T> > >:true_type{};
+
+template <class T>
+struct is_stl_queue<std::stack                                <T> >:true_type{};
+template <class T>
+struct is_stl_queue<std::queue                                <T> >:true_type{};
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_11
