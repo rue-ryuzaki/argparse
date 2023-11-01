@@ -3858,7 +3858,11 @@ class _Storage
     };
 
     typedef pArgument                               key_type;
+
+public:
     typedef std::pair<key_type, mapped_type>        value_type;
+
+private:
     typedef std::list<value_type>                   map_type;
     typedef map_type::iterator                      iterator;
     typedef map_type::const_iterator                const_iterator;
@@ -5042,17 +5046,6 @@ public:
     unrecognized_args_to_args() const;
 
 private:
-    std::string
-    boolean_option_to_args(
-            std::string const& key,
-            _Storage::value_type const& args) const;
-
-    std::string
-    boolean_option_to_string(
-            std::string const& key,
-            _Storage::value_type const& args,
-            std::string const& quotes) const;
-
     std::string
     store_actions_to_string(
             _Storage::value_type const& args,
@@ -9187,6 +9180,40 @@ _matrix_to_string(
 }
 
 _ARGPARSE_INL std::string
+_boolean_option_to_args(
+        std::string const& key,
+        _Storage::value_type const& args)
+{
+    if (args.second.empty()) {
+        return _bool_to_string(args.first->default_value());
+    }
+    if (args.second.size() != 1) {
+        throw TypeError("got a data-array for argument '" + key + "'");
+    }
+    return (args.first->action() != argparse::BooleanOptionalAction
+            || args.second.front() == args.first->const_value())
+           ? _bool_to_string(args.second.front()) : args.second.front();
+}
+
+_ARGPARSE_INL std::string
+_boolean_option_to_string(
+        std::string const& key,
+        _Storage::value_type const& args,
+        std::string const& quotes)
+{
+    if (args.second.empty()) {
+        return args.first->action() == argparse::BooleanOptionalAction
+                ? "None" : _bool_to_string(args.first->default_value());
+    }
+    if (args.second.size() != 1) {
+        throw TypeError("got a data-array for argument '" + key + "'");
+    }
+    return args.second.is_default()
+            ? quotes + args.second.front() + quotes
+            : _bool_to_string(args.second.front());
+}
+
+_ARGPARSE_INL std::string
 _ignore_explicit(
             std::string const& arg,
             std::string const& value)
@@ -11811,7 +11838,7 @@ Namespace::to_args(
         case argparse::store_true :
         case argparse::store_false :
         case argparse::BooleanOptionalAction :
-            return boolean_option_to_args(key, args);
+            return detail::_boolean_option_to_args(key, args);
         case argparse::count :
             return detail::_to_string(args.second.size());
         case argparse::store :
@@ -11844,7 +11871,7 @@ Namespace::to_string(
         case argparse::store_true :
         case argparse::store_false :
         case argparse::BooleanOptionalAction :
-            return boolean_option_to_string(key, args, quotes);
+            return detail::_boolean_option_to_string(key, args, quotes);
         case argparse::count :
             return args.second.empty()
                     ? "None" : detail::_to_string(args.second.size());
@@ -11891,40 +11918,6 @@ Namespace::unrecognized_args_to_args() const
 {
     return detail::_vector_to_string(
                 unrecognized_args(), detail::_spaces, std::string(), true);
-}
-
-_ARGPARSE_INL std::string
-Namespace::boolean_option_to_args(
-        std::string const& key,
-        _Storage::value_type const& args) const
-{
-    if (args.second.empty()) {
-        return detail::_bool_to_string(args.first->default_value());
-    }
-    if (args.second.size() != 1) {
-        throw TypeError("got a data-array for argument '" + key + "'");
-    }
-    return (args.first->action() != argparse::BooleanOptionalAction
-            || args.second.front() == args.first->const_value())
-           ? detail::_bool_to_string(args.second.front()) : args.second.front();
-}
-
-_ARGPARSE_INL std::string
-Namespace::boolean_option_to_string(
-        std::string const& key,
-        _Storage::value_type const& args,
-        std::string const& quotes) const
-{
-    if (args.second.empty()) {
-        return args.first->action() == argparse::BooleanOptionalAction
-                ? "None" : detail::_bool_to_string(args.first->default_value());
-    }
-    if (args.second.size() != 1) {
-        throw TypeError("got a data-array for argument '" + key + "'");
-    }
-    return args.second.is_default()
-            ? quotes + args.second.front() + quotes
-            : detail::_bool_to_string(args.second.front());
 }
 
 _ARGPARSE_INL std::string
