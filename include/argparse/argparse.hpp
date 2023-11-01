@@ -2073,6 +2073,426 @@ private:
 };
 
 template <class T>
+typename enable_if<is_constructible<std::string, T>::value, T>::type
+_to_type(
+        std::string const& data)
+{
+    return _remove_quotes<T>(data);
+}
+
+template <class T>
+typename enable_if<is_same<bool, T>::value, T>::type
+_to_type(
+        std::string const& data) _ARGPARSE_NOEXCEPT
+{
+    return _string_to_bool(data);
+}
+
+template <class T>
+typename enable_if<is_byte_type<T>::value, T>::type
+_to_type(
+        std::string const& data)
+{
+    if (data.empty()) {
+        return T();
+    }
+    if (data.size() != 1) {
+        throw TypeError("got a data-array in value '" + data + "'");
+    }
+    return static_cast<T>(data.at(0));
+}
+
+template <class T>
+typename enable_if<!is_constructible<std::string, T>::value
+                   && !is_same<bool, T>::value
+                   && !is_byte_type<T>::value, T>::type
+_to_type(
+        std::string const& data)
+{
+    if (data.empty()) {
+        return T();
+    }
+    T res = T();
+    std::stringstream ss(_remove_quotes<std::string>(data));
+    ss >> res;
+    if (ss.fail() || !ss.eof()) {
+        throw
+        TypeError("invalid " + Type::name<T>() + " value: '" + data + "'");
+    }
+    return res;
+}
+
+template <class T, class U>
+std::pair<T, U>
+_to_pair(
+        std::string const& data,
+        char sep)
+{
+    std::vector<std::string> pair = _split(data, std::string(1, sep), 1);
+    pair.resize(2);
+    return std::make_pair(_to_type<T>(pair.at(0)), _to_type<U>(pair.at(1)));
+}
+
+template <class T, class U>
+std::vector<std::pair<T, U> >
+_to_paired_vector(
+        std::vector<std::string> const& args,
+        char sep)
+{
+    std::vector<std::pair<T, U> > vec;
+    if (std::isspace(static_cast<unsigned char>(sep))) {
+        if (args.size() & 1) {
+            throw TypeError("invalid stored argument amount");
+        }
+        vec.reserve(args.size() / 2);
+        for (std::size_t i = 0; i < args.size(); i += 2) {
+            vec.push_back(std::make_pair(_to_type<T>(args.at(i)),
+                                         _to_type<U>(args.at(i + 1))));
+        }
+    } else {
+        vec.reserve(args.size());
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            vec.push_back(_to_pair<T, U>(args.at(i), sep));
+        }
+    }
+    return vec;
+}
+
+#ifdef _ARGPARSE_CXX_11
+template <class T,
+          typename enable_if<
+              is_constructible<std::string, T>::value
+              || is_floating_point<T>::value
+              || is_integral<T>::value>::type* = nullptr>
+std::vector<T>
+_to_vector(
+        std::vector<std::string>::const_iterator beg,
+        std::vector<std::string>::const_iterator end)
+#else
+template <class T>
+std::vector<T>
+_to_vector(
+        std::vector<std::string>::const_iterator beg,
+        std::vector<std::string>::const_iterator end,
+        typename enable_if<
+            is_constructible<std::string, T>::value
+            || is_floating_point<T>::value
+            || is_integral<T>::value, bool>::type = true)
+#endif  // C++11+
+{
+    std::vector<T> vec;
+    vec.reserve(static_cast<std::size_t>(end - beg));
+    for (std::vector<std::string>::const_iterator it = beg; it != end; ++it) {
+        vec.push_back(_to_type<T>(*it));
+    }
+    return vec;
+}
+
+#ifdef _ARGPARSE_CXX_11
+template <class T,
+          typename enable_if<
+              !is_constructible<std::string, T>::value
+              && !is_floating_point<T>::value
+              && !is_integral<T>::value>::type* = nullptr>
+std::vector<T>
+_to_vector(
+        std::vector<std::string>::const_iterator beg,
+        std::vector<std::string>::const_iterator end)
+#else
+template <class T>
+std::vector<T>
+_to_vector(
+        std::vector<std::string>::const_iterator beg,
+        std::vector<std::string>::const_iterator end,
+        typename enable_if<
+            !is_constructible<std::string, T>::value
+            && !is_floating_point<T>::value
+            && !is_integral<T>::value, bool>::type = true)
+#endif  // C++11+
+{
+    std::vector<T> vec;
+    if (end == beg) {
+        return vec;
+    }
+    std::string data;
+    for (std::vector<std::string>::const_iterator it = beg; it != end; ++it) {
+        std::string value = _remove_quotes<std::string>(*it);
+        if (!data.empty() && !value.empty()) {
+            data += _spaces;
+        }
+        data += value;
+    }
+    T res = T();
+    std::stringstream ss(data);
+    while (!ss.eof()) {
+        ss >> res;
+        if (ss.fail()) {
+            throw
+            TypeError("invalid " + Type::name<T>() + " value: '" + data + "'");
+        }
+        vec.push_back(res);
+    }
+    return vec;
+}
+
+#ifdef _ARGPARSE_CXX_11
+template <class... Ts, std::size_t... Idxs>
+std::tuple<Ts...>
+_parse_tuple(
+        std::vector<std::string> const& values,
+        integer_sequence<std::size_t, Idxs...>)
+{
+    return std::make_tuple(_to_type<Ts>(values[Idxs])...);
+}
+
+template <class... Ts>
+std::tuple<Ts...>
+_to_tuple(
+        type_tag<std::tuple<Ts...> >,
+        std::vector<std::string> const& values)
+{
+    return _parse_tuple<Ts...>(
+                values, make_integer_sequence<std::size_t, sizeof...(Ts)>());
+}
+
+template <class T>
+std::vector<T>
+_to_tupled_vector(
+        std::vector<std::string> const& args,
+        char sep)
+{
+    std::vector<T> vec;
+    if (std::isspace(static_cast<unsigned char>(sep))) {
+        auto const size = std::tuple_size<T>{};
+        if (size == 0 || args.size() % size != 0) {
+            throw TypeError("invalid stored argument amount");
+        }
+        vec.reserve(args.size() / size);
+        for (std::size_t i = 0; i < args.size(); i += size) {
+            std::vector<std::string> temp
+                    = { args.begin() + i, args.begin() + i + size };
+            vec.emplace_back(_to_tuple(type_tag<T>{}, temp));
+        }
+    } else {
+        vec.reserve(args.size());
+        std::transform(args.begin(), args.end(), std::back_inserter(vec),
+                       [sep] (std::string const& a)
+        { return _to_tuple(type_tag<T>{}, _split(a, std::string(1, sep))); });
+    }
+    return vec;
+}
+#endif  // C++11+
+
+#ifdef _ARGPARSE_CXX_17
+template <class T>
+std::optional<typename enable_if<
+    is_constructible<std::string, T>::value, T>::type>
+_try_to_type(
+        std::string const& data)
+{
+    return _remove_quotes<T>(data);
+}
+
+template <class T>
+std::optional<typename enable_if<is_same<bool, T>::value, T>::type>
+_try_to_type(
+        std::string const& data) _ARGPARSE_NOEXCEPT
+{
+    return _string_to_bool(data);
+}
+
+template <class T>
+std::optional<typename enable_if<is_byte_type<T>::value, T>::type>
+_try_to_type(
+        std::string const& data) _ARGPARSE_NOEXCEPT
+{
+    if (data.size() != 1) {
+        return std::nullopt;
+    }
+    return static_cast<T>(data.front());
+}
+
+template <class T>
+std::optional<typename enable_if<
+    !is_constructible<std::string, T>::value
+    && !is_same<bool, T>::value
+    && !is_byte_type<T>::value, T>::type>
+_try_to_type(
+        std::string const& data)
+{
+    if (data.empty()) {
+        return T{};
+    }
+    T res{};
+    std::stringstream ss(_remove_quotes<std::string>(data));
+    ss >> res;
+    if (ss.fail() || !ss.eof()) {
+        return std::nullopt;
+    }
+    return res;
+}
+
+template <class T, class U>
+std::optional<std::pair<T, U> >
+_try_to_pair(
+        std::string const& data,
+        char sep)
+{
+    auto pair = _split(data, std::string(1, sep), 1);
+    pair.resize(2);
+    auto el1 = _try_to_type<T>(pair.at(0));
+    auto el2 = _try_to_type<U>(pair.at(1));
+    if (el1.has_value() && el2.has_value()) {
+        return std::make_pair(el1.value(), el2.value());
+    } else {
+        return std::nullopt;
+    }
+}
+
+template <class T, class U>
+std::optional<std::vector<std::pair<T, U> > >
+_try_to_paired_vector(
+        std::vector<std::string> const& args,
+        char sep)
+{
+    std::vector<std::pair<T, U> > vec;
+    if (std::isspace(static_cast<unsigned char>(sep))) {
+        if (args.size() & 1) {
+            return std::nullopt;
+        }
+        vec.reserve(args.size() / 2);
+        for (std::size_t i = 0; i < args.size(); i += 2) {
+            auto el1 = _try_to_type<T>(args.at(i));
+            auto el2 = _try_to_type<U>(args.at(i + 1));
+            if (el1.has_value() && el2.has_value()) {
+                vec.emplace_back(std::make_pair(el1.value(), el2.value()));
+            } else {
+                return std::nullopt;
+            }
+        }
+    } else {
+        vec.reserve(args.size());
+        for (auto const& arg : args) {
+            auto pair = _try_to_pair<T, U>(arg, sep);
+            if (!pair.has_value()) {
+                return std::nullopt;
+            }
+            vec.emplace_back(pair.value());
+        }
+    }
+    return vec;
+}
+
+template <class T,
+          typename enable_if<
+              is_constructible<std::string, T>::value
+              || is_floating_point<T>::value
+              || is_integral<T>::value>::type* = nullptr>
+std::optional<std::vector<T> >
+_try_to_vector(
+        std::vector<std::string>::const_iterator beg,
+        std::vector<std::string>::const_iterator end)
+{
+    std::vector<T> vec;
+    vec.reserve(static_cast<std::size_t>(end - beg));
+    for (auto it = beg; it != end; ++it) {
+        auto el = _try_to_type<T>(*it);
+        if (!el.has_value()) {
+            return std::nullopt;
+        }
+        vec.emplace_back(el.value());
+    }
+    return vec;
+}
+
+template <class T,
+          typename enable_if<
+              !is_constructible<std::string, T>::value
+              && !is_floating_point<T>::value
+              && !is_integral<T>::value>::type* = nullptr>
+std::optional<std::vector<T> >
+_try_to_vector(
+        std::vector<std::string>::const_iterator beg,
+        std::vector<std::string>::const_iterator end)
+{
+    std::vector<T> vec;
+    if (end == beg) {
+        return vec;
+    }
+    std::string data;
+    for (auto it = beg; it != end; ++it) {
+        auto value = _remove_quotes<std::string>(*it);
+        if (!data.empty() && !value.empty()) {
+            data += _spaces;
+        }
+        data += value;
+    }
+    T res{};
+    std::stringstream ss(data);
+    while (!ss.eof()) {
+        ss >> res;
+        if (ss.fail()) {
+            return std::nullopt;
+        }
+        vec.push_back(res);
+    }
+    return vec;
+}
+
+template <class... Ts>
+std::optional<std::tuple<Ts...> >
+_try_to_tuple(
+        type_tag<std::tuple<Ts...> >,
+        std::vector<std::string> const& values)
+{
+    try {
+        auto res = _parse_tuple<Ts...>(
+                    values,
+                    make_integer_sequence<std::size_t, sizeof...(Ts)>());
+        return res;
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
+template <class T>
+std::optional<std::vector<T> >
+_try_to_tupled_vector(
+        std::vector<std::string> const& args,
+        char sep)
+{
+    std::vector<T> vec;
+    if (std::isspace(static_cast<unsigned char>(sep))) {
+        auto const size = std::tuple_size<T>{};
+        if (size == 0 || args.size() % size != 0) {
+            return std::nullopt;
+        }
+        vec.reserve(args.size() / size);
+        for (std::size_t i = 0; i < args.size(); i += size) {
+            std::vector<std::string> temp
+                    = { args.begin() + i, args.begin() + i + size };
+            auto tuple = _try_to_tuple(type_tag<T>{}, temp);
+            if (!tuple.has_value()) {
+                return std::nullopt;
+            }
+            vec.emplace_back(tuple.value());
+        }
+    } else {
+        vec.reserve(args.size());
+        for (auto const& arg : args) {
+            auto tuple = _try_to_tuple(
+                        type_tag<T>{}, _split(arg, std::string(1, sep)));
+            if (!tuple.has_value()) {
+                return std::nullopt;
+            }
+            vec.emplace_back(tuple.value());
+        }
+    }
+    return vec;
+}
+#endif  // C++17+
+
+template <class T>
 class Value
 {
 public:
@@ -4119,7 +4539,7 @@ public:
         if (args.second.size() != 1) {
             throw TypeError("got a data-array for argument '" + key + "'");
         }
-        return to_type<T>(args.second.front());
+        return detail::_to_type<T>(args.second.front());
     }
 
     /*!
@@ -4148,7 +4568,7 @@ public:
         if (args.second.size() != 1) {
             throw TypeError("got a data-array for argument '" + key + "'");
         }
-        return to_type<T>(args.second.front());
+        return detail::_to_type<T>(args.second.front());
     }
 
 #ifdef _ARGPARSE_CXX_11
@@ -4169,7 +4589,7 @@ public:
         auto const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
-        auto vector = to_vector<typename T::value_type>(args.second());
+        auto vector = detail::_to_vector<typename T::value_type>(args.second());
         T res{};
         if (res.size() != vector.size()) {
             std::cerr << "argparse error [skip]: array size mismatch: was "
@@ -4210,8 +4630,8 @@ public:
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
         typedef typename T::value_type V;
-        std::vector<V> vector = to_vector<V>(args.second().begin(),
-                                             args.second().end());
+        std::vector<V> vector = detail::_to_vector<V>(args.second().begin(),
+                                                      args.second().end());
         return T(vector.begin(), vector.end());
     }
 
@@ -4238,7 +4658,7 @@ public:
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
         std::vector<std::pair<K, V> > vector
-                = to_paired_vector<K, V>(args.second(), sep);
+                = detail::_to_paired_vector<K, V>(args.second(), sep);
         return T(vector.begin(), vector.end());
     }
 
@@ -4263,7 +4683,7 @@ public:
         auto const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
-        auto vector = to_tupled_vector<
+        auto vector = detail::_to_tupled_vector<
                 typename T::value_type>(args.second(), sep);
         return T(vector.begin(), vector.end());
     }
@@ -4292,7 +4712,7 @@ public:
         typedef typename T::mapped_type V;
         T res = T();
         std::vector<std::pair<K, V> > vector
-                = to_paired_vector<K, V>(args.second(), sep);
+                = detail::_to_paired_vector<K, V>(args.second(), sep);
         for (std::size_t i = 0; i < vector.size(); ++i) {
             res.insert(std::make_pair(vector.at(i).first, vector.at(i).second));
         }
@@ -4328,7 +4748,7 @@ public:
         T res = T();
         for (std::size_t i = 0; i < args.second.indexes().size(); ++i) {
             typedef std::vector<std::string>::difference_type dtype;
-            std::vector<VV> vector = to_vector<VV>(
+            std::vector<VV> vector = detail::_to_vector<VV>(
                         args.second().begin()
                             + static_cast<dtype>(
                                 i == 0 ? 0 : args.second.indexes().at(i - 1)),
@@ -4367,7 +4787,7 @@ public:
         T res = T();
         for (std::size_t i = 0; i < args.second.indexes().size(); ++i) {
             typedef std::vector<std::string>::difference_type dtype;
-            std::vector<VV> vector = to_vector<VV>(
+            std::vector<VV> vector = detail::_to_vector<VV>(
                         args.second().begin()
                             + static_cast<dtype>(
                                 i == 0 ? 0 : args.second.indexes().at(i - 1)),
@@ -4407,13 +4827,13 @@ public:
                 throw
                 TypeError("invalid data for paired argument '" + key + "'");
             }
-            return std::make_pair(to_type<K>(args.second.front()),
-                                  to_type<V>(args.second.at(1)));
+            return std::make_pair(detail::_to_type<K>(args.second.front()),
+                                  detail::_to_type<V>(args.second.at(1)));
         }
         if (args.second.size() != 1) {
             throw TypeError("got a data-array for argument '" + key + "'");
         }
-        return to_pair<K, V>(args.second.front(), sep);
+        return detail::_to_pair<K, V>(args.second.front(), sep);
     }
 
     /*!
@@ -4434,7 +4854,7 @@ public:
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
         typedef typename T::value_type V;
-        std::vector<V> vector = to_vector<V>(args.second());
+        std::vector<V> vector = detail::_to_vector<V>(args.second());
         return T(std::deque<V>(vector.begin(), vector.end()));
     }
 
@@ -4462,12 +4882,12 @@ public:
             return T();
         }
         if (std::isspace(static_cast<unsigned char>(sep))) {
-            return to_tuple(detail::type_tag<T>{}, args.second());
+            return detail::_to_tuple(detail::type_tag<T>{}, args.second());
         }
         if (args.second.size() != 1) {
             throw TypeError("got a data-array for argument '" + key + "'");
         }
-        return to_tuple(
+        return detail::_to_tuple(
                     detail::type_tag<T>{},
                     detail::_split(args.second.front(), std::string(1, sep)));
     }
@@ -4501,7 +4921,7 @@ public:
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         detail::_check_non_count_action(key, args.first->action());
-        return to_type<T>(detail::_join(args.second()));
+        return detail::_to_type<T>(detail::_join(args.second()));
     }
 
     /*!
@@ -4573,7 +4993,7 @@ public:
                                              detail::Type::name<T>())) {
             return std::nullopt;
         }
-        return try_to_type<T>(args->second.front());
+        return detail::_try_to_type<T>(args->second.front());
     }
 
     /*!
@@ -4605,7 +5025,7 @@ public:
         if (args->second.size() != 1) {
             return std::nullopt;
         }
-        return try_to_type<T>(args->second.front());
+        return detail::_try_to_type<T>(args->second.front());
     }
 
     /*!
@@ -4630,7 +5050,8 @@ public:
                                              detail::Type::basic<T>())) {
             return std::nullopt;
         }
-        auto vector = try_to_vector<typename T::value_type>(args->second());
+        auto vector = detail::_try_to_vector<typename T::value_type>(
+                    args->second());
         if (!vector.has_value()) {
             return std::nullopt;
         }
@@ -4675,7 +5096,7 @@ public:
                                              detail::Type::basic<T>())) {
             return std::nullopt;
         }
-        auto vector = try_to_vector<typename T::value_type>(
+        auto vector = detail::_try_to_vector<typename T::value_type>(
                     args->second().begin(), args->second().end());
         if (!vector.has_value()) {
             return std::nullopt;
@@ -4710,7 +5131,7 @@ public:
         }
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
-        auto vector = try_to_paired_vector<K, V>(args->second(), sep);
+        auto vector = detail::_try_to_paired_vector<K, V>(args->second(), sep);
         if (!vector.has_value()) {
             return std::nullopt;
         }
@@ -4742,7 +5163,7 @@ public:
                                              detail::Type::basic<T>())) {
             return std::nullopt;
         }
-        auto vector = try_to_tupled_vector<
+        auto vector = detail::_try_to_tupled_vector<
                 typename T::value_type>(args->second(), sep);
         if (!vector.has_value()) {
             return std::nullopt;
@@ -4777,7 +5198,7 @@ public:
         typedef typename T::key_type K;
         typedef typename T::mapped_type V;
         T res{};
-        auto vector = try_to_paired_vector<K, V>(args->second(), sep);
+        auto vector = detail::_try_to_paired_vector<K, V>(args->second(), sep);
         if (!vector.has_value()) {
             return std::nullopt;
         }
@@ -4820,7 +5241,7 @@ public:
         T res{};
         for (std::size_t i = 0; i < args->second.indexes().size(); ++i) {
             typedef std::vector<std::string>::difference_type dtype;
-            auto vector = try_to_vector<VV>(
+            auto vector = detail::_try_to_vector<VV>(
                         args->second().begin()
                             + static_cast<dtype>(
                                 i == 0 ? 0 : args->second.indexes().at(i - 1)),
@@ -4866,7 +5287,7 @@ public:
         T res{};
         for (std::size_t i = 0; i < args->second.indexes().size(); ++i) {
             typedef std::vector<std::string>::difference_type dtype;
-            auto vector = try_to_vector<VV>(
+            auto vector = detail::_try_to_vector<VV>(
                         args->second().begin()
                             + static_cast<dtype>(
                                 i == 0 ? 0 : args->second.indexes().at(i - 1)),
@@ -4912,8 +5333,8 @@ public:
             if (args->second.size() != 2) {
                 return std::nullopt;
             }
-            auto el1 = try_to_type<K>(args->second.at(0));
-            auto el2 = try_to_type<V>(args->second.at(1));
+            auto el1 = detail::_try_to_type<K>(args->second.at(0));
+            auto el2 = detail::_try_to_type<V>(args->second.at(1));
             if (el1.has_value() && el2.has_value()) {
                 return std::make_pair(el1.value(), el2.value());
             } else {
@@ -4923,7 +5344,7 @@ public:
         if (args->second.size() != 1) {
             return std::nullopt;
         }
-        return try_to_pair<K, V>(args->second.front(), sep);
+        return detail::_try_to_pair<K, V>(args->second.front(), sep);
     }
 
     /*!
@@ -4949,7 +5370,7 @@ public:
             return std::nullopt;
         }
         typedef typename T::value_type V;
-        auto vector = try_to_vector<V>(args->second());
+        auto vector = detail::_try_to_vector<V>(args->second());
         if (!vector.has_value()) {
             return std::nullopt;
         }
@@ -4982,12 +5403,12 @@ public:
             return std::nullopt;
         }
         if (std::isspace(static_cast<unsigned char>(sep))) {
-            return try_to_tuple(detail::type_tag<T>{}, args->second());
+            return detail::_try_to_tuple(detail::type_tag<T>{}, args->second());
         }
         if (args->second.size() != 1) {
             return std::nullopt;
         }
-        return try_to_tuple(
+        return detail::_try_to_tuple(
                     detail::type_tag<T>{},
                     detail::_split(args->second.front(), std::string(1, sep)));
     }
@@ -5023,7 +5444,7 @@ public:
                                              detail::Type::name<T>())) {
             return std::nullopt;
         }
-        return try_to_type<T>(detail::_join(args->second()));
+        return detail::_try_to_type<T>(detail::_join(args->second()));
     }
 #endif  // C++17+
 
@@ -5057,217 +5478,6 @@ private:
     _Storage const&
     storage() const _ARGPARSE_NOEXCEPT;
 
-    template <class T, class U>
-    std::pair<T, U>
-    to_pair(std::string const& data,
-            char sep) const
-    {
-        std::vector<std::string> pair
-                = detail::_split(data, std::string(1, sep), 1);
-        pair.resize(2);
-        return std::make_pair(to_type<T>(pair.at(0)), to_type<U>(pair.at(1)));
-    }
-
-    template <class T, class U>
-    std::vector<std::pair<T, U> >
-    to_paired_vector(
-            std::vector<std::string> const& args,
-            char sep) const
-    {
-        std::vector<std::pair<T, U> > vec;
-        if (std::isspace(static_cast<unsigned char>(sep))) {
-            if (args.size() & 1) {
-                throw TypeError("invalid stored argument amount");
-            }
-            vec.reserve(args.size() / 2);
-            for (std::size_t i = 0; i < args.size(); i += 2) {
-                vec.push_back(std::make_pair(to_type<T>(args.at(i)),
-                                             to_type<U>(args.at(i + 1))));
-            }
-        } else {
-            vec.reserve(args.size());
-            for (std::size_t i = 0; i < args.size(); ++i) {
-                vec.push_back(to_pair<T, U>(args.at(i), sep));
-            }
-        }
-        return vec;
-    }
-
-    typedef std::vector<std::string>::const_iterator value_const_iterator;
-
-#ifdef _ARGPARSE_CXX_11
-    template <class T,
-              typename std::enable_if<
-                  std::is_constructible<std::string, T>::value
-                  || std::is_floating_point<T>::value
-                  || std::is_integral<T>::value>::type* = nullptr>
-    std::vector<T>
-    to_vector(
-            value_const_iterator beg,
-            value_const_iterator end) const
-#else
-    template <class T>
-    std::vector<T>
-    to_vector(
-            value_const_iterator beg,
-            value_const_iterator end,
-            typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value
-                || detail::is_floating_point<T>::value
-                || detail::is_integral<T>::value, bool>::type = true) const
-#endif  // C++11+
-    {
-        std::vector<T> vec;
-        vec.reserve(static_cast<std::size_t>(end - beg));
-        for (value_const_iterator it = beg; it != end; ++it) {
-            vec.push_back(to_type<T>(*it));
-        }
-        return vec;
-    }
-
-#ifdef _ARGPARSE_CXX_11
-    template <class T,
-              typename std::enable_if<
-                  !std::is_constructible<std::string, T>::value
-                  && !std::is_floating_point<T>::value
-                  && !std::is_integral<T>::value>::type* = nullptr>
-    std::vector<T>
-    to_vector(
-            value_const_iterator beg,
-            value_const_iterator end) const
-#else
-    template <class T>
-    std::vector<T>
-    to_vector(
-            value_const_iterator beg,
-            value_const_iterator end,
-            typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value
-                && !detail::is_floating_point<T>::value
-                && !detail::is_integral<T>::value, bool>::type = true) const
-#endif  // C++11+
-    {
-        std::vector<T> vec;
-        if (end == beg) {
-            return vec;
-        }
-        std::string data;
-        for (value_const_iterator it = beg; it != end; ++it) {
-            std::string value = detail::_remove_quotes<std::string>(*it);
-            if (!data.empty() && !value.empty()) {
-                data += detail::_spaces;
-            }
-            data += value;
-        }
-        T res = T();
-        std::stringstream ss(data);
-        while (!ss.eof()) {
-            ss >> res;
-            if (ss.fail()) {
-                throw TypeError("invalid " + detail::Type::name<T>()
-                                + " value: '" + data + "'");
-            }
-            vec.push_back(res);
-        }
-        return vec;
-    }
-
-#ifdef _ARGPARSE_CXX_11
-    template <class... Ts, std::size_t... Idxs>
-    std::tuple<Ts...>
-    parse_tuple(
-            std::vector<std::string> const& values,
-            detail::integer_sequence<std::size_t, Idxs...>) const
-    {
-        return std::make_tuple(to_type<Ts>(values[Idxs])...);
-    }
-
-    template <class... Ts>
-    std::tuple<Ts...>
-    to_tuple(detail::type_tag<std::tuple<Ts...> >,
-            std::vector<std::string> const& values) const
-    {
-        return parse_tuple<Ts...>(
-                    values, detail::make_integer_sequence<std::size_t,
-                                                              sizeof...(Ts)>());
-    }
-
-    template <class T>
-    std::vector<T>
-    to_tupled_vector(
-            std::vector<std::string> const& args,
-            char sep) const
-    {
-        std::vector<T> vec;
-        if (std::isspace(static_cast<unsigned char>(sep))) {
-            auto const size = std::tuple_size<T>{};
-            if (size == 0 || args.size() % size != 0) {
-                throw TypeError("invalid stored argument amount");
-            }
-            vec.reserve(args.size() / size);
-            for (std::size_t i = 0; i < args.size(); i += size) {
-                std::vector<std::string> temp
-                        = { args.begin() + i, args.begin() + i + size };
-                vec.emplace_back(to_tuple(detail::type_tag<T>{}, temp));
-            }
-        } else {
-            vec.reserve(args.size());
-            std::transform(args.begin(), args.end(), std::back_inserter(vec),
-                           [this, sep] (std::string const& a)
-            { return to_tuple(detail::type_tag<T>{},
-                              detail::_split(a, std::string(1, sep))); });
-        }
-        return vec;
-    }
-#endif  // C++11+
-
-    template <class T>
-    typename detail::enable_if<
-        detail::is_constructible<std::string, T>::value, T>::type
-    to_type(std::string const& data) const
-    {
-        return detail::_remove_quotes<T>(data);
-    }
-
-    template <class T>
-    typename detail::enable_if<detail::is_same<bool, T>::value, T>::type
-    to_type(std::string const& data) const _ARGPARSE_NOEXCEPT
-    {
-        return detail::_string_to_bool(data);
-    }
-
-    template <class T>
-    typename detail::enable_if<detail::is_byte_type<T>::value, T>::type
-    to_type(std::string const& data) const
-    {
-        if (data.empty()) {
-            return T();
-        }
-        if (data.size() != 1) {
-            throw TypeError("got a data-array in value '" + data + "'");
-        }
-        return static_cast<T>(data.at(0));
-    }
-
-    template <class T>
-    typename detail::enable_if<!detail::is_constructible<std::string, T>::value
-                               && !detail::is_same<bool, T>::value
-                               && !detail::is_byte_type<T>::value, T>::type
-    to_type(std::string const& data) const
-    {
-        if (data.empty()) {
-            return T();
-        }
-        T res = T();
-        std::stringstream ss(detail::_remove_quotes<std::string>(data));
-        ss >> res;
-        if (ss.fail() || !ss.eof()) {
-            throw TypeError("invalid " + detail::Type::name<T>()
-                            + " value: '" + data + "'");
-        }
-        return res;
-    }
-
 #ifdef _ARGPARSE_CXX_17
     inline std::optional<_Storage::value_type>
     try_get_data(
@@ -5278,217 +5488,6 @@ private:
             return *it;
         }
         return std::nullopt;
-    }
-
-    template <class T, class U>
-    std::optional<std::pair<T, U> >
-    try_to_pair(
-            std::string const& data,
-            char sep) const
-    {
-        auto pair = detail::_split(data, std::string(1, sep), 1);
-        pair.resize(2);
-        auto el1 = try_to_type<T>(pair.at(0));
-        auto el2 = try_to_type<U>(pair.at(1));
-        if (el1.has_value() && el2.has_value()) {
-            return std::make_pair(el1.value(), el2.value());
-        } else {
-            return std::nullopt;
-        }
-    }
-
-    template <class T, class U>
-    std::optional<std::vector<std::pair<T, U> > >
-    try_to_paired_vector(
-            std::vector<std::string> const& args,
-            char sep) const
-    {
-        std::vector<std::pair<T, U> > vec;
-        if (std::isspace(static_cast<unsigned char>(sep))) {
-            if (args.size() & 1) {
-                return std::nullopt;
-            }
-            vec.reserve(args.size() / 2);
-            for (std::size_t i = 0; i < args.size(); i += 2) {
-                auto el1 = try_to_type<T>(args.at(i));
-                auto el2 = try_to_type<U>(args.at(i + 1));
-                if (el1.has_value() && el2.has_value()) {
-                    vec.emplace_back(std::make_pair(el1.value(), el2.value()));
-                } else {
-                    return std::nullopt;
-                }
-            }
-        } else {
-            vec.reserve(args.size());
-            for (auto const& arg : args) {
-                auto pair = try_to_pair<T, U>(arg, sep);
-                if (!pair.has_value()) {
-                    return std::nullopt;
-                }
-                vec.emplace_back(pair.value());
-            }
-        }
-        return vec;
-    }
-
-    template <class T,
-              typename std::enable_if<
-                  std::is_constructible<std::string, T>::value
-                  || std::is_floating_point<T>::value
-                  || std::is_integral<T>::value>::type* = nullptr>
-    std::optional<std::vector<T> >
-    try_to_vector(
-            value_const_iterator beg,
-            value_const_iterator end) const
-    {
-        std::vector<T> vec;
-        vec.reserve(static_cast<std::size_t>(end - beg));
-        for (value_const_iterator it = beg; it != end; ++it) {
-            auto el = try_to_type<T>(*it);
-            if (!el.has_value()) {
-                return std::nullopt;
-            }
-            vec.emplace_back(el.value());
-        }
-        return vec;
-    }
-
-    template <class T,
-              typename std::enable_if<
-                  !std::is_constructible<std::string, T>::value
-                  && !std::is_floating_point<T>::value
-                  && !std::is_integral<T>::value>::type* = nullptr>
-    std::optional<std::vector<T> >
-    try_to_vector(
-            value_const_iterator beg,
-            value_const_iterator end) const
-    {
-        std::vector<T> vec;
-        if (end == beg) {
-            return vec;
-        }
-        std::string data;
-        for (value_const_iterator it = beg; it != end; ++it) {
-            auto value = detail::_remove_quotes<std::string>(*it);
-            if (!data.empty() && !value.empty()) {
-                data += detail::_spaces;
-            }
-            data += value;
-        }
-        T res{};
-        std::stringstream ss(data);
-        while (!ss.eof()) {
-            ss >> res;
-            if (ss.fail()) {
-                return std::nullopt;
-            }
-            vec.push_back(res);
-        }
-        return vec;
-    }
-
-    template <class... Ts>
-    std::optional<std::tuple<Ts...> >
-    try_to_tuple(
-            detail::type_tag<std::tuple<Ts...> >,
-            std::vector<std::string> const& values) const
-    {
-        try {
-            auto res = parse_tuple<Ts...>(
-                        values,
-                        detail::make_integer_sequence<std::size_t,
-                                                              sizeof...(Ts)>());
-            return res;
-        } catch (...) {
-            return std::nullopt;
-        }
-    }
-
-    template <class T>
-    std::optional<std::vector<T> >
-    try_to_tupled_vector(
-            std::vector<std::string> const& args,
-            char sep) const
-    {
-        std::vector<T> vec;
-        if (std::isspace(static_cast<unsigned char>(sep))) {
-            auto const size = std::tuple_size<T>{};
-            if (size == 0 || args.size() % size != 0) {
-                return std::nullopt;
-            }
-            vec.reserve(args.size() / size);
-            for (std::size_t i = 0; i < args.size(); i += size) {
-                std::vector<std::string> temp
-                        = { args.begin() + i, args.begin() + i + size };
-                auto tuple = try_to_tuple(detail::type_tag<T>{}, temp);
-                if (!tuple.has_value()) {
-                    return std::nullopt;
-                }
-                vec.emplace_back(tuple.value());
-            }
-        } else {
-            vec.reserve(args.size());
-            for (auto const& arg : args) {
-                auto tuple = try_to_tuple(
-                            detail::type_tag<T>{},
-                            detail::_split(arg, std::string(1, sep)));
-                if (!tuple.has_value()) {
-                    return std::nullopt;
-                }
-                vec.emplace_back(tuple.value());
-            }
-        }
-        return vec;
-    }
-
-    template <class T>
-    std::optional<typename std::enable_if<
-        std::is_constructible<std::string, T>::value, T>::type>
-    try_to_type(
-            std::string const& data) const
-    {
-        return detail::_remove_quotes<T>(data);
-    }
-
-    template <class T>
-    std::optional<typename std::enable_if<
-        std::is_same<bool, T>::value, T>::type>
-    try_to_type(
-            std::string const& data) const _ARGPARSE_NOEXCEPT
-    {
-        return detail::_string_to_bool(data);
-    }
-
-    template <class T>
-    std::optional<typename std::enable_if<
-        detail::is_byte_type<T>::value, T>::type>
-    try_to_type(
-            std::string const& data) const _ARGPARSE_NOEXCEPT
-    {
-        if (data.size() != 1) {
-            return std::nullopt;
-        }
-        return static_cast<T>(data.front());
-    }
-
-    template <class T>
-    std::optional<typename std::enable_if<
-        !std::is_constructible<std::string, T>::value
-        && !std::is_same<bool, T>::value
-        && !detail::is_byte_type<T>::value, T>::type>
-    try_to_type(
-            std::string const& data) const
-    {
-        if (data.empty()) {
-            return T{};
-        }
-        T res{};
-        std::stringstream ss(detail::_remove_quotes<std::string>(data));
-        ss >> res;
-        if (ss.fail() || !ss.eof()) {
-            return std::nullopt;
-        }
-        return res;
     }
 #endif  // C++17+
 
