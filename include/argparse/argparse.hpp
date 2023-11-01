@@ -534,16 +534,20 @@ public:
             std::string const& text,
             std::size_t width,
             std::size_t indent) const;
+
     virtual std::string
     _get_default_metavar_for_optional(
             Argument const* action) const;
+
     virtual std::string
     _get_default_metavar_for_positional(
             Argument const* action) const;
+
     virtual std::string
     _get_help_string(
             Argument const* action,
             std::string const& lang) const;
+
     virtual std::vector<std::string>
     _split_lines(
             std::string const& text,
@@ -665,7 +669,7 @@ template <class... T>
 using void_t = typename voider<T...>::type;
 
 template <class T>
-struct type_tag{};
+struct type_tag { };
 
 template <class T, T... Ints>
 struct integer_sequence { };
