@@ -5046,10 +5046,10 @@ public:
     unrecognized_args_to_args() const;
 
 private:
-    std::string
+    static std::string
     store_actions_to_string(
             _Storage::value_type const& args,
-            std::string const& quotes) const;
+            std::string const& quotes);
 
     _Storage::value_type const&
     data(std::string const& key) const;
@@ -11923,7 +11923,7 @@ Namespace::unrecognized_args_to_args() const
 _ARGPARSE_INL std::string
 Namespace::store_actions_to_string(
         _Storage::value_type const& args,
-        std::string const& quotes) const
+        std::string const& quotes)
 {
     if (((args.first->action() & (argparse::store | argparse::language))
          && (args.first->m_nargs
