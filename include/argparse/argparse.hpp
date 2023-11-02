@@ -4593,7 +4593,8 @@ public:
         auto const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
-        auto vector = detail::_to_vector<typename T::value_type>(args.second());
+        auto vector = detail::_to_vector<typename T::value_type>(
+                    args.second().begin(), args.second().end());
         T res{};
         if (res.size() != vector.size()) {
             std::cerr << "argparse error [skip]: array size mismatch: was "
@@ -4858,7 +4859,8 @@ public:
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
         typedef typename T::value_type V;
-        std::vector<V> vector = detail::_to_vector<V>(args.second());
+        std::vector<V> vector = detail::_to_vector<V>(args.second().begin(),
+                                                      args.second().end());
         return T(std::deque<V>(vector.begin(), vector.end()));
     }
 
@@ -5055,7 +5057,7 @@ public:
             return std::nullopt;
         }
         auto vector = detail::_try_to_vector<typename T::value_type>(
-                    args->second());
+                    args->second().begin(), args->second().end());
         if (!vector.has_value()) {
             return std::nullopt;
         }
@@ -5374,7 +5376,8 @@ public:
             return std::nullopt;
         }
         typedef typename T::value_type V;
-        auto vector = detail::_try_to_vector<V>(args->second());
+        auto vector = detail::_try_to_vector<V>(args->second().begin(),
+                                                args->second().end());
         if (!vector.has_value()) {
             return std::nullopt;
         }
