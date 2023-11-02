@@ -1055,6 +1055,48 @@ struct voider { typedef void type; };
 #endif  // C++11+
 
 // -- library type traits -----------------------------------------------------
+namespace _stream_check
+{
+    typedef char yes;
+    typedef int no;
+
+    struct anyx { template <class T> anyx(T const&); };
+
+    no operator <<(anyx const&, anyx const&);
+    no operator >>(anyx const&, anyx const&);
+
+    template <class T>
+    yes check(T const&);
+    no check(no);
+
+    template <class StreamType, class T>
+    struct has_loading_support
+    {
+        static StreamType& stream;
+        static T& x;
+        static const bool value = sizeof(check(stream >> x)) == sizeof(yes);
+    };
+
+    template <class StreamType, class T>
+    struct has_saving_support
+    {
+        static StreamType& stream;
+        static T& x;
+        static const bool value = sizeof(check(stream << x)) == sizeof(yes);
+    };
+
+    template <class StreamType, class T>
+    struct has_stream_operators
+    {
+        static const bool can_load = has_loading_support<StreamType, T>::value;
+        static const bool can_save = has_saving_support<StreamType, T>::value;
+        static const bool value = can_load && can_save;
+    };
+}  // _stream_check
+
+template <class T>
+struct has_operator_in : _stream_check::has_loading_support<std::istream, T> {};
+
 template <class T> struct is_byte_type              { enum { value = false }; };
 template <>        struct is_byte_type<char>         { enum { value = true }; };
 template <>        struct is_byte_type<signed char>  { enum { value = true }; };
@@ -2107,7 +2149,8 @@ _to_type(
 }
 
 template <class T>
-typename enable_if<!is_constructible<std::string, T>::value
+typename enable_if<has_operator_in<T>::value
+                   && !is_constructible<std::string, T>::value
                    && !is_same<bool, T>::value
                    && !is_byte_type<T>::value, T>::type
 _to_type(
@@ -2124,6 +2167,17 @@ _to_type(
         TypeError("invalid " + Type::name<T>() + " value: '" + data + "'");
     }
     return res;
+}
+
+template <class T>
+typename enable_if<!has_operator_in<T>::value, T>::type
+_to_type(
+        std::string const& data)
+{
+    if (data.empty()) {
+        return T();
+    }
+    throw TypeError("unsupported type " + Type::name<T>());
 }
 
 template <class T, class U>
@@ -2317,10 +2371,10 @@ _try_to_type(
 }
 
 template <class T>
-std::optional<typename enable_if<
-    !is_constructible<std::string, T>::value
-    && !is_same<bool, T>::value
-    && !is_byte_type<T>::value, T>::type>
+std::optional<typename enable_if<has_operator_in<T>::value
+                                 && !is_constructible<std::string, T>::value
+                                 && !is_same<bool, T>::value
+                                 && !is_byte_type<T>::value, T>::type>
 _try_to_type(
         std::string const& data)
 {
@@ -2334,6 +2388,17 @@ _try_to_type(
         return std::nullopt;
     }
     return res;
+}
+
+template <class T>
+std::optional<typename enable_if<!has_operator_in<T>::value, T>::type>
+_try_to_type(
+        std::string const& data) _ARGPARSE_NOEXCEPT
+{
+    if (data.empty()) {
+        return T{};
+    }
+    return std::nullopt;
 }
 
 template <class T, class U>
