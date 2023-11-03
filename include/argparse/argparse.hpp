@@ -2359,7 +2359,7 @@ std::optional<typename enable_if<is_same<bool, T>::value, T>::type>
 _try_to_type(
         std::string const& data) _ARGPARSE_NOEXCEPT
 {
-    return _string_to_bool(data);
+    return _string_to_bool(_remove_quotes<std::string>(data));
 }
 
 template <class T>
