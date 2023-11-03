@@ -3199,7 +3199,7 @@ public:
      *  \return Current argument reference
      */
     Argument&
-    type(void (*func)(void*, std::string const&)) _ARGPARSE_NOEXCEPT;
+    type(void (*func)(std::istream&, void*)) _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Set argument 'choices' value
@@ -3727,7 +3727,7 @@ private:
 #else
     void (*m_handle)(std::string const&);
 #endif  // C++11+
-    void (*m_factory)(void*, std::string const&);
+    void (*m_factory)(std::istream&, void*);
     detail::shared_ptr<_ConflictResolver> m_post_trigger;
     detail::Value<bool>         m_required;
 };
@@ -10347,7 +10347,7 @@ Argument::type(
 
 _ARGPARSE_INL Argument&
 Argument::type(
-        void (*func)(void*, std::string const&)) _ARGPARSE_NOEXCEPT
+        void (*func)(std::istream&, void*)) _ARGPARSE_NOEXCEPT
 {
     m_factory = _ARGPARSE_MOVE(func);
     return *this;
