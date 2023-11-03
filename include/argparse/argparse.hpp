@@ -2170,7 +2170,10 @@ _to_type(
 }
 
 template <class T>
-typename enable_if<!has_operator_in<T>::value, T>::type
+typename enable_if<!has_operator_in<T>::value
+                    && !is_constructible<std::string, T>::value
+                    && !is_same<bool, T>::value
+                    && !is_byte_type<T>::value, T>::type
 _to_type(
         std::string const& data)
 {
@@ -2391,7 +2394,10 @@ _try_to_type(
 }
 
 template <class T>
-std::optional<typename enable_if<!has_operator_in<T>::value, T>::type>
+std::optional<typename enable_if<!has_operator_in<T>::value
+                                 && !is_constructible<std::string, T>::value
+                                 && !is_same<bool, T>::value
+                                 && !is_byte_type<T>::value, T>::type>
 _try_to_type(
         std::string const& data) _ARGPARSE_NOEXCEPT
 {
