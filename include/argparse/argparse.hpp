@@ -4395,132 +4395,52 @@ private:
     self_value_stored(
             key_type const& key);
 
-    inline bool
+    bool
     exists_arg(
-            std::string const& key) const
-    {
-        return find_arg(key) != end();
-    }
+            std::string const& key) const;
 
-    inline bool
-    exists(std::string const& key) const
-    {
-        return find(key) != end();
-    }
+    bool
+    exists(std::string const& key) const;
 
-    inline bool
-    exists(key_type const& key) const
-    {
-        return find(key) != end();
-    }
+    bool
+    exists(key_type const& key) const;
 
-    inline value_type const&
-    at(std::string const& key) const
-    {
-        const_iterator it = find(key);
-        if (it == end()) {
-            throw std::out_of_range("key '" + key + "' not found");
-        }
-        return *it;
-    }
+    value_type const&
+    at(std::string const& key) const;
 
-    inline mapped_type&
-    at(key_type const& key)
-    {
-        iterator it = find(key);
-        if (it == end()) {
-            throw std::out_of_range("key '" + key->m_name + "' not found");
-        }
-        return it->second;
-    }
+    mapped_type&
+    at(key_type const& key);
 
-    inline mapped_type const&
-    at(key_type const& key) const
-    {
-        const_iterator it = find(key);
-        if (it == end()) {
-            throw std::out_of_range("key '" + key->m_name + "' not found");
-        }
-        return it->second;
-    }
+    mapped_type const&
+    at(key_type const& key) const;
 
-    inline iterator
-    erase(iterator it)
-    {
-        return m_data.erase(it);
-    }
+    iterator
+    erase(iterator it);
 
-    inline iterator
-    begin() _ARGPARSE_NOEXCEPT
-    {
-        return m_data.begin();
-    }
+    iterator
+    begin() _ARGPARSE_NOEXCEPT;
 
-    inline iterator
-    end() _ARGPARSE_NOEXCEPT
-    {
-        return m_data.end();
-    }
+    iterator
+    end() _ARGPARSE_NOEXCEPT;
 
-    inline const_iterator
-    begin() const _ARGPARSE_NOEXCEPT
-    {
-        return m_data.begin();
-    }
+    const_iterator
+    begin() const _ARGPARSE_NOEXCEPT;
 
-    inline const_iterator
-    end() const _ARGPARSE_NOEXCEPT
-    {
-        return m_data.end();
-    }
+    const_iterator
+    end() const _ARGPARSE_NOEXCEPT;
 
-    inline const_iterator
-    find_arg(std::string const& key) const
-    {
-        const_iterator it = find(key);
-        if (it != end()) {
-            return it;
-        }
-        for (it = begin(); it != end(); ++it) {
-            if (it->first->is_match_name(key)) {
-                return it;
-            }
-        }
-        return end();
-    }
+    const_iterator
+    find_arg(
+            std::string const& key) const;
 
-    inline const_iterator
-    find(std::string const& key) const
-    {
-        for (const_iterator it = begin(); it != end(); ++it) {
-            if (*(it->first) == key) {
-                return it;
-            }
-        }
-        return end();
-    }
+    const_iterator
+    find(std::string const& key) const;
 
-    inline const_iterator
-    find(key_type const& key) const
-    {
-        for (const_iterator it = begin(); it != end(); ++it) {
-            if (it->first == key) {
-                return it;
-            }
-        }
-        return end();
-    }
+    const_iterator
+    find(key_type const& key) const;
 
-    inline iterator
-    find(key_type const& key)
-    {
-        for (iterator it = begin(); it != end(); ++it) {
-            if (it->first == key) {
-                return it;
-            }
-        }
-        return end();
-    }
+    iterator
+    find(key_type const& key);
 
     void
     on_process_store(
@@ -11861,6 +11781,143 @@ _Storage::self_value_stored(
         return true;
     }
     return false;
+}
+
+_ARGPARSE_INL bool
+_Storage::exists_arg(
+        std::string const& key) const
+{
+    return find_arg(key) != end();
+}
+
+_ARGPARSE_INL bool
+_Storage::exists(
+        std::string const& key) const
+{
+    return find(key) != end();
+}
+
+_ARGPARSE_INL bool
+_Storage::exists(
+        key_type const& key) const
+{
+    return find(key) != end();
+}
+
+_ARGPARSE_INL _Storage::value_type const&
+_Storage::at(
+        std::string const& key) const
+{
+    const_iterator it = find(key);
+    if (it == end()) {
+        throw std::out_of_range("key '" + key + "' not found");
+    }
+    return *it;
+}
+
+_ARGPARSE_INL _Storage::mapped_type&
+_Storage::at(
+        key_type const& key)
+{
+    iterator it = find(key);
+    if (it == end()) {
+        throw std::out_of_range("key '" + key->m_name + "' not found");
+    }
+    return it->second;
+}
+
+_ARGPARSE_INL _Storage::mapped_type const&
+_Storage::at(
+        key_type const& key) const
+{
+    const_iterator it = find(key);
+    if (it == end()) {
+        throw std::out_of_range("key '" + key->m_name + "' not found");
+    }
+    return it->second;
+}
+
+_ARGPARSE_INL _Storage::iterator
+_Storage::erase(
+        iterator it)
+{
+    return m_data.erase(it);
+}
+
+_ARGPARSE_INL _Storage::iterator
+_Storage::begin() _ARGPARSE_NOEXCEPT
+{
+    return m_data.begin();
+}
+
+_ARGPARSE_INL _Storage::iterator
+_Storage::end() _ARGPARSE_NOEXCEPT
+{
+    return m_data.end();
+}
+
+_ARGPARSE_INL _Storage::const_iterator
+_Storage::begin() const _ARGPARSE_NOEXCEPT
+{
+    return m_data.begin();
+}
+
+_ARGPARSE_INL _Storage::const_iterator
+_Storage::end() const _ARGPARSE_NOEXCEPT
+{
+    return m_data.end();
+}
+
+_ARGPARSE_INL _Storage::const_iterator
+_Storage::find_arg(
+        std::string const& key) const
+{
+    const_iterator it = find(key);
+    if (it != end()) {
+        return it;
+    }
+    for (it = begin(); it != end(); ++it) {
+        if (it->first->is_match_name(key)) {
+            return it;
+        }
+    }
+    return end();
+}
+
+_ARGPARSE_INL _Storage::const_iterator
+_Storage::find(
+        std::string const& key) const
+{
+    for (const_iterator it = begin(); it != end(); ++it) {
+        if (*(it->first) == key) {
+            return it;
+        }
+    }
+    return end();
+}
+
+_ARGPARSE_INL _Storage::const_iterator
+_Storage::find(
+        key_type const& key) const
+{
+    for (const_iterator it = begin(); it != end(); ++it) {
+        if (it->first == key) {
+            return it;
+        }
+    }
+    return end();
+}
+
+_ARGPARSE_INL _Storage::iterator
+_Storage::find(
+        key_type const& key)
+{
+    for (iterator it = begin(); it != end(); ++it) {
+        if (it->first == key) {
+            return it;
+        }
+    }
+    return end();
 }
 
 _ARGPARSE_INL void
