@@ -5145,7 +5145,7 @@ public:
         || detail::is_byte_type<T>::value, T>::type>
     try_get(std::string const& key) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_correct(args->first->type_name(),
@@ -5172,7 +5172,7 @@ public:
         && !detail::is_byte_type<T>::value, T>::type>
     try_get(std::string const& key) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || !detail::_is_type_correct(args->first->type_name(),
                                              detail::Type::name<T>())) {
@@ -5199,7 +5199,7 @@ public:
         detail::is_stl_array<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_correct(args->first->type_name(),
@@ -5245,7 +5245,7 @@ public:
     T>::type>
     try_get(std::string const& key) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_correct(args->first->type_name(),
@@ -5278,7 +5278,7 @@ public:
     try_get(std::string const& key,
             char sep = detail::_equal) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_correct(args->first->type_name(),
@@ -5312,7 +5312,7 @@ public:
     try_get(std::string const& key,
             char sep = detail::_equal) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_correct(args->first->type_name(),
@@ -5344,7 +5344,7 @@ public:
     try_get(std::string const& key,
             char sep = detail::_equal) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_correct(args->first->type_name(),
@@ -5382,7 +5382,7 @@ public:
     T>::type>
     try_get(std::string const& key) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() != argparse::append
                 || !(args->first->m_nargs
@@ -5428,7 +5428,7 @@ public:
     T>::type>
     try_get(std::string const& key) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() != argparse::append
                 || !(args->first->m_nargs
@@ -5475,7 +5475,7 @@ public:
     try_get(std::string const& key,
             char sep = detail::_equal) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.empty()
@@ -5518,7 +5518,7 @@ public:
         detail::is_stl_queue<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || !detail::_is_type_correct(args->first->type_name(),
@@ -5551,7 +5551,7 @@ public:
     try_get(std::string const& key,
             char sep = detail::_equal) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.empty()
@@ -5593,7 +5593,7 @@ public:
         && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
-        auto args = try_get_data(key);
+        auto args = opt_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
                 || args->second.empty()
@@ -5636,16 +5636,9 @@ private:
     storage() const _ARGPARSE_NOEXCEPT;
 
 #ifdef _ARGPARSE_CXX_17
-    inline std::optional<_Storage::value_type>
-    try_get_data(
-            std::string const& key) const
-    {
-        auto it = storage().find_arg(key);
-        if (it != storage().end()) {
-            return *it;
-        }
-        return std::nullopt;
-    }
+    std::optional<_Storage::value_type>
+    opt_data(
+            std::string const& key) const;
 #endif  // C++17+
 
     // -- data ----------------------------------------------------------------
@@ -12127,6 +12120,19 @@ Namespace::storage() const _ARGPARSE_NOEXCEPT
 {
     return m_storage;
 }
+
+#ifdef _ARGPARSE_CXX_17
+_ARGPARSE_INL std::optional<_Storage::value_type>
+Namespace::opt_data(
+        std::string const& key) const
+{
+    auto it = storage().find_arg(key);
+    if (it != storage().end()) {
+        return *it;
+    }
+    return std::nullopt;
+}
+#endif  // C++17+
 
 // -- ArgumentParser::Subparser -----------------------------------------------
 _ARGPARSE_INL
