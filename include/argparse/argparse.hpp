@@ -4532,6 +4532,101 @@ private:
             key_type const& key,
             std::vector<std::string> const& values);
 
+    // -- value conversion ----------------------------------------------------
+    template <class T>
+    static T
+    as_type(key_type const& key,
+            std::string const& value)
+    {
+        std::string str = detail::_remove_quotes<std::string>(value);
+        if (key->m_factory) {
+            if (str.empty()) {
+                return T();
+            }
+            std::stringstream ss(str);
+            T res = T();
+            key->m_factory(ss, &res);
+            if (ss.fail() || !ss.eof()) {
+                throw TypeError("invalid " + detail::Type::name<T>()
+                                + " value: '" + str + "'");
+            }
+            return res;
+        }
+        return detail::_to_type<T>(str);
+    }
+
+#ifdef _ARGPARSE_CXX_17
+    template <class T>
+    static std::optional<T>
+    as_opt_type(
+            key_type const& key,
+            std::string const& value)
+    {
+        std::string str = detail::_remove_quotes<std::string>(value);
+        if (key->m_factory) {
+            if (str.empty()) {
+                return T{};
+            }
+            std::stringstream ss(str);
+            T res{};
+            try {
+                key->m_factory(ss, &res);
+            } catch (...) {
+                return std::nullopt;
+            }
+            if (ss.fail() || !ss.eof()) {
+                return std::nullopt;
+            }
+            return res;
+        }
+        return detail::_try_to_type<T>(str);
+    }
+#endif  // C++17+
+
+    template <class T>
+    static T
+    get_single_value(
+            std::string const& key,
+            value_type const& value)
+    {
+        if (value.second.empty()) {
+            return T();
+        }
+        if (value.second.size() != 1) {
+            throw TypeError("got a data-array for argument '" + key + "'");
+        }
+        return as_type<T>(value.first, value.second.front());
+    }
+
+    template <class T>
+    static T
+    get_custom_value(
+            value_type const& value)
+    {
+        return as_type<T>(value.first, detail::_join(value.second()));
+    }
+
+#ifdef _ARGPARSE_CXX_17
+    template <class T>
+    static std::optional<T>
+    opt_single_value(
+            value_type const& value)
+    {
+        if (value.second.size() != 1) {
+            return std::nullopt;
+        }
+        return as_opt_type<T>(value.first, value.second.front());
+    }
+
+    template <class T>
+    static std::optional<T>
+    opt_custom_value(
+            value_type const& value)
+    {
+        return as_opt_type<T>(value.first, detail::_join(value.second()));
+    }
+#endif  // C++17+
+
     // -- data ----------------------------------------------------------------
     map_type m_data;
 };
@@ -4608,13 +4703,7 @@ public:
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         detail::_check_non_count_action(key, args.first->action());
-        if (args.second.empty()) {
-            return T();
-        }
-        if (args.second.size() != 1) {
-            throw TypeError("got a data-array for argument '" + key + "'");
-        }
-        return detail::_to_type<T>(args.second.front());
+        return _Storage::get_single_value<T>(key, args);
     }
 
     /*!
@@ -4637,13 +4726,7 @@ public:
         if (args.first->action() == argparse::count) {
             return static_cast<T>(args.second.size());
         }
-        if (args.second.empty()) {
-            return T();
-        }
-        if (args.second.size() != 1) {
-            throw TypeError("got a data-array for argument '" + key + "'");
-        }
-        return detail::_to_type<T>(args.second.front());
+        return _Storage::get_single_value<T>(key, args);
     }
 
 #ifdef _ARGPARSE_CXX_11
@@ -4998,7 +5081,7 @@ public:
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         detail::_check_non_count_action(key, args.first->action());
-        return detail::_to_type<T>(detail::_join(args.second()));
+        return _Storage::get_custom_value<T>(args);
     }
 
     /*!
@@ -5065,12 +5148,11 @@ public:
         auto args = try_get_data(key);
         if (!args.has_value()
                 || args->first->action() == argparse::count
-                || args->second.size() != 1
                 || !detail::_is_type_correct(args->first->type_name(),
                                              detail::Type::name<T>())) {
             return std::nullopt;
         }
-        return detail::_try_to_type<T>(args->second.front());
+        return _Storage::opt_single_value<T>(args.value());
     }
 
     /*!
@@ -5099,10 +5181,7 @@ public:
         if (args->first->action() == argparse::count) {
             return static_cast<T>(args->second.size());
         }
-        if (args->second.size() != 1) {
-            return std::nullopt;
-        }
-        return detail::_try_to_type<T>(args->second.front());
+        return _Storage::opt_single_value<T>(args.value());
     }
 
     /*!
@@ -5522,7 +5601,7 @@ public:
                                              detail::Type::name<T>())) {
             return std::nullopt;
         }
-        return detail::_try_to_type<T>(detail::_join(args->second()));
+        return _Storage::opt_custom_value<T>(args.value());
     }
 #endif  // C++17+
 
