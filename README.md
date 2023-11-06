@@ -277,7 +277,7 @@ int main(int argc, char const* const argv[])
 - mapped types (std::map, std::multimap, std::unordered_map (since C++11), std::unordered_multimap (since C++11))
 - std::pair
 - std::tuple (since C++11)
-- custom types
+- custom types and containers with custom types
 ### Don't work:
 - pointer and reference types
 - plain C arrays
@@ -290,7 +290,7 @@ For example:
 - ```' '``` : auto args = parser.parse_args("--foo key1 value1 'key2' 'value2'"); args.get<std::vector<std::pair<std::string, std::string> > >("foo", ' ');
 ## Custom type example
 ### Namespace::get<>
-Required std::istream& operator >>(std::istream& is, Type& t).
+Required std::istream& operator >>(std::istream& is, Type& t) or Argument::type(std::function<void(std::istream&, void*)>) conversion function.
 ### Argument::default_value<> and Argument::const_value<>
 Required std::ostream& operator <<(std::ostream& os, Type const& t).
 ```cpp
@@ -334,11 +334,17 @@ inline std::ostream& operator <<(std::ostream& os, Coord const& c)
     return os;
 }
 
+inline void coord_type_builder(std::istream& is, void* res)
+{
+    // just use operator >>
+    is >> *reinterpret_cast<Coord*>(res);
+}
+
 int main(int argc, char const* const argv[])
 {
     auto parser = argparse::ArgumentParser();
     // it's recommended to pass each custom type value in quotes: 'value1 value2 ...'
-    parser.add_argument("--coord").help("coord help");
+    parser.add_argument("--coord").type(&coord_type_builder).help("coord help");
     parser.add_argument("--const_coord").action("store_const").default_value(Coord(0, 0, 0))
             .const_value(Coord(1, 1, 1)).help("const coord help");
 
@@ -449,7 +455,7 @@ int main(int argc, char const* const argv[])
 ### Terminal size auto-detection
 By default, help output is positioned based on the terminal's width. But you can manually specify the width of the available area using the ArgumentParser::output_width(...) method.
 ### Environment variables
-ArgumentParser can hold environment variables (from envp[]) and have ```has_env``` and ```get_env``` functions to work with them
+ArgumentParser can hold environment variables (from envp[]) and have ```has_env```, ```get_env``` and ```list_env``` functions to work with them
 ```cpp
 #include <iostream>
 
