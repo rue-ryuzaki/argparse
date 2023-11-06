@@ -334,10 +334,11 @@ inline std::ostream& operator <<(std::ostream& os, Coord const& c)
     return os;
 }
 
-inline void coord_type_builder(std::istream& is, void* res)
+inline void coord_type_builder(std::string const& str, void* res)
 {
+    std::stringstream ss(str);
     // just use operator >>
-    is >> *reinterpret_cast<Coord*>(res);
+    ss >> *reinterpret_cast<Coord*>(res);
 }
 
 int main(int argc, char const* const argv[])

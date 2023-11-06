@@ -43,17 +43,18 @@ inline std::ostream& operator <<(std::ostream& os, Coord const& c)
     return os;
 }
 
-inline void coord_type_builder(std::istream& is, void* res)
+inline void coord_type_builder(std::string const& str, void* res)
 {
+    std::stringstream ss(str);
     // just use operator >>
-    is >> *reinterpret_cast<Coord*>(res);
+    ss >> *reinterpret_cast<Coord*>(res);
 }
 
 TEST_CASE("1. custom types", "[argument]")
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
 
-    SECTION("1.1. custom type with conversion function") {
+    SECTION("1.1. custom type with factory function") {
         parser.add_argument("--coord")
                 .type(&coord_type_builder).help("coord help");
         parser.add_argument("--const_coord").action("store_const")

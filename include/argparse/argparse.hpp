@@ -2755,8 +2755,25 @@ public:
      *
      *  \return Current argument reference
      */
+    _ARGPARSE_ATTR_DEPRECATED_REASON(
+            "use Argument::type("
+            "std::function<void(std::string const&, void*)>) function. "
+            "will be removed in the next minor release (v1.9.0)")
     Argument&
     type(void (*func)(std::istream&, void*)) _ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Set argument 'type' factory function.
+     *  Called in Namespace::get<> and Namespace::try_get<>
+     *
+     *  \param func Type factory function
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    Argument&
+    type(void (*func)(std::string const&, void*)) _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Set argument 'choices' value
@@ -3281,10 +3298,11 @@ private:
     std::vector<std::string>    m_dest;
 #ifdef _ARGPARSE_CXX_11
     std::function<void(std::string const&)> m_handle;
+    std::function<void(std::string const&, void*)> m_factory;
 #else
     void (*m_handle)(std::string const&);
+    void (*m_factory)(std::string const&, void*);
 #endif  // C++11+
-    void (*m_factory)(std::istream&, void*);
     detail::shared_ptr<_ConflictResolver> m_post_trigger;
     detail::Value<bool>         m_required;
 };
@@ -4071,13 +4089,8 @@ private:
             if (str.empty()) {
                 return T();
             }
-            std::stringstream ss(str);
             T res = T();
-            key->m_factory(ss, &res);
-            if (ss.fail() || !ss.eof()) {
-                throw TypeError("invalid " + detail::Type::name<T>()
-                                + " value: '" + str + "'");
-            }
+            key->m_factory(str, &res);
             return res;
         }
         return str.empty() ? T() : to_type<T>(str);
@@ -4464,14 +4477,10 @@ private:
             if (str.empty()) {
                 return T{};
             }
-            std::stringstream ss(str);
             T res{};
             try {
-                key->m_factory(ss, &res);
+                key->m_factory(str, &res);
             } catch (...) {
-                return std::nullopt;
-            }
-            if (ss.fail() || !ss.eof()) {
                 return std::nullopt;
             }
             return res;
@@ -10420,6 +10429,22 @@ Argument::type(
 _ARGPARSE_INL Argument&
 Argument::type(
         void (*func)(std::istream&, void*)) _ARGPARSE_NOEXCEPT
+{
+#ifdef _ARGPARSE_CXX_11
+    m_factory = [func] (std::string const& str, void* res)
+    {
+        std::stringstream ss(str);
+        func(ss, res);
+    };
+#else
+    (void)func;
+#endif  // C++11+
+    return *this;
+}
+
+_ARGPARSE_INL Argument&
+Argument::type(
+        void (*func)(std::string const&, void*)) _ARGPARSE_NOEXCEPT
 {
     m_factory = _ARGPARSE_MOVE(func);
     return *this;
