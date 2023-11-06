@@ -4005,7 +4005,7 @@ private:
 
     // -- value conversion ----------------------------------------------------
     typedef std::vector<std::string>::const_iterator        data_const_iterator;
-    typedef std::vector<std::string>::difference_type      data_difference_type;
+    typedef std::vector<std::string>::difference_type                     dtype;
 
     template <class T>
     static typename detail::enable_if<
@@ -4128,9 +4128,8 @@ private:
         res.reserve(size / st);
         for (std::size_t i = 0; i < size; i += st) {
             res.push_back(
-                    as_pair<K, V>(
-                        name, key, beg + static_cast<data_difference_type>(i),
-                        beg + static_cast<data_difference_type>(i + st), sep));
+                    as_pair<K, V>(name, key, beg + static_cast<dtype>(i),
+                                  beg + static_cast<dtype>(i + st), sep));
         }
         return res;
     }
@@ -4205,9 +4204,8 @@ private:
         res.reserve(size / st);
         for (std::size_t i = 0; i < size; i += st) {
             res.push_back(
-                    as_tuple<T>(
-                        name, key, beg + static_cast<data_difference_type>(i),
-                        beg + static_cast<data_difference_type>(i + st), sep));
+                    as_tuple<T>(name, key, beg + static_cast<dtype>(i),
+                                beg + static_cast<dtype>(i + st), sep));
         }
         return res;
     }
@@ -4237,12 +4235,12 @@ private:
                 || detail::is_integral<T>::value, bool>::type = true)
 #endif  // C++11+
     {
-        std::vector<T> vec;
-        vec.reserve(static_cast<std::size_t>(end - beg));
+        std::vector<T> res;
+        res.reserve(static_cast<std::size_t>(end - beg));
         for (data_const_iterator it = beg; it != end; ++it) {
-            vec.push_back(as_type<T>(key, *it));
+            res.push_back(as_type<T>(key, *it));
         }
-        return vec;
+        return res;
     }
 
 #ifdef _ARGPARSE_CXX_11
@@ -4253,7 +4251,7 @@ private:
                   && !detail::is_integral<T>::value>::type* = nullptr>
     static std::vector<T>
     as_subvector(
-            key_type const& /*key*/,
+            key_type const& key,
             data_const_iterator beg,
             data_const_iterator end)
 #else
@@ -4269,29 +4267,37 @@ private:
                 && !detail::is_integral<T>::value, bool>::type = true)
 #endif  // C++11+
     {
-        std::vector<T> vec;
+        std::vector<T> res;
         if (end == beg) {
-            return vec;
+            return res;
         }
-        std::string data;
-        for (data_const_iterator it = beg; it != end; ++it) {
-            std::string value = detail::_remove_quotes<std::string>(*it);
-            if (!data.empty() && !value.empty()) {
-                data += detail::_spaces;
+        std::size_t st = 1;
+        std::size_t size = static_cast<std::size_t>(end - beg);
+        if (key->action() & detail::_store_action) {
+            switch (key->m_nargs) {
+                case Argument::NARGS_NUM :
+                    st = key->m_num_args;
+                    break;
+                case Argument::ONE_OR_MORE :
+                case Argument::ZERO_OR_MORE :
+                    st = size;
+                default :
+                    break;
             }
-            data += value;
         }
-        T res = T();
-        std::stringstream ss(data);
-        while (!ss.eof()) {
-            ss >> res;
-            if (ss.fail()) {
-                throw TypeError("invalid " + detail::Type::name<T>()
-                                + " value: '" + data + "'");
-            }
-            vec.push_back(res);
+        if (st == 0) {
+            throw TypeError("unsupported argument with nargs=0");
         }
-        return vec;
+        if (size % st != 0) {
+            throw ValueError("invalid stored argument amount");
+        }
+        res.reserve(size / st);
+        for (std::size_t i = 0; i < size; i += st) {
+            std::vector<std::string> values(beg + static_cast<dtype>(i),
+                                            beg + static_cast<dtype>(i + st));
+            res.push_back(as_type<T>(key, detail::_join(values)));
+        }
+        return res;
     }
 
     template <class T>
@@ -4314,8 +4320,18 @@ private:
     get_vector(
             value_type const& value)
     {
-        return as_subvector<T>(
-                    value.first, value.second().begin(), value.second().end());
+        std::vector<T> res;
+        for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
+            std::vector<T> vector = as_subvector<T>(
+                        value.first,
+                        value.second().begin()
+                            + static_cast<dtype>(
+                                i == 0 ? 0 : value.second.indexes().at(i - 1)),
+                        value.second().begin()
+                            + static_cast<dtype>(value.second.indexes().at(i)));
+            res.insert(res.end(), vector.begin(), vector.end());
+        }
+        return res;
     }
 
     template <class T>
@@ -4328,9 +4344,8 @@ private:
     {
         typedef typename T::value_type V;
         typedef typename V::value_type VV;
-        T res = T();
+        T res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
-            typedef std::vector<std::string>::difference_type dtype;
             std::vector<VV> vector = as_subvector<VV>(
                         value.first,
                         value.second().begin()
@@ -4352,9 +4367,8 @@ private:
     {
         typedef typename T::value_type V;
         typedef typename V::value_type VV;
-        T res = T();
+        T res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
-            typedef std::vector<std::string>::difference_type dtype;
             std::vector<VV> vector = as_subvector<VV>(
                         value.first,
                         value.second().begin()
@@ -4516,9 +4530,8 @@ private:
         std::vector<std::pair<K, V> > res;
         res.reserve(size / st);
         for (std::size_t i = 0; i < size; i += st) {
-            auto pair = as_opt_pair<K, V>(
-                        key, beg + static_cast<data_difference_type>(i),
-                        beg + static_cast<data_difference_type>(i + st), sep);
+            auto pair = as_opt_pair<K, V>(key, beg + static_cast<dtype>(i),
+                                         beg + static_cast<dtype>(i + st), sep);
             if (!pair.has_value()) {
                 return std::nullopt;
             }
@@ -4587,9 +4600,8 @@ private:
         std::vector<T> res;
         res.reserve(size / st);
         for (std::size_t i = 0; i < size; i += st) {
-            auto tuple = as_opt_tuple<T>(
-                        key, beg + static_cast<data_difference_type>(i),
-                        beg + static_cast<data_difference_type>(i + st), sep);
+            auto tuple = as_opt_tuple<T>(key, beg + static_cast<dtype>(i),
+                                         beg + static_cast<dtype>(i + st), sep);
             if (!tuple.has_value()) {
                 return std::nullopt;
             }
@@ -4606,19 +4618,19 @@ private:
     static std::optional<std::vector<T> >
     as_opt_subvector(
             key_type const& key,
-            std::vector<std::string>::const_iterator beg,
-            std::vector<std::string>::const_iterator end)
+            data_const_iterator beg,
+            data_const_iterator end)
     {
-        std::vector<T> vec;
-        vec.reserve(static_cast<std::size_t>(end - beg));
+        std::vector<T> res;
+        res.reserve(static_cast<std::size_t>(end - beg));
         for (auto it = beg; it != end; ++it) {
             auto el = as_opt_type<T>(key, *it);
             if (!el.has_value()) {
                 return std::nullopt;
             }
-            vec.emplace_back(el.value());
+            res.emplace_back(el.value());
         }
-        return vec;
+        return res;
     }
 
     template <class T,
@@ -4628,32 +4640,42 @@ private:
                   && !detail::is_integral<T>::value>::type* = nullptr>
     static std::optional<std::vector<T> >
     as_opt_subvector(
-            key_type const& /*key*/,
-            std::vector<std::string>::const_iterator beg,
-            std::vector<std::string>::const_iterator end)
+            key_type const& key,
+            data_const_iterator beg,
+            data_const_iterator end)
     {
-        std::vector<T> vec;
+        std::vector<T> res;
         if (end == beg) {
-            return vec;
+            return res;
         }
-        std::string data;
-        for (auto it = beg; it != end; ++it) {
-            auto value = detail::_remove_quotes<std::string>(*it);
-            if (!data.empty() && !value.empty()) {
-                data += detail::_spaces;
+        std::size_t st = 1;
+        std::size_t size = static_cast<std::size_t>(end - beg);
+        if (key->action() & detail::_store_action) {
+            switch (key->m_nargs) {
+                case Argument::NARGS_NUM :
+                    st = key->m_num_args;
+                    break;
+                case Argument::ONE_OR_MORE :
+                case Argument::ZERO_OR_MORE :
+                    st = size;
+                default :
+                    break;
             }
-            data += value;
         }
-        T res{};
-        std::stringstream ss(data);
-        while (!ss.eof()) {
-            ss >> res;
-            if (ss.fail()) {
+        if (st == 0 || size % st != 0) {
+            return std::nullopt;
+        }
+        res.reserve(size / st);
+        for (std::size_t i = 0; i < size; i += st) {
+            std::vector<std::string> values(beg + static_cast<dtype>(i),
+                                            beg + static_cast<dtype>(i + st));
+            auto el = as_opt_type<T>(key, detail::_join(values));
+            if (!el.has_value()) {
                 return std::nullopt;
             }
-            vec.push_back(res);
+            res.emplace_back(el.value());
         }
-        return vec;
+        return res;
     }
 
     template <class T>
@@ -4672,8 +4694,21 @@ private:
     opt_vector(
             value_type const& value)
     {
-        return as_opt_subvector<T>(
-                    value.first, value.second().begin(), value.second().end());
+        std::vector<T> res;
+        for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
+            auto vector = as_opt_subvector<T>(
+                        value.first,
+                        value.second().begin()
+                            + static_cast<dtype>(
+                                i == 0 ? 0 : value.second.indexes().at(i - 1)),
+                        value.second().begin()
+                            + static_cast<dtype>(value.second.indexes().at(i)));
+            if (!vector.has_value()) {
+                return std::nullopt;
+            }
+            res.insert(res.end(), vector.value().begin(), vector.value().end());
+        }
+        return res;
     }
 
     template <class T>
@@ -4686,9 +4721,8 @@ private:
     {
         typedef typename T::value_type V;
         typedef typename V::value_type VV;
-        T res = T();
+        T res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
-            typedef std::vector<std::string>::difference_type dtype;
             auto vector = as_opt_subvector<VV>(
                         value.first,
                         value.second().begin()
@@ -4713,9 +4747,8 @@ private:
     {
         typedef typename T::value_type V;
         typedef typename V::value_type VV;
-        T res = T();
+        T res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
-            typedef std::vector<std::string>::difference_type dtype;
             auto vector = as_opt_subvector<VV>(
                         value.first,
                         value.second().begin()
