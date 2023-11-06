@@ -180,7 +180,7 @@ TEST_CASE("2. containers with custom types", "[argument]")
         REQUIRE(args2.get<Coord>("coord").x == 1);
         REQUIRE(args2.get<Coord>("const_coord").x == 1);
 
-        // invalid since NEXT_RELEASE
+        // invalid since v1.8.3
 //        argparse::Namespace args3 = parser.parse_args("--coord 1 2 3 4 5 6 --const_coord");
 //        REQUIRE(args3.get<std::vector<Coord> >("coord").size() == 2);
 //        REQUIRE(args3.get<std::vector<Coord> >("const_coord").size() == 1);
@@ -189,7 +189,7 @@ TEST_CASE("2. containers with custom types", "[argument]")
 //        REQUIRE(args3.try_get<std::vector<Coord> >("const_coord")->size() == 1);
 //#endif  // C++17+
 
-        // work since NEXT_RELEASE
+        // work since v1.8.3
         argparse::Namespace args4 = parser.parse_args("--coord 1 2 3 --coord 4 5 6 --const_coord");
         REQUIRE(args4.get<std::vector<Coord> >("coord").size() == 2);
         REQUIRE(args4.get<std::vector<Coord> >("const_coord").size() == 1);
