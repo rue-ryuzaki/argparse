@@ -4958,7 +4958,7 @@ public:
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
         auto vector = _Storage::as_vector_tuple<typename T::value_type>(
-            key, args.first(), args.second().begin(), args.second().end(), sep);
+              key, args.first, args.second().begin(), args.second().end(), sep);
         return T(vector.begin(), vector.end());
     }
 #endif  // C++11+
@@ -5366,7 +5366,7 @@ public:
             return std::nullopt;
         }
         auto vector = _Storage::as_opt_vector_tuple<typename T::value_type>(
-              args->first(), args->second().begin(), args->second().end(), sep);
+                args->first, args->second().begin(), args->second().end(), sep);
         if (!vector.has_value()) {
             return std::nullopt;
         }
