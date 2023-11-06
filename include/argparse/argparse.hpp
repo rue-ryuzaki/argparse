@@ -12730,7 +12730,7 @@ ArgumentParser::prog(
 {
     if (!value.empty()) {
         m_prog = value;
-        if (has_subparsers()) {
+        if (m_subparsers) {
             m_subparsers->update_prog(prog(), subparser_prog_args());
         }
     }
