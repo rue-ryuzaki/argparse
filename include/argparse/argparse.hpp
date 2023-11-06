@@ -1883,7 +1883,7 @@ class Type
 {
 public:
 #ifdef _ARGPARSE_CXX_11
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   is_constructible<std::string, T>::value
                   || is_stl_pair<T>::value
                   || is_stl_tuple<T>::value>::type* = nullptr>
@@ -1893,7 +1893,7 @@ public:
         return name<T>();
     }
 
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   is_stl_array<T>::value
                   || is_stl_container<T>::value
                   || is_stl_queue<T>::value>::type* = nullptr>
@@ -1903,7 +1903,7 @@ public:
         return basic<typename T::value_type>();
     }
 
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   is_stl_map<T>::value>::type* = nullptr>
     static std::string
     basic()
@@ -1912,7 +1912,7 @@ public:
                 + ", " + name<typename T::mapped_type>() + ">";
     }
 
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   !is_constructible<std::string, T>::value
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
@@ -1963,7 +1963,7 @@ public:
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_11
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   is_constructible<std::string, T>::value>::type* = nullptr>
     static std::string
     name()
@@ -1971,7 +1971,7 @@ public:
         return "std::string";
     }
 
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   is_stl_array<T>::value>::type* = nullptr>
     static std::string
     name()
@@ -1983,7 +1983,7 @@ public:
                 + ", " + std::to_string(std::tuple_size<T>::value) + ">";
     }
 
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   is_stl_container<T>::value
                   || is_stl_queue<T>::value>::type* = nullptr>
     static std::string
@@ -1995,7 +1995,7 @@ public:
                 + "<" + name<typename T::value_type>() + ">";
     }
 
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   is_stl_map<T>::value>::type* = nullptr>
     static std::string
     name()
@@ -2005,7 +2005,7 @@ public:
                 + ", " + name<typename T::mapped_type>() + ">";
     }
 
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   is_stl_pair<T>::value>::type* = nullptr>
     static std::string
     name()
@@ -2014,7 +2014,7 @@ public:
                 + ", " + name<typename T::second_type>() + ">";
     }
 
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   is_stl_tuple<T>::value>::type* = nullptr>
     static std::string
     name()
@@ -2022,7 +2022,7 @@ public:
         return tuple_as_string(type_tag<T>{});
     }
 
-    template <class T, typename std::enable_if<
+    template <class T, typename enable_if<
                   !is_constructible<std::string, T>::value
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
