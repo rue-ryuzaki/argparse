@@ -10336,7 +10336,7 @@ Argument::nargs(
     if (value == "?") {
         if (num != 1) {
             throw ValueError("invalid number of arguments value '"
-                             + std::to_string(num) + "' for nargs '?'");
+                             + detail::_to_string(num) + "' for nargs '?'");
         }
         m_nargs = ZERO_OR_ONE;
     } else if (value == "*") {
