@@ -10830,8 +10830,10 @@ Argument::flags_to_string(
         }
     } else {
         std::vector<std::string> names = get_argument_name(formatter);
-        res += names.size() > 1
-              ? ("[" + detail::_join(names, ", ") + "]") : detail::_join(names);
+        if (names.size() != 1) {
+            throw ValueError("too many values to unpack (expected 1)");
+        }
+        res += names.front();
     }
     return res;
 }
@@ -10971,7 +10973,6 @@ Argument::process_nargs_suffix(
         return;
     }
     std::vector<std::string> names = get_argument_name(formatter);
-    std::size_t const names_size = names.size();
     if (names.size() > 1
             && (m_nargs != NARGS_NUM || names.size() != m_num_args)) {
         throw TypeError("length of metavar tuple does not match nargs");
@@ -10980,8 +10981,7 @@ Argument::process_nargs_suffix(
             && m_nargs == NARGS_NUM && names.size() != m_num_args) {
         names.resize(m_num_args, names.front());
     }
-    std::string const name = names_size > 1
-            ? ("[" + detail::_join(names, ", ") + "]") : detail::_join(names);
+    std::string const name = detail::_join(names);
     if (m_type == Optional && !name.empty() && m_nargs != SUPPRESSING) {
         res += detail::_spaces;
     }
