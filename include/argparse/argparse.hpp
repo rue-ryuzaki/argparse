@@ -2495,22 +2495,24 @@ public:
     /*!
      *  \brief Set argument 'nargs' value
      *
-     *  \param value Nargs value
+     *  \param num Number of arguments
      *
      *  \return Current argument reference
      */
     Argument&
-    nargs(std::size_t value);
+    nargs(std::size_t num);
 
     /*!
      *  \brief Set argument 'nargs' value
      *
      *  \param value Nargs value: "?", "*", "+"
+     *  \param num Number of arguments (default: 1)
      *
      *  \return Current argument reference
      */
     Argument&
-    nargs(std::string const& value);
+    nargs(std::string const& value,
+            std::size_t num = 1);
 
     /*!
      *  \brief Set argument 'nargs' value
@@ -2559,23 +2561,29 @@ public:
     /*!
      *  \brief Set argument 'nargs' zero_or_more ("*") value
      *
+     *  \param num Number of arguments (default: 1)
+     *
      *  \return Current argument reference
      */
     inline Argument&
-    zero_or_more()
+    zero_or_more(
+            std::size_t num = 1)
     {
-        return nargs("*");
+        return nargs("*", num);
     }
 
     /*!
      *  \brief Set argument 'nargs' one_or_more ("+") value
      *
+     *  \param num Number of arguments (default: 1)
+     *
      *  \return Current argument reference
      */
     inline Argument&
-    one_or_more()
+    one_or_more(
+            std::size_t num = 1)
     {
-        return nargs("+");
+        return nargs("+", num);
     }
 
     /*!
@@ -4289,11 +4297,9 @@ private:
         if (key->action() & detail::_store_action) {
             switch (key->m_nargs) {
                 case Argument::NARGS_NUM :
-                    st = key->m_num_args;
-                    break;
                 case Argument::ONE_OR_MORE :
                 case Argument::ZERO_OR_MORE :
-                    st = size;
+                    st = key->m_num_args;
                 default :
                     break;
             }
@@ -4662,11 +4668,9 @@ private:
         if (key->action() & detail::_store_action) {
             switch (key->m_nargs) {
                 case Argument::NARGS_NUM :
-                    st = key->m_num_args;
-                    break;
                 case Argument::ONE_OR_MORE :
                 case Argument::ZERO_OR_MORE :
-                    st = size;
+                    st = key->m_num_args;
                 default :
                     break;
             }
@@ -10279,7 +10283,7 @@ Argument::action(
 
 _ARGPARSE_INL Argument&
 Argument::nargs(
-        std::size_t value)
+        std::size_t num)
 {
     if (m_type == Operand) {
         throw TypeError("got an unexpected keyword argument 'nargs'");
@@ -10296,7 +10300,7 @@ Argument::nargs(
         case argparse::BooleanOptionalAction :
             throw TypeError("got an unexpected keyword argument 'nargs'");
         case argparse::store :
-            if (value == 0) {
+            if (num == 0) {
                 throw
                 ValueError("nargs for store actions must be != 0; if you "
                            "have nothing to store, actions such as store "
@@ -10305,7 +10309,7 @@ Argument::nargs(
             break;
         case argparse::append :
         case argparse::extend :
-            if (value == 0) {
+            if (num == 0) {
                 throw
                 ValueError("nargs for append actions must be != 0; if arg "
                            "strings are not supplying the value to append, "
@@ -10316,19 +10320,24 @@ Argument::nargs(
             throw ValueError("unknown action");
     }
     m_nargs = NARGS_NUM;
-    m_nargs_str = detail::_to_string(value);
-    m_num_args = value;
+    m_nargs_str = detail::_to_string(num);
+    m_num_args = num;
     return *this;
 }
 
 _ARGPARSE_INL Argument&
 Argument::nargs(
-        std::string const& value)
+        std::string const& value,
+        std::size_t num)
 {
-    if (!(action() & detail::_store_action) || m_type == Operand) {
+    if (!(action() & detail::_store_action) || m_type == Operand || num == 0) {
         throw TypeError("got an unexpected keyword argument 'nargs'");
     }
     if (value == "?") {
+        if (num != 1) {
+            throw ValueError("invalid number of arguments value '"
+                             + std::to_string(num) + "' for nargs '?'");
+        }
         m_nargs = ZERO_OR_ONE;
     } else if (value == "*") {
         m_nargs = ZERO_OR_MORE;
@@ -10338,7 +10347,7 @@ Argument::nargs(
         throw ValueError("invalid nargs value '" + value + "'");
     }
     m_nargs_str = value;
-    m_num_args = 1;
+    m_num_args = num;
     return *this;
 }
 

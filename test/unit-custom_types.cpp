@@ -157,7 +157,7 @@ TEST_CASE("2. containers with custom types", "[argument]")
     }
 
     SECTION("2.3. custom type with nargs=*") {
-        parser.add_argument("--coord").action("append").nargs("*").help("coord help");
+        parser.add_argument("--coord").action("append").nargs("*", 3).help("coord help");
         parser.add_argument("--const_coord").action("store_const")
                 .default_value(Coord(0, 0, 0))
                 .const_value(Coord(1, 1, 1)).help("const coord help");
@@ -182,13 +182,14 @@ TEST_CASE("2. containers with custom types", "[argument]")
         REQUIRE(args2.get<Coord>("const_coord").x == 1);
 
         // invalid since v1.8.3
-//        argparse::Namespace args3 = parser.parse_args("--coord 1 2 3 4 5 6 --const_coord");
-//        REQUIRE(args3.get<std::vector<Coord> >("coord").size() == 2);
-//        REQUIRE(args3.get<std::vector<Coord> >("const_coord").size() == 1);
-//#ifdef _ARGPARSE_CXX_17
-//        REQUIRE(args3.try_get<std::vector<Coord> >("coord")->size() == 2);
-//        REQUIRE(args3.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-//#endif  // C++17+
+        // work since NEXT_RELEASE
+        argparse::Namespace args3 = parser.parse_args("--coord 1 2 3 4 5 6 --const_coord");
+        REQUIRE(args3.get<std::vector<Coord> >("coord").size() == 2);
+        REQUIRE(args3.get<std::vector<Coord> >("const_coord").size() == 1);
+#ifdef _ARGPARSE_CXX_17
+        REQUIRE(args3.try_get<std::vector<Coord> >("coord")->size() == 2);
+        REQUIRE(args3.try_get<std::vector<Coord> >("const_coord")->size() == 1);
+#endif  // C++17+
 
         // work since v1.8.3
         argparse::Namespace args4 = parser.parse_args("--coord 1 2 3 --coord 4 5 6 --const_coord");
