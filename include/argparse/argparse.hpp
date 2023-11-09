@@ -10982,12 +10982,11 @@ Argument::process_nargs_suffix(
         return;
     }
     std::vector<std::string> names = get_argument_name(formatter);
-    if (names.size() > 1
-            && (m_nargs != NARGS_NUM || names.size() != m_num_args)) {
+    bool nargs_check = (m_nargs & (NARGS_NUM | ONE_OR_MORE | ZERO_OR_MORE));
+    if (names.size() > 1 && (!nargs_check || names.size() != m_num_args)) {
         throw TypeError("length of metavar tuple does not match nargs");
     }
-    if (names.size() == 1
-            && m_nargs == NARGS_NUM && names.size() != m_num_args) {
+    if (names.size() == 1 && m_num_args > names.size() && nargs_check) {
         names.resize(m_num_args, names.front());
     }
     std::string const name = detail::_join(names);
