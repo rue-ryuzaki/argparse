@@ -2304,6 +2304,9 @@ _ARGPARSE_EXPORT class Argument
         SUPPRESSING     = 0x40,  // argparse::SUPPRESS
     };
 
+    static uint8_t _ARGPARSE_USE_CONSTEXPR
+    _NARGS_COMBINED = NARGS_NUM | ONE_OR_MORE | ZERO_OR_ONE | ZERO_OR_MORE;
+
     enum Type _ARGPARSE_ENUM_TYPE(uint8_t)
     {
         NoType,
@@ -2504,6 +2507,7 @@ public:
 
     /*!
      *  \brief Set argument 'nargs' value
+     *  (combined nargs if num > 1)
      *
      *  \param value Nargs value: "?", "*", "+"
      *  \param num Number of arguments (default: 1)
@@ -2538,28 +2542,37 @@ public:
 
     /*!
      *  \brief Set argument 'nargs' optional ("?") value
+     *  (combined nargs if num > 1)
+     *
+     *  \param num Number of arguments (default: 1)
      *
      *  \return Current argument reference
      */
     inline Argument&
-    optional()
+    optional(
+            std::size_t num = 1)
     {
-        return nargs("?");
+        return nargs("?", num);
     }
 
     /*!
      *  \brief Set argument 'nargs' zero_or_one ("?") value
+     *  (combined nargs if num > 1)
+     *
+     *  \param num Number of arguments (default: 1)
      *
      *  \return Current argument reference
      */
     inline Argument&
-    zero_or_one()
+    zero_or_one(
+            std::size_t num = 1)
     {
-        return nargs("?");
+        return nargs("?", num);
     }
 
     /*!
      *  \brief Set argument 'nargs' zero_or_more ("*") value
+     *  (combined nargs if num > 1)
      *
      *  \param num Number of arguments (default: 1)
      *
@@ -2574,6 +2587,7 @@ public:
 
     /*!
      *  \brief Set argument 'nargs' one_or_more ("+") value
+     *  (combined nargs if num > 1)
      *
      *  \param num Number of arguments (default: 1)
      *
@@ -2605,7 +2619,8 @@ public:
      *  \return Current argument reference
      */
     Argument&
-    const_value(std::string const& value);
+    const_value(
+            std::string const& value);
 
     /*!
      *  \brief Set custom argument 'const' value
@@ -10334,10 +10349,6 @@ Argument::nargs(
         throw TypeError("got an unexpected keyword argument 'nargs'");
     }
     if (value == "?") {
-        if (num != 1) {
-            throw ValueError("invalid number of arguments value '"
-                             + detail::_to_string(num) + "' for nargs '?'");
-        }
         m_nargs = ZERO_OR_ONE;
     } else if (value == "*") {
         m_nargs = ZERO_OR_MORE;
@@ -10982,7 +10993,7 @@ Argument::process_nargs_suffix(
         return;
     }
     std::vector<std::string> names = get_argument_name(formatter);
-    bool nargs_check = (m_nargs & (NARGS_NUM | ONE_OR_MORE | ZERO_OR_MORE));
+    bool nargs_check = (m_nargs & _NARGS_COMBINED);
     if (names.size() > 1 && (!nargs_check || names.size() != m_num_args)) {
         throw TypeError("length of metavar tuple does not match nargs");
     }
@@ -11059,9 +11070,20 @@ Argument::error_nargs(
         case NARGS_NUM :
             return "argument " + arg + ": expected " + nargs() + " arguments";
         case ONE_OR_MORE :
+            if (m_num_args > 1) {
+                return "argument " + arg + ": expected at least "
+                        + detail::_to_string(m_num_args) + "x arguments";
+            }
             return "argument " + arg + ": expected at least one argument";
         case ZERO_OR_ONE :
+            return "argument " + arg + ": expected 0 or "
+                    + detail::_to_string(m_num_args) + " arguments";
         case ZERO_OR_MORE :
+            if (m_num_args > 1) {
+                return "argument " + arg + ": expected 0 or at least "
+                        + detail::_to_string(m_num_args) + "x arguments";
+            }
+            // fallthrough
         case REMAINDING :
         case SUPPRESSING :
         default :
@@ -14222,6 +14244,9 @@ ArgumentParser::storage_store_n_values(
         std::list<std::string>& arguments,
         std::size_t n) const
 {
+    if (n > arguments.size()) {
+        throw std::logic_error("can't store n values");
+    }
     std::vector<std::string> values;
     values.reserve(n);
     for (std::size_t i = 0; i < n; ++i) {
@@ -14294,7 +14319,10 @@ ArgumentParser::storage_optional_store_func(
                 storage_have_value(parsers, tmp);
                 break;
         }
-    } else if (tmp->m_nargs == Argument::NARGS_NUM && n < tmp->m_num_args) {
+    } else if ((tmp->m_nargs & Argument::_NARGS_COMBINED)
+               && (n < tmp->m_num_args
+                   || (tmp->m_nargs != Argument::NARGS_NUM
+                       && tmp->m_num_args > 1 && n % tmp->m_num_args != 0))) {
         parsers.back().parser->throw_error(tmp->error_nargs(arg));
     }
 }
@@ -14316,6 +14344,7 @@ ArgumentParser::storage_optional_store(
         }
         std::size_t n = 0;
         std::vector<std::string> values;
+        bool read_next = true;
         do {
             if (++i == args.size()) {
                 storage_optional_store_func(parsers, arg, tmp, n);
@@ -14339,9 +14368,25 @@ ArgumentParser::storage_optional_store(
                     break;
                 }
             }
-        } while (!(tmp->m_nargs & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))
-                 && (tmp->m_nargs != Argument::NARGS_NUM
-                     || n != tmp->m_num_args));
+            switch (tmp->m_nargs) {
+                case Argument::NARGS_DEF :
+                    read_next = false;
+                    break;
+                case Argument::NARGS_NUM :
+                case Argument::ZERO_OR_ONE :
+                    read_next = tmp->m_num_args != n;
+                    break;
+                case Argument::ONE_OR_MORE :
+                case Argument::ZERO_OR_MORE :
+                case Argument::REMAINDING :
+                case Argument::SUPPRESSING :
+                    read_next = true;
+                    break;
+                default :
+                    read_next = false;
+                    break;
+            }
+        } while (read_next);
         if (!values.empty()) {
             storage_store_values(parsers, tmp, values);
         }
@@ -14435,10 +14480,10 @@ ArgumentParser::match_positional_minimum(
     }
     switch (arg->m_nargs) {
         case Argument::NARGS_DEF :
-        case Argument::ONE_OR_MORE :
             storage_store_value(parsers, arg, arguments.front());
             arguments.pop_front();
             break;
+        case Argument::ONE_OR_MORE :
         case Argument::NARGS_NUM :
             storage_store_n_values(parsers, arg, arguments, arg->m_num_args);
             break;
@@ -14527,10 +14572,10 @@ ArgumentParser::match_positional_optional(
             storage_store_n_values(parsers, arg, arguments, arg->m_num_args);
             break;
         case Argument::ZERO_OR_ONE :
-            if (over_args < one_args) {
+            if (over_args + arg->m_num_args <= one_args) {
                 storage_store_value(parsers, arg, arguments.front());
                 arguments.pop_front();
-                ++over_args;
+                over_args += arg->m_num_args;
             } else {
                 storage_store_default_value(parsers, arg);
             }
@@ -14625,10 +14670,10 @@ ArgumentParser::finish_analyze_positional(
             min_amount += arg->m_num_args;
             break;
         case Argument::ZERO_OR_ONE :
-            ++one_args;
+            one_args += arg->m_num_args;
             break;
         case Argument::ONE_OR_MORE :
-            ++min_amount;
+            min_amount += arg->m_num_args;
             // fallthrough
         case Argument::ZERO_OR_MORE :
             more_args = true;
