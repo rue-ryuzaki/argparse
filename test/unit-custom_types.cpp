@@ -156,7 +156,7 @@ TEST_CASE("2. containers with custom types", "[argument]")
 #endif  // C++17+
     }
 
-    SECTION("2.3. custom type with nargs=*") {
+    SECTION("2.3. custom type with combined nargs=*") {
         parser.add_argument("--coord").action("append").nargs("*", 3).help("coord help");
         parser.add_argument("--const_coord").action("store_const")
                 .default_value(Coord(0, 0, 0))
@@ -199,5 +199,10 @@ TEST_CASE("2. containers with custom types", "[argument]")
         REQUIRE(args4.try_get<std::vector<Coord> >("coord")->size() == 2);
         REQUIRE(args4.try_get<std::vector<Coord> >("const_coord")->size() == 1);
 #endif  // C++17+
+
+        REQUIRE_THROWS(parser.parse_args("--coord 1"));
+        REQUIRE_THROWS(parser.parse_args("--coord 1 2"));
+        REQUIRE_THROWS(parser.parse_args("--coord 1 2 3 4"));
+        REQUIRE_THROWS(parser.parse_args("--coord 1 2 3 4 5"));
     }
 }

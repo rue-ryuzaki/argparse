@@ -14245,7 +14245,7 @@ ArgumentParser::storage_store_n_values(
         std::size_t n) const
 {
     if (n > arguments.size()) {
-        throw std::logic_error("can't store n values");
+        throw ValueError("can't store " +  detail::_to_string(n) + " values");
     }
     std::vector<std::string> values;
     values.reserve(n);
@@ -14573,8 +14573,8 @@ ArgumentParser::match_positional_optional(
             break;
         case Argument::ZERO_OR_ONE :
             if (over_args + arg->m_num_args <= one_args) {
-                storage_store_value(parsers, arg, arguments.front());
-                arguments.pop_front();
+                storage_store_n_values(
+                            parsers, arg, arguments, arg->m_num_args);
                 over_args += arg->m_num_args;
             } else {
                 storage_store_default_value(parsers, arg);
