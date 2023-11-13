@@ -65,6 +65,7 @@ The work of the parser on older versions of compilers is not guaranteed.
   - [environment variables](#environment-variables)
   - [operand argument type](#operand-argument)
   - [Argument::implicit_value](#argumentimplicit_value)
+  - [combined nargs](#combined-nargs)
   - [Action::language](#actionlanguage)
   - [comment_prefix_chars](#comment_prefix_chars)
 - Python API support:
@@ -553,6 +554,11 @@ with usage:
 ./a.out --foo=baz
   foo = 'baz'
 ```
+### Combined nargs
+Nargs ```"?"```, ```"*"``` or ```"+"``` can be combined with ```N``` (an integer):
+- ```nargs("?", N)``` - 0 or N arguments
+- ```nargs("*", N)``` - 0 or more (1*N, 2*N, 3*N, 4*N ...) arguments
+- ```nargs("+", N)``` - N or more (2*N, 3*N, 4*N, 5*N ...) arguments
 ### Action::language
 Allows you to add support for displaying help in multiple languages.
 
