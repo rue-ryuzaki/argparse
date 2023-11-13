@@ -4309,15 +4309,9 @@ private:
         }
         std::size_t st = 1;
         std::size_t size = static_cast<std::size_t>(end - beg);
-        if (key->action() & detail::_store_action) {
-            switch (key->m_nargs) {
-                case Argument::NARGS_NUM :
-                case Argument::ONE_OR_MORE :
-                case Argument::ZERO_OR_MORE :
-                    st = key->m_num_args;
-                default :
-                    break;
-            }
+        if ((key->action() & detail::_store_action)
+                && (key->m_nargs & Argument::_NARGS_COMBINED)) {
+            st = key->m_num_args;
         }
         if (st == 0) {
             throw TypeError("unsupported argument with nargs=0");
@@ -4680,15 +4674,9 @@ private:
         }
         std::size_t st = 1;
         std::size_t size = static_cast<std::size_t>(end - beg);
-        if (key->action() & detail::_store_action) {
-            switch (key->m_nargs) {
-                case Argument::NARGS_NUM :
-                case Argument::ONE_OR_MORE :
-                case Argument::ZERO_OR_MORE :
-                    st = key->m_num_args;
-                default :
-                    break;
-            }
+        if ((key->action() & detail::_store_action)
+                && (key->m_nargs & Argument::_NARGS_COMBINED)) {
+            st = key->m_num_args;
         }
         if (st == 0 || size % st != 0) {
             return std::nullopt;
@@ -10756,7 +10744,7 @@ _ARGPARSE_INL std::string
 Argument::metavar() const
 {
     std::string res = detail::_join(m_metavar(), ", ");
-    return m_metavar().size() > 1 ? ("[" + res + "]") : res;
+    return m_metavar().size() > 1 ? ("(" + res + ")") : res;
 }
 
 _ARGPARSE_INL std::string const&
@@ -14492,6 +14480,7 @@ ArgumentParser::match_positional_minimum(
             storage_store_default_value(parsers, arg);
             break;
         case Argument::REMAINDING :
+        case Argument::SUPPRESSING :
         default :
             break;
     }
@@ -14539,6 +14528,7 @@ ArgumentParser::match_positional_more_zero(
                 storage_store_default_value(parsers, arg);
             }
             break;
+        case Argument::SUPPRESSING :
         default :
             break;
     }
@@ -14583,6 +14573,7 @@ ArgumentParser::match_positional_optional(
         case Argument::ONE_OR_MORE :
         case Argument::ZERO_OR_MORE :
         case Argument::REMAINDING :
+        case Argument::SUPPRESSING :
         default :
             break;
     }
@@ -14681,6 +14672,7 @@ ArgumentParser::finish_analyze_positional(
         case Argument::REMAINDING :
             more_args = true;
             break;
+        case Argument::SUPPRESSING :
         default :
             break;
     }
@@ -14810,7 +14802,7 @@ ArgumentParser::check_abbreviations(
         std::vector<std::string>& arguments,
         std::size_t i) const
 {
-    std::string& arg = arguments.at(i);
+    std::string const& arg = arguments.at(i);
     if (!arg.empty() && !parsers.front().storage.exists(arg)
             && detail::_is_optional(arg,
                                     parsers.back().parser->prefix_chars(),
