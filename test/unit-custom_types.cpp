@@ -157,6 +157,7 @@ TEST_CASE("2. containers with custom types", "[argument]")
     }
 
     SECTION("2.3. custom type with combined nargs=*") {
+        // combined nargs since v1.8.4
         parser.add_argument("--coord").action("append").nargs("*", 3).help("coord help");
         parser.add_argument("--const_coord").action("store_const")
                 .default_value(Coord(0, 0, 0))
@@ -181,8 +182,8 @@ TEST_CASE("2. containers with custom types", "[argument]")
         REQUIRE(args2.get<Coord>("coord").x == 1);
         REQUIRE(args2.get<Coord>("const_coord").x == 1);
 
-        // invalid since v1.8.3
-        // work since NEXT_RELEASE
+        // invalid in v1.8.3
+        // work since v1.8.4
         argparse::Namespace args3 = parser.parse_args("--coord 1 2 3 4 5 6 --const_coord");
         REQUIRE(args3.get<std::vector<Coord> >("coord").size() == 2);
         REQUIRE(args3.get<std::vector<Coord> >("const_coord").size() == 1);

@@ -5,7 +5,7 @@
 *                         __| |
 * MIT License
 *
-* Argument parser for C++ (ArgumentParser v1.8.3)
+* Argument parser for C++ (ArgumentParser v1.8.4)
 *
 * Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 *
@@ -81,7 +81,7 @@
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 8
-#define ARGPARSE_VERSION_PATCH 3
+#define ARGPARSE_VERSION_PATCH 4
 
 /*!
  *  This macro turns the version numbers into a numeric value:
@@ -2791,7 +2791,7 @@ public:
      *
      *  \param func Type factory function
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.8.4
      *
      *  \return Current argument reference
      */
