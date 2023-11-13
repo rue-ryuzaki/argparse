@@ -14513,7 +14513,8 @@ ArgumentParser::match_positional_more_zero(
             storage_store_n_values(parsers, arg, arguments, arg->m_num_args);
             break;
         case Argument::ONE_OR_MORE :
-            storage_store_n_values(parsers, arg, arguments, 1 + over_args);
+            storage_store_n_values(
+                        parsers, arg, arguments, arg->m_num_args + over_args);
             over_args = 0;
             break;
         case Argument::ZERO_OR_ONE :
