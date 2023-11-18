@@ -8363,7 +8363,7 @@ _utf8_length(
     std::size_t res = 0;
     std::size_t i = 0;
     while (i < str.size()) {
-        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str[i]));
+        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str.at(i)));
         if (cp_size == 0) {
             err << "argparse error [skip]: invalid code point for string "
                 << "'" << str << "'" << std::endl;
@@ -8375,13 +8375,13 @@ _utf8_length(
             return std::make_pair(false, str.size());
         }
         for (std::size_t n = 1; n < cp_size; ++n) {
-            if (str[i + n] == '\0') {
+            if (str.at(i + n) == '\0') {
                 err << "argparse error [skip]: string '" << str << "' "
                     << "is NUL-terminated in the middle of the code point"
                     << std::endl;
                 return std::make_pair(false, str.size());
-            } else if ((_char_to_u8(str[i + n]) & _utf8_ct_mask)
-                                               != _utf8_ct_bits) {
+            } else if ((_char_to_u8(str.at(i + n)) & _utf8_ct_mask)
+                                                  != _utf8_ct_bits) {
                 err << "argparse error [skip]: invalid byte in code point"
                     << " for string '" << str << "'" << std::endl;
                 return std::make_pair(false, str.size());
@@ -8671,26 +8671,26 @@ _to_upper(std::string const& str)
     }
     std::size_t i = 0;
     for (std::size_t n = 0; n < num_chars.second; ++n) {
-        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str[i]));
+        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str.at(i)));
         codepoint cp = 0;
         switch (cp_size) {
             case 1:
-                cp =  (_char_to_u32(str[i    ]) & ~_utf8_1b_mask);
+                cp =  (_char_to_u32(str.at(i    )) & ~_utf8_1b_mask);
                 break;
             case 2:
-                cp = ((_char_to_u32(str[i    ]) & ~_utf8_2b_mask) <<  6)
-                   |  (_char_to_u32(str[i + 1]) & ~_utf8_ct_mask);
+                cp = ((_char_to_u32(str.at(i    )) & ~_utf8_2b_mask) <<  6)
+                   |  (_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask);
                 break;
             case 3:
-                cp = ((_char_to_u32(str[i    ]) & ~_utf8_3b_mask) << 12)
-                   | ((_char_to_u32(str[i + 1]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_u32(str[i + 2]) & ~_utf8_ct_mask);
+                cp = ((_char_to_u32(str.at(i    )) & ~_utf8_3b_mask) << 12)
+                   | ((_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_u32(str.at(i + 2)) & ~_utf8_ct_mask);
                 break;
             case 4:
-                cp = ((_char_to_u32(str[i    ]) & ~_utf8_4b_mask) << 18)
-                   | ((_char_to_u32(str[i + 1]) & ~_utf8_ct_mask) << 12)
-                   | ((_char_to_u32(str[i + 2]) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_u32(str[i + 3]) & ~_utf8_ct_mask);
+                cp = ((_char_to_u32(str.at(i    )) & ~_utf8_4b_mask) << 18)
+                   | ((_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask) << 12)
+                   | ((_char_to_u32(str.at(i + 2)) & ~_utf8_ct_mask) <<  6)
+                   |  (_char_to_u32(str.at(i + 3)) & ~_utf8_ct_mask);
                 break;
             default:
                 // should never happen
@@ -8903,7 +8903,7 @@ _resolve_conflict(
         std::vector<std::string>& values)
 {
     for (std::size_t i = 0; i < vec.size(); ++i) {
-        _resolve_conflict(vec[i], values);
+        _resolve_conflict(vec.at(i), values);
     }
 }
 
@@ -9232,7 +9232,7 @@ _split_to_args(
                 value += c;
                 break;
             }
-            if (str[i + 1] != _space) {
+            if (str.at(i + 1) != _space) {
                 value += c;
             }
             continue;
@@ -14944,8 +14944,8 @@ ArgumentParser::separate_arg_abbrev(
         std::vector<std::string> flags;
         flags.reserve(8);
         for (std::size_t i = 0; i < name.size(); ) {
-            std::size_t cp_size
-                   = detail::_utf8_codepoint_size(detail::_char_to_u8(name[i]));
+            std::size_t cp_size = detail::_utf8_codepoint_size(
+                        detail::_char_to_u8(name.at(i)));
             if (cp_size == 0) {
                 // invalid string
                 cp_size = 1;
