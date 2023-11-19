@@ -630,25 +630,11 @@ public:
 } _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
 
 namespace detail {
-_ARGPARSE_INLINE_VARIABLE std::size_t _ARGPARSE_USE_CONSTEXPR _min_width = 33;
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_char      = '-';
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_chars[]   = "-";
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _pseudo_arg[]     = "--";
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _space            = ' ';
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equal            = '=';
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _spaces[]         = " ";
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equals[]         = "=";
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR
-                                                   _suppress[] = "==SUPPRESS==";
 
 _ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
-_bool_action = argparse::store_true | argparse::store_false;
-_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _store_action = argparse::store | argparse::append | argparse::extend;
-_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
-_const_action = argparse::store_const | argparse::append_const;
-_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
-_store_const_action = _store_action | _const_action;
 
 // -- standard type traits ----------------------------------------------------
 #ifdef _ARGPARSE_CXX_11
@@ -1639,63 +1625,6 @@ make_shared(U const& u)
 }
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_11
-template <class T = std::string, class... Args>
-std::vector<T>
-_vector(Args... args)
-{
-    return std::vector<T>{ std::move(args)... };
-}
-#else
-template <class T>
-std::vector<T>
-_vector(T const& arg1)
-{
-    std::vector<T> res;
-    res.push_back(arg1);
-    return res;
-}
-
-template <class T>
-std::vector<T>
-_vector(T const& arg1,
-        T const& arg2)
-{
-    std::vector<T> res;
-    res.push_back(arg1);
-    res.push_back(arg2);
-    return res;
-}
-
-template <class T>
-std::vector<T>
-_vector(T const& arg1,
-        T const& arg2,
-        T const& arg3)
-{
-    std::vector<T> res;
-    res.push_back(arg1);
-    res.push_back(arg2);
-    res.push_back(arg3);
-    return res;
-}
-
-template <class T>
-std::vector<T>
-_vector(T const& arg1,
-        T const& arg2,
-        T const& arg3,
-        T const& arg4)
-{
-    std::vector<T> res;
-    res.push_back(arg1);
-    res.push_back(arg2);
-    res.push_back(arg3);
-    res.push_back(arg4);
-    return res;
-}
-#endif  // C++11+
-
 // -- translations support ----------------------------------------------------
 // since v1.7.1
 class TranslationPack
@@ -1840,11 +1769,6 @@ _split(std::string const& str,
         int32_t maxsplit = -1);
 
 std::vector<std::string>
-_split_lines(
-        std::string const& str,
-        bool keepends = false);
-
-std::vector<std::string>
 _split_to_args(
         std::string const& str,
         std::ostream& err = std::cerr);
@@ -1869,7 +1793,7 @@ _get_type_name()
 #elif defined(__GNUC__)
     std::string res = __PRETTY_FUNCTION__;
     std::string::size_type pos = res.find('=') + 2;
-#if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 6))
+#if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
     return res.substr(pos, res.find(';', pos) - pos);
 #else
     return res.substr(pos, res.find(',', pos) - pos);
@@ -8167,10 +8091,83 @@ private:
 // -- implementation ----------------------------------------------------------
 #ifdef _ARGPARSE_INL
 namespace detail {
+_ARGPARSE_INLINE_VARIABLE std::size_t _ARGPARSE_USE_CONSTEXPR _min_width = 33;
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_char      = '-';
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_chars[]   = "-";
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _pseudo_arg[]     = "--";
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _space            = ' ';
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equals[]         = "=";
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR
+                                                   _suppress[] = "==SUPPRESS==";
+
+_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
+_bool_action = argparse::store_true | argparse::store_false;
+_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
+_const_action = argparse::store_const | argparse::append_const;
+_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
+_store_const_action = _store_action | _const_action;
+
 typedef detail::shared_ptr<Argument> pArgument;
 typedef std::vector<pArgument> pArguments;
 
 // -- templates ---------------------------------------------------------------
+#ifdef _ARGPARSE_CXX_11
+template <class T = std::string, class... Args>
+std::vector<T>
+_vector(Args... args)
+{
+    return std::vector<T>{ std::move(args)... };
+}
+#else
+template <class T>
+std::vector<T>
+_vector(T const& arg1)
+{
+    std::vector<T> res;
+    res.push_back(arg1);
+    return res;
+}
+
+template <class T>
+std::vector<T>
+_vector(T const& arg1,
+        T const& arg2)
+{
+    std::vector<T> res;
+    res.push_back(arg1);
+    res.push_back(arg2);
+    return res;
+}
+
+template <class T>
+std::vector<T>
+_vector(T const& arg1,
+        T const& arg2,
+        T const& arg3)
+{
+    std::vector<T> res;
+    res.push_back(arg1);
+    res.push_back(arg2);
+    res.push_back(arg3);
+    return res;
+}
+
+template <class T>
+std::vector<T>
+_vector(T const& arg1,
+        T const& arg2,
+        T const& arg3,
+        T const& arg4)
+{
+    std::vector<T> res;
+    res.push_back(arg1);
+    res.push_back(arg2);
+    res.push_back(arg3);
+    res.push_back(arg4);
+    return res;
+}
+#endif  // C++11+
+
 template <class T>
 void
 _insert_to_end(
@@ -9150,7 +9147,7 @@ _split(std::string const& str,
 _ARGPARSE_INL std::vector<std::string>
 _split_lines(
         std::string const& str,
-        bool keepends)
+        bool keepends = false)
 {
     std::vector<std::string> res;
     std::string value;
