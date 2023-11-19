@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.0)
+if (${CMAKE_VERSION} VERSION_LESS "3.12")
+    cmake_minimum_required(VERSION 3.0)
+else()
+    cmake_minimum_required(VERSION 3.0...3.12)
+endif()
 
 include(cmake/prelude.cmake)
 
