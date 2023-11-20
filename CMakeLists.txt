@@ -6,22 +6,19 @@ endif()
 
 include(cmake/prelude.cmake)
 
-set(VERSION_MAJOR 1)
-set(VERSION_MINOR 8)
-set(VERSION_PATCH 4)
+FILE(READ include/argparse/argparse.hpp CURRENT_VERSION_H)
+STRING(REGEX MATCH "\#define ARGPARSE_VERSION_MAJOR +([0-9]+)" MAJOR_VERSION ${CURRENT_VERSION_H})
+SET(LIBRARY_VERSION_MAJOR ${CMAKE_MATCH_1})
+STRING(REGEX MATCH "\#define ARGPARSE_VERSION_MINOR +([0-9]+)" MINOR_VERSION ${CURRENT_VERSION_H})
+SET(LIBRARY_VERSION_MINOR ${CMAKE_MATCH_1})
+STRING(REGEX MATCH "\#define ARGPARSE_VERSION_PATCH +([0-9]+)" PATCH_VERSION ${CURRENT_VERSION_H})
+SET(LIBRARY_VERSION_PATCH ${CMAKE_MATCH_1})
+message("argparse version: ${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}")
 
-if (${CMAKE_VERSION} VERSION_LESS "3.9")
-    project("ArgumentParser"
-        VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-        LANGUAGES CXX
-    )
-else()
-    project("ArgumentParser"
-        DESCRIPTION "C++ argument parser"
-        VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-        LANGUAGES CXX
-    )
-endif()
+project("ArgumentParser"
+    VERSION ${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}
+    LANGUAGES CXX
+)
 
 set(PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
 
@@ -33,14 +30,16 @@ if (NOT CMAKE_CXX_STANDARD)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+message("argparse build standard: C++${CMAKE_CXX_STANDARD}")
+
 include_directories(include)
 
-file(GLOB ARGPARSE_HEADER "include/argparse/argparse*.hpp")
+file(GLOB LIBRARY_HEADER "include/argparse/argparse*.hpp")
 
 if (${CMAKE_VERSION} VERSION_LESS "3.19")
     add_library(argparse INTERFACE)
 else()
-    add_library(argparse INTERFACE ${ARGPARSE_HEADER})
+    add_library(argparse INTERFACE ${LIBRARY_HEADER})
 endif()
 add_library(argparse::argparse ALIAS argparse)
 
@@ -95,10 +94,10 @@ else()
     )
 endif()
 
-set(ARGPARSE_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc)
+set(LIBRARY_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc)
 
-install(FILES ${ARGPARSE_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
-install(FILES ${ARGPARSE_CONFIG} DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig)
+install(FILES ${LIBRARY_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
+install(FILES ${LIBRARY_CONFIG} DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig)
 
 set(CPACK_PACKAGE_NAME "cpp-argparse-dev")
 set(CPACK_PACKAGE_MAINTAINER "Mikhail Golubchikov")
@@ -108,14 +107,18 @@ if (${CMAKE_VERSION} VERSION_LESS "3.12")
 endif()
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CPACK_RESOURCE_FILE_README}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "C++ argument parser")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(CPACK_GENERATOR DEB)
     ## DEB
+    set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
     set(CPACK_DEBIAN_PACKAGE_NAME "${CPACK_PACKAGE_NAME}")
     set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Python-like header-only C++ argument parser")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_MAINTAINER}")
     set(CPACK_DEBIAN_PACKAGE_SUGGESTS "cmake, build-essential")
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/debian/changelog")
     if (NOT ${CMAKE_VERSION} VERSION_LESS "3.6")
         set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
     endif()
