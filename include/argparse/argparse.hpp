@@ -1736,17 +1736,9 @@ _to_string(
     return ss.str();
 }
 
-bool
-_have_quotes(
-        std::string const& str);
-
-template <class T>
-typename enable_if<is_constructible<std::string, T>::value, T>::type
+std::string
 _remove_quotes(
-        std::string const& str)
-{
-    return _have_quotes(str) ? T(str.substr(1, str.size() - 2)) : T(str);
-}
+        std::string const& str);
 
 std::string
 _replace(std::string str,
@@ -4031,7 +4023,7 @@ private:
     as_type(key_type const& key,
             std::string const& value)
     {
-        std::string str = detail::_remove_quotes<std::string>(value);
+        std::string str = detail::_remove_quotes(value);
         if (key->m_factory) {
             if (str.empty()) {
                 return T();
@@ -4411,7 +4403,7 @@ private:
             key_type const& key,
             std::string const& value)
     {
-        std::string str = detail::_remove_quotes<std::string>(value);
+        std::string str = detail::_remove_quotes(value);
         if (key->m_factory) {
             if (str.empty()) {
                 return T{};
@@ -8926,6 +8918,13 @@ _have_quotes(
 }
 
 _ARGPARSE_INL std::string
+_remove_quotes(
+        std::string const& str)
+{
+    return _have_quotes(str) ? str.substr(1, str.size() - 2) : str;
+}
+
+_ARGPARSE_INL std::string
 _replace(std::string str,
         char old,
         std::string const& value)
@@ -10755,7 +10754,7 @@ Argument::handle(
         std::string const& str) const
 {
     if (m_handle) {
-        m_handle(detail::_remove_quotes<std::string>(str));
+        m_handle(detail::_remove_quotes(str));
     }
 }
 
@@ -14180,7 +14179,7 @@ ArgumentParser::validate_argument_value(
     detail::Value<std::vector<std::string> > const& choices = arg.m_choices;
     if (!(arg.m_nargs & (Argument::REMAINDING | Argument::SUPPRESSING))
             && choices.has_value()) {
-        std::string str = detail::_remove_quotes<std::string>(value);
+        std::string str = detail::_remove_quotes(value);
         if (!str.empty() && !detail::_exists(str, choices.value())) {
             parser->throw_error(
                         "argument " + (arg.m_flags.empty()
@@ -15694,7 +15693,7 @@ ArgumentParser::handle(
         std::string const& str) const
 {
     if (m_handle) {
-        m_handle(detail::_remove_quotes<std::string>(str));
+        m_handle(detail::_remove_quotes(str));
     }
 }
 
