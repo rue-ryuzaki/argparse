@@ -2182,17 +2182,8 @@ _check_non_count_action(
         Action action);
 }  // namespace detail
 
-/*!
- *  \brief _ConflictResolver class
- */
-struct _ConflictResolver
-{
-    virtual ~_ConflictResolver() _ARGPARSE_NOEXCEPT { }
-
-    virtual void
-    check_conflict_arg(
-            Argument const* arg)                                            = 0;
-};
+// Forward declaration
+class _ArgumentData;
 
 /*!
  *  \brief Argument class
@@ -3242,7 +3233,7 @@ private:
     void (*m_handle)(std::string const&);
     void (*m_factory)(std::string const&, void*);
 #endif  // C++11+
-    detail::shared_ptr<_ConflictResolver> m_post_trigger;
+    detail::shared_ptr<_ArgumentData> m_post_trigger;
     detail::Value<bool>         m_required;
 };
 
@@ -3303,9 +3294,10 @@ protected:
 /*!
  *  \brief _ArgumentData class
  */
-class _ArgumentData : public _ConflictResolver
+class _ArgumentData
 {
     friend class _ArgumentGroup;
+    friend class Argument;
     friend class ArgumentGroup;
     friend class ArgumentParser;
     friend class MutuallyExclusiveGroup;
@@ -3321,7 +3313,7 @@ class _ArgumentData : public _ConflictResolver
 
     void
     check_conflict_arg(
-            Argument const* arg) _ARGPARSE_OVERRIDE _ARGPARSE_FINAL;
+            Argument const* arg);
 
     void
     update_help(bool add_help,
