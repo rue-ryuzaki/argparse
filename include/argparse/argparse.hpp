@@ -1760,11 +1760,6 @@ _split(std::string const& str,
         std::string const& sep,
         int32_t maxsplit = -1);
 
-std::vector<std::string>
-_split_to_args(
-        std::string const& str,
-        std::ostream& err = std::cerr);
-
 bool
 _string_to_bool(
         std::string const& str) _ARGPARSE_NOEXCEPT;
@@ -6740,10 +6735,7 @@ public:
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_args(
-            Namespace const& space = Namespace()) const
-    {
-        return parse_args(m_parsed_arguments, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Parse concrete arguments
@@ -6753,27 +6745,11 @@ public:
      *
      *  \return Object with parsed arguments
      */
-#ifdef _ARGPARSE_CXX_11
-    template <class T,
-              typename std::enable_if<
-                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_args(
-            T const& args,
-            Namespace const& space = Namespace()) const
-#else
-    template <class T>
-    _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_args(
-            T const& args, Namespace const& space = Namespace(),
-            typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value, bool
-            >::type = true) const
-#endif  // C++11+
-    {
-        return parse_args(detail::_split_to_args(args), space);
-    }
+            std::string const& args,
+            Namespace const& space = Namespace()) const;
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -6787,13 +6763,10 @@ public:
      *  \return Object with parsed arguments
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    inline Namespace
+    Namespace
     parse_args(
             std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return parse_args(std::vector<std::string>{ args }, space);
-    }
+            Namespace const& space = Namespace()) const;
 #endif  // C++11+
 
     /*!
@@ -6820,10 +6793,7 @@ public:
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_args(
-            Namespace const& space = Namespace()) const
-    {
-        return parse_known_args(m_parsed_arguments, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Parse known concrete arguments
@@ -6833,28 +6803,11 @@ public:
      *
      *  \return Object with parsed arguments
      */
-#ifdef _ARGPARSE_CXX_11
-    template <class T,
-              typename std::enable_if<
-                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_args(
-            T const& args,
-            Namespace const& space = Namespace()) const
-#else
-    template <class T>
-    _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace
-    parse_known_args(
-            T const& args, Namespace const& space = Namespace(),
-            typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value, bool
-            >::type = true) const
-#endif  // C++11+
-    {
-        return parse_known_args(detail::_split_to_args(args), space);
-    }
+            std::string const& args,
+            Namespace const& space = Namespace()) const;
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -6868,13 +6821,10 @@ public:
      *  \return Object with parsed arguments
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    inline Namespace
+    Namespace
     parse_known_args(
             std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return parse_known_args(std::vector<std::string>{ args }, space);
-    }
+            Namespace const& space = Namespace()) const;
 #endif  // C++11+
 
     /*!
@@ -6901,10 +6851,7 @@ public:
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_intermixed_args(
-            Namespace const& space = Namespace()) const
-    {
-        return parse_intermixed_args(m_parsed_arguments, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Parse intermixed concrete arguments
@@ -6914,28 +6861,11 @@ public:
      *
      *  \return Object with parsed arguments
      */
-#ifdef _ARGPARSE_CXX_11
-    template <class T,
-              typename std::enable_if<
-                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_intermixed_args(
-            T const& args,
-            Namespace const& space = Namespace()) const
-#else
-    template <class T>
-    _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace
-    parse_intermixed_args(
-            T const& args, Namespace const& space = Namespace(),
-            typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value, bool
-            >::type = true) const
-#endif  // C++11+
-    {
-        return parse_intermixed_args(detail::_split_to_args(args), space);
-    }
+            std::string const& args,
+            Namespace const& space = Namespace()) const;
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -6949,13 +6879,10 @@ public:
      *  \return Object with parsed arguments
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    inline Namespace
+    Namespace
     parse_intermixed_args(
             std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return parse_intermixed_args(std::vector<std::string>{ args }, space);
-    }
+            Namespace const& space = Namespace()) const;
 #endif  // C++11+
 
     /*!
@@ -6982,10 +6909,7 @@ public:
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(
-            Namespace const& space = Namespace()) const
-    {
-        return parse_known_intermixed_args(m_parsed_arguments, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Parse known intermixed concrete arguments
@@ -6995,27 +6919,11 @@ public:
      *
      *  \return Object with parsed arguments
      */
-#ifdef _ARGPARSE_CXX_11
-    template <class T,
-              typename std::enable_if<
-                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(
-            T const& args,
-            Namespace const& space = Namespace()) const
-#else
-    template <class T>
-    _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace parse_known_intermixed_args(
-            T const& args, Namespace const& space = Namespace(),
-            typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value, bool
-            >::type = true) const
-#endif  // C++11+
-    {
-        return parse_known_intermixed_args(detail::_split_to_args(args), space);
-    }
+            std::string const& args,
+            Namespace const& space = Namespace()) const;
 
 #ifdef _ARGPARSE_CXX_11
     /*!
@@ -7029,14 +6937,10 @@ public:
      *  \return Object with parsed arguments
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    inline Namespace
+    Namespace
     parse_known_intermixed_args(
             std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return parse_known_intermixed_args(
-                    std::vector<std::string>{ args }, space);
-    }
+            Namespace const& space = Namespace()) const;
 #endif  // C++11+
 
     /*!
@@ -7064,14 +6968,10 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    template <typename = void>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_args(
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_args(m_parsed_arguments, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse concrete arguments.
@@ -7084,17 +6984,11 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_args(
-            T const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_args(detail::_split_to_args(args), space);
-    }
+            std::string const& args,
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse concrete arguments.
@@ -7108,13 +7002,10 @@ public:
      *  \return Object with parsed arguments or std::nullopt
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    inline std::optional<Namespace>
+    std::optional<Namespace>
     try_parse_args(
             std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_args(std::vector<std::string>{ args }, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse concrete arguments.
@@ -7143,14 +7034,10 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    template <typename = void>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_args(
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_known_args(m_parsed_arguments, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse known concrete arguments.
@@ -7163,17 +7050,11 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_args(
-            T const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_known_args(detail::_split_to_args(args), space);
-    }
+            std::string const& args,
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse known concrete arguments.
@@ -7187,13 +7068,10 @@ public:
      *  \return Object with parsed arguments or std::nullopt
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    inline std::optional<Namespace>
+    std::optional<Namespace>
     try_parse_known_args(
             std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_known_args(std::vector<std::string>{ args }, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse known concrete arguments.
@@ -7222,14 +7100,10 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    template <typename = void>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_intermixed_args(
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_intermixed_args(m_parsed_arguments, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse intermixed concrete arguments.
@@ -7242,17 +7116,11 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_intermixed_args(
-            T const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_intermixed_args(detail::_split_to_args(args), space);
-    }
+            std::string const& args,
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse intermixed concrete arguments.
@@ -7266,14 +7134,10 @@ public:
      *  \return Object with parsed arguments or std::nullopt
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    inline std::optional<Namespace>
+    std::optional<Namespace>
     try_parse_intermixed_args(
             std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_intermixed_args(
-                    std::vector<std::string>{ args }, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse intermixed concrete arguments.
@@ -7302,14 +7166,10 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    template <typename = void>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_intermixed_args(
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_known_intermixed_args(m_parsed_arguments, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse known intermixed concrete arguments.
@@ -7322,18 +7182,11 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    template <class T,
-              typename std::enable_if<
-                 std::is_constructible<std::string, T>::value>::type* = nullptr>
     _ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_intermixed_args(
-            T const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_known_intermixed_args(
-                    detail::_split_to_args(args), space);
-    }
+            std::string const& args,
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse known intermixed concrete arguments.
@@ -7347,14 +7200,10 @@ public:
      *  \return Object with parsed arguments or std::nullopt
      */
     _ARGPARSE_ATTR_MAYBE_UNUSED
-    inline std::optional<Namespace>
+    std::optional<Namespace>
     try_parse_known_intermixed_args(
             std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const
-    {
-        return try_parse_known_intermixed_args(
-                    std::vector<std::string>{ args }, space);
-    }
+            Namespace const& space = Namespace()) const;
 
     /*!
      *  \brief Try parse known intermixed concrete arguments.
@@ -9205,7 +9054,7 @@ _process_quotes(
 _ARGPARSE_INL std::vector<std::string>
 _split_to_args(
         std::string const& str,
-        std::ostream& err)
+        std::ostream& err = std::cerr)
 {
     std::vector<std::string> res;
     std::string value;
@@ -13324,11 +13173,61 @@ ArgumentParser::set_defaults(
 
 _ARGPARSE_INL Namespace
 ArgumentParser::parse_args(
+        Namespace const& space) const
+{
+    return parse_args(m_parsed_arguments, space);
+}
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_args(
+        std::string const& args,
+        Namespace const& space) const
+{
+    return parse_args(detail::_split_to_args(args), space);
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return parse_args(std::vector<std::string>{ args }, space);
+}
+#endif  // C++11+
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
 {
     return on_parse_arguments(args, false, false, space);
 }
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_known_args(
+        Namespace const& space) const
+{
+    return parse_known_args(m_parsed_arguments, space);
+}
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_known_args(
+        std::string const& args,
+        Namespace const& space) const
+{
+    return parse_known_args(detail::_split_to_args(args), space);
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_known_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return parse_known_args(std::vector<std::string>{ args }, space);
+}
+#endif  // C++11+
 
 _ARGPARSE_INL Namespace
 ArgumentParser::parse_known_args(
@@ -13340,11 +13239,61 @@ ArgumentParser::parse_known_args(
 
 _ARGPARSE_INL Namespace
 ArgumentParser::parse_intermixed_args(
+        Namespace const& space) const
+{
+    return parse_intermixed_args(m_parsed_arguments, space);
+}
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_intermixed_args(
+        std::string const& args,
+        Namespace const& space) const
+{
+    return parse_intermixed_args(detail::_split_to_args(args), space);
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_intermixed_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return parse_intermixed_args(std::vector<std::string>{ args }, space);
+}
+#endif  // C++11+
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_intermixed_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
 {
     return on_parse_arguments(args, false, true, space);
 }
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_known_intermixed_args(
+        Namespace const& space) const
+{
+    return parse_known_intermixed_args(m_parsed_arguments, space);
+}
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_known_intermixed_args(
+        std::string const& args,
+        Namespace const& space) const
+{
+    return parse_known_intermixed_args(detail::_split_to_args(args), space);
+}
+
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_known_intermixed_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return parse_known_intermixed_args(std::vector<std::string>{ args }, space);
+}
+#endif  // C++11+
 
 _ARGPARSE_INL Namespace
 ArgumentParser::parse_known_intermixed_args(
@@ -13357,10 +13306,56 @@ ArgumentParser::parse_known_intermixed_args(
 #ifdef _ARGPARSE_CXX_17
 _ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_args(
+        Namespace const& space) const
+{
+    return try_parse_args(m_parsed_arguments, space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_args(
+        std::string const& args,
+        Namespace const& space) const
+{
+    return try_parse_args(detail::_split_to_args(args), space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return try_parse_args(std::vector<std::string>{ args }, space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
 {
     return on_try_parse_arguments(args, false, false, space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_known_args(
+        Namespace const& space) const
+{
+    return try_parse_known_args(m_parsed_arguments, space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_known_args(
+        std::string const& args,
+        Namespace const& space) const
+{
+    return try_parse_known_args(detail::_split_to_args(args), space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_known_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return try_parse_known_args(std::vector<std::string>{ args }, space);
 }
 
 _ARGPARSE_INL std::optional<Namespace>
@@ -13373,10 +13368,58 @@ ArgumentParser::try_parse_known_args(
 
 _ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_intermixed_args(
+        Namespace const& space) const
+{
+    return try_parse_intermixed_args(m_parsed_arguments, space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_intermixed_args(
+        std::string const& args,
+        Namespace const& space) const
+{
+    return try_parse_intermixed_args(detail::_split_to_args(args), space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_intermixed_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return try_parse_intermixed_args(
+                std::vector<std::string>{ args }, space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_intermixed_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
 {
     return on_try_parse_arguments(args, false, true, space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_known_intermixed_args(
+        Namespace const& space) const
+{
+    return try_parse_known_intermixed_args(m_parsed_arguments, space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_known_intermixed_args(
+        std::string const& args,
+        Namespace const& space) const
+{
+    return try_parse_known_intermixed_args(detail::_split_to_args(args), space);
+}
+
+_ARGPARSE_INL std::optional<Namespace>
+ArgumentParser::try_parse_known_intermixed_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return try_parse_known_intermixed_args(
+                std::vector<std::string>{ args }, space);
 }
 
 _ARGPARSE_INL std::optional<Namespace>
