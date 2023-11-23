@@ -2949,8 +2949,13 @@ public:
      *
      *  \return Current argument reference
      */
+#ifdef _ARGPARSE_CXX_11
+    Argument&
+    handle(std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT;
+#else
     Argument&
     handle(void (*func)(std::string const&)) _ARGPARSE_NOEXCEPT;
+#endif  // C++11+
 
     /*!
      *  \brief Get argument flags values
@@ -3182,7 +3187,11 @@ private:
     detail::Value<std::string>  m_version;
     detail::Value<std::vector<std::string> > m_metavar;
     std::vector<std::string>    m_dest;
+#ifdef _ARGPARSE_CXX_11
+    std::function<void(std::string const&)> m_handle;
+#else
     void (*m_handle)(std::string const&);
+#endif  // C++11+
     void (*m_factory)(std::string const&, void*);
     detail::shared_ptr<_ArgumentData> m_post_trigger;
     detail::Value<bool>         m_required;
@@ -6604,8 +6613,13 @@ public:
      *
      *  \return Current argument parser reference
      */
+#ifdef _ARGPARSE_CXX_11
+    ArgumentParser&
+    handle(std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT;
+#else
     ArgumentParser&
     handle(void (*func)(std::string const&)) _ARGPARSE_NOEXCEPT;
+#endif  // C++11+
 
     /*!
      *  \brief Set argument parser 'handle' function.
@@ -6616,8 +6630,13 @@ public:
      *
      *  \return Current argument parser reference
      */
+#ifdef _ARGPARSE_CXX_11
+    ArgumentParser&
+    handle(std::function<void(Namespace const&)> func) _ARGPARSE_NOEXCEPT;
+#else
     ArgumentParser&
     handle(void (*func)(Namespace const&)) _ARGPARSE_NOEXCEPT;
+#endif  // C++11+
 
     /*!
      *  \brief Get the default value for a specific argument.
@@ -7822,8 +7841,13 @@ private:
     std::list<std::pair<std::string, std::string> > m_env_variables;
     pSubparser m_subparsers;
     std::size_t m_subparsers_position;
+#ifdef _ARGPARSE_CXX_11
+    std::function<void(std::string const&)> m_handle;
+    std::function<void(Namespace const&)> m_parse_handle;
+#else
     void (*m_handle)(std::string const&);
     void (*m_parse_handle)(Namespace const&);
+#endif  // C++11+
     detail::Value<_SUPPRESS> m_argument_default_type;
     bool m_allow_abbrev;
     bool m_exit_on_error;
@@ -10377,6 +10401,15 @@ Argument::dest(
     return *this;
 }
 
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Argument&
+Argument::handle(
+        std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT
+{
+    m_handle = std::move(func);
+    return *this;
+}
+#else
 _ARGPARSE_INL Argument&
 Argument::handle(
         void (*func)(std::string const&)) _ARGPARSE_NOEXCEPT
@@ -10384,6 +10417,7 @@ Argument::handle(
     m_handle = _ARGPARSE_MOVE(func);
     return *this;
 }
+#endif  // C++11+
 
 _ARGPARSE_INL std::vector<std::string> const&
 Argument::flags() const _ARGPARSE_NOEXCEPT
@@ -12959,6 +12993,23 @@ ArgumentParser::has_subparsers() const _ARGPARSE_NOEXCEPT
     return m_subparsers.get();
 }
 
+#ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL ArgumentParser&
+ArgumentParser::handle(
+        std::function<void(std::string const&)> func) _ARGPARSE_NOEXCEPT
+{
+    m_handle = std::move(func);
+    return *this;
+}
+
+_ARGPARSE_INL ArgumentParser&
+ArgumentParser::handle(
+        std::function<void(Namespace const&)> func) _ARGPARSE_NOEXCEPT
+{
+    m_parse_handle = std::move(func);
+    return *this;
+}
+#else
 _ARGPARSE_INL ArgumentParser&
 ArgumentParser::handle(
         void (*func)(std::string const&)) _ARGPARSE_NOEXCEPT
@@ -12974,6 +13025,7 @@ ArgumentParser::handle(
     m_parse_handle = _ARGPARSE_MOVE(func);
     return *this;
 }
+#endif  // C++11+
 
 _ARGPARSE_INL std::string
 ArgumentParser::get_default(
