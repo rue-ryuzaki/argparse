@@ -644,7 +644,6 @@ using std::is_constructible;
 using std::is_floating_point;
 using std::is_integral;
 using std::is_same;
-using std::is_base_of;
 using std::false_type;
 using std::true_type;
 
@@ -750,27 +749,6 @@ struct integral_constant
 
 typedef integral_constant<bool, true> true_type;
 typedef integral_constant<bool, false> false_type;
-
-template <class B, class D>
-struct _is_base_of_helper
-{
-    operator B*() const;
-    operator D*();
-};
-
-template <class B, class D>
-struct is_base_of
-{
-    typedef char yes;
-    typedef int no;
-
-    template <class T>
-    static yes check(D*, T);
-    static no check(B*, int);
-
-    static const bool value
-              = sizeof(check(_is_base_of_helper<B, D>(), int())) == sizeof(yes);
-};
 
 template <class T, class U>
 struct is_same                                                    :false_type{};
@@ -6098,21 +6076,10 @@ public:
      *
      *  \return Current argument parser reference
      */
-#ifdef _ARGPARSE_CXX_11
-    template <class T, typename detail::enable_if<
-                  detail::is_base_of<HelpFormatter, T>::value>::type* = nullptr>
-    inline ArgumentParser&
+    template <class T>
+    ArgumentParser&
     formatter_class(
             T const& value)
-#else
-    template <class T>
-    inline ArgumentParser&
-    formatter_class(
-            T const& value, typename detail::enable_if<
-                detail::is_base_of<HelpFormatter, T>::value
-                || detail::is_same<HelpFormatter, T>::value, bool
-            >::type = true)
-#endif  // C++11+
     {
         m_formatter = detail::make_shared<T>(value);
         return *this;
