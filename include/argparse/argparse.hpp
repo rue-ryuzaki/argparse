@@ -1107,9 +1107,13 @@ struct is_stl_pair<T, typename voider<typename T::first_type,
                                     typename T::second_type>::type>:true_type{};
 
 template <class T>
+struct is_stl_array                                               :false_type{};
+template <class T>
 struct is_stl_container                                           :false_type{};
 template <class T, typename U = void>
 struct is_stl_container_paired                                    :false_type{};
+template <class T, typename U = void>
+struct is_stl_container_tupled                                    :false_type{};
 template <class T>
 struct is_stl_matrix                                              :false_type{};
 template <class T>
@@ -1117,9 +1121,10 @@ struct is_stl_matrix_queue                                        :false_type{};
 template <class T>
 struct is_stl_queue                                               :false_type{};
 
-#ifdef _ARGPARSE_CXX_11
 template <class T>
-struct is_stl_array                                               :false_type{};
+struct is_stl_tuple                                               :false_type{};
+
+#ifdef _ARGPARSE_CXX_11
 template <class T, std::size_t N>
 struct is_stl_array<std::array                          <T, N> >   :true_type{};
 
@@ -1145,8 +1150,6 @@ struct is_stl_container<std::unordered_set              <Args...> >:true_type{};
 template <class _1st, class _2nd, template <class...> class container>
 struct is_stl_container_paired<container<std::pair<_1st, _2nd> > > :true_type{};
 
-template <class T, typename U = void>
-struct is_stl_container_tupled                                    :false_type{};
 template <class... Args, template <class...> class container>
 struct is_stl_container_tupled<container<std::tuple<Args...> > >   :true_type{};
 
@@ -1225,8 +1228,6 @@ struct is_stl_queue<std::stack                          <Args...> >:true_type{};
 template <class... Args>
 struct is_stl_queue<std::queue                          <Args...> >:true_type{};
 
-template <class T>
-struct is_stl_tuple                                               :false_type{};
 template <class... Args>
 struct is_stl_tuple<std::tuple                          <Args...> >:true_type{};
 #else
@@ -4760,40 +4761,6 @@ public:
         return _Storage::get_single_value<T>(key, args);
     }
 
-#ifdef _ARGPARSE_CXX_11
-    /*!
-     *  \brief Get parsed argument value as std array type.
-     *  If argument not parsed, returns array of default values.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    typename std::enable_if<
-        detail::is_stl_array<typename std::decay<T>::type>::value, T>::type
-    get(std::string const& key) const
-    {
-        auto const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        auto vector = _Storage::get_vector<typename T::value_type>(args);
-        T res{};
-        if (res.size() != vector.size()) {
-            std::cerr << "argparse error [skip]: array size mismatch: was "
-                      << res.size() << ", expected " << vector.size()
-                      << std::endl;
-        }
-        auto size = res.size();
-        if (size > vector.size()) {
-            size = vector.size();
-        }
-        std::copy_n(vector.begin(), size, res.begin());
-        return res;
-    }
-#endif  // C++11+
-
     /*!
      *  \brief Get parsed argument value as std containers types.
      *  If argument not parsed, returns empty container.
@@ -4806,9 +4773,7 @@ public:
     _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_container<typename detail::decay<T>::type>::value
-#ifdef _ARGPARSE_CXX_11
-     && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
-#endif  // C++11+
+     && !detail::is_stl_container_tupled<typename detail::decay<T>::type>::value
      && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
      && !detail::is_stl_matrix<typename detail::decay<T>::type>::value
      && !detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
@@ -4849,33 +4814,6 @@ public:
               key, args.first, args.second().begin(), args.second().end(), sep);
         return T(vector.begin(), vector.end());
     }
-
-#ifdef _ARGPARSE_CXX_11
-    /*!
-     *  \brief Get parsed argument value as tupled container types.
-     *  If argument not parsed, returns empty container.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    typename std::enable_if<
-        detail::is_stl_container_tupled<typename std::decay<T>::type>::value, T
-    >::type
-    get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        auto const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        auto vector = _Storage::as_vector_tuple<typename T::value_type>(
-              key, args.first, args.second().begin(), args.second().end(), sep);
-        return T(vector.begin(), vector.end());
-    }
-#endif  // C++11+
 
     /*!
      *  \brief Get parsed argument value as mapped types.
@@ -4986,6 +4924,63 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
+     *  \brief Get parsed argument value as std array type.
+     *  If argument not parsed, returns array of default values.
+     *
+     *  \param key Argument destination name or flag
+     *
+     *  \return Parsed argument value
+     */
+    template <class T>
+    _ARGPARSE_ATTR_NODISCARD
+    typename std::enable_if<
+        detail::is_stl_array<typename std::decay<T>::type>::value, T>::type
+    get(std::string const& key) const
+    {
+        auto const& args = data(key);
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
+        detail::_check_non_count_action(key, args.first->action());
+        auto vector = _Storage::get_vector<typename T::value_type>(args);
+        T res{};
+        if (res.size() != vector.size()) {
+            std::cerr << "argparse error [skip]: array size mismatch: was "
+                      << res.size() << ", expected " << vector.size()
+                      << std::endl;
+        }
+        auto size = res.size();
+        if (size > vector.size()) {
+            size = vector.size();
+        }
+        std::copy_n(vector.begin(), size, res.begin());
+        return res;
+    }
+
+    /*!
+     *  \brief Get parsed argument value as tupled container types.
+     *  If argument not parsed, returns empty container.
+     *
+     *  \param key Argument destination name or flag
+     *  \param sep Separator (default: '=')
+     *
+     *  \return Parsed argument value
+     */
+    template <class T>
+    _ARGPARSE_ATTR_NODISCARD
+    typename std::enable_if<
+        detail::is_stl_container_tupled<typename std::decay<T>::type>::value, T
+    >::type
+    get(std::string const& key,
+            char sep = detail::_equal) const
+    {
+        auto const& args = data(key);
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
+        detail::_check_non_count_action(key, args.first->action());
+        auto vector = _Storage::as_vector_tuple<typename T::value_type>(
+              key, args.first, args.second().begin(), args.second().end(), sep);
+        return T(vector.begin(), vector.end());
+    }
+
+    /*!
      *  \brief Get parsed argument value as tuple types.
      *  If argument not parsed, returns empty tuple.
      *
@@ -5026,10 +5021,8 @@ public:
         !detail::is_constructible<std::string, T>::value
         && !detail::is_floating_point<T>::value
         && !detail::is_integral<T>::value
-#ifdef _ARGPARSE_CXX_11
-        && !detail::is_stl_array<typename std::decay<T>::type>::value
-        && !detail::is_stl_tuple<typename std::decay<T>::type>::value
-#endif  // C++11+
+        && !detail::is_stl_array<typename detail::decay<T>::type>::value
+        && !detail::is_stl_tuple<typename detail::decay<T>::type>::value
         && !detail::is_stl_container<typename detail::decay<T>::type>::value
         && !detail::is_stl_map<typename detail::decay<T>::type>::value
         && !detail::is_stl_pair<typename detail::decay<T>::type>::value
@@ -6686,24 +6679,6 @@ public:
             std::string const& args,
             Namespace const& space = Namespace()) const;
 
-#ifdef _ARGPARSE_CXX_11
-    /*!
-     *  \brief Parse concrete arguments
-     *
-     *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace (default: none)
-     *
-     *  \since v1.7.2
-     *
-     *  \return Object with parsed arguments
-     */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace
-    parse_args(
-            std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const;
-#endif  // C++11+
-
     /*!
      *  \brief Parse concrete arguments
      *
@@ -6743,24 +6718,6 @@ public:
     parse_known_args(
             std::string const& args,
             Namespace const& space = Namespace()) const;
-
-#ifdef _ARGPARSE_CXX_11
-    /*!
-     *  \brief Parse known concrete arguments
-     *
-     *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace (default: none)
-     *
-     *  \since v1.7.2
-     *
-     *  \return Object with parsed arguments
-     */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace
-    parse_known_args(
-            std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const;
-#endif  // C++11+
 
     /*!
      *  \brief Parse known concrete arguments
@@ -6802,24 +6759,6 @@ public:
             std::string const& args,
             Namespace const& space = Namespace()) const;
 
-#ifdef _ARGPARSE_CXX_11
-    /*!
-     *  \brief Parse intermixed concrete arguments
-     *
-     *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace (default: none)
-     *
-     *  \since v1.7.2
-     *
-     *  \return Object with parsed arguments
-     */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace
-    parse_intermixed_args(
-            std::initializer_list<std::string> const& args,
-            Namespace const& space = Namespace()) const;
-#endif  // C++11+
-
     /*!
      *  \brief Parse intermixed concrete arguments
      *
@@ -6860,7 +6799,69 @@ public:
             std::string const& args,
             Namespace const& space = Namespace()) const;
 
+    /*!
+     *  \brief Parse known intermixed concrete arguments
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace (default: none)
+     *
+     *  \return Object with parsed arguments
+     */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
+    Namespace
+    parse_known_intermixed_args(
+            std::vector<std::string> const& args,
+            Namespace const& space = Namespace()) const;
+
 #ifdef _ARGPARSE_CXX_11
+    /*!
+     *  \brief Parse concrete arguments
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace (default: none)
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments
+     */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
+    Namespace
+    parse_args(
+            std::initializer_list<std::string> const& args,
+            Namespace const& space = Namespace()) const;
+
+    /*!
+     *  \brief Parse known concrete arguments
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace (default: none)
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments
+     */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
+    Namespace
+    parse_known_args(
+            std::initializer_list<std::string> const& args,
+            Namespace const& space = Namespace()) const;
+
+    /*!
+     *  \brief Parse intermixed concrete arguments
+     *
+     *  \param args Arguments to parse
+     *  \param space Parsed arguments namespace (default: none)
+     *
+     *  \since v1.7.2
+     *
+     *  \return Object with parsed arguments
+     */
+    _ARGPARSE_ATTR_MAYBE_UNUSED
+    Namespace
+    parse_intermixed_args(
+            std::initializer_list<std::string> const& args,
+            Namespace const& space = Namespace()) const;
+
     /*!
      *  \brief Parse known intermixed concrete arguments
      *
@@ -6877,20 +6878,6 @@ public:
             std::initializer_list<std::string> const& args,
             Namespace const& space = Namespace()) const;
 #endif  // C++11+
-
-    /*!
-     *  \brief Parse known intermixed concrete arguments
-     *
-     *  \param args Arguments to parse
-     *  \param space Parsed arguments namespace (default: none)
-     *
-     *  \return Object with parsed arguments
-     */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
-    Namespace
-    parse_known_intermixed_args(
-            std::vector<std::string> const& args,
-            Namespace const& space = Namespace()) const;
 
 #ifdef _ARGPARSE_CXX_17
     /*!
@@ -13040,16 +13027,6 @@ ArgumentParser::parse_args(
     return parse_args(detail::_split_to_args(args), space);
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL Namespace
-ArgumentParser::parse_args(
-        std::initializer_list<std::string> const& args,
-        Namespace const& space) const
-{
-    return parse_args(std::vector<std::string>{ args }, space);
-}
-#endif  // C++11+
-
 _ARGPARSE_INL Namespace
 ArgumentParser::parse_args(
         std::vector<std::string> const& args,
@@ -13072,16 +13049,6 @@ ArgumentParser::parse_known_args(
 {
     return parse_known_args(detail::_split_to_args(args), space);
 }
-
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL Namespace
-ArgumentParser::parse_known_args(
-        std::initializer_list<std::string> const& args,
-        Namespace const& space) const
-{
-    return parse_known_args(std::vector<std::string>{ args }, space);
-}
-#endif  // C++11+
 
 _ARGPARSE_INL Namespace
 ArgumentParser::parse_known_args(
@@ -13106,16 +13073,6 @@ ArgumentParser::parse_intermixed_args(
     return parse_intermixed_args(detail::_split_to_args(args), space);
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL Namespace
-ArgumentParser::parse_intermixed_args(
-        std::initializer_list<std::string> const& args,
-        Namespace const& space) const
-{
-    return parse_intermixed_args(std::vector<std::string>{ args }, space);
-}
-#endif  // C++11+
-
 _ARGPARSE_INL Namespace
 ArgumentParser::parse_intermixed_args(
         std::vector<std::string> const& args,
@@ -13139,7 +13096,39 @@ ArgumentParser::parse_known_intermixed_args(
     return parse_known_intermixed_args(detail::_split_to_args(args), space);
 }
 
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_known_intermixed_args(
+        std::vector<std::string> const& args,
+        Namespace const& space) const
+{
+    return on_parse_arguments(args, true, true, space);
+}
+
 #ifdef _ARGPARSE_CXX_11
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return parse_args(std::vector<std::string>{ args }, space);
+}
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_known_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return parse_known_args(std::vector<std::string>{ args }, space);
+}
+
+_ARGPARSE_INL Namespace
+ArgumentParser::parse_intermixed_args(
+        std::initializer_list<std::string> const& args,
+        Namespace const& space) const
+{
+    return parse_intermixed_args(std::vector<std::string>{ args }, space);
+}
+
 _ARGPARSE_INL Namespace
 ArgumentParser::parse_known_intermixed_args(
         std::initializer_list<std::string> const& args,
@@ -13148,14 +13137,6 @@ ArgumentParser::parse_known_intermixed_args(
     return parse_known_intermixed_args(std::vector<std::string>{ args }, space);
 }
 #endif  // C++11+
-
-_ARGPARSE_INL Namespace
-ArgumentParser::parse_known_intermixed_args(
-        std::vector<std::string> const& args,
-        Namespace const& space) const
-{
-    return on_parse_arguments(args, true, true, space);
-}
 
 #ifdef _ARGPARSE_CXX_17
 _ARGPARSE_INL std::optional<Namespace>
