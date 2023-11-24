@@ -9591,9 +9591,7 @@ Argument::make_argument(
     return detail::make_shared<Argument>(
                 Argument(std::move(flags), std::move(name), type));
 }
-#endif  // C++11+
-
-#ifndef _ARGPARSE_CXX_11
+#else
 _ARGPARSE_INL
 Argument::Argument(
         std::string const& flag)
@@ -9719,7 +9717,7 @@ Argument::Argument(
 {
     m_help[std::string()] = std::string();
 }
-#endif  // C++11-
+#endif  // C++11+
 
 _ARGPARSE_INL
 Argument::Argument(
