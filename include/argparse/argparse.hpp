@@ -3700,14 +3700,6 @@ class _Storage
             return m_exists;
         }
 
-        inline void
-        push_default(
-                std::string const& value)
-        {
-            m_is_default = true;
-            push_back(value);
-        }
-
         inline bool
         is_default() const _ARGPARSE_NOEXCEPT
         {
@@ -3744,21 +3736,12 @@ class _Storage
             return m_values.at(i);
         }
 
-#ifdef _ARGPARSE_CXX_11
-        inline void
-        emplace_back(
-                std::string&& value)
-        {
-            m_values.emplace_back(std::move(value));
-            m_indexes.push_back(m_values.size());
-            m_exists = true;
-        }
-#endif  // C++11+
-
         inline void
         push_back(
-                std::string const& value)
+                std::string const& value,
+                bool is_default = false)
         {
+            m_is_default = is_default;
             m_values.push_back(value);
             m_indexes.push_back(m_values.size());
             m_exists = true;
@@ -11537,7 +11520,7 @@ _Storage::store_default_value(
                 & (argparse::store | argparse::BooleanOptionalAction))) {
         mapped_type& arg_data = at(key);
         if (arg_data.empty()) {
-            arg_data.push_default(key->m_default.value());
+            arg_data.push_back(key->m_default.value(), true);
             on_process_store(key, key->m_default.value());
             key->handle(key->m_default.value());
         }
@@ -14997,11 +14980,9 @@ ArgumentParser::default_values_post_trigger(
                     && (it->first->m_type == Argument::Optional
                         || it->first->m_type == Argument::Operand)) {
                 detail::Value<std::string> const& dv = it->first->m_default;
-                if (dv.has_value()) {
-                    it->second.push_default(dv.value());
-                    storage.on_process_store(it->first, dv.value());
-                } else if (it->first->action() & detail::_bool_action) {
-                    it->second.push_back(dv.value());
+                if (dv.has_value()
+                        || (it->first->action() & detail::_bool_action)) {
+                    it->second.push_back(dv.value(), dv.has_value());
                     storage.on_process_store(it->first, dv.value());
                 }
             }
@@ -15033,17 +15014,16 @@ ArgumentParser::namespace_post_trigger(
     pi_iterator p = parsers.begin();
     _Storage const* storage = &(*p).storage;
     for (++p; p != parsers.end(); ++p) {
-        _Storage& sub_storage = (*p).storage;
-        for (_Storage::iterator it = sub_storage.begin();
-             it != sub_storage.end(); ) {
+        _Storage& current = (*p).storage;
+        for (_Storage::iterator it = current.begin(); it != current.end(); ) {
             if (storage->exists(it->first)) {
                 it->second = storage->at(it->first);
                 ++it;
             } else {
-                it = sub_storage.erase(it);
+                it = current.erase(it);
             }
         }
-        (*p).parser->parse_handle(only_known, sub_storage, unrecognized_args);
+        (*p).parser->parse_handle(only_known, current, unrecognized_args);
         storage = &(*p).storage;
     }
 }
