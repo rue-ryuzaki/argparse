@@ -3214,6 +3214,7 @@ protected:
     limit_help_flags(
             HelpFormatter const& formatter,
             std::size_t& limit) const                                       = 0;
+
     virtual void
     print_help(std::ostream& os,
             HelpFormatter const& formatter,
@@ -5492,11 +5493,451 @@ operator <<(
     return os;
 }
 
+// Forward declaration
+class ArgumentParser;
+
+/*!
+ *  \brief _ParserGroup class
+ */
+class _ParserGroup : public _Group
+{
+    friend class ArgumentParser;
+    friend class ParserGroup;
+    friend class SubParsers;
+
+    typedef detail::shared_ptr<ArgumentParser> pParser;
+    typedef std::list<pParser>::const_iterator prs_iterator;
+
+    explicit
+    _ParserGroup(
+            std::string const& title,
+            std::string const& description);
+
+    static pParser
+    make_parser(
+            std::string const& name);
+
+public:
+    /*!
+     *  \brief Get parser group 'help' message for default language
+     *
+     *  \return Parser group 'help' message
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    std::string const&
+    help() const;
+
+    /*!
+     *  \brief Get parser group 'metavar' value
+     *
+     *  \return Parser group 'metavar' value
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    std::string const&
+    metavar() const _ARGPARSE_NOEXCEPT;
+
+private:
+    void
+    limit_help_flags(
+            HelpFormatter const&,
+            std::size_t& limit) const _ARGPARSE_OVERRIDE;
+
+    void
+    print_help(
+            std::ostream& os,
+            HelpFormatter const& formatter,
+            std::string const& prog,
+            std::size_t limit,
+            std::size_t width,
+            std::string const& lang) const _ARGPARSE_OVERRIDE;
+
+    void
+    print_parser_group(
+            std::ostream& os,
+            HelpFormatter const& formatter,
+            std::size_t limit,
+            std::size_t width,
+            std::string const& lang) const;
+
+    std::vector<std::string>
+    _parser_names() const;
+
+    std::string
+    _flags_to_string() const;
+
+    // -- data ----------------------------------------------------------------
+    detail::TranslationPack m_help;
+    detail::Value<std::string> m_metavar;
+    std::list<pParser> m_parsers;
+    detail::Value<_SUPPRESS> m_help_type;
+};
+
+// Forward declaration
+class SubParsers;
+
+/*!
+ *  \brief ParserGroup class
+ *
+ *  \since NEXT_RELEASE
+ */
+class ParserGroup : public _ParserGroup
+{
+    friend class ArgumentParser;
+    friend class SubParsers;
+
+    explicit
+    ParserGroup(
+            SubParsers* parent,
+            std::string const& title,
+            std::string const& description);
+
+    static detail::shared_ptr<ParserGroup>
+    make_parsergroup(
+            SubParsers* parent,
+            std::string const& title,
+            std::string const& description);
+
+public:
+    using _ParserGroup::title;
+    using _ParserGroup::description;
+    using _ParserGroup::help;
+    using _ParserGroup::metavar;
+
+    /*!
+     *  \brief Create parser group object from another parser group
+     *
+     *  \param orig Parser group object to copy
+     *
+     *  \return Parser group object
+     */
+    ParserGroup(
+            ParserGroup const& orig);
+
+    /*!
+     *  \brief Copy parser group object from another parser group
+     *
+     *  \param rhs Parser group object to copy
+     *
+     *  \return Current parser group reference
+     */
+    ParserGroup&
+    operator =(
+            ParserGroup const& rhs);
+
+    /*!
+     *  \brief Set parser group 'title' value for selected language
+     *
+     *  \param value Title value
+     *  \param lang Language value (default: "")
+     *
+     *  \return Current parser group reference
+     */
+    ParserGroup&
+    title(std::string const& value,
+            std::string const& lang = std::string());
+
+    /*!
+     *  \brief Set parser group 'description' value for selected language
+     *
+     *  \param value Description value
+     *  \param lang Language value (default: "")
+     *
+     *  \return Current parser group reference
+     */
+    ParserGroup&
+    description(
+            std::string const& value,
+            std::string const& lang = std::string());
+
+    /*!
+     *  \brief Set parser group 'help' message for selected language
+     *
+     *  \param value Help message
+     *  \param lang Language value (default: "")
+     *
+     *  \return Current parser group reference
+     */
+    ParserGroup&
+    help(std::string const& value,
+            std::string const& lang = std::string());
+
+    /*!
+     *  \brief Suppress parser group 'help' message
+     *
+     *  \param value argparse::SUPPRESS
+     *
+     *  \return Current parser group reference
+     */
+    ParserGroup&
+    help(_SUPPRESS value);
+
+    /*!
+     *  \brief Set parser group 'metavar' value
+     *
+     *  \param value Metavar value
+     *
+     *  \return Current parser group reference
+     */
+    ParserGroup&
+    metavar(std::string const& value);
+
+    /*!
+     *  \brief Add argument parser with concrete name
+     *
+     *  \param name Parser name
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    add_parser(
+            std::string const& name);
+
+    /*!
+     *  \brief Get parser names
+     *
+     *  \return Parser names container
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    std::vector<std::string>
+    parser_names() const;
+
+private:
+    // -- data ----------------------------------------------------------------
+    SubParsers* m_parent;
+};
+
+/*!
+ *  \brief SubParsers class
+ */
+class SubParsers : public _ParserGroup
+{
+    friend class ArgumentParser;
+    friend class ParserGroup;
+
+    typedef detail::shared_ptr<ParserGroup> pParserGroup;
+    typedef std::list<pParserGroup>::const_iterator pgr_iterator;
+
+    explicit
+    SubParsers(
+            std::string const& title,
+            std::string const& description);
+
+    static detail::shared_ptr<SubParsers>
+    make_subparsers(
+            std::string const& title,
+            std::string const& description);
+
+public:
+    using _ParserGroup::title;
+    using _ParserGroup::description;
+    using _ParserGroup::help;
+    using _ParserGroup::metavar;
+
+    /*!
+     *  \brief Set subparser 'title' value for selected language
+     *
+     *  \param value Title value
+     *  \param lang Language value (default: "")
+     *
+     *  \return Current subparser reference
+     */
+    SubParsers&
+    title(std::string const& value,
+            std::string const& lang = std::string());
+
+    /*!
+     *  \brief Set subparser 'description' value for selected language
+     *
+     *  \param value Description value
+     *  \param lang Language value (default: "")
+     *
+     *  \return Current subparser reference
+     */
+    SubParsers&
+    description(
+            std::string const& value,
+            std::string const& lang = std::string());
+
+    /*!
+     *  \brief Set subparser 'prog' value
+     *
+     *  \param value Program value
+     *
+     *  \return Current subparser reference
+     */
+    SubParsers&
+    prog(std::string const& value);
+
+    /*!
+     *  \brief Set subparser 'dest' value
+     *
+     *  \param value Destination value
+     *
+     *  \return Current subparser reference
+     */
+    SubParsers&
+    dest(std::string const& value);
+
+    /*!
+     *  \brief Set subparser 'required' value
+     *
+     *  \param value Required flag
+     *
+     *  \return Current subparser reference
+     */
+    SubParsers&
+    required(bool value) _ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Set subparser 'help' message for selected language
+     *
+     *  \param value Help message
+     *  \param lang Language value (default: "")
+     *
+     *  \return Current subparser reference
+     */
+    SubParsers&
+    help(std::string const& value,
+            std::string const& lang = std::string());
+
+    /*!
+     *  \brief Suppress subparser 'help' message
+     *
+     *  \param value argparse::SUPPRESS
+     *
+     *  \since v1.7.3
+     *
+     *  \return Current subparser reference
+     */
+    SubParsers&
+    help(_SUPPRESS value);
+
+    /*!
+     *  \brief Set subparser 'metavar' value
+     *
+     *  \param value Metavar value
+     *
+     *  \return Current subparser reference
+     */
+    SubParsers&
+    metavar(std::string const& value);
+
+    /*!
+     *  \brief Get subparser 'prog' value
+     *
+     *  \return Subparser 'prog' value
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    std::string const&
+    prog() const _ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Get subparser 'dest' value
+     *
+     *  \return Subparser 'dest' value
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    std::string const&
+    dest() const _ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Get subparser 'required' value
+     *
+     *  \return Subparser 'required' value
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    bool
+    required() const _ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Add argument parser with concrete name
+     *
+     *  \param name Parser name
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    add_parser(
+            std::string const& name);
+
+    /*!
+     *  \brief Add parser group
+     *
+     *  \param title Parser group title (default: "")
+     *  \param description Parser group description (default: "")
+     *
+     *  \return Current parser group reference
+     */
+    ParserGroup&
+    add_parser_group(
+            std::string const& title = std::string(),
+            std::string const& description = std::string());
+
+    /*!
+     *  \brief Get parser names
+     *
+     *  \return Parser names container
+     */
+    _ARGPARSE_ATTR_NODISCARD
+    std::vector<std::string>
+    parser_names() const;
+
+private:
+    void
+    limit_help_flags(
+            HelpFormatter const&,
+            std::size_t& limit) const _ARGPARSE_OVERRIDE;
+
+    void
+    print_help(
+            std::ostream& os,
+            HelpFormatter const& formatter,
+            std::string const& prog,
+            std::size_t limit,
+            std::size_t width,
+            std::string const& lang) const _ARGPARSE_OVERRIDE;
+
+    std::list<pParser>
+    list_parsers() const;
+
+    std::string
+    prog_name() const;
+
+    void
+    update_prog(
+            std::string const& parent_prog,
+            std::string const& parent_args);
+
+    std::string
+    usage() const;
+
+    std::string
+    flags_to_string() const;
+
+    std::string
+    print(HelpFormatter const& formatter,
+            std::size_t limit,
+            std::size_t width,
+            std::string const& lang) const;
+
+    // -- data ------------------------------------------------------------
+    std::string m_parent_prog;
+    std::string m_parent_args;
+    std::string m_prog;
+    std::string m_dest;
+    std::list<pParserGroup> m_groups;
+    bool        m_required;
+};
+
 /*!
  *  \brief ArgumentParser objects
  */
 _ARGPARSE_EXPORT class ArgumentParser
 {
+    friend class _ParserGroup;
+    friend class ParserGroup;
+    friend class SubParsers;
+
     typedef detail::shared_ptr<Argument> pArgument;
     typedef std::vector<pArgument> pArguments;
     typedef detail::shared_ptr<_ArgumentData> pArgumentData;
@@ -5507,237 +5948,8 @@ _ARGPARSE_EXPORT class ArgumentParser
     typedef std::list<std::pair<pArgument, bool> >::const_iterator sub_iterator;
     typedef std::list<pGroup>::const_iterator grp_iterator;
     typedef std::list<MutuallyExclusiveGroup>::const_iterator mtx_it;
-
-public:
-    /*!
-     *  \brief Subparser class
-     */
-    class Subparser : public _Group
-    {
-        friend class ArgumentParser;
-
-        explicit
-        Subparser(
-                std::string const& title,
-                std::string const& description);
-
-        static detail::shared_ptr<Subparser>
-        make_subparser(
-                std::string const& title,
-                std::string const& description);
-
-    public:
-        using _Group::title;
-        using _Group::description;
-
-        /*!
-         *  \brief Set subparser 'title' value for selected language
-         *
-         *  \param value Title value
-         *  \param lang Language value (default: "")
-         *
-         *  \return Current subparser reference
-         */
-        Subparser&
-        title(std::string const& value,
-                std::string const& lang = std::string());
-
-        /*!
-         *  \brief Set subparser 'description' value for selected language
-         *
-         *  \param value Description value
-         *  \param lang Language value (default: "")
-         *
-         *  \return Current subparser reference
-         */
-        Subparser&
-        description(
-                std::string const& value,
-                std::string const& lang = std::string());
-
-        /*!
-         *  \brief Set subparser 'prog' value
-         *
-         *  \param value Program value
-         *
-         *  \return Current subparser reference
-         */
-        Subparser&
-        prog(std::string const& value);
-
-        /*!
-         *  \brief Set subparser 'dest' value
-         *
-         *  \param value Destination value
-         *
-         *  \return Current subparser reference
-         */
-        Subparser&
-        dest(std::string const& value);
-
-        /*!
-         *  \brief Set subparser 'required' value
-         *
-         *  \param value Required flag
-         *
-         *  \return Current subparser reference
-         */
-        Subparser&
-        required(bool value) _ARGPARSE_NOEXCEPT;
-
-        /*!
-         *  \brief Set subparser 'help' message for selected language
-         *
-         *  \param value Help message
-         *  \param lang Language value (default: "")
-         *
-         *  \return Current subparser reference
-         */
-        Subparser&
-        help(std::string const& value,
-                std::string const& lang = std::string());
-
-        /*!
-         *  \brief Suppress subparser 'help' message
-         *
-         *  \param value argparse::SUPPRESS
-         *
-         *  \since v1.7.3
-         *
-         *  \return Current subparser reference
-         */
-        Subparser&
-        help(_SUPPRESS value);
-
-        /*!
-         *  \brief Set subparser 'metavar' value
-         *
-         *  \param value Metavar value
-         *
-         *  \return Current subparser reference
-         */
-        Subparser&
-        metavar(std::string const& value);
-
-        /*!
-         *  \brief Get subparser 'prog' value
-         *
-         *  \return Subparser 'prog' value
-         */
-        _ARGPARSE_ATTR_NODISCARD
-        std::string const&
-        prog() const _ARGPARSE_NOEXCEPT;
-
-        /*!
-         *  \brief Get subparser 'dest' value
-         *
-         *  \return Subparser 'dest' value
-         */
-        _ARGPARSE_ATTR_NODISCARD
-        std::string const&
-        dest() const _ARGPARSE_NOEXCEPT;
-
-        /*!
-         *  \brief Get subparser 'required' value
-         *
-         *  \return Subparser 'required' value
-         */
-        _ARGPARSE_ATTR_NODISCARD
-        bool
-        required() const _ARGPARSE_NOEXCEPT;
-
-        /*!
-         *  \brief Get subparser 'help' message for default language
-         *
-         *  \return Subparser 'help' message
-         */
-        _ARGPARSE_ATTR_NODISCARD
-        std::string const&
-        help() const;
-
-        /*!
-         *  \brief Get subparser 'metavar' value
-         *
-         *  \return Subparser 'metavar' value
-         */
-        _ARGPARSE_ATTR_NODISCARD
-        std::string const&
-        metavar() const _ARGPARSE_NOEXCEPT;
-
-        /*!
-         *  \brief Add argument parser with concrete name
-         *
-         *  \param name Parser name
-         *
-         *  \return Current argument parser reference
-         */
-        ArgumentParser&
-        add_parser(
-                std::string const& name);
-
-        /*!
-         *  \brief Get parser names
-         *
-         *  \return Parser names container
-         */
-        _ARGPARSE_ATTR_NODISCARD
-        std::vector<std::string>
-        parser_names() const;
-
-    private:
-        void
-        limit_help_flags(
-                HelpFormatter const&,
-                std::size_t& limit) const _ARGPARSE_OVERRIDE;
-
-        void
-        print_help(
-                std::ostream& os,
-                HelpFormatter const& formatter,
-                std::string const& prog,
-                std::size_t limit,
-                std::size_t width,
-                std::string const& lang) const _ARGPARSE_OVERRIDE;
-
-        std::string
-        prog_name() const;
-
-        void
-        update_prog(
-                std::string const& parent_prog,
-                std::string const& parent_args);
-
-        std::string
-        usage() const;
-
-        std::string
-        flags_to_string() const;
-
-        std::string
-        print(HelpFormatter const& formatter,
-                std::size_t limit,
-                std::size_t width,
-                std::string const& lang) const;
-
-        // -- data ------------------------------------------------------------
-        std::string m_parent_prog;
-        std::string m_parent_args;
-        std::string m_prog;
-        std::string m_dest;
-        detail::TranslationPack m_help;
-        detail::Value<std::string> m_metavar;
-        std::list<pParser> m_parsers;
-        detail::Value<_SUPPRESS> m_help_type;
-        bool        m_required;
-    };
-
-private:
-    typedef detail::shared_ptr<Subparser> pSubparser;
+    typedef detail::shared_ptr<SubParsers> pSubparser;
     typedef std::pair<pSubparser, std::size_t> SubparserInfo;
-
-    static pParser
-    make_parser(
-            std::string const& name);
 
     void
     read_args(int argc,
@@ -5750,6 +5962,8 @@ private:
     initialize_parser();
 
 public:
+    typedef SubParsers Subparser;
+
     /*!
      *  \brief Construct argument parser with concrete program name
      *
@@ -6518,7 +6732,7 @@ public:
      *
      *  \return Current subparser reference
      */
-    Subparser&
+    SubParsers&
     add_subparsers(
             std::string const& title = std::string(),
             std::string const& description = std::string());
@@ -6530,7 +6744,7 @@ public:
      *  \return Current subparser pointer or nullptr
      */
     _ARGPARSE_ATTR_NODISCARD
-    Subparser*
+    SubParsers*
     subparsers() const _ARGPARSE_NOEXCEPT;
 
     /*!
@@ -11960,176 +12174,55 @@ Namespace::opt_data(
 }
 #endif  // C++17+
 
-// -- ArgumentParser::Subparser -----------------------------------------------
+// -- _ParserGroup ------------------------------------------------------------
 _ARGPARSE_INL
-ArgumentParser::Subparser::Subparser(
+_ParserGroup::_ParserGroup(
         std::string const& title,
         std::string const& description)
     : _Group(title, description),
-      m_parent_prog(),
-      m_parent_args(),
-      m_prog(),
-      m_dest(),
       m_help(),
       m_metavar(),
       m_parsers(),
-      m_help_type(),
-      m_required(false)
+      m_help_type()
 {
     m_help[std::string()] = std::string();
 }
 
-_ARGPARSE_INL detail::shared_ptr<ArgumentParser::Subparser>
-ArgumentParser::Subparser::make_subparser(
-        std::string const& title,
-        std::string const& description)
+_ARGPARSE_INL _ParserGroup::pParser
+_ParserGroup::make_parser(
+        std::string const& name)
 {
-    return detail::make_shared<Subparser>(Subparser(title, description));
-}
-
-_ARGPARSE_INL ArgumentParser::Subparser&
-ArgumentParser::Subparser::title(
-        std::string const& value,
-        std::string const& lang)
-{
-    m_title[lang] = value;
-    return *this;
-}
-
-_ARGPARSE_INL ArgumentParser::Subparser&
-ArgumentParser::Subparser::description(
-        std::string const& value,
-        std::string const& lang)
-{
-    m_description[lang] = value;
-    return *this;
-}
-
-_ARGPARSE_INL ArgumentParser::Subparser&
-ArgumentParser::Subparser::prog(
-        std::string const& value)
-{
-    m_prog = value;
-    update_prog(m_parent_prog, m_parent_args);
-    return *this;
-}
-
-_ARGPARSE_INL ArgumentParser::Subparser&
-ArgumentParser::Subparser::dest(
-        std::string const& value)
-{
-    m_dest = value;
-    return *this;
-}
-
-_ARGPARSE_INL ArgumentParser::Subparser&
-ArgumentParser::Subparser::required(
-        bool value) _ARGPARSE_NOEXCEPT
-{
-    m_required = value;
-    return *this;
-}
-
-_ARGPARSE_INL ArgumentParser::Subparser&
-ArgumentParser::Subparser::help(
-        std::string const& value,
-        std::string const& lang)
-{
-    if (lang.empty()) {
-        m_help_type.reset();
-    }
-    m_help[lang] = value;
-    return *this;
-}
-
-_ARGPARSE_INL ArgumentParser::Subparser&
-ArgumentParser::Subparser::help(
-        _SUPPRESS value)
-{
-    if (value != argparse::SUPPRESS) {
-        throw TypeError("got an unexpected keyword argument 'help'");
-    }
-    m_help_type = value;
-    return *this;
-}
-
-_ARGPARSE_INL ArgumentParser::Subparser&
-ArgumentParser::Subparser::metavar(
-        std::string const& value)
-{
-    m_metavar = value;
-    return *this;
+    pParser res = detail::make_shared<ArgumentParser>();
+    res->m_prog.clear();
+    res->m_name = name;
+    return res;
 }
 
 _ARGPARSE_INL std::string const&
-ArgumentParser::Subparser::prog() const _ARGPARSE_NOEXCEPT
-{
-    return m_prog;
-}
-
-_ARGPARSE_INL std::string const&
-ArgumentParser::Subparser::dest() const _ARGPARSE_NOEXCEPT
-{
-    return m_dest;
-}
-
-_ARGPARSE_INL bool
-ArgumentParser::Subparser::required() const _ARGPARSE_NOEXCEPT
-{
-    return m_required;
-}
-
-_ARGPARSE_INL std::string const&
-ArgumentParser::Subparser::help() const
+_ParserGroup::help() const
 {
     return detail::_tr_at(m_help, std::string());
 }
 
 _ARGPARSE_INL std::string const&
-ArgumentParser::Subparser::metavar() const _ARGPARSE_NOEXCEPT
+_ParserGroup::metavar() const _ARGPARSE_NOEXCEPT
 {
     return m_metavar();
 }
 
-_ARGPARSE_INL ArgumentParser&
-ArgumentParser::Subparser::add_parser(
-        std::string const& name)
-{
-    if (name.empty()) {
-        throw ValueError("parser name can't be empty");
-    }
-    m_parsers.push_back(make_parser(name));
-    m_parsers.back()->update_prog(prog_name());
-    return *m_parsers.back();
-}
-
-_ARGPARSE_INL std::vector<std::string>
-ArgumentParser::Subparser::parser_names() const
-{
-    std::vector<std::string> res;
-    res.reserve(2 * m_parsers.size());
-    for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
-        res.push_back((*it)->m_name);
-        for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
-            res.push_back((*it)->aliases().at(a));
-        }
-    }
-    return res;
-}
-
 _ARGPARSE_INL void
-ArgumentParser::Subparser::limit_help_flags(
+_ParserGroup::limit_help_flags(
         HelpFormatter const&,
         std::size_t& limit) const
 {
-    detail::_limit_to_min(limit, flags_to_string().size());
+    detail::_limit_to_min(limit, _flags_to_string().size());
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
         detail::_limit_to_min(limit, (*it)->m_name.size() + 2);
     }
 }
 
 _ARGPARSE_INL void
-ArgumentParser::Subparser::print_help(
+_ParserGroup::print_help(
         std::ostream& os,
         HelpFormatter const& formatter,
         std::string const& prog,
@@ -12144,40 +12237,50 @@ ArgumentParser::Subparser::print_help(
                 detail::_replace(
                     detail::_tr(m_description, lang), "%(prog)s", prog),
                 width, os, std::string(), 2, "\n");
-    os << print(formatter, limit, width, lang) << std::endl;
-}
-
-_ARGPARSE_INL std::string
-ArgumentParser::Subparser::prog_name() const
-{
-    std::string program = m_prog.empty() ? m_parent_prog : m_prog;
-    if (!m_parent_args.empty()) {
-        program += " " + m_parent_args;
-    }
-    return program;
+    print_parser_group(os, formatter, limit, width, lang);
 }
 
 _ARGPARSE_INL void
-ArgumentParser::Subparser::update_prog(
-        std::string const& parent_prog,
-        std::string const& parent_args)
+_ParserGroup::print_parser_group(
+        std::ostream& os,
+        HelpFormatter const& formatter,
+        std::size_t limit,
+        std::size_t width,
+        std::string const& lang) const
 {
-    m_parent_prog = parent_prog;
-    m_parent_args = parent_args;
-    std::string const program = prog_name();
+    os << detail::_help_formatter("  " + _flags_to_string(), formatter,
+                                  detail::_tr(m_help, lang), width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
-        (*it)->update_prog(program);
+        std::string help = detail::_tr((*it)->m_help, lang);
+        if (!help.empty()) {
+            std::string name = "    " + (*it)->m_name;
+            std::string alias = detail::_join((*it)->aliases(), ", ");
+            if (!alias.empty()) {
+                name += " (" + alias + ")";
+            }
+            os << "\n"
+               << detail::_help_formatter(name, formatter, help, width, limit);
+        }
     }
+    os << std::endl;
 }
 
-_ARGPARSE_INL std::string
-ArgumentParser::Subparser::usage() const
+_ARGPARSE_INL std::vector<std::string>
+_ParserGroup::_parser_names() const
 {
-    return flags_to_string() + " ...";
+    std::vector<std::string> res;
+    res.reserve(2 * m_parsers.size());
+    for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
+        res.push_back((*it)->m_name);
+        for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
+            res.push_back((*it)->aliases().at(a));
+        }
+    }
+    return res;
 }
 
 _ARGPARSE_INL std::string
-ArgumentParser::Subparser::flags_to_string() const
+_ParserGroup::_flags_to_string() const
 {
     if (m_metavar.has_value()) {
         return metavar();
@@ -12192,42 +12295,344 @@ ArgumentParser::Subparser::flags_to_string() const
     return "{" + res + "}";
 }
 
-_ARGPARSE_INL std::string
-ArgumentParser::Subparser::print(
+// -- ParserGroup -------------------------------------------------------------
+_ARGPARSE_INL
+ParserGroup::ParserGroup(
+        SubParsers* parent,
+        std::string const& title,
+        std::string const& description)
+    : _ParserGroup(title, description),
+      m_parent(parent)
+{
+}
+
+_ARGPARSE_INL detail::shared_ptr<ParserGroup>
+ParserGroup::make_parsergroup(
+        SubParsers* parent,
+        std::string const& title,
+        std::string const& description)
+{
+    return detail::make_shared<ParserGroup>(
+                ParserGroup(parent, title, description));
+}
+
+_ARGPARSE_INL
+ParserGroup::ParserGroup(
+        ParserGroup const& orig)
+    : _ParserGroup(orig),
+      m_parent(orig.m_parent)
+{
+}
+
+_ARGPARSE_INL ParserGroup&
+ParserGroup::operator =(
+        ParserGroup const& rhs)
+{
+    if (this != &rhs) {
+        m_title         = rhs.m_title;
+        m_description   = rhs.m_description;
+        m_parent        = rhs.m_parent;
+        m_help          = rhs.m_help;
+        m_metavar       = rhs.m_metavar;
+        m_parsers       = rhs.m_parsers;
+        m_help_type     = rhs.m_help_type;
+    }
+    return *this;
+}
+
+_ARGPARSE_INL ParserGroup&
+ParserGroup::title(
+        std::string const& value,
+        std::string const& lang)
+{
+    m_title[lang] = value;
+    return *this;
+}
+
+_ARGPARSE_INL ParserGroup&
+ParserGroup::description(
+        std::string const& value,
+        std::string const& lang)
+{
+    m_description[lang] = value;
+    return *this;
+}
+
+_ARGPARSE_INL ParserGroup&
+ParserGroup::help(
+        std::string const& value,
+        std::string const& lang)
+{
+    if (lang.empty()) {
+        m_help_type.reset();
+    }
+    m_help[lang] = value;
+    return *this;
+}
+
+_ARGPARSE_INL ParserGroup&
+ParserGroup::help(
+        _SUPPRESS value)
+{
+    if (value != argparse::SUPPRESS) {
+        throw TypeError("got an unexpected keyword argument 'help'");
+    }
+    m_help_type = value;
+    return *this;
+}
+
+_ARGPARSE_INL ParserGroup&
+ParserGroup::metavar(
+        std::string const& value)
+{
+    m_metavar = value;
+    return *this;
+}
+
+_ARGPARSE_INL ArgumentParser&
+ParserGroup::add_parser(
+        std::string const& name)
+{
+    if (name.empty()) {
+        throw ValueError("parser name can't be empty");
+    }
+    m_parsers.push_back(make_parser(name));
+    if (m_parent) {
+        m_parsers.back()->update_prog(m_parent->prog_name());
+    }
+    return *m_parsers.back();
+}
+
+_ARGPARSE_INL std::vector<std::string>
+ParserGroup::parser_names() const
+{
+    return _parser_names();
+}
+
+// -- SubParsers --------------------------------------------------------------
+_ARGPARSE_INL
+SubParsers::SubParsers(
+        std::string const& title,
+        std::string const& description)
+    : _ParserGroup(title, description),
+      m_parent_prog(),
+      m_parent_args(),
+      m_prog(),
+      m_dest(),
+      m_groups(),
+      m_required(false)
+{
+}
+
+_ARGPARSE_INL detail::shared_ptr<SubParsers>
+SubParsers::make_subparsers(
+        std::string const& title,
+        std::string const& description)
+{
+    return detail::make_shared<SubParsers>(SubParsers(title, description));
+}
+
+_ARGPARSE_INL SubParsers&
+SubParsers::title(
+        std::string const& value,
+        std::string const& lang)
+{
+    m_title[lang] = value;
+    return *this;
+}
+
+_ARGPARSE_INL SubParsers&
+SubParsers::description(
+        std::string const& value,
+        std::string const& lang)
+{
+    m_description[lang] = value;
+    return *this;
+}
+
+_ARGPARSE_INL SubParsers&
+SubParsers::prog(
+        std::string const& value)
+{
+    m_prog = value;
+    update_prog(m_parent_prog, m_parent_args);
+    return *this;
+}
+
+_ARGPARSE_INL SubParsers&
+SubParsers::dest(
+        std::string const& value)
+{
+    m_dest = value;
+    return *this;
+}
+
+_ARGPARSE_INL SubParsers&
+SubParsers::required(
+        bool value) _ARGPARSE_NOEXCEPT
+{
+    m_required = value;
+    return *this;
+}
+
+_ARGPARSE_INL SubParsers&
+SubParsers::help(
+        std::string const& value,
+        std::string const& lang)
+{
+    if (lang.empty()) {
+        m_help_type.reset();
+    }
+    m_help[lang] = value;
+    return *this;
+}
+
+_ARGPARSE_INL SubParsers&
+SubParsers::help(
+        _SUPPRESS value)
+{
+    if (value != argparse::SUPPRESS) {
+        throw TypeError("got an unexpected keyword argument 'help'");
+    }
+    m_help_type = value;
+    return *this;
+}
+
+_ARGPARSE_INL SubParsers&
+SubParsers::metavar(
+        std::string const& value)
+{
+    m_metavar = value;
+    return *this;
+}
+
+_ARGPARSE_INL std::string const&
+SubParsers::prog() const _ARGPARSE_NOEXCEPT
+{
+    return m_prog;
+}
+
+_ARGPARSE_INL std::string const&
+SubParsers::dest() const _ARGPARSE_NOEXCEPT
+{
+    return m_dest;
+}
+
+_ARGPARSE_INL bool
+SubParsers::required() const _ARGPARSE_NOEXCEPT
+{
+    return m_required;
+}
+
+_ARGPARSE_INL ArgumentParser&
+SubParsers::add_parser(
+        std::string const& name)
+{
+    if (name.empty()) {
+        throw ValueError("parser name can't be empty");
+    }
+    m_parsers.push_back(make_parser(name));
+    m_parsers.back()->update_prog(prog_name());
+    return *m_parsers.back();
+}
+
+_ARGPARSE_INL ParserGroup&
+SubParsers::add_parser_group(
+        std::string const& title,
+        std::string const& description)
+{
+    m_groups.push_back(ParserGroup::make_parsergroup(this, title, description));
+    return *m_groups.back();
+}
+
+_ARGPARSE_INL std::vector<std::string>
+SubParsers::parser_names() const
+{
+    std::vector<std::string> res = _parser_names();
+    for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
+        std::vector<std::string> sub = (*it)->_parser_names();
+        res.insert(res.end(), sub.begin(), sub.end());
+    }
+    return res;
+}
+
+_ARGPARSE_INL void
+SubParsers::limit_help_flags(
         HelpFormatter const& formatter,
+        std::size_t& limit) const
+{
+    _ParserGroup::limit_help_flags(formatter, limit);
+    for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
+        (*it)->limit_help_flags(formatter, limit);
+    }
+}
+
+_ARGPARSE_INL void
+SubParsers::print_help(
+        std::ostream& os,
+        HelpFormatter const& formatter,
+        std::string const& prog,
         std::size_t limit,
         std::size_t width,
         std::string const& lang) const
 {
-    std::string res = detail::_help_formatter(
-                "  " + flags_to_string(), formatter,
-                detail::_tr(m_help, lang), width, limit);
-    for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
-        std::string help = detail::_tr((*it)->m_help, lang);
-        if (!help.empty()) {
-            std::string name = "    " + (*it)->m_name;
-            std::string alias = detail::_join((*it)->aliases(), ", ");
-            if (!alias.empty()) {
-                name += " (" + alias + ")";
-            }
-            res += "\n" + detail::_help_formatter(
-                        name, formatter, help, width, limit);
-        }
+    _ParserGroup::print_help(os, formatter, prog, limit, width, lang);
+    for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
+        (*it)->print_help(os, formatter, prog, limit, width, lang);
+    }
+}
+
+_ARGPARSE_INL std::list<SubParsers::pParser>
+SubParsers::list_parsers() const
+{
+    std::list<pParser> res = m_parsers;
+    for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
+        res.insert(res.end(), (*it)->m_parsers.begin(), (*it)->m_parsers.end());
+    }
+    return res;
+}
+
+_ARGPARSE_INL std::string
+SubParsers::prog_name() const
+{
+    std::string program = m_prog.empty() ? m_parent_prog : m_prog;
+    if (!m_parent_args.empty()) {
+        program += " " + m_parent_args;
+    }
+    return program;
+}
+
+_ARGPARSE_INL void
+SubParsers::update_prog(
+        std::string const& parent_prog,
+        std::string const& parent_args)
+{
+    m_parent_prog = parent_prog;
+    m_parent_args = parent_args;
+    std::string const program = prog_name();
+    std::list<SubParsers::pParser> parsers = list_parsers();
+    for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+        (*it)->update_prog(program);
+    }
+}
+
+_ARGPARSE_INL std::string
+SubParsers::usage() const
+{
+    return flags_to_string() + " ...";
+}
+
+_ARGPARSE_INL std::string
+SubParsers::flags_to_string() const
+{
+    std::string res = _flags_to_string();
+    for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
+        detail::_append_value_to((*it)->_flags_to_string(), res, " | ");
     }
     return res;
 }
 
 // -- ArgumentParser ----------------------------------------------------------
-_ARGPARSE_INL ArgumentParser::pParser
-ArgumentParser::make_parser(
-        std::string const& name)
-{
-    pParser res = detail::make_shared<ArgumentParser>();
-    res->m_prog.clear();
-    res->m_name = name;
-    return res;
-}
-
 _ARGPARSE_INL void
 ArgumentParser::read_args(
         int argc,
@@ -12873,7 +13278,7 @@ ArgumentParser::add_mutually_exclusive_group(
     return m_mutex_groups.back().required(required);
 }
 
-_ARGPARSE_INL ArgumentParser::Subparser&
+_ARGPARSE_INL SubParsers&
 ArgumentParser::add_subparsers(
         std::string const& title,
         std::string const& description)
@@ -12882,13 +13287,13 @@ ArgumentParser::add_subparsers(
         throw_error("cannot have multiple subparser arguments");
     }
     m_subparsers_position = m_data->m_positional.size();
-    m_subparsers = Subparser::make_subparser(title, description);
+    m_subparsers = SubParsers::make_subparsers(title, description);
     m_subparsers->update_prog(prog(), subparser_prog_args());
     m_groups.push_back(pGroup(m_subparsers));
     return *m_subparsers;
 }
 
-_ARGPARSE_INL ArgumentParser::Subparser*
+_ARGPARSE_INL SubParsers*
 ArgumentParser::subparsers() const _ARGPARSE_NOEXCEPT
 {
     return m_subparsers.get();
@@ -13520,8 +13925,8 @@ ArgumentParser::print_parser_completion(
         std::ostream& os)
 {
     if (p->has_subparsers()) {
-        for (prs_iterator it = p->m_subparsers->m_parsers.begin();
-             it != p->m_subparsers->m_parsers.end(); ++it) {
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
             print_parser_completion(
                         (*it).get(), prog + "_" + (*it)->m_name, false, os);
         }
@@ -13535,8 +13940,8 @@ ArgumentParser::print_parser_completion(
             os << "  for (( i=$1; i < ${COMP_CWORD}; ((++i)) )); do\n";
         }
         os << "    case \"${COMP_WORDS[$i]}\" in\n";
-        for (prs_iterator it = p->m_subparsers->m_parsers.begin();
-             it != p->m_subparsers->m_parsers.end(); ++it) {
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
             std::string name = "\"" + (*it)->m_name + "\"";
             if (!(*it)->aliases().empty()) {
                 name += "|" + detail::_join((*it)->aliases(), "|", "\"");
@@ -14562,8 +14967,9 @@ ArgumentParser::try_capture_parser(
     std::string const& name = args.front();
     std::string const& dest = parsers.back().subparser.first->dest();
     std::string choices;
-    for (prs_iterator it = parsers.back().subparser.first->m_parsers.begin();
-         it != parsers.back().subparser.first->m_parsers.end(); ++it) {
+    std::list<pParser> const lst_parsers
+            = parsers.back().subparser.first->list_parsers();
+    for (prs_iterator it = lst_parsers.begin(); it != lst_parsers.end(); ++it) {
         detail::_append_value_to("'" + (*it)->m_name + "'", choices, ", ");
         for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
             std::string const& alias = (*it)->aliases().at(a);
@@ -15173,7 +15579,7 @@ ArgumentParser::print_subparser(
         std::ostream& os)
 {
     if (need_print && info.second == index) {
-        os << info.first->print(formatter, size, width, lang) << std::endl;
+        info.first->print_parser_group(os, formatter, size, width, lang);
     }
 }
 
@@ -15239,7 +15645,7 @@ ArgumentParser::test_overview(
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
     }
     if (has_subparsers()) {
-        std::list<pParser> const& parsers = m_subparsers->m_parsers;
+        std::list<pParser> const parsers = m_subparsers->list_parsers();
         os << "subparsers list:\n";
         std::size_t i = 0;
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
@@ -15417,7 +15823,7 @@ ArgumentParser::test_diagnostics(
     }
     // check subparsers
     if (has_subparsers()) {
-        std::list<pParser> const& parsers = m_subparsers->m_parsers;
+        std::list<pParser> const parsers = m_subparsers->list_parsers();
         if (parsers.empty()) {
             ++diagnostics.first;
             os << _warn << " subparsers created but no parsers were added\n";
