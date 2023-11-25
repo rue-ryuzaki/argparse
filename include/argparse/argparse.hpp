@@ -640,12 +640,13 @@ public:
  *
  *  \return Container with arguments
  */
-std::vector<std::string>
+_ARGPARSE_EXPORT std::vector<std::string>
 split_to_args(
         std::string const& str,
         std::ostream& err = std::cerr);
 
 namespace detail {
+// -- constants ---------------------------------------------------------------
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equal            = '=';
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _spaces[]         = " ";
 
@@ -5596,7 +5597,7 @@ class SubParsers;
  *
  *  \since NEXT_RELEASE
  */
-class ParserGroup : public _ParserGroup
+_ARGPARSE_EXPORT class ParserGroup : public _ParserGroup
 {
     friend class ArgumentParser;
     friend class SubParsers;
@@ -5725,7 +5726,7 @@ private:
 /*!
  *  \brief SubParsers class
  */
-class SubParsers : public _ParserGroup
+_ARGPARSE_EXPORT class SubParsers : public _ParserGroup
 {
     friend class ArgumentParser;
     friend class ParserGroup;
