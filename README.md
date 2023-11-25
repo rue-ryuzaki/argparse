@@ -68,6 +68,7 @@ The work of the parser on older versions of compilers is not guaranteed.
   - [combined nargs](#combined-nargs)
   - [Action::language](#actionlanguage)
   - [comment_prefix_chars](#comment_prefix_chars)
+  - [parser groups](#parser-groups)
 - Python API support:
   - [ArgumentParser objects](#argumentparser-objects-support)
   - [add_argument(name or flags) method](#the-add_argumentname-or-flags-method-support)
@@ -135,7 +136,7 @@ bar: 101
 baz: baaz
 ```
 ## Actions example
-See [supported actions](https://github.com/rue-ryuzaki/argparse#the-add_argument-actions-support)
+See [supported actions](#the-add_argument-actions-support)
 ```cpp
 #include <iostream>
 
@@ -206,13 +207,15 @@ int main(int argc, char const* const argv[])
 ## Subparsers example
 If you want to use subcommands with arguments (like git commands: git clone URL -b BRANCH, git merge --ff, git status), use subparsers.
 
-If you need to get the subparser's parser name, set dest value to the subparser, or use [handle](https://github.com/rue-ryuzaki/argparse#parserhandlestdfunctionvoidstdstring-func) in parsers.
+If you need to get the subparsers's parser name, set dest value to the subparsers, or use [handle](#argumentparserhandlestdfunctionvoidargparsenamespace-const-func) in parsers.
 
 Note:
 
-If subparser not selected in parsed arguments, it is not added to the Namespace, like the arguments of its parsers.
+If subparsers not selected in parsed arguments, it is not added to the Namespace, like the arguments of its parsers.
 
 Check if value exists first (Namespace::exists()), or use Namespace::try_get<>() instead of Namespace::get<>() (since C++17).
+
+You can use parser groups inside subparsers, see [parser groups](#parser-groups)
 ```cpp
 #include <iostream>
 
@@ -691,6 +694,43 @@ auto parser = argparse::ArgumentParser(argc, argv)
             .prog("prog")
             .fromfile_prefix_chars("@")
             .comment_prefix_chars("#");
+```
+### Parser groups
+This library allows you to create groups of parsers in your SubParsers. By default, all parsers created in the main subparsers group constitute the main parser group. You can create a new parser group using ```add_parser_group(title, description)`` and group other parsers into it.
+```cpp
+#include <iostream>
+
+#include <argparse/argparse.hpp>
+
+int main(int argc, char const* const argv[])
+{
+    auto parser = argparse::ArgumentParser(argc, argv);
+    parser.add_argument("--foo").action("store_true").help("foo help");
+
+    auto& subparsers = parser.add_subparsers().help("sub-command help");
+
+    auto& parser_a = subparsers.add_parser("a").help("a help")
+            .handle([] (std::string const&) { std::cout << "Parser A handle" << std::endl; });
+    parser_a.add_argument("bar").help("bar help");
+
+    auto& parsers_group = subparsers.add_parser_group().help("next sub-commands help");
+
+    auto& parser_b = parsers_group.add_parser("b").help("b help")
+            .handle([] (std::string const& value) { std::cout << "Parser B handle " << value << std::endl; });
+    parser_b.add_argument("--baz").choices("XYZ").help("baz help");
+
+    auto const args = parser.parse_args();
+
+    std::cout << "foo: " << args.get<bool>("foo") << std::endl;
+    if (args.exists("bar")) {
+        std::cout << "bar: " << args.get<uint32_t>("bar") << std::endl;
+    }
+    if (args.exists("baz")) {
+        std::cout << "baz: " << args.get<std::string>("baz") << std::endl;
+    }
+
+    return 0;
+}
 ```
 ## ArgumentParser objects support
 - [x] prog - The name of the program (default: ```argv[0]``` or ```"untitled"```)
