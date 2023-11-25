@@ -3336,7 +3336,9 @@ protected:
             std::size_t& limit) const                                       = 0;
 
     virtual void
-    print_help(std::ostream& os,
+    print_help(
+            std::ostream& os,
+            bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
             std::size_t limit,
@@ -3679,6 +3681,7 @@ private:
     void
     print_help(
             std::ostream& os,
+            bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
             std::size_t limit,
@@ -5659,6 +5662,7 @@ private:
     void
     print_help(
             std::ostream& os,
+            bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
             std::size_t limit,
@@ -6004,6 +6008,7 @@ private:
     void
     print_help(
             std::ostream& os,
+            bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
             std::size_t limit,
@@ -6155,6 +6160,18 @@ public:
     ArgumentParser&
     usage(std::string const& value,
             std::string const& lang = std::string());
+
+    /*!
+     *  \brief Suppress argument parser 'usage' value
+     *
+     *  \param value argparse::SUPPRESS
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    usage(_SUPPRESS value);
 
     /*!
      *  \brief Set title for argument parser 'usage' (default: "usage")
@@ -7545,7 +7562,8 @@ public:
      *  \since v1.7.1
      */
     void
-    print_help(std::string const& lang,
+    print_help(
+            std::string const& lang,
             std::ostream& os = std::cout) const;
 
     /*!
@@ -8072,7 +8090,7 @@ private:
     pArgumentData m_data;
     std::string m_name;
     std::string m_prog;
-    detail::TranslationPack m_usage;
+    detail::SValue<detail::TranslationPack> m_usage;
     detail::TranslationPack m_usage_title;
     detail::TranslationPack m_description;
     detail::TranslationPack m_positionals_title;
@@ -9356,6 +9374,18 @@ _ignore_explicit(
 }
 
 _ARGPARSE_INL void
+_eat_ln(std::ostream& os,
+        bool& eat_ln,
+        std::string const& begin = std::string("\n"))
+{
+    if (eat_ln) {
+        eat_ln = false;
+    } else {
+        os << begin;
+    }
+}
+
+_ARGPARSE_INL void
 _format_output_func(
         std::size_t indent,
         std::size_t width,
@@ -9448,13 +9478,14 @@ _print_raw_text_formatter(
         std::string const& text,
         std::size_t width,
         std::ostream& os,
+        bool& eat_ln,
         std::string const& begin = std::string("\n"),
         std::size_t indent = 0,
         std::string const& end = std::string())
 {
     if (!text.empty()) {
-        os << begin
-           << formatter._fill_text(text, width, indent) << end << std::endl;
+        _eat_ln(os, eat_ln, begin);
+        os << formatter._fill_text(text, width, indent) << end << std::endl;
     }
 }
 
@@ -11622,6 +11653,7 @@ ArgumentGroup::limit_help_flags(
 _ARGPARSE_INL void
 ArgumentGroup::print_help(
         std::ostream& os,
+        bool& eat_ln,
         HelpFormatter const& formatter,
         std::string const& prog,
         std::size_t limit,
@@ -11632,12 +11664,13 @@ ArgumentGroup::print_help(
     if (!description.empty() || !m_data->m_arguments.empty()) {
         std::string const title = detail::_tr(m_title, lang);
         if (!title.empty()) {
-            os << "\n" << title << ":";
+            detail::_eat_ln(os, eat_ln);
+            os << title << ":";
         }
         detail::_print_raw_text_formatter(
                     formatter,
                     detail::_replace(description, "%(prog)s", prog),
-                    width, os, "\n", 2);
+                    width, os, eat_ln, "\n", 2);
         if (!m_data->m_arguments.empty()) {
             os << std::endl;
         }
@@ -12289,19 +12322,21 @@ _ParserGroup::limit_help_flags(
 _ARGPARSE_INL void
 _ParserGroup::print_help(
         std::ostream& os,
+        bool& eat_ln,
         HelpFormatter const& formatter,
         std::string const& prog,
         std::size_t limit,
         std::size_t width,
         std::string const& lang) const
 {
+    detail::_eat_ln(os, eat_ln);
     std::string const title = detail::_tr(m_title, lang);
-    os << "\n" << (title.empty() ? "subcommands" : title) << ":\n";
+    os << (title.empty() ? "subcommands" : title) << ":\n";
     detail::_print_raw_text_formatter(
                 formatter,
                 detail::_replace(
                     detail::_tr(m_description, lang), "%(prog)s", prog),
-                width, os, std::string(), 2, "\n");
+                width, os, eat_ln, std::string(), 2, "\n");
     print_parser_group(os, formatter, limit, width, lang);
 }
 
@@ -12622,15 +12657,16 @@ SubParsers::limit_help_flags(
 _ARGPARSE_INL void
 SubParsers::print_help(
         std::ostream& os,
+        bool& eat_ln,
         HelpFormatter const& formatter,
         std::string const& prog,
         std::size_t limit,
         std::size_t width,
         std::string const& lang) const
 {
-    _ParserGroup::print_help(os, formatter, prog, limit, width, lang);
+    _ParserGroup::print_help(os, eat_ln, formatter, prog, limit, width, lang);
     for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
-        (*it)->print_help(os, formatter, prog, limit, width, lang);
+        (*it)->print_help(os, eat_ln, formatter, prog, limit, width, lang);
     }
 }
 
@@ -12719,7 +12755,7 @@ ArgumentParser::initialize_parser()
     formatter_class(HelpFormatter());
     m_data->update_help(true, m_prefix_chars);
     // init translations
-    m_usage[std::string()] = std::string();
+    m_usage.will_have()[std::string()] = std::string();
     m_usage_title[std::string()] = "usage";
     m_description[std::string()] = std::string();
     m_positionals_title[std::string()] = "positional arguments";
@@ -12866,7 +12902,15 @@ ArgumentParser::usage(
         std::string const& value,
         std::string const& lang)
 {
-    m_usage[lang] = value;
+    m_usage.will_have()[lang] = value;
+    return *this;
+}
+
+_ARGPARSE_INL ArgumentParser&
+ArgumentParser::usage(
+        _SUPPRESS value)
+{
+    m_usage = value;
     return *this;
 }
 
@@ -13126,7 +13170,7 @@ ArgumentParser::prog() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string const&
 ArgumentParser::usage() const
 {
-    return detail::_tr_at(m_usage, default_language());
+    return detail::_tr_at(m_usage.value(), default_language());
 }
 
 _ARGPARSE_INL std::string const&
@@ -13748,9 +13792,12 @@ ArgumentParser::print_usage(
         std::string const& language,
         std::ostream& os) const
 {
+    if (m_usage.suppress()) {
+        return;
+    }
     std::string lang = !language.empty() ? language : default_language();
     std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
-    std::string tr_usage = detail::_tr(m_usage, lang);
+    std::string tr_usage = detail::_tr(m_usage.value(), lang);
     if (!tr_usage.empty()) {
         os << tr_usage_title << " " << despecify(tr_usage) << std::endl;
     } else {
@@ -13782,18 +13829,22 @@ ArgumentParser::print_help(
     pArguments const operand = m_data->get_operand(false, false);
     pArguments const optional = m_data->get_optional(false, false);
     SubParsersInfo const sub_info = subparsers_info(false);
-    std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
-    std::string tr_usage = detail::_tr(m_usage, lang);
-    if (!tr_usage.empty()) {
-        os << tr_usage_title << " " << despecify(tr_usage) << std::endl;
-    } else {
-        print_custom_usage(positional_all, operand_all, optional_all,
-                          m_mutex_groups, sub_info, prog(), tr_usage_title, os);
+    if (!m_usage.suppress()) {
+        std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
+        std::string tr_usage = detail::_tr(m_usage.value(), lang);
+        if (!tr_usage.empty()) {
+            os << tr_usage_title << " " << despecify(tr_usage) << std::endl;
+        } else {
+            print_custom_usage(
+                        positional_all, operand_all, optional_all,
+                        m_mutex_groups, sub_info, prog(), tr_usage_title, os);
+        }
     }
+    bool eat_ln = m_usage.suppress();
     std::size_t const width = output_width();
     detail::_print_raw_text_formatter(
                 *m_formatter,
-                despecify(detail::_tr(m_description, lang)), width, os);
+                despecify(detail::_tr(m_description, lang)), width, os, eat_ln);
     std::size_t size = 0;
     pSubParsers subparsers = sub_info.first;
     bool sub_positional = is_subparsers_positional(subparsers);
@@ -13815,7 +13866,8 @@ ArgumentParser::print_help(
     size += 4;
     detail::_limit_to_max(size, output_width() - argument_help_limit());
     if (!positional.empty() || sub_positional) {
-        os << "\n" << detail::_tr(m_positionals_title, lang) << ":\n";
+        detail::_eat_ln(os, eat_ln);
+        os << detail::_tr(m_positionals_title, lang) << ":\n";
         for (std::size_t i = 0; i < positional.size(); ++i) {
             print_subparsers(sub_positional, sub_info, i,
                              *m_formatter, size, width, lang, os);
@@ -13826,14 +13878,16 @@ ArgumentParser::print_help(
                          *m_formatter, size, width, lang, os);
     }
     if (!operand.empty()) {
-        os << "\n" << detail::_tr(m_operands_title, lang) << ":\n";
+        detail::_eat_ln(os, eat_ln);
+        os << detail::_tr(m_operands_title, lang) << ":\n";
         for (std::size_t i = 0; i < operand.size(); ++i) {
             os << despecify(operand.at(i)->print(
                                 *m_formatter, size, width, lang)) << std::endl;
         }
     }
     if (!optional.empty()) {
-        os << "\n" << detail::_tr(m_optionals_title, lang) << ":\n";
+        detail::_eat_ln(os, eat_ln);
+        os << detail::_tr(m_optionals_title, lang) << ":\n";
         for (std::size_t i = 0; i < optional.size(); ++i) {
             os << despecify(optional.at(i)->print(
                                 *m_formatter, size, width, lang)) << std::endl;
@@ -13843,11 +13897,13 @@ ArgumentParser::print_help(
         if (!subparsers || ((*it) != subparsers
                             || (!sub_positional
                                 && !subparsers->m_help.suppress()))) {
-            (*it)->print_help(os, *m_formatter, prog(), size, width, lang);
+            (*it)->print_help(
+                        os, eat_ln, *m_formatter, prog(), size, width, lang);
         }
     }
     detail::_print_raw_text_formatter(
-               *m_formatter, despecify(detail::_tr(m_epilog, lang)), width, os);
+                *m_formatter, despecify(detail::_tr(m_epilog, lang)),
+                width, os, eat_ln);
 }
 
 _ARGPARSE_INL std::string
@@ -15653,9 +15709,11 @@ ArgumentParser::test_overview(
             os << "version: " << (*it)->version() << "\n";
         }
     }
-    std::string tr_usage = detail::_tr(m_usage, lang);
-    if (!tr_usage.empty()) {
-        os << "usage: " << despecify(tr_usage) << "\n";
+    if (!m_usage.suppress()) {
+        std::string tr_usage = detail::_tr(m_usage.value(), lang);
+        if (!tr_usage.empty()) {
+            os << "usage: " << despecify(tr_usage) << "\n";
+        }
     }
     std::string tr_description = detail::_tr(m_description, lang);
     if (!tr_description.empty()) {
