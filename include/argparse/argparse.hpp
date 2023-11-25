@@ -629,6 +629,22 @@ public:
             Argument const* action) const _ARGPARSE_OVERRIDE;
 } _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
 
+// -- standAlone functions ----------------------------------------------------
+/*!
+ *  \brief Split string with command line arguments to arguments container
+ *
+ *  \param str String to process
+ *  \param err Output stream for errors (default: std::cerr)
+ *
+ *  \since NEXT_RELEASE
+ *
+ *  \return Container with arguments
+ */
+std::vector<std::string>
+split_to_args(
+        std::string const& str,
+        std::ostream& err = std::cerr);
+
 namespace detail {
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equal            = '=';
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _spaces[]         = " ";
@@ -9118,47 +9134,6 @@ _process_quotes(
     }
 }
 
-_ARGPARSE_INL std::vector<std::string>
-_split_to_args(
-        std::string const& str,
-        std::ostream& err = std::cerr)
-{
-    std::vector<std::string> res;
-    std::string value;
-    std::deque<char> quotes;
-    bool skip = false;
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        char c = str.at(i);
-        if (!skip && c == '\\') {
-            // skip space
-            skip = true;
-            if (i + 1 == str.size()) {
-                value += c;
-                break;
-            }
-            if (str.at(i + 1) != _space) {
-                value += c;
-            }
-            continue;
-        }
-        if (((c == _space && !skip)
-             || (c != _space && std::isspace(static_cast<unsigned char>(c))))
-                && quotes.empty()) {
-            _store_value_to(value, res);
-        } else {
-            _process_quotes(quotes, value, str, c, i + 1);
-            value += c;
-        }
-        skip = false;
-    }
-    _store_value_to(value, res);
-    if (!quotes.empty()) {
-        err << "argparse error [skip]: possible incorrect string: '"
-            << str << "'" << std::endl;
-    }
-    return res;
-}
-
 _ARGPARSE_INL bool
 _string_to_bool(
         std::string const& str) _ARGPARSE_NOEXCEPT
@@ -9698,6 +9673,49 @@ _MetavarTypeHelpFormatter::_get_default_metavar_for_positional(
         return action->type_name();
     }
     return HelpFormatter::_get_default_metavar_for_positional(action);
+}
+
+// -- standAlone functions ----------------------------------------------------
+_ARGPARSE_INL std::vector<std::string>
+split_to_args(
+        std::string const& str,
+        std::ostream& err)
+{
+    std::vector<std::string> res;
+    std::string value;
+    std::deque<char> quotes;
+    bool skip = false;
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        char c = str.at(i);
+        if (!skip && c == '\\') {
+            // skip space
+            skip = true;
+            if (i + 1 == str.size()) {
+                value += c;
+                break;
+            }
+            if (str.at(i + 1) != detail::_space) {
+                value += c;
+            }
+            continue;
+        }
+        if (((c == detail::_space && !skip)
+             || (c != detail::_space
+                 && std::isspace(static_cast<unsigned char>(c))))
+                && quotes.empty()) {
+            detail::_store_value_to(value, res);
+        } else {
+            detail::_process_quotes(quotes, value, str, c, i + 1);
+            value += c;
+        }
+        skip = false;
+    }
+    detail::_store_value_to(value, res);
+    if (!quotes.empty()) {
+        err << "argparse error [skip]: possible incorrect string: '"
+            << str << "'" << std::endl;
+    }
+    return res;
 }
 
 // -- Argument ----------------------------------------------------------------
@@ -13379,7 +13397,7 @@ ArgumentParser::parse_args(
         std::string const& args,
         Namespace const& space) const
 {
-    return parse_args(detail::_split_to_args(args), space);
+    return parse_args(split_to_args(args), space);
 }
 
 _ARGPARSE_INL Namespace
@@ -13402,7 +13420,7 @@ ArgumentParser::parse_known_args(
         std::string const& args,
         Namespace const& space) const
 {
-    return parse_known_args(detail::_split_to_args(args), space);
+    return parse_known_args(split_to_args(args), space);
 }
 
 _ARGPARSE_INL Namespace
@@ -13425,7 +13443,7 @@ ArgumentParser::parse_intermixed_args(
         std::string const& args,
         Namespace const& space) const
 {
-    return parse_intermixed_args(detail::_split_to_args(args), space);
+    return parse_intermixed_args(split_to_args(args), space);
 }
 
 _ARGPARSE_INL Namespace
@@ -13448,7 +13466,7 @@ ArgumentParser::parse_known_intermixed_args(
         std::string const& args,
         Namespace const& space) const
 {
-    return parse_known_intermixed_args(detail::_split_to_args(args), space);
+    return parse_known_intermixed_args(split_to_args(args), space);
 }
 
 _ARGPARSE_INL Namespace
@@ -13506,7 +13524,7 @@ ArgumentParser::try_parse_args(
         std::string const& args,
         Namespace const& space) const
 {
-    return try_parse_args(detail::_split_to_args(args), space);
+    return try_parse_args(split_to_args(args), space);
 }
 
 _ARGPARSE_INL std::optional<Namespace>
@@ -13537,7 +13555,7 @@ ArgumentParser::try_parse_known_args(
         std::string const& args,
         Namespace const& space) const
 {
-    return try_parse_known_args(detail::_split_to_args(args), space);
+    return try_parse_known_args(split_to_args(args), space);
 }
 
 _ARGPARSE_INL std::optional<Namespace>
@@ -13568,7 +13586,7 @@ ArgumentParser::try_parse_intermixed_args(
         std::string const& args,
         Namespace const& space) const
 {
-    return try_parse_intermixed_args(detail::_split_to_args(args), space);
+    return try_parse_intermixed_args(split_to_args(args), space);
 }
 
 _ARGPARSE_INL std::optional<Namespace>
@@ -13600,7 +13618,7 @@ ArgumentParser::try_parse_known_intermixed_args(
         std::string const& args,
         Namespace const& space) const
 {
-    return try_parse_known_intermixed_args(detail::_split_to_args(args), space);
+    return try_parse_known_intermixed_args(split_to_args(args), space);
 }
 
 _ARGPARSE_INL std::optional<Namespace>

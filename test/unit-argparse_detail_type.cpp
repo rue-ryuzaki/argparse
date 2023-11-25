@@ -2,30 +2,12 @@
 * Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 */
 
-#include <argparse/argparse.hpp>
+#include <argparse/argparse_decl.hpp>
 #include "./catch-define.h"
 
-TEST_CASE("1. split to args", "[detail]")
+TEST_CASE("1. type name", "[detail]")
 {
-    SECTION("1.1. without quotes") {
-        REQUIRE(argparse::detail::_split_to_args("").empty());
-        REQUIRE(argparse::detail::_split_to_args("abc").size() == 1);
-        REQUIRE(argparse::detail::_split_to_args("abc xyz").size() == 2);
-        REQUIRE(argparse::detail::_split_to_args("abc\\ xyz").size() == 1);
-        REQUIRE(argparse::detail::_split_to_args("-f=abc xyz").size() == 2);
-    }
-
-    SECTION("1.2. with quotes") {
-        REQUIRE(argparse::detail::_split_to_args("Homer's dog").size() == 2);
-        REQUIRE(argparse::detail::_split_to_args("Homer's\\ dog").size() == 1);
-        REQUIRE(argparse::detail::_split_to_args("'Homer's dog'").size() == 1);
-        REQUIRE(argparse::detail::_split_to_args("-f='Homer's dog'").size() == 1);
-    }
-}
-
-TEST_CASE("2. type name", "[detail]")
-{
-    SECTION("2.1. current type") {
+    SECTION("1.1. current type") {
         REQUIRE(argparse::detail::Type::name<int>() == "int");
         REQUIRE(argparse::detail::Type::name<char>() == "char");
         REQUIRE(argparse::detail::Type::name<float>() == "float");
@@ -84,7 +66,7 @@ TEST_CASE("2. type name", "[detail]")
         REQUIRE(argparse::detail::Type::name<std::vector<std::vector<int> > >() == "std::vector<std::vector<int>>");
     }
 
-    SECTION("2.2. basic type") {
+    SECTION("1.2. basic type") {
         REQUIRE(argparse::detail::Type::basic<int>() == "int");
         REQUIRE(argparse::detail::Type::basic<char>() == "char");
         REQUIRE(argparse::detail::Type::basic<float>() == "float");
