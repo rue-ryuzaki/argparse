@@ -58,7 +58,7 @@ TEST_CASE("2. intermixed parsing", "[argument_parser]")
     SECTION("2.2. subparsers") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
-        argparse::ArgumentParser::Subparser& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+        argparse::SubParsers& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
         parser_a.add_argument("bar").help("bar help");

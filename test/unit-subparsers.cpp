@@ -12,7 +12,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
     SECTION("1.1. main parser without positional arguments (required=false)") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
-        argparse::ArgumentParser::Subparser& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+        argparse::SubParsers& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
         parser_a.add_argument("bar").help("bar help");
@@ -51,7 +51,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         parser.add_argument("--foo").action("store_true").help("foo help");
         parser.add_argument("boo").action("store").help("boo help");
 
-        argparse::ArgumentParser::Subparser& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+        argparse::SubParsers& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
         parser_a.add_argument("bar").help("bar help");
@@ -121,7 +121,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         parser.add_argument("boo").action("store_true").help("boo help");
         parser.add_argument("doo").action("store_false").help("doo help");
 
-        argparse::ArgumentParser::Subparser& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+        argparse::SubParsers& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
         parser_a.add_argument("bar").help("bar help");
@@ -189,7 +189,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         parser.add_argument("-1").dest("one").help("one help");
         parser.add_argument("--foo").action("store_true").help("foo help");
 
-        argparse::ArgumentParser::Subparser& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+        argparse::SubParsers& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
         parser_a.add_argument("bar").help("bar help");
@@ -234,7 +234,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         parser.add_argument("--foo").action("store_true").help("foo help");
         parser.add_argument("--boo").action("store").help("boo help");
 
-        argparse::ArgumentParser::Subparser& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+        argparse::SubParsers& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
         parser_a.add_argument("bar").help("bar help");
@@ -271,7 +271,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
     SECTION("1.6. subparser required=true") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
-        argparse::ArgumentParser::Subparser& subparsers
+        argparse::SubParsers& subparsers
                 = parser.add_subparsers().required(true).dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
@@ -287,7 +287,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
     SECTION("1.7. subparser namespace handle") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
-        argparse::ArgumentParser::Subparser& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
+        argparse::SubParsers& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
 #ifdef _ARGPARSE_CXX_11

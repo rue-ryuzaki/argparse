@@ -5962,6 +5962,9 @@ _ARGPARSE_EXPORT class ArgumentParser
     initialize_parser();
 
 public:
+    _ARGPARSE_ATTR_DEPRECATED_REASON(
+            "use argparse::SubParsers instead. "
+            "will be removed in the next minor release (v1.10.0)")
     typedef SubParsers Subparser;
 
     /*!
