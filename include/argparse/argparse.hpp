@@ -2102,30 +2102,6 @@ public:
     }
 #endif  // C++11+
 
-    inline bool
-    operator ==(Value const& rhs) const _ARGPARSE_NOEXCEPT
-    {
-        return m_has_value == rhs.m_has_value && m_value == rhs.m_value;
-    }
-
-    inline bool
-    operator ==(T const& rhs) const _ARGPARSE_NOEXCEPT
-    {
-        return m_has_value && m_value == rhs;
-    }
-
-    inline bool
-    operator !=(Value const& rhs) const _ARGPARSE_NOEXCEPT
-    {
-        return !(*this == rhs);
-    }
-
-    inline bool
-    operator !=(T const& rhs) const _ARGPARSE_NOEXCEPT
-    {
-        return !(*this == rhs);
-    }
-
     inline void
     reset(T const& value = T())
     {
@@ -2145,12 +2121,6 @@ public:
         return m_value;
     }
 
-    inline T const&
-    operator()() const _ARGPARSE_NOEXCEPT
-    {
-        return m_value;
-    }
-
     inline T const
     value_or(T const& value) const _ARGPARSE_NOEXCEPT
     {
@@ -2161,6 +2131,134 @@ private:
     // -- data ----------------------------------------------------------------
     T       m_value;
     bool    m_has_value;
+};
+
+template <class T>
+class SValue
+{
+public:
+    typedef T value_type;
+
+    SValue()
+        : m_value(),
+          m_has_value(false),
+          m_suppress(false)
+    { }
+
+    SValue(SValue const& orig)
+        : m_value(orig.m_value),
+          m_has_value(orig.m_has_value),
+          m_suppress(orig.m_suppress)
+    { }
+
+    explicit
+    SValue(T const& orig)
+        : m_value(orig),
+          m_has_value(true),
+          m_suppress(false)
+    { }
+
+    inline SValue&
+    operator =(SValue const& rhs)
+    {
+        if (this != &rhs) {
+            m_value     = rhs.m_value;
+            m_has_value = rhs.m_has_value;
+            m_suppress  = rhs.m_suppress;
+        }
+        return *this;
+    }
+
+    inline SValue&
+    operator =(T const& rhs)
+    {
+        m_value     = rhs;
+        m_has_value = true;
+        m_suppress  = false;
+        return *this;
+    }
+
+    inline SValue&
+    operator =(_SUPPRESS) _ARGPARSE_NOEXCEPT
+    {
+        m_suppress = true;
+        return *this;
+    }
+
+#ifdef _ARGPARSE_CXX_11
+    SValue(SValue&& orig) _ARGPARSE_NOEXCEPT
+        : m_value(std::move(orig.m_value)),
+          m_has_value(std::move(orig.m_has_value)),
+          m_suppress(std::move(orig.m_suppress))
+    { }
+
+    explicit
+    SValue(T&& orig) _ARGPARSE_NOEXCEPT
+        : m_value(std::move(orig)),
+          m_has_value(true),
+          m_suppress(false)
+    { }
+
+    inline SValue&
+    operator =(SValue&& rhs) _ARGPARSE_NOEXCEPT
+    {
+        if (this != &rhs) {
+            m_value     = std::move(rhs.m_value);
+            m_has_value = std::move(rhs.m_has_value);
+            m_suppress  = std::move(rhs.m_suppress);
+        }
+        return *this;
+    }
+
+    inline SValue&
+    operator =(T&& rhs) _ARGPARSE_NOEXCEPT
+    {
+        m_value     = std::move(rhs);
+        m_has_value = true;
+        m_suppress  = false;
+        return *this;
+    }
+#endif  // C++11+
+
+    inline void
+    reset(T const& value = T())
+    {
+        m_value     = value;
+        m_has_value = false;
+        m_suppress  = false;
+    }
+
+    inline bool
+    suppress() const _ARGPARSE_NOEXCEPT
+    {
+        return m_suppress;
+    }
+
+    inline bool
+    has_value() const _ARGPARSE_NOEXCEPT
+    {
+        return m_has_value;
+    }
+
+    inline T const&
+    value() const _ARGPARSE_NOEXCEPT
+    {
+        return m_value;
+    }
+
+    inline T&
+    will_have() _ARGPARSE_NOEXCEPT
+    {
+        m_has_value = true;
+        m_suppress  = false;
+        return m_value;
+    }
+
+private:
+    // -- data ----------------------------------------------------------------
+    T       m_value;
+    bool    m_has_value;
+    bool    m_suppress;
 };
 
 bool
@@ -2513,6 +2611,19 @@ public:
     remainder()
     {
         return nargs(argparse::REMAINDER);
+    }
+
+    /*!
+     *  \brief Set argument 'nargs' argparse::SUPPRESS value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    inline Argument&
+    suppresser()
+    {
+        return nargs(argparse::SUPPRESS);
     }
 
     /*!
@@ -3150,12 +3261,6 @@ private:
     is_match_name(
             std::string const& value) const;
 
-    inline bool
-    is_suppressed() const _ARGPARSE_NOEXCEPT
-    {
-        return m_default_type == argparse::SUPPRESS && !m_default.has_value();
-    }
-
     bool
     operator ==(
             Argument const& rhs) const;
@@ -3168,25 +3273,23 @@ private:
     std::vector<std::string>    m_flags;
     std::vector<std::string>    m_all_flags;
     std::string                 m_name;
-    Action                      m_action;
-    detail::Value<_SUPPRESS>    m_default_type;
-    detail::Value<_SUPPRESS>    m_help_type;
-    Type                        m_type;
-    Nargs                       m_nargs;
     std::size_t                 m_num_args;
     std::string                 m_nargs_str;
     detail::Value<std::string>  m_const;
-    detail::Value<std::string>  m_default;
+    detail::SValue<std::string> m_default;
     detail::Value<std::string>  m_implicit;
     detail::Value<std::string>  m_type_name;
     detail::Value<std::vector<std::string> > m_choices;
-    detail::TranslationPack     m_help;
+    detail::SValue<detail::TranslationPack>  m_help;
     detail::Value<std::string>  m_version;
     detail::Value<std::vector<std::string> > m_metavar;
     std::vector<std::string>    m_dest;
     detail::func1<std::string const&>::type m_handle;
     detail::func2<std::string const&, void*>::type m_factory;
     detail::shared_ptr<_ArgumentData> m_post_trigger;
+    Action                      m_action;
+    Type                        m_type;
+    Nargs                       m_nargs;
     detail::Value<bool>         m_required;
 };
 
@@ -3337,8 +3440,7 @@ protected:
     _ArgumentGroup(
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::Value<std::string>& argument_default,
-            detail::Value<_SUPPRESS>& argument_default_type,
+            detail::SValue<std::string>& argument_default,
             bool is_mutex_group);
 
 public:
@@ -3477,8 +3579,7 @@ protected:
     pArgumentData m_data;
     std::string& m_prefix_chars;
     pArgumentData& m_parent_data;
-    detail::Value<std::string>& m_argument_default;
-    detail::Value<_SUPPRESS>& m_argument_default_type;
+    detail::SValue<std::string>& m_argument_default;
 
 private:
     bool m_is_mutex_group;
@@ -3497,8 +3598,7 @@ _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
             std::string const& description,
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::Value<std::string>& argument_default,
-            detail::Value<_SUPPRESS>& argument_default_type);
+            detail::SValue<std::string>& argument_default);
 
     static detail::shared_ptr<ArgumentGroup>
     make_argument_group(
@@ -3506,8 +3606,7 @@ _ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
             std::string const& description,
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::Value<std::string>& argument_default,
-            detail::Value<_SUPPRESS>& argument_default_type);
+            detail::SValue<std::string>& argument_default);
 
 public:
     using _ArgumentGroup::add_argument;
@@ -3598,15 +3697,13 @@ _ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
     MutuallyExclusiveGroup(
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::Value<std::string>& argument_default,
-            detail::Value<_SUPPRESS>& argument_default_type);
+            detail::SValue<std::string>& argument_default);
 
     static MutuallyExclusiveGroup
     make_mutex_group(
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::Value<std::string>& argument_default,
-            detail::Value<_SUPPRESS>& argument_default_type);
+            detail::SValue<std::string>& argument_default);
 
 public:
     using _ArgumentGroup::add_argument;
@@ -5583,10 +5680,9 @@ private:
     _flags_to_string() const;
 
     // -- data ----------------------------------------------------------------
-    detail::TranslationPack m_help;
+    detail::SValue<detail::TranslationPack> m_help;
     detail::Value<std::string> m_metavar;
     std::list<pParser> m_parsers;
-    detail::Value<_SUPPRESS> m_help_type;
 };
 
 // Forward declaration
@@ -7989,7 +8085,7 @@ private:
     std::string m_prefix_chars;
     std::string m_fromfile_prefix_chars;
     std::string m_comment_prefix_chars;
-    detail::Value<std::string> m_argument_default;
+    detail::SValue<std::string> m_argument_default;
     detail::Value<std::size_t> m_output_width;
     std::list<pGroup> m_groups;
     std::list<MutuallyExclusiveGroup> m_mutex_groups;
@@ -8000,7 +8096,6 @@ private:
     std::size_t m_subparsers_position;
     detail::func1<std::string const&>::type m_handle;
     detail::func1<Namespace const&>::type m_parse_handle;
-    detail::Value<_SUPPRESS> m_argument_default_type;
     bool m_allow_abbrev;
     bool m_exit_on_error;
 };
@@ -9391,7 +9486,7 @@ _check_type(
         Value<std::string> const& expected,
         std::string const& received)
 {
-    if (expected.has_value() && !_is_type_correct(expected(), received)) {
+    if (expected.has_value() && !_is_type_correct(expected.value(), received)) {
         throw TypeError("type_name mismatch: expected '" + expected.value()
                         + "', received '" + received + "'");
     }
@@ -9531,7 +9626,7 @@ HelpFormatter::_get_help_string(
         Argument const* action,
         std::string const& lang) const
 {
-    return detail::_tr(action->m_help, lang);
+    return detail::_tr(action->m_help.value(), lang);
 }
 
 _ARGPARSE_INL std::vector<std::string>
@@ -9642,7 +9737,7 @@ _ArgumentDefaultsHelpFormatter::_get_help_string(
         Argument const* action,
         std::string const& lang) const
 {
-    std::string res = detail::_tr(action->m_help, lang);
+    std::string res = detail::_tr(action->m_help.value(), lang);
     if (!res.empty() && !detail::_contains_substr(res, "%(default)s")) {
         if (((action->m_type == Argument::Optional
               || action->m_type == Argument::Operand)
@@ -9728,11 +9823,6 @@ Argument::Argument(
     : m_flags(flags),
       m_all_flags(m_flags),
       m_name(name),
-      m_action(argparse::store),
-      m_default_type(),
-      m_help_type(),
-      m_type(type),
-      m_nargs(NARGS_DEF),
       m_num_args(1),
       m_nargs_str("1"),
       m_const(),
@@ -9751,9 +9841,12 @@ Argument::Argument(
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
+      m_action(argparse::store),
+      m_type(type),
+      m_nargs(NARGS_DEF),
       m_required()
 {
-    m_help[std::string()] = std::string();
+    m_help.will_have()[std::string()] = std::string();
     m_required.reset(m_type != Optional);
 }
 
@@ -9775,11 +9868,6 @@ Argument::Argument(
     : m_flags(std::move(flags)),
       m_all_flags(m_flags),
       m_name(std::move(name)),
-      m_action(argparse::store),
-      m_default_type(),
-      m_help_type(),
-      m_type(type),
-      m_nargs(NARGS_DEF),
       m_num_args(1),
       m_nargs_str("1"),
       m_const(),
@@ -9794,9 +9882,12 @@ Argument::Argument(
       m_handle(nullptr),
       m_factory(nullptr),
       m_post_trigger(nullptr),
+      m_action(argparse::store),
+      m_type(type),
+      m_nargs(NARGS_DEF),
       m_required()
 {
-    m_help[std::string()] = std::string();
+    m_help.will_have()[std::string()] = std::string();
     m_required.reset(m_type != Optional);
 }
 
@@ -9816,11 +9907,6 @@ Argument::Argument(
     : m_flags(detail::_vector(flag)),
       m_all_flags(m_flags),
       m_name(),
-      m_action(argparse::store),
-      m_default_type(),
-      m_help_type(),
-      m_type(NoType),
-      m_nargs(NARGS_DEF),
       m_num_args(1),
       m_nargs_str("1"),
       m_const(),
@@ -9835,9 +9921,12 @@ Argument::Argument(
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
+      m_action(argparse::store),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
       m_required()
 {
-    m_help[std::string()] = std::string();
+    m_help.will_have()[std::string()] = std::string();
 }
 
 _ARGPARSE_INL
@@ -9847,11 +9936,6 @@ Argument::Argument(
     : m_flags(detail::_vector(flag1, flag2)),
       m_all_flags(m_flags),
       m_name(),
-      m_action(argparse::store),
-      m_default_type(),
-      m_help_type(),
-      m_type(NoType),
-      m_nargs(NARGS_DEF),
       m_num_args(1),
       m_nargs_str("1"),
       m_const(),
@@ -9866,9 +9950,12 @@ Argument::Argument(
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
+      m_action(argparse::store),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
       m_required()
 {
-    m_help[std::string()] = std::string();
+    m_help.will_have()[std::string()] = std::string();
 }
 
 _ARGPARSE_INL
@@ -9879,11 +9966,6 @@ Argument::Argument(
     : m_flags(detail::_vector(flag1, flag2, flag3)),
       m_all_flags(m_flags),
       m_name(),
-      m_action(argparse::store),
-      m_default_type(),
-      m_help_type(),
-      m_type(NoType),
-      m_nargs(NARGS_DEF),
       m_num_args(1),
       m_nargs_str("1"),
       m_const(),
@@ -9898,9 +9980,12 @@ Argument::Argument(
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
+      m_action(argparse::store),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
       m_required()
 {
-    m_help[std::string()] = std::string();
+    m_help.will_have()[std::string()] = std::string();
 }
 
 _ARGPARSE_INL
@@ -9912,11 +9997,6 @@ Argument::Argument(
     : m_flags(detail::_vector(flag1, flag2, flag3, flag4)),
       m_all_flags(m_flags),
       m_name(),
-      m_action(argparse::store),
-      m_default_type(),
-      m_help_type(),
-      m_type(NoType),
-      m_nargs(NARGS_DEF),
       m_num_args(1),
       m_nargs_str("1"),
       m_const(),
@@ -9931,9 +10011,12 @@ Argument::Argument(
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
+      m_action(argparse::store),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
       m_required()
 {
-    m_help[std::string()] = std::string();
+    m_help.will_have()[std::string()] = std::string();
 }
 #endif  // C++11+
 
@@ -9943,11 +10026,6 @@ Argument::Argument(
     : m_flags(flags),
       m_all_flags(m_flags),
       m_name(),
-      m_action(argparse::store),
-      m_default_type(),
-      m_help_type(),
-      m_type(NoType),
-      m_nargs(NARGS_DEF),
       m_num_args(1),
       m_nargs_str("1"),
       m_const(),
@@ -9966,9 +10044,12 @@ Argument::Argument(
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
+      m_action(argparse::store),
+      m_type(NoType),
+      m_nargs(NARGS_DEF),
       m_required()
 {
-    m_help[std::string()] = std::string();
+    m_help.will_have()[std::string()] = std::string();
 }
 
 _ARGPARSE_INL
@@ -9977,11 +10058,6 @@ Argument::Argument(
     : m_flags(orig.m_flags),
       m_all_flags(orig.m_all_flags),
       m_name(orig.m_name),
-      m_action(orig.m_action),
-      m_default_type(orig.m_default_type),
-      m_help_type(orig.m_help_type),
-      m_type(orig.m_type),
-      m_nargs(orig.m_nargs),
       m_num_args(orig.m_num_args),
       m_nargs_str(orig.m_nargs_str),
       m_const(orig.m_const),
@@ -9996,6 +10072,9 @@ Argument::Argument(
       m_handle(orig.m_handle),
       m_factory(orig.m_factory),
       m_post_trigger(orig.m_post_trigger),
+      m_action(orig.m_action),
+      m_type(orig.m_type),
+      m_nargs(orig.m_nargs),
       m_required(orig.m_required)
 {
 }
@@ -10008,11 +10087,6 @@ Argument::operator =(
         this->m_flags           = rhs.m_flags;
         this->m_all_flags       = rhs.m_all_flags;
         this->m_name            = rhs.m_name;
-        this->m_action          = rhs.m_action;
-        this->m_default_type    = rhs.m_default_type;
-        this->m_help_type       = rhs.m_help_type;
-        this->m_type            = rhs.m_type;
-        this->m_nargs           = rhs.m_nargs;
         this->m_num_args        = rhs.m_num_args;
         this->m_nargs_str       = rhs.m_nargs_str;
         this->m_const           = rhs.m_const;
@@ -10027,6 +10101,9 @@ Argument::operator =(
         this->m_handle          = rhs.m_handle;
         this->m_factory         = rhs.m_factory;
         this->m_post_trigger    = rhs.m_post_trigger;
+        this->m_action          = rhs.m_action;
+        this->m_type            = rhs.m_type;
+        this->m_nargs           = rhs.m_nargs;
         this->m_required        = rhs.m_required;
     }
     return *this;
@@ -10039,11 +10116,6 @@ Argument::Argument(
     : m_flags(std::move(orig.m_flags)),
       m_all_flags(std::move(orig.m_all_flags)),
       m_name(std::move(orig.m_name)),
-      m_action(std::move(orig.m_action)),
-      m_default_type(std::move(orig.m_default_type)),
-      m_help_type(std::move(orig.m_help_type)),
-      m_type(std::move(orig.m_type)),
-      m_nargs(std::move(orig.m_nargs)),
       m_num_args(std::move(orig.m_num_args)),
       m_nargs_str(std::move(orig.m_nargs_str)),
       m_const(std::move(orig.m_const)),
@@ -10058,6 +10130,9 @@ Argument::Argument(
       m_handle(std::move(orig.m_handle)),
       m_factory(std::move(orig.m_factory)),
       m_post_trigger(std::move(orig.m_post_trigger)),
+      m_action(std::move(orig.m_action)),
+      m_type(std::move(orig.m_type)),
+      m_nargs(std::move(orig.m_nargs)),
       m_required(std::move(orig.m_required))
 {
 }
@@ -10070,11 +10145,6 @@ Argument::operator =(
         this->m_flags           = std::move(rhs.m_flags);
         this->m_all_flags       = std::move(rhs.m_all_flags);
         this->m_name            = std::move(rhs.m_name);
-        this->m_action          = std::move(rhs.m_action);
-        this->m_default_type    = std::move(rhs.m_default_type);
-        this->m_help_type       = std::move(rhs.m_help_type);
-        this->m_type            = std::move(rhs.m_type);
-        this->m_nargs           = std::move(rhs.m_nargs);
         this->m_num_args        = std::move(rhs.m_num_args);
         this->m_nargs_str       = std::move(rhs.m_nargs_str);
         this->m_const           = std::move(rhs.m_const);
@@ -10089,6 +10159,9 @@ Argument::operator =(
         this->m_handle          = std::move(rhs.m_handle);
         this->m_factory         = std::move(rhs.m_factory);
         this->m_post_trigger    = std::move(rhs.m_post_trigger);
+        this->m_action          = std::move(rhs.m_action);
+        this->m_type            = std::move(rhs.m_type);
+        this->m_nargs           = std::move(rhs.m_nargs);
         this->m_required        = std::move(rhs.m_required);
     }
     return *this;
@@ -10273,10 +10346,9 @@ Argument::nargs(
 
 _ARGPARSE_INL Argument&
 Argument::nargs(
-        _REMAINDER value)
+        _REMAINDER)
 {
-    if (!(action() & detail::_store_action) || m_type == Operand
-            || value != argparse::REMAINDER) {
+    if (!(action() & detail::_store_action) || m_type == Operand) {
         throw TypeError("got an unexpected keyword argument 'nargs'");
     }
     m_nargs = REMAINDING;
@@ -10287,10 +10359,9 @@ Argument::nargs(
 
 _ARGPARSE_INL Argument&
 Argument::nargs(
-        _SUPPRESS value)
+        _SUPPRESS)
 {
-    if (!(action() & detail::_store_action) || m_type == Operand
-            || value != argparse::SUPPRESS) {
+    if (!(action() & detail::_store_action) || m_type == Operand) {
         throw TypeError("got an unexpected keyword argument 'nargs'");
     }
     m_nargs = SUPPRESSING;
@@ -10327,15 +10398,7 @@ _ARGPARSE_INL Argument&
 Argument::default_value(
         _SUPPRESS value)
 {
-    if (value != argparse::SUPPRESS) {
-        throw TypeError("got an unexpected keyword argument 'default'");
-    }
-    if (action() == argparse::store_false) {
-        m_default.reset("1");
-    } else {
-        m_default.reset();
-    }
-    m_default_type = value;
+    m_default = value;
     return *this;
 }
 
@@ -10454,10 +10517,7 @@ Argument::help(
         std::string const& value,
         std::string const& lang)
 {
-    if (lang.empty()) {
-        m_help_type.reset();
-    }
-    m_help[lang] = value;
+    m_help.will_have()[lang] = value;
     return *this;
 }
 
@@ -10465,10 +10525,7 @@ _ARGPARSE_INL Argument&
 Argument::help(
         _SUPPRESS value)
 {
-    if (value != argparse::SUPPRESS) {
-        throw TypeError("got an unexpected keyword argument 'help'");
-    }
-    m_help_type = value;
+    m_help = value;
     return *this;
 }
 
@@ -10582,56 +10639,56 @@ Argument::nargs() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string const&
 Argument::const_value() const _ARGPARSE_NOEXCEPT
 {
-    return m_const();
+    return m_const.value();
 }
 
 _ARGPARSE_INL std::string const&
 Argument::default_value() const _ARGPARSE_NOEXCEPT
 {
-    return m_default();
+    return m_default.value();
 }
 
 _ARGPARSE_INL std::string const&
 Argument::implicit_value() const _ARGPARSE_NOEXCEPT
 {
-    return m_implicit();
+    return m_implicit.value();
 }
 
 _ARGPARSE_INL std::string const&
 Argument::type_name() const _ARGPARSE_NOEXCEPT
 {
-    return m_type_name();
+    return m_type_name.value();
 }
 
 _ARGPARSE_INL std::vector<std::string> const&
 Argument::choices() const _ARGPARSE_NOEXCEPT
 {
-    return m_choices();
+    return m_choices.value();
 }
 
 _ARGPARSE_INL bool
 Argument::required() const _ARGPARSE_NOEXCEPT
 {
-    return m_required();
+    return m_required.value();
 }
 
 _ARGPARSE_INL std::string const&
 Argument::help() const
 {
-    return detail::_tr_at(m_help, std::string());
+    return detail::_tr_at(m_help.value(), std::string());
 }
 
 _ARGPARSE_INL std::string const&
 Argument::version() const _ARGPARSE_NOEXCEPT
 {
-    return m_version();
+    return m_version.value();
 }
 
 _ARGPARSE_INL std::string
 Argument::metavar() const
 {
-    std::string res = detail::_join(m_metavar(), ", ");
-    return m_metavar().size() > 1 ? ("(" + res + ")") : res;
+    std::string res = detail::_join(m_metavar.value(), ", ");
+    return m_metavar.value().size() > 1 ? ("(" + res + ")") : res;
 }
 
 _ARGPARSE_INL std::string const&
@@ -10749,9 +10806,9 @@ _ARGPARSE_INL std::string
 Argument::get_default() const
 {
     if (!m_default.has_value() && (action() & detail::_bool_action)) {
-        return detail::_bool_to_string(m_default());
+        return detail::_bool_to_string(m_default.value());
     } else {
-        return (m_default.has_value() || !m_default().empty())
+        return (m_default.has_value() || !m_default.value().empty())
                 ? m_default.value() : "None";
     }
 }
@@ -11006,7 +11063,8 @@ Argument::operator ==(
             && m_name == rhs.m_name
             && m_type == rhs.m_type
             && m_action == rhs.m_action
-            && m_const == rhs.m_const
+            && m_const.has_value() == rhs.m_const.has_value()
+            && m_const.value() == rhs.m_const.value()
             && dest() == rhs.dest();
 }
 
@@ -11114,7 +11172,7 @@ _ArgumentData::get_arguments(
     std::vector<pArgument> res;
     res.reserve(m_arguments.size());
     for (arg_iterator it = m_arguments.begin(); it != m_arguments.end(); ++it) {
-        if ((add_suppress || !(*it)->m_help_type.has_value())
+        if ((add_suppress || !(*it)->m_help.suppress())
                 && ((*it)->m_type != Argument::Optional
                     || !(*it)->flags().empty())) {
             res.push_back(*it);
@@ -11131,7 +11189,7 @@ _ArgumentData::get_optional(
     std::vector<pArgument> res;
     res.reserve(m_optional.size());
     for (sub_iterator it = m_optional.begin(); it != m_optional.end(); ++it) {
-        if ((add_suppress || !(*it).first->m_help_type.has_value())
+        if ((add_suppress || !(*it).first->m_help.suppress())
                 && (add_group || !(*it).second)
                 && !(*it).first->flags().empty()) {
             res.push_back((*it).first);
@@ -11148,7 +11206,7 @@ _ArgumentData::get_operand(
     std::vector<pArgument> res;
     res.reserve(m_operand.size());
     for (sub_iterator it = m_operand.begin(); it != m_operand.end(); ++it) {
-        if ((add_suppress || !(*it).first->m_help_type.has_value())
+        if ((add_suppress || !(*it).first->m_help.suppress())
                 && (add_group || !(*it).second)) {
             res.push_back((*it).first);
         }
@@ -11164,7 +11222,7 @@ _ArgumentData::get_positional(
     std::vector<pArgument> res;
     res.reserve(m_positional.size());
     for (sub_iterator i = m_positional.begin(); i != m_positional.end(); ++i) {
-        if ((add_suppress || !(*i).first->m_help_type.has_value())
+        if ((add_suppress || !(*i).first->m_help.suppress())
                 && (add_group || !(*i).second)) {
             res.push_back((*i).first);
         }
@@ -11319,7 +11377,7 @@ _ArgumentData::validate_argument(
         if (arg.m_nargs != Argument::NARGS_DEF) {
             throw TypeError("got an unexpected keyword argument 'nargs'");
         }
-        if (arg.m_metavar.has_value() && arg.m_metavar().size() != 1) {
+        if (arg.m_metavar.has_value() && arg.m_metavar.value().size() != 1) {
             throw ValueError("got an invalid keyword argument 'metavar'");
         }
     } else if (arg.m_type == Argument::Optional) {
@@ -11336,14 +11394,12 @@ _ARGPARSE_INL
 _ArgumentGroup::_ArgumentGroup(
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::Value<std::string>& argument_default,
-        detail::Value<_SUPPRESS>& argument_default_type,
+        detail::SValue<std::string>& argument_default,
         bool is_mutex_group)
     : m_data(_ArgumentData::make_argument_data()),
       m_prefix_chars(prefix_chars),
       m_parent_data(parent_data),
       m_argument_default(argument_default),
-      m_argument_default_type(argument_default_type),
       m_is_mutex_group(is_mutex_group)
 {
 }
@@ -11355,7 +11411,6 @@ _ArgumentGroup::_ArgumentGroup(
       m_prefix_chars(orig.m_prefix_chars),
       m_parent_data(orig.m_parent_data),
       m_argument_default(orig.m_argument_default),
-      m_argument_default_type(orig.m_argument_default_type),
       m_is_mutex_group(orig.m_is_mutex_group)
 {
 }
@@ -11369,7 +11424,6 @@ _ArgumentGroup::operator =(
         m_prefix_chars          = rhs.m_prefix_chars;
         m_parent_data           = rhs.m_parent_data;
         m_argument_default      = rhs.m_argument_default;
-        m_argument_default_type = rhs.m_argument_default_type;
         m_is_mutex_group        = rhs.m_is_mutex_group;
     }
     return *this;
@@ -11441,11 +11495,11 @@ _ArgumentGroup::process_add_argument()
     }
     if (m_argument_default.has_value()
             && !m_data->m_arguments.back()->m_default.has_value()
-            && !m_data->m_arguments.back()->m_default_type.has_value()) {
+            && !m_data->m_arguments.back()->m_default.suppress()) {
         m_data->m_arguments.back()->default_value(m_argument_default.value());
     }
-    if (m_argument_default_type.has_value()) {
-        m_data->m_arguments.back()->default_value(m_argument_default_type());
+    if (m_argument_default.suppress()) {
+        m_data->m_arguments.back()->default_value(argparse::SUPPRESS);
     }
     m_parent_data->m_arguments.push_back(m_data->m_arguments.back());
     switch (type) {
@@ -11485,11 +11539,9 @@ ArgumentGroup::ArgumentGroup(
         std::string const& description,
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::Value<std::string>& argument_default,
-        detail::Value<_SUPPRESS>& argument_default_type)
+        detail::SValue<std::string>& argument_default)
     : _Group(title, description),
-      _ArgumentGroup(prefix_chars, parent_data,
-                     argument_default, argument_default_type, false)
+      _ArgumentGroup(prefix_chars, parent_data, argument_default, false)
 {
 }
 
@@ -11499,12 +11551,11 @@ ArgumentGroup::make_argument_group(
         std::string const& description,
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::Value<std::string>& argument_default,
-        detail::Value<_SUPPRESS>& argument_default_type)
+        detail::SValue<std::string>& argument_default)
 {
     return detail::make_shared<ArgumentGroup>(
-                ArgumentGroup(title, description, prefix_chars, parent_data,
-                              argument_default, argument_default_type));
+                ArgumentGroup(title, description, prefix_chars,
+                              parent_data, argument_default));
 }
 
 _ARGPARSE_INL
@@ -11525,7 +11576,6 @@ ArgumentGroup::operator =(
         m_data                  = rhs.m_data;
         m_prefix_chars          = rhs.m_prefix_chars;
         m_argument_default      = rhs.m_argument_default;
-        m_argument_default_type = rhs.m_argument_default_type;
         m_parent_data           = rhs.m_parent_data;
     }
     return *this;
@@ -11603,10 +11653,8 @@ _ARGPARSE_INL
 MutuallyExclusiveGroup::MutuallyExclusiveGroup(
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::Value<std::string>& argument_default,
-        detail::Value<_SUPPRESS>& argument_default_type)
-    : _ArgumentGroup(prefix_chars, parent_data,
-                     argument_default, argument_default_type, true),
+        detail::SValue<std::string>& argument_default)
+    : _ArgumentGroup(prefix_chars, parent_data, argument_default, true),
       m_required(false)
 {
 }
@@ -11615,11 +11663,9 @@ _ARGPARSE_INL MutuallyExclusiveGroup
 MutuallyExclusiveGroup::make_mutex_group(
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::Value<std::string>& argument_default,
-        detail::Value<_SUPPRESS>& argument_default_type)
+        detail::SValue<std::string>& argument_default)
 {
-    return MutuallyExclusiveGroup(prefix_chars, parent_data,
-                                  argument_default, argument_default_type);
+    return MutuallyExclusiveGroup(prefix_chars, parent_data, argument_default);
 }
 
 _ARGPARSE_INL
@@ -11639,7 +11685,6 @@ MutuallyExclusiveGroup::operator =(
         m_prefix_chars          = rhs.m_prefix_chars;
         m_parent_data           = rhs.m_parent_data;
         m_argument_default      = rhs.m_argument_default;
-        m_argument_default_type = rhs.m_argument_default_type;
         m_required              = rhs.m_required;
     }
     return *this;
@@ -12120,7 +12165,7 @@ Namespace::to_string() const
 _ARGPARSE_INL std::vector<std::string> const&
 Namespace::unrecognized_args() const _ARGPARSE_NOEXCEPT
 {
-    return m_unrecognized_args();
+    return m_unrecognized_args.value();
 }
 
 _ARGPARSE_INL std::string
@@ -12203,10 +12248,9 @@ _ParserGroup::_ParserGroup(
     : _Group(title, description),
       m_help(),
       m_metavar(),
-      m_parsers(),
-      m_help_type()
+      m_parsers()
 {
-    m_help[std::string()] = std::string();
+    m_help.will_have()[std::string()] = std::string();
 }
 
 _ARGPARSE_INL _ParserGroup::pParser
@@ -12222,13 +12266,13 @@ _ParserGroup::make_parser(
 _ARGPARSE_INL std::string const&
 _ParserGroup::help() const
 {
-    return detail::_tr_at(m_help, std::string());
+    return detail::_tr_at(m_help.value(), std::string());
 }
 
 _ARGPARSE_INL std::string const&
 _ParserGroup::metavar() const _ARGPARSE_NOEXCEPT
 {
-    return m_metavar();
+    return m_metavar.value();
 }
 
 _ARGPARSE_INL void
@@ -12270,7 +12314,7 @@ _ParserGroup::print_parser_group(
         std::string const& lang) const
 {
     os << detail::_help_formatter("  " + _flags_to_string(), formatter,
-                                  detail::_tr(m_help, lang), width, limit);
+                               detail::_tr(m_help.value(), lang), width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
         std::string help = detail::_tr((*it)->m_help, lang);
         if (!help.empty()) {
@@ -12356,7 +12400,6 @@ ParserGroup::operator =(
         m_help          = rhs.m_help;
         m_metavar       = rhs.m_metavar;
         m_parsers       = rhs.m_parsers;
-        m_help_type     = rhs.m_help_type;
     }
     return *this;
 }
@@ -12384,10 +12427,7 @@ ParserGroup::help(
         std::string const& value,
         std::string const& lang)
 {
-    if (lang.empty()) {
-        m_help_type.reset();
-    }
-    m_help[lang] = value;
+    m_help.will_have()[lang] = value;
     return *this;
 }
 
@@ -12395,10 +12435,7 @@ _ARGPARSE_INL ParserGroup&
 ParserGroup::help(
         _SUPPRESS value)
 {
-    if (value != argparse::SUPPRESS) {
-        throw TypeError("got an unexpected keyword argument 'help'");
-    }
-    m_help_type = value;
+    m_help = value;
     return *this;
 }
 
@@ -12501,10 +12538,7 @@ SubParsers::help(
         std::string const& value,
         std::string const& lang)
 {
-    if (lang.empty()) {
-        m_help_type.reset();
-    }
-    m_help[lang] = value;
+    m_help.will_have()[lang] = value;
     return *this;
 }
 
@@ -12512,10 +12546,7 @@ _ARGPARSE_INL SubParsers&
 SubParsers::help(
         _SUPPRESS value)
 {
-    if (value != argparse::SUPPRESS) {
-        throw TypeError("got an unexpected keyword argument 'help'");
-    }
-    m_help_type = value;
+    m_help = value;
     return *this;
 }
 
@@ -12728,7 +12759,6 @@ ArgumentParser::ArgumentParser(
       m_subparsers_position(),
       m_handle(_ARGPARSE_NULLPTR),
       m_parse_handle(_ARGPARSE_NULLPTR),
-      m_argument_default_type(),
       m_allow_abbrev(true),
       m_exit_on_error(true)
 {
@@ -12768,7 +12798,6 @@ ArgumentParser::ArgumentParser(
       m_subparsers_position(),
       m_handle(_ARGPARSE_NULLPTR),
       m_parse_handle(_ARGPARSE_NULLPTR),
-      m_argument_default_type(),
       m_allow_abbrev(true),
       m_exit_on_error(true)
 {
@@ -12810,7 +12839,6 @@ ArgumentParser::ArgumentParser(
       m_subparsers_position(),
       m_handle(_ARGPARSE_NULLPTR),
       m_parse_handle(_ARGPARSE_NULLPTR),
-      m_argument_default_type(),
       m_allow_abbrev(true),
       m_exit_on_error(true)
 {
@@ -13041,11 +13069,7 @@ _ARGPARSE_INL ArgumentParser&
 ArgumentParser::argument_default(
         _SUPPRESS value)
 {
-    if (value != argparse::SUPPRESS) {
-        throw
-        TypeError("got an unexpected keyword argument 'argument_default'");
-    }
-    m_argument_default_type = value;
+    m_argument_default = value;
     return *this;
 }
 
@@ -13180,7 +13204,7 @@ ArgumentParser::comment_prefix_chars() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string const&
 ArgumentParser::argument_default() const _ARGPARSE_NOEXCEPT
 {
-    return m_argument_default();
+    return m_argument_default.value();
 }
 
 _ARGPARSE_INL std::string const&
@@ -13282,8 +13306,7 @@ ArgumentParser::add_argument_group(
 {
     detail::shared_ptr<ArgumentGroup> group
             = ArgumentGroup::make_argument_group(
-                title, description, m_prefix_chars, m_data,
-                m_argument_default, m_argument_default_type);
+                title, description, m_prefix_chars, m_data, m_argument_default);
     m_groups.push_back(pGroup(group));
     return *group;
 }
@@ -13294,8 +13317,7 @@ ArgumentParser::add_mutually_exclusive_group(
 {
     m_mutex_groups.push_back(
                 MutuallyExclusiveGroup::make_mutex_group(
-                    m_prefix_chars, m_data,
-                    m_argument_default, m_argument_default_type));
+                    m_prefix_chars, m_data, m_argument_default));
     return m_mutex_groups.back().required(required);
 }
 
@@ -13350,7 +13372,8 @@ ArgumentParser::get_default(
     for (std::size_t i = 0; i < arguments.size(); ++i) {
         pArgument const& arg = arguments.at(i);
         if (arg->is_match_name(dest)) {
-            return arg->is_suppressed() ? detail::_suppress : arg->m_default();
+            return arg->m_default.suppress()
+                    ? detail::_suppress : arg->m_default.value();
         }
     }
     for (std::size_t i = 0; i < m_default_values.size(); ++i) {
@@ -13819,7 +13842,7 @@ ArgumentParser::print_help(
     for (grp_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
         if (!subparsers || ((*it) != subparsers
                             || (!sub_positional
-                                && !subparsers->m_help_type.has_value()))) {
+                                && !subparsers->m_help.suppress()))) {
             (*it)->print_help(os, *m_formatter, prog(), size, width, lang);
         }
     }
@@ -14093,11 +14116,11 @@ ArgumentParser::process_add_argument()
 {
     if (m_argument_default.has_value()
             && !m_data->m_arguments.back()->m_default.has_value()
-            && !m_data->m_arguments.back()->m_default_type.has_value()) {
+            && !m_data->m_arguments.back()->m_default.suppress()) {
         m_data->m_arguments.back()->default_value(m_argument_default.value());
     }
-    if (m_argument_default_type.has_value()) {
-        m_data->m_arguments.back()->default_value(m_argument_default_type());
+    if (m_argument_default.suppress()) {
+        m_data->m_arguments.back()->default_value(argparse::SUPPRESS);
     }
     switch (m_data->m_arguments.back()->m_type) {
         case Argument::Positional :
@@ -14373,12 +14396,9 @@ ArgumentParser::create_namespace(
         detail::rval<_Storage>::type storage,
         detail::rval<std::vector<std::string> >::type unrecognized_args)
 {
-    if (only_known) {
-        return Namespace(_ARGPARSE_MOVE(storage),
-                         _ARGPARSE_MOVE(unrecognized_args));
-    } else {
-        return Namespace(_ARGPARSE_MOVE(storage));
-    }
+    return only_known ? Namespace(_ARGPARSE_MOVE(storage),
+                                  _ARGPARSE_MOVE(unrecognized_args))
+                      : Namespace(_ARGPARSE_MOVE(storage));
 }
 
 _ARGPARSE_INL bool
@@ -15150,7 +15170,7 @@ ArgumentParser::process_separate_arg_abbrev(
     } else if ((!argument && !flags.empty())
                || (argument && (argument->action() & detail::_store_action))) {
         std::string str
-             = name.substr(i + (static_cast<bool>(argument) ? cp_size : 0));
+                = name.substr(i + (static_cast<bool>(argument) ? cp_size : 0));
         if (!str.empty()) {
             flags.back() += detail::_equals;
             flags.back() += str;
@@ -15170,9 +15190,9 @@ ArgumentParser::separate_arg_abbrev(
 {
     if (name.size() + 1 == arg.size()) {
         std::vector<std::string> const split
-             = detail::_split_equal(arg, info.parser->prefix_chars());
+                = detail::_split_equal(arg, info.parser->prefix_chars());
         if (split.size() == 2 && !split.front().empty()
-              && detail::_find_arg_by_flag(info.optional, split.front())) {
+                && detail::_find_arg_by_flag(info.optional, split.front())) {
             temp.push_back(arg);
             return;
         }
@@ -15400,14 +15420,14 @@ ArgumentParser::default_values_post_trigger(
 {
     for (_Storage::iterator it = storage.begin(); it != storage.end(); ) {
         if (!it->second.exists()) {
-            if (it->first->is_suppressed()) {
+            if (it->first->m_default.suppress()) {
                 it = storage.erase(it);
                 continue;
             }
             if (it->first->action() != argparse::count
                     && (it->first->m_type == Argument::Optional
                         || it->first->m_type == Argument::Operand)) {
-                detail::Value<std::string> const& dv = it->first->m_default;
+                detail::SValue<std::string> const& dv = it->first->m_default;
                 if (dv.has_value()
                         || (it->first->action() & detail::_bool_action)) {
                     it->second.push_back(dv.value(), dv.has_value());
@@ -15496,7 +15516,7 @@ ArgumentParser::subparsers_info(
     for (sub_iterator it = m_data->m_positional.begin();
          it != m_data->m_positional.end() && i < m_subparsers_position;
          ++it, ++i) {
-        res.second += (add_suppress || !(*it).first->m_help_type.has_value());
+        res.second += (add_suppress || !(*it).first->m_help.suppress());
     }
     return res;
 }
@@ -15565,7 +15585,7 @@ ArgumentParser::print_custom_usage(
     }
     for (std::size_t i = 0; i < positional.size(); ++i) {
         if (info.first && info.second == i
-                && !info.first->m_help_type.has_value()) {
+                && !info.first->m_help.suppress()) {
             add_arg_usage(res, info.first->usage(), true);
         }
         std::string const str = positional.at(i)->usage(*m_formatter);
@@ -15575,7 +15595,7 @@ ArgumentParser::print_custom_usage(
         add_arg_usage(res, str, true);
     }
     if (info.first && info.second == positional.size()
-            && !info.first->m_help_type.has_value()) {
+            && !info.first->m_help.suppress()) {
         add_arg_usage(res, info.first->usage(), true);
     }
     os << detail::_format_output(head_prog, res, 1, indent, w) << std::endl;
@@ -15586,7 +15606,7 @@ ArgumentParser::is_subparsers_positional(
         pSubParsers const& sub)
 {
     return sub && sub->title().empty() && sub->description().empty()
-            && !sub->m_help_type.has_value();
+            && !sub->m_help.suppress();
 }
 
 _ARGPARSE_INL void
@@ -15814,8 +15834,8 @@ ArgumentParser::test_diagnostics(
             os << _warn << " " << argument << ": empty choices\n";
         }
         // check help
-        if (detail::_tr(arg->m_help, lang).empty()
-                && !arg->m_help_type.has_value()) {
+        if (detail::_tr(arg->m_help.value(), lang).empty()
+                && !arg->m_help.suppress()) {
             ++diagnostics.first;
             os << _warn << " " << argument << ": help is not set\n";
         }
@@ -15884,8 +15904,8 @@ ArgumentParser::test_diagnostics(
             ++dest_args[flag];
         }
         // check help
-        if (detail::_tr(m_subparsers->m_help, lang).empty()
-                && !m_subparsers->m_help_type.has_value()) {
+        if (detail::_tr(m_subparsers->m_help.value(), lang).empty()
+                && !m_subparsers->m_help.suppress()) {
             ++diagnostics.first;
             os << _warn << " help for subparsers is not set\n";
         }
