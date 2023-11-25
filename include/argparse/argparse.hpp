@@ -15583,6 +15583,10 @@ ArgumentParser::print_subparsers(
 {
     if (need_print && info.second == index) {
         info.first->print_parser_group(os, formatter, size, width, lang);
+        for (SubParsers::pgr_iterator it = info.first->m_groups.begin();
+             it != info.first->m_groups.end(); ++it) {
+            (*it)->print_parser_group(os, formatter, size, width, lang);
+        }
     }
 }
 
