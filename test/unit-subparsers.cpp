@@ -230,7 +230,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args(_make_vec("-1", "-1")));
     }
 
-    SECTION("1.5. subparser with negative number options present") {
+    SECTION("1.5. subparsers with negative number options present") {
         parser.add_argument("--foo").action("store_true").help("foo help");
         parser.add_argument("--boo").action("store").help("boo help");
 
@@ -243,7 +243,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         argparse::ArgumentParser& parser_b = subparsers.add_parser("b").help("b help");
         parser_b.add_argument("--baz").choices("XYZ").help("baz help");
 
-        // so -1 is an option in subparser
+        // so -1 is an option in subparsers
         argparse::Namespace args0 = parser.parse_args(_make_vec("--boo", "-1", "a", "-1", "x", "1"));
         REQUIRE(args0.exists("bar") == true);
         REQUIRE(args0.exists("baz") == false);
@@ -262,13 +262,13 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         REQUIRE(args1.get<bool>("foo") == false);
         REQUIRE(args1.get<std::string>("cmd") == "a");
 
-        // so -2 is an option in subparser
+        // so -2 is an option in subparsers
         REQUIRE_THROWS(parser.parse_args(_make_vec("a", "-1", "x", "-2")));
-        // so both -1s are options in subparser
+        // so both -1s are options in subparsers
         REQUIRE_THROWS(parser.parse_args(_make_vec("a", "-1", "-1")));
     }
 
-    SECTION("1.6. subparser required=true") {
+    SECTION("1.6. subparsers required=true") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
         argparse::SubParsers& subparsers
@@ -284,7 +284,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         REQUIRE_THROWS(parser.parse_args(_make_vec("--foo")));
     }
 
-    SECTION("1.7. subparser namespace handle") {
+    SECTION("1.7. subparsers namespace handle") {
         parser.add_argument("--foo").action("store_true").help("foo help");
 
         argparse::SubParsers& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");

@@ -24,11 +24,11 @@ TEST_CASE("1. parents", "[argument_parser]")
         argparse::ArgumentParser parent3 = argparse::ArgumentParser().prefix_chars("+");
 
         argparse::ArgumentParser parser = argparse::ArgumentParser();
-        argparse::SubParsers& subparser = parser.add_subparsers();
+        argparse::SubParsers& subparsers = parser.add_subparsers();
 
-        REQUIRE_THROWS(subparser.add_parser("1").parents(parent1));
-        REQUIRE_NOTHROW(subparser.add_parser("2").add_help(false).parents(parent1));
-        REQUIRE_NOTHROW(subparser.add_parser("3").parents(parent2));
-        REQUIRE_NOTHROW(subparser.add_parser("4").parents(parent3));
+        REQUIRE_THROWS(subparsers.add_parser("1").parents(parent1));
+        REQUIRE_NOTHROW(subparsers.add_parser("2").add_help(false).parents(parent1));
+        REQUIRE_NOTHROW(subparsers.add_parser("3").parents(parent2));
+        REQUIRE_NOTHROW(subparsers.add_parser("4").parents(parent3));
     }
 }

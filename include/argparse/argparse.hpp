@@ -5734,24 +5734,24 @@ public:
     using _ParserGroup::metavar;
 
     /*!
-     *  \brief Set subparser 'title' value for selected language
+     *  \brief Set subparsers 'title' value for selected language
      *
      *  \param value Title value
      *  \param lang Language value (default: "")
      *
-     *  \return Current subparser reference
+     *  \return Current subparsers reference
      */
     SubParsers&
     title(std::string const& value,
             std::string const& lang = std::string());
 
     /*!
-     *  \brief Set subparser 'description' value for selected language
+     *  \brief Set subparsers 'description' value for selected language
      *
      *  \param value Description value
      *  \param lang Language value (default: "")
      *
-     *  \return Current subparser reference
+     *  \return Current subparsers reference
      */
     SubParsers&
     description(
@@ -5759,91 +5759,91 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  \brief Set subparser 'prog' value
+     *  \brief Set subparsers 'prog' value
      *
      *  \param value Program value
      *
-     *  \return Current subparser reference
+     *  \return Current subparsers reference
      */
     SubParsers&
     prog(std::string const& value);
 
     /*!
-     *  \brief Set subparser 'dest' value
+     *  \brief Set subparsers 'dest' value
      *
      *  \param value Destination value
      *
-     *  \return Current subparser reference
+     *  \return Current subparsers reference
      */
     SubParsers&
     dest(std::string const& value);
 
     /*!
-     *  \brief Set subparser 'required' value
+     *  \brief Set subparsers 'required' value
      *
      *  \param value Required flag
      *
-     *  \return Current subparser reference
+     *  \return Current subparsers reference
      */
     SubParsers&
     required(bool value) _ARGPARSE_NOEXCEPT;
 
     /*!
-     *  \brief Set subparser 'help' message for selected language
+     *  \brief Set subparsers 'help' message for selected language
      *
      *  \param value Help message
      *  \param lang Language value (default: "")
      *
-     *  \return Current subparser reference
+     *  \return Current subparsers reference
      */
     SubParsers&
     help(std::string const& value,
             std::string const& lang = std::string());
 
     /*!
-     *  \brief Suppress subparser 'help' message
+     *  \brief Suppress subparsers 'help' message
      *
      *  \param value argparse::SUPPRESS
      *
      *  \since v1.7.3
      *
-     *  \return Current subparser reference
+     *  \return Current subparsers reference
      */
     SubParsers&
     help(_SUPPRESS value);
 
     /*!
-     *  \brief Set subparser 'metavar' value
+     *  \brief Set subparsers 'metavar' value
      *
      *  \param value Metavar value
      *
-     *  \return Current subparser reference
+     *  \return Current subparsers reference
      */
     SubParsers&
     metavar(std::string const& value);
 
     /*!
-     *  \brief Get subparser 'prog' value
+     *  \brief Get subparsers 'prog' value
      *
-     *  \return Subparser 'prog' value
+     *  \return Subparsers 'prog' value
      */
     _ARGPARSE_ATTR_NODISCARD
     std::string const&
     prog() const _ARGPARSE_NOEXCEPT;
 
     /*!
-     *  \brief Get subparser 'dest' value
+     *  \brief Get subparsers 'dest' value
      *
-     *  \return Subparser 'dest' value
+     *  \return Subparsers 'dest' value
      */
     _ARGPARSE_ATTR_NODISCARD
     std::string const&
     dest() const _ARGPARSE_NOEXCEPT;
 
     /*!
-     *  \brief Get subparser 'required' value
+     *  \brief Get subparsers 'required' value
      *
-     *  \return Subparser 'required' value
+     *  \return Subparsers 'required' value
      */
     _ARGPARSE_ATTR_NODISCARD
     bool
@@ -5948,8 +5948,8 @@ _ARGPARSE_EXPORT class ArgumentParser
     typedef std::list<std::pair<pArgument, bool> >::const_iterator sub_iterator;
     typedef std::list<pGroup>::const_iterator grp_iterator;
     typedef std::list<MutuallyExclusiveGroup>::const_iterator mtx_it;
-    typedef detail::shared_ptr<SubParsers> pSubparser;
-    typedef std::pair<pSubparser, std::size_t> SubparserInfo;
+    typedef detail::shared_ptr<SubParsers> pSubParsers;
+    typedef std::pair<pSubParsers, std::size_t> SubParsersInfo;
 
     void
     read_args(int argc,
@@ -6733,7 +6733,7 @@ public:
      *  \param title Subparsers title (default: "")
      *  \param description Subparsers description (default: "")
      *
-     *  \return Current subparser reference
+     *  \return Current subparsers reference
      */
     SubParsers&
     add_subparsers(
@@ -6741,21 +6741,20 @@ public:
             std::string const& description = std::string());
 
     /*!
-     *  \brief Get subparsers.
-     *  If no subparsers are present, returns nullptr
+     *  \brief Get subparsers. If no subparsers was added, returns nullptr
      *
-     *  \return Current subparser pointer or nullptr
+     *  \return Current subparsers pointer or nullptr
      */
     _ARGPARSE_ATTR_NODISCARD
     SubParsers*
     subparsers() const _ARGPARSE_NOEXCEPT;
 
     /*!
-     *  \brief Check if subparsers are present
+     *  \brief Check if subparsers was added
      *
      *  \since v1.8.3
      *
-     *  \return True if subparsers are present, false otherwise
+     *  \return True if subparsers was added, false otherwise
      */
     _ARGPARSE_ATTR_NODISCARD
     bool
@@ -7538,7 +7537,7 @@ private:
         ParserInfo(
                 ArgumentParser const* parser,
                 _Storage const& storage,
-                SubparserInfo const& subparser,
+                SubParsersInfo const& subparsers,
                 pArguments const& optional,
                 pArguments const& operand);
 
@@ -7554,7 +7553,7 @@ private:
         pArguments optional;
         pArguments operand;
         _Storage storage;
-        SubparserInfo subparser;
+        SubParsersInfo subparsers;
         std::string lang;
         bool have_negative_args;
     };
@@ -7565,7 +7564,7 @@ private:
     parser_info(
             ArgumentParser const* parser,
             _Storage const& storage,
-            SubparserInfo const& subparser);
+            SubParsersInfo const& subparsers);
 
     void
     throw_error(
@@ -7615,9 +7614,9 @@ private:
     check_mutex_arguments() const;
 
     static void
-    check_intermixed_subparser(
+    check_intermixed_subparsers(
             bool intermixed,
-            pSubparser const& subparser);
+            pSubParsers const& subparsers);
 
     static void
     check_intermixed_remainder(
@@ -7847,10 +7846,10 @@ private:
             _Storage const& storage);
 
     static void
-    process_required_subparser(
+    process_required_subparsers(
             bool required,
             std::size_t pos,
-            SubparserInfo const& info,
+            SubParsersInfo const& info,
             std::string& res);
 
     static void
@@ -7893,13 +7892,13 @@ private:
     std::size_t
     argument_help_limit() const;
 
-    SubparserInfo
-    subparser_info(
+    SubParsersInfo
+    subparsers_info(
             bool add_suppress,
             std::size_t offset = 0) const;
 
     std::string
-    subparser_prog_args() const;
+    subparsers_prog_args() const;
 
     void
     add_arg_usage(
@@ -7913,19 +7912,19 @@ private:
             pArguments const& operand,
             pArguments const& optional,
             std::list<MutuallyExclusiveGroup> const& mutex_groups,
-            SubparserInfo const& info,
+            SubParsersInfo const& info,
             std::string const& prog,
             std::string const& usage_title,
             std::ostream& os) const;
 
     static bool
-    is_subparser_positional(
-            pSubparser const& sub);
+    is_subparsers_positional(
+            pSubParsers const& sub);
 
     static void
-    print_subparser(
+    print_subparsers(
             bool need_print,
-            SubparserInfo const& info,
+            SubParsersInfo const& info,
             std::size_t index,
             HelpFormatter const& formatter,
             std::size_t size,
@@ -7980,7 +7979,7 @@ private:
     std::vector<std::pair<std::string, std::string> > m_default_values;
     std::vector<std::string> m_parsed_arguments;
     std::list<std::pair<std::string, std::string> > m_env_variables;
-    pSubparser m_subparsers;
+    pSubParsers m_subparsers;
     std::size_t m_subparsers_position;
     detail::func1<std::string const&>::type m_handle;
     detail::func1<Namespace const&>::type m_parse_handle;
@@ -12809,7 +12808,7 @@ ArgumentParser::prog(
     if (!value.empty()) {
         m_prog = value;
         if (m_subparsers) {
-            m_subparsers->update_prog(prog(), subparser_prog_args());
+            m_subparsers->update_prog(prog(), subparsers_prog_args());
         }
     }
     return *this;
@@ -12949,7 +12948,7 @@ ArgumentParser::parents(
             m_subparsers_position
                    = parent.m_subparsers_position + m_data->m_positional.size();
             m_subparsers = parent.m_subparsers;
-            m_subparsers->update_prog(prog(), subparser_prog_args());
+            m_subparsers->update_prog(prog(), subparsers_prog_args());
         }
         m_data->merge_arguments(*parent.m_data.get());
         detail::_insert_to_end(parent.m_groups, m_groups);
@@ -13291,7 +13290,7 @@ ArgumentParser::add_subparsers(
     }
     m_subparsers_position = m_data->m_positional.size();
     m_subparsers = SubParsers::make_subparsers(title, description);
-    m_subparsers->update_prog(prog(), subparser_prog_args());
+    m_subparsers->update_prog(prog(), subparsers_prog_args());
     m_groups.push_back(pGroup(m_subparsers));
     return *m_subparsers;
 }
@@ -13717,7 +13716,7 @@ ArgumentParser::print_usage(
         pArguments const operand = m_data->get_operand(false, true);
         pArguments const optional = m_data->get_optional(false, true);
         print_custom_usage(positional, operand, optional, m_mutex_groups,
-                           subparser_info(false), prog(), tr_usage_title, os);
+                           subparsers_info(false), prog(), tr_usage_title, os);
     }
 }
 
@@ -13740,7 +13739,7 @@ ArgumentParser::print_help(
     pArguments const positional = m_data->get_positional(false, false);
     pArguments const operand = m_data->get_operand(false, false);
     pArguments const optional = m_data->get_optional(false, false);
-    SubparserInfo const sub_info = subparser_info(false);
+    SubParsersInfo const sub_info = subparsers_info(false);
     std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
     std::string tr_usage = detail::_tr(m_usage, lang);
     if (!tr_usage.empty()) {
@@ -13754,8 +13753,8 @@ ArgumentParser::print_help(
                 *m_formatter,
                 despecify(detail::_tr(m_description, lang)), width, os);
     std::size_t size = 0;
-    pSubparser subparser = sub_info.first;
-    bool sub_positional = is_subparser_positional(subparser);
+    pSubParsers subparsers = sub_info.first;
+    bool sub_positional = is_subparsers_positional(subparsers);
     for (std::size_t i = 0; i < positional.size(); ++i) {
         std::string str = positional.at(i)->flags_to_string(*m_formatter);
         detail::_limit_to_min(size, detail::_utf8_length(str).second);
@@ -13776,13 +13775,13 @@ ArgumentParser::print_help(
     if (!positional.empty() || sub_positional) {
         os << "\n" << detail::_tr(m_positionals_title, lang) << ":\n";
         for (std::size_t i = 0; i < positional.size(); ++i) {
-            print_subparser(sub_positional, sub_info, i,
-                            *m_formatter, size, width, lang, os);
+            print_subparsers(sub_positional, sub_info, i,
+                             *m_formatter, size, width, lang, os);
             os << despecify(positional.at(i)->print(
                                 *m_formatter, size, width, lang)) << std::endl;
         }
-        print_subparser(sub_positional, sub_info, positional.size(),
-                        *m_formatter, size, width, lang, os);
+        print_subparsers(sub_positional, sub_info, positional.size(),
+                         *m_formatter, size, width, lang, os);
     }
     if (!operand.empty()) {
         os << "\n" << detail::_tr(m_operands_title, lang) << ":\n";
@@ -13799,9 +13798,9 @@ ArgumentParser::print_help(
         }
     }
     for (grp_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
-        if (!subparser || ((*it) != subparser
-                           || (!sub_positional
-                               && !subparser->m_help_type.has_value()))) {
+        if (!subparsers || ((*it) != subparsers
+                            || (!sub_positional
+                                && !subparsers->m_help_type.has_value()))) {
             (*it)->print_help(os, *m_formatter, prog(), size, width, lang);
         }
     }
@@ -13998,14 +13997,14 @@ _ARGPARSE_INL
 ArgumentParser::ParserInfo::ParserInfo(
         ArgumentParser const* parser,
         _Storage const& storage,
-        SubparserInfo const& subparser,
+        SubParsersInfo const& subparsers,
         pArguments const& optional,
         pArguments const& operand)
     : parser(parser),
       optional(optional),
       operand(operand),
       storage(storage),
-      subparser(subparser),
+      subparsers(subparsers),
       lang(),
       have_negative_args()
 {
@@ -14021,7 +14020,7 @@ ArgumentParser::ParserInfo::ParserInfo(
       optional(orig.optional),
       operand(orig.operand),
       storage(orig.storage),
-      subparser(orig.subparser),
+      subparsers(orig.subparsers),
       lang(orig.lang),
       have_negative_args(orig.have_negative_args)
 { }
@@ -14035,7 +14034,7 @@ ArgumentParser::ParserInfo::operator =(
         optional            = rhs.optional;
         operand             = rhs.operand;
         storage             = rhs.storage;
-        subparser           = rhs.subparser;
+        subparsers          = rhs.subparsers;
         lang                = rhs.lang;
         have_negative_args  = rhs.have_negative_args;
     }
@@ -14046,9 +14045,9 @@ _ARGPARSE_INL ArgumentParser::ParserInfo
 ArgumentParser::parser_info(
         ArgumentParser const* parser,
         _Storage const& storage,
-        SubparserInfo const& subparser)
+        SubParsersInfo const& subparsers)
 {
-    return ParserInfo(parser, storage, subparser,
+    return ParserInfo(parser, storage, subparsers,
                       parser->m_data->get_optional(true, true),
                       parser->m_data->get_operand(true, true));
 }
@@ -14197,10 +14196,11 @@ ArgumentParser::parse_arguments(
     std::vector<std::string> parsed_arguments = read_args_from_file(in_args);
 
     Parsers parsers;
-    parsers.push_back(parser_info(this, space.storage(), subparser_info(true)));
+    parsers.push_back(
+                parser_info(this, space.storage(), subparsers_info(true)));
 
     check_mutex_arguments();
-    check_intermixed_subparser(intermixed, parsers.back().subparser.first);
+    check_intermixed_subparsers(intermixed, parsers.back().subparsers.first);
 
     pArguments positional = m_data->get_positional(true, true);
     check_intermixed_remainder(intermixed, positional);
@@ -14308,11 +14308,11 @@ ArgumentParser::check_mutex_arguments() const
 }
 
 _ARGPARSE_INL void
-ArgumentParser::check_intermixed_subparser(
+ArgumentParser::check_intermixed_subparsers(
         bool intermixed,
-        pSubparser const& subparser)
+        pSubParsers const& subparsers)
 {
-    if (intermixed && subparser) {
+    if (intermixed && subparsers) {
         throw
         TypeError("parse_intermixed_args: positional arg with nargs=A...");
     }
@@ -14945,7 +14945,7 @@ ArgumentParser::try_capture_parser(
     bool more_args = false;
     bool capture_need = false;
     for ( ; finish < positional.size(); ++finish) {
-        if (finish == parsers.back().subparser.second) {
+        if (finish == parsers.back().subparsers.second) {
             if (min_args + 1 > args.size()) {
                 break;
             }
@@ -14968,10 +14968,10 @@ ArgumentParser::try_capture_parser(
     match_positionals(parsers, pos, positional, args, finish,
                       ++min_args, one_args, more_args);
     std::string const& name = args.front();
-    std::string const& dest = parsers.back().subparser.first->dest();
+    std::string const& dest = parsers.back().subparsers.first->dest();
     std::string choices;
     std::list<pParser> const lst_parsers
-            = parsers.back().subparser.first->list_parsers();
+            = parsers.back().subparsers.first->list_parsers();
     for (prs_iterator it = lst_parsers.begin(); it != lst_parsers.end(); ++it) {
         detail::_append_value_to("'" + (*it)->m_name + "'", choices, ", ");
         for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
@@ -14981,20 +14981,20 @@ ArgumentParser::try_capture_parser(
         if ((*it)->m_name == name || detail::_exists(name, (*it)->aliases())) {
             std::string lang = parsers.back().lang;
             parsers.push_back(parser_info((*it).get(), _Storage(),
-                                          (*it)->subparser_info(true, pos)));
+                                          (*it)->subparsers_info(true, pos)));
             if (!lang.empty()) {
                 parsers.back().lang = lang;
             }
             parsers.back().parser->handle(parsers.back().parser->m_name);
             validate_arguments((*it)->m_data->get_arguments(true));
             if (!dest.empty()) {
-                pArgument subparser_arg
+                pArgument subparsers_arg
                         = Argument::make_argument(detail::_vector(dest),
                                                   dest, Argument::Positional);
                 for (pi_iterator j = parsers.begin(); j != parsers.end(); ++j) {
-                    (*j).storage.create(subparser_arg);
+                    (*j).storage.create(subparsers_arg);
                 }
-                parsers.front().storage.at(subparser_arg).push_back(name);
+                parsers.front().storage.at(subparsers_arg).push_back(name);
             }
             for (pi_iterator j = parsers.begin(); j != parsers.end(); ++j) {
                 (*j).storage.create(
@@ -15007,7 +15007,7 @@ ArgumentParser::try_capture_parser(
             return true;
         }
     }
-    throw_error("argument " + parsers.back().subparser.first->flags_to_string()
+    throw_error("argument " + parsers.back().subparsers.first->flags_to_string()
             + ": invalid choice: '" + name + "' (choose from " + choices + ")");
     return false;
 }
@@ -15216,7 +15216,7 @@ ArgumentParser::process_positional_args(
     if (intermixed) {
         detail::_insert_to_end(args, intermixed_args);
     } else {
-        if (parsers.back().subparser.first) {
+        if (parsers.back().subparsers.first) {
             if (try_capture_parser(parsers, pos, positional, unrecognized_args,
                                    args, i == parsed_arguments.size())) {
                 i -= (i == parsed_arguments.size());
@@ -15276,10 +15276,10 @@ ArgumentParser::process_required_arguments(
 }
 
 _ARGPARSE_INL void
-ArgumentParser::process_required_subparser(
+ArgumentParser::process_required_subparsers(
         bool required,
         std::size_t pos,
-        SubparserInfo const& info,
+        SubParsersInfo const& info,
         std::string& res)
 {
     if (required && pos == info.second) {
@@ -15339,19 +15339,19 @@ ArgumentParser::check_required_args(
     std::vector<std::string> required;
     process_required_arguments(required, it->optional, parsers.front().storage);
     process_required_arguments(required, it->operand, parsers.front().storage);
-    SubparserInfo const& info = it->subparser;
+    SubParsersInfo const& info = it->subparsers;
     bool sub_required = info.first && info.first->required();
     if (!required.empty() || pos < positional.size() || sub_required) {
         std::string args;
         for ( ; pos < positional.size(); ++pos) {
-            process_required_subparser(sub_required, pos, info, args);
+            process_required_subparsers(sub_required, pos, info, args);
             pArgument const& arg = positional.at(pos);
             if (args.empty() && skip_positional_required_check(parsers, arg)) {
                 continue;
             }
             detail::_append_value_to(arg->m_flags.front(), args, ", ");
         }
-        process_required_subparser(sub_required, pos, info, args);
+        process_required_subparsers(sub_required, pos, info, args);
         for (std::size_t i = 0; i < required.size(); ++i) {
             detail::_append_value_to(required.at(i), args, ", ");
         }
@@ -15467,12 +15467,12 @@ ArgumentParser::argument_help_limit() const
     return _help_minwidth;
 }
 
-_ARGPARSE_INL ArgumentParser::SubparserInfo
-ArgumentParser::subparser_info(
+_ARGPARSE_INL ArgumentParser::SubParsersInfo
+ArgumentParser::subparsers_info(
         bool add_suppress,
         std::size_t offset) const
 {
-    SubparserInfo res = std::make_pair(m_subparsers, offset);
+    SubParsersInfo res = std::make_pair(m_subparsers, offset);
     std::size_t i = 0;
     for (sub_iterator it = m_data->m_positional.begin();
          it != m_data->m_positional.end() && i < m_subparsers_position;
@@ -15483,11 +15483,11 @@ ArgumentParser::subparser_info(
 }
 
 _ARGPARSE_INL std::string
-ArgumentParser::subparser_prog_args() const
+ArgumentParser::subparsers_prog_args() const
 {
     std::string res;
     bool add_suppress = false;
-    SubparserInfo info = subparser_info(add_suppress);
+    SubParsersInfo info = subparsers_info(add_suppress);
     pArguments args = m_data->get_positional(add_suppress, true);
     for (std::size_t i = 0; i < args.size() && i != info.second; ++i) {
         detail::_append_value_to(args.at(i)->usage(*m_formatter), res);
@@ -15510,7 +15510,7 @@ ArgumentParser::print_custom_usage(
         pArguments const& operand,
         pArguments const& options,
         std::list<MutuallyExclusiveGroup> const& mutex_groups,
-        SubparserInfo const& info,
+        SubParsersInfo const& info,
         std::string const& prog,
         std::string const& usage_title,
         std::ostream& os) const
@@ -15563,17 +15563,17 @@ ArgumentParser::print_custom_usage(
 }
 
 _ARGPARSE_INL bool
-ArgumentParser::is_subparser_positional(
-        pSubparser const& sub)
+ArgumentParser::is_subparsers_positional(
+        pSubParsers const& sub)
 {
     return sub && sub->title().empty() && sub->description().empty()
             && !sub->m_help_type.has_value();
 }
 
 _ARGPARSE_INL void
-ArgumentParser::print_subparser(
+ArgumentParser::print_subparsers(
         bool need_print,
-        SubparserInfo const& info,
+        SubParsersInfo const& info,
         std::size_t index,
         HelpFormatter const& formatter,
         std::size_t size,
