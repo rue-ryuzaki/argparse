@@ -501,150 +501,6 @@ enum _SUPPRESS _ARGPARSE_ENUM_TYPE(uint8_t) {} SUPPRESS;
 _ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE
 enum _REMAINDER _ARGPARSE_ENUM_TYPE(uint8_t) {} REMAINDER;
 
-// Forward declaration
-class Argument;
-
-/*!
- *  \brief Formatter for generating usage messages and argument help strings
- */
-_ARGPARSE_EXPORT class HelpFormatter
-{
-    static std::size_t const c_default_tab_size = 4;
-
-public:
-    HelpFormatter()
-        : m_tab_size(c_default_tab_size)
-    { }
-    virtual ~HelpFormatter() _ARGPARSE_NOEXCEPT { }
-
-    inline void
-    _tab_size(std::size_t value) _ARGPARSE_NOEXCEPT
-    {
-        m_tab_size = value != 0 ? value : c_default_tab_size;
-    }
-
-    inline std::size_t
-    _tab_size() const _ARGPARSE_NOEXCEPT
-    {
-        return m_tab_size;
-    }
-
-    virtual std::string
-    _fill_text(
-            std::string const& text,
-            std::size_t width,
-            std::size_t indent) const;
-
-    virtual std::string
-    _get_default_metavar_for_optional(
-            Argument const* action) const;
-
-    virtual std::string
-    _get_default_metavar_for_positional(
-            Argument const* action) const;
-
-    virtual std::string
-    _get_help_string(
-            Argument const* action,
-            std::string const& lang) const;
-
-    virtual std::vector<std::string>
-    _split_lines(
-            std::string const& text,
-            std::size_t width) const;
-
-private:
-    // -- data ----------------------------------------------------------------
-    std::size_t m_tab_size;
-};
-
-/*!
- *  \brief Help message formatter which retains any formatting in descriptions
- */
-_ARGPARSE_EXPORT
-class _RawDescriptionHelpFormatter : virtual public HelpFormatter
-{
-public:
-    ~_RawDescriptionHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
-
-    std::string
-    _fill_text(
-            std::string const& text,
-            std::size_t width,
-            std::size_t indent) const _ARGPARSE_OVERRIDE;
-
-protected:
-    std::vector<std::string>
-    _split_lines_raw(
-            std::string const& text,
-            std::size_t width) const;
-} _ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
-
-/*!
- *  \brief Help message formatter which retains formatting of all help text
- */
-_ARGPARSE_EXPORT
-class _RawTextHelpFormatter : virtual public _RawDescriptionHelpFormatter
-{
-public:
-    ~_RawTextHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
-
-    std::vector<std::string>
-    _split_lines(
-            std::string const& text,
-            std::size_t width) const _ARGPARSE_OVERRIDE;
-} _ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
-
-/*!
- *  \brief Help message formatter which adds default values to argument help
- */
-_ARGPARSE_EXPORT
-class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
-{
-public:
-    ~_ArgumentDefaultsHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
-
-    std::string
-    _get_help_string(
-            Argument const* action,
-            std::string const& lang) const _ARGPARSE_OVERRIDE;
-} _ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
-
-/*!
- *  \brief Help message formatter which uses the argument 'type' as the default
- *  metavar value (instead of the argument 'dest')
- */
-_ARGPARSE_EXPORT
-class _MetavarTypeHelpFormatter : virtual public HelpFormatter
-{
-public:
-    ~_MetavarTypeHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
-
-    std::string
-    _get_default_metavar_for_optional(
-            Argument const* action) const _ARGPARSE_OVERRIDE;
-
-    std::string
-    _get_default_metavar_for_positional(
-            Argument const* action) const _ARGPARSE_OVERRIDE;
-} _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
-
-// -- standAlone functions ----------------------------------------------------
-/*!
- *  \brief Split string with command line arguments to arguments container
- *
- *  \param str String to process
- *  \param err Output stream for errors (default: std::cerr)
- *
- *  \since NEXT_RELEASE
- *
- *  \return Container with arguments
- */
-_ARGPARSE_EXPORT std::vector<std::string>
-split_to_args(
-        std::string const& str,
-        std::ostream& err = std::cerr);
-
 namespace detail {
 // -- constants ---------------------------------------------------------------
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equal            = '=';
@@ -1727,7 +1583,6 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-
 template <class T>
 inline std::string
 _to_string(
@@ -2276,6 +2131,201 @@ _check_non_count_action(
         std::string const& key,
         Action action);
 }  // namespace detail
+
+// Forward declaration
+class Argument;
+class ArgumentParser;
+
+/*!
+ *  \brief Formatter for generating usage messages and argument help strings
+ */
+_ARGPARSE_EXPORT class HelpFormatter
+{
+    friend class ArgumentParser;
+
+    typedef detail::shared_ptr<Argument> pArgument;
+    typedef std::vector<pArgument> pArguments;
+    typedef detail::shared_ptr<ArgumentParser> pParser;
+    typedef std::list<pParser>::const_iterator prs_iterator;
+
+    static std::size_t const c_default_tab_size = 4;
+
+public:
+    HelpFormatter()
+        : m_tab_size(c_default_tab_size)
+    { }
+    virtual ~HelpFormatter() _ARGPARSE_NOEXCEPT { }
+
+    inline void
+    _tab_size(std::size_t value) _ARGPARSE_NOEXCEPT
+    {
+        m_tab_size = value != 0 ? value : c_default_tab_size;
+    }
+
+    inline std::size_t
+    _tab_size() const _ARGPARSE_NOEXCEPT
+    {
+        return m_tab_size;
+    }
+
+    virtual std::string
+    _fill_text(
+            std::string const& text,
+            std::size_t width,
+            std::size_t indent) const;
+
+    virtual std::string
+    _get_default_metavar_for_optional(
+            Argument const* action) const;
+
+    virtual std::string
+    _get_default_metavar_for_positional(
+            Argument const* action) const;
+
+    virtual std::string
+    _get_help_string(
+            Argument const* action,
+            std::string const& lang) const;
+
+    virtual std::vector<std::string>
+    _split_lines(
+            std::string const& text,
+            std::size_t width) const;
+
+private:
+    struct CompletionInfo
+    {
+        CompletionInfo()
+            : args(),
+              options()
+        { }
+
+        // -- data ------------------------------------------------------------
+        std::string args;
+        std::vector<std::pair<pArgument, std::string> > options;
+    };
+
+    CompletionInfo
+    _bash_completion_info(
+            ArgumentParser const* parser) const;
+
+    void
+    _print_parser_completion(
+            std::ostream& os,
+            ArgumentParser const* parser,
+            std::string const& prog,
+            bool is_root) const;
+
+    void
+    _print_custom_usage(
+            std::ostream& os,
+            ArgumentParser const* parser,
+            std::string const& usage_title) const;
+
+    std::string
+    _format_bash_completion(
+            ArgumentParser const* parser) const;
+
+    std::string
+    _format_usage(
+            ArgumentParser const* parser,
+            std::string const& lang) const;
+
+    std::string
+    _format_help(
+            ArgumentParser const* parser,
+            std::string const& lang) const;
+
+    // -- data ----------------------------------------------------------------
+    std::size_t m_tab_size;
+};
+
+/*!
+ *  \brief Help message formatter which retains any formatting in descriptions
+ */
+_ARGPARSE_EXPORT
+class _RawDescriptionHelpFormatter : virtual public HelpFormatter
+{
+public:
+    ~_RawDescriptionHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+
+    std::string
+    _fill_text(
+            std::string const& text,
+            std::size_t width,
+            std::size_t indent) const _ARGPARSE_OVERRIDE;
+
+protected:
+    std::vector<std::string>
+    _split_lines_raw(
+            std::string const& text,
+            std::size_t width) const;
+} _ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
+
+/*!
+ *  \brief Help message formatter which retains formatting of all help text
+ */
+_ARGPARSE_EXPORT
+class _RawTextHelpFormatter : virtual public _RawDescriptionHelpFormatter
+{
+public:
+    ~_RawTextHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+
+    std::vector<std::string>
+    _split_lines(
+            std::string const& text,
+            std::size_t width) const _ARGPARSE_OVERRIDE;
+} _ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
+
+/*!
+ *  \brief Help message formatter which adds default values to argument help
+ */
+_ARGPARSE_EXPORT
+class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
+{
+public:
+    ~_ArgumentDefaultsHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+
+    std::string
+    _get_help_string(
+            Argument const* action,
+            std::string const& lang) const _ARGPARSE_OVERRIDE;
+} _ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
+
+/*!
+ *  \brief Help message formatter which uses the argument 'type' as the default
+ *  metavar value (instead of the argument 'dest')
+ */
+_ARGPARSE_EXPORT
+class _MetavarTypeHelpFormatter : virtual public HelpFormatter
+{
+public:
+    ~_MetavarTypeHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+
+    std::string
+    _get_default_metavar_for_optional(
+            Argument const* action) const _ARGPARSE_OVERRIDE;
+
+    std::string
+    _get_default_metavar_for_positional(
+            Argument const* action) const _ARGPARSE_OVERRIDE;
+} _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
+
+// -- standAlone functions ----------------------------------------------------
+/*!
+ *  \brief Split string with command line arguments to arguments container
+ *
+ *  \param str String to process
+ *  \param err Output stream for errors (default: std::cerr)
+ *
+ *  \since NEXT_RELEASE
+ *
+ *  \return Container with arguments
+ */
+_ARGPARSE_EXPORT std::vector<std::string>
+split_to_args(
+        std::string const& str,
+        std::ostream& err = std::cerr);
 
 // Forward declaration
 class _ArgumentData;
@@ -3299,6 +3349,7 @@ private:
 class _Group
 {
     friend class ArgumentParser;
+    friend class HelpFormatter;
 
 protected:
     explicit
@@ -3359,6 +3410,7 @@ class _ArgumentData
     friend class Argument;
     friend class ArgumentGroup;
     friend class ArgumentParser;
+    friend class HelpFormatter;
     friend class MutuallyExclusiveGroup;
 
     typedef detail::shared_ptr<Argument> pArgument;
@@ -3695,6 +3747,7 @@ private:
 _ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
 {
     friend class ArgumentParser;
+    friend class HelpFormatter;
 
     explicit
     MutuallyExclusiveGroup(
@@ -5610,15 +5663,13 @@ operator <<(
     return os;
 }
 
-// Forward declaration
-class ArgumentParser;
-
 /*!
  *  \brief _ParserGroup class
  */
 class _ParserGroup : public _Group
 {
     friend class ArgumentParser;
+    friend class HelpFormatter;
     friend class ParserGroup;
     friend class SubParsers;
 
@@ -5829,6 +5880,7 @@ private:
 _ARGPARSE_EXPORT class SubParsers : public _ParserGroup
 {
     friend class ArgumentParser;
+    friend class HelpFormatter;
     friend class ParserGroup;
 
     typedef detail::shared_ptr<ParserGroup> pParserGroup;
@@ -6053,6 +6105,7 @@ private:
 _ARGPARSE_EXPORT class ArgumentParser
 {
     friend class _ParserGroup;
+    friend class HelpFormatter;
     friend class ParserGroup;
     friend class SubParsers;
 
@@ -7639,26 +7692,6 @@ public:
             std::string const& arg_line) const;
 
 private:
-    struct CompletionInfo
-    {
-        CompletionInfo();
-
-        // -- data ------------------------------------------------------------
-        std::string args;
-        std::vector<std::pair<pArgument, std::string> > options;
-    };
-
-    static CompletionInfo
-    bash_completion_info(
-            ArgumentParser const* parser);
-
-    static void
-    print_parser_completion(
-            ArgumentParser const* parser,
-            std::string const& prog,
-            bool is_root,
-            std::ostream& os = std::cout);
-
     std::string
     default_language() const;
 
@@ -8030,23 +8063,6 @@ private:
 
     std::string
     subparsers_prog_args() const;
-
-    void
-    add_arg_usage(
-            std::string& res,
-            std::string const& str,
-            bool required) const;
-
-    void
-    print_custom_usage(
-            pArguments const& positional,
-            pArguments const& operand,
-            pArguments const& optional,
-            std::list<MutuallyExclusiveGroup> const& mutex_groups,
-            SubParsersInfo const& info,
-            std::string const& prog,
-            std::string const& usage_title,
-            std::ostream& os) const;
 
     static bool
     is_subparsers_positional(
@@ -9381,7 +9397,7 @@ _eat_ln(std::ostream& os,
     if (eat_ln) {
         eat_ln = false;
     } else {
-        os << begin;
+        os << "\n" << begin;
     }
 }
 
@@ -9485,7 +9501,7 @@ _print_raw_text_formatter(
 {
     if (!text.empty()) {
         _eat_ln(os, eat_ln, begin);
-        os << formatter._fill_text(text, width, indent) << end << std::endl;
+        os << formatter._fill_text(text, width, indent) << end;
     }
 }
 
@@ -9614,6 +9630,15 @@ _is_not_operand(
     return was_pseudo_arg || !_find_arg_by_flag(
                 args, _split(key, detail::_equals, 1).front());
 }
+
+_ARGPARSE_INL void
+_add_arg_usage(
+        std::string& res,
+        std::string const& str,
+        bool required)
+{
+    _append_value_to(required ? str : "[" + str + "]", res, "\n");
+}
 }  // namespace detail
 
 // -- HelpFormatter -----------------------------------------------------------
@@ -9680,6 +9705,292 @@ HelpFormatter::_split_lines(
     }
     detail::_store_value_to(value, res);
     return res;
+}
+
+_ARGPARSE_INL HelpFormatter::CompletionInfo
+HelpFormatter::_bash_completion_info(
+        ArgumentParser const* parser) const
+{
+    CompletionInfo res;
+    pArguments const optional = parser->m_data->get_optional(false, true);
+    pArguments const operand = parser->m_data->get_operand(false, true);
+    pArguments const positional = parser->m_data->get_positional(false, true);
+    res.options.reserve(optional.size());
+    std::vector<std::string> options;
+    for (std::size_t i = 0; i < optional.size(); ++i) {
+        pArgument const& arg = optional.at(i);
+        detail::_insert_to_end(arg->flags(), options);
+        res.options.push_back(std::make_pair(arg, std::string()));
+        if (arg->m_nargs != Argument::SUPPRESSING
+                && (arg->action()
+                    & (detail::_store_action | argparse::language))) {
+            if (!arg->choices().empty()) {
+                res.options.back().second
+                        = " -W \"" + detail::_join(arg->choices()) + "\"";
+            } else {
+                res.options.back().second = " -df";
+            }
+        }
+    }
+    for (std::size_t i = 0; i < operand.size(); ++i) {
+        pArgument const& arg = operand.at(i);
+        for (std::size_t j = 0; j < arg->flags().size(); ++j) {
+            options.push_back(arg->flags().at(j) + "=");
+            options.push_back(options.back() + "A");
+        }
+    }
+    bool have_fs_args = false;
+    for (std::size_t i = 0; i < positional.size(); ++i) {
+        pArgument const& arg = positional.at(i);
+        if (!(arg->action() & detail::_store_action)) {
+            continue;
+        }
+        have_fs_args = have_fs_args || (arg->m_nargs != Argument::SUPPRESSING);
+    }
+    if (parser->has_subparsers()) {
+        detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
+    }
+    if (have_fs_args) {
+        res.args += " -df";
+    }
+    if (!options.empty()) {
+        res.args += " -W \"" + detail::_join(options) + "\"";
+    }
+    return res;
+}
+
+_ARGPARSE_INL void
+HelpFormatter::_print_parser_completion(
+        std::ostream& os,
+        ArgumentParser const* p,
+        std::string const& prog,
+        bool is_root) const
+{
+    if (p->has_subparsers()) {
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            _print_parser_completion(
+                        os, (*it).get(), prog + "_" + (*it)->m_name, false);
+        }
+    }
+    os << "function _" << prog << "()\n";
+    os << "{\n";
+    if (p->has_subparsers()) {
+        if (is_root) {
+            os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
+        } else {
+            os << "  for (( i=$1; i < ${COMP_CWORD}; ((++i)) )); do\n";
+        }
+        os << "    case \"${COMP_WORDS[$i]}\" in\n";
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            std::string name = "\"" + (*it)->m_name + "\"";
+            if (!(*it)->aliases().empty()) {
+                name += "|" + detail::_join((*it)->aliases(), "|", "\"");
+            }
+            os << "      " << name << ")\n";
+            os << "        _" << prog << "_" << (*it)->m_name << " $((i+1))\n";
+            os << "        return;;\n";
+        }
+        os << "      *);;\n";
+        os << "    esac\n";
+        os << "  done\n";
+    }
+    CompletionInfo info = _bash_completion_info(p);
+    if (!info.options.empty()) {
+        os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
+        for (std::size_t j = 0; j < info.options.size(); ++j) {
+            std::pair<pArgument, std::string> const& a = info.options.at(j);
+            os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
+            if (!a.second.empty()) {
+                os << "      COMPREPLY=($(compgen" << a.second
+                   << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+            }
+            os << "      return;;\n";
+        }
+        os << "    *);;\n";
+        os << "  esac\n";
+    }
+    if (!info.args.empty()) {
+        os << "  COMPREPLY=($(compgen" << info.args
+           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+    }
+    os << "  return\n";
+    os << "}\n\n";
+}
+
+_ARGPARSE_INL void
+HelpFormatter::_print_custom_usage(
+        std::ostream& os,
+        ArgumentParser const* p,
+        std::string const& usage_title) const
+{
+    typedef ArgumentParser::mtx_it _mt;
+    typedef ArgumentParser::arg_iterator _arg;
+    pArguments const positional = p->m_data->get_positional(false, true);
+    pArguments ex_operand = p->m_data->get_operand(false, true);
+    pArguments ex_options = p->m_data->get_optional(false, true);
+    ArgumentParser::SubParsersInfo const info = p->subparsers_info(false);
+    std::size_t const w = p->output_width();
+    std::string head_prog = usage_title + " " + p->prog();
+    std::size_t indent = 1 + detail::_utf8_length(
+                w > detail::_min_width ? head_prog : usage_title).second;
+    std::string res;
+    for (_mt i = p->m_mutex_groups.begin(); i != p->m_mutex_groups.end(); ++i) {
+        for (_arg j = (*i).m_data->m_arguments.begin();
+             j != (*i).m_data->m_arguments.end(); ++j) {
+            ex_options.erase(std::remove(
+                                 ex_options.begin(), ex_options.end(), *j),
+                             ex_options.end());
+            ex_operand.erase(std::remove(
+                                 ex_operand.begin(), ex_operand.end(), *j),
+                             ex_operand.end());
+        }
+    }
+    for (std::size_t i = 0; i < ex_options.size(); ++i) {
+        detail::_add_arg_usage(res, ex_options.at(i)->usage(*this),
+                               ex_options.at(i)->required());
+    }
+    for (std::size_t i = 0; i < ex_operand.size(); ++i) {
+        detail::_add_arg_usage(res, ex_operand.at(i)->usage(*this),
+                               ex_operand.at(i)->required());
+    }
+    for (_mt i = p->m_mutex_groups.begin(); i != p->m_mutex_groups.end(); ++i) {
+        detail::_add_arg_usage(res, (*i).usage(*this), true);
+    }
+    for (std::size_t i = 0; i < positional.size(); ++i) {
+        if (info.first && info.second == i
+                && !info.first->m_help.suppress()) {
+            detail::_add_arg_usage(res, info.first->usage(), true);
+        }
+        std::string const str = positional.at(i)->usage(*this);
+        if (str.empty()) {
+            continue;
+        }
+        detail::_add_arg_usage(res, str, true);
+    }
+    if (info.first && info.second == positional.size()
+            && !info.first->m_help.suppress()) {
+        detail::_add_arg_usage(res, info.first->usage(), true);
+    }
+    os << detail::_format_output(head_prog, res, 1, indent, w);
+}
+
+_ARGPARSE_INL std::string
+HelpFormatter::_format_bash_completion(
+        ArgumentParser const* p) const
+{
+    std::stringstream ss;
+    ss << "# bash completion for " << p->prog() << "\n";
+    ss << "# generated with cpp-argparse v"
+       << ARGPARSE_VERSION_MAJOR << "."
+       << ARGPARSE_VERSION_MINOR << "."
+       << ARGPARSE_VERSION_PATCH << "\n\n";
+    _print_parser_completion(ss, p, p->prog(), true);
+    ss << "complete -F _" << p->prog() << " " << p->prog();
+    return ss.str();
+}
+
+_ARGPARSE_INL std::string
+HelpFormatter::_format_usage(
+        ArgumentParser const* p,
+        std::string const& language) const
+{
+    if (p->m_usage.suppress()) {
+        return std::string();
+    }
+    std::stringstream ss;
+    std::string lang = !language.empty() ? language : p->default_language();
+    std::string tr_usage_title = detail::_tr(p->m_usage_title, lang) + ":";
+    std::string tr_usage = detail::_tr(p->m_usage.value(), lang);
+    if (!tr_usage.empty()) {
+        ss << tr_usage_title << " " << p->despecify(tr_usage);
+    } else {
+        _print_custom_usage(ss, p, tr_usage_title);
+    }
+    return ss.str();
+}
+
+_ARGPARSE_INL std::string
+HelpFormatter::_format_help(
+        ArgumentParser const* p,
+        std::string const& language) const
+{
+    typedef ArgumentParser::grp_iterator grp_iterator;
+    std::stringstream ss;
+    std::string lang = !language.empty() ? language : p->default_language();
+    pArguments const positional = p->m_data->get_positional(false, false);
+    pArguments const operand = p->m_data->get_operand(false, false);
+    pArguments const optional = p->m_data->get_optional(false, false);
+    ArgumentParser::SubParsersInfo const sub_info = p->subparsers_info(false);
+    bool eat_ln = p->m_usage.suppress();
+    if (!eat_ln) {
+        ss << _format_usage(p, lang);
+    }
+    std::size_t const width = p->output_width();
+    detail::_print_raw_text_formatter(
+                *this, p->despecify(detail::_tr(p->m_description, lang)),
+                width, ss, eat_ln);
+    std::size_t size = 0;
+    ArgumentParser::pSubParsers subparsers = sub_info.first;
+    bool sub_positional = p->is_subparsers_positional(subparsers);
+    for (std::size_t i = 0; i < positional.size(); ++i) {
+        std::string str = positional.at(i)->flags_to_string(*this);
+        detail::_limit_to_min(size, detail::_utf8_length(str).second);
+    }
+    for (std::size_t i = 0; i < operand.size(); ++i) {
+        std::string str = operand.at(i)->flags_to_string(*this);
+        detail::_limit_to_min(size, detail::_utf8_length(str).second);
+    }
+    for (std::size_t i = 0; i < optional.size(); ++i) {
+        std::string str = optional.at(i)->flags_to_string(*this);
+        detail::_limit_to_min(size, detail::_utf8_length(str).second);
+    }
+    for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
+        (*it)->limit_help_flags(*this, size);
+    }
+    size += 4;
+    detail::_limit_to_max(size, p->output_width() - p->argument_help_limit());
+    if (!positional.empty() || sub_positional) {
+        detail::_eat_ln(ss, eat_ln);
+        ss << detail::_tr(p->m_positionals_title, lang) << ":";
+        for (std::size_t i = 0; i < positional.size(); ++i) {
+            p->print_subparsers(sub_positional, sub_info, i,
+                                *this, size, width, lang, ss);
+            ss << "\n" << p->despecify(positional.at(i)->print(
+                                           *this, size, width, lang));
+        }
+        p->print_subparsers(sub_positional, sub_info, positional.size(),
+                            *this, size, width, lang, ss);
+    }
+    if (!operand.empty()) {
+        detail::_eat_ln(ss, eat_ln);
+        ss << detail::_tr(p->m_operands_title, lang) << ":";
+        for (std::size_t i = 0; i < operand.size(); ++i) {
+            ss << "\n" << p->despecify(operand.at(i)->print(
+                                           *this, size, width, lang));
+        }
+    }
+    if (!optional.empty()) {
+        detail::_eat_ln(ss, eat_ln);
+        ss << detail::_tr(p->m_optionals_title, lang) << ":";
+        for (std::size_t i = 0; i < optional.size(); ++i) {
+            ss << "\n" << p->despecify(optional.at(i)->print(
+                                           *this, size, width, lang));
+        }
+    }
+    for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
+        if (!subparsers || ((*it) != subparsers
+                            || (!sub_positional
+                                && !subparsers->m_help.suppress()))) {
+            (*it)->print_help(
+                        ss, eat_ln, *this, p->prog(), size, width, lang);
+        }
+    }
+    detail::_print_raw_text_formatter(
+                *this, p->despecify(detail::_tr(p->m_epilog, lang)),
+                width, ss, eat_ln);
+    return ss.str();
 }
 
 // -- _RawDescriptionHelpFormatter --------------------------------------------
@@ -11671,12 +11982,9 @@ ArgumentGroup::print_help(
                     formatter,
                     detail::_replace(description, "%(prog)s", prog),
                     width, os, eat_ln, "\n", 2);
-        if (!m_data->m_arguments.empty()) {
-            os << std::endl;
-        }
         for (arg_iterator it = m_data->m_arguments.begin();
              it != m_data->m_arguments.end(); ++it) {
-            os << (*it)->print(formatter, limit, width, lang) << std::endl;
+            os << "\n" << (*it)->print(formatter, limit, width, lang);
         }
     }
 }
@@ -12331,7 +12639,7 @@ _ParserGroup::print_help(
 {
     detail::_eat_ln(os, eat_ln);
     std::string const title = detail::_tr(m_title, lang);
-    os << (title.empty() ? "subcommands" : title) << ":\n";
+    os << (title.empty() ? "subcommands" : title) << ":";
     detail::_print_raw_text_formatter(
                 formatter,
                 detail::_replace(
@@ -12348,7 +12656,7 @@ _ParserGroup::print_parser_group(
         std::size_t width,
         std::string const& lang) const
 {
-    os << detail::_help_formatter("  " + _flags_to_string(), formatter,
+    os << "\n" << detail::_help_formatter("  " + _flags_to_string(), formatter,
                                detail::_tr(m_help.value(), lang), width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
         std::string help = detail::_tr((*it)->m_help, lang);
@@ -12362,7 +12670,6 @@ _ParserGroup::print_parser_group(
                << detail::_help_formatter(name, formatter, help, width, limit);
         }
     }
-    os << std::endl;
 }
 
 _ARGPARSE_INL std::vector<std::string>
@@ -13771,13 +14078,7 @@ _ARGPARSE_INL void
 ArgumentParser::print_bash_completion(
         std::ostream& os) const
 {
-    os << "# bash completion for " << prog() << "\n";
-    os << "# generated with cpp-argparse v"
-       << ARGPARSE_VERSION_MAJOR << "."
-       << ARGPARSE_VERSION_MINOR << "."
-       << ARGPARSE_VERSION_PATCH << "\n\n";
-    print_parser_completion(this, prog(), true, os);
-    os << "complete -F _" << prog() << " " << prog() << std::endl;
+    os << format_bash_completion() << std::endl;
 }
 
 _ARGPARSE_INL void
@@ -13792,20 +14093,9 @@ ArgumentParser::print_usage(
         std::string const& language,
         std::ostream& os) const
 {
-    if (m_usage.suppress()) {
-        return;
-    }
-    std::string lang = !language.empty() ? language : default_language();
-    std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
-    std::string tr_usage = detail::_tr(m_usage.value(), lang);
-    if (!tr_usage.empty()) {
-        os << tr_usage_title << " " << despecify(tr_usage) << std::endl;
-    } else {
-        pArguments const positional = m_data->get_positional(false, true);
-        pArguments const operand = m_data->get_operand(false, true);
-        pArguments const optional = m_data->get_optional(false, true);
-        print_custom_usage(positional, operand, optional, m_mutex_groups,
-                           subparsers_info(false), prog(), tr_usage_title, os);
+    std::string res = format_usage(language);
+    if (!res.empty()) {
+        os << res << std::endl;
     }
 }
 
@@ -13821,115 +14111,30 @@ ArgumentParser::print_help(
         std::string const& language,
         std::ostream& os) const
 {
-    std::string lang = !language.empty() ? language : default_language();
-    pArguments const positional_all = m_data->get_positional(false, true);
-    pArguments const operand_all = m_data->get_operand(false, true);
-    pArguments const optional_all = m_data->get_optional(false, true);
-    pArguments const positional = m_data->get_positional(false, false);
-    pArguments const operand = m_data->get_operand(false, false);
-    pArguments const optional = m_data->get_optional(false, false);
-    SubParsersInfo const sub_info = subparsers_info(false);
-    if (!m_usage.suppress()) {
-        std::string tr_usage_title = detail::_tr(m_usage_title, lang) + ":";
-        std::string tr_usage = detail::_tr(m_usage.value(), lang);
-        if (!tr_usage.empty()) {
-            os << tr_usage_title << " " << despecify(tr_usage) << std::endl;
-        } else {
-            print_custom_usage(
-                        positional_all, operand_all, optional_all,
-                        m_mutex_groups, sub_info, prog(), tr_usage_title, os);
-        }
+    std::string res = format_help(language);
+    if (!res.empty()) {
+        os << res << std::endl;
     }
-    bool eat_ln = m_usage.suppress();
-    std::size_t const width = output_width();
-    detail::_print_raw_text_formatter(
-                *m_formatter,
-                despecify(detail::_tr(m_description, lang)), width, os, eat_ln);
-    std::size_t size = 0;
-    pSubParsers subparsers = sub_info.first;
-    bool sub_positional = is_subparsers_positional(subparsers);
-    for (std::size_t i = 0; i < positional.size(); ++i) {
-        std::string str = positional.at(i)->flags_to_string(*m_formatter);
-        detail::_limit_to_min(size, detail::_utf8_length(str).second);
-    }
-    for (std::size_t i = 0; i < operand.size(); ++i) {
-        std::string str = operand.at(i)->flags_to_string(*m_formatter);
-        detail::_limit_to_min(size, detail::_utf8_length(str).second);
-    }
-    for (std::size_t i = 0; i < optional.size(); ++i) {
-        std::string str = optional.at(i)->flags_to_string(*m_formatter);
-        detail::_limit_to_min(size, detail::_utf8_length(str).second);
-    }
-    for (grp_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
-        (*it)->limit_help_flags(*m_formatter, size);
-    }
-    size += 4;
-    detail::_limit_to_max(size, output_width() - argument_help_limit());
-    if (!positional.empty() || sub_positional) {
-        detail::_eat_ln(os, eat_ln);
-        os << detail::_tr(m_positionals_title, lang) << ":\n";
-        for (std::size_t i = 0; i < positional.size(); ++i) {
-            print_subparsers(sub_positional, sub_info, i,
-                             *m_formatter, size, width, lang, os);
-            os << despecify(positional.at(i)->print(
-                                *m_formatter, size, width, lang)) << std::endl;
-        }
-        print_subparsers(sub_positional, sub_info, positional.size(),
-                         *m_formatter, size, width, lang, os);
-    }
-    if (!operand.empty()) {
-        detail::_eat_ln(os, eat_ln);
-        os << detail::_tr(m_operands_title, lang) << ":\n";
-        for (std::size_t i = 0; i < operand.size(); ++i) {
-            os << despecify(operand.at(i)->print(
-                                *m_formatter, size, width, lang)) << std::endl;
-        }
-    }
-    if (!optional.empty()) {
-        detail::_eat_ln(os, eat_ln);
-        os << detail::_tr(m_optionals_title, lang) << ":\n";
-        for (std::size_t i = 0; i < optional.size(); ++i) {
-            os << despecify(optional.at(i)->print(
-                                *m_formatter, size, width, lang)) << std::endl;
-        }
-    }
-    for (grp_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
-        if (!subparsers || ((*it) != subparsers
-                            || (!sub_positional
-                                && !subparsers->m_help.suppress()))) {
-            (*it)->print_help(
-                        os, eat_ln, *m_formatter, prog(), size, width, lang);
-        }
-    }
-    detail::_print_raw_text_formatter(
-                *m_formatter, despecify(detail::_tr(m_epilog, lang)),
-                width, os, eat_ln);
 }
 
 _ARGPARSE_INL std::string
 ArgumentParser::format_bash_completion() const
 {
-    std::stringstream ss;
-    print_bash_completion(ss);
-    return detail::_trim_copy(ss.str());
+    return m_formatter->_format_bash_completion(this);
 }
 
 _ARGPARSE_INL std::string
 ArgumentParser::format_usage(
         std::string const& lang) const
 {
-    std::stringstream ss;
-    print_usage(lang, ss);
-    return detail::_trim_copy(ss.str());
+    return m_formatter->_format_usage(this, lang);
 }
 
 _ARGPARSE_INL std::string
 ArgumentParser::format_help(
         std::string const& lang) const
 {
-    std::stringstream ss;
-    print_help(lang, ss);
-    return detail::_trim_copy(ss.str());
+    return m_formatter->_format_help(this, lang);
 }
 
 _ARGPARSE_INL void
@@ -13957,124 +14162,6 @@ ArgumentParser::convert_arg_line_to_args(
         std::string const& arg_line) const
 {
     return detail::_vector(arg_line);
-}
-
-_ARGPARSE_INL
-ArgumentParser::CompletionInfo::CompletionInfo()
-    : args(),
-      options()
-{ }
-
-_ARGPARSE_INL ArgumentParser::CompletionInfo
-ArgumentParser::bash_completion_info(
-        ArgumentParser const* parser)
-{
-    CompletionInfo res;
-    pArguments const optional = parser->m_data->get_optional(false, true);
-    pArguments const operand = parser->m_data->get_operand(false, true);
-    pArguments const positional = parser->m_data->get_positional(false, true);
-    res.options.reserve(optional.size());
-    std::vector<std::string> options;
-    for (std::size_t i = 0; i < optional.size(); ++i) {
-        pArgument const& arg = optional.at(i);
-        detail::_insert_to_end(arg->flags(), options);
-        res.options.push_back(std::make_pair(arg, std::string()));
-        if (arg->m_nargs != Argument::SUPPRESSING
-                && (arg->action()
-                    & (detail::_store_action | argparse::language))) {
-            if (!arg->choices().empty()) {
-                res.options.back().second
-                        = " -W \"" + detail::_join(arg->choices()) + "\"";
-            } else {
-                res.options.back().second = " -df";
-            }
-        }
-    }
-    for (std::size_t i = 0; i < operand.size(); ++i) {
-        pArgument const& arg = operand.at(i);
-        for (std::size_t j = 0; j < arg->flags().size(); ++j) {
-            options.push_back(arg->flags().at(j) + "=");
-            options.push_back(options.back() + "A");
-        }
-    }
-    bool have_fs_args = false;
-    for (std::size_t i = 0; i < positional.size(); ++i) {
-        pArgument const& arg = positional.at(i);
-        if (!(arg->action() & detail::_store_action)) {
-            continue;
-        }
-        have_fs_args = have_fs_args || (arg->m_nargs != Argument::SUPPRESSING);
-    }
-    if (parser->has_subparsers()) {
-        detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
-    }
-    if (have_fs_args) {
-        res.args += " -df";
-    }
-    if (!options.empty()) {
-        res.args += " -W \"" + detail::_join(options) + "\"";
-    }
-    return res;
-}
-
-_ARGPARSE_INL void
-ArgumentParser::print_parser_completion(
-        ArgumentParser const* p,
-        std::string const& prog,
-        bool is_root,
-        std::ostream& os)
-{
-    if (p->has_subparsers()) {
-        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
-        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
-            print_parser_completion(
-                        (*it).get(), prog + "_" + (*it)->m_name, false, os);
-        }
-    }
-    os << "function _" << prog << "()\n";
-    os << "{\n";
-    if (p->has_subparsers()) {
-        if (is_root) {
-            os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
-        } else {
-            os << "  for (( i=$1; i < ${COMP_CWORD}; ((++i)) )); do\n";
-        }
-        os << "    case \"${COMP_WORDS[$i]}\" in\n";
-        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
-        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
-            std::string name = "\"" + (*it)->m_name + "\"";
-            if (!(*it)->aliases().empty()) {
-                name += "|" + detail::_join((*it)->aliases(), "|", "\"");
-            }
-            os << "      " << name << ")\n";
-            os << "        _" << prog << "_" << (*it)->m_name << " $((i+1))\n";
-            os << "        return;;\n";
-        }
-        os << "      *);;\n";
-        os << "    esac\n";
-        os << "  done\n";
-    }
-    CompletionInfo info = bash_completion_info(p);
-    if (!info.options.empty()) {
-        os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
-        for (std::size_t j = 0; j < info.options.size(); ++j) {
-            std::pair<pArgument, std::string> const& a = info.options.at(j);
-            os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
-            if (!a.second.empty()) {
-                os << "      COMPREPLY=($(compgen" << a.second
-                   << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
-            }
-            os << "      return;;\n";
-        }
-        os << "    *);;\n";
-        os << "  esac\n";
-    }
-    if (!info.args.empty()) {
-        os << "  COMPREPLY=($(compgen" << info.args
-           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
-    }
-    os << "  return\n";
-    os << "}\n\n";
 }
 
 _ARGPARSE_INL std::string
@@ -15588,73 +15675,6 @@ ArgumentParser::subparsers_prog_args() const
         detail::_append_value_to(args.at(i)->usage(*m_formatter), res);
     }
     return res;
-}
-
-_ARGPARSE_INL void
-ArgumentParser::add_arg_usage(
-        std::string& res,
-        std::string const& str,
-        bool required) const
-{
-    detail::_append_value_to(required ? str : "[" + str + "]", res, "\n");
-}
-
-_ARGPARSE_INL void
-ArgumentParser::print_custom_usage(
-        pArguments const& positional,
-        pArguments const& operand,
-        pArguments const& options,
-        std::list<MutuallyExclusiveGroup> const& mutex_groups,
-        SubParsersInfo const& info,
-        std::string const& prog,
-        std::string const& usage_title,
-        std::ostream& os) const
-{
-    std::size_t const w = output_width();
-    std::string head_prog = usage_title + " " + prog;
-    std::size_t indent = 1 + detail::_utf8_length(
-                w > detail::_min_width ? head_prog : usage_title).second;
-    std::string res;
-    pArguments ex_options = options;
-    pArguments ex_operand = operand;
-    for (mtx_it i = mutex_groups.begin(); i != mutex_groups.end(); ++i) {
-        for (arg_iterator j = (*i).m_data->m_arguments.begin();
-             j != (*i).m_data->m_arguments.end(); ++j) {
-            ex_options.erase(std::remove(
-                                 ex_options.begin(), ex_options.end(), *j),
-                             ex_options.end());
-            ex_operand.erase(std::remove(
-                                 ex_operand.begin(), ex_operand.end(), *j),
-                             ex_operand.end());
-        }
-    }
-    for (std::size_t i = 0; i < ex_options.size(); ++i) {
-        add_arg_usage(res, ex_options.at(i)->usage(*m_formatter),
-                      ex_options.at(i)->required());
-    }
-    for (std::size_t i = 0; i < ex_operand.size(); ++i) {
-        add_arg_usage(res, ex_operand.at(i)->usage(*m_formatter),
-                      ex_operand.at(i)->required());
-    }
-    for (mtx_it i = mutex_groups.begin(); i != mutex_groups.end(); ++i) {
-        add_arg_usage(res, (*i).usage(*m_formatter), true);
-    }
-    for (std::size_t i = 0; i < positional.size(); ++i) {
-        if (info.first && info.second == i
-                && !info.first->m_help.suppress()) {
-            add_arg_usage(res, info.first->usage(), true);
-        }
-        std::string const str = positional.at(i)->usage(*m_formatter);
-        if (str.empty()) {
-            continue;
-        }
-        add_arg_usage(res, str, true);
-    }
-    if (info.first && info.second == positional.size()
-            && !info.first->m_help.suppress()) {
-        add_arg_usage(res, info.first->usage(), true);
-    }
-    os << detail::_format_output(head_prog, res, 1, indent, w) << std::endl;
 }
 
 _ARGPARSE_INL bool
