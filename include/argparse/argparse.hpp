@@ -5734,6 +5734,9 @@ private:
     std::string
     _flags_to_string() const;
 
+    bool
+    _is_positional() const;
+
     // -- data ----------------------------------------------------------------
     detail::SValue<detail::TranslationPack> m_help;
     detail::Value<std::string> m_metavar;
@@ -6084,11 +6087,11 @@ private:
     std::string
     flags_to_string() const;
 
-    std::string
-    print(HelpFormatter const& formatter,
-            std::size_t limit,
-            std::size_t width,
-            std::string const& lang) const;
+    bool
+    is_positional() const;
+
+    bool
+    is_suppress() const;
 
     // -- data ------------------------------------------------------------
     std::string m_parent_prog;
@@ -8064,10 +8067,6 @@ private:
     std::string
     subparsers_prog_args() const;
 
-    static bool
-    is_subparsers_positional(
-            pSubParsers const& sub);
-
     static void
     print_subparsers(
             bool need_print,
@@ -9860,7 +9859,7 @@ HelpFormatter::_print_custom_usage(
     }
     for (std::size_t i = 0; i < positional.size(); ++i) {
         if (info.first && info.second == i
-                && !info.first->m_help.suppress()) {
+                && !info.first->is_suppress()) {
             detail::_add_arg_usage(res, info.first->usage(), true);
         }
         std::string const str = positional.at(i)->usage(*this);
@@ -9870,7 +9869,7 @@ HelpFormatter::_print_custom_usage(
         detail::_add_arg_usage(res, str, true);
     }
     if (info.first && info.second == positional.size()
-            && !info.first->m_help.suppress()) {
+            && !info.first->is_suppress()) {
         detail::_add_arg_usage(res, info.first->usage(), true);
     }
     os << detail::_format_output(head_prog, res, 1, indent, w);
@@ -9933,7 +9932,7 @@ HelpFormatter::_format_help(
                 width, ss, eat_ln);
     std::size_t size = 0;
     ArgumentParser::pSubParsers subparsers = sub_info.first;
-    bool sub_positional = p->is_subparsers_positional(subparsers);
+    bool sub_positional = subparsers && subparsers->is_positional();
     for (std::size_t i = 0; i < positional.size(); ++i) {
         std::string str = positional.at(i)->flags_to_string(*this);
         detail::_limit_to_min(size, detail::_utf8_length(str).second);
@@ -9980,11 +9979,8 @@ HelpFormatter::_format_help(
         }
     }
     for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
-        if (!subparsers || ((*it) != subparsers
-                            || (!sub_positional
-                                && !subparsers->m_help.suppress()))) {
-            (*it)->print_help(
-                        ss, eat_ln, *this, p->prog(), size, width, lang);
+        if (!subparsers || ((*it) != subparsers || !sub_positional)) {
+            (*it)->print_help(ss, eat_ln, *this, p->prog(), size, width, lang);
         }
     }
     detail::_print_raw_text_formatter(
@@ -12621,6 +12617,9 @@ _ParserGroup::limit_help_flags(
         HelpFormatter const&,
         std::size_t& limit) const
 {
+    if (m_help.suppress()) {
+        return;
+    }
     detail::_limit_to_min(limit, _flags_to_string().size());
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
         detail::_limit_to_min(limit, (*it)->m_name.size() + 2);
@@ -12637,6 +12636,9 @@ _ParserGroup::print_help(
         std::size_t width,
         std::string const& lang) const
 {
+    if (m_help.suppress()) {
+        return;
+    }
     detail::_eat_ln(os, eat_ln);
     std::string const title = detail::_tr(m_title, lang);
     os << (title.empty() ? "subcommands" : title) << ":";
@@ -12656,6 +12658,9 @@ _ParserGroup::print_parser_group(
         std::size_t width,
         std::string const& lang) const
 {
+    if (m_help.suppress()) {
+        return;
+    }
     os << "\n" << detail::_help_formatter("  " + _flags_to_string(), formatter,
                                detail::_tr(m_help.value(), lang), width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
@@ -12700,6 +12705,12 @@ _ParserGroup::_flags_to_string() const
         }
     }
     return "{" + res + "}";
+}
+
+_ARGPARSE_INL bool
+_ParserGroup::_is_positional() const
+{
+    return title().empty() && description().empty();
 }
 
 // -- ParserGroup -------------------------------------------------------------
@@ -13020,9 +13031,34 @@ SubParsers::usage() const
 _ARGPARSE_INL std::string
 SubParsers::flags_to_string() const
 {
-    std::string res = _flags_to_string();
+    std::string res;
+    if (!m_help.suppress()) {
+        res += _flags_to_string();
+    }
     for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
-        detail::_append_value_to((*it)->_flags_to_string(), res, " | ");
+        if (!(*it)->m_help.suppress()) {
+            detail::_append_value_to((*it)->_flags_to_string(), res, " | ");
+        }
+    }
+    return res;
+}
+
+_ARGPARSE_INL bool
+SubParsers::is_positional() const
+{
+    bool res = _is_positional();
+    for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
+        res = res && (*it)->_is_positional();
+    }
+    return res;
+}
+
+_ARGPARSE_INL bool
+SubParsers::is_suppress() const
+{
+    bool res = m_help.suppress();
+    for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
+        res = res && (*it)->m_help.suppress();
     }
     return res;
 }
@@ -15677,14 +15713,6 @@ ArgumentParser::subparsers_prog_args() const
     return res;
 }
 
-_ARGPARSE_INL bool
-ArgumentParser::is_subparsers_positional(
-        pSubParsers const& sub)
-{
-    return sub && sub->title().empty() && sub->description().empty()
-            && !sub->m_help.suppress();
-}
-
 _ARGPARSE_INL void
 ArgumentParser::print_subparsers(
         bool need_print,
@@ -15983,7 +16011,7 @@ ArgumentParser::test_diagnostics(
         }
         // check help
         if (detail::_tr(m_subparsers->m_help.value(), lang).empty()
-                && !m_subparsers->m_help.suppress()) {
+                && !m_subparsers->is_suppress()) {
             ++diagnostics.first;
             os << _warn << " help for subparsers is not set\n";
         }
