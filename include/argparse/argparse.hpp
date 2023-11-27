@@ -2144,9 +2144,6 @@ _ARGPARSE_EXPORT class HelpFormatter
     friend class ArgumentParser;
 
     typedef detail::shared_ptr<Argument> pArgument;
-    typedef std::vector<pArgument> pArguments;
-    typedef detail::shared_ptr<ArgumentParser> pParser;
-    typedef std::list<pParser>::const_iterator prs_iterator;
 
     static std::size_t const c_default_tab_size = 4;
 
@@ -2361,10 +2358,10 @@ _ARGPARSE_EXPORT class Argument
 
     enum Type _ARGPARSE_ENUM_TYPE(uint8_t)
     {
-        NoType,
-        Positional,
-        Operand,
-        Optional
+        NoType      = 0x00,
+        Positional  = 0x01,
+        Operand     = 0x02,
+        Optional    = 0x04
     };
 
     explicit
@@ -3348,7 +3345,6 @@ private:
  */
 class _Group
 {
-    friend class ArgumentParser;
     friend class HelpFormatter;
 
 protected:
@@ -5670,9 +5666,8 @@ class _ParserGroup : public _Group
 {
     friend class ArgumentParser;
     friend class HelpFormatter;
-    friend class ParserGroup;
-    friend class SubParsers;
 
+protected:
     typedef detail::shared_ptr<ArgumentParser> pParser;
     typedef std::list<pParser>::const_iterator prs_iterator;
 
@@ -5704,7 +5699,7 @@ public:
     std::string const&
     metavar() const _ARGPARSE_NOEXCEPT;
 
-private:
+protected:
     void
     limit_help_flags(
             HelpFormatter const&,
@@ -6114,13 +6109,10 @@ _ARGPARSE_EXPORT class ArgumentParser
 
     typedef detail::shared_ptr<Argument> pArgument;
     typedef std::vector<pArgument> pArguments;
-    typedef detail::shared_ptr<_ArgumentData> pArgumentData;
     typedef detail::shared_ptr<_Group> pGroup;
     typedef detail::shared_ptr<ArgumentParser> pParser;
     typedef std::list<pParser>::const_iterator prs_iterator;
     typedef std::list<pArgument>::const_iterator arg_iterator;
-    typedef std::list<std::pair<pArgument, bool> >::const_iterator sub_iterator;
-    typedef std::list<pGroup>::const_iterator grp_iterator;
     typedef std::list<MutuallyExclusiveGroup>::const_iterator mtx_it;
     typedef detail::shared_ptr<SubParsers> pSubParsers;
     typedef std::pair<pSubParsers, std::size_t> SubParsersInfo;
@@ -8102,7 +8094,7 @@ private:
             std::vector<std::string> const& unrecognized_args) const;
 
     // -- data ----------------------------------------------------------------
-    pArgumentData m_data;
+    detail::shared_ptr<_ArgumentData> m_data;
     std::string m_name;
     std::string m_prog;
     detail::SValue<detail::TranslationPack> m_usage;
@@ -9242,7 +9234,7 @@ _split_equal(
 
 _ARGPARSE_INL void
 _process_quotes(
-        std::deque<char>& quotes,
+        std::list<char>& quotes,
         std::string const& value,
         std::string const& str,
         char c,
@@ -9375,9 +9367,8 @@ _boolean_option_to_string(
     if (args.second.size() != 1) {
         throw TypeError("got a data-array for argument '" + key + "'");
     }
-    return args.second.is_default()
-            ? quotes + args.second.front() + quotes
-            : _bool_to_string(args.second.front());
+    return args.second.is_default() ? quotes + args.second.front() + quotes
+                                    : _bool_to_string(args.second.front());
 }
 
 _ARGPARSE_INL std::string
@@ -9711,9 +9702,9 @@ HelpFormatter::_bash_completion_info(
         ArgumentParser const* parser) const
 {
     CompletionInfo res;
-    pArguments const optional = parser->m_data->get_optional(false, true);
-    pArguments const operand = parser->m_data->get_operand(false, true);
-    pArguments const positional = parser->m_data->get_positional(false, true);
+    detail::pArguments optional = parser->m_data->get_optional(false, true);
+    detail::pArguments operand = parser->m_data->get_operand(false, true);
+    detail::pArguments positional = parser->m_data->get_positional(false, true);
     res.options.reserve(optional.size());
     std::vector<std::string> options;
     for (std::size_t i = 0; i < optional.size(); ++i) {
@@ -9765,6 +9756,8 @@ HelpFormatter::_print_parser_completion(
         std::string const& prog,
         bool is_root) const
 {
+    typedef detail::shared_ptr<ArgumentParser> pParser;
+    typedef std::list<pParser>::const_iterator prs_iterator;
     if (p->has_subparsers()) {
         std::list<pParser> const parsers = p->m_subparsers->list_parsers();
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
@@ -9826,9 +9819,9 @@ HelpFormatter::_print_custom_usage(
 {
     typedef ArgumentParser::mtx_it _mt;
     typedef ArgumentParser::arg_iterator _arg;
-    pArguments const positional = p->m_data->get_positional(false, true);
-    pArguments ex_operand = p->m_data->get_operand(false, true);
-    pArguments ex_options = p->m_data->get_optional(false, true);
+    detail::pArguments positional = p->m_data->get_positional(false, true);
+    detail::pArguments operand = p->m_data->get_operand(false, true);
+    detail::pArguments options = p->m_data->get_optional(false, true);
     ArgumentParser::SubParsersInfo const info = p->subparsers_info(false);
     std::size_t const w = p->output_width();
     std::string head_prog = usage_title + " " + p->prog();
@@ -9838,28 +9831,25 @@ HelpFormatter::_print_custom_usage(
     for (_mt i = p->m_mutex_groups.begin(); i != p->m_mutex_groups.end(); ++i) {
         for (_arg j = (*i).m_data->m_arguments.begin();
              j != (*i).m_data->m_arguments.end(); ++j) {
-            ex_options.erase(std::remove(
-                                 ex_options.begin(), ex_options.end(), *j),
-                             ex_options.end());
-            ex_operand.erase(std::remove(
-                                 ex_operand.begin(), ex_operand.end(), *j),
-                             ex_operand.end());
+            options.erase(std::remove(options.begin(), options.end(), *j),
+                          options.end());
+            operand.erase(std::remove(operand.begin(), operand.end(), *j),
+                          operand.end());
         }
     }
-    for (std::size_t i = 0; i < ex_options.size(); ++i) {
-        detail::_add_arg_usage(res, ex_options.at(i)->usage(*this),
-                               ex_options.at(i)->required());
+    for (std::size_t i = 0; i < options.size(); ++i) {
+        detail::_add_arg_usage(res, options.at(i)->usage(*this),
+                               options.at(i)->required());
     }
-    for (std::size_t i = 0; i < ex_operand.size(); ++i) {
-        detail::_add_arg_usage(res, ex_operand.at(i)->usage(*this),
-                               ex_operand.at(i)->required());
+    for (std::size_t i = 0; i < operand.size(); ++i) {
+        detail::_add_arg_usage(res, operand.at(i)->usage(*this),
+                               operand.at(i)->required());
     }
     for (_mt i = p->m_mutex_groups.begin(); i != p->m_mutex_groups.end(); ++i) {
         detail::_add_arg_usage(res, (*i).usage(*this), true);
     }
     for (std::size_t i = 0; i < positional.size(); ++i) {
-        if (info.first && info.second == i
-                && !info.first->is_suppress()) {
+        if (info.first && info.second == i && !info.first->is_suppress()) {
             detail::_add_arg_usage(res, info.first->usage(), true);
         }
         std::string const str = positional.at(i)->usage(*this);
@@ -9915,12 +9905,12 @@ HelpFormatter::_format_help(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    typedef ArgumentParser::grp_iterator grp_iterator;
+    typedef std::list<ArgumentParser::pGroup>::const_iterator grp_iterator;
     std::stringstream ss;
     std::string lang = !language.empty() ? language : p->default_language();
-    pArguments const positional = p->m_data->get_positional(false, false);
-    pArguments const operand = p->m_data->get_operand(false, false);
-    pArguments const optional = p->m_data->get_optional(false, false);
+    detail::pArguments positional = p->m_data->get_positional(false, false);
+    detail::pArguments operand = p->m_data->get_operand(false, false);
+    detail::pArguments optional = p->m_data->get_optional(false, false);
     ArgumentParser::SubParsersInfo const sub_info = p->subparsers_info(false);
     bool eat_ln = p->m_usage.suppress();
     if (!eat_ln) {
@@ -10077,8 +10067,7 @@ _ArgumentDefaultsHelpFormatter::_get_help_string(
 {
     std::string res = detail::_tr(action->m_help.value(), lang);
     if (!res.empty() && !detail::_contains_substr(res, "%(default)s")) {
-        if (((action->m_type == Argument::Optional
-              || action->m_type == Argument::Operand)
+        if (((action->m_type & (Argument::Optional | Argument::Operand))
              || (action->m_nargs & (Argument::ZERO_OR_ONE
                                     | Argument::ZERO_OR_MORE)))
                 && !(action->action() & (argparse::help | argparse::version))) {
@@ -10117,7 +10106,7 @@ split_to_args(
 {
     std::vector<std::string> res;
     std::string value;
-    std::deque<char> quotes;
+    std::list<char> quotes;
     bool skip = false;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
@@ -11081,7 +11070,6 @@ Argument::make_no_flags()
     for (std::size_t i = 0; i < m_flags.size(); ++i) {
         std::string const& flag = m_flags.at(i);
         m_all_flags.push_back(flag);
-
         char prefix = flag.at(0);
         std::string::const_iterator it = flag.begin();
         for ( ; it != flag.end() && *it == prefix; ++it) {
@@ -12070,12 +12058,11 @@ _Storage::create(
     if (key->action() & (argparse::version | argparse::help)) {
         return;
     }
-    std::vector<std::string> const& arg_flags = key->flags();
     bool have_key = false;
     for (const_iterator it = m_data.begin(); it != m_data.end(); ++it) {
         have_key |= (key == (*it).first);
         if (key != (*it).first) {
-            (*it).first->resolve_conflict_flags(arg_flags);
+            (*it).first->resolve_conflict_flags(key->flags());
         }
     }
     if (!have_key) {
@@ -12262,48 +12249,39 @@ _Storage::find_arg(
     if (it != end()) {
         return it;
     }
-    for (it = begin(); it != end(); ++it) {
-        if (it->first->is_match_name(key)) {
-            return it;
-        }
+    for (it = begin(); it != end() && !it->first->is_match_name(key); ++it) {
     }
-    return end();
+    return it;
 }
 
 _ARGPARSE_INL _Storage::const_iterator
 _Storage::find(
         std::string const& key) const
 {
-    for (const_iterator it = begin(); it != end(); ++it) {
-        if (*(it->first) == key) {
-            return it;
-        }
+    const_iterator it = begin();
+    for ( ; it != end() && !(*(it->first) == key); ++it) {
     }
-    return end();
+    return it;
 }
 
 _ARGPARSE_INL _Storage::const_iterator
 _Storage::find(
         key_type const& key) const
 {
-    for (const_iterator it = begin(); it != end(); ++it) {
-        if (it->first == key) {
-            return it;
-        }
+    const_iterator it = begin();
+    for ( ; it != end() && it->first != key; ++it) {
     }
-    return end();
+    return it;
 }
 
 _ARGPARSE_INL _Storage::iterator
 _Storage::find(
         key_type const& key)
 {
-    for (iterator it = begin(); it != end(); ++it) {
-        if (it->first == key) {
-            return it;
-        }
+    iterator it = begin();
+    for ( ; it != end() && it->first != key; ++it) {
     }
-    return end();
+    return it;
 }
 
 _ARGPARSE_INL void
@@ -12311,10 +12289,9 @@ _Storage::on_process_store(
         key_type const& key,
         std::string const& value)
 {
-    std::string const& dest = key->dest();
-    if (!dest.empty()) {
+    if (!key->dest().empty()) {
         for (iterator it = begin(); it != end(); ++it) {
-            if (it->first != key && it->first->dest() == dest) {
+            if (it->first != key && it->first->dest() == key->dest()) {
                 if (it->first->action() & (argparse::store
                                            | argparse::store_const
                                            | detail::_bool_action
@@ -12332,10 +12309,9 @@ _Storage::on_process_store(
         key_type const& key,
         std::vector<std::string> const& values)
 {
-    std::string const& dest = key->dest();
-    if (!dest.empty()) {
+    if (!key->dest().empty()) {
         for (iterator it = begin(); it != end(); ++it) {
-            if (it->first != key && it->first->dest() == dest) {
+            if (it->first != key && it->first->dest() == key->dest()) {
                 if (it->first->action() & (argparse::store
                                            | argparse::store_const
                                            | detail::_bool_action
@@ -15604,8 +15580,8 @@ ArgumentParser::default_values_post_trigger(
                 continue;
             }
             if (it->first->action() != argparse::count
-                    && (it->first->m_type == Argument::Optional
-                        || it->first->m_type == Argument::Operand)) {
+                    && (it->first->m_type
+                        & (Argument::Optional | Argument::Operand))) {
                 detail::SValue<std::string> const& dv = it->first->m_default;
                 if (dv.has_value()
                         || (it->first->action() & detail::_bool_action)) {
@@ -15690,6 +15666,7 @@ ArgumentParser::subparsers_info(
         bool add_suppress,
         std::size_t offset) const
 {
+    typedef std::list<std::pair<pArgument, bool> >::const_iterator sub_iterator;
     SubParsersInfo res = std::make_pair(m_subparsers, offset);
     std::size_t i = 0;
     for (sub_iterator it = m_data->m_positional.begin();
@@ -16070,11 +16047,8 @@ ArgumentParser::parse_handle(
         std::vector<std::string> const& unrecognized_args) const
 {
     if (m_parse_handle) {
-        if (only_known) {
-            m_parse_handle(Namespace(storage, unrecognized_args));
-        } else {
-            m_parse_handle(Namespace(storage));
-        }
+        m_parse_handle(only_known ? Namespace(storage, unrecognized_args)
+                                  : Namespace(storage));
     }
 }
 #endif  // _ARGPARSE_INL
