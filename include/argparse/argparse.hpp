@@ -11424,7 +11424,7 @@ _ArgumentData::check_conflict_arg(
 {
     for (sub_iterator it = m_optional.begin(); it != m_optional.end(); ++it) {
         if ((*it).first.get() == arg) {
-            return;
+            continue;
         }
         check_conflicting_option(arg, (*it).first->m_all_flags);
         check_conflicting_option(arg, (*it).first->m_flags);
@@ -15898,7 +15898,7 @@ ArgumentParser::test_diagnostics(
                               | argparse::append_const
                               | argparse::language))) {
             std::size_t size = arg->get_argument_name(*m_formatter).size();
-            if (size > 1 && (arg->m_nargs != Argument::NARGS_NUM
+            if (size > 1 && (!(arg->m_nargs & Argument::_NARGS_COMBINED)
                              || size != arg->m_num_args)) {
                 ++diagnostics.second;
                 os << _error << " " << argument << ": length of "
