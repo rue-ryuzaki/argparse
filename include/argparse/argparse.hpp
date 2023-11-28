@@ -11418,7 +11418,7 @@ _Group::description() const
 // -- _ArgumentData -----------------------------------------------------------
 _ARGPARSE_INL
 _ArgumentData::_ArgumentData()
-    : m_conflict_handler(),
+    : m_conflict_handler("error"),
       m_arguments(),
       m_optional(),
       m_operand(),
@@ -13427,7 +13427,7 @@ _ARGPARSE_INL ArgumentParser&
 ArgumentParser::conflict_handler(
         std::string const& value)
 {
-    if (value != "resolve") {
+    if (value != "resolve" && value != "error") {
         throw AttributeError("'ArgumentParser' object has no attribute "
                              "'_handle_conflict_" + value + "'");
     }
