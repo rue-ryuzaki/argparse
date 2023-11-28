@@ -1558,23 +1558,19 @@ public:
     inline const_iterator
     find(key_type const& key) const
     {
-        for (const_iterator it = begin(); it != end(); ++it) {
-            if (it->first == key) {
-                return it;
-            }
+        const_iterator it = begin();
+        for ( ; it != end() && it->first != key; ++it) {
         }
-        return end();
+        return it;
     }
 
     inline iterator
     find(key_type const& key)
     {
-        for (iterator it = begin(); it != end(); ++it) {
-            if (it->first == key) {
-                return it;
-            }
+        iterator it = begin();
+        for ( ; it != end() && it->first != key; ++it) {
         }
-        return end();
+        return it;
     }
 
 private:
@@ -8315,24 +8311,20 @@ bool
 _exists(T const& value,
         std::vector<T> const& vec)
 {
-    for (std::size_t i = 0; i < vec.size(); ++i) {
-        if (vec.at(i) == value) {
-            return true;
-        }
+    typename std::vector<T>::const_iterator it = vec.begin();
+    for ( ; it != vec.end() && (*it) != value; ++it) {
     }
-    return false;
+    return it != vec.end();
 }
 
 _ARGPARSE_INL bool
 _exists(char value,
         std::string const& str)
 {
-    for (std::size_t i = 0; i < str.size(); ++i) {
-        if (str.at(i) == value) {
-            return true;
-        }
+    std::string::const_iterator it = str.begin();
+    for ( ; it != str.end() && (*it) != value; ++it) {
     }
-    return false;
+    return it != str.end();
 }
 
 // -- utf8 support ------------------------------------------------------------
@@ -9576,9 +9568,9 @@ _ARGPARSE_INL void
 _update_flag_name(
         std::vector<std::string>& flags,
         std::string const& prefix_chars,
-        bool is_optional,
         std::string& flag_name,
-        std::size_t& prefixes)
+        std::size_t& prefixes,
+        bool is_optional)
 {
     if (is_optional) {
         _update_flag_name_func(flag_name, flag_name, prefixes);
@@ -10018,7 +10010,7 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
                     = detail::_split(str, detail::_spaces);
             for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
                 if (j != 0) {
-                    value += " ";
+                    value += detail::_spaces;
                 }
                 std::vector<std::string> tab_split_str
                         = detail::_split(sub_split_str.at(j), "\t");
@@ -11101,7 +11093,7 @@ Argument::flags_to_string(
         HelpFormatter const& formatter) const
 {
     std::string res;
-    if (m_type == Optional || m_type == Operand) {
+    if (m_type & (Optional | Operand)) {
         for (std::size_t i = 0; i < flags().size(); ++i) {
             detail::_append_value_to(flags().at(i), res, ", ");
             process_nargs_suffix(res, formatter);
@@ -11361,17 +11353,15 @@ Argument::is_match_name(
             return m_name == value;
         case Operand :
             for (std::size_t j = 0; j < m_flags.size(); ++j) {
-                std::string const& flag = m_flags.at(j);
-                if (flag == value || (flag + "=" == value)) {
+                if (m_flags.at(j) == value || (m_flags.at(j) + "=" == value)) {
                     return true;
                 }
             }
             return false;
         case Optional :
             for (std::size_t j = 0; j < m_flags.size(); ++j) {
-                std::string const& flag = m_flags.at(j);
-                if (flag == value || m_name == value
-                        || detail::_flag_name(flag) == value) {
+                if (m_flags.at(j) == value || m_name == value
+                        || detail::_flag_name(m_flags.at(j)) == value) {
                     return true;
                 }
             }
@@ -11624,8 +11614,8 @@ _ArgumentData::create_argument(
         detail::_check_flag_name(flag);
         type = Argument::Operand;
     }
-    detail::_update_flag_name(flags, prefix_chars,
-                              type == Argument::Optional, flag, prefixes);
+    detail::_update_flag_name(flags, prefix_chars, flag, prefixes,
+                              type == Argument::Optional);
     if (type == Argument::Optional) {
         flag = detail::_replace(flag, '-', "_");
     }
@@ -11666,9 +11656,8 @@ _ArgumentData::validate_argument(
                 arg.m_required.reset(true);
             }
         }
-        detail::_update_flag_name(
-                    flags, prefix_chars,
-                    arg.m_type == Argument::Optional, flag, prefixes);
+        detail::_update_flag_name(flags, prefix_chars, flag, prefixes,
+                                  arg.m_type == Argument::Optional);
         arg.m_name = arg.m_type == Argument::Optional
                 ? detail::_replace(flag, '-', "_") : flag;
     }
@@ -12060,7 +12049,7 @@ _Storage::create(
     }
     bool have_key = false;
     for (const_iterator it = m_data.begin(); it != m_data.end(); ++it) {
-        have_key |= (key == (*it).first);
+        have_key = have_key || (key == (*it).first);
         if (key != (*it).first) {
             (*it).first->resolve_conflict_flags(key->flags());
         }
@@ -12366,10 +12355,8 @@ Namespace::contains(
         std::string const& key) const
 {
     _Storage::const_iterator it = storage().find_arg(key);
-    if (it != storage().end()) {
-        return !it->second.empty() || it->first->action() == argparse::count;
-    }
-    return false;
+    return it != storage().end()
+            && (!it->second.empty() || it->first->action() == argparse::count);
 }
 
 _ARGPARSE_INL bool
