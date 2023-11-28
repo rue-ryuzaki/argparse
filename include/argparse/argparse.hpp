@@ -3822,109 +3822,53 @@ private:
  */
 class _Storage
 {
-    typedef detail::shared_ptr<Argument> pArgument;
-
     friend class ArgumentParser;
     friend class Namespace;
 
     class mapped_type
     {
     public:
-        mapped_type()
-            : m_exists(),
-              m_is_default(),
-              m_values(),
-              m_indexes()
-        { }
+        mapped_type();
 
         explicit
         mapped_type(
-                std::vector<std::string> const& values)
-            : m_exists(true),
-              m_is_default(true),
-              m_values(values),
-              m_indexes()
-        {
-            m_indexes.push_back(m_values.size());
-        }
+                std::vector<std::string> const& values);
 
-        inline void
-        clear()
-        {
-            m_values.clear();
-            m_indexes.clear();
-            m_exists = false;
-            m_is_default = false;
-        }
+        void
+        clear();
 
-        inline bool
-        exists() const _ARGPARSE_NOEXCEPT
-        {
-            return m_exists;
-        }
+        bool
+        exists() const _ARGPARSE_NOEXCEPT;
 
-        inline bool
-        is_default() const _ARGPARSE_NOEXCEPT
-        {
-            return m_is_default;
-        }
+        bool
+        is_default() const _ARGPARSE_NOEXCEPT;
 
-        inline std::vector<std::string> const&
-        operator ()() const _ARGPARSE_NOEXCEPT
-        {
-            return m_values;
-        }
+        std::vector<std::string> const&
+        operator ()() const _ARGPARSE_NOEXCEPT;
 
-        inline std::size_t
-        size() const _ARGPARSE_NOEXCEPT
-        {
-            return m_values.size();
-        }
+        std::size_t
+        size() const _ARGPARSE_NOEXCEPT;
 
-        inline bool
-        empty() const _ARGPARSE_NOEXCEPT
-        {
-            return m_values.empty();
-        }
+        bool
+        empty() const _ARGPARSE_NOEXCEPT;
 
-        inline std::string const&
-        front() const _ARGPARSE_NOEXCEPT
-        {
-            return m_values.front();
-        }
+        std::string const&
+        front() const _ARGPARSE_NOEXCEPT;
 
-        inline std::string const&
-        at(std::size_t i) const
-        {
-            return m_values.at(i);
-        }
+        std::string const&
+        at(std::size_t i) const;
 
-        inline void
+        void
         push_back(
                 std::string const& value,
-                bool is_default = false)
-        {
-            m_is_default = is_default;
-            m_values.push_back(value);
-            m_indexes.push_back(m_values.size());
-            m_exists = true;
-        }
+                bool is_default = false);
 
-        inline void
+        void
         push_values(
-                std::vector<std::string> const& values)
-        {
-            m_values.reserve(m_values.size() + values.size());
-            m_values.insert(m_values.end(), values.begin(), values.end());
-            m_indexes.push_back(m_values.size());
-            m_exists = true;
-        }
+                std::vector<std::string> const& values);
 
-        inline std::vector<std::size_t> const&
-        indexes() const _ARGPARSE_NOEXCEPT
-        {
-            return m_indexes;
-        }
+        std::vector<std::size_t> const&
+        indexes() const _ARGPARSE_NOEXCEPT;
 
     private:
         // -- data ------------------------------------------------------------
@@ -3934,7 +3878,7 @@ class _Storage
         std::vector<std::size_t> m_indexes;
     };
 
-    typedef pArgument                               key_type;
+    typedef detail::shared_ptr<Argument>            key_type;
 
 public:
     typedef std::pair<key_type, mapped_type>        value_type;
@@ -3944,9 +3888,7 @@ private:
     typedef map_type::iterator                      iterator;
     typedef map_type::const_iterator                const_iterator;
 
-    _Storage()
-        : m_data()
-    { }
+    _Storage();
 
     void
     create(key_type const& key,
@@ -12022,7 +11964,111 @@ MutuallyExclusiveGroup::usage(
     return res.empty() ? res : (m_required ? "(" + res + ")" : "[" + res + "]");
 }
 
+// -- _Storage::mapped_type ---------------------------------------------------
+_ARGPARSE_INL
+_Storage::mapped_type::mapped_type()
+    : m_exists(),
+      m_is_default(),
+      m_values(),
+      m_indexes()
+{ }
+
+_ARGPARSE_INL
+_Storage::mapped_type::mapped_type(
+        std::vector<std::string> const& values)
+    : m_exists(true),
+      m_is_default(true),
+      m_values(values),
+      m_indexes()
+{
+    m_indexes.push_back(m_values.size());
+}
+
+_ARGPARSE_INL void
+_Storage::mapped_type::clear()
+{
+    m_values.clear();
+    m_indexes.clear();
+    m_exists = false;
+    m_is_default = false;
+}
+
+_ARGPARSE_INL bool
+_Storage::mapped_type::exists() const _ARGPARSE_NOEXCEPT
+{
+    return m_exists;
+}
+
+_ARGPARSE_INL bool
+_Storage::mapped_type::is_default() const _ARGPARSE_NOEXCEPT
+{
+    return m_is_default;
+}
+
+_ARGPARSE_INL std::vector<std::string> const&
+_Storage::mapped_type::operator ()() const _ARGPARSE_NOEXCEPT
+{
+    return m_values;
+}
+
+_ARGPARSE_INL std::size_t
+_Storage::mapped_type::size() const _ARGPARSE_NOEXCEPT
+{
+    return m_values.size();
+}
+
+_ARGPARSE_INL bool
+_Storage::mapped_type::empty() const _ARGPARSE_NOEXCEPT
+{
+    return m_values.empty();
+}
+
+_ARGPARSE_INL std::string const&
+_Storage::mapped_type::front() const _ARGPARSE_NOEXCEPT
+{
+    return m_values.front();
+}
+
+_ARGPARSE_INL std::string const&
+_Storage::mapped_type::at(
+        std::size_t i) const
+{
+    return m_values.at(i);
+}
+
+_ARGPARSE_INL void
+_Storage::mapped_type::push_back(
+        std::string const& value,
+        bool is_default)
+{
+    m_is_default = is_default;
+    m_values.push_back(value);
+    m_indexes.push_back(m_values.size());
+    m_exists = true;
+}
+
+_ARGPARSE_INL void
+_Storage::mapped_type::push_values(
+        std::vector<std::string> const& values)
+{
+    m_values.reserve(m_values.size() + values.size());
+    m_values.insert(m_values.end(), values.begin(), values.end());
+    m_indexes.push_back(m_values.size());
+    m_exists = true;
+}
+
+_ARGPARSE_INL std::vector<std::size_t> const&
+_Storage::mapped_type::indexes() const _ARGPARSE_NOEXCEPT
+{
+    return m_indexes;
+}
+
 // -- _Storage ----------------------------------------------------------------
+_ARGPARSE_INL
+_Storage::_Storage()
+    : m_data()
+{ }
+
 _ARGPARSE_INL void
 _Storage::create(
         key_type const& key,
