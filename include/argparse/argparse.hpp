@@ -4099,11 +4099,10 @@ private:
     {
         std::string str = detail::_remove_quotes(value);
         if (key->m_factory) {
-            if (str.empty()) {
-                return T();
-            }
             T res = T();
-            key->m_factory(str, &res);
+            if (!str.empty()) {
+                key->m_factory(str, &res);
+            }
             return res;
         }
         return str.empty() ? T() : to_type<T>(str);
@@ -4119,12 +4118,11 @@ private:
     {
         std::size_t size = static_cast<std::size_t>(end - beg);
         if (std::isspace(static_cast<unsigned char>(sep))) {
-            if (size != 2) {
-                throw
-                TypeError("invalid data for paired argument '" + name + "'");
+            if (size == 2) {
+                return std::make_pair(as_type<K>(key, *(beg)),
+                                      as_type<V>(key, *(beg + 1)));
             }
-            return std::make_pair(as_type<K>(key, *(beg)),
-                                  as_type<V>(key, *(beg + 1)));
+            throw TypeError("invalid data for paired argument '" + name + "'");
         }
         if (size != 1) {
             throw TypeError("got a data-array for argument '" + name + "'");
@@ -4153,9 +4151,8 @@ private:
         std::vector<std::pair<K, V> > res;
         res.reserve(size / st);
         for (std::size_t i = 0; i < size; i += st) {
-            res.push_back(
-                    as_pair<K, V>(name, key, beg + static_cast<dtype>(i),
-                                  beg + static_cast<dtype>(i + st), sep));
+            res.push_back(as_pair<K, V>(name, key, beg + static_cast<dtype>(i),
+                                        beg + static_cast<dtype>(i + st), sep));
         }
         return res;
     }
@@ -4197,11 +4194,10 @@ private:
         }
         std::size_t size = static_cast<std::size_t>(end - beg);
         if (std::isspace(static_cast<unsigned char>(sep))) {
-            if (size != tuple_sz) {
-                throw
-                TypeError("invalid data for tuple argument '" + name + "'");
+            if (size == tuple_sz) {
+                return gen_tuple(key, detail::type_tag<T>{}, { beg, end });
             }
-            return gen_tuple(key, detail::type_tag<T>{}, { beg, end });
+            throw TypeError("invalid data for tuple argument '" + name + "'");
         }
         if (size != 1) {
             throw TypeError("got a data-array for argument '" + name + "'");
@@ -4223,15 +4219,14 @@ private:
         auto const tuple_sz = std::tuple_size<T>{};
         auto st = std::isspace(static_cast<unsigned char>(sep)) ? tuple_sz : 1;
         std::size_t size = static_cast<std::size_t>(end - beg);
-        if (size % st != 0) {
+        if (st == 0 || size % st != 0) {
             throw ValueError("invalid stored argument amount");
         }
         std::vector<T> res;
         res.reserve(size / st);
         for (std::size_t i = 0; i < size; i += st) {
-            res.push_back(
-                    as_tuple<T>(name, key, beg + static_cast<dtype>(i),
-                                beg + static_cast<dtype>(i + st), sep));
+            res.push_back(as_tuple<T>(name, key, beg + static_cast<dtype>(i),
+                                      beg + static_cast<dtype>(i + st), sep));
         }
         return res;
     }
@@ -4324,13 +4319,11 @@ private:
             std::string const& key,
             value_type const& value)
     {
-        if (value.second.empty()) {
-            return T();
-        }
-        if (value.second.size() != 1) {
+        if (value.second.size() > 1) {
             throw TypeError("got a data-array for argument '" + key + "'");
         }
-        return as_type<T>(value.first, value.second.front());
+        return value.second.empty()
+                ? T() : as_type<T>(value.first, value.second.front());
     }
 
     template <class T>
@@ -4404,10 +4397,8 @@ private:
     get_custom_value(
             value_type const& value)
     {
-        if (value.second.empty()) {
-            return T();
-        }
-        return as_type<T>(value.first, detail::_join(value.second()));
+        return value.second.empty()
+                ? T() : as_type<T>(value.first, detail::_join(value.second()));
     }
 
 #ifdef _ARGPARSE_CXX_17
@@ -4479,14 +4470,13 @@ private:
     {
         std::string str = detail::_remove_quotes(value);
         if (key->m_factory) {
-            if (str.empty()) {
-                return T{};
-            }
             T res{};
-            try {
-                key->m_factory(str, &res);
-            } catch (...) {
-                return std::nullopt;
+            if (!str.empty()) {
+                try {
+                    key->m_factory(str, &res);
+                } catch (...) {
+                    return std::nullopt;
+                }
             }
             return res;
         }
@@ -4503,29 +4493,25 @@ private:
     {
         std::size_t size = static_cast<std::size_t>(end - beg);
         if (std::isspace(static_cast<unsigned char>(sep))) {
-            if (size != 2) {
-                return std::nullopt;
+            if (size == 2) {
+                auto el1 = as_opt_type<K>(key, *(beg));
+                auto el2 = as_opt_type<V>(key, *(beg + 1));
+                if (el1.has_value() && el2.has_value()) {
+                    return std::make_pair(el1.value(), el2.value());
+                }
             }
-            auto el1 = as_opt_type<K>(key, *(beg));
-            auto el2 = as_opt_type<V>(key, *(beg + 1));
+            return std::nullopt;
+        }
+        if (size == 1) {
+            auto pair = detail::_split(*(beg), std::string(1, sep), 1);
+            pair.resize(2);
+            auto el1 = as_opt_type<K>(key, pair.at(0));
+            auto el2 = as_opt_type<V>(key, pair.at(1));
             if (el1.has_value() && el2.has_value()) {
                 return std::make_pair(el1.value(), el2.value());
-            } else {
-                return std::nullopt;
             }
         }
-        if (size != 1) {
-            return std::nullopt;
-        }
-        auto pair = detail::_split(*(beg), std::string(1, sep), 1);
-        pair.resize(2);
-        auto el1 = as_opt_type<K>(key, pair.at(0));
-        auto el2 = as_opt_type<V>(key, pair.at(1));
-        if (el1.has_value() && el2.has_value()) {
-            return std::make_pair(el1.value(), el2.value());
-        } else {
-            return std::nullopt;
-        }
+        return std::nullopt;
     }
 
     template <class K, class V>
@@ -4608,7 +4594,7 @@ private:
         auto const tuple_sz = std::tuple_size<T>{};
         auto st = std::isspace(static_cast<unsigned char>(sep)) ? tuple_sz : 1;
         std::size_t size = static_cast<std::size_t>(end - beg);
-        if (size % st != 0) {
+        if (st == 0 || size % st != 0) {
             return std::nullopt;
         }
         std::vector<T> res;
@@ -4899,8 +4885,7 @@ public:
         detail::is_stl_container<typename detail::decay<T>::type>::value
      && !detail::is_stl_container_tupled<typename detail::decay<T>::type>::value
      && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
-     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value
-     && !detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
+     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
     >::type
     get(std::string const& key) const
     {
@@ -5316,8 +5301,7 @@ public:
         detail::is_stl_container<typename std::decay<T>::type>::value
         && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
         && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix_queue<typename std::decay<T>::type>::value,
+        && !detail::is_stl_matrix<typename std::decay<T>::type>::value,
     T>::type>
     try_get(std::string const& key) const
     {
