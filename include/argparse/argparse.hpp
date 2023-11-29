@@ -925,9 +925,8 @@ namespace _stream_check
     template <class StreamType, class T>
     struct has_stream_operators
     {
-        static const bool can_load = has_loading_support<StreamType, T>::value;
-        static const bool can_save = has_saving_support<StreamType, T>::value;
-        static const bool value = can_load && can_save;
+        static const bool value = has_loading_support<StreamType, T>::value
+                                && has_saving_support<StreamType, T>::value;
     };
 }  // _stream_check
 
@@ -3981,6 +3980,22 @@ private:
     typedef std::vector<std::string>::difference_type                     dtype;
 
     template <class T>
+    struct need_operator_in
+    {
+        static const bool value = !detail::is_same<bool, T>::value
+                && !detail::is_constructible<std::string, T>::value
+                && !detail::is_byte_type<T>::value;
+    };
+
+    template <class T>
+    struct simple_element
+    {
+        static const bool value = detail::is_floating_point<T>::value
+                || detail::is_constructible<std::string, T>::value
+                || detail::is_integral<T>::value;
+    };
+
+    template <class T>
     static typename detail::enable_if<
         detail::is_constructible<std::string, T>::value, T>::type
     to_type(std::string const& data)
@@ -4007,10 +4022,7 @@ private:
 
     template <class T>
     static typename detail::enable_if<
-        detail::has_operator_in<T>::value
-        && !detail::is_constructible<std::string, T>::value
-        && !detail::is_same<bool, T>::value
-        && !detail::is_byte_type<T>::value, T>::type
+       detail::has_operator_in<T>::value && need_operator_in<T>::value, T>::type
     to_type(std::string const& data)
     {
         T res = T();
@@ -4025,10 +4037,7 @@ private:
 
     template <class T>
     static typename detail::enable_if<
-        !detail::has_operator_in<T>::value
-        && !detail::is_constructible<std::string, T>::value
-        && !detail::is_same<bool, T>::value
-        && !detail::is_byte_type<T>::value, T>::type
+      !detail::has_operator_in<T>::value && need_operator_in<T>::value, T>::type
     to_type(std::string const&)
     {
         throw TypeError("unsupported type " + detail::Type::name<T>());
@@ -4175,11 +4184,8 @@ private:
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_11
-    template <class T,
-              typename detail::enable_if<
-                  detail::is_constructible<std::string, T>::value
-                  || detail::is_floating_point<T>::value
-                  || detail::is_integral<T>::value>::type* = nullptr>
+    template <class T, typename detail::enable_if<
+                  simple_element<T>::value>::type* = nullptr>
     static std::vector<T>
     as_subvector(
             key_type const& key,
@@ -4193,9 +4199,7 @@ private:
             data_const_iterator beg,
             data_const_iterator end,
             typename detail::enable_if<
-                detail::is_constructible<std::string, T>::value
-                || detail::is_floating_point<T>::value
-                || detail::is_integral<T>::value, bool>::type = true)
+                simple_element<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         std::vector<T> res;
@@ -4207,11 +4211,8 @@ private:
     }
 
 #ifdef _ARGPARSE_CXX_11
-    template <class T,
-              typename detail::enable_if<
-                  !detail::is_constructible<std::string, T>::value
-                  && !detail::is_floating_point<T>::value
-                  && !detail::is_integral<T>::value>::type* = nullptr>
+    template <class T, typename detail::enable_if<
+                  !simple_element<T>::value>::type* = nullptr>
     static std::vector<T>
     as_subvector(
             key_type const& key,
@@ -4225,9 +4226,7 @@ private:
             data_const_iterator beg,
             data_const_iterator end,
             typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value
-                && !detail::is_floating_point<T>::value
-                && !detail::is_integral<T>::value, bool>::type = true)
+                !simple_element<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         std::vector<T> res;
@@ -4376,10 +4375,7 @@ private:
 
     template <class T>
     static std::optional<typename detail::enable_if<
-        detail::has_operator_in<T>::value
-        && !detail::is_constructible<std::string, T>::value
-        && !detail::is_same<bool, T>::value
-        && !detail::is_byte_type<T>::value, T>::type>
+      detail::has_operator_in<T>::value && need_operator_in<T>::value, T>::type>
     to_opt_type(
             std::string const& data)
     {
@@ -4394,10 +4390,7 @@ private:
 
     template <class T>
     static std::optional<typename detail::enable_if<
-        !detail::has_operator_in<T>::value
-        && !detail::is_constructible<std::string, T>::value
-        && !detail::is_same<bool, T>::value
-        && !detail::is_byte_type<T>::value, T>::type>
+     !detail::has_operator_in<T>::value && need_operator_in<T>::value, T>::type>
     to_opt_type(
             std::string const&) _ARGPARSE_NOEXCEPT
     {
@@ -4552,11 +4545,8 @@ private:
         return res;
     }
 
-    template <class T,
-              typename detail::enable_if<
-                  detail::is_constructible<std::string, T>::value
-                  || detail::is_floating_point<T>::value
-                  || detail::is_integral<T>::value>::type* = nullptr>
+    template <class T, typename detail::enable_if<
+                  simple_element<T>::value>::type* = nullptr>
     static std::optional<std::vector<T> >
     as_opt_subvector(
             key_type const& key,
@@ -4575,11 +4565,8 @@ private:
         return res;
     }
 
-    template <class T,
-              typename detail::enable_if<
-                  !detail::is_constructible<std::string, T>::value
-                  && !detail::is_floating_point<T>::value
-                  && !detail::is_integral<T>::value>::type* = nullptr>
+    template <class T, typename detail::enable_if<
+                  !simple_element<T>::value>::type* = nullptr>
     static std::optional<std::vector<T> >
     as_opt_subvector(
             key_type const& key,
