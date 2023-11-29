@@ -3818,6 +3818,10 @@ class _Storage
         std::vector<std::size_t> const&
         indexes() const _ARGPARSE_NOEXCEPT;
 
+        std::vector<std::string>
+        sub_values(
+                std::size_t i) const;
+
     private:
         // -- data ------------------------------------------------------------
         bool m_exists;
@@ -4037,22 +4041,21 @@ private:
     template <class K, class V>
     static std::vector<std::pair<K, V> >
     as_vector_pair(
-            std::string const& name,
-            key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end,
+            std::string const& key,
+            value_type const& v,
             char sep)
     {
+        std::vector<std::string> const& vs = v.second();
         std::size_t st = std::isspace(static_cast<unsigned char>(sep)) ? 2 : 1;
-        std::size_t size = static_cast<std::size_t>(end - beg);
-        if (size % st != 0) {
+        if (vs.size() % st != 0) {
             throw ValueError("invalid stored argument amount");
         }
         std::vector<std::pair<K, V> > res;
-        res.reserve(size / st);
-        for (std::size_t i = 0; i < size; i += st) {
-            res.push_back(as_pair<K, V>(name, key, beg + static_cast<dtype>(i),
-                                        beg + static_cast<dtype>(i + st), sep));
+        res.reserve(vs.size() / st);
+        for (std::size_t i = 0; i < vs.size(); i += st) {
+            res.push_back(as_pair<K, V>(
+                              key, v.first, vs.begin() + static_cast<dtype>(i),
+                              vs.begin() + static_cast<dtype>(i + st), sep));
         }
         return res;
     }
@@ -4110,23 +4113,22 @@ private:
     template <class T>
     static std::vector<T>
     as_vector_tuple(
-            std::string const& name,
-            key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end,
+            std::string const& key,
+            value_type const& v,
             char sep)
     {
+        std::vector<std::string> const& vs = v.second();
         auto const tuple_sz = std::tuple_size<T>{};
         auto st = std::isspace(static_cast<unsigned char>(sep)) ? tuple_sz : 1;
-        std::size_t size = static_cast<std::size_t>(end - beg);
-        if (st == 0 || size % st != 0) {
+        if (st == 0 || vs.size() % st != 0) {
             throw ValueError("invalid stored argument amount");
         }
         std::vector<T> res;
-        res.reserve(size / st);
-        for (std::size_t i = 0; i < size; i += st) {
-            res.push_back(as_tuple<T>(name, key, beg + static_cast<dtype>(i),
-                                      beg + static_cast<dtype>(i + st), sep));
+        res.reserve(vs.size() / st);
+        for (std::size_t i = 0; i < vs.size(); i += st) {
+            res.push_back(as_tuple<T>(
+                              key, v.first, vs.begin() + static_cast<dtype>(i),
+                              vs.begin() + static_cast<dtype>(i + st), sep));
         }
         return res;
     }
@@ -4138,22 +4140,20 @@ private:
     static std::vector<T>
     as_subvector(
             key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end)
+            std::vector<std::string> const& vs)
 #else
     template <class T>
     static std::vector<T>
     as_subvector(
             key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end,
+            std::vector<std::string> const& vs,
             typename detail::enable_if<
                 simple_element<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         std::vector<T> res;
-        res.reserve(static_cast<std::size_t>(end - beg));
-        for (data_const_iterator it = beg; it != end; ++it) {
+        res.reserve(vs.size());
+        for (data_const_iterator it = vs.begin(); it != vs.end(); ++it) {
             res.push_back(as_type<T>(key, *it));
         }
         return res;
@@ -4165,25 +4165,22 @@ private:
     static std::vector<T>
     as_subvector(
             key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end)
+            std::vector<std::string> const& vs)
 #else
     template <class T>
     static std::vector<T>
     as_subvector(
             key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end,
+            std::vector<std::string> const& vs,
             typename detail::enable_if<
                 !simple_element<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         std::vector<T> res;
-        if (end == beg) {
+        if (vs.empty()) {
             return res;
         }
         std::size_t st = 1;
-        std::size_t size = static_cast<std::size_t>(end - beg);
         if ((key->action() & detail::_store_action)
                 && (key->m_nargs & Argument::_NARGS_COMBINED)) {
             st = key->m_num_args;
@@ -4191,13 +4188,14 @@ private:
         if (st == 0) {
             throw TypeError("unsupported argument with nargs=0");
         }
-        if (size % st != 0) {
+        if (vs.size() % st != 0) {
             throw ValueError("invalid stored argument amount");
         }
-        res.reserve(size / st);
-        for (std::size_t i = 0; i < size; i += st) {
-            std::vector<std::string> values(beg + static_cast<dtype>(i),
-                                            beg + static_cast<dtype>(i + st));
+        res.reserve(vs.size() / st);
+        for (std::size_t i = 0; i < vs.size(); i += st) {
+            std::vector<std::string> values(
+                        vs.begin() + static_cast<dtype>(i),
+                        vs.begin() + static_cast<dtype>(i + st));
             res.push_back(as_type<T>(key, detail::_join(values)));
         }
         return res;
@@ -4224,12 +4222,7 @@ private:
         std::vector<T> res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             std::vector<T> vector = as_subvector<T>(
-                        value.first,
-                        value.second().begin()
-                            + static_cast<dtype>(
-                                i == 0 ? 0 : value.second.indexes().at(i - 1)),
-                        value.second().begin()
-                            + static_cast<dtype>(value.second.indexes().at(i)));
+                        value.first, value.second.sub_values(i));
             res.insert(res.end(), vector.begin(), vector.end());
         }
         return res;
@@ -4248,12 +4241,7 @@ private:
         T res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             std::vector<VV> vector = as_subvector<VV>(
-                        value.first,
-                        value.second().begin()
-                            + static_cast<dtype>(
-                                i == 0 ? 0 : value.second.indexes().at(i - 1)),
-                        value.second().begin()
-                            + static_cast<dtype>(value.second.indexes().at(i)));
+                        value.first, value.second.sub_values(i));
             res.push_back(V(vector.begin(), vector.end()));
         }
         return res;
@@ -4271,12 +4259,7 @@ private:
         T res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             std::vector<VV> vector = as_subvector<VV>(
-                        value.first,
-                        value.second().begin()
-                            + static_cast<dtype>(
-                                i == 0 ? 0 : value.second.indexes().at(i - 1)),
-                        value.second().begin()
-                            + static_cast<dtype>(value.second.indexes().at(i)));
+                        value.first, value.second.sub_values(i));
             res.push_back(V(std::deque<VV>(vector.begin(), vector.end())));
         }
         return res;
@@ -4401,21 +4384,20 @@ private:
     template <class K, class V>
     static std::optional<std::vector<std::pair<K, V> > >
     as_opt_vector_pair(
-            key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end,
+            value_type const& value,
             char sep)
     {
+        auto const& vs = value.second();
         std::size_t st = std::isspace(static_cast<unsigned char>(sep)) ? 2 : 1;
-        std::size_t size = static_cast<std::size_t>(end - beg);
-        if (size % st != 0) {
+        if (vs.size() % st != 0) {
             return std::nullopt;
         }
         std::vector<std::pair<K, V> > res;
-        res.reserve(size / st);
-        for (std::size_t i = 0; i < size; i += st) {
-            auto pair = as_opt_pair<K, V>(key, beg + static_cast<dtype>(i),
-                                         beg + static_cast<dtype>(i + st), sep);
+        res.reserve(vs.size() / st);
+        for (std::size_t i = 0; i < vs.size(); i += st) {
+            auto pair = as_opt_pair<K, V>(
+                        value.first, vs.begin() + static_cast<dtype>(i),
+                        vs.begin() + static_cast<dtype>(i + st), sep);
             if (!pair.has_value()) {
                 return std::nullopt;
             }
@@ -4470,22 +4452,21 @@ private:
     template <class T>
     static std::optional<std::vector<T> >
     as_opt_vector_tuple(
-            key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end,
+            value_type const& value,
             char sep)
     {
+        auto const& vs = value.second();
         auto const tuple_sz = std::tuple_size<T>{};
         auto st = std::isspace(static_cast<unsigned char>(sep)) ? tuple_sz : 1;
-        std::size_t size = static_cast<std::size_t>(end - beg);
-        if (st == 0 || size % st != 0) {
+        if (st == 0 || vs.size() % st != 0) {
             return std::nullopt;
         }
         std::vector<T> res;
-        res.reserve(size / st);
-        for (std::size_t i = 0; i < size; i += st) {
-            auto tuple = as_opt_tuple<T>(key, beg + static_cast<dtype>(i),
-                                         beg + static_cast<dtype>(i + st), sep);
+        res.reserve(vs.size() / st);
+        for (std::size_t i = 0; i < vs.size(); i += st) {
+            auto tuple = as_opt_tuple<T>(
+                        value.first, vs.begin() + static_cast<dtype>(i),
+                        vs.begin() + static_cast<dtype>(i + st), sep);
             if (!tuple.has_value()) {
                 return std::nullopt;
             }
@@ -4499,13 +4480,12 @@ private:
     static std::optional<std::vector<T> >
     as_opt_subvector(
             key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end)
+            std::vector<std::string> const& vs)
     {
         std::vector<T> res;
-        res.reserve(static_cast<std::size_t>(end - beg));
-        for (auto it = beg; it != end; ++it) {
-            auto el = as_opt_type<T>(key, *it);
+        res.reserve(vs.size());
+        for (auto const& value : vs) {
+            auto el = as_opt_type<T>(key, value);
             if (!el.has_value()) {
                 return std::nullopt;
             }
@@ -4519,26 +4499,25 @@ private:
     static std::optional<std::vector<T> >
     as_opt_subvector(
             key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end)
+            std::vector<std::string> const& vs)
     {
         std::vector<T> res;
-        if (end == beg) {
+        if (vs.empty()) {
             return res;
         }
         std::size_t st = 1;
-        std::size_t size = static_cast<std::size_t>(end - beg);
         if ((key->action() & detail::_store_action)
                 && (key->m_nargs & Argument::_NARGS_COMBINED)) {
             st = key->m_num_args;
         }
-        if (st == 0 || size % st != 0) {
+        if (st == 0 || vs.size() % st != 0) {
             return std::nullopt;
         }
-        res.reserve(size / st);
-        for (std::size_t i = 0; i < size; i += st) {
-            std::vector<std::string> values(beg + static_cast<dtype>(i),
-                                            beg + static_cast<dtype>(i + st));
+        res.reserve(vs.size() / st);
+        for (std::size_t i = 0; i < vs.size(); i += st) {
+            std::vector<std::string> values(
+                        vs.begin() + static_cast<dtype>(i),
+                        vs.begin() + static_cast<dtype>(i + st));
             auto el = as_opt_type<T>(key, detail::_join(values));
             if (!el.has_value()) {
                 return std::nullopt;
@@ -4567,12 +4546,7 @@ private:
         std::vector<T> res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             auto vector = as_opt_subvector<T>(
-                        value.first,
-                        value.second().begin()
-                            + static_cast<dtype>(
-                                i == 0 ? 0 : value.second.indexes().at(i - 1)),
-                        value.second().begin()
-                            + static_cast<dtype>(value.second.indexes().at(i)));
+                        value.first, value.second.sub_values(i));
             if (!vector.has_value()) {
                 return std::nullopt;
             }
@@ -4594,12 +4568,7 @@ private:
         T res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             auto vector = as_opt_subvector<VV>(
-                        value.first,
-                        value.second().begin()
-                            + static_cast<dtype>(
-                                i == 0 ? 0 : value.second.indexes().at(i - 1)),
-                        value.second().begin()
-                            + static_cast<dtype>(value.second.indexes().at(i)));
+                        value.first, value.second.sub_values(i));
             if (!vector.has_value()) {
                 return std::nullopt;
             }
@@ -4620,12 +4589,7 @@ private:
         T res;
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             auto vector = as_opt_subvector<VV>(
-                        value.first,
-                        value.second().begin()
-                            + static_cast<dtype>(
-                                i == 0 ? 0 : value.second.indexes().at(i - 1)),
-                        value.second().begin()
-                            + static_cast<dtype>(value.second.indexes().at(i)));
+                        value.first, value.second.sub_values(i));
             if (!vector.has_value()) {
                 return std::nullopt;
             }
@@ -4797,8 +4761,8 @@ public:
         detail::_check_non_count_action(key, args.first->action());
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
-        std::vector<std::pair<K, V> > vector = _Storage::as_vector_pair<K, V>(
-              key, args.first, args.second().begin(), args.second().end(), sep);
+        std::vector<std::pair<K, V> > vector
+                = _Storage::as_vector_pair<K, V>(key, args, sep);
         return T(vector.begin(), vector.end());
     }
 
@@ -4824,8 +4788,8 @@ public:
         typedef typename T::key_type K;
         typedef typename T::mapped_type V;
         T res = T();
-        std::vector<std::pair<K, V> > vector = _Storage::as_vector_pair<K, V>(
-              key, args.first, args.second().begin(), args.second().end(), sep);
+        std::vector<std::pair<K, V> > vector
+                = _Storage::as_vector_pair<K, V>(key, args, sep);
         for (std::size_t i = 0; i < vector.size(); ++i) {
             res.insert(std::make_pair(vector.at(i).first, vector.at(i).second));
         }
@@ -4963,7 +4927,7 @@ public:
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
         auto vector = _Storage::as_vector_tuple<typename T::value_type>(
-              key, args.first, args.second().begin(), args.second().end(), sep);
+                    key, args, sep);
         return T(vector.begin(), vector.end());
     }
 
@@ -5225,8 +5189,7 @@ public:
         }
         typedef typename T::value_type::first_type K;
         typedef typename T::value_type::second_type V;
-        auto vector = _Storage::as_opt_vector_pair<K, V>(
-                args->first, args->second().begin(), args->second().end(), sep);
+        auto vector = _Storage::as_opt_vector_pair<K, V>(args.value(), sep);
         if (!vector.has_value()) {
             return std::nullopt;
         }
@@ -5259,7 +5222,7 @@ public:
             return std::nullopt;
         }
         auto vector = _Storage::as_opt_vector_tuple<typename T::value_type>(
-                args->first, args->second().begin(), args->second().end(), sep);
+                    args.value(), sep);
         if (!vector.has_value()) {
             return std::nullopt;
         }
@@ -5293,8 +5256,7 @@ public:
         typedef typename T::key_type K;
         typedef typename T::mapped_type V;
         T res{};
-        auto vector = _Storage::as_opt_vector_pair<K, V>(
-                args->first, args->second().begin(), args->second().end(), sep);
+        auto vector = _Storage::as_opt_vector_pair<K, V>(args.value(), sep);
         if (!vector.has_value()) {
             return std::nullopt;
         }
@@ -12068,6 +12030,15 @@ _Storage::mapped_type::indexes() const _ARGPARSE_NOEXCEPT
     return m_indexes;
 }
 
+_ARGPARSE_INL std::vector<std::string>
+_Storage::mapped_type::sub_values(
+        std::size_t i) const
+{
+    return std::vector<std::string>(
+                m_values.begin() + static_cast<dtype>(
+                    i == 0 ? 0 : m_indexes.at(i - 1)),
+                m_values.begin() + static_cast<dtype>(m_indexes.at(i)));
+}
 // -- _Storage ----------------------------------------------------------------
 _ARGPARSE_INL
 _Storage::_Storage()
