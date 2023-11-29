@@ -1495,82 +1495,35 @@ public:
     typedef map_type::iterator                  iterator;
     typedef map_type::const_iterator            const_iterator;
 
-    TranslationPack()
-        : m_data()
-    { }
+    TranslationPack();
 
-    inline iterator
-    begin() _ARGPARSE_NOEXCEPT
-    {
-        return m_data.begin();
-    }
+    iterator
+    begin() _ARGPARSE_NOEXCEPT;
 
-    inline iterator
-    end() _ARGPARSE_NOEXCEPT
-    {
-        return m_data.end();
-    }
+    iterator
+    end() _ARGPARSE_NOEXCEPT;
 
-    inline const_iterator
-    begin() const _ARGPARSE_NOEXCEPT
-    {
-        return m_data.begin();
-    }
+    const_iterator
+    begin() const _ARGPARSE_NOEXCEPT;
 
-    inline const_iterator
-    end() const _ARGPARSE_NOEXCEPT
-    {
-        return m_data.end();
-    }
+    const_iterator
+    end() const _ARGPARSE_NOEXCEPT;
 
-    inline mapped_type&
+    mapped_type&
     operator [](
-            key_type const& key)
-    {
-        iterator it = find(key);
-        if (it == end()) {
-            it = m_data.insert(end(), value_type());
-        }
-        return it->second;
-    }
+            key_type const& key);
 
-    inline mapped_type&
-    at(key_type const& key)
-    {
-        iterator it = find(key);
-        if (it == end()) {
-            throw std::out_of_range("argparse: translation at '" + key + "'");
-        }
-        return it->second;
-    }
+    mapped_type&
+    at(key_type const& key);
 
-    inline mapped_type const&
-    at(key_type const& key) const
-    {
-        const_iterator it = find(key);
-        if (it == end()) {
-            throw std::out_of_range("argparse: translation at '" + key + "'");
-        }
-        return it->second;
-    }
+    mapped_type const&
+    at(key_type const& key) const;
 
-    inline const_iterator
-    find(key_type const& key) const
-    {
-        const_iterator it = begin();
-        for ( ; it != end() && it->first != key; ++it) {
-        }
-        return it;
-    }
+    const_iterator
+    find(key_type const& key) const;
 
-    inline iterator
-    find(key_type const& key)
-    {
-        iterator it = begin();
-        for ( ; it != end() && it->first != key; ++it) {
-        }
-        return it;
-    }
+    iterator
+    find(key_type const& key);
 
 private:
     // -- data ----------------------------------------------------------------
@@ -8659,6 +8612,88 @@ _to_upper(std::string const& str)
 
 // -- translations support ----------------------------------------------------
 // since v1.7.1
+_ARGPARSE_INL
+TranslationPack::TranslationPack()
+    : m_data()
+{ }
+
+_ARGPARSE_INL TranslationPack::iterator
+TranslationPack::begin() _ARGPARSE_NOEXCEPT
+{
+    return m_data.begin();
+}
+
+_ARGPARSE_INL TranslationPack::iterator
+TranslationPack::end() _ARGPARSE_NOEXCEPT
+{
+    return m_data.end();
+}
+
+_ARGPARSE_INL TranslationPack::const_iterator
+TranslationPack::begin() const _ARGPARSE_NOEXCEPT
+{
+    return m_data.begin();
+}
+
+_ARGPARSE_INL TranslationPack::const_iterator
+TranslationPack::end() const _ARGPARSE_NOEXCEPT
+{
+    return m_data.end();
+}
+
+_ARGPARSE_INL TranslationPack::mapped_type&
+TranslationPack::operator [](
+        key_type const& key)
+{
+    iterator it = find(key);
+    if (it == end()) {
+        it = m_data.insert(end(), value_type());
+    }
+    return it->second;
+}
+
+_ARGPARSE_INL TranslationPack::mapped_type&
+TranslationPack::at(
+        key_type const& key)
+{
+    iterator it = find(key);
+    if (it == end()) {
+        throw std::out_of_range("argparse: translation at '" + key + "'");
+    }
+    return it->second;
+}
+
+_ARGPARSE_INL TranslationPack::mapped_type const&
+TranslationPack::at(
+        key_type const& key) const
+{
+    const_iterator it = find(key);
+    if (it == end()) {
+        throw std::out_of_range("argparse: translation at '" + key + "'");
+    }
+    return it->second;
+}
+
+_ARGPARSE_INL TranslationPack::const_iterator
+TranslationPack::find(
+        key_type const& key) const
+{
+    const_iterator it = begin();
+    for ( ; it != end() && it->first != key; ++it) {
+    }
+    return it;
+}
+
+_ARGPARSE_INL TranslationPack::iterator
+TranslationPack::find(
+        key_type const& key)
+{
+    iterator it = begin();
+    for ( ; it != end() && it->first != key; ++it) {
+    }
+    return it;
+}
+
 _ARGPARSE_INL std::string
 _tr(TranslationPack const& pack,
         std::string const& lang)
