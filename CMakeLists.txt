@@ -65,6 +65,8 @@ if (ARGPARSE_STATIC)
     add_library(argparse_static STATIC src/argparse_impl.cpp)
     add_library(argparse::argparse_static ALIAS argparse_static)
 
+    set_property(TARGET argparse_static PROPERTY POSITION_INDEPENDENT_CODE ON)
+
     target_include_directories(
         argparse_static PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
