@@ -1593,12 +1593,8 @@ _remove_quotes(
         std::string const& str);
 
 std::string
-_replace(std::string str,
-        char old,
-        std::string const& value);
-
-std::string
-_replace(std::string str,
+_replace(
+        std::string str,
         std::string const& old,
         std::string const& value);
 
@@ -8876,19 +8872,6 @@ _remove_quotes(
 
 _ARGPARSE_INL std::string
 _replace(std::string str,
-        char old,
-        std::string const& value)
-{
-    std::string::size_type pos = str.find(old);
-    while (pos != std::string::npos) {
-        str.replace(pos, 1, value);
-        pos = str.find(old, pos + value.size());
-    }
-    return str;
-}
-
-_ARGPARSE_INL std::string
-_replace(std::string str,
         std::string const& old,
         std::string const& value)
 {
@@ -9197,7 +9180,7 @@ _vector_to_string(
     for (value_const_iterator it = begvec; it != endvec; ++it) {
         std::string val = *it;
         if (quotes.empty() && replace_space && !_have_quotes(val)) {
-            val = _replace(val, _space, "\\ ");
+            val = _replace(val, _spaces, "\\ ");
         }
         _append_value_to(quotes + val + quotes, res, separator);
     }
@@ -11530,7 +11513,7 @@ _ArgumentData::create_argument(
     detail::_update_flag_name(flags, prefix_chars, flag, prefixes,
                               type == Argument::Optional);
     if (type == Argument::Optional) {
-        flag = detail::_replace(flag, '-', "_");
+        flag = detail::_replace(flag, "-", "_");
     }
     pArgument arg = Argument::make_argument(
                 _ARGPARSE_MOVE(flags), _ARGPARSE_MOVE(flag), type);
@@ -11572,7 +11555,7 @@ _ArgumentData::validate_argument(
         detail::_update_flag_name(flags, prefix_chars, flag, prefixes,
                                   arg.m_type == Argument::Optional);
         arg.m_name = arg.m_type == Argument::Optional
-                ? detail::_replace(flag, '-', "_") : flag;
+                ? detail::_replace(flag, "-", "_") : flag;
     }
     // check
     if (arg.m_type == Argument::Positional) {
@@ -12406,7 +12389,7 @@ Namespace::to_args(
             return detail::_have_quotes(args.second.front())
                     ? args.second.front()
                     : detail::_replace(
-                          args.second.front(), detail::_space, "\\ ");
+                          args.second.front(), detail::_spaces, "\\ ");
         case argparse::store_true :
         case argparse::store_false :
         case argparse::BooleanOptionalAction :
