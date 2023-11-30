@@ -51,10 +51,11 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-option(ARGPARSE_STATIC "Build argparse as static lib" OFF)
+option(ARGPARSE_STATIC "Build argparse as a static lib" OFF)
+option(ARGPARSE_STATIC_PIC "Build argparse_static with -fPIC" ON)
 
 if (ARGPARSE_STATIC)
-    message("Build argparse as static lib")
+    message("Build argparse as a static lib")
 
     foreach(DEFINITION ${ARGPARSE_STATIC_DEFINITIONS})
         if (NOT ${DEFINITION} STREQUAL "ARGPARSE_DECLARATION")
@@ -65,7 +66,13 @@ if (ARGPARSE_STATIC)
     add_library(argparse_static STATIC src/argparse_impl.cpp)
     add_library(argparse::argparse_static ALIAS argparse_static)
 
-    set_property(TARGET argparse_static PROPERTY POSITION_INDEPENDENT_CODE ON)
+    if (ARGPARSE_STATIC_PIC)
+        message("Build argparse_static with -fPIC")
+        set_property(
+            TARGET argparse_static
+            PROPERTY POSITION_INDEPENDENT_CODE ON
+        )
+    endif()
 
     target_include_directories(
         argparse_static PUBLIC
