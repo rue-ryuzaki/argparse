@@ -8011,7 +8011,7 @@ typedef std::vector<pArgument> pArguments;
 // -- templates ---------------------------------------------------------------
 #ifdef _ARGPARSE_CXX_11
 template <class T = std::string, class... Args>
-std::vector<T>
+inline std::vector<T>
 _vector(Args... args)
 {
     return std::vector<T>{ std::move(args)... };
@@ -10090,11 +10090,7 @@ Argument::Argument(
       m_help(),
       m_version(),
       m_metavar(),
-#ifdef _ARGPARSE_CXX_11
-      m_dest(std::vector<std::string>{ std::string() }),
-#else
       m_dest(detail::_vector(std::string())),
-#endif  // C++11+
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
@@ -10293,11 +10289,7 @@ Argument::Argument(
       m_help(),
       m_version(),
       m_metavar(),
-#ifdef _ARGPARSE_CXX_11
-      m_dest(std::vector<std::string>{ std::string() }),
-#else
       m_dest(detail::_vector(std::string())),
-#endif  // C++11+
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
       m_post_trigger(_ARGPARSE_NULLPTR),
