@@ -11129,10 +11129,10 @@ Argument::print(
         std::string const& lang) const
 {
     std::string res = formatter._get_help_string(this, lang);
+    std::string text;
 #ifdef _ARGPARSE_CXX_11
     std::regex const r("%[(]([a-z_]*)[)]s");
     std::smatch match;
-    std::string text;
     std::unordered_map<std::string, std::function<std::string()> > const
             specifiers =
     {
@@ -11154,20 +11154,46 @@ Argument::print(
         text += (it != specifiers.end() ? it->second() : specifier);
         res = match.suffix();
     }
+#else
+    std::string const beg = "%(";
+    std::string const end = ")s";
+    std::string::size_type pos = res.find(beg);
+    while (pos != std::string::npos) {
+        std::string::size_type next = res.find(end, pos + beg.size());
+        if (next == std::string::npos) {
+            break;
+        }
+        text += res.substr(0, pos);
+        std::string specifier = res.substr(pos, next + end.size() - pos);
+        if (specifier == "%(choices)s") {
+            text += get_choices();
+        } else if (specifier == "%(const)s") {
+            text += get_const();
+        } else if (specifier == "%(default)s") {
+            text += get_default();
+        } else if (specifier == "%(dest)s") {
+            text += get_dest();
+        } else if (specifier == "%(metavar)s") {
+            text += get_metavar();
+        } else if (specifier == "%(nargs)s") {
+            text += get_nargs();
+        } else if (specifier == "%(option_strings)s") {
+            text += option_strings();
+        } else if (specifier == "%(required)s") {
+            text += get_required();
+        } else if (specifier == "%(type)s") {
+            text += get_type();
+        } else if (specifier == "%(help)s") {
+            text += help();
+        } else {
+            text += specifier;
+        }
+        res = res.substr(next + end.size());
+        pos = res.find(beg);
+    }
+#endif  // C++11+
     text += res;
     std::swap(res, text);
-#else
-    res = detail::_replace(res, "%(choices)s",          get_choices()   );
-    res = detail::_replace(res, "%(const)s",            get_const()     );
-    res = detail::_replace(res, "%(default)s",          get_default()   );
-    res = detail::_replace(res, "%(dest)s",             get_dest()      );
-    res = detail::_replace(res, "%(metavar)s",          get_metavar()   );
-    res = detail::_replace(res, "%(nargs)s",            get_nargs()     );
-    res = detail::_replace(res, "%(option_strings)s",   option_strings());
-    res = detail::_replace(res, "%(required)s",         get_required()  );
-    res = detail::_replace(res, "%(type)s",             get_type()      );
-    res = detail::_replace(res, "%(help)s",             help()          );
-#endif  // C++11+
     return detail::_help_formatter("  " + flags_to_string(formatter),
                                    formatter, res, width, limit);
 }
