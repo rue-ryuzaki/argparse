@@ -7994,6 +7994,7 @@ _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_chars[]   = "-";
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _pseudo_arg[]     = "--";
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _space            = ' ';
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equals[]         = "=";
+_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _none[]         = "None";
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
@@ -9291,7 +9292,7 @@ _boolean_option_to_string(
 {
     if (args.second.empty()) {
         return args.first->action() == argparse::BooleanOptionalAction
-                ? "None" : _bool_to_string(args.first->default_value());
+                ? _none : _bool_to_string(args.first->default_value());
     }
     if (args.second.size() != 1) {
         throw TypeError("got a data-array for argument '" + key + "'");
@@ -11049,13 +11050,14 @@ Argument::flags_to_string(
 _ARGPARSE_INL std::string
 Argument::get_choices() const
 {
-    return m_choices.has_value() ? detail::_join(choices(), ", ") : "None";
+    return m_choices.has_value()
+            ? detail::_join(choices(), ", ") : detail::_none;
 }
 
 _ARGPARSE_INL std::string
 Argument::get_const() const
 {
-    return m_const.value_or("None");
+    return m_const.value_or(detail::_none);
 }
 
 _ARGPARSE_INL std::string
@@ -11065,7 +11067,7 @@ Argument::get_default() const
         return detail::_bool_to_string(m_default.value());
     } else {
         return (m_default.has_value() || !m_default.value().empty())
-                ? m_default.value() : "None";
+                ? m_default.value() : detail::_none;
     }
 }
 
@@ -11078,7 +11080,7 @@ Argument::get_dest() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string
 Argument::get_metavar() const
 {
-    return m_metavar.has_value() ? metavar() : "None";
+    return m_metavar.has_value() ? metavar() : detail::_none;
 }
 
 _ARGPARSE_INL std::string
@@ -11086,7 +11088,7 @@ Argument::get_nargs() const
 {
     switch (m_nargs) {
         case NARGS_DEF :
-            return "None";
+            return detail::_none;
         case NARGS_NUM :
         case ONE_OR_MORE :
         case ZERO_OR_ONE :
@@ -11116,7 +11118,7 @@ Argument::get_required() const
 _ARGPARSE_INL std::string
 Argument::get_type() const
 {
-    return m_type_name.value_or("None");
+    return m_type_name.value_or(detail::_none);
 }
 
 _ARGPARSE_INL std::string
@@ -12469,7 +12471,7 @@ Namespace::to_string(
     switch (args.first->action()) {
         case argparse::store_const :
             if (args.second.empty()) {
-                return std::string("None");
+                return detail::_none;
             }
             if (args.second.size() != 1) {
                 throw TypeError("got a data-array for argument '" + key + "'");
@@ -12481,7 +12483,7 @@ Namespace::to_string(
             return detail::_boolean_option_to_string(key, args, quotes);
         case argparse::count :
             return args.second.empty()
-                    ? "None" : detail::_to_string(args.second.size());
+                    ? detail::_none : detail::_to_string(args.second.size());
         case argparse::store :
         case argparse::append :
         case argparse::append_const :
@@ -12539,8 +12541,8 @@ Namespace::store_actions_to_string(
                 && args.first->m_type == Argument::Optional)
             || args.first->m_nargs == Argument::SUPPRESSING
             || args.second.is_default()) {
-        return detail::_vector_to_string(args.second(), ", ",
-                                         quotes, false, "None");
+        return detail::_vector_to_string(
+                    args.second(), ", ", quotes, false, detail::_none);
     }
     if (args.first->action() != argparse::append
             || (args.first->m_nargs
@@ -12550,13 +12552,13 @@ Namespace::store_actions_to_string(
                    & (Argument::ZERO_OR_MORE | Argument::REMAINDING))
                 || (args.first->action() == argparse::extend
                     && args.first->m_nargs == Argument::ZERO_OR_ONE)
-                ? std::string() : "None";
+                ? std::string() : detail::_none;
         return detail::_vector_to_string(args.second(),
                                          ", ", quotes, false, none, "[", "]");
     } else {
         std::string none = (args.first->m_nargs
                             & (Argument::ZERO_OR_MORE | Argument::REMAINDING))
-                ? std::string() : "None";
+                ? std::string() : detail::_none;
         return detail::_matrix_to_string(args.second(), args.second.indexes(),
                                          ", ", quotes, false, none, "[", "]");
     }
