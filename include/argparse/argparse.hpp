@@ -8072,9 +8072,7 @@ _insert_to_end(
         std::list<T> const& from,
         std::list<T>& to)
 {
-    if (!from.empty()) {
-        to.insert(to.end(), from.begin(), from.end());
-    }
+    to.insert(to.end(), from.begin(), from.end());
 }
 
 template <class T>
@@ -8083,9 +8081,8 @@ _insert_to_end(
         std::list<T> const& from,
         std::vector<T>& to)
 {
-    if (!from.empty()) {
-        to.insert(to.end(), from.begin(), from.end());
-    }
+    to.reserve(to.size() + from.size());
+    to.insert(to.end(), from.begin(), from.end());
 }
 
 template <class T>
@@ -8094,9 +8091,8 @@ _insert_to_end(
         std::vector<T> const& from,
         std::vector<T>& to)
 {
-    if (!from.empty()) {
-        to.insert(to.end(), from.begin(), from.end());
-    }
+    to.reserve(to.size() + from.size());
+    to.insert(to.end(), from.begin(), from.end());
 }
 
 template <class T>
@@ -8106,11 +8102,10 @@ _move_insert_to_end(
         std::vector<T>& to)
 {
 #ifdef _ARGPARSE_CXX_11
-    if (!from.empty()) {
-        to.insert(to.end(),
-                  std::make_move_iterator(from.begin()),
-                  std::make_move_iterator(from.end()));
-    }
+    to.reserve(to.size() + from.size());
+    to.insert(to.end(),
+              std::make_move_iterator(from.begin()),
+              std::make_move_iterator(from.end()));
 #else
     _insert_to_end(from, to);
 #endif  // C++11+
@@ -8123,11 +8118,10 @@ _move_insert_to_end(
         std::vector<T>& to)
 {
 #ifdef _ARGPARSE_CXX_11
-    if (!from.empty()) {
-        to.insert(to.end(),
-                  std::make_move_iterator(from.begin()),
-                  std::make_move_iterator(from.end()));
-    }
+    to.reserve(to.size() + from.size());
+    to.insert(to.end(),
+              std::make_move_iterator(from.begin()),
+              std::make_move_iterator(from.end()));
 #else
     _insert_to_end(from, to);
 #endif  // C++11+
@@ -8140,16 +8134,15 @@ _move_insert_to(
         std::vector<T>& to,
         std::size_t i)
 {
-    if (!from.empty()) {
-        typedef typename std::vector<T>::difference_type dtype;
+    to.reserve(to.size() + from.size());
+    typedef typename std::vector<T>::difference_type dtype;
 #ifdef _ARGPARSE_CXX_11
-        to.insert(std::next(to.begin(), static_cast<dtype>(i)),
-                  std::make_move_iterator(from.begin()),
-                  std::make_move_iterator(from.end()));
+    to.insert(std::next(to.begin(), static_cast<dtype>(i)),
+              std::make_move_iterator(from.begin()),
+              std::make_move_iterator(from.end()));
 #else
-        to.insert(to.begin() + static_cast<dtype>(i), from.begin(), from.end());
+    to.insert(to.begin() + static_cast<dtype>(i), from.begin(), from.end());
 #endif  // C++11+
-    }
 }
 
 template <class T>
@@ -12084,8 +12077,7 @@ _ARGPARSE_INL void
 _Storage::mapped_type::push_values(
         std::vector<std::string> const& values)
 {
-    m_values.reserve(m_values.size() + values.size());
-    m_values.insert(m_values.end(), values.begin(), values.end());
+    detail::_insert_to_end(values, m_values);
     m_indexes.push_back(m_values.size());
     m_exists = true;
 }
@@ -12990,8 +12982,7 @@ SubParsers::parser_names() const
 {
     std::vector<std::string> res = _parser_names();
     for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
-        std::vector<std::string> sub = (*it)->_parser_names();
-        res.insert(res.end(), sub.begin(), sub.end());
+        detail::_insert_to_end((*it)->_parser_names(), res);
     }
     return res;
 }
