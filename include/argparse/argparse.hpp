@@ -13359,10 +13359,10 @@ ArgumentParser::aliases(
         std::vector<std::string> const& value)
 {
     m_aliases.clear();
-    for (std::size_t i = 0; i < value.size(); ++i) {
-        std::string const& val = value.at(i);
-        if (!val.empty()) {
-            m_aliases.push_back(val);
+    std::vector<std::string>::const_iterator it = value.begin();
+    for ( ; it != value.end(); ++it) {
+        if (!(*it).empty()) {
+            m_aliases.push_back(*it);
         }
     }
     return *this;
