@@ -5,6 +5,26 @@
 #include <argparse/argparse_decl.hpp>
 #include "./catch-define.h"
 
+#ifndef _ARGPARSE_CXX_11
+void
+parser_a_handle_check(argparse::Namespace const& args)
+{
+    REQUIRE(args.exists("foo") == false);
+    REQUIRE(args.exists("cmd") == true);
+    REQUIRE(args.exists("bar") == true);
+    REQUIRE(args.exists("baz") == false);
+}
+
+void
+parser_b_handle_check(argparse::Namespace const& args)
+{
+    REQUIRE(args.exists("foo") == false);
+    REQUIRE(args.exists("cmd") == true);
+    REQUIRE(args.exists("bar") == false);
+    REQUIRE(args.exists("baz") == true);
+}
+#endif  // C++11-
+
 TEST_CASE("1. subparsers", "[argument_parser]")
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
@@ -298,6 +318,8 @@ TEST_CASE("1. subparsers", "[argument_parser]")
             REQUIRE(args.exists("bar") == true);
             REQUIRE(args.exists("baz") == false);
         });
+#else
+        parser_a.handle(&parser_a_handle_check);
 #endif  // C++11+
         parser_a.add_argument("bar").help("bar help");
         REQUIRE(subparsers.parser_names().size() == 1);
@@ -311,6 +333,8 @@ TEST_CASE("1. subparsers", "[argument_parser]")
              REQUIRE(args.exists("bar") == false);
              REQUIRE(args.exists("baz") == true);
         });
+#else
+        parser_b.handle(&parser_b_handle_check);
 #endif  // C++11+
         parser_b.add_argument("--baz").choices("XYZ").help("baz help");
         REQUIRE(subparsers.parser_names().size() == 2);
