@@ -5574,6 +5574,7 @@ protected:
     print_parser_group(
             std::ostream& os,
             HelpFormatter const& formatter,
+            std::string const& prog,
             std::size_t limit,
             std::size_t width,
             std::string const& lang) const;
@@ -5586,6 +5587,12 @@ protected:
 
     bool
     _is_positional() const;
+
+    std::string
+    get_choices() const;
+
+    std::string
+    get_metavar() const;
 
     // -- data ----------------------------------------------------------------
     detail::SValue<detail::TranslationPack> m_help;
@@ -7925,6 +7932,7 @@ private:
             SubParsersInfo const& info,
             std::size_t index,
             HelpFormatter const& formatter,
+            std::string const& prog,
             std::size_t size,
             std::size_t width,
             std::string const& lang,
@@ -9868,12 +9876,12 @@ HelpFormatter::_format_help(
         ss << detail::_tr(p->m_positionals_title, lang) << ":";
         for (std::size_t i = 0; i < positional.size(); ++i) {
             p->print_subparsers(sub_positional, sub_info, i,
-                                *this, size, width, lang, ss);
+                                *this, p->prog(), size, width, lang, ss);
             ss << "\n" << p->despecify(positional.at(i)->print(
                                            *this, size, width, lang));
         }
         p->print_subparsers(sub_positional, sub_info, positional.size(),
-                            *this, size, width, lang, ss);
+                            *this, p->prog(), size, width, lang, ss);
     }
     if (!operand.empty()) {
         detail::_eat_ln(ss, eat_ln);
@@ -11113,7 +11121,8 @@ Argument::print(
         std::size_t width,
         std::string const& lang) const
 {
-    std::string res = formatter._get_help_string(this, lang);
+    std::string help = formatter._get_help_string(this, lang);
+    std::string res = help;
     std::string text;
 #ifdef _ARGPARSE_CXX_11
     std::regex const r("%[(]([a-z_]*)[)]s");
@@ -11125,7 +11134,7 @@ Argument::print(
         { "%(const)s",          [this] () { return get_const();         } },
         { "%(default)s",        [this] () { return get_default();       } },
         { "%(dest)s",           [this] () { return get_dest();          } },
-        { "%(help)s",           [this] () { return help();              } },
+        { "%(help)s",           [&help]() { return help;                } },
         { "%(metavar)s",        [this] () { return get_metavar();       } },
         { "%(nargs)s",          [this] () { return get_nargs();         } },
         { "%(option_strings)s", [this] () { return option_strings();    } },
@@ -11169,7 +11178,7 @@ Argument::print(
         } else if (specifier == "%(type)s") {
             text += get_type();
         } else if (specifier == "%(help)s") {
-            text += help();
+            text += help;
         } else {
             text += specifier;
         }
@@ -12674,13 +12683,14 @@ _ParserGroup::print_help(
                 detail::_replace(
                     detail::_tr(m_description, lang), "%(prog)s", prog),
                 width, os, eat_ln, std::string(), 2, "\n");
-    print_parser_group(os, formatter, limit, width, lang);
+    print_parser_group(os, formatter, prog, limit, width, lang);
 }
 
 _ARGPARSE_INL void
 _ParserGroup::print_parser_group(
         std::ostream& os,
         HelpFormatter const& formatter,
+        std::string const& prog,
         std::size_t limit,
         std::size_t width,
         std::string const& lang) const
@@ -12688,18 +12698,122 @@ _ParserGroup::print_parser_group(
     if (m_help.suppress()) {
         return;
     }
-    os << "\n" << detail::_help_formatter("  " + _flags_to_string(), formatter,
-                               detail::_tr(m_help.value(), lang), width, limit);
+    std::string help = detail::_tr(m_help.value(), lang);
+    std::string res = help;
+    std::string text;
+#ifdef _ARGPARSE_CXX_11
+    std::regex const r("%[(]([a-z_]*)[)]s");
+    std::smatch match;
+    std::unordered_map<std::string, std::function<std::string()> > const
+            specifiers =
+    {
+        { "%(prog)s",           [&prog] () { return prog;           } },
+        { "%(choices)s",        [this]  () { return get_choices();  } },
+        { "%(help)s",           [&help] () { return help;           } },
+        { "%(metavar)s",        [this]  () { return get_metavar();  } },
+        { "%(option_strings)s", []      () { return "[]";           } },
+    };
+    while (std::regex_search(res, match, r)) {
+        text += match.prefix();
+        auto specifier = std::string(match[0]);
+        auto it = specifiers.find(specifier);
+        text += (it != specifiers.end() ? it->second() : specifier);
+        res = match.suffix();
+    }
+#else
+    std::string const beg = "%(";
+    std::string const end = ")s";
+    std::string::size_type pos = res.find(beg);
+    while (pos != std::string::npos) {
+        std::string::size_type next = res.find(end, pos + beg.size());
+        if (next == std::string::npos) {
+            break;
+        }
+        text += res.substr(0, pos);
+        std::string specifier = res.substr(pos, next + end.size() - pos);
+        if (specifier == "%(prog)s") {
+            text += prog;
+        } else if (specifier == "%(choices)s") {
+            text += get_choices();
+        } else if (specifier == "%(metavar)s") {
+            text += get_metavar();
+        } else if (specifier == "%(option_strings)s") {
+            text += "[]";
+        } else if (specifier == "%(help)s") {
+            text += help;
+        } else {
+            text += specifier;
+        }
+        res = res.substr(next + end.size());
+        pos = res.find(beg);
+    }
+#endif  // C++11+
+    text += res;
+    std::swap(res, text);
+    os << "\n" << detail::_help_formatter(
+              "  " + _flags_to_string(), formatter, res, width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
-        std::string help = detail::_tr((*it)->m_help, lang);
+        help = detail::_tr((*it)->m_help, lang);
         if (!help.empty()) {
-            std::string name = "    " + (*it)->m_name;
+            std::string metavar = (*it)->m_name;
             std::string alias = detail::_join((*it)->aliases(), ", ");
             if (!alias.empty()) {
-                name += " (" + alias + ")";
+                metavar += " (" + alias + ")";
             }
+            std::string name = "    " + metavar;
+            res = help;
+            text.clear();
+#ifdef _ARGPARSE_CXX_11
+            std::unordered_map<std::string, std::function<std::string()> > const
+                    specifiers2 =
+            {
+                { "%(prog)s",           [&prog]   () { return prog;         } },
+                { "%(choices)s",        []        () { return detail::_none;} },
+                { "%(help)s",           [&help]   () { return help;         } },
+                { "%(metavar)s",        [&metavar]() { return metavar;      } },
+                { "%(option_strings)s", []        () { return "[]";         } },
+                { "%(required)s",       []        () { return "False";      } },
+            };
+            while (std::regex_search(res, match, r)) {
+                text += match.prefix();
+                auto specifier = std::string(match[0]);
+                auto it = specifiers2.find(specifier);
+                text += (it != specifiers2.end() ? it->second() : specifier);
+                res = match.suffix();
+            }
+#else
+            pos = res.find(beg);
+            while (pos != std::string::npos) {
+                std::string::size_type next = res.find(end, pos + beg.size());
+                if (next == std::string::npos) {
+                    break;
+                }
+                text += res.substr(0, pos);
+                std::string specifier
+                        = res.substr(pos, next + end.size() - pos);
+                if (specifier == "%(prog)s") {
+                    text += prog;
+                } else if (specifier == "%(choices)s") {
+                    text += detail::_none;
+                } else if (specifier == "%(metavar)s") {
+                    text += metavar;
+                } else if (specifier == "%(option_strings)s") {
+                    text += "[]";
+                } else if (specifier == "%(required)s") {
+                    text += "False";
+                } else if (specifier == "%(help)s") {
+                    text += help;
+                } else {
+                    text += specifier;
+                }
+                res = res.substr(next + end.size());
+                pos = res.find(beg);
+            }
+#endif  // C++11+
+            text += res;
+            std::swap(res, text);
             os << "\n"
-               << detail::_help_formatter(name, formatter, help, width, limit);
+               << detail::_help_formatter(name, formatter, res, width, limit);
         }
     }
 }
@@ -12738,6 +12852,18 @@ _ARGPARSE_INL bool
 _ParserGroup::_is_positional() const
 {
     return title().empty() && description().empty();
+}
+
+_ARGPARSE_INL std::string
+_ParserGroup::get_choices() const
+{
+    return detail::_join(_parser_names(), ", ");
+}
+
+_ARGPARSE_INL std::string
+_ParserGroup::get_metavar() const
+{
+    return m_metavar.has_value() ? metavar() : detail::_none;
 }
 
 // -- ParserGroup -------------------------------------------------------------
@@ -15746,16 +15872,17 @@ ArgumentParser::print_subparsers(
         SubParsersInfo const& info,
         std::size_t index,
         HelpFormatter const& formatter,
+        std::string const& prog,
         std::size_t size,
         std::size_t width,
         std::string const& lang,
         std::ostream& os)
 {
     if (need_print && info.second == index) {
-        info.first->print_parser_group(os, formatter, size, width, lang);
+        info.first->print_parser_group(os, formatter, prog, size, width, lang);
         for (SubParsers::pgr_iterator it = info.first->m_groups.begin();
              it != info.first->m_groups.end(); ++it) {
-            (*it)->print_parser_group(os, formatter, size, width, lang);
+            (*it)->print_parser_group(os, formatter, prog, size, width, lang);
         }
     }
 }
