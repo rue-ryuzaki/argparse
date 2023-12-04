@@ -3364,6 +3364,7 @@ protected:
             bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
+            bool required,
             std::size_t limit,
             std::size_t width,
             std::string const& lang) const                                  = 0;
@@ -3708,6 +3709,7 @@ private:
             bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
+            bool required,
             std::size_t limit,
             std::size_t width,
             std::string const& lang) const _ARGPARSE_OVERRIDE;
@@ -5566,6 +5568,7 @@ protected:
             bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
+            bool required,
             std::size_t limit,
             std::size_t width,
             std::string const& lang) const _ARGPARSE_OVERRIDE;
@@ -5575,6 +5578,7 @@ protected:
             std::ostream& os,
             HelpFormatter const& formatter,
             std::string const& prog,
+            bool required,
             std::size_t limit,
             std::size_t width,
             std::string const& lang) const;
@@ -5924,6 +5928,7 @@ private:
             bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
+            bool required,
             std::size_t limit,
             std::size_t width,
             std::string const& lang) const _ARGPARSE_OVERRIDE;
@@ -9901,7 +9906,8 @@ HelpFormatter::_format_help(
     }
     for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
         if (!subparsers || ((*it) != subparsers || !sub_positional)) {
-            (*it)->print_help(ss, eat_ln, *this, p->prog(), size, width, lang);
+            (*it)->print_help(ss, eat_ln, *this, p->prog(),
+                              false, size, width, lang);
         }
     }
     detail::_print_raw_text_formatter(
@@ -11900,6 +11906,7 @@ ArgumentGroup::print_help(
         bool& eat_ln,
         HelpFormatter const& formatter,
         std::string const& prog,
+        bool /*required*/,
         std::size_t limit,
         std::size_t width,
         std::string const& lang) const
@@ -12668,6 +12675,7 @@ _ParserGroup::print_help(
         bool& eat_ln,
         HelpFormatter const& formatter,
         std::string const& prog,
+        bool required,
         std::size_t limit,
         std::size_t width,
         std::string const& lang) const
@@ -12683,7 +12691,7 @@ _ParserGroup::print_help(
                 detail::_replace(
                     detail::_tr(m_description, lang), "%(prog)s", prog),
                 width, os, eat_ln, std::string(), 2, "\n");
-    print_parser_group(os, formatter, prog, limit, width, lang);
+    print_parser_group(os, formatter, prog, required, limit, width, lang);
 }
 
 _ARGPARSE_INL void
@@ -12691,6 +12699,7 @@ _ParserGroup::print_parser_group(
         std::ostream& os,
         HelpFormatter const& formatter,
         std::string const& prog,
+        bool required,
         std::size_t limit,
         std::size_t width,
         std::string const& lang) const
@@ -12712,6 +12721,8 @@ _ParserGroup::print_parser_group(
         { "%(help)s",           [&help] () { return help;           } },
         { "%(metavar)s",        [this]  () { return get_metavar();  } },
         { "%(option_strings)s", []      () { return "[]";           } },
+        { "%(required)s",
+            [required] () { return detail::_bool_to_string(required); } },
     };
     while (std::regex_search(res, match, r)) {
         text += match.prefix();
@@ -12739,6 +12750,8 @@ _ParserGroup::print_parser_group(
             text += get_metavar();
         } else if (specifier == "%(option_strings)s") {
             text += "[]";
+        } else if (specifier == "%(required)s") {
+            text += detail::_bool_to_string(required);
         } else if (specifier == "%(help)s") {
             text += help;
         } else {
@@ -13130,13 +13143,16 @@ SubParsers::print_help(
         bool& eat_ln,
         HelpFormatter const& formatter,
         std::string const& prog,
+        bool /*required*/,
         std::size_t limit,
         std::size_t width,
         std::string const& lang) const
 {
-    _ParserGroup::print_help(os, eat_ln, formatter, prog, limit, width, lang);
+    _ParserGroup::print_help(os, eat_ln, formatter, prog,
+                             required(), limit, width, lang);
     for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
-        (*it)->print_help(os, eat_ln, formatter, prog, limit, width, lang);
+        (*it)->print_help(os, eat_ln, formatter, prog,
+                          required(), limit, width, lang);
     }
 }
 
@@ -15879,10 +15895,12 @@ ArgumentParser::print_subparsers(
         std::ostream& os)
 {
     if (need_print && info.second == index) {
-        info.first->print_parser_group(os, formatter, prog, size, width, lang);
+        info.first->print_parser_group(
+                os, formatter, prog, info.first->required(), size, width, lang);
         for (SubParsers::pgr_iterator it = info.first->m_groups.begin();
              it != info.first->m_groups.end(); ++it) {
-            (*it)->print_parser_group(os, formatter, prog, size, width, lang);
+            (*it)->print_parser_group(
+                os, formatter, prog, info.first->required(), size, width, lang);
         }
     }
 }
