@@ -11341,13 +11341,7 @@ _ARGPARSE_INL bool
 Argument::operator ==(
         Argument const& rhs) const
 {
-    return m_flags == rhs.m_flags
-            && m_name == rhs.m_name
-            && m_type == rhs.m_type
-            && m_action == rhs.m_action
-            && m_const.has_value() == rhs.m_const.has_value()
-            && m_const.value() == rhs.m_const.value()
-            && dest() == rhs.dest();
+    return this == &rhs;
 }
 
 _ARGPARSE_INL bool
