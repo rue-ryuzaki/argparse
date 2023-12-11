@@ -5,7 +5,7 @@
 *                         __| |
 * MIT License
 *
-* Argument parser for C++ (ArgumentParser v1.8.4)
+* Argument parser for C++ (ArgumentParser v1.9.0)
 *
 * Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 *
@@ -80,8 +80,8 @@
 // -- #define -----------------------------------------------------------------
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
-#define ARGPARSE_VERSION_MINOR 8
-#define ARGPARSE_VERSION_PATCH 4
+#define ARGPARSE_VERSION_MINOR 9
+#define ARGPARSE_VERSION_PATCH 0
 
 /*!
  *  This macro turns the version numbers into a numeric value:
@@ -2280,7 +2280,7 @@ public:
  *  \param str String to process
  *  \param err Output stream for errors (default: std::cerr)
  *
- *  \since NEXT_RELEASE
+ *  \since v1.9.0
  *
  *  \return Container with arguments
  */
@@ -2638,7 +2638,7 @@ public:
     /*!
      *  \brief Set argument 'nargs' argparse::SUPPRESS value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.0
      *
      *  \return Current argument reference
      */
@@ -5610,7 +5610,7 @@ class SubParsers;
 /*!
  *  \brief ParserGroup class
  *
- *  \since NEXT_RELEASE
+ *  \since v1.9.0
  */
 _ARGPARSE_EXPORT class ParserGroup : public _ParserGroup
 {
@@ -6084,7 +6084,7 @@ public:
      *
      *  \param value argparse::SUPPRESS
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.0
      *
      *  \return Current argument parser reference
      */

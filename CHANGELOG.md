@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.0] - 2023-12-11
+
+  * Fix: link shared library with argparse_static
+  * Add: SubParsers::add_parser_group (parser groups)
+  * Add: argparse:split_to_args(str) function
+  * Add: ArgumentParser::usage(argparse::SUPPRESS) support
+  * Add: specifiers support for parser groups and parsers
+  * Mark: ArgumentParser::Subparser as deprecated (use argparse::SubParsers)
+  * Remove: deprecated code
+
 ## [1.8.4] - 2023-11-13
 
   * Fix: help generation with metavar array
