@@ -67,5 +67,6 @@ x86/
 CMakeLists.txt.*
 
 # Others
+debian/
 ~$*
 .DS_Store
