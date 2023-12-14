@@ -1,16 +1,26 @@
 stages:
 - build
 
+variables:
+  BUILD_TYPE: Release
+
 build:
   stage: build
-  variables:
-    BUILD_TYPE: Release
+  only:
+    refs:
+      - develop
+      - merge_requests
+    changes:
+      - CMakeLists.txt
+      - cmake/*
+      - include/argparse/*
+      - test/*
+      - src/*
   parallel:
     matrix:
-      - PROVIDER: standard
-        STACK: [98, 11, 14, 17, 20]
+      - standard: [98, 11, 14, 17, 20]
   script:
-    - cmake -B build -S . -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_STANDARD=$STACK
+    - cmake -B build -S . -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_STANDARD=$standard
     - cmake --build build --config $BUILD_TYPE
     - cd build
     - ctest -C $BUILD_TYPE --output-on-failure
