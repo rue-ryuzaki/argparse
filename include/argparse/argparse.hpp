@@ -12701,6 +12701,7 @@ _ParserGroup::print_parser_group(
     if (m_help.suppress()) {
         return;
     }
+    // despecify parser group help
     std::string help = detail::_tr(m_help.value(), lang);
     std::string res = help;
     std::string text;
@@ -12760,12 +12761,13 @@ _ParserGroup::print_parser_group(
     os << "\n" << detail::_help_formatter(
               "  " + _flags_to_string(), formatter, res, width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
+        // despecify group's parser help
         help = detail::_tr((*it)->m_help, lang);
         if (!help.empty()) {
             std::string metavar = (*it)->m_name;
-            std::string alias = detail::_join((*it)->aliases(), ", ");
-            if (!alias.empty()) {
-                metavar += " (" + alias + ")";
+            std::string aliases = detail::_join((*it)->aliases(), ", ");
+            if (!aliases.empty()) {
+                metavar += " (" + aliases + ")";
             }
             std::string name = "    " + metavar;
             res = help;
