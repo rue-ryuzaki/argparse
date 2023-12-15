@@ -127,6 +127,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Python-like header-only C++ argument parser")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_MAINTAINER}")
     set(CPACK_DEBIAN_PACKAGE_SUGGESTS "cmake, build-essential")
+    # set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG.md")
     if (NOT ${CMAKE_VERSION} VERSION_LESS "3.6")
         set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
     endif()
@@ -154,5 +155,11 @@ endif()
 
 include(CPack)
 
-enable_testing()
-add_subdirectory(test)
+option(ARGPARSE_TESTS "Build argparse unit tests" ON)
+
+if (ARGPARSE_TESTS)
+    message("Build argparse unit tests")
+
+    enable_testing()
+    add_subdirectory(test)
+endif()
