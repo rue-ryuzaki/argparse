@@ -214,7 +214,9 @@
 #include <array>
 #include <cstdint>
 #include <forward_list>
+#include <functional>
 #include <initializer_list>
+#include <memory>
 #include <regex>
 #include <tuple>
 #include <type_traits>
@@ -226,17 +228,12 @@
 #include <cassert>
 #endif  // C++11+
 
-#include <algorithm>
 #include <cctype>
 #include <cstddef>
 #include <deque>
-#include <fstream>
-#include <functional>
 #include <iostream>
 #include <list>
 #include <map>
-#include <memory>
-#include <numeric>
 #include <queue>
 #include <set>
 #include <sstream>
@@ -250,6 +247,11 @@
 #include <optional>
 #include <string_view>
 #endif  // C++17+
+
+#ifdef _ARGPARSE_INL
+#include <algorithm>
+#include <fstream>
+#endif  // _ARGPARSE_INL
 
 // -- attributes --------------------------------------------------------------
 #ifdef _ARGPARSE_CXX_11
