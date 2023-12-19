@@ -20,7 +20,7 @@ build:
     matrix:
       - standard: [98, 11, 14, 17, 20]
   script:
-    - cmake -B build -S . -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_STANDARD=$standard
-    - cmake --build build --config $BUILD_TYPE
-    - cd build
-    - ctest -C $BUILD_TYPE --output-on-failure
+    - cmake -S . -B build/${standard} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_STANDARD=${standard}
+    - cmake --build build/${standard} --config ${BUILD_TYPE}
+    - cd build/${standard}
+    - ctest -C ${BUILD_TYPE} --output-on-failure
