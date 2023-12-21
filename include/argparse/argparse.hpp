@@ -230,6 +230,7 @@
 
 #include <cctype>
 #include <cstddef>
+#include <cstdlib>
 #include <deque>
 #include <iostream>
 #include <list>
@@ -14348,7 +14349,7 @@ ArgumentParser::exit(
     if (!message.empty()) {
         std::cerr << message << std::endl;
     }
-    ::exit(status);
+    std::exit(status);
 }
 
 _ARGPARSE_INL void
@@ -14356,8 +14357,7 @@ ArgumentParser::error(
         std::string const& message) const
 {
     print_usage(std::cerr);
-    std::cerr << prog() << ": error: " << message << std::endl;
-    ::exit(2);
+    exit(2, prog() + ": error: " + message);
 }
 
 _ARGPARSE_INL std::vector<std::string>
@@ -14503,7 +14503,7 @@ ArgumentParser::on_parse_arguments(
     } catch (...) {
         std::cerr << "argparse error: unexpected error" << std::endl;
     }
-    ::exit(1);
+    std::exit(1);
 }
 
 #ifdef _ARGPARSE_CXX_17
@@ -15025,7 +15025,7 @@ ArgumentParser::process_optional_help(
     // print help and exit
     tmp->handle(std::string());
     info.parser->print_help(info.lang);
-    ::exit(0);
+    exit(0);
 }
 
 _ARGPARSE_INL void
@@ -15046,7 +15046,7 @@ ArgumentParser::process_optional_version(
     // print version and exit
     tmp->handle(std::string());
     std::cout << despecify(tmp->version()) << std::endl;
-    ::exit(0);
+    exit(0);
 }
 
 _ARGPARSE_INL void
