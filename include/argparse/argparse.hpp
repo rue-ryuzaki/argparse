@@ -8874,10 +8874,13 @@ _resolve_conflict(
         std::string const& str,
         std::vector<std::string>& values)
 {
-    std::vector<std::string>::iterator it
-            = std::find(values.begin(), values.end(), str);
-    if (it != values.end()) {
-        values.erase(it);
+    std::vector<std::string>::iterator it = values.begin();
+    while (it != values.end()) {
+        if ((*it) == str) {
+            it = values.erase(it);
+        } else {
+            ++it;
+        }
     }
 }
 
@@ -11513,27 +11516,25 @@ _ArgumentData::check_conflicting_option(
         Argument const* arg,
         std::vector<std::string>& flags) const
 {
-    std::vector<std::string> conflict_options;
-    for (std::size_t i = 0; i < arg->flags().size(); ++i) {
-        std::string const& flag = arg->flags().at(i);
-        std::vector<std::string>::iterator it
-                = std::find(flags.begin(), flags.end(), flag);
-        if (it != flags.end()) {
-            if (m_conflict_handler == "resolve") {
-                flags.erase(it);
-            } else {
+    if (m_conflict_handler == "resolve") {
+        detail::_resolve_conflict(arg->flags(), flags);
+    } else {
+        std::vector<std::string> conflict_options;
+        for (std::size_t i = 0; i < arg->flags().size(); ++i) {
+            std::string const& flag = arg->flags().at(i);
+            if (detail::_exists(flag, flags)) {
                 conflict_options.push_back(flag);
             }
         }
-    }
-    if (conflict_options.size() == 1) {
-        throw ArgumentError("argument " + detail::_join(arg->flags(), "/")
-                            + ": conflicting option string: "
-                            + conflict_options.front());
-    } else if (conflict_options.size() > 1) {
-        throw ArgumentError("argument " + detail::_join(arg->flags(), "/")
-                            + ": conflicting option strings: "
-                            + detail::_join(conflict_options, ", "));
+        if (conflict_options.size() == 1) {
+            throw ArgumentError("argument " + detail::_join(arg->flags(), "/")
+                                + ": conflicting option string: "
+                                + conflict_options.front());
+        } else if (conflict_options.size() > 1) {
+            throw ArgumentError("argument " + detail::_join(arg->flags(), "/")
+                                + ": conflicting option strings: "
+                                + detail::_join(conflict_options, ", "));
+        }
     }
 }
 
