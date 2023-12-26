@@ -250,7 +250,6 @@
 #endif  // C++17+
 
 #ifdef _ARGPARSE_INL
-#include <algorithm>
 #include <fstream>
 #endif  // _ARGPARSE_INL
 
@@ -8024,6 +8023,24 @@ _store_const_action = _store_action | _const_action;
 typedef detail::shared_ptr<Argument> pArgument;
 typedef std::vector<pArgument> pArguments;
 
+_ARGPARSE_INL void
+_erase_remove(
+        pArguments& args,
+        pArgument arg)
+{
+    pArguments::iterator it = args.begin();
+    for ( ; it != args.end() && (*it) != arg; ++it) {
+    }
+    if (it != args.end()) {
+        for (pArguments::iterator i = it; ++i != args.end(); ) {
+            if (!(*i == arg)) {
+                *it++ = _ARGPARSE_MOVE(*i);
+            }
+        }
+        args.erase(it, args.end());
+    }
+}
+
 // -- templates ---------------------------------------------------------------
 #ifdef _ARGPARSE_CXX_11
 template <class T = std::string, class... Args>
@@ -9773,10 +9790,8 @@ HelpFormatter::_print_custom_usage(
     for (_mt i = p->m_mutex_groups.begin(); i != p->m_mutex_groups.end(); ++i) {
         for (_arg j = (*i).m_data->m_arguments.begin();
              j != (*i).m_data->m_arguments.end(); ++j) {
-            options.erase(std::remove(options.begin(), options.end(), *j),
-                          options.end());
-            operand.erase(std::remove(operand.begin(), operand.end(), *j),
-                          operand.end());
+            detail::_erase_remove(options, *j);
+            detail::_erase_remove(operand, *j);
         }
     }
     for (std::size_t i = 0; i < options.size(); ++i) {
