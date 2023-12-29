@@ -14,7 +14,7 @@ build:
       - CMakeLists.txt
       - cmake/*
       - include/argparse/*
-      - test/*
+      - tests/*
       - src/*
   parallel:
     matrix:

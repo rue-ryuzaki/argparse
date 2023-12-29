@@ -161,5 +161,5 @@ if (ARGPARSE_TESTS)
     message("Build argparse unit tests")
 
     enable_testing()
-    add_subdirectory(test)
+    add_subdirectory(tests)
 endif()
