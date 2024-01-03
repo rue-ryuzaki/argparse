@@ -5,6 +5,8 @@ else()
 endif()
 
 include(cmake/prelude.cmake)
+include(cmake/project-is-top-level.cmake)
+include(cmake/warnings.cmake)
 
 file(READ include/argparse/argparse.hpp CURRENT_VERSION_H)
 string(REGEX MATCH "\#define ARGPARSE_VERSION_MAJOR +([0-9]+)" MAJOR_VERSION ${CURRENT_VERSION_H})
@@ -21,18 +23,14 @@ project("ArgumentParser"
 
 set(PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
 
-include(cmake/project-is-top-level.cmake)
-include(cmake/warnings.cmake)
-
 if (NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 11)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 message("argparse version: ${PROJECT_VERSION}")
 message("argparse build standard: C++${CMAKE_CXX_STANDARD}")
-
-include_directories(include)
 
 file(GLOB LIBRARY_HEADER "include/argparse/argparse*.hpp")
 
