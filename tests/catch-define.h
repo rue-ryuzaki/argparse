@@ -2,8 +2,8 @@
 * Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 */
 
-#ifndef _ARGPARSE_TEST_CATCH_DEFINE_H_
-#define _ARGPARSE_TEST_CATCH_DEFINE_H_
+#ifndef _ARGPARSE_TESTS_CATCH_DEFINE_H_
+#define _ARGPARSE_TESTS_CATCH_DEFINE_H_
 
 #ifdef _MSVC_LANG
 #if _MSVC_LANG >= 201103L
@@ -480,4 +480,4 @@ inline std::vector<std::string> _make_vec(std::string const& arg1,
 }
 #endif  // C++11+
 
-#endif  // _ARGPARSE_TEST_CATCH_DEFINE_H_
+#endif  // _ARGPARSE_TESTS_CATCH_DEFINE_H_
