@@ -12805,8 +12805,8 @@ _ParserGroup::print_parser_group(
             while (std::regex_search(res, match, r)) {
                 text += match.prefix();
                 auto specifier = std::string(match[0]);
-                auto it = specifiers2.find(specifier);
-                text += (it != specifiers2.end() ? it->second() : specifier);
+                auto it2 = specifiers2.find(specifier);
+                text += (it2 != specifiers2.end() ? it2->second() : specifier);
                 res = match.suffix();
             }
 #else
