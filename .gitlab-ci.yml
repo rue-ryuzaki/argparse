@@ -22,5 +22,4 @@ build:
   script:
     - cmake -S . -B build/${standard} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_STANDARD=${standard}
     - cmake --build build/${standard} --config ${BUILD_TYPE}
-    - cd build/${standard}
-    - ctest -C ${BUILD_TYPE} --output-on-failure
+    - ctest --test-dir build/${standard} -C ${BUILD_TYPE} --output-on-failure
