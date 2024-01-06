@@ -144,12 +144,12 @@ TEST_CASE("1. argument actions", "[argument]")
         REQUIRE_THROWS(parser.add_argument("--no-foo"));
     }
 
-//    SECTION("1.6. BooleanOptionalAction conflict options [3]") {
-//        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+    SECTION("1.6. BooleanOptionalAction conflict options [3]") {
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
 
-//        parser.add_argument("--no-foo").action(argparse::store_true);
-//        REQUIRE_THROWS(parser.add_argument("--foo").action(argparse::BooleanOptionalAction));
-//    }
+        parser.add_argument("--no-foo").action(argparse::store_true);
+        REQUIRE_THROWS(parser.add_argument("--foo").action(argparse::BooleanOptionalAction));
+    }
 
     SECTION("1.7. BooleanOptionalAction conflict options resolved [1]") {
         argparse::ArgumentParser parser1

@@ -833,7 +833,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args2.exists("foo") == true);
         REQUIRE(args2.exists("bar") == true);
         REQUIRE(args2.get<std::string>("foo") == "key=value");
-//        REQUIRE(args2.get<std::string>("bar") == "");
+        REQUIRE_THROWS(args2.get<std::string>("bar"));
         REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 1);
         REQUIRE(args2.get<std::vector<std::string> >("bar").size() == 2);
 #ifdef _ARGPARSE_CXX_11
@@ -862,7 +862,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args3.exists("foo") == true);
         REQUIRE(args3.exists("bar") == true);
         REQUIRE(args3.get<std::string>("foo") == "key=value");
-//        REQUIRE(args3.get<std::string>("bar") == "");
+        REQUIRE_THROWS(args3.get<std::string>("bar"));
         REQUIRE(args3.get<std::vector<std::string> >("foo").size() == 1);
         REQUIRE(args3.get<std::vector<std::string> >("bar").size() == 2);
         REQUIRE((args3.get<std::map<std::string, std::string> >("bar").size() == 1));
