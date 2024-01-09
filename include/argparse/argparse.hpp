@@ -941,16 +941,12 @@ namespace _stream_check
 template <class T>
 struct has_operator_in : _stream_check::has_loading_support<std::istream, T> {};
 
-template <class T> struct is_byte_type              { enum { value = false }; };
-template <>        struct is_byte_type<char>         { enum { value = true }; };
-template <>        struct is_byte_type<signed char>  { enum { value = true }; };
-template <>        struct is_byte_type<unsigned char>{ enum { value = true }; };
-#ifdef _ARGPARSE_CXX_17
-template <>        struct is_byte_type<std::byte>    { enum { value = true }; };
-#endif  // C++17+
-#ifdef _ARGPARSE_CXX_20
-template <>        struct is_byte_type<char8_t>      { enum { value = true }; };
-#endif  // C++20+
+template <class T>
+struct is_byte_type
+{
+    static const bool value
+                        = sizeof(T) == sizeof(char) && !is_same<bool, T>::value;
+};
 
 template <class T, typename U = void>
 struct is_stl_map                                                 :false_type{};

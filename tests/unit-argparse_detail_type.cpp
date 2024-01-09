@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2021-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+* Copyright (c) 2021-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 */
 
 #include <argparse/argparse_decl.hpp>
@@ -121,4 +121,28 @@ TEST_CASE("1. type name", "[detail]")
         REQUIRE((argparse::detail::Type::basic<std::vector<std::pair<int, int> > >() == "std::pair<int, int>"));
         REQUIRE(argparse::detail::Type::basic<std::vector<std::vector<int> > >() == "int");
     }
+}
+
+TEST_CASE("3. byte type check", "[detail]")
+{
+    // true
+    REQUIRE(argparse::detail::is_byte_type<char>::value == true);
+    REQUIRE(argparse::detail::is_byte_type<unsigned char>::value == true);
+    REQUIRE(argparse::detail::is_byte_type<signed char>::value == true);
+    REQUIRE(argparse::detail::is_byte_type<int8_t>::value == true);
+    REQUIRE(argparse::detail::is_byte_type<uint8_t>::value == true);
+#ifdef _ARGPARSE_CXX_17
+    REQUIRE(argparse::detail::is_byte_type<std::byte>::value == true);
+#endif  // C++17+
+#ifdef _ARGPARSE_CXX_20
+    REQUIRE(argparse::detail::is_byte_type<char8_t>::value == true);
+#endif  // C++20+
+    // false
+    REQUIRE(argparse::detail::is_byte_type<bool>::value == false);
+    REQUIRE(argparse::detail::is_byte_type<int>::value == false);
+    REQUIRE(argparse::detail::is_byte_type<short>::value == false);
+    REQUIRE(argparse::detail::is_byte_type<long>::value == false);
+    REQUIRE(argparse::detail::is_byte_type<double>::value == false);
+    REQUIRE(argparse::detail::is_byte_type<float>::value == false);
+    REQUIRE(argparse::detail::is_byte_type<std::string>::value == false);
 }
