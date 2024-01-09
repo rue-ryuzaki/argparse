@@ -30,8 +30,8 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-message("argparse version: ${PROJECT_VERSION}")
-message("argparse build standard: C++${CMAKE_CXX_STANDARD}")
+message(STATUS "argparse version: ${PROJECT_VERSION}")
+message(STATUS "argparse build standard: C++${CMAKE_CXX_STANDARD}")
 
 file(GLOB LIBRARY_HEADER "include/argparse/argparse*.hpp")
 
@@ -54,7 +54,7 @@ option(ARGPARSE_STATIC "Build argparse as a static lib" OFF)
 option(ARGPARSE_STATIC_PIC "Build argparse_static with -fPIC" ON)
 
 if (ARGPARSE_STATIC)
-    message("Build argparse as a static lib")
+    message(STATUS "Build argparse as a static lib")
 
     foreach(DEFINITION ${ARGPARSE_STATIC_DEFINITIONS})
         if (NOT ${DEFINITION} STREQUAL "ARGPARSE_DECLARATION")
@@ -66,7 +66,7 @@ if (ARGPARSE_STATIC)
     add_library(argparse::argparse_static ALIAS argparse_static)
 
     if (ARGPARSE_STATIC_PIC)
-        message("Build argparse_static with -fPIC")
+        message(STATUS "Build argparse_static with -fPIC")
         set_property(
             TARGET argparse_static
             PROPERTY POSITION_INDEPENDENT_CODE ON
@@ -154,10 +154,10 @@ endif()
 
 include(CPack)
 
-option(ARGPARSE_TESTS "Build argparse unit tests" ON)
+option(ARGPARSE_BUILD_TESTS "Build argparse unit tests" ON)
 
-if (ARGPARSE_TESTS)
-    message("Build argparse unit tests")
+if (ARGPARSE_BUILD_TESTS)
+    message(STATUS "Build argparse unit tests")
 
     enable_testing()
     add_subdirectory(tests)
