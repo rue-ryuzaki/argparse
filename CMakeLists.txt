@@ -1,10 +1,10 @@
+include(cmake/prelude.cmake)
+
 if (${CMAKE_VERSION} VERSION_LESS "3.12")
     cmake_minimum_required(VERSION 3.0)
 else()
     cmake_minimum_required(VERSION 3.0...3.12)
 endif()
-
-include(cmake/prelude.cmake)
 
 file(READ include/argparse/argparse.hpp CURRENT_VERSION_H)
 string(REGEX MATCH "\#define ARGPARSE_VERSION_MAJOR +([0-9]+)" MAJOR_VERSION ${CURRENT_VERSION_H})
@@ -56,14 +56,14 @@ option(ARGPARSE_STATIC_PIC "Build argparse_static with -fPIC" ON)
 if (ARGPARSE_STATIC)
     message(STATUS "Build argparse as a static lib")
 
-    foreach(DEFINITION ${ARGPARSE_STATIC_DEFINITIONS})
-        if (NOT ${DEFINITION} STREQUAL "ARGPARSE_DECLARATION")
-            add_compile_definitions(${DEFINITION})
-        endif()
-    endforeach()
-
     add_library(argparse_static STATIC src/argparse_impl.cpp)
     add_library(argparse::argparse_static ALIAS argparse_static)
+
+    foreach(DEFINITION ${ARGPARSE_STATIC_DEFINITIONS})
+        if (NOT ${DEFINITION} STREQUAL "ARGPARSE_DECLARATION")
+            target_compile_definitions(argparse_static PRIVATE ${DEFINITION})
+        endif()
+    endforeach()
 
     if (ARGPARSE_STATIC_PIC)
         message(STATUS "Build argparse_static with -fPIC")
