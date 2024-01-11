@@ -217,7 +217,6 @@
 #include <functional>
 #include <initializer_list>
 #include <memory>
-#include <regex>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
@@ -251,6 +250,9 @@
 
 #ifdef _ARGPARSE_INL
 #include <fstream>
+#ifdef _ARGPARSE_CXX_11
+#include <regex>
+#endif  // C++11+
 #endif  // _ARGPARSE_INL
 
 // -- attributes --------------------------------------------------------------
@@ -4936,7 +4938,7 @@ public:
         if (size > vector.size()) {
             size = vector.size();
         }
-        std::copy_n(vector.begin(), size, res.begin());
+        std::move(vector.begin(), std::next(vector.begin(), size), res.begin());
         return res;
     }
 
@@ -5159,7 +5161,8 @@ public:
         if (size > vector->size()) {
             size = vector->size();
         }
-        std::copy_n(vector.value().begin(), size, res.begin());
+        std::move(vector.value().begin(),
+                  std::next(vector.value().begin(), size), res.begin());
         return res;
     }
 
