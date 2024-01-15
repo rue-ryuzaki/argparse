@@ -233,7 +233,6 @@
 #include <deque>
 #include <iostream>
 #include <list>
-#include <map>
 #include <queue>
 #include <set>
 #include <sstream>
@@ -250,6 +249,7 @@
 
 #ifdef _ARGPARSE_INL
 #include <fstream>
+#include <map>
 #ifdef _ARGPARSE_CXX_11
 #include <regex>
 #endif  // C++11+

@@ -2,6 +2,8 @@
 * Copyright (c) 2021-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 */
 
+#include <map>
+
 #include <argparse/argparse_decl.hpp>
 #include "./catch-define.h"
 
