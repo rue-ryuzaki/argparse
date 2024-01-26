@@ -542,7 +542,7 @@ struct type_tag { };
 template <class T, T... Ints>
 struct integer_sequence { };
 
-template <class T, T N, typename = void>
+template <class T, T N, class = void>
 struct make_integer_sequence_impl
 {
     template <class>
@@ -572,7 +572,7 @@ struct conditional                  { typedef T type; };
 template <class T, class F>
 struct conditional<false, T, F>     { typedef F type; };
 
-template <bool, typename T = void>
+template <bool, class T = void>
 struct enable_if { };
 template <class T>
 struct enable_if<true, T>           { typedef T type; };
@@ -950,13 +950,13 @@ struct is_byte_type
                         = sizeof(T) == sizeof(char) && !is_same<bool, T>::value;
 };
 
-template <class T, typename U = void>
+template <class T, class = void>
 struct is_stl_map                                                 :false_type{};
 template <class T>
 struct is_stl_map<T, typename voider<typename T::key_type,
                                     typename T::mapped_type>::type>:true_type{};
 
-template <class T, typename U = void>
+template <class T, class = void>
 struct is_stl_pair                                                :false_type{};
 template <class T>
 struct is_stl_pair<T, typename voider<typename T::first_type,
@@ -966,9 +966,9 @@ template <class T>
 struct is_stl_array                                               :false_type{};
 template <class T>
 struct is_stl_container                                           :false_type{};
-template <class T, typename U = void>
+template <class T, class = void>
 struct is_stl_container_paired                                    :false_type{};
-template <class T, typename U = void>
+template <class T, class = void>
 struct is_stl_container_tupled                                    :false_type{};
 template <class T>
 struct is_stl_matrix                                              :false_type{};
