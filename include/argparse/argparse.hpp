@@ -944,6 +944,12 @@ template <class T>
 struct has_operator_in : _stream_check::has_loading_support<std::istream, T> {};
 
 template <class T>
+struct is_string_ctor
+{
+    static const bool value = is_constructible<std::string, T>::value;
+};
+
+template <class T>
 struct is_byte_type
 {
     static const bool value
@@ -1606,7 +1612,7 @@ class Type
 public:
 #ifdef _ARGPARSE_CXX_11
     template <class T, typename enable_if<
-                  is_constructible<std::string, T>::value
+                  is_string_ctor<T>::value
                   || is_stl_pair<T>::value
                   || is_stl_tuple<T>::value>::type* = nullptr>
     static std::string
@@ -1635,7 +1641,7 @@ public:
     }
 
     template <class T, typename enable_if<
-                  !is_constructible<std::string, T>::value
+                  !is_string_ctor<T>::value
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
@@ -1650,7 +1656,7 @@ public:
 #else
     template <class T>
     static std::string
-    basic(typename enable_if<is_same<std::string, T>::value
+    basic(typename enable_if<is_string_ctor<T>::value
                              || is_stl_pair<T>::value, bool>::type = true)
     {
         return name<T>();
@@ -1674,7 +1680,7 @@ public:
 
     template <class T>
     static std::string
-    basic(typename enable_if<!is_same<std::string, T>::value
+    basic(typename enable_if<!is_string_ctor<T>::value
                              && !is_stl_container<T>::value
                              && !is_stl_map<T>::value
                              && !is_stl_pair<T>::value
@@ -1686,7 +1692,7 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     template <class T, typename enable_if<
-                  is_constructible<std::string, T>::value>::type* = nullptr>
+                  is_string_ctor<T>::value>::type* = nullptr>
     static std::string
     name()
     {
@@ -1745,7 +1751,7 @@ public:
     }
 
     template <class T, typename enable_if<
-                  !is_constructible<std::string, T>::value
+                  !is_string_ctor<T>::value
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
@@ -1760,7 +1766,7 @@ public:
 #else
     template <class T>
     static std::string
-    name(typename enable_if<is_same<std::string, T>::value, bool>::type = true)
+    name(typename enable_if<is_string_ctor<T>::value, bool>::type = true)
     {
         return "std::string";
     }
@@ -1796,7 +1802,7 @@ public:
 
     template <class T>
     static std::string
-    name(typename enable_if<!is_same<std::string, T>::value
+    name(typename enable_if<!is_string_ctor<T>::value
                             && !is_stl_container<T>::value
                             && !is_stl_map<T>::value
                             && !is_stl_pair<T>::value
@@ -2669,7 +2675,7 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
-                !std::is_constructible<std::string, T>::value>::type* = nullptr>
+                  !detail::is_string_ctor<T>::value>::type* = nullptr>
     inline Argument&
     const_value(
             T const& value)
@@ -2679,8 +2685,7 @@ public:
     const_value(
             T const& value,
             typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value, bool
-            >::type = true)
+                !detail::is_string_ctor<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         const_value(detail::_to_string<T>(value));
@@ -2709,7 +2714,7 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
-                !std::is_constructible<std::string, T>::value>::type* = nullptr>
+                  !detail::is_string_ctor<T>::value>::type* = nullptr>
     inline Argument&
     default_value(
             T const& value)
@@ -2719,8 +2724,7 @@ public:
     default_value(
             T const& value,
             typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value, bool
-            >::type = true)
+                !detail::is_string_ctor<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         m_default = detail::_to_string<T>(value);
@@ -2762,7 +2766,7 @@ public:
 #ifdef _ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
-                !std::is_constructible<std::string, T>::value>::type* = nullptr>
+                  !detail::is_string_ctor<T>::value>::type* = nullptr>
     inline Argument&
     implicit_value(
             T const& value)
@@ -2772,8 +2776,7 @@ public:
     implicit_value(
             T const& value,
             typename detail::enable_if<
-                !detail::is_constructible<std::string, T>::value, bool
-            >::type = true)
+                !detail::is_string_ctor<T>::value, bool>::type = true)
 #endif  // C++11+
     {
         m_implicit = detail::_to_string<T>(value);
@@ -3971,7 +3974,7 @@ private:
     struct need_operator_in
     {
         static const bool value = !detail::is_same<bool, T>::value
-                && !detail::is_constructible<std::string, T>::value
+                && !detail::is_string_ctor<T>::value
                 && !detail::is_byte_type<T>::value;
     };
 
@@ -3979,13 +3982,13 @@ private:
     struct simple_element
     {
         static const bool value = detail::is_floating_point<T>::value
-                || detail::is_constructible<std::string, T>::value
+                || detail::is_string_ctor<T>::value
                 || detail::is_integral<T>::value;
     };
 
     template <class T>
     static typename detail::enable_if<
-        detail::is_constructible<std::string, T>::value, T>::type
+        detail::is_string_ctor<T>::value, T>::type
     to_type(std::string const& data)
     {
         return T(data);
@@ -4312,7 +4315,7 @@ private:
 #ifdef _ARGPARSE_CXX_17
     template <class T>
     static std::optional<typename detail::enable_if<
-        detail::is_constructible<std::string, T>::value, T>::type>
+        detail::is_string_ctor<T>::value, T>::type>
     to_opt_type(
             std::string const& data)
     {
@@ -4714,7 +4717,7 @@ public:
      */
     template <class T>
     _ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<detail::is_constructible<std::string, T>::value
+    typename detail::enable_if<detail::is_string_ctor<T>::value
                                || detail::is_floating_point<T>::value
                                || detail::is_same<bool, T>::value
                                || detail::is_byte_type<T>::value, T>::type
@@ -5005,7 +5008,7 @@ public:
     template <class T>
     _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
-        !detail::is_constructible<std::string, T>::value
+        !detail::is_string_ctor<T>::value
         && !detail::is_floating_point<T>::value
         && !detail::is_integral<T>::value
         && !detail::is_stl_array<typename detail::decay<T>::type>::value
@@ -5079,7 +5082,7 @@ public:
     template <class T>
     _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
-        std::is_constructible<std::string, T>::value
+        detail::is_string_ctor<T>::value
         || std::is_floating_point<T>::value
         || std::is_same<bool, T>::value
         || detail::is_byte_type<T>::value, T>::type>
@@ -5437,7 +5440,7 @@ public:
     template <class T>
     _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
-        !std::is_constructible<std::string, T>::value
+        !detail::is_string_ctor<T>::value
         && !std::is_floating_point<T>::value
         && !std::is_integral<T>::value
         && !detail::is_stl_array<typename std::decay<T>::type>::value
