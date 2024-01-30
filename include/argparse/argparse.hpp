@@ -897,13 +897,12 @@ struct is_constructible<std::string, std::vector<std::string> >
     static const bool value = false;
 };
 
-template <class T, class U>
+template <class T, class = void>
 struct voider { typedef void type; };
 #endif  // C++11+
 
 // -- library type traits -----------------------------------------------------
-namespace _stream_check
-{
+namespace _stream_check {
     typedef char yes;
     typedef int no;
 
@@ -938,22 +937,22 @@ namespace _stream_check
         static const bool value = has_loading_support<StreamType, T>::value
                                 && has_saving_support<StreamType, T>::value;
     };
-}  // _stream_check
+}  // namespace _stream_check
 
 template <class T>
 struct has_operator_in : _stream_check::has_loading_support<std::istream, T> {};
-
-template <class T>
-struct is_string_ctor
-{
-    static const bool value = is_constructible<std::string, T>::value;
-};
 
 template <class T>
 struct is_byte_type
 {
     static const bool value
                         = sizeof(T) == sizeof(char) && !is_same<bool, T>::value;
+};
+
+template <class T>
+struct is_string_ctor
+{
+    static const bool value = is_constructible<std::string, T>::value;
 };
 
 template <class T, class = void>
@@ -968,14 +967,22 @@ template <class T>
 struct is_stl_pair<T, typename voider<typename T::first_type,
                                     typename T::second_type>::type>:true_type{};
 
+template <class T, class = void>
+struct is_stl_container_paired             { static const bool value = false; };
+template <class T>
+struct is_stl_container_paired<T, typename voider<typename T::value_type>::type>
+{
+    static const bool value
+          = is_stl_pair<typename T::value_type>::value && !is_stl_map<T>::value;
+};
+
+template <class T, class = void>
+struct is_stl_container_tupled             { static const bool value = false; };
+
 template <class T>
 struct is_stl_array                                               :false_type{};
 template <class T>
 struct is_stl_container                                           :false_type{};
-template <class T, class = void>
-struct is_stl_container_paired                                    :false_type{};
-template <class T, class = void>
-struct is_stl_container_tupled                                    :false_type{};
 template <class T>
 struct is_stl_matrix                                              :false_type{};
 template <class T>
@@ -1008,12 +1015,6 @@ template <class... Args>
 struct is_stl_container<std::unordered_multiset         <Args...> >:true_type{};
 template <class... Args>
 struct is_stl_container<std::unordered_set              <Args...> >:true_type{};
-
-template <class _1st, class _2nd, template <class...> class container>
-struct is_stl_container_paired<container<std::pair<_1st, _2nd> > > :true_type{};
-
-template <class... Args, template <class...> class container>
-struct is_stl_container_tupled<container<std::tuple<Args...> > >   :true_type{};
 
 template <class... Args>
 struct is_stl_matrix<std::deque<std::deque            <Args...> > >:true_type{};
@@ -1092,6 +1093,12 @@ struct is_stl_queue<std::queue                          <Args...> >:true_type{};
 
 template <class... Args>
 struct is_stl_tuple<std::tuple                          <Args...> >:true_type{};
+
+template <class T>
+struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
+{
+    static const bool value = is_stl_tuple<typename T::value_type>::value;
+};
 #else
 template <class T>
 struct is_stl_container<std::deque                            <T> >:true_type{};
@@ -1105,10 +1112,6 @@ template <class T>
 struct is_stl_container<std::set                              <T> >:true_type{};
 template <class T>
 struct is_stl_container<std::vector                           <T> >:true_type{};
-
-template <class _1st, class _2nd, template <class T, class U> class container>
-struct is_stl_container_paired<container<std::pair<_1st, _2nd>,
-                         std::allocator<std::pair<_1st, _2nd> > > >:true_type{};
 
 template <class T>
 struct is_stl_matrix<std::deque<std::deque                  <T> > >:true_type{};
