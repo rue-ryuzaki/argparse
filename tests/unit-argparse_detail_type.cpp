@@ -2,10 +2,25 @@
 * Copyright (c) 2021-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
 */
 
-#include <map>
-
 #include <argparse/argparse_decl.hpp>
 #include "./catch-define.h"
+
+#ifdef _ARGPARSE_CXX_11
+#include <array>
+#include <forward_list>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
+#endif  // C++11+
+
+#include <deque>
+#include <list>
+#include <map>
+#include <queue>
+#include <set>
+#include <stack>
+#include <string>
+#include <vector>
 
 TEST_CASE("1. type name", "[detail]")
 {
