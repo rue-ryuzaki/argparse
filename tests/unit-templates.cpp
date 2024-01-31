@@ -8,9 +8,81 @@
 #ifdef _ARGPARSE_CXX_11
 #include <array>
 #include <forward_list>
+#include <functional>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+
+inline std::size_t
+hash_combiner(
+        std::size_t left,
+        std::size_t right)
+{
+    return left ^ right;
+}
+
+template <class T, class U>
+struct std::hash<std::pair<T, U> >
+{
+    inline size_t
+    operator() (
+            std::pair<T, U> const& key) const
+    {
+        return hash_combiner(std::hash<T>()(key.first), std::hash<U>()(key.second));
+    }
+};
+
+template <std::size_t Idx, class... Ts>
+struct hash_impl
+{
+    inline std::size_t
+    operator() (
+            std::size_t a,
+            std::tuple<Ts...> const& t) const
+    {
+        typedef typename std::tuple_element<Idx - 1, std::tuple<Ts...> >::type nexttype;
+        hash_impl<Idx - 2, Ts...> next;
+        std::size_t b = std::hash<nexttype>()(std::get<Idx - 1>(t));
+        return next(hash_combiner(a, b), t);
+    }
+};
+
+template <class... Ts>
+struct hash_impl<1, Ts...>
+{
+    inline std::size_t
+    operator() (
+            std::size_t a,
+            std::tuple<Ts...> const& t) const
+    {
+        typedef typename std::tuple_element<0, std::tuple<Ts...> >::type nexttype;
+        std::size_t b = std::hash<nexttype>()(std::get<0>(t));
+        return hash_combiner(a, b);
+    }
+};
+
+template <class... Ts>
+struct hash_impl<0, Ts...>
+{
+    inline std::size_t
+    operator() (
+            std::size_t a,
+            std::tuple<Ts...> const&) const
+    {
+        return a;
+    }
+};
+
+template <class... Ts>
+struct std::hash<std::tuple<Ts...> >
+{
+    inline std::size_t
+    operator() (
+            std::tuple<Ts...> const& x) const
+    {
+        return hash_impl<std::tuple_size<std::tuple<Ts...> >::value, Ts...>()(0, x);
+    }
+};
 #endif  // C++11+
 
 #include <deque>
