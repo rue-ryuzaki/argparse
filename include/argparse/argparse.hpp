@@ -4046,7 +4046,7 @@ private:
             data_const_iterator end,
             char sep)
     {
-        auto const tuple_sz = std::tuple_size<T>{};
+        std::size_t const tuple_sz = std::tuple_size<T>{};
         if (tuple_sz == 0) {
             throw TypeError("unsupported empty tuple");
         }
@@ -4073,7 +4073,7 @@ private:
             char sep)
     {
         std::vector<std::string> const& vs = v.second();
-        auto const tuple_sz = std::tuple_size<T>{};
+        std::size_t const tuple_sz = std::tuple_size<T>{};
         auto st = std::isspace(static_cast<unsigned char>(sep)) ? tuple_sz : 1;
         if (st == 0 || vs.size() % st != 0) {
             throw ValueError("invalid stored argument amount");
@@ -4385,7 +4385,7 @@ private:
             data_const_iterator end,
             char sep)
     {
-        auto const tuple_sz = std::tuple_size<T>{};
+        std::size_t const tuple_sz = std::tuple_size<T>{};
         if (tuple_sz == 0) {
             return std::nullopt;
         }
@@ -4411,7 +4411,7 @@ private:
             char sep)
     {
         auto const& vs = value.second();
-        auto const tuple_sz = std::tuple_size<T>{};
+        std::size_t const tuple_sz = std::tuple_size<T>{};
         auto st = std::isspace(static_cast<unsigned char>(sep)) ? tuple_sz : 1;
         if (st == 0 || vs.size() % st != 0) {
             return std::nullopt;
@@ -4858,7 +4858,10 @@ public:
         if (size > vector.size()) {
             size = vector.size();
         }
-        std::move(vector.begin(), std::next(vector.begin(), size), res.begin());
+        typedef typename std::vector<
+                typename T::value_type>::difference_type dtype;
+        std::move(vector.begin(), std::next(
+                      vector.begin(), static_cast<dtype>(size)), res.begin());
         return res;
     }
 
@@ -5081,8 +5084,11 @@ public:
         if (size > vector->size()) {
             size = vector->size();
         }
-        std::move(vector.value().begin(),
-                  std::next(vector.value().begin(), size), res.begin());
+        typedef typename std::vector<
+                typename T::value_type>::difference_type dtype;
+        std::move(vector.value().begin(), std::next(
+                      vector.value().begin(), static_cast<dtype>(size)),
+                  res.begin());
         return res;
     }
 
