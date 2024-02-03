@@ -1057,14 +1057,7 @@ template <class T>
 struct is_stl_matrix
 {
     static const bool value = is_stl_container<T>::value
-                           && is_stl_sub_container<T>::value;
-};
-
-template <class T>
-struct is_stl_matrix_queue
-{
-    static const bool value = is_stl_container<T>::value
-                           && is_stl_sub_queue<T>::value;
+            && (is_stl_sub_container<T>::value || is_stl_sub_queue<T>::value);
 };
 
 template <class T>
@@ -4015,6 +4008,26 @@ private:
         return res;
     }
 
+    template <class T>
+    static typename detail::enable_if<
+        detail::is_stl_container<typename detail::decay<T>::type>::value, T
+    >::type
+    make_container(
+            std::vector<typename T::value_type> const& vec)
+    {
+        return T(vec.begin(), vec.end());
+    }
+
+    template <class T>
+    static typename detail::enable_if<
+        detail::is_stl_queue<typename detail::decay<T>::type>::value, T
+    >::type
+    make_container(
+            std::vector<typename T::value_type> const& vec)
+    {
+        return T(std::deque<typename T::value_type>(vec.begin(), vec.end()));
+    }
+
 #ifdef _ARGPARSE_CXX_11
     template <class... Ts, std::size_t... Idxs>
     static std::tuple<Ts...>
@@ -4185,8 +4198,7 @@ private:
 
     template <class T>
     static typename detail::enable_if<
-        detail::is_stl_matrix<typename detail::decay<T>::type>::value
-     && !detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
+        detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
     >::type
     get_matrix(
             value_type const& value)
@@ -4197,25 +4209,7 @@ private:
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             std::vector<VV> vector = as_subvector<VV>(
                         value.first, value.second.sub_values(i));
-            res.push_back(V(vector.begin(), vector.end()));
-        }
-        return res;
-    }
-
-    template <class T>
-    static typename detail::enable_if<
-        detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
-    >::type
-    get_matrix(
-            value_type const& value)
-    {
-        typedef typename T::value_type V;
-        typedef typename V::value_type VV;
-        T res;
-        for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
-            std::vector<VV> vector = as_subvector<VV>(
-                        value.first, value.second.sub_values(i));
-            res.push_back(V(std::deque<VV>(vector.begin(), vector.end())));
+            res.push_back(make_container<V>(vector));
         }
         return res;
     }
@@ -4512,8 +4506,7 @@ private:
 
     template <class T>
     static std::optional<typename detail::enable_if<
-        detail::is_stl_matrix<typename detail::decay<T>::type>::value
-     && !detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
+        detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
     >::type>
     opt_matrix(
             value_type const& value)
@@ -4527,29 +4520,7 @@ private:
             if (!vector.has_value()) {
                 return std::nullopt;
             }
-            res.push_back(V(vector.value().begin(), vector.value().end()));
-        }
-        return res;
-    }
-
-    template <class T>
-    static std::optional<typename detail::enable_if<
-        detail::is_stl_matrix_queue<typename detail::decay<T>::type>::value, T
-    >::type>
-    opt_matrix(
-            value_type const& value)
-    {
-        typedef typename T::value_type V;
-        typedef typename V::value_type VV;
-        T res;
-        for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
-            auto vector = as_opt_subvector<VV>(
-                        value.first, value.second.sub_values(i));
-            if (!vector.has_value()) {
-                return std::nullopt;
-            }
-            res.push_back(V(std::deque<VV>(vector.value().begin(),
-                                           vector.value().end())));
+            res.push_back(make_container<V>(vector.value()));
         }
         return res;
     }
@@ -4670,7 +4641,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as std containers types.
+     *  \brief Get parsed argument value as std containers and queues types.
      *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
@@ -4680,19 +4651,19 @@ public:
     template <class T>
     _ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
-        detail::is_stl_container<typename detail::decay<T>::type>::value
+        (detail::is_stl_container<typename detail::decay<T>::type>::value
      && !detail::is_stl_container_tupled<typename detail::decay<T>::type>::value
      && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
-     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
+     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value)
+      || detail::is_stl_queue<typename detail::decay<T>::type>::value, T
     >::type
     get(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
-        typedef typename T::value_type V;
-        std::vector<V> vector = _Storage::get_vector<V>(args);
-        return T(vector.begin(), vector.end());
+        return _Storage::make_container<T>(
+                    _Storage::get_vector<typename T::value_type>(args));
     }
 
     /*!
@@ -4719,7 +4690,7 @@ public:
         typedef typename T::value_type::second_type V;
         std::vector<std::pair<K, V> > vector
                 = _Storage::as_vector_pair<K, V>(key, args, sep);
-        return T(vector.begin(), vector.end());
+        return _Storage::make_container<T>(vector);
     }
 
     /*!
@@ -4807,28 +4778,6 @@ public:
               key, args.first, args.second().begin(), args.second().end(), sep);
     }
 
-    /*!
-     *  \brief Get parsed argument value as queue types.
-     *  If argument not parsed, returns empty queue.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<
-        detail::is_stl_queue<typename detail::decay<T>::type>::value, T>::type
-    get(std::string const& key) const
-    {
-        _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        typedef typename T::value_type V;
-        std::vector<V> vector = _Storage::get_vector<V>(args);
-        return T(std::deque<V>(vector.begin(), vector.end()));
-    }
-
 #ifdef _ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value as std array type.
@@ -4887,7 +4836,7 @@ public:
         detail::_check_non_count_action(key, args.first->action());
         auto vector = _Storage::as_vector_tuple<typename T::value_type>(
                     key, args, sep);
-        return T(vector.begin(), vector.end());
+        return _Storage::make_container<T>(vector);
     }
 
     /*!
@@ -5093,7 +5042,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value as std containers types.
+     *  \brief Try get parsed argument value as std containers and queues types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -5104,10 +5053,11 @@ public:
     template <class T>
     _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
-        detail::is_stl_container<typename std::decay<T>::type>::value
+        (detail::is_stl_container<typename std::decay<T>::type>::value
         && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
         && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix<typename std::decay<T>::type>::value,
+        && !detail::is_stl_matrix<typename std::decay<T>::type>::value)
+        || detail::is_stl_queue<typename std::decay<T>::type>::value,
     T>::type>
     try_get(std::string const& key) const
     {
@@ -5123,7 +5073,7 @@ public:
         if (!vector.has_value()) {
             return std::nullopt;
         }
-        return T(vector.value().begin(), vector.value().end());
+        return _Storage::make_container<T>(vector.value());
     }
 
     /*!
@@ -5157,7 +5107,7 @@ public:
         if (!vector.has_value()) {
             return std::nullopt;
         }
-        return T(vector.value().begin(), vector.value().end());
+        return _Storage::make_container<T>(vector.value());
     }
 
     /*!
@@ -5190,7 +5140,7 @@ public:
         if (!vector.has_value()) {
             return std::nullopt;
         }
-        return T(vector.value().begin(), vector.value().end());
+        return _Storage::make_container<T>(vector.value());
     }
 
     /*!
@@ -5289,37 +5239,6 @@ public:
         typedef typename T::second_type V;
         return _Storage::as_opt_pair<K, V>(
                 args->first, args->second().begin(), args->second().end(), sep);
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as queue types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        detail::is_stl_queue<typename std::decay<T>::type>::value, T>::type>
-    try_get(std::string const& key) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::basic<T>())) {
-            return std::nullopt;
-        }
-        typedef typename T::value_type V;
-        auto vector = _Storage::opt_vector<
-                typename T::value_type>(args.value());
-        if (!vector.has_value()) {
-            return std::nullopt;
-        }
-        return T(std::deque<V>(vector.value().begin(), vector.value().end()));
     }
 
     /*!
