@@ -515,6 +515,9 @@ _ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _store_action = argparse::store | argparse::append | argparse::extend;
 
 // -- standard type traits ----------------------------------------------------
+typedef int8_t _yes;
+typedef int16_t _no;
+
 #ifdef _ARGPARSE_CXX_11
 using std::decay;
 using std::enable_if;
@@ -716,7 +719,7 @@ struct _is_constructible_impl
     typedef typename _replace_array_with_pointer<AT_4>::type AU_4;
 
     template <class C_T, class C_AT_1, class C_AT_2, class C_AT_3, class C_AT_4>
-    static bool test(
+    static _yes test(
         typename enable_if<
             sizeof(C_T) ==
             sizeof(C_T(
@@ -733,10 +736,10 @@ struct _is_constructible_impl
     );
 
     template <class, class, class, class, class>
-    static int test(...);
+    static _no test(...);
 
     static const bool value
-              = (sizeof(test<T, AU_1, AU_2, AU_3, AU_4>(NULL)) == sizeof(bool));
+              = (sizeof(test<T, AU_1, AU_2, AU_3, AU_4>(NULL)) == sizeof(_yes));
 };
 
 template <class T, class AT_1, class AT_2, class AT_3>
@@ -747,7 +750,7 @@ struct _is_constructible_impl<T, AT_1, AT_2, AT_3, void>
     typedef typename _replace_array_with_pointer<AT_3>::type AU_3;
 
     template <class C_T, class C_AT_1, class C_AT_2, class C_AT_3>
-    static bool test(
+    static _yes test(
         typename enable_if<
             sizeof(C_T) ==
             sizeof(C_T(
@@ -762,10 +765,10 @@ struct _is_constructible_impl<T, AT_1, AT_2, AT_3, void>
     );
 
     template <class, class, class, class>
-    static int test(...);
+    static _no test(...);
 
     static const bool value
-                    = (sizeof(test<T, AU_1, AU_2, AU_3>(NULL)) == sizeof(bool));
+                    = (sizeof(test<T, AU_1, AU_2, AU_3>(NULL)) == sizeof(_yes));
 };
 
 template <class T, class AT_1, class AT_2>
@@ -775,7 +778,7 @@ struct _is_constructible_impl<T, AT_1, AT_2, void, void>
     typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
 
     template <class C_T, class C_AT_1, class C_AT_2>
-    static bool test(
+    static _yes test(
         typename enable_if<
             sizeof(C_T) ==
             sizeof(C_T(
@@ -788,10 +791,10 @@ struct _is_constructible_impl<T, AT_1, AT_2, void, void>
     );
 
     template <class, class, class>
-    static int test(...);
+    static _no test(...);
 
     static const bool value
-                          = (sizeof(test<T, AU_1, AU_2>(NULL)) == sizeof(bool));
+                          = (sizeof(test<T, AU_1, AU_2>(NULL)) == sizeof(_yes));
 };
 
 template <class T, class AT_1>
@@ -800,7 +803,7 @@ struct _is_constructible_impl<T, AT_1, void, void, void>
     typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
 
     template <class C_T, class C_AT_1>
-    static bool test(
+    static _yes test(
         typename enable_if<
             sizeof(C_T) ==
             sizeof(C_T(
@@ -811,9 +814,9 @@ struct _is_constructible_impl<T, AT_1, void, void, void>
     );
 
     template <class, class>
-    static int test(...);
+    static _no test(...);
 
-    static const bool value = (sizeof(test<T, AU_1>(NULL)) == sizeof(bool));
+    static const bool value = (sizeof(test<T, AU_1>(NULL)) == sizeof(_yes));
 };
 
 template <class T>
@@ -823,14 +826,14 @@ struct _is_constructible_impl<T, void, void, void, void>
     static C_T testFun(C_T);
 
     template <class C_T>
-    static bool test(
+    static _yes test(
             typename enable_if<sizeof(C_T)
                     == sizeof(_is_constructible_impl::testFun(C_T()))>::type*);
 
     template <class>
-    static int test(...);
+    static _no test(...);
 
-    static const bool value = (sizeof(test<T>(NULL)) == sizeof(bool));
+    static const bool value = (sizeof(test<T>(NULL)) == sizeof(_yes));
 };
 
 template <class T,
@@ -849,13 +852,13 @@ struct _is_constructible_impl_ptr<T, AT_1,
             typename remove_reference<T>::type>::value, void>::type, void, void>
 {
     template <class C_T>
-    static bool test(C_T);
+    static _yes test(C_T);
 
     template <class>
-    static int test(...);
+    static _no test(...);
 
     static const bool value
-                   = (sizeof(test<T>(static_cast<AT_1>(NULL))) == sizeof(bool));
+                   = (sizeof(test<T>(static_cast<AT_1>(NULL))) == sizeof(_yes));
 };
 
 template <class T>
@@ -898,24 +901,21 @@ struct voider { typedef void type; };
 
 // -- library type traits -----------------------------------------------------
 namespace _stream_check {
-    typedef char yes;
-    typedef int no;
-
     struct anyx { template <class T> anyx(T const&); };
 
-    no operator <<(anyx const&, anyx const&);
-    no operator >>(anyx const&, anyx const&);
+    _no operator <<(anyx const&, anyx const&);
+    _no operator >>(anyx const&, anyx const&);
 
     template <class T>
-    yes check(T const&);
-    no check(no);
+    _yes test(T const&);
+    _no test(_no);
 
     template <class StreamType, class T>
     struct has_loading_support
     {
         static StreamType& stream;
         static T& x;
-        static const bool value = sizeof(check(stream >> x)) == sizeof(yes);
+        static const bool value = sizeof(test(stream >> x)) == sizeof(_yes);
     };
 
     template <class StreamType, class T>
@@ -923,7 +923,7 @@ namespace _stream_check {
     {
         static StreamType& stream;
         static T& x;
-        static const bool value = sizeof(check(stream << x)) == sizeof(yes);
+        static const bool value = sizeof(test(stream << x)) == sizeof(_yes);
     };
 
     template <class StreamType, class T>
@@ -4209,7 +4209,7 @@ private:
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             std::vector<VV> vector = as_subvector<VV>(
                         value.first, value.second.sub_values(i));
-            res.push_back(make_container<V>(vector));
+            res.push_back(make_container<V>(vector)); // push or insert
         }
         return res;
     }
