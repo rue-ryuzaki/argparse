@@ -121,6 +121,7 @@ struct std::hash<std::tuple<Ts...> >
 #define MACRO_CONTAINER(M, R) \
     MACRO_TEST1(AD::M<std::deque,                           >::value == R)\
     MACRO_TEST1(AD::M<std::list,                            >::value == R)\
+    MACRO_TEST1(AD::M<std::multiset,                        >::value == R)\
     MACRO_TEST1(AD::M<std::priority_queue,                  >::value == R)\
     MACRO_TEST1(AD::M<std::set,                             >::value == R)\
     MACRO_TEST1(AD::M<std::vector,                          >::value == R)
@@ -133,6 +134,9 @@ struct std::hash<std::tuple<Ts...> >
 #define MACRO_CONTAINER_PAIR(M, R) \
     MACRO_TEST3(AD::M<std::deque<std::pair,                 > >::value == R)\
     MACRO_TEST3(AD::M<std::list<std::pair,                  > >::value == R)\
+    MACRO_TEST3(AD::M<std::multiset<std::pair,              > >::value == R)\
+    MACRO_TEST3(AD::M<std::priority_queue<std::pair,        > >::value == R)\
+    MACRO_TEST3(AD::M<std::set<std::pair,                   > >::value == R)\
     MACRO_TEST3(AD::M<std::vector<std::pair,                > >::value == R)
 
 #define MACRO_CONTAINER_PAIR11(M, R) \
@@ -143,6 +147,7 @@ struct std::hash<std::tuple<Ts...> >
 #define MACRO_CONTAINER_TUPLE(M, R) \
     MACRO_TEST3(AD::M<std::deque<std::tuple,                > >::value == R)\
     MACRO_TEST3(AD::M<std::list<std::tuple,                 > >::value == R)\
+    MACRO_TEST3(AD::M<std::multiset<std::tuple,             > >::value == R)\
     MACRO_TEST3(AD::M<std::priority_queue<std::tuple,       > >::value == R)\
     MACRO_TEST3(AD::M<std::set<std::tuple,                  > >::value == R)\
     MACRO_TEST3(AD::M<std::vector<std::tuple,               > >::value == R)\
@@ -163,11 +168,12 @@ struct std::hash<std::tuple<Ts...> >
 #define MACRO_MATRIX(M, C, R) \
     MACRO_TEST1(AD::M<C<std::deque,                         > >::value == R)\
     MACRO_TEST1(AD::M<C<std::list,                          > >::value == R)\
+    MACRO_TEST1(AD::M<C<std::multiset,                      > >::value == R)\
     MACRO_TEST1(AD::M<C<std::priority_queue,                > >::value == R)\
     MACRO_TEST1(AD::M<C<std::set,                           > >::value == R)\
     MACRO_TEST1(AD::M<C<std::vector,                        > >::value == R)\
-    MACRO_TEST1(AD::M<C<std::stack,                         > >::value == R)\
-    MACRO_TEST1(AD::M<C<std::queue,                         > >::value == R)
+    MACRO_TEST1(AD::M<C<std::queue,                         > >::value == R)\
+    MACRO_TEST1(AD::M<C<std::stack,                         > >::value == R)
 
 #define MACRO_MATRIX11(M, C, R) \
     MACRO_TEST1(AD::M<C<std::forward_list,                  > >::value == R)\
