@@ -1039,6 +1039,15 @@ struct is_stl_queue
                           && !has_vector_ctor<T>::value;
 };
 
+template <class T, class = void>
+struct is_stl_sub_array                    { static const bool value = false; };
+
+template <class T>
+struct is_stl_sub_array<T, typename voider<typename T::value_type>::type>
+{
+    static const bool value = is_stl_array<typename T::value_type>::value;
+};
+
 template <class T>
 struct is_stl_sub_container
 {
@@ -1057,7 +1066,9 @@ template <class T>
 struct is_stl_matrix
 {
     static const bool value = is_stl_container<T>::value
-            && (is_stl_sub_container<T>::value || is_stl_sub_queue<T>::value);
+            && (is_stl_sub_array<T>::value
+                || is_stl_sub_container<T>::value
+                || is_stl_sub_queue<T>::value);
 };
 
 template <class T>
