@@ -4029,6 +4029,31 @@ private:
     }
 
 #ifdef _ARGPARSE_CXX_11
+    template <class T>
+    static typename detail::enable_if<
+        detail::is_stl_array<typename detail::decay<T>::type>::value, T
+    >::type
+    make_container(
+            std::vector<typename T::value_type> const& vec)
+    {
+        T res{};
+        if (res.size() != vec.size()) {
+            std::cerr << "argparse error [skip]: array size mismatch: was "
+                      << res.size() << ", expected " << vec.size() << std::endl;
+        }
+        auto size = res.size();
+        if (size > vec.size()) {
+            size = vec.size();
+        }
+        typedef typename std::vector<
+                typename T::value_type>::difference_type dtype;
+        std::move(vec.begin(), std::next(
+                      vec.begin(), static_cast<dtype>(size)), res.begin());
+        return res;
+    }
+#endif  // C++11+
+
+#ifdef _ARGPARSE_CXX_11
     template <class... Ts, std::size_t... Idxs>
     static std::tuple<Ts...>
     mk_tuple(
@@ -4641,7 +4666,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as std containers and queues types.
+     *  \brief Get parsed argument value as std container types.
      *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
@@ -4655,6 +4680,7 @@ public:
      && !detail::is_stl_container_tupled<typename detail::decay<T>::type>::value
      && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
      && !detail::is_stl_matrix<typename detail::decay<T>::type>::value)
+      || detail::is_stl_array<typename detail::decay<T>::type>::value
       || detail::is_stl_queue<typename detail::decay<T>::type>::value, T
     >::type
     get(std::string const& key) const
@@ -4779,41 +4805,6 @@ public:
     }
 
 #ifdef _ARGPARSE_CXX_11
-    /*!
-     *  \brief Get parsed argument value as std array type.
-     *  If argument not parsed, returns array of default values.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    typename std::enable_if<
-        detail::is_stl_array<typename std::decay<T>::type>::value, T>::type
-    get(std::string const& key) const
-    {
-        auto const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        auto vector = _Storage::get_vector<typename T::value_type>(args);
-        T res{};
-        if (res.size() != vector.size()) {
-            std::cerr << "argparse error [skip]: array size mismatch: was "
-                      << res.size() << ", expected " << vector.size()
-                      << std::endl;
-        }
-        auto size = res.size();
-        if (size > vector.size()) {
-            size = vector.size();
-        }
-        typedef typename std::vector<
-                typename T::value_type>::difference_type dtype;
-        std::move(vector.begin(), std::next(
-                      vector.begin(), static_cast<dtype>(size)), res.begin());
-        return res;
-    }
-
     /*!
      *  \brief Get parsed argument value as tupled container types.
      *  If argument not parsed, returns empty container.
@@ -4997,52 +4988,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value as std array type.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        detail::is_stl_array<typename std::decay<T>::type>::value, T>::type>
-    try_get(std::string const& key) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::basic<T>())) {
-            return std::nullopt;
-        }
-        auto vector = _Storage::opt_vector<
-                typename T::value_type>(args.value());
-        if (!vector.has_value()) {
-            return std::nullopt;
-        }
-        T res{};
-        if (res.size() != vector->size()) {
-            std::cerr << "argparse error [skip]: array size mismatch: was "
-                      << res.size() << ", expected " << vector->size()
-                      << std::endl;
-        }
-        auto size = res.size();
-        if (size > vector->size()) {
-            size = vector->size();
-        }
-        typedef typename std::vector<
-                typename T::value_type>::difference_type dtype;
-        std::move(vector.value().begin(), std::next(
-                      vector.value().begin(), static_cast<dtype>(size)),
-                  res.begin());
-        return res;
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as std containers and queues types.
+     *  \brief Try get parsed argument value as std container types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -5057,6 +5003,7 @@ public:
         && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
         && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
         && !detail::is_stl_matrix<typename std::decay<T>::type>::value)
+        || detail::is_stl_array<typename std::decay<T>::type>::value
         || detail::is_stl_queue<typename std::decay<T>::type>::value,
     T>::type>
     try_get(std::string const& key) const
