@@ -176,6 +176,7 @@ struct std::hash<std::tuple<Ts...> >
     MACRO_TEST1(AD::M<C<std::stack,                         > >::value == R)
 
 #define MACRO_MATRIX11(M, C, R) \
+    MACRO_TEST2(AD::M<C<std::array,                         > >::value == R)\
     MACRO_TEST1(AD::M<C<std::forward_list,                  > >::value == R)\
     MACRO_TEST1(AD::M<C<std::unordered_multiset,            > >::value == R)\
     MACRO_TEST1(AD::M<C<std::unordered_set,                 > >::value == R)
