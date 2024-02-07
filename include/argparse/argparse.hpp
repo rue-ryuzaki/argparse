@@ -531,9 +531,6 @@ using std::true_type;
 template <class...>
 struct voider { using type = void; };
 
-template <class... T>
-using void_t = typename voider<T...>::type;
-
 template <class T>
 struct type_tag { };
 
