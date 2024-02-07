@@ -949,7 +949,6 @@ struct is_string_ctor
 
 template <class T, class = void>
 struct has_sub_string_ctor                 { static const bool value = false; };
-
 template <class T>
 struct has_sub_string_ctor<T, typename voider<typename T::value_type>::type>
 {
@@ -958,7 +957,6 @@ struct has_sub_string_ctor<T, typename voider<typename T::value_type>::type>
 
 template <class T, class = void>
 struct has_vector_ctor                     { static const bool value = false; };
-
 template <class T>
 struct has_vector_ctor<T, typename voider<typename T::value_type>::type>
 {
@@ -969,7 +967,6 @@ struct has_vector_ctor<T, typename voider<typename T::value_type>::type>
 
 template <class T, class = void>
 struct has_deque_ctor                      { static const bool value = false; };
-
 template <class T>
 struct has_deque_ctor<T, typename voider<typename T::value_type>::type>
 {
@@ -979,7 +976,6 @@ struct has_deque_ctor<T, typename voider<typename T::value_type>::type>
 
 template <class T, class = void>
 struct has_sub_vector_ctor                 { static const bool value = false; };
-
 template <class T>
 struct has_sub_vector_ctor<T, typename voider<typename T::value_type>::type>
 {
@@ -988,7 +984,6 @@ struct has_sub_vector_ctor<T, typename voider<typename T::value_type>::type>
 
 template <class T, class = void>
 struct has_sub_deque_ctor                  { static const bool value = false; };
-
 template <class T>
 struct has_sub_deque_ctor<T, typename voider<typename T::value_type>::type>
 {
@@ -1038,7 +1033,6 @@ struct is_stl_queue
 
 template <class T, class = void>
 struct is_stl_sub_array                    { static const bool value = false; };
-
 template <class T>
 struct is_stl_sub_array<T, typename voider<typename T::value_type>::type>
 {
@@ -1046,26 +1040,13 @@ struct is_stl_sub_array<T, typename voider<typename T::value_type>::type>
 };
 
 template <class T>
-struct is_stl_sub_container
-{
-    static const bool value = has_sub_vector_ctor<T>::value
-                          && !has_sub_string_ctor<T>::value;
-};
-
-template <class T>
-struct is_stl_sub_queue
-{
-    static const bool value = has_sub_deque_ctor<T>::value
-                          && !has_sub_vector_ctor<T>::value;
-};
-
-template <class T>
 struct is_stl_matrix
 {
     static const bool value = is_stl_container<T>::value
             && (is_stl_sub_array<T>::value
-                || is_stl_sub_container<T>::value
-                || is_stl_sub_queue<T>::value);
+                || (has_sub_vector_ctor<T>::value
+                    && !has_sub_string_ctor<T>::value)
+                || has_sub_deque_ctor<T>::value);
 };
 
 template <class T>
