@@ -603,18 +603,6 @@ struct remove_cv<volatile T>        { typedef T type; };
 template <class T>
 struct remove_cv<const volatile T>  { typedef T type; };
 
-template <class T>
-struct _is_pointer_helper           { static const bool value = false; };
-template <class T>
-struct _is_pointer_helper<T*>       { static const bool value = true; };
-
-template <class T>
-struct is_pointer
-{
-    static const bool value
-                       = _is_pointer_helper<typename remove_cv<T>::type>::value;
-};
-
 template <class T, T Val>
 struct integral_constant
 {
@@ -627,6 +615,18 @@ struct integral_constant
 
 typedef integral_constant<bool, true> true_type;
 typedef integral_constant<bool, false> false_type;
+
+template <class T>
+struct _is_pointer_helper                                         :false_type{};
+template <class T>
+struct _is_pointer_helper<T*>                                      :true_type{};
+
+template <class T>
+struct is_pointer
+{
+    static const bool value
+                       = _is_pointer_helper<typename remove_cv<T>::type>::value;
+};
 
 template <class T, class U>
 struct is_same                                                    :false_type{};
