@@ -904,8 +904,10 @@ namespace _stream_check {
     _no operator >>(anyx const&, anyx const&);
 
     template <class T>
-    _yes test(T const&);
-    _no test(_no);
+    static _yes test(T const&);
+
+    template <class T>
+    static _no test(...);
 
     template <class StreamType, class T>
     struct has_loading_support
