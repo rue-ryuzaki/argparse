@@ -518,6 +518,9 @@ _store_action = argparse::store | argparse::append | argparse::extend;
 typedef int8_t _yes;
 typedef int16_t _no;
 
+template <class T, T>
+struct func_tag { };
+
 #ifdef _ARGPARSE_CXX_11
 using std::decay;
 using std::enable_if;
@@ -937,6 +940,51 @@ template <class T>
 struct has_operator_in : _stream_check::has_loading_support<std::istream, T> {};
 
 template <class T>
+struct has_insert
+{
+    template <class C>
+    static _yes test(
+            func_tag<typename C::iterator(C::*)(
+                typename C::value_type const&), &C::insert>*);
+
+    template <class C>
+    static _yes test(
+            func_tag<std::pair<typename C::iterator,
+                bool>(C::*)(typename C::value_type const&), &C::insert>*);
+
+    template <class>
+    static _no test(...);
+
+    static bool const value = sizeof(test<T>(NULL)) == sizeof(_yes);
+};
+
+template <class T>
+struct has_push
+{
+    template <class C>
+    static _yes test(
+            func_tag<void(C::*)(typename C::value_type const&), &C::push>*);
+
+    template <class>
+    static _no test(...);
+
+    static bool const value = sizeof(test<T>(NULL)) == sizeof(_yes);
+};
+
+template <class T>
+struct has_push_back
+{
+    template <class C>
+    static _yes test(
+           func_tag<void(C::*)(typename C::value_type const&), &C::push_back>*);
+
+    template <class>
+    static _no test(...);
+
+    static bool const value = sizeof(test<T>(NULL)) == sizeof(_yes);
+};
+
+template <class T>
 struct is_byte_type
 {
     static const bool value
@@ -1044,7 +1092,8 @@ struct is_stl_sub_array<T, typename voider<typename T::value_type>::type>
 template <class T>
 struct is_stl_matrix
 {
-    static const bool value = is_stl_container<T>::value
+    static const bool value =
+            (is_stl_container<T>::value || is_stl_queue<T>::value)
             && (is_stl_sub_array<T>::value
                 || (has_sub_vector_ctor<T>::value
                     && !has_sub_string_ctor<T>::value)
@@ -4212,6 +4261,77 @@ private:
         return res;
     }
 
+#ifdef _ARGPARSE_CXX_11
+    template <class T, typename detail::enable_if<
+                  detail::has_push_back<T>::value>::type* = nullptr>
+    static void
+    push_to_container(
+            T& container,
+            typename T::value_type const& value)
+    {
+        container.push_back(value);
+    }
+
+    template <class T, typename detail::enable_if<
+                  detail::has_push<T>::value
+                  && !detail::has_push_back<T>::value>::type* = nullptr>
+    static void
+    push_to_container(
+            T& container,
+            typename T::value_type const& value)
+    {
+        container.push(value);
+    }
+
+    template <class T, typename detail::enable_if<
+                  detail::has_insert<T>::value
+                  && !detail::has_push<T>::value
+                  && !detail::has_push_back<T>::value>::type* = nullptr>
+    static void
+    push_to_container(
+            T& container,
+            typename T::value_type const& value)
+    {
+        container.insert(value);
+    }
+#else
+    template <class T>
+    static void
+    push_to_container(
+            T& container,
+            typename T::value_type const& value,
+            typename detail::enable_if<
+                detail::has_push_back<T>::value, bool>::type = true)
+    {
+        container.push_back(value);
+    }
+
+    template <class T>
+    static void
+    push_to_container(
+            T& container,
+            typename T::value_type const& value,
+            typename detail::enable_if<
+                detail::has_push<T>::value
+                && !detail::has_push_back<T>::value, bool>::type = true)
+    {
+        container.push(value);
+    }
+
+    template <class T>
+    static void
+    push_to_container(
+            T& container,
+            typename T::value_type const& value,
+            typename detail::enable_if<
+                detail::has_insert<T>::value
+                && !detail::has_push<T>::value
+                && !detail::has_push_back<T>::value, bool>::type = true)
+    {
+        container.insert(value);
+    }
+#endif  // C++11+
+
     template <class T>
     static typename detail::enable_if<
         detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
@@ -4225,7 +4345,7 @@ private:
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             std::vector<VV> vector = as_subvector<VV>(
                         value.first, value.second.sub_values(i));
-            res.push_back(make_container<V>(vector)); // push or insert
+            push_to_container<T>(res, make_container<V>(vector));
         }
         return res;
     }
@@ -4672,7 +4792,8 @@ public:
      && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
      && !detail::is_stl_matrix<typename detail::decay<T>::type>::value)
       || detail::is_stl_array<typename detail::decay<T>::type>::value
-      || detail::is_stl_queue<typename detail::decay<T>::type>::value, T
+      || (detail::is_stl_queue<typename detail::decay<T>::type>::value
+     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value), T
     >::type
     get(std::string const& key) const
     {
@@ -4995,7 +5116,8 @@ public:
         && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
         && !detail::is_stl_matrix<typename std::decay<T>::type>::value)
         || detail::is_stl_array<typename std::decay<T>::type>::value
-        || detail::is_stl_queue<typename std::decay<T>::type>::value,
+        || (detail::is_stl_queue<typename std::decay<T>::type>::value
+        && !detail::is_stl_matrix<typename std::decay<T>::type>::value),
     T>::type>
     try_get(std::string const& key) const
     {
