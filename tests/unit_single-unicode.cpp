@@ -5,6 +5,8 @@
 #include <argparse/argparse.hpp>
 #include "./catch-define.h"
 
+#include <map>
+
 TEST_CASE("1. unicode to upper", "[detail]")
 {
     SECTION("1.1. table symbols") {
