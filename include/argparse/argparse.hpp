@@ -244,7 +244,6 @@
 
 #ifdef _ARGPARSE_INL
 #include <fstream>
-#include <map>
 #ifdef _ARGPARSE_CXX_11
 #include <regex>
 #endif  // C++11+
@@ -15942,7 +15941,7 @@ ArgumentParser::test_diagnostics(
             }
         }
     }
-    std::map<std::string, std::size_t> dest_args;
+    std::vector<std::string> dest_args;
     // check arguments
     for (arg_iterator i = m_data->m_arguments.begin();
          i != m_data->m_arguments.end(); ++i) {
@@ -15999,7 +15998,7 @@ ArgumentParser::test_diagnostics(
         for (std::size_t j = 0; j < arg->get_argument_flags().size(); ++j) {
             std::string const& flag = arg->get_argument_flags().at(j);
             if (!flag.empty()) {
-                if (dest_args.count(flag) != 0) {
+                if (detail::_exists(flag, dest_args)) {
                     if (conflict_handler() == "resolve") {
                         ++diagnostics.first;
                         os << _warn << " " << argument << " resolve"
@@ -16010,7 +16009,7 @@ ArgumentParser::test_diagnostics(
                            << ": conflicting option string: '" << flag << "'\n";
                     }
                 }
-                ++dest_args[flag];
+                dest_args.push_back(flag);
             }
         }
         // check choices
@@ -16086,7 +16085,7 @@ ArgumentParser::test_diagnostics(
                    << m_subparsers->dest() << "' can be incorrect\n";
             }
             std::string const& flag = m_subparsers->dest();
-            if (dest_args.count(flag) != 0) {
+            if (detail::_exists(flag, dest_args)) {
                 if (conflict_handler() == "resolve") {
                     ++diagnostics.first;
                     os << _warn << " subparsers dest '" << flag << " resolve"
@@ -16097,7 +16096,7 @@ ArgumentParser::test_diagnostics(
                        << "': conflicting option string: '" << flag << "'\n";
                 }
             }
-            ++dest_args[flag];
+            dest_args.push_back(flag);
         }
         // check help
         if (detail::_tr(m_subparsers->m_help.value(), lang).empty()
