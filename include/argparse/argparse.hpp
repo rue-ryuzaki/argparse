@@ -1092,7 +1092,9 @@ template <class T>
 struct is_stl_matrix
 {
     static const bool value =
-            (is_stl_container<T>::value || is_stl_queue<T>::value)
+            (is_stl_array<T>::value
+             || is_stl_container<T>::value
+             || is_stl_queue<T>::value)
             && (is_stl_sub_array<T>::value
                 || (has_sub_vector_ctor<T>::value
                     && !has_sub_string_ctor<T>::value)
@@ -4333,7 +4335,8 @@ private:
 
     template <class T>
     static typename detail::enable_if<
-        detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
+        detail::is_stl_matrix<typename detail::decay<T>::type>::value
+        && !detail::is_stl_array<typename detail::decay<T>::type>::value, T
     >::type
     get_matrix(
             value_type const& value)
@@ -4348,6 +4351,41 @@ private:
         }
         return res;
     }
+
+#ifdef _ARGPARSE_CXX_11
+    template <class T>
+    static typename detail::enable_if<
+        detail::is_stl_matrix<typename detail::decay<T>::type>::value
+        && detail::is_stl_array<typename detail::decay<T>::type>::value, T
+    >::type
+    get_matrix(
+            value_type const& value)
+    {
+        typedef typename T::value_type V;
+        typedef typename V::value_type VV;
+        T res;
+        if (res.size() != value.second.indexes().size()) {
+            std::cerr << "argparse error [skip]: array size mismatch: was "
+                      << res.size() << ", expected "
+                      << value.second.indexes().size() << std::endl;
+        }
+        auto size = res.size();
+        if (size > value.second.indexes().size()) {
+            size = value.second.indexes().size();
+        }
+        std::vector<V> vec;
+        vec.reserve(size);
+        for (std::size_t i = 0; i < size; ++i) {
+            std::vector<VV> vector = as_subvector<VV>(
+                        value.first, value.second.sub_values(i));
+            push_to_container<std::vector<V> >(vec, make_container<V>(vector));
+        }
+        typedef typename std::vector<V>::difference_type dtype;
+        std::move(vec.begin(), std::next(
+                      vec.begin(), static_cast<dtype>(size)), res.begin());
+        return res;
+    }
+#endif  // C++11+
 
     template <class T>
     static T
@@ -4790,8 +4828,8 @@ public:
      && !detail::is_stl_container_tupled<typename detail::decay<T>::type>::value
      && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
      && !detail::is_stl_matrix<typename detail::decay<T>::type>::value)
-      || detail::is_stl_array<typename detail::decay<T>::type>::value
-      || (detail::is_stl_queue<typename detail::decay<T>::type>::value
+      || ((detail::is_stl_array<typename detail::decay<T>::type>::value
+           || detail::is_stl_queue<typename detail::decay<T>::type>::value)
      && !detail::is_stl_matrix<typename detail::decay<T>::type>::value), T
     >::type
     get(std::string const& key) const
@@ -5114,8 +5152,8 @@ public:
         && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
         && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
         && !detail::is_stl_matrix<typename std::decay<T>::type>::value)
-        || detail::is_stl_array<typename std::decay<T>::type>::value
-        || (detail::is_stl_queue<typename std::decay<T>::type>::value
+        || ((detail::is_stl_array<typename std::decay<T>::type>::value
+             || detail::is_stl_queue<typename std::decay<T>::type>::value)
         && !detail::is_stl_matrix<typename std::decay<T>::type>::value),
     T>::type>
     try_get(std::string const& key) const
