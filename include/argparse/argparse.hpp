@@ -984,6 +984,19 @@ struct has_push_back
 };
 
 template <class T>
+struct has_push_front
+{
+    template <class C>
+    static _yes test(
+          func_tag<void(C::*)(typename C::value_type const&), &C::push_front>*);
+
+    template <class>
+    static _no test(...);
+
+    static bool const value = sizeof(test<T>(NULL)) == sizeof(_yes);
+};
+
+template <class T>
 struct is_byte_type
 {
     static const bool value
@@ -4295,6 +4308,19 @@ private:
     {
         container.insert(value);
     }
+
+    template <class T, typename detail::enable_if<
+                  detail::has_push_front<T>::value
+                  && !detail::has_insert<T>::value
+                  && !detail::has_push<T>::value
+                  && !detail::has_push_back<T>::value>::type* = nullptr>
+    static void
+    push_to_container(
+            T& container,
+            typename T::value_type const& value)
+    {
+        container.push_front(value);
+    }
 #else
     template <class T>
     static void
@@ -4330,6 +4356,20 @@ private:
                 && !detail::has_push_back<T>::value, bool>::type = true)
     {
         container.insert(value);
+    }
+
+    template <class T>
+    static void
+    push_to_container(
+            T& container,
+            typename T::value_type const& value,
+            typename detail::enable_if<
+                detail::has_push_front<T>::value
+                && !detail::has_insert<T>::value
+                && !detail::has_push<T>::value
+                && !detail::has_push_back<T>::value, bool>::type = true)
+    {
+        container.push_front(value);
     }
 #endif  // C++11+
 
