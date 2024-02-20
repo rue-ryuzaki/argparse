@@ -1,13 +1,14 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../third_party")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../include")
 
+# catch main library
 add_library(catch_main OBJECT "unit.cpp")
-
 set_target_properties(catch_main PROPERTIES
     COMPILE_DEFINITIONS "$<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>"
     COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:/EHsc;$<$<CONFIG:Release>:/Od>>"
 )
 
+# tests with argparse declaration
 file(GLOB files "unit-*.cpp")
 foreach(file ${files})
     get_filename_component(file_basename ${file} NAME_WE)
@@ -17,6 +18,7 @@ foreach(file ${files})
     add_test(${testcase} ${testcase})
 endforeach()
 
+# tests with argparse single-header
 file(GLOB files "unit_single-*.cpp")
 foreach(file ${files})
     get_filename_component(file_basename ${file} NAME_WE)
