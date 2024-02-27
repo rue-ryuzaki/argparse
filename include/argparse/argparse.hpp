@@ -7967,7 +7967,7 @@ private:
     std::string m_fromfile_prefix_chars;
     std::string m_comment_prefix_chars;
     detail::SValue<std::string> m_argument_default;
-    detail::Value<std::size_t> m_output_width;
+    std::size_t m_output_width;
     std::list<pGroup> m_groups;
     std::list<MutuallyExclusiveGroup> m_mutex_groups;
     std::vector<std::pair<std::string, std::string> > m_default_values;
@@ -13785,8 +13785,8 @@ ArgumentParser::exit_on_error() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::size_t
 ArgumentParser::output_width() const
 {
-    return m_output_width.has_value()
-            ? m_output_width.value() : detail::_get_terminal_size().first;
+    return m_output_width != 0
+            ? m_output_width : detail::_get_terminal_size().first;
 }
 
 #ifdef _ARGPARSE_CXX_11
@@ -15954,7 +15954,7 @@ ArgumentParser::test_overview(
     os << "add_help: " << detail::_bool_to_string(add_help()) << "\n";
     os << "allow_abbrev: " << detail::_bool_to_string(allow_abbrev()) << "\n";
     os << "exit_on_error: " << detail::_bool_to_string(exit_on_error()) << "\n";
-    if (m_output_width.has_value()) {
+    if (m_output_width != 0) {
         os << "output_width [override]: " << output_width() << "\n";
     } else {
 #ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
