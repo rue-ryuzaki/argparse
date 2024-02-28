@@ -108,32 +108,32 @@
 #if _MSVC_LANG >= 201103L
 #define _ARGPARSE_CXX_11
 #endif  // C++11+
-#if _MSVC_LANG >= 201402L
+#if _MSVC_LANG >  201103L
 #define _ARGPARSE_CXX_14
 #endif  // C++14+
-#if _MSVC_LANG >= 201703L
+#if _MSVC_LANG >  201402L
 #define _ARGPARSE_CXX_17
 #endif  // C++17+
-#if _MSVC_LANG >= 202002L
+#if _MSVC_LANG >  201703L
 #define _ARGPARSE_CXX_20
 #endif  // C++20+
-#if _MSVC_LANG >= 202302L
+#if _MSVC_LANG >  202002L
 #define _ARGPARSE_CXX_23
 #endif  // C++23+
 #else
 #if __cplusplus >= 201103L
 #define _ARGPARSE_CXX_11
 #endif  // C++11+
-#if __cplusplus >= 201402L
+#if __cplusplus >  201103L
 #define _ARGPARSE_CXX_14
 #endif  // C++14+
-#if __cplusplus >= 201703L
+#if __cplusplus >  201402L
 #define _ARGPARSE_CXX_17
 #endif  // C++17+
-#if __cplusplus >= 202002L
+#if __cplusplus >  201703L
 #define _ARGPARSE_CXX_20
 #endif  // C++20+
-#if __cplusplus >= 202302L
+#if __cplusplus >  202002L
 #define _ARGPARSE_CXX_23
 #endif  // C++23+
 #endif  // _MSVC_LANG
