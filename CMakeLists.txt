@@ -158,6 +158,7 @@ option(ARGPARSE_BUILD_EXAMPLES "Build argparse examples" OFF)
 option(ARGPARSE_BUILD_TESTS "Build argparse unit tests" ON)
 
 if (ARGPARSE_BUILD_EXAMPLES OR ARGPARSE_BUILD_TESTS)
+    # argparse implementation (internal)
     add_library(
         argparse_impl OBJECT
         ${CMAKE_CURRENT_SOURCE_DIR}/src/argparse_impl.cpp
