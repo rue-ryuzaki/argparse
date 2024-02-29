@@ -58,9 +58,9 @@ main(int argc,
 
     std::pair<std::size_t, std::size_t> type
             = args.get<std::pair<std::size_t, std::size_t> >("type", 'x');
-    std::vector<int8_t> values = args.get<std::vector<int8_t> >("values");
+    std::vector<uint8_t> values = args.get<std::vector<uint8_t> >("values");
 
-    sudoku::sudoku_t<int8_t> sudoku(type.first, type.second);
+    sudoku::sudoku_t<uint8_t> sudoku(type.first, type.second);
     sudoku.load(values);
 
     if (!sudoku.is_valid()) {

@@ -43,7 +43,7 @@
 #include <fstream>
 #include <iostream>
 
-#include <argparse/argparse.hpp>
+#include <argparse/argparse_decl.hpp>
 
 char const version[] = "%(prog)s v0.1.0";
 

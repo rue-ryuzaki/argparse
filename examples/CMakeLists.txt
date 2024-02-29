@@ -1,5 +1,6 @@
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../include")
 
+# examples with argparse declaration
 file(GLOB examples "*/main.cpp")
 foreach(path ${examples})
     get_filename_component(parent_dir ${path} DIRECTORY)
