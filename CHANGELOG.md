@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1] - 2024-02-29
+
+  * Remove: include <algorithm>, <map>, <numeric>, <queue>, <set>, <stack>
+  * Move to impl: include <fstream>, <regex>
+  * Update: std containers support for Namespace::get<>
+  * Add: examples
+
 ## [1.9.0] - 2023-12-11
 
   * Fix: link shared library with argparse_static
