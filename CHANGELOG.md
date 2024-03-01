@@ -2,8 +2,8 @@
 
 ## [1.9.1] - 2024-02-29
 
-  * Remove: include <algorithm>, <map>, <numeric>, <queue>, <set>, <stack>
-  * Move to impl: include <fstream>, <regex>
+  * Remove: include \<algorithm>, \<map>, \<numeric>, <queue>, \<set>, \<stack>
+  * Move to impl: include \<fstream>, \<regex>
   * Update: std containers support for Namespace::get<>
   * Add: examples
 
@@ -21,8 +21,8 @@
 
   * Fix: help generation with metavar array
   * Add: combined Argument::nargs support
-  * Add: Argument::type(void (*)(std::string const&, void*)) factory function
-  * Mark: Argument::type(void (*)(std::istream&, void*)) as deprecated
+  * Add: Argument::type(void (\*)(std::string const&, void*)) factory function
+  * Mark: Argument::type(void (\*)(std::istream&, void*)) as deprecated
 
 ## [1.8.3] - 2023-11-06
 
