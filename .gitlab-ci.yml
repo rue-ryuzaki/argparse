@@ -10,6 +10,7 @@ build:
     refs:
       - develop
       - merge_requests
+      - web
     changes:
       - CMakeLists.txt
       - cmake/*
