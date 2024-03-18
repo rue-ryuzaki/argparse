@@ -3411,11 +3411,12 @@ class _ArgumentData
             std::string const& prefix_chars);
 
     // -- data ----------------------------------------------------------------
-    std::string m_conflict_handler;
+    std::string m_conflict_handler_str;
     std::list<pArgument> m_arguments;
     std::list<std::pair<pArgument, bool> > m_optional;
     std::list<std::pair<pArgument, bool> > m_operand;
     std::list<std::pair<pArgument, bool> > m_positional;
+    uint16_t m_conflict_handler;
     bool m_add_help;
     bool m_help_added;
 };
@@ -7994,6 +7995,12 @@ _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _none[]         = "None";
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
+enum ConflictHandler _ARGPARSE_ENUM_TYPE(uint16_t)
+{
+    _conflict_error   = 0,  // "error"
+    _conflict_resolve = 1,  // "resolve"
+};
+
 _ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
 _bool_action = argparse::store_true | argparse::store_false;
 _ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
@@ -11380,11 +11387,12 @@ _Group::description() const
 // -- _ArgumentData -----------------------------------------------------------
 _ARGPARSE_INL
 _ArgumentData::_ArgumentData()
-    : m_conflict_handler("error"),
+    : m_conflict_handler_str("error"),
       m_arguments(),
       m_optional(),
       m_operand(),
       m_positional(),
+      m_conflict_handler(detail::_conflict_error),
       m_add_help(false),
       m_help_added(false)
 {
@@ -11426,7 +11434,7 @@ _ArgumentData::update_help(
         std::vector<std::string> help_flags
                 = detail::_vector(std::string(1, prefix) + "h",
                                   std::string(2, prefix) + "help");
-        if (m_conflict_handler == "resolve") {
+        if (m_conflict_handler == detail::_conflict_resolve) {
             for (sub_iterator it = m_optional.begin();
                  it != m_optional.end(); ++it) {
                 detail::_resolve_conflict((*it).first->flags(), help_flags);
@@ -11513,7 +11521,7 @@ _ArgumentData::check_conflicting_option(
         Argument const* arg,
         std::vector<std::string>& flags) const
 {
-    if (m_conflict_handler == "resolve") {
+    if (m_conflict_handler == detail::_conflict_resolve) {
         detail::_resolve_conflict(arg->flags(), flags);
     } else {
         std::vector<std::string> conflict_options;
@@ -11761,7 +11769,7 @@ _ArgumentGroup::process_add_argument()
 {
     Argument::Type type = m_data->m_arguments.back()->m_type;
     if (type == Argument::Optional
-            && m_parent_data->m_conflict_handler == "resolve") {
+            && m_parent_data->m_conflict_handler == detail::_conflict_resolve) {
         for (sub_iterator it = m_parent_data->m_optional.begin();
              it != m_parent_data->m_optional.end(); ++it) {
             (*it).first->resolve_conflict_flags(
@@ -13628,11 +13636,15 @@ _ARGPARSE_INL ArgumentParser&
 ArgumentParser::conflict_handler(
         std::string const& value)
 {
-    if (value != "resolve" && value != "error") {
+    if (value == "resolve") {
+        m_data->m_conflict_handler = detail::_conflict_resolve;
+    } else if (value == "error") {
+        m_data->m_conflict_handler = detail::_conflict_error;
+    } else {
         throw AttributeError("'ArgumentParser' object has no attribute "
                              "'_handle_conflict_" + value + "'");
     }
-    m_data->m_conflict_handler = value;
+    m_data->m_conflict_handler_str = value;
     return *this;
 }
 
@@ -13761,7 +13773,7 @@ ArgumentParser::argument_default() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL std::string const&
 ArgumentParser::conflict_handler() const _ARGPARSE_NOEXCEPT
 {
-    return m_data->m_conflict_handler;
+    return m_data->m_conflict_handler_str;
 }
 
 _ARGPARSE_INL bool
