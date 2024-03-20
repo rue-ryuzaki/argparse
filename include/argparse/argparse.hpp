@@ -1132,7 +1132,8 @@ struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
 #endif  // C++11+
 
 #ifdef _ARGPARSE_CXX_11
-template <class T>  struct rval { typedef T&& type; };
+template <class T>
+struct rval { typedef T&& type; };
 template <class T>
 struct func1 { typedef std::function<void(T)> type; };
 template <class T, class U>
@@ -1142,9 +1143,12 @@ using std::shared_ptr;
 using std::weak_ptr;
 using std::make_shared;
 #else
-template <class T>  struct rval { typedef T const& type; };
-template <class T>          struct func1 { typedef void (*type)(T); };
-template <class T, class U> struct func2 { typedef void (*type)(T, U); };
+template <class T>
+struct rval { typedef T const& type; };
+template <class T>
+struct func1 { typedef void (*type)(T); };
+template <class T, class U>
+struct func2 { typedef void (*type)(T, U); };
 
 struct ref_count_data
 {
@@ -2574,7 +2578,8 @@ public:
      *
      *  \return Argument object
      */
-    Argument(Argument&& orig) _ARGPARSE_NOEXCEPT;
+    Argument(
+            Argument&& orig) _ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Move argument object from another argument
@@ -3486,7 +3491,8 @@ class _ArgumentData
             Argument const* arg);
 
     void
-    update_help(bool add_help,
+    update_help(
+            bool add_help,
             std::string const& prefix_chars);
 
     std::vector<pArgument>
