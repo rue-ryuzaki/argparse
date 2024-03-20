@@ -1139,162 +1139,135 @@ template <class T, class U>
 struct func2 { typedef std::function<void(T, U)> type; };
 
 using std::shared_ptr;
+using std::weak_ptr;
 using std::make_shared;
 #else
 template <class T>  struct rval { typedef T const& type; };
 template <class T>          struct func1 { typedef void (*type)(T); };
 template <class T, class U> struct func2 { typedef void (*type)(T, U); };
 
-// Slightly modified version of the shared_ptr implementation for C++98
-// from Sébastien Rombauts which is licensed under the MIT License.
-// See https://github.com/SRombauts/shared_ptr
-class _shared_ptr_count
+struct ref_count_data
+{
+    std::size_t weak_count;
+    std::size_t use_count;
+};
+
+class reference_count
 {
 public:
-    _shared_ptr_count()
-        : pn(NULL)
-    { }
-
-    _shared_ptr_count(
-            _shared_ptr_count const& orig)
-        : pn(orig.pn)
-    { }
+    reference_count()
+        : ref_counts()
+    {
+        ref_counts.weak_count = 1;
+        ref_counts.use_count = 0;
+    }
 
     inline void
-    swap(_shared_ptr_count& lhs) throw()
+    add_shared_ref()
     {
-        std::swap(pn, lhs.pn);
+        ++ref_counts.use_count;
+    }
+
+    inline ref_count_data
+    release_shared_ref()
+    {
+        --ref_counts.use_count;
+        if (!ref_counts.use_count) {
+            --ref_counts.weak_count;
+        }
+        return ref_counts;
+    }
+
+    inline void
+    add_weak_ref()
+    {
+        ++ref_counts.weak_count;
+    }
+
+    inline ref_count_data
+    release_weak_ref()
+    {
+        --ref_counts.weak_count;
+        return ref_counts;
     }
 
     inline std::size_t
-    use_count() const throw()
+    use_count() const
     {
-        std::size_t count = 0;
-        if (pn) {
-            count = *pn;
-        }
-        return count;
+        return ref_counts.use_count;
     }
 
-    template <class U>
-    void
-    acquire(U*& p)
-    {
-        if (p) {
-            if (!pn) {
-                try {
-                    pn = new std::size_t(1);
-                } catch (std::bad_alloc&) {
-                    delete p;
-                    p = NULL;
-                    throw;
-                }
-            } else {
-                ++(*pn);
-            }
-        }
-    }
-
-    template <class U>
-    void
-    release(U*& p) throw()
-    {
-        if (pn) {
-            --(*pn);
-            if (*pn == 0) {
-                delete p;
-                delete pn;
-                p = NULL;
-            }
-            pn = NULL;
-        }
-    }
-
-public:
-    std::size_t* pn;
-};
-
-class _shared_ptr_base
-{
-protected:
-    _shared_ptr_base()
-        : pn()
-    { }
-
-    _shared_ptr_base(
-            _shared_ptr_base const& orig)
-        : pn(orig.pn)
-    { }
-
-    _shared_ptr_count pn;
+private:
+    ref_count_data ref_counts;
 };
 
 template <class T>
-class shared_ptr : public _shared_ptr_base
+class shared_ptr
 {
 public:
-    typedef typename remove_extent<T>::type element_type;
+    typedef T element_type;
 
     shared_ptr() throw()
-        : _shared_ptr_base(),
-          px(NULL)
+        : px(NULL),
+          pn(NULL)
     { }
-
-    explicit
-    shared_ptr(
-            T* p)
-        : _shared_ptr_base(),
-          px(NULL)
-    {
-        acquire(p);
-    }
 
     shared_ptr(
             nullptr_t) throw()
-        : _shared_ptr_base(),
-          px(NULL)
+        : px(NULL),
+          pn(NULL)
     { }
 
-    template <class U>
     explicit
     shared_ptr(
-            shared_ptr<U> const& ptr,
-            T* p)
-        : _shared_ptr_base(ptr),
-          px(NULL)
+            T* value)
+        : px(value),
+          pn(NULL)
     {
-        acquire(p);
+        if (px) {
+            pn = new reference_count();
+            pn->add_shared_ref();
+        }
+    }
+
+    shared_ptr(
+            shared_ptr<T> const& orig) throw()
+        : px(orig.px),
+          pn(orig.pn)
+    {
+        if (pn) {
+            pn->add_shared_ref();
+        }
     }
 
     template <class U>
     explicit
     shared_ptr(
             shared_ptr<U> const& orig) throw()
-        : _shared_ptr_base(orig),
-          px(NULL)
+        : px(static_cast<typename shared_ptr<T>::element_type*>(orig.get())),
+          pn(orig.pn)
     {
-        assert(!orig.get() || (orig.use_count() != 0));
-        acquire(static_cast<typename shared_ptr<T>::element_type*>(orig.get()));
+        if (pn) {
+            pn->add_shared_ref();
+        }
     }
 
-    shared_ptr(
-            shared_ptr const& orig) throw()
-        : _shared_ptr_base(orig),
-          px(NULL)
+    ~shared_ptr() throw()
     {
-        assert(!orig.px || (orig.use_count() != 0));
-        acquire(orig.px);
+        if (pn) {
+            ref_count_data updated_counts = pn->release_shared_ref();
+            if (!updated_counts.use_count) {
+                delete px;
+                px = NULL;
+            }
+            if (!updated_counts.weak_count) {
+                delete pn;
+                pn = NULL;
+            }
+        }
     }
 
-    inline shared_ptr&
-    operator =(
-            shared_ptr ptr) throw()
-    {
-        swap(ptr);
-        return *this;
-    }
-
-    inline shared_ptr&
+    inline shared_ptr<T>&
     operator =(
             nullptr_t) throw()
     {
@@ -1302,70 +1275,51 @@ public:
         return *this;
     }
 
-    template <class U>
     inline shared_ptr&
     operator =(
-            shared_ptr<U> const& ptr) throw()
+            shared_ptr<T> const& rhs) throw()
     {
-        *this = shared_ptr(ptr);
+        shared_ptr(rhs).swap(*this);
         return *this;
     }
 
-    ~shared_ptr() throw()
+    template <class U>
+    inline shared_ptr&
+    operator =(
+            shared_ptr<U> const& rhs) throw()
     {
-        release();
+        shared_ptr(rhs).swap(*this);
+        return *this;
     }
 
     inline void
     reset() throw()
     {
-        release();
+        shared_ptr().swap(*this);
     }
 
     inline void
-    reset(T* p)
+    reset(T* ptr) throw()
     {
-        assert(!p || (px != p));
-        release();
-        acquire(p);
+        shared_ptr(ptr).swap(*this);
     }
 
     inline void
-    swap(shared_ptr& lhs) throw()
+    swap(shared_ptr<T>& other) throw()
     {
-        std::swap(px, lhs.px);
-        pn.swap(lhs.pn);
-    }
-
-    inline operator
-    bool() const throw()
-    {
-        return use_count() > 0;
-    }
-
-    inline bool
-    unique() const throw()
-    {
-        return use_count() == 1;
-    }
-
-    inline std::size_t
-    use_count() const throw()
-    {
-        return pn.use_count();
+        std::swap(px, other.px);
+        std::swap(pn, other.pn);
     }
 
     inline T&
     operator *() const throw()
     {
-        assert(NULL != px);
         return *px;
     }
 
     inline T*
     operator ->() const throw()
     {
-        assert(px);
         return px;
     }
 
@@ -1375,22 +1329,186 @@ public:
         return px;
     }
 
-private:
-    inline void
-    acquire(T* p)
+    inline
+    operator bool() const throw()
     {
-        pn.acquire(p);
-        px = p;
+        return use_count() > 0;
+    }
+
+    inline bool
+    operator !() const throw()
+    {
+        return !px;
+    }
+
+    inline std::size_t
+    unique() const
+    {
+        return use_count() == 1;
+    }
+
+    inline std::size_t
+    use_count() const throw()
+    {
+        return pn ? pn->use_count() : 0;
+    }
+
+    inline bool
+    operator ==(
+            void* rhs) const throw()
+    {
+        return px == rhs;
+    }
+
+    inline bool
+    operator !=(
+            void* rhs) const throw()
+    {
+        return px != rhs;
+    }
+
+private:
+    template <class U>
+    friend class shared_ptr;
+
+    template <class U>
+    friend class weak_ptr;
+
+    explicit
+    shared_ptr(
+            element_type* pvalue_arg,
+            reference_count* pn_arg) throw()
+        : px(pvalue_arg),
+          pn(pn_arg)
+    {
+        if (px) {
+            pn->add_shared_ref();
+        } else {
+            pn = NULL;
+        }
+    }
+
+    element_type* px;
+    reference_count* pn;
+};
+
+template <class T>
+class weak_ptr
+{
+public:
+    typedef T element_type;
+
+    weak_ptr() throw()
+        : px(NULL),
+          pn(NULL)
+    { }
+
+    weak_ptr(
+            weak_ptr<T> const& orig) throw()
+        : px(orig.px),
+          pn(orig.pn)
+    {
+        if (pn) {
+            pn->add_weak_ref();
+        }
+    }
+
+    template <class U>
+    explicit
+    weak_ptr(
+            weak_ptr<U> const& orig) throw()
+        : px(static_cast<typename shared_ptr<T>::element_type*>(orig.px)),
+          pn(orig.pn)
+    {
+        if (pn) {
+            pn->add_weak_ref();
+        }
+    }
+
+    weak_ptr(
+            shared_ptr<T> const& orig) throw()
+        : px(orig.px),
+          pn(orig.pn)
+    {
+        if (pn) {
+            pn->add_weak_ref();
+        }
+    }
+
+    template <class U>
+    explicit
+    weak_ptr(
+            shared_ptr<U> const& orig) throw()
+        : px(static_cast<typename shared_ptr<T>::element_type*>(orig.px)),
+          pn(orig.pn)
+    {
+        if (pn) {
+            pn->add_weak_ref();
+        }
+    }
+
+    ~weak_ptr() throw()
+    {
+        if (pn) {
+            ref_count_data updated_counts = pn->release_weak_ref();
+            if (!updated_counts.weak_count) {
+                delete pn;
+                pn = NULL;
+            }
+        }
+    }
+
+    inline weak_ptr&
+    operator =(
+            weak_ptr<T> const& rhs) throw()
+    {
+        weak_ptr(rhs).swap(*this);
+        return *this;
+    }
+
+    template <class U>
+    inline weak_ptr&
+    operator =(
+            weak_ptr<U> const& rhs) throw()
+    {
+        weak_ptr(rhs).swap(*this);
+        return *this;
+    }
+
+    inline shared_ptr<T>
+    lock() const throw()
+    {
+        return shared_ptr<element_type>(px, pn);
+    }
+
+    inline std::size_t
+    use_count() const throw()
+    {
+        return pn ? pn->use_count() : 0;
+    }
+
+    inline bool
+    expired() const throw()
+    {
+        return use_count() == 0;
     }
 
     inline void
-    release() throw()
+    reset() throw()
     {
-        pn.release(px);
+        weak_ptr().swap(*this);
+    }
+
+    inline void
+    swap(weak_ptr<T>& other) throw()
+    {
+        std::swap(px, other.px);
+        std::swap(pn, other.pn);
     }
 
 private:
-    T* px;
+    element_type* px;
+    reference_count* pn;
 };
 
 template <class T, class U>
@@ -3277,7 +3395,7 @@ private:
     std::vector<std::string>    m_dest;
     detail::func1<std::string const&>::type m_handle;
     detail::func2<std::string const&, void*>::type m_factory;
-    detail::shared_ptr<_ArgumentData> m_post_trigger;
+    detail::weak_ptr<_ArgumentData> m_post_trigger;
     Action                      m_action;
     Type                        m_type;
     Nargs                       m_nargs;
@@ -10109,7 +10227,7 @@ Argument::Argument(
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
-      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_post_trigger(),
       m_action(argparse::store),
       m_type(type),
       m_nargs(NARGS_DEF),
@@ -10150,7 +10268,7 @@ Argument::Argument(
       m_dest(std::vector<std::string>{ std::string() }),
       m_handle(nullptr),
       m_factory(nullptr),
-      m_post_trigger(nullptr),
+      m_post_trigger(),
       m_action(argparse::store),
       m_type(type),
       m_nargs(NARGS_DEF),
@@ -10189,7 +10307,7 @@ Argument::Argument(
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
-      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
@@ -10218,7 +10336,7 @@ Argument::Argument(
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
-      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
@@ -10248,7 +10366,7 @@ Argument::Argument(
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
-      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
@@ -10279,7 +10397,7 @@ Argument::Argument(
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
-      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
@@ -10308,7 +10426,7 @@ Argument::Argument(
       m_dest(detail::_vector(std::string())),
       m_handle(_ARGPARSE_NULLPTR),
       m_factory(_ARGPARSE_NULLPTR),
-      m_post_trigger(_ARGPARSE_NULLPTR),
+      m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
@@ -10994,8 +11112,8 @@ Argument::prepare_action(
 {
     if (m_type == Optional && value == argparse::BooleanOptionalAction) {
         make_no_flags();
-        if (m_post_trigger) {
-            m_post_trigger->check_conflict_arg(this);
+        if (detail::shared_ptr<_ArgumentData> ptr = m_post_trigger.lock()) {
+            ptr->check_conflict_arg(this);
         }
     } else {
         m_all_flags = m_flags;
