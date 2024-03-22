@@ -3401,9 +3401,9 @@ private:
     detail::func1<std::string const&>::type m_handle;
     detail::func2<std::string const&, void*>::type m_factory;
     detail::weak_ptr<_ArgumentData> m_post_trigger;
-    Action                      m_action;
-    Type                        m_type;
-    Nargs                       m_nargs;
+    uint16_t                    m_action;
+    uint8_t                     m_type;
+    uint8_t                     m_nargs;
     detail::Value<bool>         m_required;
 };
 
@@ -3540,7 +3540,7 @@ class _ArgumentData
     std::list<std::pair<pArgument, bool> > m_optional;
     std::list<std::pair<pArgument, bool> > m_operand;
     std::list<std::pair<pArgument, bool> > m_positional;
-    uint16_t m_conflict_handler;
+    uint8_t m_conflict_handler;
     bool m_add_help;
     bool m_help_added;
 };
@@ -8119,7 +8119,7 @@ _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _none[]         = "None";
 _ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
-enum ConflictHandler _ARGPARSE_ENUM_TYPE(uint16_t)
+enum ConflictHandler _ARGPARSE_ENUM_TYPE(uint8_t)
 {
     _conflict_error   = 0,  // "error"
     _conflict_resolve = 1,  // "resolve"
@@ -11017,7 +11017,7 @@ Argument::flags() const _ARGPARSE_NOEXCEPT
 _ARGPARSE_INL Action
 Argument::action() const _ARGPARSE_NOEXCEPT
 {
-    return m_action;
+    return static_cast<Action>(m_action);
 }
 
 _ARGPARSE_INL std::string const&
@@ -11891,7 +11891,8 @@ _ArgumentGroup::add_argument(
 _ARGPARSE_INL void
 _ArgumentGroup::process_add_argument()
 {
-    Argument::Type type = m_data->m_arguments.back()->m_type;
+    Argument::Type type
+            = static_cast<Argument::Type>(m_data->m_arguments.back()->m_type);
     if (type == Argument::Optional
             && m_parent_data->m_conflict_handler == detail::_conflict_resolve) {
         for (sub_iterator it = m_parent_data->m_optional.begin();
