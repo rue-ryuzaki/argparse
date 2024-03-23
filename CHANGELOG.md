@@ -1,8 +1,12 @@
 # Changelog
 
+## [1.9.2] - 2024-03-23
+
+  * Fix: memory leak & update smart ptrs for C++98
+
 ## [1.9.1] - 2024-02-29
 
-  * Remove: include \<algorithm>, \<map>, \<numeric>, <queue>, \<set>, \<stack>
+  * Remove: include \<algorithm>, \<map>, \<numeric>, \<queue>, \<set>, \<stack>
   * Move to impl: include \<fstream>, \<regex>
   * Update: std containers support for Namespace::get<>
   * Add: examples
