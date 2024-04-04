@@ -10473,27 +10473,27 @@ Argument::operator =(
         Argument const& rhs)
 {
     if (this != &rhs) {
-        this->m_flags           = rhs.m_flags;
-        this->m_all_flags       = rhs.m_all_flags;
-        this->m_name            = rhs.m_name;
-        this->m_num_args        = rhs.m_num_args;
-        this->m_nargs_str       = rhs.m_nargs_str;
-        this->m_const           = rhs.m_const;
-        this->m_default         = rhs.m_default;
-        this->m_implicit        = rhs.m_implicit;
-        this->m_type_name       = rhs.m_type_name;
-        this->m_choices         = rhs.m_choices;
-        this->m_help            = rhs.m_help;
-        this->m_version         = rhs.m_version;
-        this->m_metavar         = rhs.m_metavar;
-        this->m_dest            = rhs.m_dest;
-        this->m_handle          = rhs.m_handle;
-        this->m_factory         = rhs.m_factory;
-        this->m_post_trigger    = rhs.m_post_trigger;
-        this->m_action          = rhs.m_action;
-        this->m_type            = rhs.m_type;
-        this->m_nargs           = rhs.m_nargs;
-        this->m_required        = rhs.m_required;
+        this->m_flags       = rhs.m_flags;
+        this->m_all_flags   = rhs.m_all_flags;
+        this->m_name        = rhs.m_name;
+        this->m_num_args    = rhs.m_num_args;
+        this->m_nargs_str   = rhs.m_nargs_str;
+        this->m_const       = rhs.m_const;
+        this->m_default     = rhs.m_default;
+        this->m_implicit    = rhs.m_implicit;
+        this->m_type_name   = rhs.m_type_name;
+        this->m_choices     = rhs.m_choices;
+        this->m_help        = rhs.m_help;
+        this->m_version     = rhs.m_version;
+        this->m_metavar     = rhs.m_metavar;
+        this->m_dest        = rhs.m_dest;
+        this->m_handle      = rhs.m_handle;
+        this->m_factory     = rhs.m_factory;
+        this->m_post_trigger= rhs.m_post_trigger;
+        this->m_action      = rhs.m_action;
+        this->m_type        = rhs.m_type;
+        this->m_nargs       = rhs.m_nargs;
+        this->m_required    = rhs.m_required;
     }
     return *this;
 }
@@ -10531,27 +10531,27 @@ Argument::operator =(
         Argument&& rhs) _ARGPARSE_NOEXCEPT
 {
     if (this != &rhs) {
-        this->m_flags           = std::move(rhs.m_flags);
-        this->m_all_flags       = std::move(rhs.m_all_flags);
-        this->m_name            = std::move(rhs.m_name);
-        this->m_num_args        = std::move(rhs.m_num_args);
-        this->m_nargs_str       = std::move(rhs.m_nargs_str);
-        this->m_const           = std::move(rhs.m_const);
-        this->m_default         = std::move(rhs.m_default);
-        this->m_implicit        = std::move(rhs.m_implicit);
-        this->m_type_name       = std::move(rhs.m_type_name);
-        this->m_choices         = std::move(rhs.m_choices);
-        this->m_help            = std::move(rhs.m_help);
-        this->m_version         = std::move(rhs.m_version);
-        this->m_metavar         = std::move(rhs.m_metavar);
-        this->m_dest            = std::move(rhs.m_dest);
-        this->m_handle          = std::move(rhs.m_handle);
-        this->m_factory         = std::move(rhs.m_factory);
-        this->m_post_trigger    = std::move(rhs.m_post_trigger);
-        this->m_action          = std::move(rhs.m_action);
-        this->m_type            = std::move(rhs.m_type);
-        this->m_nargs           = std::move(rhs.m_nargs);
-        this->m_required        = std::move(rhs.m_required);
+        this->m_flags       = std::move(rhs.m_flags);
+        this->m_all_flags   = std::move(rhs.m_all_flags);
+        this->m_name        = std::move(rhs.m_name);
+        this->m_num_args    = std::move(rhs.m_num_args);
+        this->m_nargs_str   = std::move(rhs.m_nargs_str);
+        this->m_const       = std::move(rhs.m_const);
+        this->m_default     = std::move(rhs.m_default);
+        this->m_implicit    = std::move(rhs.m_implicit);
+        this->m_type_name   = std::move(rhs.m_type_name);
+        this->m_choices     = std::move(rhs.m_choices);
+        this->m_help        = std::move(rhs.m_help);
+        this->m_version     = std::move(rhs.m_version);
+        this->m_metavar     = std::move(rhs.m_metavar);
+        this->m_dest        = std::move(rhs.m_dest);
+        this->m_handle      = std::move(rhs.m_handle);
+        this->m_factory     = std::move(rhs.m_factory);
+        this->m_post_trigger= std::move(rhs.m_post_trigger);
+        this->m_action      = std::move(rhs.m_action);
+        this->m_type        = std::move(rhs.m_type);
+        this->m_nargs       = std::move(rhs.m_nargs);
+        this->m_required    = std::move(rhs.m_required);
     }
     return *this;
 }
@@ -11827,11 +11827,11 @@ _ArgumentGroup::operator =(
         _ArgumentGroup const& rhs)
 {
     if (this != &rhs) {
-        m_data                  = rhs.m_data;
-        m_prefix_chars          = rhs.m_prefix_chars;
-        m_parent_data           = rhs.m_parent_data;
-        m_argument_default      = rhs.m_argument_default;
-        m_is_mutex_group        = rhs.m_is_mutex_group;
+        m_data              = rhs.m_data;
+        m_prefix_chars      = rhs.m_prefix_chars;
+        m_parent_data       = rhs.m_parent_data;
+        m_argument_default  = rhs.m_argument_default;
+        m_is_mutex_group    = rhs.m_is_mutex_group;
     }
     return *this;
 }
@@ -11979,12 +11979,12 @@ ArgumentGroup::operator =(
         ArgumentGroup const& rhs)
 {
     if (this != &rhs) {
-        m_title                 = rhs.m_title;
-        m_description           = rhs.m_description;
-        m_data                  = rhs.m_data;
-        m_prefix_chars          = rhs.m_prefix_chars;
-        m_argument_default      = rhs.m_argument_default;
-        m_parent_data           = rhs.m_parent_data;
+        m_title             = rhs.m_title;
+        m_description       = rhs.m_description;
+        m_data              = rhs.m_data;
+        m_prefix_chars      = rhs.m_prefix_chars;
+        m_argument_default  = rhs.m_argument_default;
+        m_parent_data       = rhs.m_parent_data;
     }
     return *this;
 }
@@ -12089,11 +12089,11 @@ MutuallyExclusiveGroup::operator =(
         MutuallyExclusiveGroup const& rhs)
 {
     if (this != &rhs) {
-        m_data                  = rhs.m_data;
-        m_prefix_chars          = rhs.m_prefix_chars;
-        m_parent_data           = rhs.m_parent_data;
-        m_argument_default      = rhs.m_argument_default;
-        m_required              = rhs.m_required;
+        m_data              = rhs.m_data;
+        m_prefix_chars      = rhs.m_prefix_chars;
+        m_parent_data       = rhs.m_parent_data;
+        m_argument_default  = rhs.m_argument_default;
+        m_required          = rhs.m_required;
     }
     return *this;
 }
