@@ -9473,8 +9473,8 @@ _format_output_func(
     std::size_t size = _utf8_length(value).second;
     if (size > indent && size + 1 + _utf8_length(str).second > width) {
         _store_value_to(value, res);
+        size = _utf8_length(value).second;
     }
-    size = _utf8_length(value).second;
     if (size < indent) {
         value.resize(value.size() + indent - size, _space);
         value += str;
