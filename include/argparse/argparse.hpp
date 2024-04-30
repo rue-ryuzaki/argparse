@@ -10094,16 +10094,13 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
                         = detail::_split(sub_split_str.at(j), "\t");
                 for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
                     if (k != 0) {
-                        std::string sub = std::string(
-                                    _tab_size() - (detail::_utf8_length(
-                                                   value).second % _tab_size()),
-                                    detail::_space);
-                        if (detail::_utf8_length(value).second + 1
-                                + detail::_utf8_length(sub).second > width) {
+                        std::size_t size = detail::_utf8_length(value).second;
+                        std::size_t tbsize = _tab_size() - (size % _tab_size());
+                        if (size + 1 + tbsize > width) {
                             detail::_store_value_to(value, res);
-                            sub = std::string(_tab_size(), detail::_space);
+                        } else {
+                            value += std::string(tbsize, detail::_space);
                         }
-                        value += sub;
                     }
                     std::string sub = tab_split_str.at(k);
                     if (detail::_utf8_length(value).second + 1
