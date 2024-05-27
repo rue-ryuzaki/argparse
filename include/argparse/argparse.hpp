@@ -7753,30 +7753,15 @@ private:
     check_mutex_arguments() const;
 
     static void
-    check_intermixed_subparsers(
-            bool intermixed,
-            pSubParsers const& subparsers);
-
-    static void
     check_intermixed_remainder(
             bool intermixed,
             pArguments const& positional);
-
-    std::vector<std::string>
-    process_split_equal(
-            std::string& arg,
-            std::string const& prefix_chars) const;
 
     static Namespace
     create_namespace(
             bool only_known,
             detail::rval<_Storage>::type storage,
             detail::rval<std::vector<std::string> >::type unrecognized_args);
-
-    static bool
-    negative_numbers_presented(
-            pArguments const& optionals,
-            std::string const& prefix_chars);
 
     static void
     validate_arguments(
@@ -7944,15 +7929,6 @@ private:
             bool was_pseudo_arg,
             ParserInfo const& info,
             std::string const& key);
-
-    static bool
-    process_separate_arg_abbrev(
-            std::string const& name,
-            std::size_t i,
-            std::size_t cp_size,
-            std::vector<std::string>& flags,
-            std::string const& arg,
-            pArguments const& args);
 
     void
     separate_arg_abbrev(
@@ -8134,6 +8110,7 @@ _store_const_action = _store_action | _const_action;
 
 typedef detail::shared_ptr<Argument> pArgument;
 typedef std::vector<pArgument> pArguments;
+typedef detail::shared_ptr<SubParsers> pSubParsers;
 
 _ARGPARSE_INL void
 _erase_remove(
@@ -9689,7 +9666,7 @@ _is_not_operand(
         std::string const& key)
 {
     return was_pseudo_arg || !_find_arg_by_flag(
-                args, _split(key, detail::_equals, 1).front());
+                args, _split(key, _equals, 1).front());
 }
 
 _ARGPARSE_INL void
@@ -9699,6 +9676,95 @@ _add_arg_usage(
         bool required)
 {
     _append_value_to(required ? str : "[" + str + "]", res, "\n");
+}
+
+_ARGPARSE_INL void
+_check_intermixed_subparsers(
+        bool intermixed,
+        pSubParsers const& subparsers)
+{
+    if (intermixed && subparsers) {
+        throw
+        TypeError("parse_intermixed_args: positional arg with nargs=A...");
+    }
+}
+
+_ARGPARSE_INL std::vector<std::string>
+_process_split_equal(
+        std::string& arg,
+        std::string const& prefix_chars)
+{
+    std::vector<std::string> equals = _split_equal(arg, prefix_chars);
+    if (equals.size() == 2 && !equals.front().empty()) {
+        arg = equals.front();
+    } else {
+        equals.resize(1);
+    }
+    return equals;
+}
+
+_ARGPARSE_INL bool
+_negative_numbers_presented(
+        pArguments const& optionals,
+        std::string const& prefix_chars)
+{
+    if (_exists(_prefix_char, prefix_chars)) {
+        for (std::size_t i = 0; i < optionals.size(); ++i) {
+            pArgument const& arg = optionals.at(i);
+            for (std::size_t j = 0; j < arg->flags().size(); ++j) {
+                if (_is_negative_number(arg->flags().at(j))) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+_ARGPARSE_INL bool
+_process_separate_arg_abbrev(
+        std::string const& name,
+        std::size_t i,
+        std::size_t cp_size,
+        std::vector<std::string>& flags,
+        std::string const& arg,
+        pArguments const& args)
+{
+    std::string abbrev = name.substr(i, cp_size);
+    if (abbrev == _equals) {
+        if (flags.empty()) {
+            flags.push_back(std::string());
+        }
+        flags.back() += name.substr(i);
+        return false;
+    }
+    Argument const* argument = _ARGPARSE_NULLPTR;
+    for (std::size_t j = 0; j < args.size() && !argument; ++j) {
+        for (std::size_t k = 0; k < args.at(j)->flags().size(); ++k) {
+            std::string const& flag = args.at(j)->flags().at(k);
+            if (_utf8_length(flag).second == 2
+                    && flag.substr(1) == abbrev
+                    && flag.at(0) == arg.at(0)) {
+                flags.push_back(flag);
+                argument = args.at(j).get();
+                break;
+            }
+        }
+    }
+    if (!argument && flags.empty()) {
+        flags.push_back(arg);
+        return false;
+    } else if ((!argument && !flags.empty())
+               || (argument && (argument->action() & _store_action))) {
+        std::string str
+                = name.substr(i + (static_cast<bool>(argument) ? cp_size : 0));
+        if (!str.empty()) {
+            flags.back() += _equals;
+            flags.back() += str;
+        }
+        return false;
+    }
+    return true;
 }
 }  // namespace detail
 
@@ -9990,7 +10056,7 @@ HelpFormatter::_format_help(
                 *this, p->despecify(detail::_tr(p->m_description, lang)),
                 width, ss, eat_ln);
     std::size_t size = 0;
-    ArgumentParser::pSubParsers subparsers = sub_info.first;
+    detail::pSubParsers subparsers = sub_info.first;
     bool sub_positional = subparsers && subparsers->is_positional();
     for (std::size_t i = 0; i < positional.size(); ++i) {
         std::string str = positional.at(i)->flags_to_string(*this);
@@ -14527,8 +14593,8 @@ ArgumentParser::ParserInfo::ParserInfo(
       have_negative_args()
 {
     lang = parser->default_language();
-    have_negative_args
-            = negative_numbers_presented(optional, parser->prefix_chars());
+    have_negative_args = detail::_negative_numbers_presented(
+                optional, parser->prefix_chars());
 }
 
 _ARGPARSE_INL
@@ -14718,7 +14784,8 @@ ArgumentParser::parse_arguments(
                 parser_info(this, space.storage(), subparsers_info(true)));
 
     check_mutex_arguments();
-    check_intermixed_subparsers(intermixed, parsers.back().subparsers.first);
+    detail::_check_intermixed_subparsers(
+                intermixed, parsers.back().subparsers.first);
 
     pArguments positional = m_data->get_positional(true, true);
     check_intermixed_remainder(intermixed, positional);
@@ -14739,8 +14806,8 @@ ArgumentParser::parse_arguments(
         check_abbreviations(parsers, was_pseudo_arg, parsed_arguments, i);
         bool remainder = is_remainder_positional(pos, positional, parsers);
         std::string arg = parsed_arguments.at(i);
-        std::vector<std::string> equals
-              = process_split_equal(arg, parsers.back().parser->prefix_chars());
+        std::vector<std::string> equals = detail::_process_split_equal(
+                    arg, parsers.back().parser->prefix_chars());
         pArgument const tmp
                 = get_optional_arg_by_flag(was_pseudo_arg, parsers.back(), arg);
         if (tmp && !remainder) {
@@ -14826,17 +14893,6 @@ ArgumentParser::check_mutex_arguments() const
 }
 
 _ARGPARSE_INL void
-ArgumentParser::check_intermixed_subparsers(
-        bool intermixed,
-        pSubParsers const& subparsers)
-{
-    if (intermixed && subparsers) {
-        throw
-        TypeError("parse_intermixed_args: positional arg with nargs=A...");
-    }
-}
-
-_ARGPARSE_INL void
 ArgumentParser::check_intermixed_remainder(
         bool intermixed,
         pArguments const& positional)
@@ -14852,20 +14908,6 @@ ArgumentParser::check_intermixed_remainder(
     }
 }
 
-_ARGPARSE_INL std::vector<std::string>
-ArgumentParser::process_split_equal(
-        std::string& arg,
-        std::string const& prefix_chars) const
-{
-    std::vector<std::string> equals = detail::_split_equal(arg, prefix_chars);
-    if (equals.size() == 2 && !equals.front().empty()) {
-        arg = equals.front();
-    } else {
-        equals.resize(1);
-    }
-    return equals;
-}
-
 _ARGPARSE_INL Namespace
 ArgumentParser::create_namespace(
         bool only_known,
@@ -14875,24 +14917,6 @@ ArgumentParser::create_namespace(
     return only_known ? Namespace(_ARGPARSE_MOVE(storage),
                                   _ARGPARSE_MOVE(unrecognized_args))
                       : Namespace(_ARGPARSE_MOVE(storage));
-}
-
-_ARGPARSE_INL bool
-ArgumentParser::negative_numbers_presented(
-        pArguments const& optionals,
-        std::string const& prefix_chars)
-{
-    if (detail::_exists(detail::_prefix_char, prefix_chars)) {
-        for (std::size_t i = 0; i < optionals.size(); ++i) {
-            pArgument const& arg = optionals.at(i);
-            for (std::size_t j = 0; j < arg->flags().size(); ++j) {
-                if (detail::_is_negative_number(arg->flags().at(j))) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
 }
 
 _ARGPARSE_INL void
@@ -14910,16 +14934,15 @@ ArgumentParser::validate_argument_value(
         Argument const& arg,
         std::string const& value) const
 {
-    detail::Value<std::vector<std::string> > const& choices = arg.m_choices;
     if (!(arg.m_nargs & (Argument::REMAINDING | Argument::SUPPRESSING))
-            && choices.has_value()) {
+            && arg.m_choices.has_value()) {
         std::string str = detail::_remove_quotes(value);
-        if (!str.empty() && !detail::_exists(str, choices.value())) {
+        if (!str.empty() && !detail::_exists(str, arg.m_choices.value())) {
             parser->throw_error(
                         "argument " + (arg.m_flags.empty()
                                        ? arg.dest() : arg.m_flags.front())
                         + ": invalid choice: '" + str + "' (choose from "
-                        + detail::_join(choices.value(), ", ", "'") + ")");
+                       + detail::_join(arg.m_choices.value(), ", ", "'") + ")");
         }
     }
 }
@@ -15610,52 +15633,6 @@ ArgumentParser::get_optional_arg_by_flag(
     return opt ? opt : detail::_find_arg_by_flag(info.operand, key);
 }
 
-_ARGPARSE_INL bool
-ArgumentParser::process_separate_arg_abbrev(
-        std::string const& name,
-        std::size_t i,
-        std::size_t cp_size,
-        std::vector<std::string>& flags,
-        std::string const& arg,
-        pArguments const& args)
-{
-    std::string abbrev = name.substr(i, cp_size);
-    if (abbrev == detail::_equals) {
-        if (flags.empty()) {
-            flags.push_back(std::string());
-        }
-        flags.back() += name.substr(i);
-        return false;
-    }
-    Argument const* argument = _ARGPARSE_NULLPTR;
-    for (std::size_t j = 0; j < args.size() && !argument; ++j) {
-        for (std::size_t k = 0; k < args.at(j)->flags().size(); ++k) {
-            std::string const& flag = args.at(j)->flags().at(k);
-            if (detail::_utf8_length(flag).second == 2
-                    && flag.substr(1) == abbrev
-                    && flag.at(0) == arg.at(0)) {
-                flags.push_back(flag);
-                argument = args.at(j).get();
-                break;
-            }
-        }
-    }
-    if (!argument && flags.empty()) {
-        flags.push_back(arg);
-        return false;
-    } else if ((!argument && !flags.empty())
-               || (argument && (argument->action() & detail::_store_action))) {
-        std::string str
-                = name.substr(i + (static_cast<bool>(argument) ? cp_size : 0));
-        if (!str.empty()) {
-            flags.back() += detail::_equals;
-            flags.back() += str;
-        }
-        return false;
-    }
-    return true;
-}
-
 _ARGPARSE_INL void
 ArgumentParser::separate_arg_abbrev(
         ParserInfo const& info,
@@ -15681,7 +15658,7 @@ ArgumentParser::separate_arg_abbrev(
                 // invalid string
                 cp_size = 1;
             }
-            if (!process_separate_arg_abbrev(
+            if (!detail::_process_separate_arg_abbrev(
                         name, i, cp_size, flags, arg, args)) {
                 break;
             }
