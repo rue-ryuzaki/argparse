@@ -9615,7 +9615,7 @@ _check_argument_type(
         bool is_positional)
 {
     if (is_positional) {
-        // version, help and language actions cannot be positional
+        // 'version', 'help' and 'language' actions cannot be positional
         throw TypeError("got an unexpected keyword argument 'action'");
     }
 }
@@ -9654,7 +9654,7 @@ _update_flag_name(
     if (is_optional) {
         _update_flag_name_func(flag_name, flag_name, prefixes);
     } else if (flags.size() > 1) {
-        // no positional multiflag
+        // no positional or operand multiflag
         throw ValueError("invalid option string " + flags.front() + ": must "
                          + "starts with a character '" + prefix_chars + "'");
     }
@@ -9663,7 +9663,7 @@ _update_flag_name(
         std::string& flag = flags.at(i);
         _check_flag_name(flag);
         if (!_exists(flag.at(0), prefix_chars)) {
-            // no positional and optional args
+            // no positional or operand arguments with optional flags
             throw ValueError("invalid option string " + flag + ": must starts "
                              + "with a character '" + prefix_chars + "'");
         }
@@ -11757,7 +11757,7 @@ _ArgumentData::validate_argument(
         }
         if (arg.action()
               & (argparse::version | argparse::help | argparse::language)) {
-            // version, help and language actions cannot be positional
+            // 'version', 'help' and 'language' actions cannot be positional
             throw TypeError("got an unexpected keyword argument 'action'");
         }
         if (arg.m_required.has_value()) {
