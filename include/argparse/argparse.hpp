@@ -2754,7 +2754,8 @@ public:
             std::string const& value);
 
     /*!
-     *  \brief Set custom argument 'const' value
+     *  \brief Set custom argument 'const' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
      *
      *  \param value Const value
      *
@@ -2793,7 +2794,8 @@ public:
             std::string const& value);
 
     /*!
-     *  \brief Set custom argument 'default' value
+     *  \brief Set custom argument 'default' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
      *
      *  \param value Default value
      *
@@ -2846,6 +2848,8 @@ public:
     /*!
      *  \brief Set custom argument 'implicit' value (used with nargs="?" or "*",
      *  const_value alternative for optional arguments with nargs="?")
+     *  and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
      *
      *  \param value Implicit value
      *
@@ -2874,7 +2878,7 @@ public:
 
     /*!
      *  \brief Set argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get<T> type check)
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
      *
      *  \return Current argument reference
      */
@@ -2898,7 +2902,7 @@ public:
 
     /*!
      *  \brief Set argument 'type' factory function.
-     *  Called in Namespace::get<> and Namespace::try_get<>
+     *  Called in Namespace::get/try_get<>
      *
      *  \param func Type factory function
      *
