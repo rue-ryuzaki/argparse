@@ -1644,6 +1644,19 @@ _to_string(
     return ss.str();
 }
 
+template <class T>
+std::vector<std::string>
+_to_vecstring(
+        std::vector<T> const& vec)
+{
+    std::vector<std::string> res;
+    res.reserve(vec.size());
+    for (std::size_t i = 0; i < vec.size(); ++i) {
+        res.push_back(_to_string(vec.at(i)));
+    }
+    return res;
+}
+
 std::string
 _remove_quotes(
         std::string const& str);
@@ -2937,6 +2950,68 @@ public:
 
 #ifdef _ARGPARSE_CXX_11
     /*!
+     *  \brief Set argument 'choices' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *
+     *  \param value Choice value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    template <class T,
+              typename std::enable_if<
+                  !detail::is_string_ctor<T>::value>::type* = nullptr>
+    inline Argument&
+    choice(T const& value)
+    {
+        m_type_name = detail::Type::basic<T>();
+        return choices(std::vector<std::string>{ detail::_to_string(value) });
+    }
+
+    /*!
+     *  \brief Set argument 'choices' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *  \param args Other values
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    template <class T, class... Args,
+              typename std::enable_if<
+                  !detail::is_string_ctor<T>::value>::type* = nullptr>
+    inline Argument&
+    choices(T const& value1,
+            T const& value2,
+            Args... args)
+    {
+        return choices(std::vector<T>{ value1, value2, args... });
+    }
+
+    /*!
+     *  \brief Set argument 'choices' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *
+     *  \param value Choices value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    template <class T,
+              typename std::enable_if<
+                  !detail::is_string_ctor<T>::value>::type* = nullptr>
+    Argument&
+    choices(std::initializer_list<T> const& value)
+    {
+        return choices(std::vector<T>{ value });
+    }
+
+    /*!
      *  \brief Set argument 'choices' value
      *
      *  \param value1 First value
@@ -2968,6 +3043,112 @@ public:
     Argument&
     choices(std::initializer_list<std::string> const& value);
 #else
+    /*!
+     *  \brief Set argument 'choices' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *
+     *  \param value Choice value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    template <class T>
+    inline Argument&
+    choice(T const& value,
+            typename detail::enable_if<
+                !detail::is_string_ctor<T>::value, bool>::type = true)
+    {
+        m_type_name = detail::Type::basic<T>();
+        std::vector<std::string> res;
+        res.push_back(detail::_to_string(value));
+        return choices(res);
+    }
+
+    /*!
+     *  \brief Set argument 'choices' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    template <class T>
+    inline Argument&
+    choices(T const& value1,
+            T const& value2,
+            typename detail::enable_if<
+                !detail::is_string_ctor<T>::value, bool>::type = true)
+    {
+        m_type_name = detail::Type::basic<T>();
+        std::vector<std::string> res;
+        res.push_back(detail::_to_string(value1));
+        res.push_back(detail::_to_string(value2));
+        return choices(res);
+    }
+
+    /*!
+     *  \brief Set argument 'choices' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *  \param value3 Third value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    template <class T>
+    inline Argument&
+    choices(T const& value1,
+            T const& value2,
+            T const& value3,
+            typename detail::enable_if<
+                !detail::is_string_ctor<T>::value, bool>::type = true)
+    {
+        m_type_name = detail::Type::basic<T>();
+        std::vector<std::string> res;
+        res.push_back(detail::_to_string(value1));
+        res.push_back(detail::_to_string(value2));
+        res.push_back(detail::_to_string(value3));
+        return choices(res);
+    }
+
+    /*!
+     *  \brief Set argument 'choices' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *
+     *  \param value1 First value
+     *  \param value2 Second value
+     *  \param value3 Third value
+     *  \param value4 Fourth value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    template <class T>
+    inline Argument&
+    choices(T const& value1,
+            T const& value2,
+            T const& value3,
+            T const& value4,
+            typename detail::enable_if<
+                !detail::is_string_ctor<T>::value, bool>::type = true)
+    {
+        m_type_name = detail::Type::basic<T>();
+        std::vector<std::string> res;
+        res.push_back(detail::_to_string(value1));
+        res.push_back(detail::_to_string(value2));
+        res.push_back(detail::_to_string(value3));
+        res.push_back(detail::_to_string(value4));
+        return choices(res);
+    }
+
     /*!
      *  \brief Set argument 'choices' value
      *
@@ -3016,6 +3197,34 @@ public:
             std::string const& value3,
             std::string const& value4);
 #endif  // C++11+
+
+    /*!
+     *  \brief Set argument 'choices' value and argument 'type' name
+     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *
+     *  \param value Choices value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+#ifdef _ARGPARSE_CXX_11
+    template <class T,
+              typename std::enable_if<
+                  !detail::is_string_ctor<T>::value>::type* = nullptr>
+    inline Argument&
+    choices(std::vector<T> const& value)
+#else
+    template <class T>
+    inline Argument&
+    choices(std::vector<T> const& value,
+            typename detail::enable_if<
+                !detail::is_string_ctor<T>::value, bool>::type = true)
+#endif  // C++11+
+    {
+        m_type_name = detail::Type::basic<T>();
+        return choices(detail::_to_vecstring(value));
+    }
 
     /*!
      *  \brief Set argument 'choices' value
