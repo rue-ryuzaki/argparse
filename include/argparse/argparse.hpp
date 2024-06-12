@@ -5192,7 +5192,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as std container types.
+     *  \brief Get parsed argument value as stl container types.
      *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
@@ -5277,8 +5277,7 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as 2D deque, list or
-     *  vector of containers.
+     *  \brief Get parsed argument value as 2D stl containers.
      *  If argument not parsed, returns empty container.
      *
      *  \param key Argument destination name or flag
@@ -5515,7 +5514,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value as std container types.
+     *  \brief Try get parsed argument value as stl container types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -5656,8 +5655,7 @@ public:
     }
 
     /*!
-     *  \brief Try get parsed argument value as 2D deque, list, vector
-     *  of containers.
+     *  \brief Try get parsed argument value as 2D stl containers.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
