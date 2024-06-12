@@ -4443,9 +4443,7 @@ private:
                       vec.begin(), static_cast<dtype>(size)), res.begin());
         return res;
     }
-#endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_11
     template <class... Ts, std::size_t... Idxs>
     static std::tuple<Ts...>
     mk_tuple(
@@ -4600,6 +4598,15 @@ private:
     }
 
     template <class T>
+    static T
+    get_custom_value(
+            value_type const& value)
+    {
+        return value.second.empty()
+                ? T() : as_type<T>(value.first, detail::_join(value.second()));
+    }
+
+    template <class T>
     static std::vector<T>
     get_vector(
             value_type const& value)
@@ -4613,7 +4620,59 @@ private:
         return res;
     }
 
+    template <class T>
+    static typename detail::enable_if<
+        detail::is_stl_matrix<typename detail::decay<T>::type>::value
+        && !detail::is_stl_array<typename detail::decay<T>::type>::value, T
+    >::type
+    get_matrix(
+            value_type const& value)
+    {
+        typedef typename T::value_type V;
+        typedef typename V::value_type VV;
+        T res;
+        for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
+            std::vector<VV> vector = as_subvector<VV>(
+                        value.first, value.second.sub_values(i));
+            push_to_container<T>(res, make_container<V>(vector));
+        }
+        return res;
+    }
+
 #ifdef _ARGPARSE_CXX_11
+    template <class T>
+    static typename detail::enable_if<
+        detail::is_stl_matrix<typename detail::decay<T>::type>::value
+        && detail::is_stl_array<typename detail::decay<T>::type>::value, T
+    >::type
+    get_matrix(
+            value_type const& value)
+    {
+        typedef typename T::value_type V;
+        typedef typename V::value_type VV;
+        T res;
+        if (res.size() != value.second.indexes().size()) {
+            std::cerr << "argparse error [skip]: array size mismatch: was "
+                      << res.size() << ", expected "
+                      << value.second.indexes().size() << std::endl;
+        }
+        auto size = res.size();
+        if (size > value.second.indexes().size()) {
+            size = value.second.indexes().size();
+        }
+        std::vector<V> vec;
+        vec.reserve(size);
+        for (std::size_t i = 0; i < size; ++i) {
+            std::vector<VV> vector = as_subvector<VV>(
+                        value.first, value.second.sub_values(i));
+            push_to_container<std::vector<V> >(vec, make_container<V>(vector));
+        }
+        typedef typename std::vector<V>::difference_type dtype;
+        std::move(vec.begin(), std::next(
+                      vec.begin(), static_cast<dtype>(size)), res.begin());
+        return res;
+    }
+
     template <class T, typename detail::enable_if<
                   detail::has_push_back<T>::value>::type* = nullptr>
     static void
@@ -4710,69 +4769,6 @@ private:
         container.push_front(value);
     }
 #endif  // C++11+
-
-    template <class T>
-    static typename detail::enable_if<
-        detail::is_stl_matrix<typename detail::decay<T>::type>::value
-        && !detail::is_stl_array<typename detail::decay<T>::type>::value, T
-    >::type
-    get_matrix(
-            value_type const& value)
-    {
-        typedef typename T::value_type V;
-        typedef typename V::value_type VV;
-        T res;
-        for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
-            std::vector<VV> vector = as_subvector<VV>(
-                        value.first, value.second.sub_values(i));
-            push_to_container<T>(res, make_container<V>(vector));
-        }
-        return res;
-    }
-
-#ifdef _ARGPARSE_CXX_11
-    template <class T>
-    static typename detail::enable_if<
-        detail::is_stl_matrix<typename detail::decay<T>::type>::value
-        && detail::is_stl_array<typename detail::decay<T>::type>::value, T
-    >::type
-    get_matrix(
-            value_type const& value)
-    {
-        typedef typename T::value_type V;
-        typedef typename V::value_type VV;
-        T res;
-        if (res.size() != value.second.indexes().size()) {
-            std::cerr << "argparse error [skip]: array size mismatch: was "
-                      << res.size() << ", expected "
-                      << value.second.indexes().size() << std::endl;
-        }
-        auto size = res.size();
-        if (size > value.second.indexes().size()) {
-            size = value.second.indexes().size();
-        }
-        std::vector<V> vec;
-        vec.reserve(size);
-        for (std::size_t i = 0; i < size; ++i) {
-            std::vector<VV> vector = as_subvector<VV>(
-                        value.first, value.second.sub_values(i));
-            push_to_container<std::vector<V> >(vec, make_container<V>(vector));
-        }
-        typedef typename std::vector<V>::difference_type dtype;
-        std::move(vec.begin(), std::next(
-                      vec.begin(), static_cast<dtype>(size)), res.begin());
-        return res;
-    }
-#endif  // C++11+
-
-    template <class T>
-    static T
-    get_custom_value(
-            value_type const& value)
-    {
-        return value.second.empty()
-                ? T() : as_type<T>(value.first, detail::_join(value.second()));
-    }
 
 #ifdef _ARGPARSE_CXX_17
     template <class T>
