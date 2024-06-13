@@ -1,6 +1,6 @@
 /*
-* Copyright (c) 2022-2023 Golubchikov Mihail <https://github.com/rue-ryuzaki>
-*/
+ * Copyright (c) 2022-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+ */
 
 #include <iostream>
 
