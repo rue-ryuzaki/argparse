@@ -76,6 +76,8 @@
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
+// -- features ----------------------------------------------------------------
+#undef _ARGPARSE_HAS_OPTIONAL
 
 // -- #define -----------------------------------------------------------------
 // -- version -----------------------------------------------------------------
@@ -240,6 +242,7 @@
 #ifdef _ARGPARSE_CXX_17
 #include <optional>
 #include <string_view>
+#define _ARGPARSE_HAS_OPTIONAL
 #endif  // C++17+
 
 #ifdef _ARGPARSE_INL
@@ -4770,7 +4773,7 @@ private:
     }
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
     template <class T>
     static std::optional<typename detail::enable_if<
         detail::is_string_ctor<T>::value, T>::type>
@@ -5082,7 +5085,7 @@ private:
         }
         return as_opt_type<T>(value.first, detail::_join(value.second()));
     }
-#endif  // C++17+
+#endif  // has optional
 
     // -- data ----------------------------------------------------------------
     map_type m_data;
@@ -5450,7 +5453,7 @@ public:
     std::string
     to_string() const;
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
     /*!
      *  \brief Try get parsed argument value as boolean, byte, floating point
      *  or string types.
@@ -5771,7 +5774,7 @@ public:
         }
         return _Storage::opt_custom_value<T>(args.value());
     }
-#endif  // C++17+
+#endif  // has optional
 
     /*!
      *  \brief Get unrecognized arguments
@@ -5803,11 +5806,11 @@ private:
     _Storage const&
     storage() const _ARGPARSE_NOEXCEPT;
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
     std::optional<_Storage::value_type>
     opt_data(
             std::string const& key) const;
-#endif  // C++17+
+#endif  // has optional
 
     // -- data ----------------------------------------------------------------
     _Storage m_storage;
@@ -7410,7 +7413,7 @@ public:
             Namespace const& space = Namespace()) const;
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
     /*!
      *  \brief Try parse command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
@@ -7674,7 +7677,7 @@ public:
     try_parse_known_intermixed_args(
             std::vector<std::string> const& args,
             Namespace const& space = Namespace()) const;
-#endif  // C++17+
+#endif  // has optional
 
     /*!
      *  \brief Check if environment variable with name exists (from envp[])
@@ -7932,14 +7935,14 @@ private:
             bool intermixed,
             Namespace const& space) const;
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
     std::optional<Namespace>
     on_try_parse_arguments(
             std::vector<std::string> const& args,
             bool only_known,
             bool intermixed,
             Namespace const& space) const;
-#endif  // C++17+
+#endif  // has optional
 
     std::vector<std::string>
     read_args_from_file(
@@ -13004,7 +13007,7 @@ Namespace::storage() const _ARGPARSE_NOEXCEPT
     return m_storage;
 }
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
 _ARGPARSE_INL std::optional<_Storage::value_type>
 Namespace::opt_data(
         std::string const& key) const
@@ -13015,7 +13018,7 @@ Namespace::opt_data(
     }
     return std::nullopt;
 }
-#endif  // C++17+
+#endif  // has optional
 
 // -- _ParserGroup ------------------------------------------------------------
 _ARGPARSE_INL
@@ -14493,7 +14496,7 @@ ArgumentParser::parse_known_intermixed_args(
 }
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
 _ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_args(
         Namespace const& space) const
@@ -14619,7 +14622,7 @@ ArgumentParser::try_parse_known_intermixed_args(
 {
     return on_try_parse_arguments(args, true, true, space);
 }
-#endif  // C++17+
+#endif  // has optional
 
 _ARGPARSE_INL bool
 ArgumentParser::has_env(
@@ -14909,7 +14912,7 @@ ArgumentParser::on_parse_arguments(
     std::exit(1);
 }
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
 _ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::on_try_parse_arguments(
         std::vector<std::string> const& args,
@@ -14926,7 +14929,7 @@ ArgumentParser::on_try_parse_arguments(
     }
     return std::nullopt;
 }
-#endif  // C++17+
+#endif  // has optional
 
 _ARGPARSE_INL std::vector<std::string>
 ArgumentParser::read_args_from_file(
@@ -16600,5 +16603,7 @@ ArgumentParser::parse_handle(
 #undef _ARGPARSE_NULLPTR
 #undef _ARGPARSE_OVERRIDE
 #undef _ARGPARSE_USE_CONSTEXPR
+// -- features ----------------------------------------------------------------
+#undef _ARGPARSE_HAS_OPTIONAL
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
