@@ -30,9 +30,9 @@ TEST_CASE("1. type name", "[detail]")
         REQUIRE(argparse::detail::Type::name<float>() == "float");
         REQUIRE(argparse::detail::Type::name<double>() == "double");
         REQUIRE(argparse::detail::Type::name<std::string>() == "std::string");
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_STRING_VIEW
         REQUIRE(argparse::detail::Type::name<std::string_view>() == "std::string");
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_STRING_VIEW
 
 #ifdef _ARGPARSE_CXX_11
         REQUIRE(argparse::detail::Type::name<std::array<int, 1> >() == "std::array<int, 1>");
@@ -89,9 +89,9 @@ TEST_CASE("1. type name", "[detail]")
         REQUIRE(argparse::detail::Type::basic<float>() == "float");
         REQUIRE(argparse::detail::Type::basic<double>() == "double");
         REQUIRE(argparse::detail::Type::basic<std::string>() == "std::string");
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_STRING_VIEW
         REQUIRE(argparse::detail::Type::basic<std::string_view>() == "std::string");
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_STRING_VIEW
 
 #ifdef _ARGPARSE_CXX_11
         REQUIRE(argparse::detail::Type::basic<std::array<int, 1> >() == "int");

@@ -143,12 +143,12 @@ TEST_CASE("1. optional arguments", "[argument_parser]")
         std::string non_exist = "baz";
         REQUIRE(args.exists(non_exist) == false);
         REQUIRE_THROWS(args.get<std::string>(non_exist));
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args.try_get<std::string>("foo").operator bool() == false);
         REQUIRE(args.try_get<std::string>("bar").operator bool() == true);
         REQUIRE(args.try_get<std::string>("bar").value() == bar);
         REQUIRE(args.try_get<std::vector<std::string> >(non_exist).operator bool() == false);
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
     }
 }
 

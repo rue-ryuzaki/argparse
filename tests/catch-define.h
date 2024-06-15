@@ -39,6 +39,11 @@
 #endif  // C++23+
 #endif  // _MSVC_LANG
 
+#ifdef _ARGPARSE_CXX_17
+#define _ARGPARSE_HAS_OPTIONAL
+#define _ARGPARSE_HAS_STRING_VIEW
+#endif  // C++17+
+
 #ifdef _ARGPARSE_CXX_11
 #include <catch2/catch.hpp>
 #else

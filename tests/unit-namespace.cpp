@@ -801,10 +801,10 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args0.get<std::map<std::string, std::string> >("foo").size() == 0);
         REQUIRE(args0.get<std::map<std::string, std::string> >("bar").size() == 0);
 #endif  // C++11+
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
         REQUIRE(args0.try_get<std::string>("bar").operator bool() == false);
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
         // delimiter ':'
         argparse::Namespace args1 = parser.parse_args(_make_vec("--foo=key:value"));
@@ -819,7 +819,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args1.get<std::map<std::string, std::string> >("bar", ':').size() == 0);
         REQUIRE(args1.get<std::map<std::string, std::string> >("foo", ':').at("key") == "value");
 #endif  // C++11+
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("bar").operator bool() == false);
         REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
@@ -827,7 +827,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args1.try_get<std::vector<std::string> >("bar")->size() == 0);
         REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->size() == 1);
         REQUIRE(args1.try_get<std::map<std::string, std::string> >("foo", ':')->at("key") == "value");
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
         // delimiter '=', std::unordered_map
         argparse::Namespace args2
@@ -845,7 +845,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key1") == "value1");
         REQUIRE(args2.get<std::unordered_map<std::string, std::string> >("bar").at("key2") == "value2");
 #endif  // C++11+
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args2.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args2.try_get<std::string>("bar").operator bool() == false);
         REQUIRE(args2.try_get<std::string>("foo").value() == "key=value");
@@ -856,7 +856,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("foo")->at("key") == "value");
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key1") == "value1");
         REQUIRE(args2.try_get<std::unordered_map<std::string, std::string> >("bar")->at("key2") == "value2");
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
         // delimiter '=', std::multimap
         argparse::Namespace args3
@@ -875,7 +875,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("foo").count("key") == 1);
         REQUIRE(args3.get<std::multimap<std::string, std::string> >("bar").count("key") == 2);
 #endif  // C++11+
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args3.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args3.try_get<std::string>("bar").operator bool() == false);
         REQUIRE(args3.try_get<std::string>("foo").value() == "key=value");
@@ -887,7 +887,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->size() == 2);
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("foo")->count("key") == 1);
         REQUIRE(args3.try_get<std::multimap<std::string, std::string> >("bar")->count("key") == 2);
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
     }
 
     SECTION("4.2. paired types") {
@@ -899,9 +899,9 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args0.exists("foo") == false);
         REQUIRE(args0.get<std::string>("foo") == "");
         REQUIRE(args0.get<std::vector<std::string> >("foo").size() == 0);
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args0.try_get<std::string>("foo").operator bool() == false);
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
         // delimiter ':'
         argparse::Namespace args1 = parser.parse_args(_make_vec("--foo=key:value"));
@@ -910,13 +910,13 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args1.get<std::vector<std::string> >("foo").size() == 1);
         REQUIRE((args1.get<std::pair<std::string, std::string> >("foo", ':').first == "key"));
         REQUIRE((args1.get<std::pair<std::string, std::string> >("foo", ':').second == "value"));
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("foo").value() == "key:value");
         REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
         REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->first == "key");
         REQUIRE(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->second == "value");
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
         // empty values
         std::pair<std::string, std::string> pair_first
@@ -939,11 +939,11 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(args2.get<std::vector<std::string> >("foo").size() == 2);
         REQUIRE((args2.get<std::pair<std::string, std::string> >("foo", ' ').first == "key"));
         REQUIRE((args2.get<std::pair<std::string, std::string> >("foo", ' ').second == "value"));
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 2);
         REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->first == "key");
         REQUIRE(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->second == "value");
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
     }
 
 #ifdef _ARGPARSE_CXX_11
@@ -966,7 +966,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(std::get<0>(tuple1) == 1);
         REQUIRE(std::get<1>(tuple1) == "value");
         REQUIRE(std::get<2>(tuple1) == 3);
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args1.try_get<std::string>("foo").operator bool() == true);
         REQUIRE(args1.try_get<std::string>("foo").value() == "1:value:3");
         REQUIRE(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
@@ -974,7 +974,7 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(std::get<0>(try_tuple1.value()) == 1);
         REQUIRE(std::get<1>(try_tuple1.value()) == "value");
         REQUIRE(std::get<2>(try_tuple1.value()) == 3);
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
         // empty values
         auto tuple1beg = parser.parse_args("--foo=:value:3")
@@ -1006,13 +1006,13 @@ TEST_CASE("4. value types check", "[namespace]")
         REQUIRE(std::get<0>(tuple2) == 1);
         REQUIRE(std::get<1>(tuple2) == "value");
         REQUIRE(std::get<2>(tuple2) == 3);
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_OPTIONAL
         REQUIRE(args2.try_get<std::vector<std::string> >("foo")->size() == 3);
         auto try_tuple2 = args2.try_get<std::tuple<int, std::string, int> >("foo", ' ');
         REQUIRE(std::get<0>(try_tuple2.value()) == 1);
         REQUIRE(std::get<1>(try_tuple2.value()) == "value");
         REQUIRE(std::get<2>(try_tuple2.value()) == 3);
-#endif  // C++17+
+#endif  // _ARGPARSE_HAS_OPTIONAL
     }
 #endif  // C++11+
 }
