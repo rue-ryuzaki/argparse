@@ -78,7 +78,7 @@
 #undef _ARGPARSE_USE_CONSTEXPR
 // -- features ----------------------------------------------------------------
 #undef _ARGPARSE_HAS_OPTIONAL
-#undef _ARGPARSE_HAS_STRINGVIEW
+#undef _ARGPARSE_HAS_STRING_VIEW
 
 // -- #define -----------------------------------------------------------------
 // -- version -----------------------------------------------------------------
@@ -241,17 +241,22 @@
 #include <vector>
 
 #ifdef _ARGPARSE_CXX_17
-#include <optional>
-#include <string_view>
 #define _ARGPARSE_HAS_OPTIONAL
-#define _ARGPARSE_HAS_STRINGVIEW
+#define _ARGPARSE_HAS_STRING_VIEW
 #endif  // C++17+
+
+#ifdef _ARGPARSE_HAS_OPTIONAL
+#include <optional>
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
 #ifdef _ARGPARSE_INL
 #include <fstream>
 #ifdef _ARGPARSE_CXX_11
 #include <regex>
 #endif  // C++11+
+#ifdef _ARGPARSE_HAS_STRING_VIEW
+#include <string_view>
+#endif  // _ARGPARSE_HAS_STRING_VIEW
 #endif  // _ARGPARSE_INL
 
 // -- attributes --------------------------------------------------------------
@@ -5089,7 +5094,7 @@ private:
         }
         return as_opt_type<T>(value.first, detail::_join(value.second()));
     }
-#endif  // has optional
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
     // -- data ----------------------------------------------------------------
     map_type m_data;
@@ -5778,7 +5783,7 @@ public:
         }
         return _Storage::opt_custom_value<T>(args.value());
     }
-#endif  // has optional
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
     /*!
      *  \brief Get unrecognized arguments
@@ -5814,7 +5819,7 @@ private:
     std::optional<_Storage::value_type>
     opt_data(
             std::string const& key) const;
-#endif  // has optional
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
     // -- data ----------------------------------------------------------------
     _Storage m_storage;
@@ -7681,7 +7686,7 @@ public:
     try_parse_known_intermixed_args(
             std::vector<std::string> const& args,
             Namespace const& space = Namespace()) const;
-#endif  // has optional
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
     /*!
      *  \brief Check if environment variable with name exists (from envp[])
@@ -7946,7 +7951,7 @@ private:
             bool only_known,
             bool intermixed,
             Namespace const& space) const;
-#endif  // has optional
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
     std::vector<std::string>
     read_args_from_file(
@@ -9152,7 +9157,7 @@ _trim_copy(
     return res;
 }
 
-#ifdef _ARGPARSE_HAS_STRINGVIEW
+#ifdef _ARGPARSE_HAS_STRING_VIEW
 _ARGPARSE_INL std::string_view
 _trim_sw(
         std::string const& str)
@@ -9181,7 +9186,7 @@ _trim_sw(
 {
     return _trim_copy(str);
 }
-#endif  // has string_view
+#endif  // _ARGPARSE_HAS_STRING_VIEW
 
 _ARGPARSE_INL std::string
 _file_name(
@@ -9306,7 +9311,7 @@ _flag_name(
                       static_cast<std::size_t>(std::distance(it, str.end())));
 }
 
-#ifdef _ARGPARSE_HAS_STRINGVIEW
+#ifdef _ARGPARSE_HAS_STRING_VIEW
 _ARGPARSE_INL std::string_view
 _flag_name(
         std::string_view str)
@@ -9318,18 +9323,18 @@ _flag_name(
     return str.substr(static_cast<std::size_t>(std::distance(str.begin(), it)),
                       static_cast<std::size_t>(std::distance(it, str.end())));
 }
-#endif  // has string_view
+#endif  // _ARGPARSE_HAS_STRING_VIEW
 
 _ARGPARSE_INL bool
 _is_flag_correct(
         std::string const& str,
         bool is_optional)
 {
-#ifdef _ARGPARSE_HAS_STRINGVIEW
+#ifdef _ARGPARSE_HAS_STRING_VIEW
     std::string_view trimmed = _trim_sw(str);
 #else
     std::string trimmed = _trim_copy(str);
-#endif  // has string_view
+#endif  // _ARGPARSE_HAS_STRING_VIEW
     if (trimmed.size() != str.size()) {
         return false;
     }
@@ -13022,7 +13027,7 @@ Namespace::opt_data(
     }
     return std::nullopt;
 }
-#endif  // has optional
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
 // -- _ParserGroup ------------------------------------------------------------
 _ARGPARSE_INL
@@ -14626,7 +14631,7 @@ ArgumentParser::try_parse_known_intermixed_args(
 {
     return on_try_parse_arguments(args, true, true, space);
 }
-#endif  // has optional
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
 _ARGPARSE_INL bool
 ArgumentParser::has_env(
@@ -14933,7 +14938,7 @@ ArgumentParser::on_try_parse_arguments(
     }
     return std::nullopt;
 }
-#endif  // has optional
+#endif  // _ARGPARSE_HAS_OPTIONAL
 
 _ARGPARSE_INL std::vector<std::string>
 ArgumentParser::read_args_from_file(
@@ -16609,6 +16614,6 @@ ArgumentParser::parse_handle(
 #undef _ARGPARSE_USE_CONSTEXPR
 // -- features ----------------------------------------------------------------
 #undef _ARGPARSE_HAS_OPTIONAL
-#undef _ARGPARSE_HAS_STRINGVIEW
+#undef _ARGPARSE_HAS_STRING_VIEW
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
