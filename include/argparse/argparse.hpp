@@ -4493,7 +4493,8 @@ private:
         if (size != 1) {
             throw TypeError("got a data-array for argument '" + name + "'");
         }
-        auto vals = detail::_split(*(beg), std::string(1, sep), tuple_sz - 1);
+        auto vals = detail::_split(*(beg), std::string(1, sep),
+                                   static_cast<int32_t>(tuple_sz) - 1);
         vals.resize(tuple_sz);
         return gen_tuple(key, detail::type_tag<T>{}, vals);
     }
@@ -4945,7 +4946,8 @@ private:
         if (size != 1) {
             return std::nullopt;
         }
-        auto vals = detail::_split(*(beg), std::string(1, sep), tuple_sz - 1);
+        auto vals = detail::_split(*(beg), std::string(1, sep),
+                                   static_cast<int32_t>(tuple_sz) - 1);
         vals.resize(tuple_sz);
         return gen_opt_tuple(key, detail::type_tag<T>{}, vals);
     }
