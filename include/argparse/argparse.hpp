@@ -78,6 +78,7 @@
 #undef _ARGPARSE_USE_CONSTEXPR
 // -- features ----------------------------------------------------------------
 #undef _ARGPARSE_HAS_OPTIONAL
+#undef _ARGPARSE_HAS_STRINGVIEW
 
 // -- #define -----------------------------------------------------------------
 // -- version -----------------------------------------------------------------
@@ -243,6 +244,7 @@
 #include <optional>
 #include <string_view>
 #define _ARGPARSE_HAS_OPTIONAL
+#define _ARGPARSE_HAS_STRINGVIEW
 #endif  // C++17+
 
 #ifdef _ARGPARSE_INL
@@ -9148,7 +9150,7 @@ _trim_copy(
     return res;
 }
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_STRINGVIEW
 _ARGPARSE_INL std::string_view
 _trim_sw(
         std::string const& str)
@@ -9177,7 +9179,7 @@ _trim_sw(
 {
     return _trim_copy(str);
 }
-#endif  // C++17+
+#endif  // has string_view
 
 _ARGPARSE_INL std::string
 _file_name(
@@ -9302,7 +9304,7 @@ _flag_name(
                       static_cast<std::size_t>(std::distance(it, str.end())));
 }
 
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_STRINGVIEW
 _ARGPARSE_INL std::string_view
 _flag_name(
         std::string_view str)
@@ -9314,18 +9316,18 @@ _flag_name(
     return str.substr(static_cast<std::size_t>(std::distance(str.begin(), it)),
                       static_cast<std::size_t>(std::distance(it, str.end())));
 }
-#endif  // C++17+
+#endif  // has string_view
 
 _ARGPARSE_INL bool
 _is_flag_correct(
         std::string const& str,
         bool is_optional)
 {
-#ifdef _ARGPARSE_CXX_17
+#ifdef _ARGPARSE_HAS_STRINGVIEW
     std::string_view trimmed = _trim_sw(str);
 #else
     std::string trimmed = _trim_copy(str);
-#endif  // C++17+
+#endif  // has string_view
     if (trimmed.size() != str.size()) {
         return false;
     }
@@ -16605,5 +16607,6 @@ ArgumentParser::parse_handle(
 #undef _ARGPARSE_USE_CONSTEXPR
 // -- features ----------------------------------------------------------------
 #undef _ARGPARSE_HAS_OPTIONAL
+#undef _ARGPARSE_HAS_STRINGVIEW
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
