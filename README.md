@@ -18,10 +18,9 @@ Python-like argument parser for C++ projects (with similar syntax).
 
 This project is a C++ adaptation of Python argparse and supports most of its features (actions, nargs, subparsers, argument groups, help formatting, auto-generated usage and help, and more).
 ## Supported compilers
-C++ support compiler:
- - gcc: 3.4 (ubuntu 8.04) or higher
- - clang: 2.7 (ubuntu 10.04) or higher
- - msvc: no actual data
+C++ support compiler (see [C++ standard support](https://github.com/rue-ryuzaki/argparse/blob/develop/COMPILERS.md)):
+ - gcc: 4.4 or higher
+ - clang: 2.7 or higher
  - other compilers: no actual data
 
 The work of the parser on older versions of compilers is not guaranteed.
