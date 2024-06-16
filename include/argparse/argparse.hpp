@@ -1020,6 +1020,12 @@ struct is_string_ctor
 };
 
 template <class T, class = void>
+struct has_value_type                      { static const bool value = false; };
+template <class T>
+struct has_value_type<T, typename voider<
+             typename T::value_type>::type> { static const bool value = true; };
+
+template <class T, class = void>
 struct has_sub_string_ctor                 { static const bool value = false; };
 template <class T>
 struct has_sub_string_ctor<T, typename voider<typename T::value_type>::type>
@@ -4783,56 +4789,32 @@ private:
 
 #ifdef _ARGPARSE_HAS_OPTIONAL
     template <class T>
-    static std::optional<typename detail::enable_if<
-        detail::is_string_ctor<T>::value, T>::type>
+    static std::optional<T>
     to_opt_type(
             std::string const& data)
     {
-        return T(data);
-    }
-
-    template <class T>
-    static std::optional<typename detail::enable_if<
-        detail::is_same<bool, T>::value, T>::type>
-    to_opt_type(
-            std::string const& data) _ARGPARSE_NOEXCEPT
-    {
-        return detail::_string_to_bool(data);
-    }
-
-    template <class T>
-    static std::optional<typename detail::enable_if<
-        detail::is_byte_type<T>::value, T>::type>
-    to_opt_type(
-            std::string const& data) _ARGPARSE_NOEXCEPT
-    {
-        if (data.size() != 1) {
-            return std::nullopt;
+        if constexpr (detail::is_string_ctor<T>::value) {
+            return T(data);
         }
-        return static_cast<T>(data.front());
-    }
-
-    template <class T>
-    static std::optional<typename detail::enable_if<
-      detail::has_operator_in<T>::value && need_operator_in<T>::value, T>::type>
-    to_opt_type(
-            std::string const& data)
-    {
-        T res{};
-        std::stringstream ss(data);
-        ss >> res;
-        if (ss.fail() || !ss.eof()) {
-            return std::nullopt;
+        if constexpr (detail::is_same<bool, T>::value) {
+            return detail::_string_to_bool(data);
         }
-        return res;
-    }
-
-    template <class T>
-    static std::optional<typename detail::enable_if<
-     !detail::has_operator_in<T>::value && need_operator_in<T>::value, T>::type>
-    to_opt_type(
-            std::string const&) _ARGPARSE_NOEXCEPT
-    {
+        if constexpr (detail::is_byte_type<T>::value) {
+            if (data.size() != 1) {
+                return std::nullopt;
+            }
+            return static_cast<T>(data.front());
+        }
+        if constexpr (detail::has_operator_in<T>::value
+                && need_operator_in<T>::value) {
+            T res{};
+            std::stringstream ss(data);
+            ss >> res;
+            if (ss.fail() || !ss.eof()) {
+                return std::nullopt;
+            }
+            return res;
+        }
         return std::nullopt;
     }
 
@@ -4983,27 +4965,7 @@ private:
         return res;
     }
 
-    template <class T, typename detail::enable_if<
-                  simple_element<T>::value>::type* = nullptr>
-    static std::optional<std::vector<T> >
-    as_opt_subvector(
-            key_type const& key,
-            std::vector<std::string> const& vs)
-    {
-        std::vector<T> res;
-        res.reserve(vs.size());
-        for (auto const& value : vs) {
-            auto el = as_opt_type<T>(key, value);
-            if (!el.has_value()) {
-                return std::nullopt;
-            }
-            res.emplace_back(el.value());
-        }
-        return res;
-    }
-
-    template <class T, typename detail::enable_if<
-                  !simple_element<T>::value>::type* = nullptr>
+    template <class T>
     static std::optional<std::vector<T> >
     as_opt_subvector(
             key_type const& key,
@@ -5013,24 +4975,35 @@ private:
         if (vs.empty()) {
             return res;
         }
-        std::size_t st = 1;
-        if ((key->action() & detail::_store_action)
-                && (key->m_nargs & Argument::_NARGS_COMBINED)) {
-            st = key->m_num_args;
-        }
-        if (st == 0 || vs.size() % st != 0) {
-            return std::nullopt;
-        }
-        res.reserve(vs.size() / st);
-        for (std::size_t i = 0; i < vs.size(); i += st) {
-            std::vector<std::string> values(
-                        vs.begin() + static_cast<dtype>(i),
-                        vs.begin() + static_cast<dtype>(i + st));
-            auto el = as_opt_type<T>(key, detail::_join(values));
-            if (!el.has_value()) {
+        if constexpr (simple_element<T>::value) {
+            res.reserve(vs.size());
+            for (auto const& value : vs) {
+                auto el = as_opt_type<T>(key, value);
+                if (!el.has_value()) {
+                    return std::nullopt;
+                }
+                res.emplace_back(el.value());
+            }
+        } else {
+            std::size_t st = 1;
+            if ((key->action() & detail::_store_action)
+                    && (key->m_nargs & Argument::_NARGS_COMBINED)) {
+                st = key->m_num_args;
+            }
+            if (st == 0 || vs.size() % st != 0) {
                 return std::nullopt;
             }
-            res.emplace_back(el.value());
+            res.reserve(vs.size() / st);
+            for (std::size_t i = 0; i < vs.size(); i += st) {
+                std::vector<std::string> values(
+                            vs.begin() + static_cast<dtype>(i),
+                            vs.begin() + static_cast<dtype>(i + st));
+                auto el = as_opt_type<T>(key, detail::_join(values));
+                if (!el.has_value()) {
+                    return std::nullopt;
+                }
+                res.emplace_back(el.value());
+            }
         }
         return res;
     }
@@ -5464,8 +5437,8 @@ public:
 
 #ifdef _ARGPARSE_HAS_OPTIONAL
     /*!
-     *  \brief Try get parsed argument value as boolean, byte, floating point
-     *  or string types.
+     *  \brief Try get parsed argument value as boolean, byte, floating point,
+     *  integer, string, stl container, 2D stl container or custom types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
      *
@@ -5476,312 +5449,161 @@ public:
     template <class T>
     _ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
-        detail::is_string_ctor<T>::value
-        || std::is_floating_point<T>::value
-        || std::is_same<bool, T>::value
-        || detail::is_byte_type<T>::value, T>::type>
-    try_get(std::string const& key) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::name<T>())) {
-            return std::nullopt;
-        }
-        return _Storage::opt_single_value<T>(args.value());
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as integer types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        std::is_integral<T>::value
-        && !std::is_same<bool, T>::value
-        && !detail::is_byte_type<T>::value, T>::type>
-    try_get(std::string const& key) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::name<T>())) {
-            return std::nullopt;
-        }
-        if (args->first->action() == argparse::count) {
-            return static_cast<T>(args->second.size());
-        }
-        return _Storage::opt_single_value<T>(args.value());
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as stl container types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        (detail::is_stl_container<typename std::decay<T>::type>::value
-        && !detail::is_stl_container_paired<typename std::decay<T>::type>::value
+        !detail::is_stl_container_paired<typename std::decay<T>::type>::value
         && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
-        && !detail::is_stl_matrix<typename std::decay<T>::type>::value)
-        || ((detail::is_stl_array<typename std::decay<T>::type>::value
-             || detail::is_stl_queue<typename std::decay<T>::type>::value)
-        && !detail::is_stl_matrix<typename std::decay<T>::type>::value),
-    T>::type>
-    try_get(std::string const& key) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::basic<T>())) {
-            return std::nullopt;
-        }
-        auto vector = _Storage::opt_vector<
-                typename T::value_type>(args.value());
-        if (!vector.has_value()) {
-            return std::nullopt;
-        }
-        return _Storage::make_container<T>(vector.value());
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as paired container types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        detail::is_stl_container_paired<typename std::decay<T>::type>::value,
-    T>::type>
-    try_get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::basic<T>())) {
-            return std::nullopt;
-        }
-        typedef typename T::value_type::first_type K;
-        typedef typename T::value_type::second_type V;
-        auto vector = _Storage::as_opt_vector_pair<K, V>(args.value(), sep);
-        if (!vector.has_value()) {
-            return std::nullopt;
-        }
-        return _Storage::make_container<T>(vector.value());
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as tupled container types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        detail::is_stl_container_tupled<typename std::decay<T>::type>::value,
-    T>::type>
-    try_get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::basic<T>())) {
-            return std::nullopt;
-        }
-        auto vector = _Storage::as_opt_vector_tuple<typename T::value_type>(
-                    args.value(), sep);
-        if (!vector.has_value()) {
-            return std::nullopt;
-        }
-        return _Storage::make_container<T>(vector.value());
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as mapped types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        detail::is_stl_map<typename std::decay<T>::type>::value, T>::type>
-    try_get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::basic<T>())) {
-            return std::nullopt;
-        }
-        typedef typename T::key_type K;
-        typedef typename T::mapped_type V;
-        T res{};
-        auto vector = _Storage::as_opt_vector_pair<K, V>(args.value(), sep);
-        if (!vector.has_value()) {
-            return std::nullopt;
-        }
-        for (auto const& pair : vector.value()) {
-            res.emplace(std::make_pair(pair.first, pair.second));
-        }
-        return res;
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as 2D stl containers.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        detail::is_stl_matrix<typename std::decay<T>::type>::value,
-    T>::type>
-    try_get(std::string const& key) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() != argparse::append
-                || !(args->first->m_nargs
-                     & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
-                        | Argument::ZERO_OR_MORE))
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::basic<T>())) {
-            return std::nullopt;
-        }
-        return _Storage::opt_matrix<T>(args.value());
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as paired types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        detail::is_stl_pair<typename std::decay<T>::type>::value, T>::type>
-    try_get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || args->second.empty()
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::name<T>())) {
-            return std::nullopt;
-        }
-        typedef typename T::first_type K;
-        typedef typename T::second_type V;
-        return _Storage::as_opt_pair<K, V>(
-                args->first, args->second().begin(), args->second().end(), sep);
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as tuple types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
-    try_get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || args->second.empty()
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::name<T>())) {
-            return std::nullopt;
-        }
-        return _Storage::as_opt_tuple<T>(
-                args->first, args->second().begin(), args->second().end(), sep);
-    }
-
-    /*!
-     *  \brief Try get parsed argument value as custom type.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value or std::nullopt
-     */
-    template <class T>
-    _ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        !detail::is_string_ctor<T>::value
-        && !std::is_floating_point<T>::value
-        && !std::is_integral<T>::value
-        && !detail::is_stl_array<typename std::decay<T>::type>::value
-        && !detail::is_stl_container<typename std::decay<T>::type>::value
         && !detail::is_stl_map<typename std::decay<T>::type>::value
         && !detail::is_stl_pair<typename std::decay<T>::type>::value
-        && !detail::is_stl_queue<typename std::decay<T>::type>::value
         && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
     try_get(std::string const& key) const
     {
         auto args = opt_data(key);
-        if (!args.has_value()
-                || args->first->action() == argparse::count
-                || !detail::_is_type_correct(args->first->type_name(),
-                                             detail::Type::name<T>())) {
+        if (!args.has_value()) {
             return std::nullopt;
         }
-        return _Storage::opt_custom_value<T>(args.value());
+        if constexpr (detail::has_value_type<T>::value
+                && !detail::is_string_ctor<T>::value) {
+            if (!detail::_is_type_correct(args->first->type_name(),
+                                          detail::Type::basic<T>())) {
+                return std::nullopt;
+            }
+        } else {
+            if (!detail::_is_type_correct(args->first->type_name(),
+                                          detail::Type::name<T>())) {
+                return std::nullopt;
+            }
+        }
+        if constexpr (std::is_integral<T>::value
+                && !std::is_same<bool, T>::value
+                && !detail::is_byte_type<T>::value) {
+            if (args->first->action() == argparse::count) {
+                return static_cast<T>(args->second.size());
+            }
+            return _Storage::opt_single_value<T>(args.value());
+        }
+        if (args->first->action() == argparse::count) {
+            return std::nullopt;
+        }
+        if constexpr (detail::is_stl_matrix<
+                typename std::decay<T>::type>::value) {
+            if (args->first->action() != argparse::append
+                    || !(args->first->m_nargs
+                         & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
+                            | Argument::ZERO_OR_MORE))) {
+                return std::nullopt;
+            }
+            return _Storage::opt_matrix<T>(args.value());
+        }
+        if constexpr ((detail::is_stl_container<
+                    typename std::decay<T>::type>::value
+                && !detail::is_stl_container_paired<
+                    typename std::decay<T>::type>::value
+                && !detail::is_stl_container_tupled<
+                    typename std::decay<T>::type>::value
+                && !detail::is_stl_matrix<typename std::decay<T>::type>::value)
+                || ((detail::is_stl_array<typename std::decay<T>::type>::value
+                   || detail::is_stl_queue<typename std::decay<T>::type>::value)
+              && !detail::is_stl_matrix<typename std::decay<T>::type>::value)) {
+            auto vector = _Storage::opt_vector<
+                    typename T::value_type>(args.value());
+            if (!vector.has_value()) {
+                return std::nullopt;
+            }
+            return _Storage::make_container<T>(vector.value());
+        } else {
+            if constexpr (detail::is_string_ctor<T>::value
+                    || std::is_floating_point<T>::value
+                    || std::is_same<bool, T>::value
+                    || detail::is_byte_type<T>::value) {
+                return _Storage::opt_single_value<T>(args.value());
+            } else {
+                return _Storage::opt_custom_value<T>(args.value());
+            }
+        }
+    }
+
+    /*!
+     *  \brief Try get parsed argument value as paired container,
+     *  tupled container, mapped, paired or tuple types.
+     *  If invalid type, argument not exists, not parsed or can't be parsed,
+     *  returns std::nullopt.
+     *
+     *  \param key Argument destination name or flag
+     *  \param sep Separator (default: '=')
+     *
+     *  \return Parsed argument value or std::nullopt
+     */
+    template <class T>
+    _ARGPARSE_ATTR_NODISCARD
+    std::optional<typename std::enable_if<
+        detail::is_stl_container_paired<typename std::decay<T>::type>::value
+        || detail::is_stl_container_tupled<typename std::decay<T>::type>::value
+        || detail::is_stl_map<typename std::decay<T>::type>::value
+        || detail::is_stl_pair<typename std::decay<T>::type>::value
+        || detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
+    try_get(std::string const& key,
+            char sep = detail::_equal) const
+    {
+        auto args = opt_data(key);
+        if (!args.has_value() || args->first->action() == argparse::count) {
+            return std::nullopt;
+        }
+        if constexpr (detail::has_value_type<T>::value) {
+            if (!detail::_is_type_correct(args->first->type_name(),
+                                          detail::Type::basic<T>())) {
+                return std::nullopt;
+            }
+        } else {
+            if (args->second.empty()
+                    || !detail::_is_type_correct(args->first->type_name(),
+                                                 detail::Type::name<T>())) {
+                return std::nullopt;
+            }
+        }
+        if constexpr (detail::is_stl_container_paired<
+                typename std::decay<T>::type>::value) {
+            auto vector = _Storage::as_opt_vector_pair<
+                    typename T::value_type::first_type,
+                    typename T::value_type::second_type>(args.value(), sep);
+            if (!vector.has_value()) {
+                return std::nullopt;
+            }
+            return _Storage::make_container<T>(vector.value());
+        }
+        if constexpr (detail::is_stl_container_tupled<
+                typename std::decay<T>::type>::value) {
+            auto vector = _Storage::as_opt_vector_tuple<
+                    typename T::value_type>(args.value(), sep);
+            if (!vector.has_value()) {
+                return std::nullopt;
+            }
+            return _Storage::make_container<T>(vector.value());
+        }
+        if constexpr (detail::is_stl_map<typename std::decay<T>::type>::value) {
+            T res{};
+            auto vector = _Storage::as_opt_vector_pair<
+              typename T::key_type, typename T::mapped_type>(args.value(), sep);
+            if (!vector.has_value()) {
+                return std::nullopt;
+            }
+            for (auto const& pair : vector.value()) {
+                res.emplace(std::make_pair(pair.first, pair.second));
+            }
+            return res;
+        }
+        if constexpr (detail::is_stl_pair<
+                typename std::decay<T>::type>::value) {
+            return _Storage::as_opt_pair<typename T::first_type,
+                                         typename T::second_type>(
+                        args->first, args->second().begin(),
+                        args->second().end(), sep);
+        }
+        if constexpr (detail::is_stl_tuple<
+                typename std::decay<T>::type>::value) {
+            return _Storage::as_opt_tuple<T>(
+                        args->first, args->second().begin(),
+                        args->second().end(), sep);
+        }
+        return std::nullopt;
     }
 #endif  // _ARGPARSE_HAS_OPTIONAL
 
