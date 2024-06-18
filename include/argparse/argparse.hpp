@@ -224,8 +224,6 @@
 #include <unordered_map>
 #else
 #include <stdint.h>
-
-#include <cassert>
 #endif  // C++11+
 
 #include <cctype>
