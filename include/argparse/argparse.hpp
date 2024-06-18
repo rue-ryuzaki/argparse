@@ -9089,11 +9089,7 @@ _contains_substr(
         std::string const& str,
         std::string const& substr)
 {
-#ifdef _ARGPARSE_CXX_23
-    return str.contains(substr);
-#else
     return str.find(substr) != std::string::npos;
-#endif  // C++23+
 }
 
 _ARGPARSE_INL bool
@@ -9101,11 +9097,7 @@ _starts_with(
         std::string const& str,
         std::string const& value)
 {
-#ifdef _ARGPARSE_CXX_20
-    return str.starts_with(value);
-#else
     return str.compare(0, value.size(), value) == 0;
-#endif  // C++20+
 }
 
 _ARGPARSE_INL bool
@@ -9113,12 +9105,8 @@ _ends_with(
         std::string const& str,
         std::string const& value)
 {
-#ifdef _ARGPARSE_CXX_20
-    return str.ends_with(value);
-#else
     return str.size() >= value.size()
             && 0 == str.compare(str.size() - value.size(), value.size(), value);
-#endif  // C++20+
 }
 
 _ARGPARSE_INL std::string
