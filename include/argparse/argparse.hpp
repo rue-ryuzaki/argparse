@@ -16295,6 +16295,16 @@ ArgumentParser::test_argument_parser(
                    << "metavar tuple does not match nargs\n";
             }
         }
+        // check type
+        if (arg->m_type_name.has_value()) {
+            if (arg->m_type_name.value() == detail::Type::basic<bool>()
+                    && !(arg->action() & (detail::_bool_action
+                                          | argparse::BooleanOptionalAction))) {
+                ++diagnostics.first;
+                os << _warn << " " << argument << ": danger to use `bool` type "
+                   << "for non-boolean actions\n";
+            }
+        }
     }
     // check mutually exclusive arguments
     for (mtx_it i = p->m_mutex_groups.begin();
