@@ -8075,6 +8075,12 @@ private:
             std::string const& lang,
             std::ostream& os) const;
 
+    static void
+    overview_subparsers(
+            ArgumentParser const* parser,
+            std::string const& indent,
+            std::ostream& os);
+
     bool
     test_diagnostics(
             std::string const& lang,
@@ -16108,17 +16114,27 @@ ArgumentParser::test_overview(
         os << "output_width [default]: " << output_width() << "\n";
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
     }
-    if (has_subparsers()) {
-        std::list<pParser> const parsers = m_subparsers->list_parsers();
-        os << "subparsers list:\n";
+    overview_subparsers(this, std::string(), os);
+}
+
+_ARGPARSE_INL void
+ArgumentParser::overview_subparsers(
+        ArgumentParser const* parser,
+        std::string const& indent,
+        std::ostream& os)
+{
+    if (parser->has_subparsers()) {
+        std::list<pParser> const parsers = parser->m_subparsers->list_parsers();
+        os << indent << "subparsers list:\n";
         std::size_t i = 0;
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
-            os << "  " << (++i) << ". '" << (*it)->m_name << "'";
+            os << indent << "  " << (++i) << ". '" << (*it)->m_name << "'";
             std::string aliases = detail::_join((*it)->aliases(), ", ", "'");
             if (!aliases.empty()) {
                 os << ", aliases: " << aliases;
             }
             os << "\n";
+            overview_subparsers((*it).get(), indent + "  ", os);
         }
     }
 }
