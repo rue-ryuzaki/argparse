@@ -9942,7 +9942,7 @@ HelpFormatter::_print_parser_completion(
                         os, (*it).get(), prog + "_" + (*it)->m_name, false);
         }
     }
-    os << "function _" << prog << "()\n";
+    os << "_" << prog << "()\n";
     os << "{\n";
     if (p->has_subparsers()) {
         if (is_root) {
