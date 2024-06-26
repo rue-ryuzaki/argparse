@@ -634,7 +634,7 @@ struct _is_pointer_helper<T*>                                      :true_type{};
 template <class T>
 struct is_pointer
 {
-    static const bool value
+    static bool const value
                        = _is_pointer_helper<typename remove_cv<T>::type>::value;
 };
 
@@ -745,7 +745,7 @@ struct _is_constructible_impl
     template <class, class, class, class, class>
     static _no test(...);
 
-    static const bool value
+    static bool const value
               = (sizeof(test<T, AU_1, AU_2, AU_3, AU_4>(NULL)) == sizeof(_yes));
 };
 
@@ -774,7 +774,7 @@ struct _is_constructible_impl<T, AT_1, AT_2, AT_3, void>
     template <class, class, class, class>
     static _no test(...);
 
-    static const bool value
+    static bool const value
                     = (sizeof(test<T, AU_1, AU_2, AU_3>(NULL)) == sizeof(_yes));
 };
 
@@ -800,7 +800,7 @@ struct _is_constructible_impl<T, AT_1, AT_2, void, void>
     template <class, class, class>
     static _no test(...);
 
-    static const bool value
+    static bool const value
                           = (sizeof(test<T, AU_1, AU_2>(NULL)) == sizeof(_yes));
 };
 
@@ -823,7 +823,7 @@ struct _is_constructible_impl<T, AT_1, void, void, void>
     template <class, class>
     static _no test(...);
 
-    static const bool value = (sizeof(test<T, AU_1>(NULL)) == sizeof(_yes));
+    static bool const value = (sizeof(test<T, AU_1>(NULL)) == sizeof(_yes));
 };
 
 template <class T>
@@ -840,7 +840,7 @@ struct _is_constructible_impl<T, void, void, void, void>
     template <class>
     static _no test(...);
 
-    static const bool value = (sizeof(test<T>(NULL)) == sizeof(_yes));
+    static bool const value = (sizeof(test<T>(NULL)) == sizeof(_yes));
 };
 
 template <class T,
@@ -850,7 +850,7 @@ template <class T,
           class AT_4 = void>
 struct _is_constructible_impl_ptr
 {
-    static const bool value = false;
+    static bool const value = false;
 };
 
 template <class T, class AT_1>
@@ -864,14 +864,14 @@ struct _is_constructible_impl_ptr<T, AT_1,
     template <class>
     static _no test(...);
 
-    static const bool value
+    static bool const value
                    = (sizeof(test<T>(static_cast<AT_1>(NULL))) == sizeof(_yes));
 };
 
 template <class T>
 struct _is_constructible_impl_ptr<T, void, void, void, void>
 {
-    static const bool value = true;
+    static bool const value = true;
 };
 
 template <class T,
@@ -883,7 +883,7 @@ struct is_constructible
 {
     typedef typename _replace_array_with_pointer<T>::type U;
 
-    static const bool value = (
+    static bool const value = (
         is_pointer<typename remove_reference<U>::type>::value
                 ? _is_constructible_impl_ptr<U, AT_1, AT_2, AT_3, AT_4>::value
                 : _is_constructible_impl<U, AT_1, AT_2, AT_3, AT_4>::value
@@ -891,15 +891,15 @@ struct is_constructible
 };
 
 template <>
-struct is_constructible<std::string, _SUPPRESS >
+struct is_constructible<std::string, _SUPPRESS>
 {
-    static const bool value = false;
+    static bool const value = false;
 };
 
 template <>
 struct is_constructible<std::string, std::vector<std::string> >
 {
-    static const bool value = false;
+    static bool const value = false;
 };
 
 template <class T, class = void>
@@ -924,7 +924,7 @@ namespace _stream_check {
     {
         static StreamType& stream;
         static T& x;
-        static const bool value = sizeof(test(stream >> x)) == sizeof(_yes);
+        static bool const value = sizeof(test(stream >> x)) == sizeof(_yes);
     };
 
     template <class StreamType, class T>
@@ -932,13 +932,13 @@ namespace _stream_check {
     {
         static StreamType& stream;
         static T& x;
-        static const bool value = sizeof(test(stream << x)) == sizeof(_yes);
+        static bool const value = sizeof(test(stream << x)) == sizeof(_yes);
     };
 
     template <class StreamType, class T>
     struct has_stream_operators
     {
-        static const bool value = has_loading_support<StreamType, T>::value
+        static bool const value = has_loading_support<StreamType, T>::value
                                 && has_saving_support<StreamType, T>::value;
     };
 }  // namespace _stream_check
@@ -1007,63 +1007,63 @@ struct has_push_front
 template <class T>
 struct is_byte_type
 {
-    static const bool value
+    static bool const value
                         = sizeof(T) == sizeof(char) && !is_same<bool, T>::value;
 };
 
 template <class T>
 struct is_string_ctor
 {
-    static const bool value = is_constructible<std::string, T>::value;
+    static bool const value = is_constructible<std::string, T>::value;
 };
 
 template <class T, class = void>
-struct has_value_type                      { static const bool value = false; };
+struct has_value_type                      { static bool const value = false; };
 template <class T>
 struct has_value_type<T, typename voider<
-             typename T::value_type>::type> { static const bool value = true; };
+             typename T::value_type>::type> { static bool const value = true; };
 
 template <class T, class = void>
-struct has_sub_string_ctor                 { static const bool value = false; };
+struct has_sub_string_ctor                 { static bool const value = false; };
 template <class T>
 struct has_sub_string_ctor<T, typename voider<typename T::value_type>::type>
 {
-    static const bool value = is_string_ctor<typename T::value_type>::value;
+    static bool const value = is_string_ctor<typename T::value_type>::value;
 };
 
 template <class T, class = void>
-struct has_vector_ctor                     { static const bool value = false; };
+struct has_vector_ctor                     { static bool const value = false; };
 template <class T>
 struct has_vector_ctor<T, typename voider<typename T::value_type>::type>
 {
-    static const bool value = is_constructible<
+    static bool const value = is_constructible<
             T, typename std::vector<typename T::value_type>::iterator,
                typename std::vector<typename T::value_type>::iterator>::value;
 };
 
 template <class T, class = void>
-struct has_deque_ctor                      { static const bool value = false; };
+struct has_deque_ctor                      { static bool const value = false; };
 template <class T>
 struct has_deque_ctor<T, typename voider<typename T::value_type>::type>
 {
-    static const bool value = is_constructible<
+    static bool const value = is_constructible<
             T, typename std::deque<typename T::value_type> >::value;
 };
 
 template <class T, class = void>
-struct has_sub_vector_ctor                 { static const bool value = false; };
+struct has_sub_vector_ctor                 { static bool const value = false; };
 template <class T>
 struct has_sub_vector_ctor<T, typename voider<typename T::value_type>::type>
 {
-    static const bool value = has_vector_ctor<typename T::value_type>::value;
+    static bool const value = has_vector_ctor<typename T::value_type>::value;
 };
 
 template <class T, class = void>
-struct has_sub_deque_ctor                  { static const bool value = false; };
+struct has_sub_deque_ctor                  { static bool const value = false; };
 template <class T>
 struct has_sub_deque_ctor<T, typename voider<typename T::value_type>::type>
 {
-    static const bool value = has_deque_ctor<typename T::value_type>::value;
+    static bool const value = has_deque_ctor<typename T::value_type>::value;
 };
 
 template <class T, class = void>
@@ -1079,16 +1079,16 @@ struct is_stl_pair<T, typename voider<typename T::first_type,
                                     typename T::second_type>::type>:true_type{};
 
 template <class T, class = void>
-struct is_stl_container_paired             { static const bool value = false; };
+struct is_stl_container_paired             { static bool const value = false; };
 template <class T>
 struct is_stl_container_paired<T, typename voider<typename T::value_type>::type>
 {
-    static const bool value
+    static bool const value
           = is_stl_pair<typename T::value_type>::value && !is_stl_map<T>::value;
 };
 
 template <class T, class = void>
-struct is_stl_container_tupled             { static const bool value = false; };
+struct is_stl_container_tupled             { static bool const value = false; };
 
 template <class T>
 struct is_stl_array                                               :false_type{};
@@ -1096,29 +1096,29 @@ struct is_stl_array                                               :false_type{};
 template <class T>
 struct is_stl_container
 {
-    static const bool value = has_vector_ctor<T>::value
+    static bool const value = has_vector_ctor<T>::value
                           && !is_string_ctor<T>::value && !is_stl_map<T>::value;
 };
 
 template <class T>
 struct is_stl_queue
 {
-    static const bool value = has_deque_ctor<T>::value
+    static bool const value = has_deque_ctor<T>::value
                           && !has_vector_ctor<T>::value;
 };
 
 template <class T, class = void>
-struct is_stl_sub_array                    { static const bool value = false; };
+struct is_stl_sub_array                    { static bool const value = false; };
 template <class T>
 struct is_stl_sub_array<T, typename voider<typename T::value_type>::type>
 {
-    static const bool value = is_stl_array<typename T::value_type>::value;
+    static bool const value = is_stl_array<typename T::value_type>::value;
 };
 
 template <class T>
 struct is_stl_matrix
 {
-    static const bool value =
+    static bool const value =
             (is_stl_array<T>::value
              || is_stl_container<T>::value
              || is_stl_queue<T>::value)
@@ -1141,7 +1141,7 @@ struct is_stl_tuple<std::tuple                          <Args...> >:true_type{};
 template <class T>
 struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
 {
-    static const bool value = is_stl_tuple<typename T::value_type>::value;
+    static bool const value = is_stl_tuple<typename T::value_type>::value;
 };
 #endif  // C++11+
 
@@ -4290,7 +4290,7 @@ private:
     template <class T>
     struct need_operator_in
     {
-        static const bool value = !detail::is_same<bool, T>::value
+        static bool const value = !detail::is_same<bool, T>::value
                 && !detail::is_string_ctor<T>::value
                 && !detail::is_byte_type<T>::value;
     };
@@ -4298,7 +4298,7 @@ private:
     template <class T>
     struct simple_element
     {
-        static const bool value = detail::is_floating_point<T>::value
+        static bool const value = detail::is_floating_point<T>::value
                 || detail::is_string_ctor<T>::value
                 || detail::is_integral<T>::value;
     };
