@@ -956,8 +956,8 @@ struct has_insert
 
     template <class C>
     static _yes test(
-            func_tag<std::pair<typename C::iterator,
-                bool>(C::*)(typename C::value_type const&), &C::insert>*);
+            func_tag<std::pair<typename C::iterator, bool>(C::*)(
+                typename C::value_type const&), &C::insert>*);
 
     template <class>
     static _no test(...);
