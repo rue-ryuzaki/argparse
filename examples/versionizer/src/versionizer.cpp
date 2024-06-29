@@ -394,7 +394,7 @@ Version::from_string(
 
 // ----------------------------------------------------------------------------
 void
-Version::patchFile(
+Version::patch_file(
         std::string const& file,
         std::string const& name) const
 {
@@ -539,7 +539,7 @@ Versionizer::Versionizer()
 
 // ----------------------------------------------------------------------------
 void
-Versionizer::setType(
+Versionizer::set_type(
         std::string const& value)
 {
     if (value == "M") {
@@ -568,14 +568,15 @@ Versionizer::type() const
 
 // ----------------------------------------------------------------------------
 std::string
-Versionizer::versionToString(Version const& ver) const
+Versionizer::to_string(
+        Version const& ver) const
 {
     return ver.to_string(type());
 }
 
 // ----------------------------------------------------------------------------
 void
-Versionizer::patchFile(
+Versionizer::patch_file(
         std::string const& file,
         Version const& oldVersion,
         Version const& newVersion,
@@ -589,7 +590,7 @@ Versionizer::patchFile(
         bool replaced = false;
         std::string line;
         while (std::getline(is, line)) {
-            std:size_t pos = line.find(oldVer);
+            std::size_t pos = line.find(oldVer);
             if (pos != std::string::npos && (!replaceOnce || !replaced)) {
                 line.replace(pos, oldVer.length(), newVer);
                 replaced = true;

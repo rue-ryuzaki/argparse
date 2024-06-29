@@ -89,7 +89,7 @@ struct Version
             Type type) const;
 
     void
-    patchFile(
+    patch_file(
             std::string const& file,
             std::string const& name) const;
 
@@ -119,17 +119,18 @@ public:
 
     // -- functions -----------------------------------------------------------
     void
-    setType(std::string const& value);
+    set_type(
+            std::string const& value);
 
     Type
     type() const;
 
     std::string
-    versionToString(
+    to_string(
             Version const& ver) const;
 
     void
-    patchFile(
+    patch_file(
             std::string const& file,
             Version const& oldVersion,
             Version const& newVersion,

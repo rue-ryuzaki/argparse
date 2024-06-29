@@ -39,12 +39,13 @@ int
 main(int argc,
         char const* const argv[])
 {
-    auto parser = argparse::ArgumentParser(argc, argv)
+    argparse::ArgumentParser parser = argparse::ArgumentParser(argc, argv)
+            .comment_prefix_chars("#")
             .fromfile_prefix_chars("@")
             .description("Version manager for C/C++ projects")
             .epilog("by rue-ryuzaki (c) 2022-2024");
     parser.add_argument("--type")
-            .choices({ "M", "MM", "MR", "MMP", "MMR", "MMPR" })
+            .choices("M", "MM", "MR", "MMP", "MMR", "MMPR")
             .required(true).help("version type");
     parser.add_argument("--source")
             .required(true).help("source file with version");
@@ -53,7 +54,7 @@ main(int argc,
     parser.add_argument("--file")
             .action("append").nargs("+").help("file names with version M.M.P");
     parser.add_argument("--apply")
-            .choices({ "major", "minor", "patch", "rc", "rc-major", "rc-minor" })
+            .choices("major", "minor", "patch", "rc", "rc-major", "rc-minor")
             .default_value("")
             .help("version patch type");
     parser.add_argument("--patch")
@@ -61,20 +62,20 @@ main(int argc,
     parser.add_argument("--commit")
             .action("store_true").help("commit changes in git repository");
 
-    auto args = parser.parse_args();
+    argparse::Namespace const args = parser.parse_args();
 
     versionizer::Versionizer ver;
-    ver.setType(args.get<std::string>("type"));
+    ver.set_type(args.get<std::string>("type"));
 
-    auto versionFile = args.get<std::string>("source");
-    auto programName = args.get<std::string>("program");
+    std::string versionFile = args.get<std::string>("source");
+    std::string programName = args.get<std::string>("program");
     std::cout << "program " << programName << std::endl;
     std::cout << "analize " << versionFile << std::endl;
 
     auto version = versionizer::Version::loadFromFile(versionFile, programName);
     std::cout << "old version v" << version.to_string(ver.type()) << std::endl;
 
-    auto versionPatch = args.get<std::string>("apply");
+    std::string versionPatch = args.get<std::string>("apply");
     if (!versionPatch.empty()) {
         auto oldVersion = version;
         if (versionPatch == "major") {
@@ -94,14 +95,15 @@ main(int argc,
         }
         std::cout << "new version v" << version.to_string(ver.type()) << std::endl;
         if (args.get<bool>("patch")) {
-            version.patchFile(versionFile, programName);
+            version.patch_file(versionFile, programName);
             auto const files = args.get<std::vector<std::string> >("file");
             for (auto const& file : files) {
-                ver.patchFile(file, oldVersion, version);
+                ver.patch_file(file, oldVersion, version);
             }
             if (args.get<bool>("commit")) {
                 std::string message = "\"Set: version v" + version.to_string(ver.type()) + "\"";
-                if (command("git add " + versionFile) == 0 && command("git commit -m " + message) == 0) {
+                if (command("git add " + versionFile) == 0
+                        && command("git commit -m " + message) == 0) {
                     std::cout << "commit " << message << " done" << std::endl;
                 }
             }
