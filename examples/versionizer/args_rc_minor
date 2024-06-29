@@ -1,0 +1,8 @@
+--type=MMPR
+--program=VERSIONIZER
+--source=include/versionizer.hpp
+--file
+include/versionizer.hpp
+--apply=rc-minor
+--patch
+--commit
