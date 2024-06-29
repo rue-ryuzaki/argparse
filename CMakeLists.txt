@@ -172,6 +172,8 @@ if (ARGPARSE_BUILD_EXAMPLES OR ARGPARSE_BUILD_TESTS)
         COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:/EHsc;$<$<CONFIG:Release>:/Od>>"
     )
 
+    set(ARGPARSE_THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+
     if (ARGPARSE_BUILD_EXAMPLES)
         message(STATUS "Build argparse examples")
 
