@@ -3,6 +3,3 @@
 --source=include/versionizer.hpp
 --file
 include/versionizer.hpp
---apply=minor
---patch
---commit

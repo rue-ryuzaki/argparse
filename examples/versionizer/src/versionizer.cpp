@@ -39,7 +39,8 @@ _create_regex(
         std::string const& name,
         std::string const& type)
 {
-    return std::regex("#define[\\s-[\\r\\n]]*" + name + "_VERSION_" + type + "[\\s-[\\r\\n]]*([0-9]+)");
+    return std::regex("#define[\\s-[\\r\\n]]*" + name
+                      + "_VERSION_" + type + "[\\s-[\\r\\n]]*([0-9]+)");
 }
 
 // ----------------------------------------------------------------------------
@@ -368,22 +369,26 @@ Version::from_string(
         res.minor = 0;
         res.patch = 0;
         res.rc = 0;
-    } else if (std::regex_search(str, match, std::regex("^([0-9]+).([0-9]+)$"))) {
+    } else if (std::regex_search(
+                   str, match, std::regex("^([0-9]+).([0-9]+)$"))) {
         res.major = std::stoi(std::string(match[1]));
         res.minor = std::stoi(std::string(match[2]));
         res.patch = 0;
         res.rc = 0;
-    } else if (std::regex_search(str, match, std::regex("^([0-9]+).([0-9]+).([0-9]+)$"))) {
+    } else if (std::regex_search(
+                   str, match, std::regex("^([0-9]+).([0-9]+).([0-9]+)$"))) {
         res.major = std::stoi(std::string(match[1]));
         res.minor = std::stoi(std::string(match[2]));
         res.patch = std::stoi(std::string(match[3]));
         res.rc = 0;
-    } else if (std::regex_search(str, match, std::regex("^([0-9]+)-rc([0-9]+)$"))) {
+    } else if (std::regex_search(
+                   str, match, std::regex("^([0-9]+)-rc([0-9]+)$"))) {
         res.major = std::stoi(std::string(match[1]));
         res.minor = 0;
         res.patch = 0;
         res.rc = std::stoi(std::string(match[2]));
-    } else if (std::regex_search(str, match, std::regex("^([0-9]+).([0-9]+)-rc([0-9]+)$"))) {
+    } else if (std::regex_search(
+                   str, match, std::regex("^([0-9]+).([0-9]+)-rc([0-9]+)$"))) {
         res.major = std::stoi(std::string(match[1]));
         res.minor = std::stoi(std::string(match[2]));
         res.patch = 0;
@@ -433,7 +438,7 @@ Version::patch_file(
 
 // ----------------------------------------------------------------------------
 Version
-Version::loadFromFile(
+Version::from_file(
         std::string const& file,
         std::string const& name)
 {
@@ -555,7 +560,8 @@ Versionizer::set_type(
     } else if (value == "MMPR") {
         m_type = MMPR;
     } else {
-        throw std::invalid_argument("error: unknown version type '" + value + "'");
+        throw std::invalid_argument(
+                    "error: unknown version type '" + value + "'");
     }
 }
 

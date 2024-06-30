@@ -93,13 +93,13 @@ struct Version
             std::string const& file,
             std::string const& name) const;
 
-    // -- static ----------------------------------------------------------------
+    // -- static --------------------------------------------------------------
     static Version
     from_string(
             std::string const& str);
 
     static Version
-    loadFromFile(
+    from_file(
             std::string const& file,
             std::string const& name);
 

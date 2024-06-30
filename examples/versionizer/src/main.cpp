@@ -72,7 +72,7 @@ main(int argc,
     std::cout << "program " << programName << std::endl;
     std::cout << "analize " << versionFile << std::endl;
 
-    auto version = versionizer::Version::loadFromFile(versionFile, programName);
+    auto version = versionizer::Version::from_file(versionFile, programName);
     std::cout << "old version v" << version.to_string(ver.type()) << std::endl;
 
     std::string versionPatch = args.get<std::string>("apply");
@@ -91,9 +91,11 @@ main(int argc,
         } else if (versionPatch == "rc-minor") {
             version.apply_rc_minor(ver.type());
         } else {
-            throw std::logic_error("invalid apply version patch type '" + versionPatch + "'");
+            throw std::logic_error(
+                     "invalid apply version patch type '" + versionPatch + "'");
         }
-        std::cout << "new version v" << version.to_string(ver.type()) << std::endl;
+        std::cout << "new version v" << version.to_string(ver.type())
+                  << std::endl;
         if (args.get<bool>("patch")) {
             version.patch_file(versionFile, programName);
             auto const files = args.get<std::vector<std::string> >("file");
@@ -101,7 +103,8 @@ main(int argc,
                 ver.patch_file(file, oldVersion, version);
             }
             if (args.get<bool>("commit")) {
-                std::string message = "\"Set: version v" + version.to_string(ver.type()) + "\"";
+                std::string message = "\"Set: version v"
+                        + version.to_string(ver.type()) + "\"";
                 if (command("git add " + versionFile) == 0
                         && command("git commit -m " + message) == 0) {
                     std::cout << "commit " << message << " done" << std::endl;
