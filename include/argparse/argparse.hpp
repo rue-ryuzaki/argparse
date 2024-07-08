@@ -41,44 +41,44 @@
 #undef ARGPARSE_VERSION_COMPILED
 #undef ARGPARSE_VERSION_AT_LEAST
 // -- standard ----------------------------------------------------------------
-#undef _ARGPARSE_CXX_98
-#undef _ARGPARSE_CXX_11
-#undef _ARGPARSE_CXX_14
-#undef _ARGPARSE_CXX_17
-#undef _ARGPARSE_CXX_20
-#undef _ARGPARSE_CXX_23
+#undef ARGPARSE_CXX_98
+#undef ARGPARSE_CXX_11
+#undef ARGPARSE_CXX_14
+#undef ARGPARSE_CXX_17
+#undef ARGPARSE_CXX_20
+#undef ARGPARSE_CXX_23
 // -- attributes --------------------------------------------------------------
 // C++11+
-#undef _ARGPARSE_ATTR_NORETURN
-#undef _ARGPARSE_ATTR_CARRIES_DEPENDENCY
+#undef ARGPARSE_ATTR_NORETURN
+#undef ARGPARSE_ATTR_CARRIES_DEPENDENCY
 // C++14+
-#undef _ARGPARSE_ATTR_DEPRECATED
-#undef _ARGPARSE_ATTR_DEPRECATED_REASON
+#undef ARGPARSE_ATTR_DEPRECATED
+#undef ARGPARSE_ATTR_DEPRECATED_REASON
 // C++17+
-#undef _ARGPARSE_ATTR_FALLTHROUGH
-#undef _ARGPARSE_ATTR_MAYBE_UNUSED
-#undef _ARGPARSE_ATTR_NODISCARD
+#undef ARGPARSE_ATTR_FALLTHROUGH
+#undef ARGPARSE_ATTR_MAYBE_UNUSED
+#undef ARGPARSE_ATTR_NODISCARD
 // C++20+
-#undef _ARGPARSE_ATTR_LIKELY
-#undef _ARGPARSE_ATTR_NODISCARD_REASON
-#undef _ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
-#undef _ARGPARSE_ATTR_UNLIKELY
+#undef ARGPARSE_ATTR_LIKELY
+#undef ARGPARSE_ATTR_NODISCARD_REASON
+#undef ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
+#undef ARGPARSE_ATTR_UNLIKELY
 // C++23+
-#undef _ARGPARSE_ATTR_ASSUME
+#undef ARGPARSE_ATTR_ASSUME
 // -- specifiers --------------------------------------------------------------
-#undef _ARGPARSE_CONSTEXPR
-#undef _ARGPARSE_ENUM_TYPE
-#undef _ARGPARSE_EXPORT
-#undef _ARGPARSE_FINAL
-#undef _ARGPARSE_INLINE_VARIABLE
-#undef _ARGPARSE_MOVE
-#undef _ARGPARSE_NOEXCEPT
-#undef _ARGPARSE_NULLPTR
-#undef _ARGPARSE_OVERRIDE
-#undef _ARGPARSE_USE_CONSTEXPR
+#undef ARGPARSE_CONSTEXPR
+#undef ARGPARSE_ENUM_TYPE
+#undef ARGPARSE_EXPORT
+#undef ARGPARSE_FINAL
+#undef ARGPARSE_INLINE_VARIABLE
+#undef ARGPARSE_MOVE
+#undef ARGPARSE_NOEXCEPT
+#undef ARGPARSE_NULLPTR
+#undef ARGPARSE_OVERRIDE
+#undef ARGPARSE_USE_CONSTEXPR
 // -- features ----------------------------------------------------------------
-#undef _ARGPARSE_HAS_OPTIONAL
-#undef _ARGPARSE_HAS_STRING_VIEW
+#undef ARGPARSE_HAS_OPTIONAL
+#undef ARGPARSE_HAS_STRING_VIEW
 
 // -- #define -----------------------------------------------------------------
 // -- version -----------------------------------------------------------------
@@ -109,50 +109,50 @@
 // -- standard ----------------------------------------------------------------
 #ifdef _MSVC_LANG
 #if _MSVC_LANG >= 201103L
-#define _ARGPARSE_CXX_11
+#define ARGPARSE_CXX_11
 #endif  // C++11+
 #if _MSVC_LANG >  201103L
-#define _ARGPARSE_CXX_14
+#define ARGPARSE_CXX_14
 #endif  // C++14+
 #if _MSVC_LANG >  201402L
-#define _ARGPARSE_CXX_17
+#define ARGPARSE_CXX_17
 #endif  // C++17+
 #if _MSVC_LANG >  201703L
-#define _ARGPARSE_CXX_20
+#define ARGPARSE_CXX_20
 #endif  // C++20+
 #if _MSVC_LANG >  202002L
-#define _ARGPARSE_CXX_23
+#define ARGPARSE_CXX_23
 #endif  // C++23+
 #else
 #if __cplusplus >= 201103L
-#define _ARGPARSE_CXX_11
+#define ARGPARSE_CXX_11
 #endif  // C++11+
 #if __cplusplus >  201103L
-#define _ARGPARSE_CXX_14
+#define ARGPARSE_CXX_14
 #endif  // C++14+
 #if __cplusplus >  201402L
-#define _ARGPARSE_CXX_17
+#define ARGPARSE_CXX_17
 #endif  // C++17+
 #if __cplusplus >  201703L
-#define _ARGPARSE_CXX_20
+#define ARGPARSE_CXX_20
 #endif  // C++20+
 #if __cplusplus >  202002L
-#define _ARGPARSE_CXX_23
+#define ARGPARSE_CXX_23
 #endif  // C++23+
 #endif  // _MSVC_LANG
 
 // -- static building ---------------------------------------------------------
-#undef _ARGPARSE_INL
+#undef ARGPARSE_INL
 #ifdef ARGPARSE_DECLARATION
 // header
 #undef ARGPARSE_IMPLEMENTATION
 #else
 #ifdef ARGPARSE_IMPLEMENTATION
 // static build
-#define _ARGPARSE_INL
+#define ARGPARSE_INL
 #else
 // single-header
-#define _ARGPARSE_INL inline
+#define ARGPARSE_INL inline
 #endif  // ARGPARSE_IMPLEMENTATION
 #endif  // ARGPARSE_DECLARATION
 
@@ -162,25 +162,25 @@
 #define ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 
-#ifdef _ARGPARSE_INL
+#ifdef ARGPARSE_INL
 #ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #if defined(_WIN32)
-#undef _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#undef _ARGPARSE_DEFINE_VC_EXTRALEAN
+#undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#undef ARGPARSE_DEFINE_VC_EXTRALEAN
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
-#define _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#define ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 #endif  // WIN32_LEAN_AND_MEAN
 
 #ifndef VC_EXTRALEAN
 #define VC_EXTRALEAN
-#define _ARGPARSE_DEFINE_VC_EXTRALEAN
+#define ARGPARSE_DEFINE_VC_EXTRALEAN
 #endif  // VC_EXTRALEAN
 
 #ifndef NOMINMAX
 #define NOMINMAX
-#define _ARGPARSE_DEFINE_NOMINMAX
+#define ARGPARSE_DEFINE_NOMINMAX
 #endif  // NOMINMAX
 
 #ifdef _MSC_VER
@@ -189,31 +189,31 @@
 #include <windows.h>
 #endif  // _MSC_VER
 
-#ifdef _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#ifdef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 #undef WIN32_LEAN_AND_MEAN
-#endif  // _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#endif  // ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 
-#ifdef _ARGPARSE_DEFINE_VC_EXTRALEAN
+#ifdef ARGPARSE_DEFINE_VC_EXTRALEAN
 #undef VC_EXTRALEAN
-#endif  // _ARGPARSE_DEFINE_VC_EXTRALEAN
+#endif  // ARGPARSE_DEFINE_VC_EXTRALEAN
 
-#ifdef _ARGPARSE_DEFINE_NOMINMAX
+#ifdef ARGPARSE_DEFINE_NOMINMAX
 #undef NOMINMAX
-#endif  // _ARGPARSE_DEFINE_NOMINMAX
+#endif  // ARGPARSE_DEFINE_NOMINMAX
 
-#undef _ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#undef _ARGPARSE_DEFINE_VC_EXTRALEAN
-#undef _ARGPARSE_DEFINE_NOMINMAX
+#undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#undef ARGPARSE_DEFINE_VC_EXTRALEAN
+#undef ARGPARSE_DEFINE_NOMINMAX
 #else  // UNIX
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
 #endif  // _WIN32
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
-#endif  // _ARGPARSE_INL
+#endif  // ARGPARSE_INL
 
 // -- #include ----------------------------------------------------------------
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
 #include <array>
 #include <cstdint>
 #include <functional>
@@ -238,103 +238,103 @@
 #include <utility>
 #include <vector>
 
-#ifdef _ARGPARSE_CXX_17
-#define _ARGPARSE_HAS_OPTIONAL
-#define _ARGPARSE_HAS_STRING_VIEW
+#ifdef ARGPARSE_CXX_17
+#define ARGPARSE_HAS_OPTIONAL
+#define ARGPARSE_HAS_STRING_VIEW
 #endif  // C++17+
 
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
 #include <optional>
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
-#ifdef _ARGPARSE_INL
+#ifdef ARGPARSE_INL
 #include <fstream>
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
 #include <regex>
 #endif  // C++11+
-#ifdef _ARGPARSE_HAS_STRING_VIEW
+#ifdef ARGPARSE_HAS_STRING_VIEW
 #include <string_view>
-#endif  // _ARGPARSE_HAS_STRING_VIEW
-#endif  // _ARGPARSE_INL
+#endif  // ARGPARSE_HAS_STRING_VIEW
+#endif  // ARGPARSE_INL
 
 // -- attributes --------------------------------------------------------------
-#ifdef _ARGPARSE_CXX_11
-#define _ARGPARSE_ATTR_NORETURN             [[noreturn]]
-#define _ARGPARSE_ATTR_CARRIES_DEPENDENCY   [[carries_dependency]]
+#ifdef ARGPARSE_CXX_11
+#define ARGPARSE_ATTR_NORETURN              [[noreturn]]
+#define ARGPARSE_ATTR_CARRIES_DEPENDENCY    [[carries_dependency]]
 #else
-#define _ARGPARSE_ATTR_NORETURN
-#define _ARGPARSE_ATTR_CARRIES_DEPENDENCY
+#define ARGPARSE_ATTR_NORETURN
+#define ARGPARSE_ATTR_CARRIES_DEPENDENCY
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_14
-#define _ARGPARSE_ATTR_DEPRECATED           [[deprecated]]
-#define _ARGPARSE_ATTR_DEPRECATED_REASON(X) [[deprecated(X)]]
+#ifdef ARGPARSE_CXX_14
+#define ARGPARSE_ATTR_DEPRECATED            [[deprecated]]
+#define ARGPARSE_ATTR_DEPRECATED_REASON(X)  [[deprecated(X)]]
 #else
-#define _ARGPARSE_ATTR_DEPRECATED
-#define _ARGPARSE_ATTR_DEPRECATED_REASON(X)
+#define ARGPARSE_ATTR_DEPRECATED
+#define ARGPARSE_ATTR_DEPRECATED_REASON(X)
 #endif  // C++14+
 
-#ifdef _ARGPARSE_CXX_17
-#define _ARGPARSE_ATTR_FALLTHROUGH          [[fallthrough]]
-#define _ARGPARSE_ATTR_MAYBE_UNUSED         [[maybe_unused]]
-#define _ARGPARSE_ATTR_NODISCARD            [[nodiscard]]
-#define _ARGPARSE_ATTR_NODISCARD_REASON(X)  [[nodiscard]]
+#ifdef ARGPARSE_CXX_17
+#define ARGPARSE_ATTR_FALLTHROUGH           [[fallthrough]]
+#define ARGPARSE_ATTR_MAYBE_UNUSED          [[maybe_unused]]
+#define ARGPARSE_ATTR_NODISCARD             [[nodiscard]]
+#define ARGPARSE_ATTR_NODISCARD_REASON(X)   [[nodiscard]]
 #else
-#define _ARGPARSE_ATTR_FALLTHROUGH
-#define _ARGPARSE_ATTR_MAYBE_UNUSED
-#define _ARGPARSE_ATTR_NODISCARD
-#define _ARGPARSE_ATTR_NODISCARD_REASON(X)
+#define ARGPARSE_ATTR_FALLTHROUGH
+#define ARGPARSE_ATTR_MAYBE_UNUSED
+#define ARGPARSE_ATTR_NODISCARD
+#define ARGPARSE_ATTR_NODISCARD_REASON(X)
 #endif  // C++17+
 
-#ifdef _ARGPARSE_CXX_20
-#undef _ARGPARSE_ATTR_NODISCARD_REASON
+#ifdef ARGPARSE_CXX_20
+#undef ARGPARSE_ATTR_NODISCARD_REASON
 
-#define _ARGPARSE_ATTR_LIKELY               [[likely]]
-#define _ARGPARSE_ATTR_NODISCARD_REASON(X)  [[nodiscard(X)]]
-#define _ARGPARSE_ATTR_NO_UNIQUE_ADDRESS    [[no_unique_address]]
-#define _ARGPARSE_ATTR_UNLIKELY             [[unlikely]]
+#define ARGPARSE_ATTR_LIKELY                [[likely]]
+#define ARGPARSE_ATTR_NODISCARD_REASON(X)   [[nodiscard(X)]]
+#define ARGPARSE_ATTR_NO_UNIQUE_ADDRESS     [[no_unique_address]]
+#define ARGPARSE_ATTR_UNLIKELY              [[unlikely]]
 #else
-#define _ARGPARSE_ATTR_LIKELY
-#define _ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
-#define _ARGPARSE_ATTR_UNLIKELY
+#define ARGPARSE_ATTR_LIKELY
+#define ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
+#define ARGPARSE_ATTR_UNLIKELY
 #endif  // C++20+
 
-#ifdef _ARGPARSE_CXX_23
-#define _ARGPARSE_ATTR_ASSUME(X)            [[assume(X)]]
+#ifdef ARGPARSE_CXX_23
+#define ARGPARSE_ATTR_ASSUME(X)             [[assume(X)]]
 #else
-#define _ARGPARSE_ATTR_ASSUME(X)
+#define ARGPARSE_ATTR_ASSUME(X)
 #endif  // C++23+
 
 // -- specifiers --------------------------------------------------------------
-#define _ARGPARSE_EXPORT
+#define ARGPARSE_EXPORT
 
-#ifdef _ARGPARSE_CXX_11
-#define _ARGPARSE_FINAL final
-#define _ARGPARSE_NOEXCEPT noexcept
-#define _ARGPARSE_OVERRIDE override
-#define _ARGPARSE_CONSTEXPR constexpr
-#define _ARGPARSE_USE_CONSTEXPR constexpr
-#define _ARGPARSE_ENUM_TYPE(X) : X
-#define _ARGPARSE_MOVE(X) std::move(X)
+#ifdef ARGPARSE_CXX_11
+#define ARGPARSE_FINAL final
+#define ARGPARSE_NOEXCEPT noexcept
+#define ARGPARSE_OVERRIDE override
+#define ARGPARSE_CONSTEXPR constexpr
+#define ARGPARSE_USE_CONSTEXPR constexpr
+#define ARGPARSE_ENUM_TYPE(X) : X
+#define ARGPARSE_MOVE(X) std::move(X)
 #else
-#define _ARGPARSE_FINAL
-#define _ARGPARSE_NOEXCEPT
-#define _ARGPARSE_OVERRIDE
-#define _ARGPARSE_CONSTEXPR
-#define _ARGPARSE_USE_CONSTEXPR const
-#define _ARGPARSE_ENUM_TYPE(X)
-#define _ARGPARSE_MOVE(X) X
+#define ARGPARSE_FINAL
+#define ARGPARSE_NOEXCEPT
+#define ARGPARSE_OVERRIDE
+#define ARGPARSE_CONSTEXPR
+#define ARGPARSE_USE_CONSTEXPR const
+#define ARGPARSE_ENUM_TYPE(X)
+#define ARGPARSE_MOVE(X) X
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_17
-#define _ARGPARSE_INLINE_VARIABLE inline
+#ifdef ARGPARSE_CXX_17
+#define ARGPARSE_INLINE_VARIABLE inline
 #else
-#define _ARGPARSE_INLINE_VARIABLE static
+#define ARGPARSE_INLINE_VARIABLE static
 #endif  // C++17+
 
 namespace argparse {
-#ifdef _ARGPARSE_CXX_11
-#define _ARGPARSE_NULLPTR nullptr
+#ifdef ARGPARSE_CXX_11
+#define ARGPARSE_NULLPTR nullptr
 #else
 const
 class nullptr_t
@@ -350,7 +350,7 @@ private:
     void operator & () const;
 } _nullptr = {};
 
-#define _ARGPARSE_NULLPTR _nullptr
+#define ARGPARSE_NULLPTR _nullptr
 #endif  // C++11+
 
 /*!
@@ -358,7 +358,7 @@ private:
  *
  *  \enum Action
  */
-_ARGPARSE_EXPORT enum Action _ARGPARSE_ENUM_TYPE(uint16_t)
+ARGPARSE_EXPORT enum Action ARGPARSE_ENUM_TYPE(uint16_t)
 {
     store                   = 0x0001,
     store_const             = 0x0002,
@@ -378,7 +378,7 @@ _ARGPARSE_EXPORT enum Action _ARGPARSE_ENUM_TYPE(uint16_t)
 /*!
  *  \brief ArgumentError handler
  */
-_ARGPARSE_EXPORT class ArgumentError : public std::invalid_argument
+ARGPARSE_EXPORT class ArgumentError : public std::invalid_argument
 {
 public:
     /*!
@@ -398,7 +398,7 @@ public:
 /*!
  *  \brief AttributeError handler
  */
-_ARGPARSE_EXPORT class AttributeError : public std::invalid_argument
+ARGPARSE_EXPORT class AttributeError : public std::invalid_argument
 {
 public:
     /*!
@@ -418,7 +418,7 @@ public:
 /*!
  *  \brief ValueError handler
  */
-_ARGPARSE_EXPORT class ValueError : public std::invalid_argument
+ARGPARSE_EXPORT class ValueError : public std::invalid_argument
 {
 public:
     /*!
@@ -438,7 +438,7 @@ public:
 /*!
  *  \brief IndexError handler
  */
-_ARGPARSE_EXPORT class IndexError : public std::out_of_range
+ARGPARSE_EXPORT class IndexError : public std::out_of_range
 {
 public:
     /*!
@@ -460,7 +460,7 @@ public:
  *
  *  \since v1.7.1
  */
-_ARGPARSE_EXPORT class NameError : public std::invalid_argument
+ARGPARSE_EXPORT class NameError : public std::invalid_argument
 {
 public:
     /*!
@@ -480,7 +480,7 @@ public:
 /*!
  *  \brief TypeError handler
  */
-_ARGPARSE_EXPORT class TypeError : public std::invalid_argument
+ARGPARSE_EXPORT class TypeError : public std::invalid_argument
 {
 public:
     /*!
@@ -502,23 +502,23 @@ public:
  *
  *  \enum _SUPPRESS
  */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE
-enum _SUPPRESS _ARGPARSE_ENUM_TYPE(uint8_t) {} SUPPRESS;
+ARGPARSE_EXPORT ARGPARSE_INLINE_VARIABLE
+enum _SUPPRESS ARGPARSE_ENUM_TYPE(uint8_t) {} SUPPRESS;
 
 /*!
  *  \brief Don't use this enum name! use argparse::REMAINDER value directly
  *
  *  \enum _REMAINDER
  */
-_ARGPARSE_EXPORT _ARGPARSE_INLINE_VARIABLE
-enum _REMAINDER _ARGPARSE_ENUM_TYPE(uint8_t) {} REMAINDER;
+ARGPARSE_EXPORT ARGPARSE_INLINE_VARIABLE
+enum _REMAINDER ARGPARSE_ENUM_TYPE(uint8_t) {} REMAINDER;
 
 namespace detail {
 // -- constants ---------------------------------------------------------------
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equal            = '=';
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _spaces[]         = " ";
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _equal               = '=';
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _spaces[]            = " ";
 
-_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
+ARGPARSE_INLINE_VARIABLE int32_t ARGPARSE_USE_CONSTEXPR
 _store_action = argparse::store | argparse::append | argparse::extend;
 
 // -- standard type traits ----------------------------------------------------
@@ -528,7 +528,7 @@ typedef int16_t _no;
 template <class T, T>
 struct func_tag { };
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
 using std::decay;
 using std::enable_if;
 using std::is_constructible;
@@ -1131,7 +1131,7 @@ struct is_stl_matrix
 template <class T>
 struct is_stl_tuple                                               :false_type{};
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
 template <class T, std::size_t N>
 struct is_stl_array<std::array                          <T, N> >   :true_type{};
 
@@ -1145,7 +1145,7 @@ struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
 };
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
 template <class T>
 struct rval { typedef T&& type; };
 template <class T>
@@ -1615,16 +1615,16 @@ public:
     TranslationPack();
 
     iterator
-    begin() _ARGPARSE_NOEXCEPT;
+    begin() ARGPARSE_NOEXCEPT;
 
     iterator
-    end() _ARGPARSE_NOEXCEPT;
+    end() ARGPARSE_NOEXCEPT;
 
     const_iterator
-    begin() const _ARGPARSE_NOEXCEPT;
+    begin() const ARGPARSE_NOEXCEPT;
 
     const_iterator
-    end() const _ARGPARSE_NOEXCEPT;
+    end() const ARGPARSE_NOEXCEPT;
 
     mapped_type&
     operator [](
@@ -1693,7 +1693,7 @@ _split(std::string const& str,
 
 bool
 _string_to_bool(
-        std::string const& str) _ARGPARSE_NOEXCEPT;
+        std::string const& str) ARGPARSE_NOEXCEPT;
 
 template <class T>
 std::string
@@ -1724,7 +1724,7 @@ _get_type_name()
 class Type
 {
 public:
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T, typename enable_if<
                   is_string_ctor<T>::value
                   || is_stl_pair<T>::value
@@ -1804,7 +1804,7 @@ public:
     }
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T, typename enable_if<
                   is_string_ctor<T>::value>::type* = nullptr>
     static std::string
@@ -1927,7 +1927,7 @@ public:
 #endif  // C++11+
 
 private:
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <std::size_t N>
     static std::string&
     tuple_type(
@@ -2002,21 +2002,21 @@ public:
         return *this;
     }
 
-#ifdef _ARGPARSE_CXX_11
-    Value(Value&& orig) _ARGPARSE_NOEXCEPT
+#ifdef ARGPARSE_CXX_11
+    Value(Value&& orig) ARGPARSE_NOEXCEPT
         : m_value(std::move(orig.m_value)),
           m_has_value(std::move(orig.m_has_value))
     { }
 
     explicit
-    Value(T&& orig) _ARGPARSE_NOEXCEPT
+    Value(T&& orig) ARGPARSE_NOEXCEPT
         : m_value(std::move(orig)),
           m_has_value(true)
     { }
 
     inline Value&
     operator =(
-            Value&& rhs) _ARGPARSE_NOEXCEPT
+            Value&& rhs) ARGPARSE_NOEXCEPT
     {
         if (this != &rhs) {
             m_value     = std::move(rhs.m_value);
@@ -2027,7 +2027,7 @@ public:
 
     inline Value&
     operator =(
-            T&& rhs) _ARGPARSE_NOEXCEPT
+            T&& rhs) ARGPARSE_NOEXCEPT
     {
         m_value     = std::move(rhs);
         m_has_value = true;
@@ -2043,20 +2043,20 @@ public:
     }
 
     inline bool
-    has_value() const _ARGPARSE_NOEXCEPT
+    has_value() const ARGPARSE_NOEXCEPT
     {
         return m_has_value;
     }
 
     inline T const&
-    value() const _ARGPARSE_NOEXCEPT
+    value() const ARGPARSE_NOEXCEPT
     {
         return m_value;
     }
 
     inline T const
     value_or(
-            T const& value) const _ARGPARSE_NOEXCEPT
+            T const& value) const ARGPARSE_NOEXCEPT
     {
         return has_value() ? this->value() : value;
     }
@@ -2116,21 +2116,21 @@ public:
 
     inline SValue&
     operator =(
-            _SUPPRESS) _ARGPARSE_NOEXCEPT
+            _SUPPRESS) ARGPARSE_NOEXCEPT
     {
         m_suppress = true;
         return *this;
     }
 
-#ifdef _ARGPARSE_CXX_11
-    SValue(SValue&& orig) _ARGPARSE_NOEXCEPT
+#ifdef ARGPARSE_CXX_11
+    SValue(SValue&& orig) ARGPARSE_NOEXCEPT
         : m_value(std::move(orig.m_value)),
           m_has_value(std::move(orig.m_has_value)),
           m_suppress(std::move(orig.m_suppress))
     { }
 
     explicit
-    SValue(T&& orig) _ARGPARSE_NOEXCEPT
+    SValue(T&& orig) ARGPARSE_NOEXCEPT
         : m_value(std::move(orig)),
           m_has_value(true),
           m_suppress(false)
@@ -2138,7 +2138,7 @@ public:
 
     inline SValue&
     operator =(
-            SValue&& rhs) _ARGPARSE_NOEXCEPT
+            SValue&& rhs) ARGPARSE_NOEXCEPT
     {
         if (this != &rhs) {
             m_value     = std::move(rhs.m_value);
@@ -2150,7 +2150,7 @@ public:
 
     inline SValue&
     operator =(
-            T&& rhs) _ARGPARSE_NOEXCEPT
+            T&& rhs) ARGPARSE_NOEXCEPT
     {
         m_value     = std::move(rhs);
         m_has_value = true;
@@ -2168,25 +2168,25 @@ public:
     }
 
     inline bool
-    suppress() const _ARGPARSE_NOEXCEPT
+    suppress() const ARGPARSE_NOEXCEPT
     {
         return m_suppress;
     }
 
     inline bool
-    has_value() const _ARGPARSE_NOEXCEPT
+    has_value() const ARGPARSE_NOEXCEPT
     {
         return m_has_value;
     }
 
     inline T const&
-    value() const _ARGPARSE_NOEXCEPT
+    value() const ARGPARSE_NOEXCEPT
     {
         return m_value;
     }
 
     inline T&
-    will_have() _ARGPARSE_NOEXCEPT
+    will_have() ARGPARSE_NOEXCEPT
     {
         m_has_value = true;
         m_suppress  = false;
@@ -2203,7 +2203,7 @@ private:
 bool
 _is_type_correct(
         std::string const& expected,
-        std::string const& received) _ARGPARSE_NOEXCEPT;
+        std::string const& received) ARGPARSE_NOEXCEPT;
 
 void
 _check_type(
@@ -2223,7 +2223,7 @@ class ArgumentParser;
 /*!
  *  \brief Formatter for generating usage messages and argument help strings
  */
-_ARGPARSE_EXPORT class HelpFormatter
+ARGPARSE_EXPORT class HelpFormatter
 {
     friend class ArgumentParser;
 
@@ -2235,17 +2235,17 @@ public:
     HelpFormatter()
         : m_tab_size(c_default_tab_size)
     { }
-    virtual ~HelpFormatter() _ARGPARSE_NOEXCEPT { }
+    virtual ~HelpFormatter() ARGPARSE_NOEXCEPT { }
 
     inline void
     _tab_size(
-            std::size_t value) _ARGPARSE_NOEXCEPT
+            std::size_t value) ARGPARSE_NOEXCEPT
     {
         m_tab_size = value != 0 ? value : c_default_tab_size;
     }
 
     inline std::size_t
-    _tab_size() const _ARGPARSE_NOEXCEPT
+    _tab_size() const ARGPARSE_NOEXCEPT
     {
         return m_tab_size;
     }
@@ -2325,73 +2325,73 @@ private:
 /*!
  *  \brief Help message formatter which retains any formatting in descriptions
  */
-_ARGPARSE_EXPORT
+ARGPARSE_EXPORT
 class _RawDescriptionHelpFormatter : virtual public HelpFormatter
 {
 public:
-    ~_RawDescriptionHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+    ~_RawDescriptionHelpFormatter() ARGPARSE_NOEXCEPT ARGPARSE_OVERRIDE { }
 
     std::string
     _fill_text(
             std::string const& text,
             std::size_t width,
-            std::size_t indent) const _ARGPARSE_OVERRIDE;
+            std::size_t indent) const ARGPARSE_OVERRIDE;
 
 protected:
     std::vector<std::string>
     _split_lines_raw(
             std::string const& text,
             std::size_t width) const;
-} _ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
+} ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
 
 /*!
  *  \brief Help message formatter which retains formatting of all help text
  */
-_ARGPARSE_EXPORT
+ARGPARSE_EXPORT
 class _RawTextHelpFormatter : virtual public _RawDescriptionHelpFormatter
 {
 public:
-    ~_RawTextHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+    ~_RawTextHelpFormatter() ARGPARSE_NOEXCEPT ARGPARSE_OVERRIDE { }
 
     std::vector<std::string>
     _split_lines(
             std::string const& text,
-            std::size_t width) const _ARGPARSE_OVERRIDE;
-} _ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
+            std::size_t width) const ARGPARSE_OVERRIDE;
+} ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
 
 /*!
  *  \brief Help message formatter which adds default values to argument help
  */
-_ARGPARSE_EXPORT
+ARGPARSE_EXPORT
 class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
 {
 public:
-    ~_ArgumentDefaultsHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+    ~_ArgumentDefaultsHelpFormatter() ARGPARSE_NOEXCEPT ARGPARSE_OVERRIDE { }
 
     std::string
     _get_help_string(
             Argument const* action,
-            std::string const& lang) const _ARGPARSE_OVERRIDE;
-} _ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
+            std::string const& lang) const ARGPARSE_OVERRIDE;
+} ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
 
 /*!
  *  \brief Help message formatter which uses the argument 'type' as the default
  *  metavar value (instead of the argument 'dest')
  */
-_ARGPARSE_EXPORT
+ARGPARSE_EXPORT
 class _MetavarTypeHelpFormatter : virtual public HelpFormatter
 {
 public:
-    ~_MetavarTypeHelpFormatter() _ARGPARSE_NOEXCEPT _ARGPARSE_OVERRIDE { }
+    ~_MetavarTypeHelpFormatter() ARGPARSE_NOEXCEPT ARGPARSE_OVERRIDE { }
 
     std::string
     _get_default_metavar_for_optional(
-            Argument const* action) const _ARGPARSE_OVERRIDE;
+            Argument const* action) const ARGPARSE_OVERRIDE;
 
     std::string
     _get_default_metavar_for_positional(
-            Argument const* action) const _ARGPARSE_OVERRIDE;
-} _ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
+            Argument const* action) const ARGPARSE_OVERRIDE;
+} ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
 
 // -- standAlone functions ----------------------------------------------------
 /*!
@@ -2404,7 +2404,7 @@ public:
  *
  *  \return Container with arguments
  */
-_ARGPARSE_EXPORT std::vector<std::string>
+ARGPARSE_EXPORT std::vector<std::string>
 split_to_args(
         std::string const& str,
         std::ostream& err = std::cerr);
@@ -2415,7 +2415,7 @@ class _ArgumentData;
 /*!
  *  \brief Argument class
  */
-_ARGPARSE_EXPORT class Argument
+ARGPARSE_EXPORT class Argument
 {
     friend class _ArgumentData;
     friend class _ArgumentDefaultsHelpFormatter;
@@ -2427,7 +2427,7 @@ _ARGPARSE_EXPORT class Argument
     friend class MutuallyExclusiveGroup;
     friend class Namespace;
 
-    enum Nargs _ARGPARSE_ENUM_TYPE(uint8_t)
+    enum Nargs ARGPARSE_ENUM_TYPE(uint8_t)
     {
         NARGS_DEF       = 0x01,  // ""
         NARGS_NUM       = 0x02,  // "N"
@@ -2438,10 +2438,10 @@ _ARGPARSE_EXPORT class Argument
         SUPPRESSING     = 0x40,  // argparse::SUPPRESS
     };
 
-    static uint8_t _ARGPARSE_USE_CONSTEXPR
+    static uint8_t ARGPARSE_USE_CONSTEXPR
     _NARGS_COMBINED = NARGS_NUM | ONE_OR_MORE | ZERO_OR_ONE | ZERO_OR_MORE;
 
-    enum Type _ARGPARSE_ENUM_TYPE(uint8_t)
+    enum Type ARGPARSE_ENUM_TYPE(uint8_t)
     {
         NoType      = 0x00,
         Positional  = 0x01,
@@ -2461,7 +2461,7 @@ _ARGPARSE_EXPORT class Argument
             std::string const& name,
             Type type);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     explicit
     Argument(
             std::vector<std::string>&& flags,
@@ -2476,7 +2476,7 @@ _ARGPARSE_EXPORT class Argument
 #endif  // C++11+
 
 public:
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Construct argument object with parsed arguments
      *
@@ -2597,7 +2597,7 @@ public:
     operator =(
             Argument const& rhs);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Construct argument object from another argument
      *
@@ -2606,7 +2606,7 @@ public:
      *  \return Argument object
      */
     Argument(
-            Argument&& orig) _ARGPARSE_NOEXCEPT;
+            Argument&& orig) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Move argument object from another argument
@@ -2617,7 +2617,7 @@ public:
      */
     Argument&
     operator =(
-            Argument&& rhs) _ARGPARSE_NOEXCEPT;
+            Argument&& rhs) ARGPARSE_NOEXCEPT;
 #endif  // C++11+
 
     /*!
@@ -2788,7 +2788,7 @@ public:
      *
      *  \return Current argument reference
      */
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
@@ -2828,7 +2828,7 @@ public:
      *
      *  \return Current argument reference
      */
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
@@ -2882,7 +2882,7 @@ public:
      *
      *  \return Current argument reference
      */
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
@@ -2938,7 +2938,7 @@ public:
      *  \return Current argument reference
      */
     Argument&
-    type(detail::func2<std::string const&, void*>::type func)_ARGPARSE_NOEXCEPT;
+    type(detail::func2<std::string const&, void*>::type func) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Set argument 'choices' value
@@ -2962,7 +2962,7 @@ public:
     Argument&
     choices(std::string const& value);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Set argument 'choices' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
@@ -3222,7 +3222,7 @@ public:
      *
      *  \return Current argument reference
      */
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
@@ -3303,7 +3303,7 @@ public:
     Argument&
     metavar(std::vector<std::string> const& value);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Set argument 'metavar' value
      *
@@ -3404,52 +3404,52 @@ public:
      *  \return Current argument reference
      */
     Argument&
-    handle(detail::func1<std::string const&>::type func) _ARGPARSE_NOEXCEPT;
+    handle(detail::func1<std::string const&>::type func) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument flags values
      *
      *  \return Argument flags values
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::vector<std::string> const&
-    flags() const _ARGPARSE_NOEXCEPT;
+    flags() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'action' value (default: argparse::store)
      *
      *  \return Argument 'action' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     Action
-    action() const _ARGPARSE_NOEXCEPT;
+    action() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'nargs' value
      *
      *  \return Argument 'nargs' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    nargs() const _ARGPARSE_NOEXCEPT;
+    nargs() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'const' value
      *
      *  \return Argument 'const' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    const_value() const _ARGPARSE_NOEXCEPT;
+    const_value() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'default' value
      *
      *  \return Argument 'default' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    default_value() const _ARGPARSE_NOEXCEPT;
+    default_value() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'implicit' value (used with nargs="?" or "*",
@@ -3457,43 +3457,43 @@ public:
      *
      *  \return Argument 'implicit' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    implicit_value() const _ARGPARSE_NOEXCEPT;
+    implicit_value() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'type' name (for MetavarTypeHelpFormatter)
      *
      *  \return Argument 'type' name
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    type_name() const _ARGPARSE_NOEXCEPT;
+    type_name() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'choices' value
      *
      *  \return Argument 'choices' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::vector<std::string> const&
-    choices() const _ARGPARSE_NOEXCEPT;
+    choices() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'required' value
      *
      *  \return Argument 'required' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
-    required() const _ARGPARSE_NOEXCEPT;
+    required() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'help' message for default language
      *
      *  \return Argument 'help' message
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     help() const;
 
@@ -3502,16 +3502,16 @@ public:
      *
      *  \return Argument 'version' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    version() const _ARGPARSE_NOEXCEPT;
+    version() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument 'metavar' value
      *
      *  \return Argument 'metavar' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     metavar() const;
 
@@ -3520,9 +3520,9 @@ public:
      *
      *  \return Argument 'dest' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    dest() const _ARGPARSE_NOEXCEPT;
+    dest() const ARGPARSE_NOEXCEPT;
 
 private:
     void
@@ -3555,7 +3555,7 @@ private:
     get_default() const;
 
     std::string const&
-    get_dest() const _ARGPARSE_NOEXCEPT;
+    get_dest() const ARGPARSE_NOEXCEPT;
 
     std::string
     get_metavar() const;
@@ -3588,7 +3588,7 @@ private:
             HelpFormatter const& formatter) const;
 
     std::vector<std::string> const&
-    get_argument_flags() const _ARGPARSE_NOEXCEPT;
+    get_argument_flags() const ARGPARSE_NOEXCEPT;
 
     void
     resolve_conflict_flags(
@@ -3650,14 +3650,14 @@ public:
     /*!
      *  \brief Destroy group
      */
-    virtual ~_Group() _ARGPARSE_NOEXCEPT { }
+    virtual ~_Group() ARGPARSE_NOEXCEPT { }
 
     /*!
      *  \brief Get group 'title' value for default language
      *
      *  \return Group 'title' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     title() const;
 
@@ -3666,7 +3666,7 @@ public:
      *
      *  \return Group 'description' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     description() const;
 
@@ -3804,7 +3804,7 @@ public:
     /*!
      *  \brief Destroy argument group object
      */
-    virtual ~_ArgumentGroup() _ARGPARSE_NOEXCEPT { }
+    virtual ~_ArgumentGroup() ARGPARSE_NOEXCEPT { }
 
     /*!
      *  \brief Copy argument group object from another argument group
@@ -3817,7 +3817,7 @@ public:
     operator =(
             _ArgumentGroup const& rhs);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Add argument with flags
      *
@@ -3935,7 +3935,7 @@ private:
 /*!
  *  \brief ArgumentGroup class
  */
-_ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
+ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
 {
     friend class ArgumentParser;
 
@@ -4021,7 +4021,7 @@ private:
     void
     limit_help_flags(
             HelpFormatter const& formatter,
-            std::size_t& limit) const _ARGPARSE_OVERRIDE;
+            std::size_t& limit) const ARGPARSE_OVERRIDE;
 
     void
     print_help(
@@ -4032,13 +4032,13 @@ private:
             bool required,
             std::size_t limit,
             std::size_t width,
-            std::string const& lang) const _ARGPARSE_OVERRIDE;
+            std::string const& lang) const ARGPARSE_OVERRIDE;
 };
 
 /*!
  *  \brief MutuallyExclusiveGroup class
  */
-_ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
+ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
 {
     friend class ArgumentParser;
     friend class HelpFormatter;
@@ -4090,16 +4090,16 @@ public:
      */
     MutuallyExclusiveGroup&
     required(
-            bool value) _ARGPARSE_NOEXCEPT;
+            bool value) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get mutually exclusive group 'required' value
      *
      *  \return Mutually exclusive group 'required' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
-    required() const _ARGPARSE_NOEXCEPT;
+    required() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Add argument
@@ -4141,22 +4141,22 @@ class _Storage
         clear();
 
         bool
-        exists() const _ARGPARSE_NOEXCEPT;
+        exists() const ARGPARSE_NOEXCEPT;
 
         bool
-        is_default() const _ARGPARSE_NOEXCEPT;
+        is_default() const ARGPARSE_NOEXCEPT;
 
         std::vector<std::string> const&
-        operator ()() const _ARGPARSE_NOEXCEPT;
+        operator ()() const ARGPARSE_NOEXCEPT;
 
         std::size_t
-        size() const _ARGPARSE_NOEXCEPT;
+        size() const ARGPARSE_NOEXCEPT;
 
         bool
-        empty() const _ARGPARSE_NOEXCEPT;
+        empty() const ARGPARSE_NOEXCEPT;
 
         std::string const&
-        front() const _ARGPARSE_NOEXCEPT;
+        front() const ARGPARSE_NOEXCEPT;
 
         std::string const&
         at(std::size_t i) const;
@@ -4171,7 +4171,7 @@ class _Storage
                 std::vector<std::string> const& values);
 
         std::vector<std::size_t> const&
-        indexes() const _ARGPARSE_NOEXCEPT;
+        indexes() const ARGPARSE_NOEXCEPT;
 
         std::vector<std::string>
         sub_values(
@@ -4249,16 +4249,16 @@ private:
     erase(iterator it);
 
     iterator
-    begin() _ARGPARSE_NOEXCEPT;
+    begin() ARGPARSE_NOEXCEPT;
 
     iterator
-    end() _ARGPARSE_NOEXCEPT;
+    end() ARGPARSE_NOEXCEPT;
 
     const_iterator
-    begin() const _ARGPARSE_NOEXCEPT;
+    begin() const ARGPARSE_NOEXCEPT;
 
     const_iterator
-    end() const _ARGPARSE_NOEXCEPT;
+    end() const ARGPARSE_NOEXCEPT;
 
     const_iterator
     find_arg(
@@ -4312,7 +4312,7 @@ private:
 
     template <class T>
     static typename detail::enable_if<detail::is_same<bool, T>::value, T>::type
-    to_type(std::string const& data) _ARGPARSE_NOEXCEPT
+    to_type(std::string const& data) ARGPARSE_NOEXCEPT
     {
         return detail::_string_to_bool(data);
     }
@@ -4434,7 +4434,7 @@ private:
         return T(std::deque<typename T::value_type>(vec.begin(), vec.end()));
     }
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T>
     static typename detail::enable_if<
         detail::is_stl_array<typename detail::decay<T>::type>::value, T
@@ -4532,7 +4532,7 @@ private:
     }
 #endif  // C++11+
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T, typename detail::enable_if<
                   simple_element<T>::value>::type* = nullptr>
     static std::vector<T>
@@ -4557,7 +4557,7 @@ private:
         return res;
     }
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T, typename detail::enable_if<
                   !simple_element<T>::value>::type* = nullptr>
     static std::vector<T>
@@ -4654,7 +4654,7 @@ private:
         return res;
     }
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     template <class T>
     static typename detail::enable_if<
         detail::is_stl_matrix<typename detail::decay<T>::type>::value
@@ -4785,7 +4785,7 @@ private:
     }
 #endif  // C++11+
 
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
     template <class T>
     static std::optional<T>
     to_opt_type(
@@ -5065,7 +5065,7 @@ private:
         }
         return as_opt_type<T>(value.first, detail::_join(value.second()));
     }
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
     // -- data ----------------------------------------------------------------
     map_type m_data;
@@ -5074,7 +5074,7 @@ private:
 /*!
  *  \brief Object with parsed arguments
  */
-_ARGPARSE_EXPORT class Namespace
+ARGPARSE_EXPORT class Namespace
 {
     friend class ArgumentParser;
 
@@ -5087,15 +5087,15 @@ _ARGPARSE_EXPORT class Namespace
             _Storage const& storage,
             std::vector<std::string> const& args);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     explicit
     Namespace(
-            _Storage&& storage) _ARGPARSE_NOEXCEPT;
+            _Storage&& storage) ARGPARSE_NOEXCEPT;
 
     explicit
     Namespace(
             _Storage&& storage,
-            std::vector<std::string>&& args) _ARGPARSE_NOEXCEPT;
+            std::vector<std::string>&& args) ARGPARSE_NOEXCEPT;
 #endif  // C++11+
 
 public:
@@ -5108,7 +5108,7 @@ public:
      *
      *  \return True if argument name exists and specified, otherwise false
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
     contains(
             std::string const& key) const;
@@ -5120,7 +5120,7 @@ public:
      *
      *  \return True if argument name exists and specified, otherwise false
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
     exists(std::string const& key) const;
 
@@ -5134,7 +5134,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<detail::is_string_ctor<T>::value
                                || detail::is_floating_point<T>::value
                                || detail::is_same<bool, T>::value
@@ -5156,7 +5156,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<detail::is_integral<T>::value
                                && !detail::is_same<bool, T>::value
                                && !detail::is_byte_type<T>::value, T>::type
@@ -5179,7 +5179,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         (detail::is_stl_container<typename detail::decay<T>::type>::value
      && !detail::is_stl_container_tupled<typename detail::decay<T>::type>::value
@@ -5208,7 +5208,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
       detail::is_stl_container_paired<typename detail::decay<T>::type>::value, T
     >::type
@@ -5235,7 +5235,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_map<typename detail::decay<T>::type>::value, T>::type
     get(std::string const& key,
@@ -5264,7 +5264,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
     >::type
@@ -5291,7 +5291,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         detail::is_stl_pair<typename detail::decay<T>::type>::value, T>::type
     get(std::string const& key,
@@ -5309,7 +5309,7 @@ public:
               key, args.first, args.second().begin(), args.second().end(), sep);
     }
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Get parsed argument value as tupled container types.
      *  If argument not parsed, returns empty container.
@@ -5320,7 +5320,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename std::enable_if<
         detail::is_stl_container_tupled<typename std::decay<T>::type>::value, T
     >::type
@@ -5345,7 +5345,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename std::enable_if<
         detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
     get(std::string const& key,
@@ -5371,7 +5371,7 @@ public:
      *  \return Parsed argument value
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
         !detail::is_string_ctor<T>::value
         && !detail::is_floating_point<T>::value
@@ -5406,7 +5406,7 @@ public:
      *
      *  \return Parsed argument value as args string
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     to_args(std::string const& key) const;
 
@@ -5418,7 +5418,7 @@ public:
      *
      *  \return Parsed argument value as string
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     to_string(
             std::string const& key,
@@ -5429,11 +5429,11 @@ public:
      *
      *  \return Namespace as string
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     to_string() const;
 
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
     /*!
      *  \brief Try get parsed argument value as boolean, byte, floating point,
      *  integer, string, stl container, 2D stl container or custom types.
@@ -5445,7 +5445,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         !detail::is_stl_container_paired<typename std::decay<T>::type>::value
         && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
@@ -5531,7 +5531,7 @@ public:
      *  \return Parsed argument value or std::nullopt
      */
     template <class T>
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::optional<typename std::enable_if<
         detail::is_stl_container_paired<typename std::decay<T>::type>::value
         || detail::is_stl_container_tupled<typename std::decay<T>::type>::value
@@ -5603,23 +5603,23 @@ public:
         }
         return std::nullopt;
     }
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
     /*!
      *  \brief Get unrecognized arguments
      *
      *  \return Unrecognized arguments
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::vector<std::string> const&
-    unrecognized_args() const _ARGPARSE_NOEXCEPT;
+    unrecognized_args() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get unrecognized arguments as args string
      *
      *  \return Unrecognized arguments as args string
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     unrecognized_args_to_args() const;
 
@@ -5633,13 +5633,13 @@ private:
     data(std::string const& key) const;
 
     _Storage const&
-    storage() const _ARGPARSE_NOEXCEPT;
+    storage() const ARGPARSE_NOEXCEPT;
 
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
     std::optional<_Storage::value_type>
     opt_data(
             std::string const& key) const;
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
     // -- data ----------------------------------------------------------------
     _Storage m_storage;
@@ -5690,7 +5690,7 @@ public:
      *
      *  \return Parser group 'help' message
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     help() const;
 
@@ -5699,15 +5699,15 @@ public:
      *
      *  \return Parser group 'metavar' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    metavar() const _ARGPARSE_NOEXCEPT;
+    metavar() const ARGPARSE_NOEXCEPT;
 
 protected:
     void
     limit_help_flags(
             HelpFormatter const&,
-            std::size_t& limit) const _ARGPARSE_OVERRIDE;
+            std::size_t& limit) const ARGPARSE_OVERRIDE;
 
     void
     print_help(
@@ -5718,7 +5718,7 @@ protected:
             bool required,
             std::size_t limit,
             std::size_t width,
-            std::string const& lang) const _ARGPARSE_OVERRIDE;
+            std::string const& lang) const ARGPARSE_OVERRIDE;
 
     void
     print_parser_group(
@@ -5759,7 +5759,7 @@ class SubParsers;
  *
  *  \since v1.9.0
  */
-_ARGPARSE_EXPORT class ParserGroup : public _ParserGroup
+ARGPARSE_EXPORT class ParserGroup : public _ParserGroup
 {
     friend class ArgumentParser;
     friend class SubParsers;
@@ -5876,7 +5876,7 @@ public:
      *
      *  \return Parser names container
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::vector<std::string>
     parser_names() const;
 
@@ -5888,7 +5888,7 @@ private:
 /*!
  *  \brief SubParsers class
  */
-_ARGPARSE_EXPORT class SubParsers : public _ParserGroup
+ARGPARSE_EXPORT class SubParsers : public _ParserGroup
 {
     friend class ArgumentParser;
     friend class HelpFormatter;
@@ -5967,7 +5967,7 @@ public:
      */
     SubParsers&
     required(
-            bool value) _ARGPARSE_NOEXCEPT;
+            bool value) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Set subparsers 'help' message for selected language
@@ -6008,27 +6008,27 @@ public:
      *
      *  \return Subparsers 'prog' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    prog() const _ARGPARSE_NOEXCEPT;
+    prog() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get subparsers 'dest' value
      *
      *  \return Subparsers 'dest' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    dest() const _ARGPARSE_NOEXCEPT;
+    dest() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get subparsers 'required' value
      *
      *  \return Subparsers 'required' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
-    required() const _ARGPARSE_NOEXCEPT;
+    required() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Add argument parser with concrete name
@@ -6059,7 +6059,7 @@ public:
      *
      *  \return Parser names container
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::vector<std::string>
     parser_names() const;
 
@@ -6067,7 +6067,7 @@ private:
     void
     limit_help_flags(
             HelpFormatter const&,
-            std::size_t& limit) const _ARGPARSE_OVERRIDE;
+            std::size_t& limit) const ARGPARSE_OVERRIDE;
 
     void
     print_help(
@@ -6078,7 +6078,7 @@ private:
             bool required,
             std::size_t limit,
             std::size_t width,
-            std::string const& lang) const _ARGPARSE_OVERRIDE;
+            std::string const& lang) const ARGPARSE_OVERRIDE;
 
     std::list<pParser>
     list_parsers() const;
@@ -6115,7 +6115,7 @@ private:
 /*!
  *  \brief ArgumentParser objects
  */
-_ARGPARSE_EXPORT class ArgumentParser
+ARGPARSE_EXPORT class ArgumentParser
 {
     friend class _ParserGroup;
     friend class HelpFormatter;
@@ -6145,7 +6145,7 @@ _ARGPARSE_EXPORT class ArgumentParser
     initialize_parser();
 
 public:
-    _ARGPARSE_ATTR_DEPRECATED_REASON(
+    ARGPARSE_ATTR_DEPRECATED_REASON(
             "use argparse::SubParsers instead. "
             "will be removed in the next minor release (v1.10.0)")
     typedef SubParsers Subparser;
@@ -6202,7 +6202,7 @@ public:
     /*!
      *  \brief Destroy argument parser
      */
-    virtual ~ArgumentParser() _ARGPARSE_NOEXCEPT { }
+    virtual ~ArgumentParser() ARGPARSE_NOEXCEPT { }
 
     /*!
      *  \brief Set argument parser 'prog' value (default: argv[0] or "untitled")
@@ -6350,7 +6350,7 @@ public:
     ArgumentParser&
     aliases(std::vector<std::string> const& value);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Set argument parser 'aliases' value (for subparsers)
      *
@@ -6412,7 +6412,7 @@ public:
     ArgumentParser&
     parents(std::vector<ArgumentParser> const& value);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Set argument parser 'parents' value
      *
@@ -6567,7 +6567,7 @@ public:
      */
     ArgumentParser&
     allow_abbrev(
-            bool value) _ARGPARSE_NOEXCEPT;
+            bool value) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Set argument parser 'exit_on_error' value (default: true)
@@ -6578,7 +6578,7 @@ public:
      */
     ArgumentParser&
     exit_on_error(
-            bool value) _ARGPARSE_NOEXCEPT;
+            bool value) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Set output width value (default: auto-detected or 80, min 33)
@@ -6589,23 +6589,23 @@ public:
      */
     ArgumentParser&
     output_width(
-            std::size_t value) _ARGPARSE_NOEXCEPT;
+            std::size_t value) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'prog' value (default: argv[0] or "untitled")
      *
      *  \return Argument parser 'prog' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    prog() const _ARGPARSE_NOEXCEPT;
+    prog() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'usage' value for default language
      *
      *  \return Argument parser 'usage' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     usage() const;
 
@@ -6617,7 +6617,7 @@ public:
      *
      *  \return Title for argument parser 'usage'
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     usage_title() const;
 
@@ -6626,7 +6626,7 @@ public:
      *
      *  \return Argument parser 'description' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     description() const;
 
@@ -6638,7 +6638,7 @@ public:
      *
      *  \return Title for positional arguments
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     positionals_title() const;
 
@@ -6650,7 +6650,7 @@ public:
      *
      *  \return Title for operand arguments
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     operands_title() const;
 
@@ -6662,7 +6662,7 @@ public:
      *
      *  \return Title for optional arguments
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     optionals_title() const;
 
@@ -6671,7 +6671,7 @@ public:
      *
      *  \return Argument parser 'epilog' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     epilog() const;
 
@@ -6681,7 +6681,7 @@ public:
      *
      *  \return Argument parser 'help' message
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
     help() const;
 
@@ -6690,9 +6690,9 @@ public:
      *
      *  \return Argument parser 'aliases' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::vector<std::string> const&
-    aliases() const _ARGPARSE_NOEXCEPT;
+    aliases() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'formatter_class' value
@@ -6701,27 +6701,27 @@ public:
      *
      *  \return Argument parser 'formatter_class' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     HelpFormatter&
-    formatter_class() _ARGPARSE_NOEXCEPT;
+    formatter_class() ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'prefix_chars' value (default: "-")
      *
      *  \return Argument parser 'prefix_chars' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    prefix_chars() const _ARGPARSE_NOEXCEPT;
+    prefix_chars() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'fromfile_prefix_chars' value
      *
      *  \return Argument parser 'fromfile_prefix_chars' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    fromfile_prefix_chars() const _ARGPARSE_NOEXCEPT;
+    fromfile_prefix_chars() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'comment_prefix_chars' value
@@ -6730,65 +6730,65 @@ public:
      *
      *  \return Argument parser 'comment_prefix_chars' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    comment_prefix_chars() const _ARGPARSE_NOEXCEPT;
+    comment_prefix_chars() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'argument_default' value
      *
      *  \return Argument parser 'argument_default' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    argument_default() const _ARGPARSE_NOEXCEPT;
+    argument_default() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'conflict_handler' value
      *
      *  \return Argument parser 'conflict_handler' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string const&
-    conflict_handler() const _ARGPARSE_NOEXCEPT;
+    conflict_handler() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'add_help' value (default: true)
      *
      *  \return Argument parser 'add_help' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
-    add_help() const _ARGPARSE_NOEXCEPT;
+    add_help() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'allow_abbrev' value (default: true)
      *
      *  \return Argument parser 'allow_abbrev' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
-    allow_abbrev() const _ARGPARSE_NOEXCEPT;
+    allow_abbrev() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'exit_on_error' value (default: true)
      *
      *  \return Argument parser 'exit_on_error' value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
-    exit_on_error() const _ARGPARSE_NOEXCEPT;
+    exit_on_error() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get output width value (default: auto-detected or 80, min 33)
      *
      *  \return Output width value
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::size_t
     output_width() const;
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Add argument with flags
      *
@@ -6942,9 +6942,9 @@ public:
      *
      *  \return Current subparsers pointer or nullptr
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     SubParsers*
-    subparsers() const _ARGPARSE_NOEXCEPT;
+    subparsers() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Check if subparsers was added
@@ -6953,9 +6953,9 @@ public:
      *
      *  \return True if subparsers was added, false otherwise
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
-    has_subparsers() const _ARGPARSE_NOEXCEPT;
+    has_subparsers() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Set argument parser 'handle' function.
@@ -6967,7 +6967,7 @@ public:
      *  \return Current argument parser reference
      */
     ArgumentParser&
-    handle(detail::func1<std::string const&>::type func) _ARGPARSE_NOEXCEPT;
+    handle(detail::func1<std::string const&>::type func) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Set argument parser 'handle' function.
@@ -6979,7 +6979,7 @@ public:
      *  \return Current argument parser reference
      */
     ArgumentParser&
-    handle(detail::func1<Namespace const&>::type func) _ARGPARSE_NOEXCEPT;
+    handle(detail::func1<Namespace const&>::type func) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get the default value for a specific argument.
@@ -6989,12 +6989,12 @@ public:
      *
      *  \return Default value for a specific argument
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     get_default(
             std::string const& dest) const;
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Set default values for a specific arguments
      *
@@ -7023,7 +7023,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_args(
             Namespace const& space = Namespace()) const;
@@ -7036,7 +7036,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_args(
             std::string const& args,
@@ -7050,7 +7050,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_args(
             std::vector<std::string> const& args,
@@ -7063,7 +7063,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_args(
             Namespace const& space = Namespace()) const;
@@ -7076,7 +7076,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_args(
             std::string const& args,
@@ -7090,7 +7090,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_args(
             std::vector<std::string> const& args,
@@ -7103,7 +7103,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_intermixed_args(
             Namespace const& space = Namespace()) const;
@@ -7116,7 +7116,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_intermixed_args(
             std::string const& args,
@@ -7130,7 +7130,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_intermixed_args(
             std::vector<std::string> const& args,
@@ -7143,7 +7143,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(
             Namespace const& space = Namespace()) const;
@@ -7156,7 +7156,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(
             std::string const& args,
@@ -7170,13 +7170,13 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(
             std::vector<std::string> const& args,
             Namespace const& space = Namespace()) const;
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Parse concrete arguments
      *
@@ -7187,7 +7187,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_args(
             std::initializer_list<std::string> const& args,
@@ -7203,7 +7203,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_args(
             std::initializer_list<std::string> const& args,
@@ -7219,7 +7219,7 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_intermixed_args(
             std::initializer_list<std::string> const& args,
@@ -7235,14 +7235,14 @@ public:
      *
      *  \return Object with parsed arguments
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
     parse_known_intermixed_args(
             std::initializer_list<std::string> const& args,
             Namespace const& space = Namespace()) const;
 #endif  // C++11+
 
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
     /*!
      *  \brief Try parse command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
@@ -7253,7 +7253,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_args(
             Namespace const& space = Namespace()) const;
@@ -7269,7 +7269,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_args(
             std::string const& args,
@@ -7286,7 +7286,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_args(
             std::initializer_list<std::string> const& args,
@@ -7303,7 +7303,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_args(
             std::vector<std::string> const& args,
@@ -7319,7 +7319,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_args(
             Namespace const& space = Namespace()) const;
@@ -7335,7 +7335,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_args(
             std::string const& args,
@@ -7352,7 +7352,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_args(
             std::initializer_list<std::string> const& args,
@@ -7369,7 +7369,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_args(
             std::vector<std::string> const& args,
@@ -7385,7 +7385,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_intermixed_args(
             Namespace const& space = Namespace()) const;
@@ -7401,7 +7401,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_intermixed_args(
             std::string const& args,
@@ -7418,7 +7418,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_intermixed_args(
             std::initializer_list<std::string> const& args,
@@ -7435,7 +7435,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_intermixed_args(
             std::vector<std::string> const& args,
@@ -7451,7 +7451,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_intermixed_args(
             Namespace const& space = Namespace()) const;
@@ -7467,7 +7467,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_intermixed_args(
             std::string const& args,
@@ -7484,7 +7484,7 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_intermixed_args(
             std::initializer_list<std::string> const& args,
@@ -7501,12 +7501,12 @@ public:
      *
      *  \return Object with parsed arguments or std::nullopt
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
     try_parse_known_intermixed_args(
             std::vector<std::string> const& args,
             Namespace const& space = Namespace()) const;
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
     /*!
      *  \brief Check if environment variable with name exists (from envp[])
@@ -7517,7 +7517,7 @@ public:
      *
      *  \return True if environment variable name with exists, false otherwise
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     bool
     has_env(std::string const& name) const;
 
@@ -7530,7 +7530,7 @@ public:
      *
      *  \return Environment variable value if exists, empty string otherwise
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     get_env(std::string const& name) const;
 
@@ -7541,7 +7541,7 @@ public:
      *
      *  \return Environment variable values list
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::list<std::pair<std::string, std::string> > const&
     list_env() const;
 
@@ -7555,7 +7555,7 @@ public:
      *
      *  \return True if no warnings or errors were found, false otherwise
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     bool
     self_test(
             std::ostream& os = std::cout) const;
@@ -7571,7 +7571,7 @@ public:
      *
      *  \return True if no warnings or errors were found, false otherwise
      */
-    _ARGPARSE_ATTR_MAYBE_UNUSED
+    ARGPARSE_ATTR_MAYBE_UNUSED
     bool
     self_test(
             std::string const& lang,
@@ -7643,7 +7643,7 @@ public:
      *
      *  \return Bash completion
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     format_bash_completion() const;
 
@@ -7654,7 +7654,7 @@ public:
      *
      *  \return Program usage for selected language
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     format_usage(
             std::string const& lang = std::string()) const;
@@ -7666,7 +7666,7 @@ public:
      *
      *  \return Help message for selected language
      */
-    _ARGPARSE_ATTR_NODISCARD
+    ARGPARSE_ATTR_NODISCARD
     std::string
     format_help(
             std::string const& lang = std::string()) const;
@@ -7764,14 +7764,14 @@ private:
             bool intermixed,
             Namespace const& space) const;
 
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
     std::optional<Namespace>
     on_try_parse_arguments(
             std::vector<std::string> const& args,
             bool only_known,
             bool intermixed,
             Namespace const& space) const;
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
     std::vector<std::string>
     read_args_from_file(
@@ -8135,36 +8135,36 @@ private:
 };
 
 // -- implementation ----------------------------------------------------------
-#ifdef _ARGPARSE_INL
+#ifdef ARGPARSE_INL
 namespace detail {
-_ARGPARSE_INLINE_VARIABLE std::size_t _ARGPARSE_USE_CONSTEXPR _min_width = 33;
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_char      = '-';
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _prefix_chars[]   = "-";
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _pseudo_arg[]     = "--";
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _space            = ' ';
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _equals[]         = "=";
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR _none[]         = "None";
-_ARGPARSE_INLINE_VARIABLE char _ARGPARSE_USE_CONSTEXPR
+ARGPARSE_INLINE_VARIABLE std::size_t ARGPARSE_USE_CONSTEXPR _min_width     = 33;
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _prefix_char         = '-';
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _prefix_chars[]      = "-";
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _pseudo_arg[]       = "--";
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _space               = ' ';
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _equals[]            = "=";
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _none[]           = "None";
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
-enum ConflictHandler _ARGPARSE_ENUM_TYPE(uint8_t)
+enum ConflictHandler ARGPARSE_ENUM_TYPE(uint8_t)
 {
     _conflict_error   = 0,  // "error"
     _conflict_resolve = 1,  // "resolve"
 };
 
-_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
+ARGPARSE_INLINE_VARIABLE int32_t ARGPARSE_USE_CONSTEXPR
 _bool_action = argparse::store_true | argparse::store_false;
-_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
+ARGPARSE_INLINE_VARIABLE int32_t ARGPARSE_USE_CONSTEXPR
 _const_action = argparse::store_const | argparse::append_const;
-_ARGPARSE_INLINE_VARIABLE int32_t _ARGPARSE_USE_CONSTEXPR
+ARGPARSE_INLINE_VARIABLE int32_t ARGPARSE_USE_CONSTEXPR
 _store_const_action = _store_action | _const_action;
 
 typedef detail::shared_ptr<Argument> pArgument;
 typedef std::vector<pArgument> pArguments;
 typedef detail::shared_ptr<SubParsers> pSubParsers;
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _erase_remove(
         pArguments& args,
         pArgument arg)
@@ -8175,7 +8175,7 @@ _erase_remove(
     if (it != args.end()) {
         for (pArguments::iterator i = it; ++i != args.end(); ) {
             if (!(*i == arg)) {
-                *it++ = _ARGPARSE_MOVE(*i);
+                *it++ = ARGPARSE_MOVE(*i);
             }
         }
         args.erase(it, args.end());
@@ -8183,7 +8183,7 @@ _erase_remove(
 }
 
 // -- templates ---------------------------------------------------------------
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
 template <class T = std::string, class... Args>
 inline std::vector<T>
 _vector(Args... args)
@@ -8275,7 +8275,7 @@ _move_insert_to_end(
         std::list<T>& from,
         std::vector<T>& to)
 {
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     to.reserve(to.size() + from.size());
     to.insert(to.end(),
               std::make_move_iterator(from.begin()),
@@ -8291,7 +8291,7 @@ _move_insert_to_end(
         std::vector<T>& from,
         std::vector<T>& to)
 {
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     to.reserve(to.size() + from.size());
     to.insert(to.end(),
               std::make_move_iterator(from.begin()),
@@ -8310,7 +8310,7 @@ _move_insert_to(
 {
     to.reserve(to.size() + from.size());
     typedef typename std::vector<T>::difference_type dtype;
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     to.insert(std::next(to.begin(), static_cast<dtype>(i)),
               std::make_move_iterator(from.begin()),
               std::make_move_iterator(from.end()));
@@ -8327,7 +8327,7 @@ _move_replace_at(
         std::size_t i)
 {
     typedef typename std::vector<T>::difference_type dtype;
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     to.erase(std::next(to.begin(), static_cast<dtype>(i)));
     to.insert(std::next(to.begin(), static_cast<dtype>(i)),
               std::make_move_iterator(from.begin()),
@@ -8349,7 +8349,7 @@ _exists(T const& value,
     return it != vec.end();
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _exists(char value,
         std::string const& str)
 {
@@ -8363,47 +8363,47 @@ _exists(char value,
 // since v1.7.0
 typedef uint32_t codepoint;
 
-_ARGPARSE_INL uint8_t _ARGPARSE_CONSTEXPR
+ARGPARSE_INL uint8_t ARGPARSE_CONSTEXPR
 _char_to_u8(
         char c)
 {
     return static_cast<uint8_t>(c);
 }
 
-_ARGPARSE_INL char _ARGPARSE_CONSTEXPR
+ARGPARSE_INL char ARGPARSE_CONSTEXPR
 _u8_to_char(
         uint8_t c)
 {
     return static_cast<char>(c);
 }
 
-_ARGPARSE_INL codepoint _ARGPARSE_CONSTEXPR
+ARGPARSE_INL codepoint ARGPARSE_CONSTEXPR
 _char_to_u32(
         char c)
 {
     return static_cast<codepoint>(_char_to_u8(c));
 }
 
-_ARGPARSE_INL char _ARGPARSE_CONSTEXPR
+ARGPARSE_INL char ARGPARSE_CONSTEXPR
 _u32_to_char(
         codepoint c)
 {
     return _u8_to_char(static_cast<uint8_t>(c));
 }
 
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_1b_mask = 0x80;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_1b_bits = 0x00;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_2b_mask = 0xe0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_2b_bits = 0xc0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_3b_mask = 0xf0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_3b_bits = 0xe0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_4b_mask = 0xf8;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_4b_bits = 0xf0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_mask = 0xc0;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_bits = 0x80;
-_ARGPARSE_INLINE_VARIABLE uint32_t _ARGPARSE_USE_CONSTEXPR _utf8_ct_invm = 0x3f;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_1b_mask = 0x80;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_1b_bits = 0x00;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_2b_mask = 0xe0;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_2b_bits = 0xc0;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_3b_mask = 0xf0;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_3b_bits = 0xe0;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_4b_mask = 0xf8;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_4b_bits = 0xf0;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_ct_mask = 0xc0;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_ct_bits = 0x80;
+ARGPARSE_INLINE_VARIABLE uint32_t ARGPARSE_USE_CONSTEXPR   _utf8_ct_invm = 0x3f;
 
-_ARGPARSE_INL std::size_t _ARGPARSE_CONSTEXPR
+ARGPARSE_INL std::size_t ARGPARSE_CONSTEXPR
 _utf8_codepoint_size(
         uint8_t byte)
 {
@@ -8413,7 +8413,7 @@ _utf8_codepoint_size(
          : (byte & _utf8_4b_mask) == _utf8_4b_bits ? 4 : 0;
 }
 
-_ARGPARSE_INL std::pair<bool, std::size_t>
+ARGPARSE_INL std::pair<bool, std::size_t>
 _utf8_length(
         std::string const& str,
         std::ostream& err = std::cerr)
@@ -8452,7 +8452,7 @@ _utf8_length(
 }
 
 // since v1.7.3
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _is_utf8_string(
         std::string const& str)
 {
@@ -8461,7 +8461,7 @@ _is_utf8_string(
 }
 
 // since v1.7.3
-_ARGPARSE_INL codepoint
+ARGPARSE_INL codepoint
 _to_upper_codepoint(
         codepoint cp)
 {
@@ -8714,7 +8714,7 @@ _to_upper_codepoint(
     return cp;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _to_upper(
         std::string const& str)
 {
@@ -8783,36 +8783,36 @@ _to_upper(
 
 // -- translations support ----------------------------------------------------
 // since v1.7.1
-_ARGPARSE_INL
+ARGPARSE_INL
 TranslationPack::TranslationPack()
     : m_data()
 { }
 
-_ARGPARSE_INL TranslationPack::iterator
-TranslationPack::begin() _ARGPARSE_NOEXCEPT
+ARGPARSE_INL TranslationPack::iterator
+TranslationPack::begin() ARGPARSE_NOEXCEPT
 {
     return m_data.begin();
 }
 
-_ARGPARSE_INL TranslationPack::iterator
-TranslationPack::end() _ARGPARSE_NOEXCEPT
+ARGPARSE_INL TranslationPack::iterator
+TranslationPack::end() ARGPARSE_NOEXCEPT
 {
     return m_data.end();
 }
 
-_ARGPARSE_INL TranslationPack::const_iterator
-TranslationPack::begin() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL TranslationPack::const_iterator
+TranslationPack::begin() const ARGPARSE_NOEXCEPT
 {
     return m_data.begin();
 }
 
-_ARGPARSE_INL TranslationPack::const_iterator
-TranslationPack::end() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL TranslationPack::const_iterator
+TranslationPack::end() const ARGPARSE_NOEXCEPT
 {
     return m_data.end();
 }
 
-_ARGPARSE_INL TranslationPack::mapped_type&
+ARGPARSE_INL TranslationPack::mapped_type&
 TranslationPack::operator [](
         key_type const& key)
 {
@@ -8823,7 +8823,7 @@ TranslationPack::operator [](
     return it->second;
 }
 
-_ARGPARSE_INL TranslationPack::mapped_type&
+ARGPARSE_INL TranslationPack::mapped_type&
 TranslationPack::at(
         key_type const& key)
 {
@@ -8834,7 +8834,7 @@ TranslationPack::at(
     return it->second;
 }
 
-_ARGPARSE_INL TranslationPack::mapped_type const&
+ARGPARSE_INL TranslationPack::mapped_type const&
 TranslationPack::at(
         key_type const& key) const
 {
@@ -8845,7 +8845,7 @@ TranslationPack::at(
     return it->second;
 }
 
-_ARGPARSE_INL TranslationPack::const_iterator
+ARGPARSE_INL TranslationPack::const_iterator
 TranslationPack::find(
         key_type const& key) const
 {
@@ -8855,7 +8855,7 @@ TranslationPack::find(
     return it;
 }
 
-_ARGPARSE_INL TranslationPack::iterator
+ARGPARSE_INL TranslationPack::iterator
 TranslationPack::find(
         key_type const& key)
 {
@@ -8865,7 +8865,7 @@ TranslationPack::find(
     return it;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _tr(TranslationPack const& pack,
         std::string const& lang)
 {
@@ -8880,7 +8880,7 @@ _tr(TranslationPack const& pack,
     return it != pack.end() ? it->second : std::string();
 }
 
-_ARGPARSE_INL TranslationPack::mapped_type const&
+ARGPARSE_INL TranslationPack::mapped_type const&
 _tr_at(TranslationPack const& map,
         TranslationPack::key_type const& key)
 {
@@ -8888,7 +8888,7 @@ _tr_at(TranslationPack const& map,
 }
 // ----------------------------------------------------------------------------
 
-_ARGPARSE_INL std::pair<std::size_t, std::size_t>
+ARGPARSE_INL std::pair<std::size_t, std::size_t>
 _get_terminal_size(
         bool default_values = false)
 {
@@ -8934,27 +8934,27 @@ _get_terminal_size(
     return std::make_pair(width, height);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _limit_to_min(
         std::size_t& value,
-        std::size_t to) _ARGPARSE_NOEXCEPT
+        std::size_t to) ARGPARSE_NOEXCEPT
 {
     if (value < to) {
         value = to;
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _limit_to_max(
         std::size_t& value,
-        std::size_t to) _ARGPARSE_NOEXCEPT
+        std::size_t to) ARGPARSE_NOEXCEPT
 {
     if (value > to) {
         value = to;
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ltrim(std::string& str)
 {
     std::string::iterator it = str.begin();
@@ -8964,7 +8964,7 @@ _ltrim(std::string& str)
     str.erase(str.begin(), it);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _rtrim(std::string& str)
 {
     std::string::reverse_iterator it = str.rbegin();
@@ -8974,14 +8974,14 @@ _rtrim(std::string& str)
     str.erase(it.base(), str.end());
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _trim(std::string& str)
 {
     _ltrim(str);
     _rtrim(str);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _trim_copy(
         std::string const& str)
 {
@@ -8990,8 +8990,8 @@ _trim_copy(
     return res;
 }
 
-#ifdef _ARGPARSE_HAS_STRING_VIEW
-_ARGPARSE_INL std::string_view
+#ifdef ARGPARSE_HAS_STRING_VIEW
+ARGPARSE_INL std::string_view
 _trim_sw(
         std::string const& str)
 {
@@ -9013,22 +9013,22 @@ _trim_sw(
                      static_cast<std::size_t>(1 + std::distance(left, right)));
 }
 #else
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _trim_sw(
         std::string const& str)
 {
     return _trim_copy(str);
 }
-#endif  // _ARGPARSE_HAS_STRING_VIEW
+#endif  // ARGPARSE_HAS_STRING_VIEW
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _file_name(
         std::string const& path)
 {
     return path.substr(path.find_last_of("/\\") + 1);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _resolve_conflict(
         std::string const& str,
         std::vector<std::string>& values)
@@ -9043,7 +9043,7 @@ _resolve_conflict(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _resolve_conflict(
         std::vector<std::string> const& vec,
         std::vector<std::string>& values)
@@ -9053,7 +9053,7 @@ _resolve_conflict(
     }
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _get_punct(
         std::string const& str)
 {
@@ -9066,7 +9066,7 @@ _get_punct(
     return res;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _have_quotes(
         std::string const& str)
 {
@@ -9074,14 +9074,14 @@ _have_quotes(
             && (str.at(0) == '\'' || str.at(0) == '\"');
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _remove_quotes(
         std::string const& str)
 {
     return _have_quotes(str) ? str.substr(1, str.size() - 2) : str;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _replace(
         std::string str,
         std::string const& old,
@@ -9095,7 +9095,7 @@ _replace(
     return str;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _contains_substr(
         std::string const& str,
         std::string const& substr)
@@ -9103,7 +9103,7 @@ _contains_substr(
     return str.find(substr) != std::string::npos;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _starts_with(
         std::string const& str,
         std::string const& value)
@@ -9111,7 +9111,7 @@ _starts_with(
     return str.compare(0, value.size(), value) == 0;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _ends_with(
         std::string const& str,
         std::string const& value)
@@ -9120,7 +9120,7 @@ _ends_with(
             && 0 == str.compare(str.size() - value.size(), value.size(), value);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _flag_name(
         std::string const& str)
 {
@@ -9132,8 +9132,8 @@ _flag_name(
                       static_cast<std::size_t>(std::distance(it, str.end())));
 }
 
-#ifdef _ARGPARSE_HAS_STRING_VIEW
-_ARGPARSE_INL std::string_view
+#ifdef ARGPARSE_HAS_STRING_VIEW
+ARGPARSE_INL std::string_view
 _flag_name(
         std::string_view str)
 {
@@ -9144,18 +9144,18 @@ _flag_name(
     return str.substr(static_cast<std::size_t>(std::distance(str.begin(), it)),
                       static_cast<std::size_t>(std::distance(it, str.end())));
 }
-#endif  // _ARGPARSE_HAS_STRING_VIEW
+#endif  // ARGPARSE_HAS_STRING_VIEW
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _is_flag_correct(
         std::string const& str,
         bool is_optional)
 {
-#ifdef _ARGPARSE_HAS_STRING_VIEW
+#ifdef ARGPARSE_HAS_STRING_VIEW
     std::string_view trimmed = _trim_sw(str);
 #else
     std::string trimmed = _trim_copy(str);
-#endif  // _ARGPARSE_HAS_STRING_VIEW
+#endif  // ARGPARSE_HAS_STRING_VIEW
     if (trimmed.size() != str.size()) {
         return false;
     }
@@ -9174,7 +9174,7 @@ _is_flag_correct(
     return true;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _is_negative_number(
         std::string const& str)
 {
@@ -9184,7 +9184,7 @@ _is_negative_number(
     return !ss.fail() && ss.eof() && value < 0;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _is_optional(
         std::string const& arg,
         std::string const& prefix_chars,
@@ -9195,7 +9195,7 @@ _is_optional(
             && (have_negative_args || !_is_negative_number(arg));
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _not_optional(
         std::string const& arg,
         std::string const& prefix_chars,
@@ -9206,7 +9206,7 @@ _not_optional(
             || (!have_negative_args && _is_negative_number(arg));
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _join(std::vector<std::string> const& values,
         std::string const& separator,
         std::string const& quotes)
@@ -9221,7 +9221,7 @@ _join(std::vector<std::string> const& values,
     return res;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _append_value_to(
         std::string const& value,
         std::string& str,
@@ -9233,7 +9233,7 @@ _append_value_to(
     str += value;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _store_value_to(
         std::string& value,
         std::vector<std::string>& res,
@@ -9245,7 +9245,7 @@ _store_value_to(
     }
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 _split(std::string const& str,
         std::string const& sep,
         int32_t maxsplit)
@@ -9276,7 +9276,7 @@ _split(std::string const& str,
     return res;
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 _split_lines(
         std::string const& str,
         bool keepends = false)
@@ -9298,7 +9298,7 @@ _split_lines(
     return res;
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 _split_equal(
         std::string const& str,
         std::string const& prefix)
@@ -9320,7 +9320,7 @@ _split_equal(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _process_quotes(
         std::list<char>& quotes,
         std::string const& value,
@@ -9343,28 +9343,28 @@ _process_quotes(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _string_to_bool(
-        std::string const& str) _ARGPARSE_NOEXCEPT
+        std::string const& str) ARGPARSE_NOEXCEPT
 {
     return !str.empty();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _bool_to_string(
         bool value)
 {
     return value ? "true" : "false";
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _bool_to_string(
         std::string const& str)
 {
     return _bool_to_string(_string_to_bool(str));
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _vector_to_string(
         std::vector<std::string>::const_iterator begvec,
         std::vector<std::string>::const_iterator endvec,
@@ -9387,7 +9387,7 @@ _vector_to_string(
     return begin + (res.empty() ? none : res) + end;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _vector_to_string(
         std::vector<std::string> const& vec,
         std::string const& separator = _spaces,
@@ -9401,7 +9401,7 @@ _vector_to_string(
                              replace_space, none, begin, end);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _matrix_to_string(
         std::vector<std::string> const& values,
         std::vector<std::size_t> const& indexes,
@@ -9426,7 +9426,7 @@ _matrix_to_string(
     return begin + (res.empty() ? (begin + res + end) : res) + end;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _boolean_option_to_args(
         std::string const& key,
         _Storage::value_type const& args)
@@ -9442,7 +9442,7 @@ _boolean_option_to_args(
            ? _bool_to_string(args.second.front()) : args.second.front();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _boolean_option_to_string(
         std::string const& key,
         _Storage::value_type const& args,
@@ -9459,7 +9459,7 @@ _boolean_option_to_string(
                                     : _bool_to_string(args.second.front());
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _ignore_explicit(
         std::string const& arg,
         std::string const& value)
@@ -9467,7 +9467,7 @@ _ignore_explicit(
     return "argument " + arg + ": ignored explicit argument '" + value + "'";
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _eat_ln(std::ostream& os,
         bool& eat_ln,
         std::string const& begin = std::string("\n"))
@@ -9479,7 +9479,7 @@ _eat_ln(std::ostream& os,
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _format_output_func(
         std::size_t indent,
         std::size_t width,
@@ -9500,7 +9500,7 @@ _format_output_func(
     }
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _format_output(
         std::string const& head,
         std::string const& body,
@@ -9536,7 +9536,7 @@ _format_output(
     return _join(res, "\n");
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _help_formatter(
         std::string const& head,
         HelpFormatter const& formatter,
@@ -9566,7 +9566,7 @@ _help_formatter(
     return _join(res, "\n");
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _print_raw_text_formatter(
         HelpFormatter const& formatter,
         std::string const& text,
@@ -9583,7 +9583,7 @@ _print_raw_text_formatter(
     }
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _filled_string(
         std::string const& str,
         std::size_t limit,
@@ -9598,15 +9598,15 @@ _filled_string(
     return res;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _is_type_correct(
         std::string const& expected,
-        std::string const& received) _ARGPARSE_NOEXCEPT
+        std::string const& received) ARGPARSE_NOEXCEPT
 {
     return expected.empty() || received == expected;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _check_type(
         Value<std::string> const& expected,
         std::string const& received)
@@ -9617,7 +9617,7 @@ _check_type(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _check_non_count_action(
         std::string const& key,
         Action action)
@@ -9627,7 +9627,7 @@ _check_non_count_action(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _check_argument_type(
         bool is_positional)
 {
@@ -9637,7 +9637,7 @@ _check_argument_type(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _check_flag_name(
         std::string const& flag)
 {
@@ -9646,7 +9646,7 @@ _check_flag_name(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _update_flag_name_func(
         std::string const& arg,
         std::string& flag,
@@ -9656,11 +9656,11 @@ _update_flag_name_func(
     std::size_t count_prefixes = arg.size() - name.size();
     if (count < count_prefixes) {
         count = count_prefixes;
-        flag = _ARGPARSE_MOVE(name);
+        flag = ARGPARSE_MOVE(name);
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _update_flag_name(
         std::vector<std::string>& flags,
         std::string const& prefix_chars,
@@ -9688,7 +9688,7 @@ _update_flag_name(
     }
 }
 
-_ARGPARSE_INL pArgument const
+ARGPARSE_INL pArgument const
 _find_arg_by_flag(
         pArguments const& args,
         std::string const& key)
@@ -9696,10 +9696,10 @@ _find_arg_by_flag(
     pArguments::const_iterator it = args.begin();
     for ( ; it != args.end() && !_exists(key, (*it)->flags()); ++it) {
     }
-    return it != args.end() ? *it : _ARGPARSE_NULLPTR;
+    return it != args.end() ? *it : ARGPARSE_NULLPTR;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _is_not_operand(
         bool was_pseudo_arg,
         pArguments const& args,
@@ -9709,7 +9709,7 @@ _is_not_operand(
                 args, _split(key, _equals, 1).front());
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _add_arg_usage(
         std::string& res,
         std::string const& str,
@@ -9718,7 +9718,7 @@ _add_arg_usage(
     _append_value_to(required ? str : "[" + str + "]", res, "\n");
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _check_intermixed_subparsers(
         bool intermixed,
         pSubParsers const& subparsers)
@@ -9729,7 +9729,7 @@ _check_intermixed_subparsers(
     }
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 _process_split_equal(
         std::string& arg,
         std::string const& prefix_chars)
@@ -9743,7 +9743,7 @@ _process_split_equal(
     return equals;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _negative_numbers_presented(
         pArguments const& optionals,
         std::string const& prefix_chars)
@@ -9761,7 +9761,7 @@ _negative_numbers_presented(
     return false;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _process_separate_arg_abbrev(
         std::string const& name,
         std::size_t i,
@@ -9778,7 +9778,7 @@ _process_separate_arg_abbrev(
         flags.back() += name.substr(i);
         return false;
     }
-    Argument const* argument = _ARGPARSE_NULLPTR;
+    Argument const* argument = ARGPARSE_NULLPTR;
     for (std::size_t j = 0; j < args.size() && !argument; ++j) {
         for (std::size_t k = 0; k < args.at(j)->flags().size(); ++k) {
             std::string const& flag = args.at(j)->flags().at(k);
@@ -9809,7 +9809,7 @@ _process_separate_arg_abbrev(
 }  // namespace detail
 
 // -- HelpFormatter -----------------------------------------------------------
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 HelpFormatter::_fill_text(
         std::string const& text,
         std::size_t width,
@@ -9830,21 +9830,21 @@ HelpFormatter::_fill_text(
     return detail::_join(res, "\n");
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 HelpFormatter::_get_default_metavar_for_optional(
         Argument const* action) const
 {
     return detail::_to_upper(action->get_dest());
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 HelpFormatter::_get_default_metavar_for_positional(
         Argument const* action) const
 {
     return action->get_dest();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 HelpFormatter::_get_help_string(
         Argument const* action,
         std::string const& lang) const
@@ -9852,7 +9852,7 @@ HelpFormatter::_get_help_string(
     return detail::_tr(action->m_help.value(), lang);
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 HelpFormatter::_split_lines(
         std::string const& text,
         std::size_t width) const
@@ -9874,7 +9874,7 @@ HelpFormatter::_split_lines(
     return res;
 }
 
-_ARGPARSE_INL HelpFormatter::CompletionInfo
+ARGPARSE_INL HelpFormatter::CompletionInfo
 HelpFormatter::_bash_completion_info(
         ArgumentParser const* parser) const
 {
@@ -9926,7 +9926,7 @@ HelpFormatter::_bash_completion_info(
     return res;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 HelpFormatter::_print_parser_completion(
         std::ostream& os,
         ArgumentParser const* p,
@@ -9988,7 +9988,7 @@ HelpFormatter::_print_parser_completion(
     os << "}\n\n";
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 HelpFormatter::_print_custom_usage(
         std::ostream& os,
         ArgumentParser const* p,
@@ -10040,7 +10040,7 @@ HelpFormatter::_print_custom_usage(
     os << detail::_format_output(head_prog, res, 1, indent, w);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 HelpFormatter::_format_bash_completion(
         ArgumentParser const* p) const
 {
@@ -10055,7 +10055,7 @@ HelpFormatter::_format_bash_completion(
     return ss.str();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 HelpFormatter::_format_usage(
         ArgumentParser const* p,
         std::string const& language) const
@@ -10075,7 +10075,7 @@ HelpFormatter::_format_usage(
     return ss.str();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 HelpFormatter::_format_help(
         ArgumentParser const* p,
         std::string const& language) const
@@ -10156,7 +10156,7 @@ HelpFormatter::_format_help(
 }
 
 // -- _RawDescriptionHelpFormatter --------------------------------------------
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _RawDescriptionHelpFormatter::_fill_text(
         std::string const& text,
         std::size_t width,
@@ -10177,7 +10177,7 @@ _RawDescriptionHelpFormatter::_fill_text(
     return detail::_join(res, "\n");
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 _RawDescriptionHelpFormatter::_split_lines_raw(
         std::string const& text,
         std::size_t width) const
@@ -10224,7 +10224,7 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
 }
 
 // -- _RawTextHelpFormatter ---------------------------------------------------
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 _RawTextHelpFormatter::_split_lines(
         std::string const& text,
         std::size_t width) const
@@ -10233,7 +10233,7 @@ _RawTextHelpFormatter::_split_lines(
 }
 
 // -- _ArgumentDefaultsHelpFormatter ------------------------------------------
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _ArgumentDefaultsHelpFormatter::_get_help_string(
         Argument const* action,
         std::string const& lang) const
@@ -10251,7 +10251,7 @@ _ArgumentDefaultsHelpFormatter::_get_help_string(
 }
 
 // -- _MetavarTypeHelpFormatter -----------------------------------------------
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _MetavarTypeHelpFormatter::_get_default_metavar_for_optional(
         Argument const* action) const
 {
@@ -10261,7 +10261,7 @@ _MetavarTypeHelpFormatter::_get_default_metavar_for_optional(
     return HelpFormatter::_get_default_metavar_for_optional(action);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _MetavarTypeHelpFormatter::_get_default_metavar_for_positional(
         Argument const* action) const
 {
@@ -10272,7 +10272,7 @@ _MetavarTypeHelpFormatter::_get_default_metavar_for_positional(
 }
 
 // -- standAlone functions ----------------------------------------------------
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 split_to_args(
         std::string const& str,
         std::ostream& err)
@@ -10315,7 +10315,7 @@ split_to_args(
 }
 
 // -- Argument ----------------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 Argument::Argument(
         std::vector<std::string> const& flags,
         std::string const& name,
@@ -10334,8 +10334,8 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
-      m_handle(_ARGPARSE_NULLPTR),
-      m_factory(_ARGPARSE_NULLPTR),
+      m_handle(ARGPARSE_NULLPTR),
+      m_factory(ARGPARSE_NULLPTR),
       m_post_trigger(),
       m_action(argparse::store),
       m_type(type),
@@ -10346,7 +10346,7 @@ Argument::Argument(
     m_required.reset(m_type != Optional);
 }
 
-_ARGPARSE_INL detail::shared_ptr<Argument>
+ARGPARSE_INL detail::shared_ptr<Argument>
 Argument::make_argument(
         std::vector<std::string> const& flags,
         std::string const& name,
@@ -10355,8 +10355,8 @@ Argument::make_argument(
     return detail::make_shared<Argument>(Argument(flags, name, type));
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL
 Argument::Argument(
         std::vector<std::string>&& flags,
         std::string&& name,
@@ -10387,7 +10387,7 @@ Argument::Argument(
     m_required.reset(m_type != Optional);
 }
 
-_ARGPARSE_INL detail::shared_ptr<Argument>
+ARGPARSE_INL detail::shared_ptr<Argument>
 Argument::make_argument(
         std::vector<std::string>&& flags,
         std::string&& name,
@@ -10397,7 +10397,7 @@ Argument::make_argument(
                 Argument(std::move(flags), std::move(name), type));
 }
 #else
-_ARGPARSE_INL
+ARGPARSE_INL
 Argument::Argument(
         std::string const& flag)
     : m_flags(detail::_vector(flag)),
@@ -10414,8 +10414,8 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
-      m_handle(_ARGPARSE_NULLPTR),
-      m_factory(_ARGPARSE_NULLPTR),
+      m_handle(ARGPARSE_NULLPTR),
+      m_factory(ARGPARSE_NULLPTR),
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
@@ -10425,7 +10425,7 @@ Argument::Argument(
     m_help.will_have()[std::string()] = std::string();
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 Argument::Argument(
         std::string const& flag1,
         std::string const& flag2)
@@ -10443,8 +10443,8 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
-      m_handle(_ARGPARSE_NULLPTR),
-      m_factory(_ARGPARSE_NULLPTR),
+      m_handle(ARGPARSE_NULLPTR),
+      m_factory(ARGPARSE_NULLPTR),
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
@@ -10454,7 +10454,7 @@ Argument::Argument(
     m_help.will_have()[std::string()] = std::string();
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 Argument::Argument(
         std::string const& flag1,
         std::string const& flag2,
@@ -10473,8 +10473,8 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
-      m_handle(_ARGPARSE_NULLPTR),
-      m_factory(_ARGPARSE_NULLPTR),
+      m_handle(ARGPARSE_NULLPTR),
+      m_factory(ARGPARSE_NULLPTR),
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
@@ -10484,7 +10484,7 @@ Argument::Argument(
     m_help.will_have()[std::string()] = std::string();
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 Argument::Argument(
         std::string const& flag1,
         std::string const& flag2,
@@ -10504,8 +10504,8 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
-      m_handle(_ARGPARSE_NULLPTR),
-      m_factory(_ARGPARSE_NULLPTR),
+      m_handle(ARGPARSE_NULLPTR),
+      m_factory(ARGPARSE_NULLPTR),
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
@@ -10516,7 +10516,7 @@ Argument::Argument(
 }
 #endif  // C++11+
 
-_ARGPARSE_INL
+ARGPARSE_INL
 Argument::Argument(
         std::vector<std::string> const& flags)
     : m_flags(flags),
@@ -10533,8 +10533,8 @@ Argument::Argument(
       m_version(),
       m_metavar(),
       m_dest(detail::_vector(std::string())),
-      m_handle(_ARGPARSE_NULLPTR),
-      m_factory(_ARGPARSE_NULLPTR),
+      m_handle(ARGPARSE_NULLPTR),
+      m_factory(ARGPARSE_NULLPTR),
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
@@ -10544,7 +10544,7 @@ Argument::Argument(
     m_help.will_have()[std::string()] = std::string();
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 Argument::Argument(
         Argument const& orig)
     : m_flags(orig.m_flags),
@@ -10571,7 +10571,7 @@ Argument::Argument(
 {
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::operator =(
         Argument const& rhs)
 {
@@ -10601,10 +10601,10 @@ Argument::operator =(
     return *this;
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL
 Argument::Argument(
-        Argument&& orig) _ARGPARSE_NOEXCEPT
+        Argument&& orig) ARGPARSE_NOEXCEPT
     : m_flags(std::move(orig.m_flags)),
       m_all_flags(std::move(orig.m_all_flags)),
       m_name(std::move(orig.m_name)),
@@ -10629,9 +10629,9 @@ Argument::Argument(
 {
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::operator =(
-        Argument&& rhs) _ARGPARSE_NOEXCEPT
+        Argument&& rhs) ARGPARSE_NOEXCEPT
 {
     if (this != &rhs) {
         this->m_flags       = std::move(rhs.m_flags);
@@ -10660,7 +10660,7 @@ Argument::operator =(
 }
 #endif  // C++11+
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::action(
         std::string const& value)
 {
@@ -10690,7 +10690,7 @@ Argument::action(
     throw ValueError("unknown action '" + value + "'");
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::action(
         Action value)
 {
@@ -10761,7 +10761,7 @@ Argument::action(
             throw ValueError("unknown action");
     }
     if (action() & (argparse::version | argparse::help)) {
-        m_handle = _ARGPARSE_NULLPTR;
+        m_handle = ARGPARSE_NULLPTR;
     }
     if (!(value & detail::_store_const_action)) {
         m_metavar.reset();
@@ -10770,7 +10770,7 @@ Argument::action(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::nargs(
         std::size_t num)
 {
@@ -10814,7 +10814,7 @@ Argument::nargs(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::nargs(
         std::string const& value,
         std::size_t num)
@@ -10836,7 +10836,7 @@ Argument::nargs(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::nargs(
         _REMAINDER)
 {
@@ -10849,7 +10849,7 @@ Argument::nargs(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::nargs(
         _SUPPRESS)
 {
@@ -10862,7 +10862,7 @@ Argument::nargs(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::const_value(
         std::string const& value)
 {
@@ -10878,7 +10878,7 @@ Argument::const_value(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::default_value(
         std::string const& value)
 {
@@ -10886,7 +10886,7 @@ Argument::default_value(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::default_value(
         _SUPPRESS value)
 {
@@ -10894,7 +10894,7 @@ Argument::default_value(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::implicit_value(
         std::string const& value)
 {
@@ -10902,7 +10902,7 @@ Argument::implicit_value(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::type(
         std::string const& value)
 {
@@ -10910,15 +10910,15 @@ Argument::type(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::type(
-        detail::func2<std::string const&, void*>::type func) _ARGPARSE_NOEXCEPT
+        detail::func2<std::string const&, void*>::type func) ARGPARSE_NOEXCEPT
 {
-    m_factory = _ARGPARSE_MOVE(func);
+    m_factory = ARGPARSE_MOVE(func);
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::choice(
         std::string const& value)
 {
@@ -10927,11 +10927,11 @@ Argument::choice(
     }
     std::vector<std::string> values;
     values.push_back(value);
-    m_choices = _ARGPARSE_MOVE(values);
+    m_choices = ARGPARSE_MOVE(values);
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::choices(
         std::string const& value)
 {
@@ -10943,19 +10943,19 @@ Argument::choices(
     for (std::size_t i = 0; i < value.size(); ++i) {
         values.push_back(std::string(1, value.at(i)));
     }
-    m_choices = _ARGPARSE_MOVE(values);
+    m_choices = ARGPARSE_MOVE(values);
     return *this;
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL Argument&
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL Argument&
 Argument::choices(
         std::initializer_list<std::string> const& value)
 {
     return choices(std::vector<std::string>{ value });
 }
 #else
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::choices(
         std::string const& value1,
         std::string const& value2)
@@ -10963,7 +10963,7 @@ Argument::choices(
     return choices(detail::_vector(value1, value2));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::choices(
         std::string const& value1,
         std::string const& value2,
@@ -10972,7 +10972,7 @@ Argument::choices(
     return choices(detail::_vector(value1, value2, value3));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::choices(
         std::string const& value1,
         std::string const& value2,
@@ -10983,7 +10983,7 @@ Argument::choices(
 }
 #endif  // C++11+
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::choices(
         std::vector<std::string> const& value)
 {
@@ -10994,7 +10994,7 @@ Argument::choices(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::required(
         bool value)
 {
@@ -11005,7 +11005,7 @@ Argument::required(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::help(
         std::string const& value,
         std::string const& lang)
@@ -11014,7 +11014,7 @@ Argument::help(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::help(
         _SUPPRESS value)
 {
@@ -11022,7 +11022,7 @@ Argument::help(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::version(
         std::string const& value)
 {
@@ -11033,7 +11033,7 @@ Argument::version(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::metavar(
         std::vector<std::string> const& value)
 {
@@ -11049,22 +11049,22 @@ Argument::metavar(
     return *this;
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL Argument&
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL Argument&
 Argument::metavar(
         std::initializer_list<std::string> const& value)
 {
     return metavar(std::vector<std::string>{ value });
 }
 #else
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::metavar(
         std::string const& value)
 {
     return metavar(detail::_vector(value));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::metavar(
         std::string const& value1,
         std::string const& value2)
@@ -11072,7 +11072,7 @@ Argument::metavar(
     return metavar(detail::_vector(value1, value2));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::metavar(
         std::string const& value1,
         std::string const& value2,
@@ -11081,7 +11081,7 @@ Argument::metavar(
     return metavar(detail::_vector(value1, value2, value3));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::metavar(
         std::string const& value1,
         std::string const& value2,
@@ -11092,7 +11092,7 @@ Argument::metavar(
 }
 #endif  // C++11+
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::dest(
         std::string const& value)
 {
@@ -11103,94 +11103,94 @@ Argument::dest(
     return *this;
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 Argument::handle(
-        detail::func1<std::string const&>::type func) _ARGPARSE_NOEXCEPT
+        detail::func1<std::string const&>::type func) ARGPARSE_NOEXCEPT
 {
-    m_handle = _ARGPARSE_MOVE(func);
+    m_handle = ARGPARSE_MOVE(func);
     return *this;
 }
 
-_ARGPARSE_INL std::vector<std::string> const&
-Argument::flags() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::vector<std::string> const&
+Argument::flags() const ARGPARSE_NOEXCEPT
 {
     return m_all_flags;
 }
 
-_ARGPARSE_INL Action
-Argument::action() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL Action
+Argument::action() const ARGPARSE_NOEXCEPT
 {
     return static_cast<Action>(m_action);
 }
 
-_ARGPARSE_INL std::string const&
-Argument::nargs() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+Argument::nargs() const ARGPARSE_NOEXCEPT
 {
     return m_nargs_str;
 }
 
-_ARGPARSE_INL std::string const&
-Argument::const_value() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+Argument::const_value() const ARGPARSE_NOEXCEPT
 {
     return m_const.value();
 }
 
-_ARGPARSE_INL std::string const&
-Argument::default_value() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+Argument::default_value() const ARGPARSE_NOEXCEPT
 {
     return m_default.value();
 }
 
-_ARGPARSE_INL std::string const&
-Argument::implicit_value() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+Argument::implicit_value() const ARGPARSE_NOEXCEPT
 {
     return m_implicit.value();
 }
 
-_ARGPARSE_INL std::string const&
-Argument::type_name() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+Argument::type_name() const ARGPARSE_NOEXCEPT
 {
     return m_type_name.value();
 }
 
-_ARGPARSE_INL std::vector<std::string> const&
-Argument::choices() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::vector<std::string> const&
+Argument::choices() const ARGPARSE_NOEXCEPT
 {
     return m_choices.value();
 }
 
-_ARGPARSE_INL bool
-Argument::required() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+Argument::required() const ARGPARSE_NOEXCEPT
 {
     return m_required.value();
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 Argument::help() const
 {
     return detail::_tr_at(m_help.value(), std::string());
 }
 
-_ARGPARSE_INL std::string const&
-Argument::version() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+Argument::version() const ARGPARSE_NOEXCEPT
 {
     return m_version.value();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::metavar() const
 {
     std::string res = detail::_join(m_metavar.value(), ", ");
     return m_metavar.value().size() > 1 ? ("(" + res + ")") : res;
 }
 
-_ARGPARSE_INL std::string const&
-Argument::dest() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+Argument::dest() const ARGPARSE_NOEXCEPT
 {
     return m_dest.front();
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 Argument::handle(
         std::string const& str) const
 {
@@ -11199,7 +11199,7 @@ Argument::handle(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 Argument::validate() const
 {
     if (!dest().empty()) {
@@ -11215,7 +11215,7 @@ Argument::validate() const
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 Argument::prepare_action(
         Action value)
 {
@@ -11229,7 +11229,7 @@ Argument::prepare_action(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 Argument::make_no_flags()
 {
     m_all_flags.clear();
@@ -11247,7 +11247,7 @@ Argument::make_no_flags()
     }
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::usage(
         HelpFormatter const& formatter) const
 {
@@ -11262,7 +11262,7 @@ Argument::usage(
     return res;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::flags_to_string(
         HelpFormatter const& formatter) const
 {
@@ -11282,20 +11282,20 @@ Argument::flags_to_string(
     return res;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::get_choices() const
 {
     return m_choices.has_value()
             ? detail::_join(choices(), ", ") : detail::_none;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::get_const() const
 {
     return m_const.value_or(detail::_none);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::get_default() const
 {
     if (!m_default.has_value() && (action() & detail::_bool_action)) {
@@ -11306,19 +11306,19 @@ Argument::get_default() const
     }
 }
 
-_ARGPARSE_INL std::string const&
-Argument::get_dest() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+Argument::get_dest() const ARGPARSE_NOEXCEPT
 {
     return dest().empty() ? m_name : dest();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::get_metavar() const
 {
     return m_metavar.has_value() ? metavar() : detail::_none;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::get_nargs() const
 {
     switch (m_nargs) {
@@ -11338,25 +11338,25 @@ Argument::get_nargs() const
     }
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::option_strings() const
 {
     return detail::_vector_to_string(flags(), ", ", "'", false, "", "[", "]");
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::get_required() const
 {
     return detail::_bool_to_string(required());
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::get_type() const
 {
     return m_type_name.value_or(detail::_none);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::print(
         HelpFormatter const& formatter,
         std::size_t limit,
@@ -11366,7 +11366,7 @@ Argument::print(
     std::string help = formatter._get_help_string(this, lang);
     std::string res = help;
     std::string text;
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     std::regex const r("%[(]([a-z_]*)[)]s");
     std::smatch match;
     std::unordered_map<std::string, std::function<std::string()> > const
@@ -11434,7 +11434,7 @@ Argument::print(
                                    formatter, res, width, limit);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 Argument::process_nargs_suffix(
         std::string& res,
         HelpFormatter const& formatter) const
@@ -11482,7 +11482,7 @@ Argument::process_nargs_suffix(
     }
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 Argument::get_argument_name(
         HelpFormatter const& formatter) const
 {
@@ -11498,13 +11498,13 @@ Argument::get_argument_name(
                   : formatter._get_default_metavar_for_optional(this));
 }
 
-_ARGPARSE_INL std::vector<std::string> const&
-Argument::get_argument_flags() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::vector<std::string> const&
+Argument::get_argument_flags() const ARGPARSE_NOEXCEPT
 {
     return dest().empty() ? m_flags : m_dest;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 Argument::resolve_conflict_flags(
         std::vector<std::string> const& flags)
 {
@@ -11512,7 +11512,7 @@ Argument::resolve_conflict_flags(
     detail::_resolve_conflict(flags, m_all_flags);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Argument::error_nargs(
         std::string const& arg) const
 {
@@ -11543,7 +11543,7 @@ Argument::error_nargs(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 Argument::is_match_name(
         std::string const& value) const
 {
@@ -11573,14 +11573,14 @@ Argument::is_match_name(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 Argument::operator ==(
         Argument const& rhs) const
 {
     return this == &rhs;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 Argument::operator ==(
         std::string const& rhs) const
 {
@@ -11588,7 +11588,7 @@ Argument::operator ==(
 }
 
 // -- _Group ------------------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 _Group::_Group(
         std::string const& title,
         std::string const& description)
@@ -11599,20 +11599,20 @@ _Group::_Group(
     m_description[std::string()] = description;
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 _Group::title() const
 {
     return detail::_tr_at(m_title, std::string());
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 _Group::description() const
 {
     return detail::_tr_at(m_description, std::string());
 }
 
 // -- _ArgumentData -----------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 _ArgumentData::_ArgumentData()
     : m_conflict_handler_str("error"),
       m_arguments(),
@@ -11625,13 +11625,13 @@ _ArgumentData::_ArgumentData()
 {
 }
 
-_ARGPARSE_INL detail::shared_ptr<_ArgumentData>
+ARGPARSE_INL detail::shared_ptr<_ArgumentData>
 _ArgumentData::make_argument_data()
 {
     return detail::make_shared<_ArgumentData>(_ArgumentData());
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ArgumentData::check_conflict_arg(
         Argument const* arg)
 {
@@ -11644,7 +11644,7 @@ _ArgumentData::check_conflict_arg(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ArgumentData::update_help(
         bool add_help,
         std::string const& prefix_chars)
@@ -11669,7 +11669,7 @@ _ArgumentData::update_help(
         }
         if (!help_flags.empty()) {
             pArgument arg = Argument::make_argument(
-                        _ARGPARSE_MOVE(help_flags), "help", Argument::Optional);
+                        ARGPARSE_MOVE(help_flags), "help", Argument::Optional);
             arg->help("show this help message and exit").action(argparse::help);
             m_arguments.push_front(arg);
             m_optional.push_front(std::make_pair(m_arguments.front(), false));
@@ -11678,7 +11678,7 @@ _ArgumentData::update_help(
     }
 }
 
-_ARGPARSE_INL std::vector<_ArgumentData::pArgument>
+ARGPARSE_INL std::vector<_ArgumentData::pArgument>
 _ArgumentData::get_arguments(
         bool add_suppress) const
 {
@@ -11694,7 +11694,7 @@ _ArgumentData::get_arguments(
     return res;
 }
 
-_ARGPARSE_INL std::vector<_ArgumentData::pArgument>
+ARGPARSE_INL std::vector<_ArgumentData::pArgument>
 _ArgumentData::get_optional(
         bool add_suppress,
         bool add_group) const
@@ -11711,7 +11711,7 @@ _ArgumentData::get_optional(
     return res;
 }
 
-_ARGPARSE_INL std::vector<_ArgumentData::pArgument>
+ARGPARSE_INL std::vector<_ArgumentData::pArgument>
 _ArgumentData::get_operand(
         bool add_suppress,
         bool add_group) const
@@ -11727,7 +11727,7 @@ _ArgumentData::get_operand(
     return res;
 }
 
-_ARGPARSE_INL std::vector<_ArgumentData::pArgument>
+ARGPARSE_INL std::vector<_ArgumentData::pArgument>
 _ArgumentData::get_positional(
         bool add_suppress,
         bool add_group) const
@@ -11743,7 +11743,7 @@ _ArgumentData::get_positional(
     return res;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ArgumentData::check_conflicting_option(
         Argument const* arg,
         std::vector<std::string>& flags) const
@@ -11770,7 +11770,7 @@ _ArgumentData::check_conflicting_option(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ArgumentData::merge_arguments(
         _ArgumentData const& d)
 {
@@ -11783,7 +11783,7 @@ _ArgumentData::merge_arguments(
     detail::_insert_to_end(d.m_arguments, m_arguments);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ArgumentData::create_argument(
         detail::shared_ptr<_ArgumentData>& data,
         std::vector<std::string> const& in_flags,
@@ -11815,7 +11815,7 @@ _ArgumentData::create_argument(
         flag = detail::_replace(flag, "-", "_");
     }
     pArgument arg = Argument::make_argument(
-                _ARGPARSE_MOVE(flags), _ARGPARSE_MOVE(flag), type);
+                ARGPARSE_MOVE(flags), ARGPARSE_MOVE(flag), type);
     if (type == Argument::Optional) {
         data->check_conflict_arg(arg.get());
     }
@@ -11825,7 +11825,7 @@ _ArgumentData::create_argument(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ArgumentData::validate_argument(
         Argument const& argument,
         std::string const& prefix_chars)
@@ -11900,7 +11900,7 @@ _ArgumentData::validate_argument(
 }
 
 // -- _ArgumentGroup ----------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 _ArgumentGroup::_ArgumentGroup(
         std::string& prefix_chars,
         pArgumentData& parent_data,
@@ -11914,7 +11914,7 @@ _ArgumentGroup::_ArgumentGroup(
 {
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 _ArgumentGroup::_ArgumentGroup(
         _ArgumentGroup const& orig)
     : m_data(orig.m_data),
@@ -11925,7 +11925,7 @@ _ArgumentGroup::_ArgumentGroup(
 {
 }
 
-_ARGPARSE_INL _ArgumentGroup&
+ARGPARSE_INL _ArgumentGroup&
 _ArgumentGroup::operator =(
         _ArgumentGroup const& rhs)
 {
@@ -11939,22 +11939,22 @@ _ArgumentGroup::operator =(
     return *this;
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL Argument&
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL Argument&
 _ArgumentGroup::add_argument(
         std::initializer_list<std::string> const& flags)
 {
     return add_argument(std::vector<std::string>{ flags });
 }
 #else
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 _ArgumentGroup::add_argument(
         std::string const& flag)
 {
     return add_argument(detail::_vector(flag));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 _ArgumentGroup::add_argument(
         std::string const& flag1,
         std::string const& flag2)
@@ -11962,7 +11962,7 @@ _ArgumentGroup::add_argument(
     return add_argument(detail::_vector(flag1, flag2));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 _ArgumentGroup::add_argument(
         std::string const& flag1,
         std::string const& flag2,
@@ -11971,7 +11971,7 @@ _ArgumentGroup::add_argument(
     return add_argument(detail::_vector(flag1, flag2, flag3));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 _ArgumentGroup::add_argument(
         std::string const& flag1,
         std::string const& flag2,
@@ -11982,7 +11982,7 @@ _ArgumentGroup::add_argument(
 }
 #endif  // C++11+
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 _ArgumentGroup::add_argument(
         std::vector<std::string> const& flags)
 {
@@ -11991,7 +11991,7 @@ _ArgumentGroup::add_argument(
     return *m_data->m_arguments.back();
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ArgumentGroup::process_add_argument()
 {
     Argument::Type type
@@ -12044,7 +12044,7 @@ _ArgumentGroup::process_add_argument()
 }
 
 // -- ArgumentGroup -----------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 ArgumentGroup::ArgumentGroup(
         std::string const& title,
         std::string const& description,
@@ -12056,7 +12056,7 @@ ArgumentGroup::ArgumentGroup(
 {
 }
 
-_ARGPARSE_INL detail::shared_ptr<ArgumentGroup>
+ARGPARSE_INL detail::shared_ptr<ArgumentGroup>
 ArgumentGroup::make_argument_group(
         std::string const& title,
         std::string const& description,
@@ -12069,7 +12069,7 @@ ArgumentGroup::make_argument_group(
                               parent_data, argument_default));
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 ArgumentGroup::ArgumentGroup(
         ArgumentGroup const& orig)
     : _Group(orig),
@@ -12077,7 +12077,7 @@ ArgumentGroup::ArgumentGroup(
 {
 }
 
-_ARGPARSE_INL ArgumentGroup&
+ARGPARSE_INL ArgumentGroup&
 ArgumentGroup::operator =(
         ArgumentGroup const& rhs)
 {
@@ -12092,7 +12092,7 @@ ArgumentGroup::operator =(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentGroup&
+ARGPARSE_INL ArgumentGroup&
 ArgumentGroup::title(
         std::string const& value,
         std::string const& lang)
@@ -12101,7 +12101,7 @@ ArgumentGroup::title(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentGroup&
+ARGPARSE_INL ArgumentGroup&
 ArgumentGroup::description(
         std::string const& value,
         std::string const& lang)
@@ -12110,7 +12110,7 @@ ArgumentGroup::description(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentGroup&
+ARGPARSE_INL ArgumentGroup&
 ArgumentGroup::add_argument(
         Argument const& argument)
 {
@@ -12119,7 +12119,7 @@ ArgumentGroup::add_argument(
     return *this;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentGroup::limit_help_flags(
         HelpFormatter const& formatter,
         std::size_t& limit) const
@@ -12130,7 +12130,7 @@ ArgumentGroup::limit_help_flags(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentGroup::print_help(
         std::ostream& os,
         bool& eat_ln,
@@ -12160,7 +12160,7 @@ ArgumentGroup::print_help(
 }
 
 // -- MutuallyExclusiveGroup --------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 MutuallyExclusiveGroup::MutuallyExclusiveGroup(
         std::string& prefix_chars,
         pArgumentData& parent_data,
@@ -12170,7 +12170,7 @@ MutuallyExclusiveGroup::MutuallyExclusiveGroup(
 {
 }
 
-_ARGPARSE_INL MutuallyExclusiveGroup
+ARGPARSE_INL MutuallyExclusiveGroup
 MutuallyExclusiveGroup::make_mutex_group(
         std::string& prefix_chars,
         pArgumentData& parent_data,
@@ -12179,7 +12179,7 @@ MutuallyExclusiveGroup::make_mutex_group(
     return MutuallyExclusiveGroup(prefix_chars, parent_data, argument_default);
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 MutuallyExclusiveGroup::MutuallyExclusiveGroup(
         MutuallyExclusiveGroup const& orig)
     : _ArgumentGroup(orig),
@@ -12187,7 +12187,7 @@ MutuallyExclusiveGroup::MutuallyExclusiveGroup(
 {
 }
 
-_ARGPARSE_INL MutuallyExclusiveGroup&
+ARGPARSE_INL MutuallyExclusiveGroup&
 MutuallyExclusiveGroup::operator =(
         MutuallyExclusiveGroup const& rhs)
 {
@@ -12201,21 +12201,21 @@ MutuallyExclusiveGroup::operator =(
     return *this;
 }
 
-_ARGPARSE_INL MutuallyExclusiveGroup&
+ARGPARSE_INL MutuallyExclusiveGroup&
 MutuallyExclusiveGroup::required(
-        bool value) _ARGPARSE_NOEXCEPT
+        bool value) ARGPARSE_NOEXCEPT
 {
     m_required = value;
     return *this;
 }
 
-_ARGPARSE_INL bool
-MutuallyExclusiveGroup::required() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+MutuallyExclusiveGroup::required() const ARGPARSE_NOEXCEPT
 {
     return m_required;
 }
 
-_ARGPARSE_INL MutuallyExclusiveGroup&
+ARGPARSE_INL MutuallyExclusiveGroup&
 MutuallyExclusiveGroup::add_argument(
         Argument const& argument)
 {
@@ -12224,7 +12224,7 @@ MutuallyExclusiveGroup::add_argument(
     return *this;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 MutuallyExclusiveGroup::usage(
         HelpFormatter const& formatter) const
 {
@@ -12237,7 +12237,7 @@ MutuallyExclusiveGroup::usage(
 }
 
 // -- _Storage::mapped_type ---------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 _Storage::mapped_type::mapped_type()
     : m_exists(),
       m_is_default(),
@@ -12245,7 +12245,7 @@ _Storage::mapped_type::mapped_type()
       m_indexes()
 { }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 _Storage::mapped_type::mapped_type(
         std::vector<std::string> const& values)
     : m_exists(true),
@@ -12256,7 +12256,7 @@ _Storage::mapped_type::mapped_type(
     m_indexes.push_back(m_values.size());
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::mapped_type::clear()
 {
     m_values.clear();
@@ -12265,50 +12265,50 @@ _Storage::mapped_type::clear()
     m_is_default = false;
 }
 
-_ARGPARSE_INL bool
-_Storage::mapped_type::exists() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+_Storage::mapped_type::exists() const ARGPARSE_NOEXCEPT
 {
     return m_exists;
 }
 
-_ARGPARSE_INL bool
-_Storage::mapped_type::is_default() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+_Storage::mapped_type::is_default() const ARGPARSE_NOEXCEPT
 {
     return m_is_default;
 }
 
-_ARGPARSE_INL std::vector<std::string> const&
-_Storage::mapped_type::operator ()() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::vector<std::string> const&
+_Storage::mapped_type::operator ()() const ARGPARSE_NOEXCEPT
 {
     return m_values;
 }
 
-_ARGPARSE_INL std::size_t
-_Storage::mapped_type::size() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::size_t
+_Storage::mapped_type::size() const ARGPARSE_NOEXCEPT
 {
     return m_values.size();
 }
 
-_ARGPARSE_INL bool
-_Storage::mapped_type::empty() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+_Storage::mapped_type::empty() const ARGPARSE_NOEXCEPT
 {
     return m_values.empty();
 }
 
-_ARGPARSE_INL std::string const&
-_Storage::mapped_type::front() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+_Storage::mapped_type::front() const ARGPARSE_NOEXCEPT
 {
     return m_values.front();
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 _Storage::mapped_type::at(
         std::size_t i) const
 {
     return m_values.at(i);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::mapped_type::push_back(
         std::string const& value,
         bool is_default)
@@ -12319,7 +12319,7 @@ _Storage::mapped_type::push_back(
     m_exists = true;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::mapped_type::push_values(
         std::vector<std::string> const& values)
 {
@@ -12328,13 +12328,13 @@ _Storage::mapped_type::push_values(
     m_exists = true;
 }
 
-_ARGPARSE_INL std::vector<std::size_t> const&
-_Storage::mapped_type::indexes() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::vector<std::size_t> const&
+_Storage::mapped_type::indexes() const ARGPARSE_NOEXCEPT
 {
     return m_indexes;
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 _Storage::mapped_type::sub_values(
         std::size_t i) const
 {
@@ -12344,12 +12344,12 @@ _Storage::mapped_type::sub_values(
                 m_values.begin() + static_cast<dtype>(m_indexes.at(i)));
 }
 // -- _Storage ----------------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 _Storage::_Storage()
     : m_data()
 { }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::create(
         key_type const& key,
         mapped_type const& value)
@@ -12369,7 +12369,7 @@ _Storage::create(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::create(
         std::vector<key_type> const& keys)
 {
@@ -12378,7 +12378,7 @@ _Storage::create(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::have_value(
         key_type const& key)
 {
@@ -12392,7 +12392,7 @@ _Storage::have_value(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::store_value(
         key_type const& key,
         std::string const& value)
@@ -12402,7 +12402,7 @@ _Storage::store_value(
     key->handle(value);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::store_values(
         key_type const& key,
         std::vector<std::string> const& values)
@@ -12414,7 +12414,7 @@ _Storage::store_values(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::store_default_value(
         key_type const& key)
 {
@@ -12430,7 +12430,7 @@ _Storage::store_default_value(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _Storage::self_value_stored(
         key_type const& key)
 {
@@ -12455,28 +12455,28 @@ _Storage::self_value_stored(
     return false;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _Storage::exists_arg(
         std::string const& key) const
 {
     return find_arg(key) != end();
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _Storage::exists(
         std::string const& key) const
 {
     return find(key) != end();
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _Storage::exists(
         key_type const& key) const
 {
     return find(key) != end();
 }
 
-_ARGPARSE_INL _Storage::value_type const&
+ARGPARSE_INL _Storage::value_type const&
 _Storage::at(
         std::string const& key) const
 {
@@ -12487,7 +12487,7 @@ _Storage::at(
     return *it;
 }
 
-_ARGPARSE_INL _Storage::mapped_type&
+ARGPARSE_INL _Storage::mapped_type&
 _Storage::at(
         key_type const& key)
 {
@@ -12498,7 +12498,7 @@ _Storage::at(
     return it->second;
 }
 
-_ARGPARSE_INL _Storage::mapped_type const&
+ARGPARSE_INL _Storage::mapped_type const&
 _Storage::at(
         key_type const& key) const
 {
@@ -12509,38 +12509,38 @@ _Storage::at(
     return it->second;
 }
 
-_ARGPARSE_INL _Storage::iterator
+ARGPARSE_INL _Storage::iterator
 _Storage::erase(
         iterator it)
 {
     return m_data.erase(it);
 }
 
-_ARGPARSE_INL _Storage::iterator
-_Storage::begin() _ARGPARSE_NOEXCEPT
+ARGPARSE_INL _Storage::iterator
+_Storage::begin() ARGPARSE_NOEXCEPT
 {
     return m_data.begin();
 }
 
-_ARGPARSE_INL _Storage::iterator
-_Storage::end() _ARGPARSE_NOEXCEPT
+ARGPARSE_INL _Storage::iterator
+_Storage::end() ARGPARSE_NOEXCEPT
 {
     return m_data.end();
 }
 
-_ARGPARSE_INL _Storage::const_iterator
-_Storage::begin() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL _Storage::const_iterator
+_Storage::begin() const ARGPARSE_NOEXCEPT
 {
     return m_data.begin();
 }
 
-_ARGPARSE_INL _Storage::const_iterator
-_Storage::end() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL _Storage::const_iterator
+_Storage::end() const ARGPARSE_NOEXCEPT
 {
     return m_data.end();
 }
 
-_ARGPARSE_INL _Storage::const_iterator
+ARGPARSE_INL _Storage::const_iterator
 _Storage::find_arg(
         std::string const& key) const
 {
@@ -12553,7 +12553,7 @@ _Storage::find_arg(
     return it;
 }
 
-_ARGPARSE_INL _Storage::const_iterator
+ARGPARSE_INL _Storage::const_iterator
 _Storage::find(
         std::string const& key) const
 {
@@ -12563,7 +12563,7 @@ _Storage::find(
     return it;
 }
 
-_ARGPARSE_INL _Storage::const_iterator
+ARGPARSE_INL _Storage::const_iterator
 _Storage::find(
         key_type const& key) const
 {
@@ -12573,7 +12573,7 @@ _Storage::find(
     return it;
 }
 
-_ARGPARSE_INL _Storage::iterator
+ARGPARSE_INL _Storage::iterator
 _Storage::find(
         key_type const& key)
 {
@@ -12583,7 +12583,7 @@ _Storage::find(
     return it;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::on_process_store(
         key_type const& key,
         std::string const& value)
@@ -12603,7 +12603,7 @@ _Storage::on_process_store(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _Storage::on_process_store(
         key_type const& key,
         std::vector<std::string> const& values)
@@ -12624,7 +12624,7 @@ _Storage::on_process_store(
 }
 
 // -- Namespace ---------------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 Namespace::Namespace(
         _Storage const& storage)
     : m_storage(storage),
@@ -12632,7 +12632,7 @@ Namespace::Namespace(
 {
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 Namespace::Namespace(
         _Storage const& storage,
         std::vector<std::string> const& args)
@@ -12641,26 +12641,26 @@ Namespace::Namespace(
 {
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL
 Namespace::Namespace(
-        _Storage&& storage) _ARGPARSE_NOEXCEPT
+        _Storage&& storage) ARGPARSE_NOEXCEPT
     : m_storage(std::move(storage)),
       m_unrecognized_args()
 {
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 Namespace::Namespace(
         _Storage&& storage,
-        std::vector<std::string>&& args) _ARGPARSE_NOEXCEPT
+        std::vector<std::string>&& args) ARGPARSE_NOEXCEPT
     : m_storage(std::move(storage)),
       m_unrecognized_args(std::move(args))
 {
 }
 #endif  // C++11+
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 Namespace::contains(
         std::string const& key) const
 {
@@ -12669,21 +12669,21 @@ Namespace::contains(
             && (!it->second.empty() || it->first->action() == argparse::count);
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 Namespace::exists(
         std::string const& key) const
 {
     return contains(key);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 Namespace::print(
         std::ostream& os) const
 {
     os << to_string() << std::endl;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Namespace::to_args(
         std::string const& key) const
 {
@@ -12718,7 +12718,7 @@ Namespace::to_args(
     }
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Namespace::to_string(
         std::string const& key,
         std::string const& quotes) const
@@ -12751,7 +12751,7 @@ Namespace::to_string(
     }
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Namespace::to_string() const
 {
     std::string res;
@@ -12772,20 +12772,20 @@ Namespace::to_string() const
     return "(Namespace(" + res + "), [" + unknown_args + "])";
 }
 
-_ARGPARSE_INL std::vector<std::string> const&
-Namespace::unrecognized_args() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::vector<std::string> const&
+Namespace::unrecognized_args() const ARGPARSE_NOEXCEPT
 {
     return m_unrecognized_args.value();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Namespace::unrecognized_args_to_args() const
 {
     return detail::_vector_to_string(
                 unrecognized_args(), detail::_spaces, std::string(), true);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 Namespace::store_actions_to_string(
         _Storage::value_type const& args,
         std::string const& quotes)
@@ -12820,7 +12820,7 @@ Namespace::store_actions_to_string(
     }
 }
 
-_ARGPARSE_INL _Storage::value_type const&
+ARGPARSE_INL _Storage::value_type const&
 Namespace::data(
         std::string const& key) const
 {
@@ -12831,14 +12831,14 @@ Namespace::data(
     throw AttributeError("'Namespace' object has no attribute '" + key + "'");
 }
 
-_ARGPARSE_INL _Storage const&
-Namespace::storage() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL _Storage const&
+Namespace::storage() const ARGPARSE_NOEXCEPT
 {
     return m_storage;
 }
 
-#ifdef _ARGPARSE_HAS_OPTIONAL
-_ARGPARSE_INL std::optional<_Storage::value_type>
+#ifdef ARGPARSE_HAS_OPTIONAL
+ARGPARSE_INL std::optional<_Storage::value_type>
 Namespace::opt_data(
         std::string const& key) const
 {
@@ -12848,10 +12848,10 @@ Namespace::opt_data(
     }
     return std::nullopt;
 }
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
 // -- _ParserGroup ------------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 _ParserGroup::_ParserGroup(
         std::string const& title,
         std::string const& description)
@@ -12863,7 +12863,7 @@ _ParserGroup::_ParserGroup(
     m_help.will_have()[std::string()] = std::string();
 }
 
-_ARGPARSE_INL _ParserGroup::pParser
+ARGPARSE_INL _ParserGroup::pParser
 _ParserGroup::make_parser(
         std::string const& name)
 {
@@ -12873,19 +12873,19 @@ _ParserGroup::make_parser(
     return res;
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 _ParserGroup::help() const
 {
     return detail::_tr_at(m_help.value(), std::string());
 }
 
-_ARGPARSE_INL std::string const&
-_ParserGroup::metavar() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+_ParserGroup::metavar() const ARGPARSE_NOEXCEPT
 {
     return m_metavar.value();
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ParserGroup::limit_help_flags(
         HelpFormatter const&,
         std::size_t& limit) const
@@ -12899,7 +12899,7 @@ _ParserGroup::limit_help_flags(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ParserGroup::print_help(
         std::ostream& os,
         bool& eat_ln,
@@ -12924,7 +12924,7 @@ _ParserGroup::print_help(
     print_parser_group(os, formatter, prog, required, limit, width, lang);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 _ParserGroup::print_parser_group(
         std::ostream& os,
         HelpFormatter const& formatter,
@@ -12941,7 +12941,7 @@ _ParserGroup::print_parser_group(
     std::string help = detail::_tr(m_help.value(), lang);
     std::string res = help;
     std::string text;
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
     std::regex const r("%[(]([a-z_]*)[)]s");
     std::smatch match;
     std::unordered_map<std::string, std::function<std::string()> > const
@@ -13008,7 +13008,7 @@ _ParserGroup::print_parser_group(
             std::string name = "    " + metavar;
             res = help;
             text.clear();
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
             std::unordered_map<std::string, std::function<std::string()> > const
                     specifiers2 =
             {
@@ -13063,7 +13063,7 @@ _ParserGroup::print_parser_group(
     }
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 _ParserGroup::_parser_names() const
 {
     std::vector<std::string> res;
@@ -13077,7 +13077,7 @@ _ParserGroup::_parser_names() const
     return res;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _ParserGroup::_flags_to_string() const
 {
     if (m_metavar.has_value()) {
@@ -13093,26 +13093,26 @@ _ParserGroup::_flags_to_string() const
     return "{" + res + "}";
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 _ParserGroup::_is_positional() const
 {
     return title().empty() && description().empty();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _ParserGroup::get_choices() const
 {
     return detail::_join(_parser_names(), ", ");
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 _ParserGroup::get_metavar() const
 {
     return m_metavar.has_value() ? metavar() : detail::_none;
 }
 
 // -- ParserGroup -------------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 ParserGroup::ParserGroup(
         SubParsers* parent,
         std::string const& title,
@@ -13122,7 +13122,7 @@ ParserGroup::ParserGroup(
 {
 }
 
-_ARGPARSE_INL detail::shared_ptr<ParserGroup>
+ARGPARSE_INL detail::shared_ptr<ParserGroup>
 ParserGroup::make_parsergroup(
         SubParsers* parent,
         std::string const& title,
@@ -13132,7 +13132,7 @@ ParserGroup::make_parsergroup(
                 ParserGroup(parent, title, description));
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 ParserGroup::ParserGroup(
         ParserGroup const& orig)
     : _ParserGroup(orig),
@@ -13140,7 +13140,7 @@ ParserGroup::ParserGroup(
 {
 }
 
-_ARGPARSE_INL ParserGroup&
+ARGPARSE_INL ParserGroup&
 ParserGroup::operator =(
         ParserGroup const& rhs)
 {
@@ -13155,7 +13155,7 @@ ParserGroup::operator =(
     return *this;
 }
 
-_ARGPARSE_INL ParserGroup&
+ARGPARSE_INL ParserGroup&
 ParserGroup::title(
         std::string const& value,
         std::string const& lang)
@@ -13164,7 +13164,7 @@ ParserGroup::title(
     return *this;
 }
 
-_ARGPARSE_INL ParserGroup&
+ARGPARSE_INL ParserGroup&
 ParserGroup::description(
         std::string const& value,
         std::string const& lang)
@@ -13173,7 +13173,7 @@ ParserGroup::description(
     return *this;
 }
 
-_ARGPARSE_INL ParserGroup&
+ARGPARSE_INL ParserGroup&
 ParserGroup::help(
         std::string const& value,
         std::string const& lang)
@@ -13182,7 +13182,7 @@ ParserGroup::help(
     return *this;
 }
 
-_ARGPARSE_INL ParserGroup&
+ARGPARSE_INL ParserGroup&
 ParserGroup::help(
         _SUPPRESS value)
 {
@@ -13190,7 +13190,7 @@ ParserGroup::help(
     return *this;
 }
 
-_ARGPARSE_INL ParserGroup&
+ARGPARSE_INL ParserGroup&
 ParserGroup::metavar(
         std::string const& value)
 {
@@ -13198,7 +13198,7 @@ ParserGroup::metavar(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ParserGroup::add_parser(
         std::string const& name)
 {
@@ -13212,14 +13212,14 @@ ParserGroup::add_parser(
     return *m_parsers.back();
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 ParserGroup::parser_names() const
 {
     return _parser_names();
 }
 
 // -- SubParsers --------------------------------------------------------------
-_ARGPARSE_INL
+ARGPARSE_INL
 SubParsers::SubParsers(
         std::string const& title,
         std::string const& description)
@@ -13233,7 +13233,7 @@ SubParsers::SubParsers(
 {
 }
 
-_ARGPARSE_INL detail::shared_ptr<SubParsers>
+ARGPARSE_INL detail::shared_ptr<SubParsers>
 SubParsers::make_subparsers(
         std::string const& title,
         std::string const& description)
@@ -13241,7 +13241,7 @@ SubParsers::make_subparsers(
     return detail::make_shared<SubParsers>(SubParsers(title, description));
 }
 
-_ARGPARSE_INL SubParsers&
+ARGPARSE_INL SubParsers&
 SubParsers::title(
         std::string const& value,
         std::string const& lang)
@@ -13250,7 +13250,7 @@ SubParsers::title(
     return *this;
 }
 
-_ARGPARSE_INL SubParsers&
+ARGPARSE_INL SubParsers&
 SubParsers::description(
         std::string const& value,
         std::string const& lang)
@@ -13259,7 +13259,7 @@ SubParsers::description(
     return *this;
 }
 
-_ARGPARSE_INL SubParsers&
+ARGPARSE_INL SubParsers&
 SubParsers::prog(
         std::string const& value)
 {
@@ -13268,7 +13268,7 @@ SubParsers::prog(
     return *this;
 }
 
-_ARGPARSE_INL SubParsers&
+ARGPARSE_INL SubParsers&
 SubParsers::dest(
         std::string const& value)
 {
@@ -13276,15 +13276,15 @@ SubParsers::dest(
     return *this;
 }
 
-_ARGPARSE_INL SubParsers&
+ARGPARSE_INL SubParsers&
 SubParsers::required(
-        bool value) _ARGPARSE_NOEXCEPT
+        bool value) ARGPARSE_NOEXCEPT
 {
     m_required = value;
     return *this;
 }
 
-_ARGPARSE_INL SubParsers&
+ARGPARSE_INL SubParsers&
 SubParsers::help(
         std::string const& value,
         std::string const& lang)
@@ -13293,7 +13293,7 @@ SubParsers::help(
     return *this;
 }
 
-_ARGPARSE_INL SubParsers&
+ARGPARSE_INL SubParsers&
 SubParsers::help(
         _SUPPRESS value)
 {
@@ -13301,7 +13301,7 @@ SubParsers::help(
     return *this;
 }
 
-_ARGPARSE_INL SubParsers&
+ARGPARSE_INL SubParsers&
 SubParsers::metavar(
         std::string const& value)
 {
@@ -13309,25 +13309,25 @@ SubParsers::metavar(
     return *this;
 }
 
-_ARGPARSE_INL std::string const&
-SubParsers::prog() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+SubParsers::prog() const ARGPARSE_NOEXCEPT
 {
     return m_prog;
 }
 
-_ARGPARSE_INL std::string const&
-SubParsers::dest() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+SubParsers::dest() const ARGPARSE_NOEXCEPT
 {
     return m_dest;
 }
 
-_ARGPARSE_INL bool
-SubParsers::required() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+SubParsers::required() const ARGPARSE_NOEXCEPT
 {
     return m_required;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 SubParsers::add_parser(
         std::string const& name)
 {
@@ -13339,7 +13339,7 @@ SubParsers::add_parser(
     return *m_parsers.back();
 }
 
-_ARGPARSE_INL ParserGroup&
+ARGPARSE_INL ParserGroup&
 SubParsers::add_parser_group(
         std::string const& title,
         std::string const& description)
@@ -13348,7 +13348,7 @@ SubParsers::add_parser_group(
     return *m_groups.back();
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 SubParsers::parser_names() const
 {
     std::vector<std::string> res = _parser_names();
@@ -13358,7 +13358,7 @@ SubParsers::parser_names() const
     return res;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 SubParsers::limit_help_flags(
         HelpFormatter const& formatter,
         std::size_t& limit) const
@@ -13369,7 +13369,7 @@ SubParsers::limit_help_flags(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 SubParsers::print_help(
         std::ostream& os,
         bool& eat_ln,
@@ -13388,7 +13388,7 @@ SubParsers::print_help(
     }
 }
 
-_ARGPARSE_INL std::list<SubParsers::pParser>
+ARGPARSE_INL std::list<SubParsers::pParser>
 SubParsers::list_parsers() const
 {
     std::list<pParser> res = m_parsers;
@@ -13398,7 +13398,7 @@ SubParsers::list_parsers() const
     return res;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 SubParsers::prog_name() const
 {
     std::string program = m_prog.empty() ? m_parent_prog : m_prog;
@@ -13408,7 +13408,7 @@ SubParsers::prog_name() const
     return program;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 SubParsers::update_prog(
         std::string const& parent_prog,
         std::string const& parent_args)
@@ -13422,13 +13422,13 @@ SubParsers::update_prog(
     }
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 SubParsers::usage() const
 {
     return flags_to_string() + " ...";
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 SubParsers::flags_to_string() const
 {
     std::string res;
@@ -13443,7 +13443,7 @@ SubParsers::flags_to_string() const
     return res;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 SubParsers::is_positional() const
 {
     bool res = _is_positional();
@@ -13453,7 +13453,7 @@ SubParsers::is_positional() const
     return res;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 SubParsers::is_suppress() const
 {
     bool res = m_help.suppress();
@@ -13464,7 +13464,7 @@ SubParsers::is_suppress() const
 }
 
 // -- ArgumentParser ----------------------------------------------------------
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::read_args(
         int argc,
         char const* const argv[])
@@ -13478,7 +13478,7 @@ ArgumentParser::read_args(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::read_env(
         char const* const envp[])
 {
@@ -13492,7 +13492,7 @@ ArgumentParser::read_env(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::initialize_parser()
 {
     formatter_class(HelpFormatter());
@@ -13508,7 +13508,7 @@ ArgumentParser::initialize_parser()
     m_help[std::string()] = std::string();
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 ArgumentParser::ArgumentParser(
         std::string const& prog)
     : m_data(_ArgumentData::make_argument_data()),
@@ -13534,10 +13534,10 @@ ArgumentParser::ArgumentParser(
       m_default_values(),
       m_parsed_arguments(),
       m_env_variables(),
-      m_subparsers(_ARGPARSE_NULLPTR),
+      m_subparsers(ARGPARSE_NULLPTR),
       m_subparsers_position(),
-      m_handle(_ARGPARSE_NULLPTR),
-      m_parse_handle(_ARGPARSE_NULLPTR),
+      m_handle(ARGPARSE_NULLPTR),
+      m_parse_handle(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
       m_exit_on_error(true)
 {
@@ -13545,7 +13545,7 @@ ArgumentParser::ArgumentParser(
     this->prog(prog);
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 ArgumentParser::ArgumentParser(
         int argc,
         char const* const argv[],
@@ -13573,10 +13573,10 @@ ArgumentParser::ArgumentParser(
       m_default_values(),
       m_parsed_arguments(),
       m_env_variables(),
-      m_subparsers(_ARGPARSE_NULLPTR),
+      m_subparsers(ARGPARSE_NULLPTR),
       m_subparsers_position(),
-      m_handle(_ARGPARSE_NULLPTR),
-      m_parse_handle(_ARGPARSE_NULLPTR),
+      m_handle(ARGPARSE_NULLPTR),
+      m_parse_handle(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
       m_exit_on_error(true)
 {
@@ -13585,7 +13585,7 @@ ArgumentParser::ArgumentParser(
     this->prog(prog);
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 ArgumentParser::ArgumentParser(
         int argc,
         char const* const argv[],
@@ -13614,10 +13614,10 @@ ArgumentParser::ArgumentParser(
       m_default_values(),
       m_parsed_arguments(),
       m_env_variables(),
-      m_subparsers(_ARGPARSE_NULLPTR),
+      m_subparsers(ARGPARSE_NULLPTR),
       m_subparsers_position(),
-      m_handle(_ARGPARSE_NULLPTR),
-      m_parse_handle(_ARGPARSE_NULLPTR),
+      m_handle(ARGPARSE_NULLPTR),
+      m_parse_handle(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
       m_exit_on_error(true)
 {
@@ -13627,7 +13627,7 @@ ArgumentParser::ArgumentParser(
     this->prog(prog);
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::prog(
         std::string const& value)
 {
@@ -13640,7 +13640,7 @@ ArgumentParser::prog(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::usage(
         std::string const& value,
         std::string const& lang)
@@ -13649,7 +13649,7 @@ ArgumentParser::usage(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::usage(
         _SUPPRESS value)
 {
@@ -13657,7 +13657,7 @@ ArgumentParser::usage(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::usage_title(
         std::string const& value,
         std::string const& lang)
@@ -13668,7 +13668,7 @@ ArgumentParser::usage_title(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::description(
         std::string const& value,
         std::string const& lang)
@@ -13677,7 +13677,7 @@ ArgumentParser::description(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::positionals_title(
         std::string const& value,
         std::string const& lang)
@@ -13688,7 +13688,7 @@ ArgumentParser::positionals_title(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::operands_title(
         std::string const& value,
         std::string const& lang)
@@ -13699,7 +13699,7 @@ ArgumentParser::operands_title(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::optionals_title(
         std::string const& value,
         std::string const& lang)
@@ -13710,7 +13710,7 @@ ArgumentParser::optionals_title(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::epilog(
         std::string const& value,
         std::string const& lang)
@@ -13719,7 +13719,7 @@ ArgumentParser::epilog(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::help(
         std::string const& value,
         std::string const& lang)
@@ -13728,7 +13728,7 @@ ArgumentParser::help(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::aliases(
         std::vector<std::string> const& value)
 {
@@ -13742,22 +13742,22 @@ ArgumentParser::aliases(
     return *this;
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL ArgumentParser&
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::aliases(
         std::initializer_list<std::string> const& value)
 {
     return aliases(std::vector<std::string>{ value });
 }
 #else
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::aliases(
         std::string const& value)
 {
     return aliases(detail::_vector(value));
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::aliases(
         std::string const& value1,
         std::string const& value2)
@@ -13766,7 +13766,7 @@ ArgumentParser::aliases(
 }
 #endif  // C++11+
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::parents(
         std::vector<ArgumentParser> const& value)
 {
@@ -13792,22 +13792,22 @@ ArgumentParser::parents(
     return *this;
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL ArgumentParser&
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::parents(
         std::initializer_list<ArgumentParser> const& value)
 {
     return parents(std::vector<ArgumentParser>{ value });
 }
 #else
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::parents(
         ArgumentParser const& value)
 {
     return parents(detail::_vector(value));
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::parents(
         ArgumentParser const& value1,
         ArgumentParser const& value2)
@@ -13816,7 +13816,7 @@ ArgumentParser::parents(
 }
 #endif  // C++11+
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::prefix_chars(
         std::string const& value)
 {
@@ -13828,7 +13828,7 @@ ArgumentParser::prefix_chars(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::fromfile_prefix_chars(
         std::string const& value)
 {
@@ -13836,7 +13836,7 @@ ArgumentParser::fromfile_prefix_chars(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::comment_prefix_chars(
         std::string const& value)
 {
@@ -13844,7 +13844,7 @@ ArgumentParser::comment_prefix_chars(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::argument_default(
         std::string const& value)
 {
@@ -13852,7 +13852,7 @@ ArgumentParser::argument_default(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::argument_default(
         _SUPPRESS value)
 {
@@ -13860,7 +13860,7 @@ ArgumentParser::argument_default(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::conflict_handler(
         std::string const& value)
 {
@@ -13876,7 +13876,7 @@ ArgumentParser::conflict_handler(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::add_help(
         bool value)
 {
@@ -13884,167 +13884,167 @@ ArgumentParser::add_help(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::allow_abbrev(
-        bool value) _ARGPARSE_NOEXCEPT
+        bool value) ARGPARSE_NOEXCEPT
 {
     m_allow_abbrev = value;
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::exit_on_error(
-        bool value) _ARGPARSE_NOEXCEPT
+        bool value) ARGPARSE_NOEXCEPT
 {
     m_exit_on_error = value;
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::output_width(
-        std::size_t value) _ARGPARSE_NOEXCEPT
+        std::size_t value) ARGPARSE_NOEXCEPT
 {
     m_output_width = value < detail::_min_width ? detail::_min_width : value;
     return *this;
 }
 
-_ARGPARSE_INL std::string const&
-ArgumentParser::prog() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+ArgumentParser::prog() const ARGPARSE_NOEXCEPT
 {
     return m_prog;
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 ArgumentParser::usage() const
 {
     return detail::_tr_at(m_usage.value(), default_language());
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 ArgumentParser::usage_title() const
 {
     return detail::_tr_at(m_usage_title, default_language());
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 ArgumentParser::description() const
 {
     return detail::_tr_at(m_description, default_language());
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 ArgumentParser::positionals_title() const
 {
     return detail::_tr_at(m_positionals_title, default_language());
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 ArgumentParser::operands_title() const
 {
     return detail::_tr_at(m_operands_title, default_language());
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 ArgumentParser::optionals_title() const
 {
     return detail::_tr_at(m_optionals_title, default_language());
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 ArgumentParser::epilog() const
 {
     return detail::_tr_at(m_epilog, default_language());
 }
 
-_ARGPARSE_INL std::string const&
+ARGPARSE_INL std::string const&
 ArgumentParser::help() const
 {
     return detail::_tr_at(m_help, default_language());
 }
 
-_ARGPARSE_INL std::vector<std::string> const&
-ArgumentParser::aliases() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::vector<std::string> const&
+ArgumentParser::aliases() const ARGPARSE_NOEXCEPT
 {
     return m_aliases;
 }
 
-_ARGPARSE_INL HelpFormatter&
-ArgumentParser::formatter_class() _ARGPARSE_NOEXCEPT
+ARGPARSE_INL HelpFormatter&
+ArgumentParser::formatter_class() ARGPARSE_NOEXCEPT
 {
     return *m_formatter;
 }
 
-_ARGPARSE_INL std::string const&
-ArgumentParser::prefix_chars() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+ArgumentParser::prefix_chars() const ARGPARSE_NOEXCEPT
 {
     return m_prefix_chars;
 }
 
-_ARGPARSE_INL std::string const&
-ArgumentParser::fromfile_prefix_chars() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+ArgumentParser::fromfile_prefix_chars() const ARGPARSE_NOEXCEPT
 {
     return m_fromfile_prefix_chars;
 }
 
-_ARGPARSE_INL std::string const&
-ArgumentParser::comment_prefix_chars() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+ArgumentParser::comment_prefix_chars() const ARGPARSE_NOEXCEPT
 {
     return m_comment_prefix_chars;
 }
 
-_ARGPARSE_INL std::string const&
-ArgumentParser::argument_default() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+ArgumentParser::argument_default() const ARGPARSE_NOEXCEPT
 {
     return m_argument_default.value();
 }
 
-_ARGPARSE_INL std::string const&
-ArgumentParser::conflict_handler() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL std::string const&
+ArgumentParser::conflict_handler() const ARGPARSE_NOEXCEPT
 {
     return m_data->m_conflict_handler_str;
 }
 
-_ARGPARSE_INL bool
-ArgumentParser::add_help() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+ArgumentParser::add_help() const ARGPARSE_NOEXCEPT
 {
     return m_data->m_add_help;
 }
 
-_ARGPARSE_INL bool
-ArgumentParser::allow_abbrev() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+ArgumentParser::allow_abbrev() const ARGPARSE_NOEXCEPT
 {
     return m_allow_abbrev;
 }
 
-_ARGPARSE_INL bool
-ArgumentParser::exit_on_error() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+ArgumentParser::exit_on_error() const ARGPARSE_NOEXCEPT
 {
     return m_exit_on_error;
 }
 
-_ARGPARSE_INL std::size_t
+ARGPARSE_INL std::size_t
 ArgumentParser::output_width() const
 {
     return m_output_width != 0
             ? m_output_width : detail::_get_terminal_size().first;
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL Argument&
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL Argument&
 ArgumentParser::add_argument(
         std::initializer_list<std::string> const& flags)
 {
     return add_argument(std::vector<std::string>{ flags });
 }
 #else
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 ArgumentParser::add_argument(
         std::string const& flag)
 {
     return add_argument(detail::_vector(flag));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 ArgumentParser::add_argument(
         std::string const& flag1,
         std::string const& flag2)
@@ -14052,7 +14052,7 @@ ArgumentParser::add_argument(
     return add_argument(detail::_vector(flag1, flag2));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 ArgumentParser::add_argument(
         std::string const& flag1,
         std::string const& flag2,
@@ -14061,7 +14061,7 @@ ArgumentParser::add_argument(
     return add_argument(detail::_vector(flag1, flag2, flag3));
 }
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 ArgumentParser::add_argument(
         std::string const& flag1,
         std::string const& flag2,
@@ -14072,7 +14072,7 @@ ArgumentParser::add_argument(
 }
 #endif  // C++11+
 
-_ARGPARSE_INL Argument&
+ARGPARSE_INL Argument&
 ArgumentParser::add_argument(
         std::vector<std::string> const& flags)
 {
@@ -14081,7 +14081,7 @@ ArgumentParser::add_argument(
     return *m_data->m_arguments.back();
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::add_argument(
         Argument const& argument)
 {
@@ -14090,7 +14090,7 @@ ArgumentParser::add_argument(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentGroup&
+ARGPARSE_INL ArgumentGroup&
 ArgumentParser::add_argument_group(
         std::string const& title,
         std::string const& description)
@@ -14102,7 +14102,7 @@ ArgumentParser::add_argument_group(
     return *group;
 }
 
-_ARGPARSE_INL MutuallyExclusiveGroup&
+ARGPARSE_INL MutuallyExclusiveGroup&
 ArgumentParser::add_mutually_exclusive_group(
         bool required)
 {
@@ -14112,7 +14112,7 @@ ArgumentParser::add_mutually_exclusive_group(
     return m_mutex_groups.back().required(required);
 }
 
-_ARGPARSE_INL SubParsers&
+ARGPARSE_INL SubParsers&
 ArgumentParser::add_subparsers(
         std::string const& title,
         std::string const& description)
@@ -14127,35 +14127,35 @@ ArgumentParser::add_subparsers(
     return *m_subparsers;
 }
 
-_ARGPARSE_INL SubParsers*
-ArgumentParser::subparsers() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL SubParsers*
+ArgumentParser::subparsers() const ARGPARSE_NOEXCEPT
 {
     return m_subparsers.get();
 }
 
-_ARGPARSE_INL bool
-ArgumentParser::has_subparsers() const _ARGPARSE_NOEXCEPT
+ARGPARSE_INL bool
+ArgumentParser::has_subparsers() const ARGPARSE_NOEXCEPT
 {
     return m_subparsers.get();
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::handle(
-        detail::func1<std::string const&>::type func) _ARGPARSE_NOEXCEPT
+        detail::func1<std::string const&>::type func) ARGPARSE_NOEXCEPT
 {
-    m_handle = _ARGPARSE_MOVE(func);
+    m_handle = ARGPARSE_MOVE(func);
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::handle(
-        detail::func1<Namespace const&>::type func) _ARGPARSE_NOEXCEPT
+        detail::func1<Namespace const&>::type func) ARGPARSE_NOEXCEPT
 {
-    m_parse_handle = _ARGPARSE_MOVE(func);
+    m_parse_handle = ARGPARSE_MOVE(func);
     return *this;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 ArgumentParser::get_default(
         std::string const& dest) const
 {
@@ -14175,8 +14175,8 @@ ArgumentParser::get_default(
     return std::string();
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL void
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL void
 ArgumentParser::set_defaults(
        std::initializer_list<std::pair<std::string, std::string> > const& pairs)
 {
@@ -14184,7 +14184,7 @@ ArgumentParser::set_defaults(
 }
 #endif  // C++11+
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::set_defaults(
         std::vector<std::pair<std::string, std::string> > const& pairs)
 {
@@ -14200,14 +14200,14 @@ ArgumentParser::set_defaults(
     }
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_args(
         Namespace const& space) const
 {
     return parse_args(m_parsed_arguments, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_args(
         std::string const& args,
         Namespace const& space) const
@@ -14215,7 +14215,7 @@ ArgumentParser::parse_args(
     return parse_args(split_to_args(args), space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
@@ -14223,14 +14223,14 @@ ArgumentParser::parse_args(
     return on_parse_arguments(args, false, false, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_known_args(
         Namespace const& space) const
 {
     return parse_known_args(m_parsed_arguments, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_known_args(
         std::string const& args,
         Namespace const& space) const
@@ -14238,7 +14238,7 @@ ArgumentParser::parse_known_args(
     return parse_known_args(split_to_args(args), space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_known_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
@@ -14246,14 +14246,14 @@ ArgumentParser::parse_known_args(
     return on_parse_arguments(args, true, false, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_intermixed_args(
         Namespace const& space) const
 {
     return parse_intermixed_args(m_parsed_arguments, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_intermixed_args(
         std::string const& args,
         Namespace const& space) const
@@ -14261,7 +14261,7 @@ ArgumentParser::parse_intermixed_args(
     return parse_intermixed_args(split_to_args(args), space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_intermixed_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
@@ -14269,14 +14269,14 @@ ArgumentParser::parse_intermixed_args(
     return on_parse_arguments(args, false, true, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_known_intermixed_args(
         Namespace const& space) const
 {
     return parse_known_intermixed_args(m_parsed_arguments, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_known_intermixed_args(
         std::string const& args,
         Namespace const& space) const
@@ -14284,7 +14284,7 @@ ArgumentParser::parse_known_intermixed_args(
     return parse_known_intermixed_args(split_to_args(args), space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_known_intermixed_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
@@ -14292,8 +14292,8 @@ ArgumentParser::parse_known_intermixed_args(
     return on_parse_arguments(args, true, true, space);
 }
 
-#ifdef _ARGPARSE_CXX_11
-_ARGPARSE_INL Namespace
+#ifdef ARGPARSE_CXX_11
+ARGPARSE_INL Namespace
 ArgumentParser::parse_args(
         std::initializer_list<std::string> const& args,
         Namespace const& space) const
@@ -14301,7 +14301,7 @@ ArgumentParser::parse_args(
     return parse_args(std::vector<std::string>{ args }, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_known_args(
         std::initializer_list<std::string> const& args,
         Namespace const& space) const
@@ -14309,7 +14309,7 @@ ArgumentParser::parse_known_args(
     return parse_known_args(std::vector<std::string>{ args }, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_intermixed_args(
         std::initializer_list<std::string> const& args,
         Namespace const& space) const
@@ -14317,7 +14317,7 @@ ArgumentParser::parse_intermixed_args(
     return parse_intermixed_args(std::vector<std::string>{ args }, space);
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_known_intermixed_args(
         std::initializer_list<std::string> const& args,
         Namespace const& space) const
@@ -14326,15 +14326,15 @@ ArgumentParser::parse_known_intermixed_args(
 }
 #endif  // C++11+
 
-#ifdef _ARGPARSE_HAS_OPTIONAL
-_ARGPARSE_INL std::optional<Namespace>
+#ifdef ARGPARSE_HAS_OPTIONAL
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_args(
         Namespace const& space) const
 {
     return try_parse_args(m_parsed_arguments, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_args(
         std::string const& args,
         Namespace const& space) const
@@ -14342,7 +14342,7 @@ ArgumentParser::try_parse_args(
     return try_parse_args(split_to_args(args), space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_args(
         std::initializer_list<std::string> const& args,
         Namespace const& space) const
@@ -14350,7 +14350,7 @@ ArgumentParser::try_parse_args(
     return try_parse_args(std::vector<std::string>{ args }, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
@@ -14358,14 +14358,14 @@ ArgumentParser::try_parse_args(
     return on_try_parse_arguments(args, false, false, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_known_args(
         Namespace const& space) const
 {
     return try_parse_known_args(m_parsed_arguments, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_known_args(
         std::string const& args,
         Namespace const& space) const
@@ -14373,7 +14373,7 @@ ArgumentParser::try_parse_known_args(
     return try_parse_known_args(split_to_args(args), space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_known_args(
         std::initializer_list<std::string> const& args,
         Namespace const& space) const
@@ -14381,7 +14381,7 @@ ArgumentParser::try_parse_known_args(
     return try_parse_known_args(std::vector<std::string>{ args }, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_known_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
@@ -14389,14 +14389,14 @@ ArgumentParser::try_parse_known_args(
     return on_try_parse_arguments(args, true, false, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_intermixed_args(
         Namespace const& space) const
 {
     return try_parse_intermixed_args(m_parsed_arguments, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_intermixed_args(
         std::string const& args,
         Namespace const& space) const
@@ -14404,7 +14404,7 @@ ArgumentParser::try_parse_intermixed_args(
     return try_parse_intermixed_args(split_to_args(args), space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_intermixed_args(
         std::initializer_list<std::string> const& args,
         Namespace const& space) const
@@ -14413,7 +14413,7 @@ ArgumentParser::try_parse_intermixed_args(
                 std::vector<std::string>{ args }, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_intermixed_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
@@ -14421,14 +14421,14 @@ ArgumentParser::try_parse_intermixed_args(
     return on_try_parse_arguments(args, false, true, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_known_intermixed_args(
         Namespace const& space) const
 {
     return try_parse_known_intermixed_args(m_parsed_arguments, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_known_intermixed_args(
         std::string const& args,
         Namespace const& space) const
@@ -14436,7 +14436,7 @@ ArgumentParser::try_parse_known_intermixed_args(
     return try_parse_known_intermixed_args(split_to_args(args), space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_known_intermixed_args(
         std::initializer_list<std::string> const& args,
         Namespace const& space) const
@@ -14445,16 +14445,16 @@ ArgumentParser::try_parse_known_intermixed_args(
                 std::vector<std::string>{ args }, space);
 }
 
-_ARGPARSE_INL std::optional<Namespace>
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::try_parse_known_intermixed_args(
         std::vector<std::string> const& args,
         Namespace const& space) const
 {
     return on_try_parse_arguments(args, true, true, space);
 }
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::has_env(
         std::string const& name) const
 {
@@ -14465,7 +14465,7 @@ ArgumentParser::has_env(
     return it != m_env_variables.end();
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 ArgumentParser::get_env(
         std::string const& name) const
 {
@@ -14476,20 +14476,20 @@ ArgumentParser::get_env(
     return it != m_env_variables.end() ? it->second : std::string();
 }
 
-_ARGPARSE_INL std::list<std::pair<std::string, std::string> > const&
+ARGPARSE_INL std::list<std::pair<std::string, std::string> > const&
 ArgumentParser::list_env() const
 {
     return m_env_variables;
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::self_test(
         std::ostream& os) const
 {
     return self_test(std::string(), os);
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::self_test(
         std::string const& language,
         std::ostream& os) const
@@ -14514,21 +14514,21 @@ ArgumentParser::self_test(
     return res;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::print_bash_completion(
         std::ostream& os) const
 {
     os << format_bash_completion() << std::endl;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::print_usage(
         std::ostream& os) const
 {
     print_usage(std::string(), os);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::print_usage(
         std::string const& language,
         std::ostream& os) const
@@ -14539,14 +14539,14 @@ ArgumentParser::print_usage(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::print_help(
         std::ostream& os) const
 {
     print_help(std::string(), os);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::print_help(
         std::string const& language,
         std::ostream& os) const
@@ -14557,27 +14557,27 @@ ArgumentParser::print_help(
     }
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 ArgumentParser::format_bash_completion() const
 {
     return m_formatter->_format_bash_completion(this);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 ArgumentParser::format_usage(
         std::string const& lang) const
 {
     return m_formatter->_format_usage(this, lang);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 ArgumentParser::format_help(
         std::string const& lang) const
 {
     return m_formatter->_format_help(this, lang);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::exit(
         int status,
         std::string const& message) const
@@ -14588,7 +14588,7 @@ ArgumentParser::exit(
     std::exit(status);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::error(
         std::string const& message) const
 {
@@ -14596,14 +14596,14 @@ ArgumentParser::error(
     exit(2, prog() + ": error: " + message);
 }
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 ArgumentParser::convert_arg_line_to_args(
         std::string const& arg_line) const
 {
     return detail::_vector(arg_line);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 ArgumentParser::default_language() const
 {
     std::string res;
@@ -14617,7 +14617,7 @@ ArgumentParser::default_language() const
     return res;
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 ArgumentParser::ParserInfo::ParserInfo(
         ArgumentParser const* parser,
         _Storage const& storage,
@@ -14637,7 +14637,7 @@ ArgumentParser::ParserInfo::ParserInfo(
                 optional, parser->prefix_chars());
 }
 
-_ARGPARSE_INL
+ARGPARSE_INL
 ArgumentParser::ParserInfo::ParserInfo(
         ParserInfo const& orig)
     : parser(orig.parser),
@@ -14649,7 +14649,7 @@ ArgumentParser::ParserInfo::ParserInfo(
       have_negative_args(orig.have_negative_args)
 { }
 
-_ARGPARSE_INL ArgumentParser::ParserInfo&
+ARGPARSE_INL ArgumentParser::ParserInfo&
 ArgumentParser::ParserInfo::operator =(
         ParserInfo const& rhs)
 {
@@ -14665,7 +14665,7 @@ ArgumentParser::ParserInfo::operator =(
     return *this;
 }
 
-_ARGPARSE_INL ArgumentParser::ParserInfo
+ARGPARSE_INL ArgumentParser::ParserInfo
 ArgumentParser::parser_info(
         ArgumentParser const* parser,
         _Storage const& storage,
@@ -14676,7 +14676,7 @@ ArgumentParser::parser_info(
                       parser->m_data->get_operand(true, true));
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::throw_error(
         std::string const& message,
         std::string const& lang,
@@ -14686,14 +14686,14 @@ ArgumentParser::throw_error(
     throw std::logic_error(prog() + ": error: " + message);
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 ArgumentParser::despecify(
         std::string const& str) const
 {
     return detail::_replace(str, "%(prog)s", prog());
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::process_add_argument()
 {
     if (m_argument_default.has_value()
@@ -14722,7 +14722,7 @@ ArgumentParser::process_add_argument()
     }
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::on_parse_arguments(
         std::vector<std::string> const& args,
         bool only_known,
@@ -14742,8 +14742,8 @@ ArgumentParser::on_parse_arguments(
     std::exit(1);
 }
 
-#ifdef _ARGPARSE_HAS_OPTIONAL
-_ARGPARSE_INL std::optional<Namespace>
+#ifdef ARGPARSE_HAS_OPTIONAL
+ARGPARSE_INL std::optional<Namespace>
 ArgumentParser::on_try_parse_arguments(
         std::vector<std::string> const& args,
         bool only_known,
@@ -14759,9 +14759,9 @@ ArgumentParser::on_try_parse_arguments(
     }
     return std::nullopt;
 }
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
-_ARGPARSE_INL std::vector<std::string>
+ARGPARSE_INL std::vector<std::string>
 ArgumentParser::read_args_from_file(
         std::vector<std::string> const& arguments) const
 {
@@ -14797,7 +14797,7 @@ ArgumentParser::read_args_from_file(
             if (first->empty()
                     || !detail::_exists(first->at(0), comment_prefix_chars())) {
                 if (it != first) {
-                    *it = _ARGPARSE_MOVE(*first);
+                    *it = ARGPARSE_MOVE(*first);
                 }
                 ++it;
             }
@@ -14808,7 +14808,7 @@ ArgumentParser::read_args_from_file(
     return res;
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::parse_arguments(
         std::vector<std::string> const& in_args,
         bool only_known,
@@ -14904,11 +14904,11 @@ ArgumentParser::parse_arguments(
     check_unrecognized_args(only_known, unrecognized_args);
     default_values_post_trigger(parsers.front().storage);
     namespace_post_trigger(parsers, only_known, unrecognized_args);
-    return create_namespace(only_known, _ARGPARSE_MOVE(parsers.front().storage),
-                            _ARGPARSE_MOVE(unrecognized_args));
+    return create_namespace(only_known, ARGPARSE_MOVE(parsers.front().storage),
+                            ARGPARSE_MOVE(unrecognized_args));
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::check_namespace(
         Namespace const& space) const
 {
@@ -14918,7 +14918,7 @@ ArgumentParser::check_namespace(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::check_mutex_arguments() const
 {
     for (mtx_it i = m_mutex_groups.begin(); i != m_mutex_groups.end(); ++i) {
@@ -14932,7 +14932,7 @@ ArgumentParser::check_mutex_arguments() const
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::check_intermixed_remainder(
         bool intermixed,
         pArguments const& positional)
@@ -14948,18 +14948,18 @@ ArgumentParser::check_intermixed_remainder(
     }
 }
 
-_ARGPARSE_INL Namespace
+ARGPARSE_INL Namespace
 ArgumentParser::create_namespace(
         bool only_known,
         detail::rval<_Storage>::type storage,
         detail::rval<std::vector<std::string> >::type unrecognized_args)
 {
-    return only_known ? Namespace(_ARGPARSE_MOVE(storage),
-                                  _ARGPARSE_MOVE(unrecognized_args))
-                      : Namespace(_ARGPARSE_MOVE(storage));
+    return only_known ? Namespace(ARGPARSE_MOVE(storage),
+                                  ARGPARSE_MOVE(unrecognized_args))
+                      : Namespace(ARGPARSE_MOVE(storage));
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::validate_arguments(
         pArguments const& args)
 {
@@ -14968,7 +14968,7 @@ ArgumentParser::validate_arguments(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::validate_argument_value(
         ArgumentParser const* parser,
         Argument const& arg,
@@ -14987,7 +14987,7 @@ ArgumentParser::validate_argument_value(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::storage_have_value(
         Parsers& parsers,
         pArgument const& arg) const
@@ -14996,7 +14996,7 @@ ArgumentParser::storage_have_value(
     parsers.front().storage.have_value(arg);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::storage_store_value(
         Parsers& parsers,
         pArgument const& arg,
@@ -15006,7 +15006,7 @@ ArgumentParser::storage_store_value(
     parsers.front().storage.store_value(arg, val);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::storage_store_values(
         Parsers& parsers,
         pArgument const& arg,
@@ -15018,7 +15018,7 @@ ArgumentParser::storage_store_values(
     parsers.front().storage.store_values(arg, values);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::storage_store_n_values(
         Parsers& parsers,
         pArgument const& arg,
@@ -15037,7 +15037,7 @@ ArgumentParser::storage_store_n_values(
     storage_store_values(parsers, arg, values);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::storage_store_default_value(
         Parsers& parsers,
         pArgument const& arg) const
@@ -15045,7 +15045,7 @@ ArgumentParser::storage_store_default_value(
     parsers.front().storage.store_default_value(arg);
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::storage_is_positional_arg_stored(
         Parsers& parsers,
         pArgument const& arg) const
@@ -15053,7 +15053,7 @@ ArgumentParser::storage_is_positional_arg_stored(
     return parsers.front().storage.self_value_stored(arg);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::storage_optional_store_func(
         Parsers& parsers,
         std::string const& arg,
@@ -15108,7 +15108,7 @@ ArgumentParser::storage_optional_store_func(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::storage_optional_store(
         Parsers& parsers,
         std::vector<std::string> const& equals,
@@ -15183,7 +15183,7 @@ ArgumentParser::storage_optional_store(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::storage_optional_store_const(
         Parsers& parsers,
         std::vector<std::string> const& equals,
@@ -15204,7 +15204,7 @@ ArgumentParser::storage_optional_store_const(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::process_optional_help(
         ParserInfo const& info,
         std::vector<std::string> const& equals,
@@ -15221,7 +15221,7 @@ ArgumentParser::process_optional_help(
     exit(0);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::process_optional_version(
         ParserInfo const& info,
         std::vector<std::string> const& equals,
@@ -15242,7 +15242,7 @@ ArgumentParser::process_optional_version(
     exit(0);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::match_positional_minimum(
         Parsers& parsers,
         std::list<std::string>& arguments,
@@ -15279,7 +15279,7 @@ ArgumentParser::match_positional_minimum(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::match_positional_more_zero(
         Parsers& parsers,
         std::list<std::string>& arguments,
@@ -15328,7 +15328,7 @@ ArgumentParser::match_positional_more_zero(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::match_positional_optional(
         Parsers& parsers,
         std::list<std::string>& arguments,
@@ -15373,7 +15373,7 @@ ArgumentParser::match_positional_optional(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::match_positional_default(
         Parsers& parsers,
         std::list<std::string>& arguments,
@@ -15398,7 +15398,7 @@ ArgumentParser::match_positional_default(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::match_positionals(
         Parsers& parsers,
         std::size_t& pos,
@@ -15435,7 +15435,7 @@ ArgumentParser::match_positionals(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::finish_analyze_positional(
         pArgument const& arg,
         std::list<std::string> const& args,
@@ -15480,7 +15480,7 @@ ArgumentParser::finish_analyze_positional(
     return false;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::match_args_partial(
         Parsers& parsers,
         std::size_t& pos,
@@ -15508,7 +15508,7 @@ ArgumentParser::match_args_partial(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::try_capture_parser(
         Parsers& parsers,
         std::size_t& pos,
@@ -15590,7 +15590,7 @@ ArgumentParser::try_capture_parser(
     return false;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::check_abbreviations(
         Parsers const& parsers,
         bool was_pseudo_arg,
@@ -15649,7 +15649,7 @@ ArgumentParser::check_abbreviations(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::is_remainder_positional(
         std::size_t pos,
         pArguments const& positional,
@@ -15660,20 +15660,20 @@ ArgumentParser::is_remainder_positional(
             && !parsers.front().storage.at(positional.at(pos)).empty();
 }
 
-_ARGPARSE_INL ArgumentParser::pArgument const
+ARGPARSE_INL ArgumentParser::pArgument const
 ArgumentParser::get_optional_arg_by_flag(
         bool was_pseudo_arg,
         ParserInfo const& info,
         std::string const& key)
 {
     if (was_pseudo_arg) {
-        return _ARGPARSE_NULLPTR;
+        return ARGPARSE_NULLPTR;
     }
     pArgument const opt = detail::_find_arg_by_flag(info.optional, key);
     return opt ? opt : detail::_find_arg_by_flag(info.operand, key);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::separate_arg_abbrev(
         ParserInfo const& info,
         std::vector<std::string>& temp,
@@ -15710,7 +15710,7 @@ ArgumentParser::separate_arg_abbrev(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::process_positional_args(
         std::vector<std::string> const& parsed_arguments,
         std::size_t& i,
@@ -15761,7 +15761,7 @@ ArgumentParser::process_positional_args(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::check_mutex_groups(
         Parsers const& parsers)
 {
@@ -15793,7 +15793,7 @@ ArgumentParser::check_mutex_groups(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::process_required_arguments(
         std::vector<std::string>& required_args,
         pArguments const& arguments,
@@ -15807,7 +15807,7 @@ ArgumentParser::process_required_arguments(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::process_required_subparsers(
         bool required,
         std::size_t pos,
@@ -15823,7 +15823,7 @@ ArgumentParser::process_required_subparsers(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::process_required_check(
         ParserInfo const& info,
         _Storage const& storage)
@@ -15837,7 +15837,7 @@ ArgumentParser::process_required_check(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::skip_positional_required_check(
         Parsers& parsers,
         pArgument const& arg) const
@@ -15861,7 +15861,7 @@ ArgumentParser::skip_positional_required_check(
     return false;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::check_required_args(
         Parsers& parsers,
         std::size_t& pos,
@@ -15897,7 +15897,7 @@ ArgumentParser::check_required_args(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::check_unrecognized_args(
         bool only_known,
         std::vector<std::string> const& args) const
@@ -15907,7 +15907,7 @@ ArgumentParser::check_unrecognized_args(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::default_values_post_trigger(
         _Storage& storage) const
 {
@@ -15944,7 +15944,7 @@ ArgumentParser::default_values_post_trigger(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::namespace_post_trigger(
         Parsers& parsers,
         bool only_known,
@@ -15969,7 +15969,7 @@ ArgumentParser::namespace_post_trigger(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::is_default_value_stored(
         std::list<pArgument>& arguments,
         std::string const& dest,
@@ -15984,7 +15984,7 @@ ArgumentParser::is_default_value_stored(
     return false;
 }
 
-_ARGPARSE_INL std::size_t
+ARGPARSE_INL std::size_t
 ArgumentParser::argument_help_limit() const
 {
     std::size_t width = output_width();
@@ -15999,7 +15999,7 @@ ArgumentParser::argument_help_limit() const
     return _help_minwidth;
 }
 
-_ARGPARSE_INL ArgumentParser::SubParsersInfo
+ARGPARSE_INL ArgumentParser::SubParsersInfo
 ArgumentParser::subparsers_info(
         bool add_suppress,
         std::size_t offset) const
@@ -16015,7 +16015,7 @@ ArgumentParser::subparsers_info(
     return res;
 }
 
-_ARGPARSE_INL std::string
+ARGPARSE_INL std::string
 ArgumentParser::subparsers_prog_args() const
 {
     std::string res;
@@ -16028,7 +16028,7 @@ ArgumentParser::subparsers_prog_args() const
     return res;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::print_subparsers(
         bool need_print,
         SubParsersInfo const& info,
@@ -16051,14 +16051,14 @@ ArgumentParser::print_subparsers(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::update_prog(
         std::string const& parent_prog)
 {
     m_prog = parent_prog + detail::_spaces + m_name;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::test_overview(
         std::string const& lang,
         std::ostream& os) const
@@ -16117,7 +16117,7 @@ ArgumentParser::test_overview(
     overview_subparsers(this, std::string(), os);
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::overview_subparsers(
         ArgumentParser const* parser,
         std::string const& indent,
@@ -16139,7 +16139,7 @@ ArgumentParser::overview_subparsers(
     }
 }
 
-_ARGPARSE_INL bool
+ARGPARSE_INL bool
 ArgumentParser::test_diagnostics(
         std::string const& lang,
         std::ostream& os) const
@@ -16196,7 +16196,7 @@ ArgumentParser::test_diagnostics(
     return res;
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::test_argument_parser(
         std::string const& lang,
         std::ostream& os,
@@ -16410,7 +16410,7 @@ ArgumentParser::test_argument_parser(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::handle(
         std::string const& str) const
 {
@@ -16419,7 +16419,7 @@ ArgumentParser::handle(
     }
 }
 
-_ARGPARSE_INL void
+ARGPARSE_INL void
 ArgumentParser::parse_handle(
         bool only_known,
         _Storage const& storage,
@@ -16430,49 +16430,49 @@ ArgumentParser::parse_handle(
                                   : Namespace(storage));
     }
 }
-#endif  // _ARGPARSE_INL
+#endif  // ARGPARSE_INL
 }  // namespace argparse
 
 // -- #undef ------------------------------------------------------------------
-#undef _ARGPARSE_INL
+#undef ARGPARSE_INL
 // -- standard ----------------------------------------------------------------
-#undef _ARGPARSE_CXX_98
-#undef _ARGPARSE_CXX_11
-#undef _ARGPARSE_CXX_14
-#undef _ARGPARSE_CXX_17
-#undef _ARGPARSE_CXX_20
-#undef _ARGPARSE_CXX_23
+#undef ARGPARSE_CXX_98
+#undef ARGPARSE_CXX_11
+#undef ARGPARSE_CXX_14
+#undef ARGPARSE_CXX_17
+#undef ARGPARSE_CXX_20
+#undef ARGPARSE_CXX_23
 // -- attributes --------------------------------------------------------------
 // C++11+
-#undef _ARGPARSE_ATTR_NORETURN
-#undef _ARGPARSE_ATTR_CARRIES_DEPENDENCY
+#undef ARGPARSE_ATTR_NORETURN
+#undef ARGPARSE_ATTR_CARRIES_DEPENDENCY
 // C++14+
-#undef _ARGPARSE_ATTR_DEPRECATED
-#undef _ARGPARSE_ATTR_DEPRECATED_REASON
+#undef ARGPARSE_ATTR_DEPRECATED
+#undef ARGPARSE_ATTR_DEPRECATED_REASON
 // C++17+
-#undef _ARGPARSE_ATTR_FALLTHROUGH
-#undef _ARGPARSE_ATTR_MAYBE_UNUSED
-#undef _ARGPARSE_ATTR_NODISCARD
+#undef ARGPARSE_ATTR_FALLTHROUGH
+#undef ARGPARSE_ATTR_MAYBE_UNUSED
+#undef ARGPARSE_ATTR_NODISCARD
 // C++20+
-#undef _ARGPARSE_ATTR_LIKELY
-#undef _ARGPARSE_ATTR_NODISCARD_REASON
-#undef _ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
-#undef _ARGPARSE_ATTR_UNLIKELY
+#undef ARGPARSE_ATTR_LIKELY
+#undef ARGPARSE_ATTR_NODISCARD_REASON
+#undef ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
+#undef ARGPARSE_ATTR_UNLIKELY
 // C++23+
-#undef _ARGPARSE_ATTR_ASSUME
+#undef ARGPARSE_ATTR_ASSUME
 // -- specifiers --------------------------------------------------------------
-#undef _ARGPARSE_CONSTEXPR
-#undef _ARGPARSE_ENUM_TYPE
-#undef _ARGPARSE_EXPORT
-#undef _ARGPARSE_FINAL
-#undef _ARGPARSE_INLINE_VARIABLE
-#undef _ARGPARSE_MOVE
-#undef _ARGPARSE_NOEXCEPT
-#undef _ARGPARSE_NULLPTR
-#undef _ARGPARSE_OVERRIDE
-#undef _ARGPARSE_USE_CONSTEXPR
+#undef ARGPARSE_CONSTEXPR
+#undef ARGPARSE_ENUM_TYPE
+#undef ARGPARSE_EXPORT
+#undef ARGPARSE_FINAL
+#undef ARGPARSE_INLINE_VARIABLE
+#undef ARGPARSE_MOVE
+#undef ARGPARSE_NOEXCEPT
+#undef ARGPARSE_NULLPTR
+#undef ARGPARSE_OVERRIDE
+#undef ARGPARSE_USE_CONSTEXPR
 // -- features ----------------------------------------------------------------
-#undef _ARGPARSE_HAS_OPTIONAL
-#undef _ARGPARSE_HAS_STRING_VIEW
+#undef ARGPARSE_HAS_OPTIONAL
+#undef ARGPARSE_HAS_STRING_VIEW
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
