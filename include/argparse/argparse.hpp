@@ -47,6 +47,9 @@
 #undef ARGPARSE_CXX_17
 #undef ARGPARSE_CXX_20
 #undef ARGPARSE_CXX_23
+// -- features ----------------------------------------------------------------
+#undef ARGPARSE_HAS_OPTIONAL
+#undef ARGPARSE_HAS_STRING_VIEW
 // -- attributes --------------------------------------------------------------
 // C++11+
 #undef ARGPARSE_ATTR_NORETURN
@@ -76,9 +79,6 @@
 #undef ARGPARSE_NULLPTR
 #undef ARGPARSE_OVERRIDE
 #undef ARGPARSE_USE_CONSTEXPR
-// -- features ----------------------------------------------------------------
-#undef ARGPARSE_HAS_OPTIONAL
-#undef ARGPARSE_HAS_STRING_VIEW
 
 // -- #define -----------------------------------------------------------------
 // -- version -----------------------------------------------------------------
@@ -107,123 +107,125 @@
     (ARGPARSE_VERSION_COMPILED >= ARGPARSE_VERSION_NUM(X, Y, Z))
 
 // -- standard ----------------------------------------------------------------
+#define ARGPARSE_CXX_98
+
 #ifdef _MSVC_LANG
-#if _MSVC_LANG >= 201103L
-#define ARGPARSE_CXX_11
-#endif  // C++11+
-#if _MSVC_LANG >  201103L
-#define ARGPARSE_CXX_14
-#endif  // C++14+
-#if _MSVC_LANG >  201402L
-#define ARGPARSE_CXX_17
-#endif  // C++17+
-#if _MSVC_LANG >  201703L
-#define ARGPARSE_CXX_20
-#endif  // C++20+
-#if _MSVC_LANG >  202002L
-#define ARGPARSE_CXX_23
-#endif  // C++23+
+# if _MSVC_LANG >= 201103L
+#  define ARGPARSE_CXX_11
+# endif  // C++11+
+# if _MSVC_LANG >  201103L
+#  define ARGPARSE_CXX_14
+# endif  // C++14+
+# if _MSVC_LANG >  201402L
+#  define ARGPARSE_CXX_17
+# endif  // C++17+
+# if _MSVC_LANG >  201703L
+#  define ARGPARSE_CXX_20
+# endif  // C++20+
+# if _MSVC_LANG >  202002L
+#  define ARGPARSE_CXX_23
+# endif  // C++23+
 #else
-#if __cplusplus >= 201103L
-#define ARGPARSE_CXX_11
-#endif  // C++11+
-#if __cplusplus >  201103L
-#define ARGPARSE_CXX_14
-#endif  // C++14+
-#if __cplusplus >  201402L
-#define ARGPARSE_CXX_17
-#endif  // C++17+
-#if __cplusplus >  201703L
-#define ARGPARSE_CXX_20
-#endif  // C++20+
-#if __cplusplus >  202002L
-#define ARGPARSE_CXX_23
-#endif  // C++23+
+# if __cplusplus >= 201103L
+#  define ARGPARSE_CXX_11
+# endif  // C++11+
+# if __cplusplus >  201103L
+#  define ARGPARSE_CXX_14
+# endif  // C++14+
+# if __cplusplus >  201402L
+#  define ARGPARSE_CXX_17
+# endif  // C++17+
+# if __cplusplus >  201703L
+#  define ARGPARSE_CXX_20
+# endif  // C++20+
+# if __cplusplus >  202002L
+#  define ARGPARSE_CXX_23
+# endif  // C++23+
 #endif  // _MSVC_LANG
 
 // -- static building ---------------------------------------------------------
 #undef ARGPARSE_INL
 #ifdef ARGPARSE_DECLARATION
 // header
-#undef ARGPARSE_IMPLEMENTATION
+# undef ARGPARSE_IMPLEMENTATION
 #else
-#ifdef ARGPARSE_IMPLEMENTATION
+# ifdef ARGPARSE_IMPLEMENTATION
 // static build
-#define ARGPARSE_INL
-#else
+#  define ARGPARSE_INL
+# else
 // single-header
-#define ARGPARSE_INL inline
-#endif  // ARGPARSE_IMPLEMENTATION
+#  define ARGPARSE_INL inline
+# endif  // ARGPARSE_IMPLEMENTATION
 #endif  // ARGPARSE_DECLARATION
 
 // -- terminal size detection -------------------------------------------------
 #undef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #if !defined ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION
-#define ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+# define ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 
 #ifdef ARGPARSE_INL
-#ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
-#if defined(_WIN32)
-#undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#undef ARGPARSE_DEFINE_VC_EXTRALEAN
+# ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+#  if defined(_WIN32)
+#   undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#   undef ARGPARSE_DEFINE_VC_EXTRALEAN
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#define ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#endif  // WIN32_LEAN_AND_MEAN
+#   ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#    define ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#   endif  // WIN32_LEAN_AND_MEAN
 
-#ifndef VC_EXTRALEAN
-#define VC_EXTRALEAN
-#define ARGPARSE_DEFINE_VC_EXTRALEAN
-#endif  // VC_EXTRALEAN
+#   ifndef VC_EXTRALEAN
+#    define VC_EXTRALEAN
+#    define ARGPARSE_DEFINE_VC_EXTRALEAN
+#   endif  // VC_EXTRALEAN
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#define ARGPARSE_DEFINE_NOMINMAX
-#endif  // NOMINMAX
+#   ifndef NOMINMAX
+#    define NOMINMAX
+#    define ARGPARSE_DEFINE_NOMINMAX
+#   endif  // NOMINMAX
 
-#ifdef _MSC_VER
-#include <Windows.h>
-#else
-#include <windows.h>
-#endif  // _MSC_VER
+#   ifdef _MSC_VER
+#    include <Windows.h>
+#   else
+#    include <windows.h>
+#   endif  // _MSC_VER
 
-#ifdef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#undef WIN32_LEAN_AND_MEAN
-#endif  // ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#   ifdef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#    undef WIN32_LEAN_AND_MEAN
+#   endif  // ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 
-#ifdef ARGPARSE_DEFINE_VC_EXTRALEAN
-#undef VC_EXTRALEAN
-#endif  // ARGPARSE_DEFINE_VC_EXTRALEAN
+#   ifdef ARGPARSE_DEFINE_VC_EXTRALEAN
+#    undef VC_EXTRALEAN
+#   endif  // ARGPARSE_DEFINE_VC_EXTRALEAN
 
-#ifdef ARGPARSE_DEFINE_NOMINMAX
-#undef NOMINMAX
-#endif  // ARGPARSE_DEFINE_NOMINMAX
+#   ifdef ARGPARSE_DEFINE_NOMINMAX
+#    undef NOMINMAX
+#   endif  // ARGPARSE_DEFINE_NOMINMAX
 
-#undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#undef ARGPARSE_DEFINE_VC_EXTRALEAN
-#undef ARGPARSE_DEFINE_NOMINMAX
-#else  // UNIX
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <unistd.h>
-#endif  // _WIN32
-#endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+#   undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#   undef ARGPARSE_DEFINE_VC_EXTRALEAN
+#   undef ARGPARSE_DEFINE_NOMINMAX
+#  else  // UNIX
+#   include <sys/ioctl.h>
+#   include <fcntl.h>
+#   include <unistd.h>
+#  endif  // _WIN32
+# endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #endif  // ARGPARSE_INL
 
 // -- #include ----------------------------------------------------------------
 #ifdef ARGPARSE_CXX_11
-#include <array>
-#include <cstdint>
-#include <functional>
-#include <initializer_list>
-#include <memory>
-#include <tuple>
-#include <type_traits>
-#include <unordered_map>
+# include <array>
+# include <cstdint>
+# include <functional>
+# include <initializer_list>
+# include <memory>
+# include <tuple>
+# include <type_traits>
+# include <unordered_map>
 #else
-#include <stdint.h>
+# include <stdint.h>
 #endif  // C++11+
 
 #include <cctype>
@@ -239,102 +241,102 @@
 #include <vector>
 
 #ifdef ARGPARSE_CXX_17
-#define ARGPARSE_HAS_OPTIONAL
-#define ARGPARSE_HAS_STRING_VIEW
+# define ARGPARSE_HAS_OPTIONAL
+# define ARGPARSE_HAS_STRING_VIEW
 #endif  // C++17+
 
 #ifdef ARGPARSE_HAS_OPTIONAL
-#include <optional>
+# include <optional>
 #endif  // ARGPARSE_HAS_OPTIONAL
 
 #ifdef ARGPARSE_INL
-#include <fstream>
+# include <fstream>
 #ifdef ARGPARSE_CXX_11
-#include <regex>
+# include <regex>
 #endif  // C++11+
-#ifdef ARGPARSE_HAS_STRING_VIEW
-#include <string_view>
-#endif  // ARGPARSE_HAS_STRING_VIEW
+# ifdef ARGPARSE_HAS_STRING_VIEW
+#  include <string_view>
+# endif  // ARGPARSE_HAS_STRING_VIEW
 #endif  // ARGPARSE_INL
 
 // -- attributes --------------------------------------------------------------
 #ifdef ARGPARSE_CXX_11
-#define ARGPARSE_ATTR_NORETURN              [[noreturn]]
-#define ARGPARSE_ATTR_CARRIES_DEPENDENCY    [[carries_dependency]]
+# define ARGPARSE_ATTR_NORETURN             [[noreturn]]
+# define ARGPARSE_ATTR_CARRIES_DEPENDENCY   [[carries_dependency]]
 #else
-#define ARGPARSE_ATTR_NORETURN
-#define ARGPARSE_ATTR_CARRIES_DEPENDENCY
+# define ARGPARSE_ATTR_NORETURN
+# define ARGPARSE_ATTR_CARRIES_DEPENDENCY
 #endif  // C++11+
 
 #ifdef ARGPARSE_CXX_14
-#define ARGPARSE_ATTR_DEPRECATED            [[deprecated]]
-#define ARGPARSE_ATTR_DEPRECATED_REASON(X)  [[deprecated(X)]]
+# define ARGPARSE_ATTR_DEPRECATED           [[deprecated]]
+# define ARGPARSE_ATTR_DEPRECATED_REASON(X) [[deprecated(X)]]
 #else
-#define ARGPARSE_ATTR_DEPRECATED
-#define ARGPARSE_ATTR_DEPRECATED_REASON(X)
+# define ARGPARSE_ATTR_DEPRECATED
+# define ARGPARSE_ATTR_DEPRECATED_REASON(X)
 #endif  // C++14+
 
 #ifdef ARGPARSE_CXX_17
-#define ARGPARSE_ATTR_FALLTHROUGH           [[fallthrough]]
-#define ARGPARSE_ATTR_MAYBE_UNUSED          [[maybe_unused]]
-#define ARGPARSE_ATTR_NODISCARD             [[nodiscard]]
-#define ARGPARSE_ATTR_NODISCARD_REASON(X)   [[nodiscard]]
+# define ARGPARSE_ATTR_FALLTHROUGH          [[fallthrough]]
+# define ARGPARSE_ATTR_MAYBE_UNUSED         [[maybe_unused]]
+# define ARGPARSE_ATTR_NODISCARD            [[nodiscard]]
+# define ARGPARSE_ATTR_NODISCARD_REASON(X)  [[nodiscard]]
 #else
-#define ARGPARSE_ATTR_FALLTHROUGH
-#define ARGPARSE_ATTR_MAYBE_UNUSED
-#define ARGPARSE_ATTR_NODISCARD
-#define ARGPARSE_ATTR_NODISCARD_REASON(X)
+# define ARGPARSE_ATTR_FALLTHROUGH
+# define ARGPARSE_ATTR_MAYBE_UNUSED
+# define ARGPARSE_ATTR_NODISCARD
+# define ARGPARSE_ATTR_NODISCARD_REASON(X)
 #endif  // C++17+
 
 #ifdef ARGPARSE_CXX_20
-#undef ARGPARSE_ATTR_NODISCARD_REASON
+# undef ARGPARSE_ATTR_NODISCARD_REASON
 
-#define ARGPARSE_ATTR_LIKELY                [[likely]]
-#define ARGPARSE_ATTR_NODISCARD_REASON(X)   [[nodiscard(X)]]
-#define ARGPARSE_ATTR_NO_UNIQUE_ADDRESS     [[no_unique_address]]
-#define ARGPARSE_ATTR_UNLIKELY              [[unlikely]]
+# define ARGPARSE_ATTR_LIKELY               [[likely]]
+# define ARGPARSE_ATTR_NODISCARD_REASON(X)  [[nodiscard(X)]]
+# define ARGPARSE_ATTR_NO_UNIQUE_ADDRESS    [[no_unique_address]]
+# define ARGPARSE_ATTR_UNLIKELY             [[unlikely]]
 #else
-#define ARGPARSE_ATTR_LIKELY
-#define ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
-#define ARGPARSE_ATTR_UNLIKELY
+# define ARGPARSE_ATTR_LIKELY
+# define ARGPARSE_ATTR_NO_UNIQUE_ADDRESS
+# define ARGPARSE_ATTR_UNLIKELY
 #endif  // C++20+
 
 #ifdef ARGPARSE_CXX_23
-#define ARGPARSE_ATTR_ASSUME(X)             [[assume(X)]]
+# define ARGPARSE_ATTR_ASSUME(X)            [[assume(X)]]
 #else
-#define ARGPARSE_ATTR_ASSUME(X)
+# define ARGPARSE_ATTR_ASSUME(X)
 #endif  // C++23+
 
 // -- specifiers --------------------------------------------------------------
 #define ARGPARSE_EXPORT
 
 #ifdef ARGPARSE_CXX_11
-#define ARGPARSE_FINAL final
-#define ARGPARSE_NOEXCEPT noexcept
-#define ARGPARSE_OVERRIDE override
-#define ARGPARSE_CONSTEXPR constexpr
-#define ARGPARSE_USE_CONSTEXPR constexpr
-#define ARGPARSE_ENUM_TYPE(X) : X
-#define ARGPARSE_MOVE(X) std::move(X)
+# define ARGPARSE_FINAL final
+# define ARGPARSE_NOEXCEPT noexcept
+# define ARGPARSE_OVERRIDE override
+# define ARGPARSE_CONSTEXPR constexpr
+# define ARGPARSE_USE_CONSTEXPR constexpr
+# define ARGPARSE_ENUM_TYPE(X) : X
+# define ARGPARSE_MOVE(X) std::move(X)
 #else
-#define ARGPARSE_FINAL
-#define ARGPARSE_NOEXCEPT
-#define ARGPARSE_OVERRIDE
-#define ARGPARSE_CONSTEXPR
-#define ARGPARSE_USE_CONSTEXPR const
-#define ARGPARSE_ENUM_TYPE(X)
-#define ARGPARSE_MOVE(X) X
+# define ARGPARSE_FINAL
+# define ARGPARSE_NOEXCEPT
+# define ARGPARSE_OVERRIDE
+# define ARGPARSE_CONSTEXPR
+# define ARGPARSE_USE_CONSTEXPR const
+# define ARGPARSE_ENUM_TYPE(X)
+# define ARGPARSE_MOVE(X) X
 #endif  // C++11+
 
 #ifdef ARGPARSE_CXX_17
-#define ARGPARSE_INLINE_VARIABLE inline
+# define ARGPARSE_INLINE_VARIABLE inline
 #else
-#define ARGPARSE_INLINE_VARIABLE static
+# define ARGPARSE_INLINE_VARIABLE static
 #endif  // C++17+
 
 namespace argparse {
 #ifdef ARGPARSE_CXX_11
-#define ARGPARSE_NULLPTR nullptr
+# define ARGPARSE_NULLPTR nullptr
 #else
 const
 class nullptr_t
@@ -350,7 +352,7 @@ private:
     void operator & () const;
 } _nullptr = {};
 
-#define ARGPARSE_NULLPTR _nullptr
+# define ARGPARSE_NULLPTR _nullptr
 #endif  // C++11+
 
 /*!
@@ -8898,7 +8900,7 @@ _get_terminal_size(
         return std::make_pair(width, height);
     }
 #ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
-#if defined(_WIN32)
+# if defined(_WIN32)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
         width = static_cast<std::size_t>
@@ -8909,8 +8911,8 @@ _get_terminal_size(
             width = _min_width;
         }
     }
-#else  // UNIX
-#if defined(TIOCGSIZE)
+# else  // UNIX
+#  if defined(TIOCGSIZE)
     struct ttysize w;
     if (ioctl(STDOUT_FILENO, TIOCGSIZE, &w) >= 0) {
         width = static_cast<std::size_t>(w.ts_cols);
@@ -8919,7 +8921,7 @@ _get_terminal_size(
             width = _min_width;
         }
     }
-#elif defined(TIOCGWINSZ)
+#  elif defined(TIOCGWINSZ)
     struct winsize w;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) >= 0) {
         width = static_cast<std::size_t>(w.ws_col);
@@ -8928,8 +8930,8 @@ _get_terminal_size(
             width = _min_width;
         }
     }
-#endif  // TIOCGSIZE
-#endif  // _WIN32
+#  endif  // TIOCGSIZE
+# endif  // _WIN32
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
     return std::make_pair(width, height);
 }
@@ -16435,13 +16437,18 @@ ArgumentParser::parse_handle(
 
 // -- #undef ------------------------------------------------------------------
 #undef ARGPARSE_INL
+#ifndef ARGPARSE_KEEP_MACROS
 // -- standard ----------------------------------------------------------------
-#undef ARGPARSE_CXX_98
-#undef ARGPARSE_CXX_11
-#undef ARGPARSE_CXX_14
-#undef ARGPARSE_CXX_17
-#undef ARGPARSE_CXX_20
-#undef ARGPARSE_CXX_23
+# undef ARGPARSE_CXX_98
+# undef ARGPARSE_CXX_11
+# undef ARGPARSE_CXX_14
+# undef ARGPARSE_CXX_17
+# undef ARGPARSE_CXX_20
+# undef ARGPARSE_CXX_23
+// -- features ----------------------------------------------------------------
+# undef ARGPARSE_HAS_OPTIONAL
+# undef ARGPARSE_HAS_STRING_VIEW
+#endif  // ARGPARSE_KEEP_MACROS
 // -- attributes --------------------------------------------------------------
 // C++11+
 #undef ARGPARSE_ATTR_NORETURN
@@ -16471,8 +16478,5 @@ ArgumentParser::parse_handle(
 #undef ARGPARSE_NULLPTR
 #undef ARGPARSE_OVERRIDE
 #undef ARGPARSE_USE_CONSTEXPR
-// -- features ----------------------------------------------------------------
-#undef ARGPARSE_HAS_OPTIONAL
-#undef ARGPARSE_HAS_STRING_VIEW
 
 #endif  // _ARGPARSE_ARGUMENT_PARSER_HPP_
