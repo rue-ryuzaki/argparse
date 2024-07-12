@@ -2,10 +2,10 @@
  * Copyright (c) 2021-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  */
 
-#include <argparse/argparse_decl.hpp>
-#include "./catch-define.h"
+#define ARGPARSE_DECLARATION
+#include "./argparse_test.hpp"
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
 #include <array>
 #include <forward_list>
 #include <tuple>
@@ -30,11 +30,11 @@ TEST_CASE("1. type name", "[detail]")
         REQUIRE(argparse::detail::Type::name<float>() == "float");
         REQUIRE(argparse::detail::Type::name<double>() == "double");
         REQUIRE(argparse::detail::Type::name<std::string>() == "std::string");
-#ifdef _ARGPARSE_HAS_STRING_VIEW
+#ifdef ARGPARSE_HAS_STRING_VIEW
         REQUIRE(argparse::detail::Type::name<std::string_view>() == "std::string");
-#endif  // _ARGPARSE_HAS_STRING_VIEW
+#endif  // ARGPARSE_HAS_STRING_VIEW
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         REQUIRE(argparse::detail::Type::name<std::array<int, 1> >() == "std::array<int, 1>");
         REQUIRE(argparse::detail::Type::name<std::forward_list<int> >() == "std::forward_list<int>");
         REQUIRE(argparse::detail::Type::name<std::tuple<int, int> >() == "std::tuple<int, int>");
@@ -53,7 +53,7 @@ TEST_CASE("1. type name", "[detail]")
         REQUIRE(argparse::detail::Type::name<std::stack<int> >() == "std::stack<int>");
         REQUIRE(argparse::detail::Type::name<std::queue<int> >() == "std::queue<int>");
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         REQUIRE(argparse::detail::Type::name<std::array<std::string, 1> >() == "std::array<std::string, 1>");
         REQUIRE(argparse::detail::Type::name<std::forward_list<std::string> >() == "std::forward_list<std::string>");
         REQUIRE(argparse::detail::Type::name<std::tuple<std::string, std::string> >()
@@ -89,11 +89,11 @@ TEST_CASE("1. type name", "[detail]")
         REQUIRE(argparse::detail::Type::basic<float>() == "float");
         REQUIRE(argparse::detail::Type::basic<double>() == "double");
         REQUIRE(argparse::detail::Type::basic<std::string>() == "std::string");
-#ifdef _ARGPARSE_HAS_STRING_VIEW
+#ifdef ARGPARSE_HAS_STRING_VIEW
         REQUIRE(argparse::detail::Type::basic<std::string_view>() == "std::string");
-#endif  // _ARGPARSE_HAS_STRING_VIEW
+#endif  // ARGPARSE_HAS_STRING_VIEW
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         REQUIRE(argparse::detail::Type::basic<std::array<int, 1> >() == "int");
         REQUIRE(argparse::detail::Type::basic<std::forward_list<int> >() == "int");
         REQUIRE(argparse::detail::Type::basic<std::tuple<int, int> >() == "std::tuple<int, int>");
@@ -112,7 +112,7 @@ TEST_CASE("1. type name", "[detail]")
         REQUIRE(argparse::detail::Type::basic<std::stack<int> >() == "int");
         REQUIRE(argparse::detail::Type::basic<std::queue<int> >() == "int");
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         REQUIRE(argparse::detail::Type::basic<std::array<std::string, 1> >() == "std::string");
         REQUIRE(argparse::detail::Type::basic<std::forward_list<std::string> >() == "std::string");
         REQUIRE(argparse::detail::Type::basic<std::tuple<std::string, std::string> >()
@@ -148,10 +148,10 @@ TEST_CASE("3. byte type check", "[detail]")
     REQUIRE(argparse::detail::is_byte_type<signed char>::value == true);
     REQUIRE(argparse::detail::is_byte_type<int8_t>::value == true);
     REQUIRE(argparse::detail::is_byte_type<uint8_t>::value == true);
-#ifdef _ARGPARSE_CXX_17
+#ifdef ARGPARSE_CXX_17
     REQUIRE(argparse::detail::is_byte_type<std::byte>::value == true);
 #endif  // C++17+
-#ifdef _ARGPARSE_CXX_20
+#ifdef ARGPARSE_CXX_20
     REQUIRE(argparse::detail::is_byte_type<char8_t>::value == true);
 #endif  // C++20+
     // false

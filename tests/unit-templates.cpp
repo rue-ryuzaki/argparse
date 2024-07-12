@@ -2,10 +2,10 @@
  * Copyright (c) 2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  */
 
-#include <argparse/argparse_decl.hpp>
-#include "./catch-define.h"
+#define ARGPARSE_DECLARATION
+#include "./argparse_test.hpp"
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
 #include <array>
 #include <forward_list>
 #include <functional>
@@ -201,7 +201,7 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX(is_stl_array, std::list, is_matrix);
         MACRO_MATRIX(is_stl_array, std::vector, is_matrix);
         // array
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         MACRO_ARRAY(is_stl_array, is_array);
         MACRO_CONTAINER11(is_stl_array, is_container);
         MACRO_CONTAINER_PAIR11(is_stl_array, is_container_pair);
@@ -230,7 +230,7 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX(is_stl_container, std::deque, is_matrix);
         MACRO_MATRIX(is_stl_container, std::list, is_matrix);
         MACRO_MATRIX(is_stl_container, std::vector, is_matrix);
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         MACRO_ARRAY(is_stl_container, is_array);
         MACRO_CONTAINER11(is_stl_container, is_container);
         MACRO_CONTAINER_PAIR11(is_stl_container, is_container_pair);
@@ -259,7 +259,7 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX(is_stl_container_paired, std::deque, is_matrix);
         MACRO_MATRIX(is_stl_container_paired, std::list, is_matrix);
         MACRO_MATRIX(is_stl_container_paired, std::vector, is_matrix);
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         MACRO_ARRAY(is_stl_container_paired, is_array);
         MACRO_CONTAINER11(is_stl_container_paired, is_container);
         MACRO_CONTAINER_PAIR11(is_stl_container_paired, is_container_pair);
@@ -288,7 +288,7 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX(is_stl_container_tupled, std::deque, is_matrix);
         MACRO_MATRIX(is_stl_container_tupled, std::list, is_matrix);
         MACRO_MATRIX(is_stl_container_tupled, std::vector, is_matrix);
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         MACRO_ARRAY(is_stl_container_tupled, is_array);
         MACRO_CONTAINER11(is_stl_container_tupled, is_container);
         MACRO_CONTAINER_PAIR11(is_stl_container_tupled, is_container_pair);
@@ -317,7 +317,7 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX(is_stl_map, std::deque, is_matrix);
         MACRO_MATRIX(is_stl_map, std::list, is_matrix);
         MACRO_MATRIX(is_stl_map, std::vector, is_matrix);
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         MACRO_ARRAY(is_stl_map, is_array);
         MACRO_CONTAINER11(is_stl_map, is_container);
         MACRO_CONTAINER_PAIR11(is_stl_map, is_container_pair);
@@ -346,7 +346,7 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX(is_stl_queue, std::deque, is_matrix);
         MACRO_MATRIX(is_stl_queue, std::list, is_matrix);
         MACRO_MATRIX(is_stl_queue, std::vector, is_matrix);
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         MACRO_ARRAY(is_stl_queue, is_array);
         MACRO_CONTAINER11(is_stl_queue, is_container);
         MACRO_CONTAINER_PAIR11(is_stl_queue, is_container_pair);
@@ -375,7 +375,7 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX(is_stl_matrix, std::deque, is_matrix);
         MACRO_MATRIX(is_stl_matrix, std::list, is_matrix);
         MACRO_MATRIX(is_stl_matrix, std::vector, is_matrix);
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         MACRO_ARRAY(is_stl_matrix, is_array);
         MACRO_CONTAINER11(is_stl_matrix, is_container);
         MACRO_CONTAINER_PAIR11(is_stl_matrix, is_container_pair);

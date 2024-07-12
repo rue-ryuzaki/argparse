@@ -2,10 +2,10 @@
  * Copyright (c) 2021-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  */
 
-#include <argparse/argparse_decl.hpp>
-#include "./catch-define.h"
+#define ARGPARSE_DECLARATION
+#include "./argparse_test.hpp"
 
-#ifndef _ARGPARSE_CXX_11
+#ifndef ARGPARSE_CXX_11
 void
 parser_a_handle_check(argparse::Namespace const& args)
 {
@@ -310,7 +310,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         argparse::SubParsers& subparsers = parser.add_subparsers().dest("cmd").help("sub-command help");
 
         argparse::ArgumentParser& parser_a = subparsers.add_parser("a").help("a help");
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         parser_a.handle([] (argparse::Namespace const& args)
         {
             REQUIRE(args.exists("foo") == false);
@@ -325,7 +325,7 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         REQUIRE(subparsers.parser_names().size() == 1);
 
         argparse::ArgumentParser& parser_b = subparsers.add_parser("b").help("b help");
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         parser_b.handle([] (argparse::Namespace const& args)
         {
              REQUIRE(args.exists("foo") == false);

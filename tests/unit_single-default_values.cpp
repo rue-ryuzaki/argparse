@@ -2,8 +2,7 @@
  * Copyright (c) 2021-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  */
 
-#include <argparse/argparse.hpp>
-#include "./catch-define.h"
+#include "./argparse_test.hpp"
 
 TEST_CASE("1. default values", "[argument_parser]")
 {
@@ -25,7 +24,7 @@ TEST_CASE("1. default values", "[argument_parser]")
         REQUIRE(args0.get<std::string>("foo") == global_default);
         REQUIRE(args0.get<std::string>("bar") == local_default);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foo", new_default } });
 #else
         std::vector<std::pair<std::string, std::string> > values1;
@@ -39,7 +38,7 @@ TEST_CASE("1. default values", "[argument_parser]")
         REQUIRE(args1.get<std::string>("foo") == new_default);
         REQUIRE(args1.get<std::string>("bar") == local_default);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foobaz", new_default } });
 #else
         std::vector<std::pair<std::string, std::string> > values2;
@@ -69,7 +68,7 @@ TEST_CASE("1. default values", "[argument_parser]")
         REQUIRE(args0.get<std::string>("foo") == "");
         REQUIRE(args0.get<std::string>("bar") == local_default);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foo", new_default } });
 #else
         std::vector<std::pair<std::string, std::string> > values1;
@@ -83,7 +82,7 @@ TEST_CASE("1. default values", "[argument_parser]")
         REQUIRE(args1.get<std::string>("foo") == new_default);
         REQUIRE(args1.get<std::string>("bar") == local_default);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foobaz", new_default } });
 #else
         std::vector<std::pair<std::string, std::string> > values2;
@@ -119,7 +118,7 @@ TEST_CASE("1. default values", "[argument_parser]")
         REQUIRE(args1.get<std::string>("foo") == new_default);
         REQUIRE(args1.get<std::string>("bar") == local_default);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foo", new_default } });
 #else
         std::vector<std::pair<std::string, std::string> > values1;
@@ -153,7 +152,7 @@ TEST_CASE("1. default values", "[argument_parser]")
         REQUIRE(args1.get<std::string>("foo") == global_default);
         REQUIRE(args1.get<std::string>("bar") == new_default);
 
-#ifdef _ARGPARSE_CXX_11
+#ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "bar", new_default } });
 #else
         std::vector<std::pair<std::string, std::string> > values1;

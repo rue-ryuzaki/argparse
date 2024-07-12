@@ -2,8 +2,8 @@
  * Copyright (c) 2021-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  */
 
-#include <argparse/argparse_decl.hpp>
-#include "./catch-define.h"
+#define ARGPARSE_DECLARATION
+#include "./argparse_test.hpp"
 
 TEST_CASE("1. optional arguments", "[argument_parser]")
 {
@@ -143,12 +143,12 @@ TEST_CASE("1. optional arguments", "[argument_parser]")
         std::string non_exist = "baz";
         REQUIRE(args.exists(non_exist) == false);
         REQUIRE_THROWS(args.get<std::string>(non_exist));
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args.try_get<std::string>("foo").operator bool() == false);
         REQUIRE(args.try_get<std::string>("bar").operator bool() == true);
         REQUIRE(args.try_get<std::string>("bar").value() == bar);
         REQUIRE(args.try_get<std::vector<std::string> >(non_exist).operator bool() == false);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
     }
 }
 

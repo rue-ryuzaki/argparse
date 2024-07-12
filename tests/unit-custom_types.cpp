@@ -4,8 +4,8 @@
 
 #include <iostream>
 
-#include <argparse/argparse_decl.hpp>
-#include "./catch-define.h"
+#define ARGPARSE_DECLARATION
+#include "./argparse_test.hpp"
 
 struct Coord
 {
@@ -15,13 +15,17 @@ struct Coord
           z()
     { }
 
-    explicit Coord(int x, int y, int z)
+    explicit
+    Coord(int x,
+            int y,
+            int z)
         : x(x),
           y(y),
           z(z)
     { }
 
-    inline void print() const
+    inline void
+    print() const
     {
         std::cout << "x=" << x << ";y=" << y << ";z=" << z << std::endl;
     }
@@ -97,29 +101,29 @@ TEST_CASE("2. containers with custom types", "[argument]")
         argparse::Namespace args1 = parser.parse_args("");
         REQUIRE(args1.get<std::vector<Coord> >("coord").size() == 0);
         REQUIRE(args1.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args1.try_get<std::vector<Coord> >("coord")->size() == 0);
         REQUIRE(args1.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
         REQUIRE(args1.get<Coord>("const_coord").x == 0);
 
         argparse::Namespace args2 = parser.parse_args("--coord='1 2 3' --const_coord");
         REQUIRE(args2.get<std::vector<Coord> >("coord").size() == 1);
         REQUIRE(args2.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args2.try_get<std::vector<Coord> >("coord")->size() == 1);
         REQUIRE(args2.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
         REQUIRE(args2.get<Coord>("coord").x == 1);
         REQUIRE(args2.get<Coord>("const_coord").x == 1);
 
         argparse::Namespace args3 = parser.parse_args("--coord='1 2 3' --coord='4 5 6' --const_coord");
         REQUIRE(args3.get<std::vector<Coord> >("coord").size() == 2);
         REQUIRE(args3.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args3.try_get<std::vector<Coord> >("coord")->size() == 2);
         REQUIRE(args3.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
     }
 
     SECTION("2.2. custom type with nargs=3") {
@@ -131,29 +135,29 @@ TEST_CASE("2. containers with custom types", "[argument]")
         argparse::Namespace args1 = parser.parse_args("");
         REQUIRE(args1.get<std::vector<Coord> >("coord").size() == 0);
         REQUIRE(args1.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args1.try_get<std::vector<Coord> >("coord")->size() == 0);
         REQUIRE(args1.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
         REQUIRE(args1.get<Coord>("const_coord").x == 0);
 
         argparse::Namespace args2 = parser.parse_args("--coord 1 2 3 --const_coord");
         REQUIRE(args2.get<std::vector<Coord> >("coord").size() == 1);
         REQUIRE(args2.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args2.try_get<std::vector<Coord> >("coord")->size() == 1);
         REQUIRE(args2.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
         REQUIRE(args2.get<Coord>("coord").x == 1);
         REQUIRE(args2.get<Coord>("const_coord").x == 1);
 
         argparse::Namespace args3 = parser.parse_args("--coord 1 2 3 --coord 4 5 6 --const_coord");
         REQUIRE(args3.get<std::vector<Coord> >("coord").size() == 2);
         REQUIRE(args3.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args3.try_get<std::vector<Coord> >("coord")->size() == 2);
         REQUIRE(args3.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
     }
 
     SECTION("2.3. custom type with combined nargs=*") {
@@ -166,19 +170,19 @@ TEST_CASE("2. containers with custom types", "[argument]")
         argparse::Namespace args1 = parser.parse_args("");
         REQUIRE(args1.get<std::vector<Coord> >("coord").size() == 0);
         REQUIRE(args1.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args1.try_get<std::vector<Coord> >("coord")->size() == 0);
         REQUIRE(args1.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
         REQUIRE(args1.get<Coord>("const_coord").x == 0);
 
         argparse::Namespace args2 = parser.parse_args("--coord 1 2 3 --const_coord");
         REQUIRE(args2.get<std::vector<Coord> >("coord").size() == 1);
         REQUIRE(args2.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args2.try_get<std::vector<Coord> >("coord")->size() == 1);
         REQUIRE(args2.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
         REQUIRE(args2.get<Coord>("coord").x == 1);
         REQUIRE(args2.get<Coord>("const_coord").x == 1);
 
@@ -187,19 +191,19 @@ TEST_CASE("2. containers with custom types", "[argument]")
         argparse::Namespace args3 = parser.parse_args("--coord 1 2 3 4 5 6 --const_coord");
         REQUIRE(args3.get<std::vector<Coord> >("coord").size() == 2);
         REQUIRE(args3.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args3.try_get<std::vector<Coord> >("coord")->size() == 2);
         REQUIRE(args3.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
         // work since v1.8.3
         argparse::Namespace args4 = parser.parse_args("--coord 1 2 3 --coord 4 5 6 --const_coord");
         REQUIRE(args4.get<std::vector<Coord> >("coord").size() == 2);
         REQUIRE(args4.get<std::vector<Coord> >("const_coord").size() == 1);
-#ifdef _ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_OPTIONAL
         REQUIRE(args4.try_get<std::vector<Coord> >("coord")->size() == 2);
         REQUIRE(args4.try_get<std::vector<Coord> >("const_coord")->size() == 1);
-#endif  // _ARGPARSE_HAS_OPTIONAL
+#endif  // ARGPARSE_HAS_OPTIONAL
 
         REQUIRE_THROWS(parser.parse_args("--coord 1"));
         REQUIRE_THROWS(parser.parse_args("--coord 1 2"));
