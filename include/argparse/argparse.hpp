@@ -6154,14 +6154,15 @@ public:
 
     /*!
      *  \brief Construct argument parser with concrete program name
+     *  (default: "" don't override default program name "untitled")
      *
-     *  \param prog Program name (default: "untitled")
+     *  \param prog Program name (default: "")
      *
      *  \return Argument parser object
      */
     explicit
     ArgumentParser(
-            std::string const& prog = "untitled");
+            std::string const& prog = std::string());
 
     /*!
      *  \brief Construct argument parser from command line arguments
@@ -8146,6 +8147,7 @@ ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _pseudo_arg[]       = "--";
 ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _space               = ' ';
 ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _equals[]            = "=";
 ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _none[]           = "None";
+ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _prog[]       = "untitled";
 ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR
                                                    _suppress[] = "==SUPPRESS==";
 
@@ -13515,7 +13517,7 @@ ArgumentParser::ArgumentParser(
         std::string const& prog)
     : m_data(_ArgumentData::make_argument_data()),
       m_name(),
-      m_prog("untitled"),
+      m_prog(detail::_prog),
       m_usage(),
       m_usage_title(),
       m_description(),
@@ -13554,7 +13556,7 @@ ArgumentParser::ArgumentParser(
         std::string const& prog)
     : m_data(_ArgumentData::make_argument_data()),
       m_name(),
-      m_prog("untitled"),
+      m_prog(detail::_prog),
       m_usage(),
       m_usage_title(),
       m_description(),
@@ -13595,7 +13597,7 @@ ArgumentParser::ArgumentParser(
         std::string const& prog)
     : m_data(_ArgumentData::make_argument_data()),
       m_name(),
-      m_prog("untitled"),
+      m_prog(detail::_prog),
       m_usage(),
       m_usage_title(),
       m_description(),
@@ -16152,7 +16154,7 @@ ArgumentParser::test_diagnostics(
     typedef std::pair<std::size_t, std::size_t> WarnErrAmount;
     WarnErrAmount diagnostics;
     // check prog
-    if (prog() == "untitled") {
+    if (prog() == detail::_prog) {
         ++diagnostics.first;
         os << _warn << " used default `prog` value, "
            << "override it or pass command line options\n";
