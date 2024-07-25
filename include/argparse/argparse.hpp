@@ -93,6 +93,7 @@
     \endverbatim
  */
 #define ARGPARSE_VERSION_NUM(X, Y, Z) ((X) * 10000 + (Y) * 100 + (Z))
+
 /*!
  *  This is the version number macro for the current argparse version.
  */
@@ -100,6 +101,7 @@
     ARGPARSE_VERSION_NUM(ARGPARSE_VERSION_MAJOR, \
                          ARGPARSE_VERSION_MINOR, \
                          ARGPARSE_VERSION_PATCH)
+
 /*!
  *  This macro will evaluate to true if compiled with argparse at least X.Y.Z.
  */
