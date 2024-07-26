@@ -9429,7 +9429,7 @@ _matrix_to_string(
                         separator, quotes,replace_space, none, begin, end),
                     res, separator);
     }
-    return begin + (res.empty() ? (begin + res + end) : res) + end;
+    return begin + (res.empty() ? (begin + end) : res) + end;
 }
 
 ARGPARSE_INL std::string
@@ -11378,22 +11378,24 @@ Argument::print(
     std::unordered_map<std::string, std::function<std::string()> > const
             specifiers =
     {
-        { "%(choices)s",        [this] () { return get_choices();       } },
-        { "%(const)s",          [this] () { return get_const();         } },
-        { "%(default)s",        [this] () { return get_default();       } },
-        { "%(dest)s",           [this] () { return get_dest();          } },
-        { "%(help)s",           [&help]() { return help;                } },
-        { "%(metavar)s",        [this] () { return get_metavar();       } },
-        { "%(nargs)s",          [this] () { return get_nargs();         } },
-        { "%(option_strings)s", [this] () { return option_strings();    } },
-        { "%(required)s",       [this] () { return get_required();      } },
-        { "%(type)s",           [this] () { return get_type();          } },
+        { "%(choices)s",        [this]() { return get_choices();    } },
+        { "%(const)s",          [this]() { return get_const();      } },
+        { "%(default)s",        [this]() { return get_default();    } },
+        { "%(dest)s",
+            [this] () -> std::string const& { return get_dest();    } },
+        { "%(help)s",
+            [&help]() -> std::string const& { return help;          } },
+        { "%(metavar)s",        [this]() { return get_metavar();    } },
+        { "%(nargs)s",          [this]() { return get_nargs();      } },
+        { "%(option_strings)s", [this]() { return option_strings(); } },
+        { "%(required)s",       [this]() { return get_required();   } },
+        { "%(type)s",           [this]() { return get_type();       } },
     };
     while (std::regex_search(res, match, r)) {
         text += match.prefix();
         auto specifier = std::string(match[0]);
         auto it = specifiers.find(specifier);
-        text += (it != specifiers.end() ? it->second() : specifier);
+        text += (it != specifiers.end() ? it->second() : std::move(specifier));
         res = match.suffix();
     }
 #else
@@ -11860,7 +11862,8 @@ _ArgumentData::validate_argument(
         detail::_update_flag_name(flags, prefix_chars, flag, prefixes,
                                   arg.m_type == Argument::Optional);
         arg.m_name = arg.m_type == Argument::Optional
-                ? detail::_replace(flag, "-", "_") : flag;
+                ? detail::_replace(ARGPARSE_MOVE(flag), "-", "_")
+                : ARGPARSE_MOVE(flag);
     }
     // check
     if (arg.m_type == Argument::Positional) {
@@ -12239,7 +12242,8 @@ MutuallyExclusiveGroup::usage(
          it != m_data->m_arguments.end(); ++it) {
         detail::_append_value_to((*it)->usage(formatter), res, " | ");
     }
-    return res.empty() ? res : (m_required ? "(" + res + ")" : "[" + res + "]");
+    return res.empty() ? std::string()
+                       : (m_required ? "(" + res + ")" : "[" + res + "]");
 }
 
 // -- _Storage::mapped_type ---------------------------------------------------
@@ -12953,19 +12957,19 @@ _ParserGroup::print_parser_group(
     std::unordered_map<std::string, std::function<std::string()> > const
             specifiers =
     {
-        { "%(prog)s",           [&prog] () { return prog;           } },
-        { "%(choices)s",        [this]  () { return get_choices();  } },
-        { "%(help)s",           [&help] () { return help;           } },
-        { "%(metavar)s",        [this]  () { return get_metavar();  } },
-        { "%(option_strings)s", []      () { return "[]";           } },
+        { "%(prog)s",[&prog]() -> std::string const& { return prog; } },
+        { "%(choices)s",        [this]() { return get_choices();    } },
+        { "%(help)s",[&help]() -> std::string const& { return help; } },
+        { "%(metavar)s",        [this]() { return get_metavar();    } },
+        { "%(option_strings)s", []    () { return "[]";             } },
         { "%(required)s",
-            [required] () { return detail::_bool_to_string(required); } },
+            [required](){ return detail::_bool_to_string(required); } },
     };
     while (std::regex_search(res, match, r)) {
         text += match.prefix();
         auto specifier = std::string(match[0]);
         auto it = specifiers.find(specifier);
-        text += (it != specifiers.end() ? it->second() : specifier);
+        text += (it != specifiers.end() ? it->second() : std::move(specifier));
         res = match.suffix();
     }
 #else
@@ -13018,18 +13022,22 @@ _ParserGroup::print_parser_group(
             std::unordered_map<std::string, std::function<std::string()> > const
                     specifiers2 =
             {
-                { "%(prog)s",           [&prog]   () { return prog;         } },
-                { "%(choices)s",        []        () { return detail::_none;} },
-                { "%(help)s",           [&help]   () { return help;         } },
-                { "%(metavar)s",        [&metavar]() { return metavar;      } },
-                { "%(option_strings)s", []        () { return "[]";         } },
-                { "%(required)s",       []        () { return "False";      } },
+                { "%(prog)s",
+                    [&prog]   () -> std::string const& { return prog;   } },
+                { "%(choices)s",        []() { return detail::_none;    } },
+                { "%(help)s",
+                    [&help]   () -> std::string const& { return help;   } },
+                { "%(metavar)s",
+                    [&metavar]() -> std::string const& { return metavar;} },
+                { "%(option_strings)s", []() { return "[]";             } },
+                { "%(required)s",       []() { return "False";          } },
             };
             while (std::regex_search(res, match, r)) {
                 text += match.prefix();
                 auto specifier = std::string(match[0]);
                 auto it2 = specifiers2.find(specifier);
-                text += (it2 != specifiers2.end() ? it2->second() : specifier);
+                text += (it2 != specifiers2.end() ? it2->second()
+                                                  : std::move(specifier));
                 res = match.suffix();
             }
 #else
@@ -13828,7 +13836,7 @@ ArgumentParser::prefix_chars(
 {
     std::string val = detail::_get_punct(value);
     if (!val.empty()) {
-        m_prefix_chars = val;
+        m_prefix_chars = ARGPARSE_MOVE(val);
         m_data->update_help(m_data->m_add_help, m_prefix_chars);
     }
     return *this;
@@ -15563,7 +15571,7 @@ ArgumentParser::try_capture_parser(
             detail::_append_value_to("'" + alias + "'", choices, ", ");
         }
         if ((*it)->m_name == name || detail::_exists(name, (*it)->aliases())) {
-            std::string lang = parsers.back().lang;
+            std::string const& lang = parsers.back().lang;
             parsers.push_back(parser_info((*it).get(), _Storage(),
                                           (*it)->subparsers_info(true, pos)));
             if (!lang.empty()) {
@@ -15785,7 +15793,7 @@ ArgumentParser::check_mutex_groups(
                         (*i).parser->throw_error("argument " + flags + ": not "
                                             + "allowed with argument " + found);
                     }
-                    found = flags;
+                    found = ARGPARSE_MOVE(flags);
                 }
             }
             if ((*j).required() && found.empty()) {
