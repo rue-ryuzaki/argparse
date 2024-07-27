@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.3] - 2024-07-27
+
+  * Fix: (C++11) build with gcc 4.8.1-5.4, 6.1-6.3
+  * Add: Argument::choice\<T>(...) functions
+  * Update: self_test checks
+  * Remove: function keyword from bash_completion output
+
 ## [1.9.2] - 2024-03-23
 
   * Fix: memory leak & update smart ptrs for C++98

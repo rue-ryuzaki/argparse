@@ -5,7 +5,7 @@
  *                         __| |
  * MIT License
  *
- * Argument parser for C++ (ArgumentParser v1.9.2)
+ * Argument parser for C++ (ArgumentParser v1.9.3)
  *
  * Copyright (c) 2021-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  *
@@ -84,7 +84,7 @@
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 9
-#define ARGPARSE_VERSION_PATCH 2
+#define ARGPARSE_VERSION_PATCH 3
 
 /*!
  *  This macro turns the version numbers into a numeric value:
@@ -2973,7 +2973,7 @@ public:
      *
      *  \param value Choice value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.3
      *
      *  \return Current argument reference
      */
@@ -2995,7 +2995,7 @@ public:
      *  \param value2 Second value
      *  \param args Other values
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.3
      *
      *  \return Current argument reference
      */
@@ -3016,7 +3016,7 @@ public:
      *
      *  \param value Choices value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.3
      *
      *  \return Current argument reference
      */
@@ -3067,7 +3067,7 @@ public:
      *
      *  \param value Choice value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.3
      *
      *  \return Current argument reference
      */
@@ -3090,7 +3090,7 @@ public:
      *  \param value1 First value
      *  \param value2 Second value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.3
      *
      *  \return Current argument reference
      */
@@ -3116,7 +3116,7 @@ public:
      *  \param value2 Second value
      *  \param value3 Third value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.3
      *
      *  \return Current argument reference
      */
@@ -3145,7 +3145,7 @@ public:
      *  \param value3 Third value
      *  \param value4 Fourth value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.3
      *
      *  \return Current argument reference
      */
@@ -3222,7 +3222,7 @@ public:
      *
      *  \param value Choices value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.3
      *
      *  \return Current argument reference
      */
