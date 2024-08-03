@@ -327,7 +327,7 @@
 # define ARGPARSE_CONSTEXPR
 # define ARGPARSE_USE_CONSTEXPR const
 # define ARGPARSE_ENUM_TYPE(X)
-# define ARGPARSE_MOVE(X) X
+# define ARGPARSE_MOVE(X) (X)
 #endif  // C++11+
 
 #ifdef ARGPARSE_CXX_17
