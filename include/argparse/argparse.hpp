@@ -253,9 +253,9 @@
 
 #ifdef ARGPARSE_INL
 # include <fstream>
-#ifdef ARGPARSE_CXX_11
-# include <regex>
-#endif  // C++11+
+# ifdef ARGPARSE_CXX_11
+#  include <regex>
+# endif  // C++11+
 # ifdef ARGPARSE_HAS_STRING_VIEW
 #  include <string_view>
 # endif  // ARGPARSE_HAS_STRING_VIEW
@@ -15580,9 +15580,8 @@ ArgumentParser::try_capture_parser(
             parsers.back().parser->handle(parsers.back().parser->m_name);
             validate_arguments((*it)->m_data->get_arguments(true));
             if (!dest.empty()) {
-                pArgument subparsers_arg
-                        = Argument::make_argument(detail::_vector(dest),
-                                                  dest, Argument::Positional);
+                pArgument subparsers_arg = Argument::make_argument(
+                            detail::_vector(dest), dest, Argument::Positional);
                 for (pi_iterator j = parsers.begin(); j != parsers.end(); ++j) {
                     (*j).storage.create(subparsers_arg);
                 }
