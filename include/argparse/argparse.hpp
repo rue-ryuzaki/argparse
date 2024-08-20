@@ -8824,7 +8824,7 @@ TranslationPack::operator [](
 {
     iterator it = find(key);
     if (it == end()) {
-        it = m_data.insert(end(), value_type());
+        it = m_data.insert(end(), std::make_pair(key, mapped_type()));
     }
     return it->second;
 }
