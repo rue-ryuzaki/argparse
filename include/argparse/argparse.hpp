@@ -9977,11 +9977,17 @@ HelpFormatter::_print_parser_completion(
         for (std::size_t j = 0; j < info.options.size(); ++j) {
             std::pair<pArgument, std::string> const& a = info.options.at(j);
             os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
-            if (!a.second.empty()) {
-                os << "      COMPREPLY=($(compgen" << a.second
-                   << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+            if (a.first->action() & (detail::_const_action
+                                     | detail::_bool_action
+                                     | argparse::BooleanOptionalAction)) {
+                os << "      ;;\n";
+            } else {
+                if (!a.second.empty()) {
+                    os << "      COMPREPLY=($(compgen" << a.second
+                       << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+                }
+                os << "      return;;\n";
             }
-            os << "      return;;\n";
         }
         os << "    *);;\n";
         os << "  esac\n";
