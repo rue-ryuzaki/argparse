@@ -8960,40 +8960,19 @@ _limit_to_max(
     }
 }
 
-ARGPARSE_INL void
-_ltrim(std::string& str)
-{
-    std::string::iterator it = str.begin();
-    for ( ; it != str.end()
-          && std::isspace(static_cast<unsigned char>(*it)); ++it) {
-    }
-    str.erase(str.begin(), it);
-}
-
-ARGPARSE_INL void
-_rtrim(std::string& str)
-{
-    std::string::reverse_iterator it = str.rbegin();
-    for ( ; it != str.rend()
-          && std::isspace(static_cast<unsigned char>(*it)); ++it) {
-    }
-    str.erase(it.base(), str.end());
-}
-
-ARGPARSE_INL void
-_trim(std::string& str)
-{
-    _ltrim(str);
-    _rtrim(str);
-}
-
 ARGPARSE_INL std::string
 _trim_copy(
         std::string const& str)
 {
-    std::string res = str;
-    _trim(res);
-    return res;
+    std::string::const_iterator it = str.begin();
+    while (it != str.end() && std::isspace(static_cast<unsigned char>(*it))) {
+        ++it;
+    }
+    std::string::const_reverse_iterator rit = str.rbegin();
+    while (rit.base() != it && std::isspace(static_cast<unsigned char>(*rit))) {
+        ++rit;
+    }
+    return std::string(it, rit.base());
 }
 
 #ifdef ARGPARSE_HAS_STRING_VIEW
