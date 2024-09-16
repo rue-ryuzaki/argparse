@@ -8471,7 +8471,7 @@ ARGPARSE_INL codepoint
 _to_upper_codepoint(
         codepoint cp)
 {
-    // unicode 15 to upper case
+    // unicode 16 to upper case
     // BASIC LATIN
     if (0x0061 <= cp && cp <= 0x007a) return cp - 0x20;
     // LATIN-1 SUPPLEMENT
@@ -8505,6 +8505,7 @@ _to_upper_codepoint(
     }
     if (cp == 0x0195) return 0x01f6;
     if (cp == 0x019a) return 0x023d;
+    if (cp == 0x019b) return 0xa7dc;
     if (cp == 0x019e) return 0x0220;
     if (cp == 0x01a8 || cp == 0x01ad || cp == 0x01b0
      || cp == 0x01b9 || cp == 0x01bd) {
@@ -8536,6 +8537,7 @@ _to_upper_codepoint(
     if (cp == 0x0260) return 0x0193;
     if (cp == 0x0261) return 0xa7ac;
     if (cp == 0x0263) return 0x0194;
+    if (cp == 0x0264) return 0xa7cb;
     if (cp == 0x0265) return 0xa78d;
     if (cp == 0x0266) return 0xa7aa;
     if (cp == 0x0268) return 0x0197;
@@ -8612,6 +8614,7 @@ _to_upper_codepoint(
     if (cp == 0x1c86) return 0x042a;
     if (cp == 0x1c87) return 0x0462;
     if (cp == 0x1c88) return 0xa64a;
+    if (cp == 0x1c8a) return 0x1c89;
     // PHONETIC EXTENSIONS
     if (cp == 0x1d79) return 0xa77d;
     if (cp == 0x1d7d) return 0x2c63;
@@ -8685,7 +8688,8 @@ _to_upper_codepoint(
         && ((0xa722 <= cp && cp <= 0xa72f) || (0xa732 <= cp && cp <= 0xa76f)
          || (0xa77e <= cp && cp <= 0xa787) || (0xa790 <= cp && cp <= 0xa793)
          || (0xa796 <= cp && cp <= 0xa7a9) || (0xa7b4 <= cp && cp <= 0xa7c3)
-         || (0xa7d0 <= cp && cp <= 0xa7d1) || (0xa7d6 <= cp && cp <= 0xa7d9))) {
+         || (0xa7cd == cp)
+         || (0xa7d0 <= cp && cp <= 0xa7d1) || (0xa7d6 <= cp && cp <= 0xa7db))) {
         return cp - 0x1;
     }
     if (!(cp & 1)
@@ -8711,6 +8715,8 @@ _to_upper_codepoint(
     }
     // OLD HUNGARIAN
     if (0x10cc0 <= cp && cp <= 0x10cf2) return cp - 0x40;
+    // GARAY
+    if (0x10d70 <= cp && cp <= 0x10d85) return cp - 0x20;
     // WARANG CITI
     if (0x118c0 <= cp && cp <= 0x118df) return cp - 0x20;
     // MEDEFAIDRIN
