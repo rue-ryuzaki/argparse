@@ -10,7 +10,7 @@
 [![GitHub downloads](https://img.shields.io/github/downloads/rue-ryuzaki/argparse/total)](https://github.com/rue-ryuzaki/argparse/releases)
 [![GitHub issues](https://img.shields.io/github/issues/rue-ryuzaki/argparse.svg)](https://github.com/rue-ryuzaki/argparse/issues)
 [![Ubuntu PPA package](https://img.shields.io/badge/Ubuntu_PPA-package-blueviolet.svg)](https://launchpad.net/~golubchikov-mihail/+archive/ubuntu/cpp-argparse)
-[![AUR package](https://img.shields.io/badge/AUR-package-blueviolet.svg)](https://aur.archlinux.org/packages/cpp-argparse-dev)
+[![AUR Version](https://img.shields.io/aur/version/cpp-argparse-dev)](https://aur.archlinux.org/packages/cpp-argparse-dev)
 [![MacPorts package](https://img.shields.io/badge/MacPorts-package-blueviolet.svg)](https://ports.macports.org/port/cpp-argparse-dev)
 [![Try it on godbolt online](https://img.shields.io/badge/on-godbolt-blue.svg)](https://godbolt.org/z/arcbv6ecv)
 # ArgumentParser
