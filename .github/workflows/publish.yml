@@ -74,7 +74,7 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: build/build/${{ steps.generate_packages_names.outputs.deb_name }}
         asset_name: ${{ steps.generate_packages_names.outputs.deb_name }}
-        asset_content_type: application/zip
+        asset_content_type: application/x-debian-package
 
     - name: Upload RPM Linux Release
       uses: comnoco/upload-release-asset-action@v2
@@ -84,4 +84,4 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: build/build/${{ steps.generate_packages_names.outputs.rpm_name }}
         asset_name: ${{ steps.generate_packages_names.outputs.rpm_name }}
-        asset_content_type: application/zip
+        asset_content_type: application/x-rpm
