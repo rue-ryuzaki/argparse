@@ -9,7 +9,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/rue-ryuzaki/argparse.svg)](https://github.com/rue-ryuzaki/argparse/issues)
 [![GitHub downloads](https://img.shields.io/github/downloads/rue-ryuzaki/argparse/total)](https://github.com/rue-ryuzaki/argparse/releases)
 [![GitHub releases](https://img.shields.io/github/release/rue-ryuzaki/argparse.svg)](https://github.com/rue-ryuzaki/argparse/releases)
-[![Ubuntu PPA package](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.launchpad.net%2F1.0%2F~golubchikov-mihail%2F%2Barchive%2Fcpp-argparse%3Fws.op%3DgetPublishedBinaries%26ws.size%3D1&query=%24.entries%5B0%5D.binary_package_version&label=ubuntu)](https://launchpad.net/~golubchikov-mihail/+archive/ubuntu/cpp-argparse)
+[![Ubuntu PPA package](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.launchpad.net%2F1.0%2F~golubchikov-mihail%2F%2Barchive%2Fcpp-argparse%3Fws.op%3DgetPublishedBinaries%26ws.size%3D1&query=%24.entries%5B0%5D.binary_package_version&label=ubuntu%20ppa)](https://launchpad.net/~golubchikov-mihail/+archive/ubuntu/cpp-argparse)
 [![AUR Version](https://img.shields.io/aur/version/cpp-argparse-dev)](https://aur.archlinux.org/packages/cpp-argparse-dev)
 [![MacPorts package](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fports.macports.org%2Fapi%2Fv1%2Fports%2Fcpp-argparse-dev%2F&query=%24.version&label=macports)](https://ports.macports.org/port/cpp-argparse-dev)
 [![Try it on godbolt online](https://img.shields.io/badge/on-godbolt-blue.svg)](https://godbolt.org/z/arcbv6ecv)
