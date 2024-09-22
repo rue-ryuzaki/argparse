@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.4] - 2024-09-22
+
+  * Add: unicode 16 to upper case support
+  * Fix: TranslationPack::operator [] impl
+  * Fix: don't break bash completion for const actions
+
 ## [1.9.3] - 2024-07-27
 
   * Fix: (C++11) build with gcc 4.8.1-5.4, 6.1-6.3
