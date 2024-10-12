@@ -8346,23 +8346,13 @@ _move_replace_at(
 
 template <class T>
 bool
-_exists(T const& value,
-        std::vector<T> const& vec)
+_exists(typename T::value_type const& value,
+        T const& container)
 {
-    typename std::vector<T>::const_iterator it = vec.begin();
-    for ( ; it != vec.end() && (*it) != value; ++it) {
+    typename T::const_iterator it = container.begin();
+    for ( ; it != container.end() && (*it) != value; ++it) {
     }
-    return it != vec.end();
-}
-
-ARGPARSE_INL bool
-_exists(char value,
-        std::string const& str)
-{
-    std::string::const_iterator it = str.begin();
-    for ( ; it != str.end() && (*it) != value; ++it) {
-    }
-    return it != str.end();
+    return it != container.end();
 }
 
 // -- utf8 support ------------------------------------------------------------
