@@ -88,7 +88,7 @@
 
 ## [1.7.6] - 2023-04-25
 
-  * Fix: separator split for Namespace::get<tuple>()
+  * Fix: separator split for Namespace::get\<tuple>()
   * Fix: tab replace in raw help formatters
   * Fix: _split_lines impl in RawTextHelpFormatter
 
@@ -215,7 +215,7 @@
   * Add: nargs(arparse::REMAINDER) or remainder() support
   * Add: %(prog)s format specifier for usage and help
   * Add: %(default)s format specifier for argument help
-  * Add: set argument type if calling Argument::*_value<T>(T)
+  * Add: set argument type if calling Argument::*_value\<T>(T)
   * Remove: deprecated code
   * Add: argument flags, dest, parser name formatting
 
