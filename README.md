@@ -757,6 +757,7 @@ int main(int argc, char const* const argv[])
 - [x] help - A brief description of what the argument does.
 - [x] metavar - A name for the argument in usage messages.
 - [x] dest - The name of the attribute to be added to the object returned by parse_args().
+- [x] deprecated - Whether or not use of the argument is deprecated.
 ## The add_argument() actions support
 - [x] "store" - This just stores the argument’s value. This is the default action.
 - [x] "store_const" - This stores the value specified by the const keyword argument.

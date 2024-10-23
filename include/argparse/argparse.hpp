@@ -3400,6 +3400,19 @@ public:
     dest(std::string const& value);
 
     /*!
+     *  \brief Set argument 'deprecated' value
+     *
+     *  \param value Deprecated value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument reference
+     */
+    Argument&
+    deprecated(
+            bool value);
+
+    /*!
      *  \brief Set argument 'handle' function.
      *  Called when the argument is present and passed the value of the argument
      *
@@ -3528,6 +3541,17 @@ public:
     std::string const&
     dest() const ARGPARSE_NOEXCEPT;
 
+    /*!
+     *  \brief Get argument 'deprecated' value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Argument 'deprecated' value
+     */
+    ARGPARSE_ATTR_NODISCARD
+    bool
+    deprecated() const ARGPARSE_NOEXCEPT;
+
 private:
     void
     handle(std::string const& str) const;
@@ -3636,6 +3660,7 @@ private:
     uint8_t                     m_type;
     uint8_t                     m_nargs;
     detail::Value<bool>         m_required;
+    bool                        m_deprecated;
 };
 
 /*!
@@ -6586,6 +6611,19 @@ public:
             bool value) ARGPARSE_NOEXCEPT;
 
     /*!
+     *  \brief Set argument parser 'deprecated' value (default: false)
+     *
+     *  \param value Deprecated flag
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    deprecated(
+            bool value) ARGPARSE_NOEXCEPT;
+
+    /*!
      *  \brief Set output width value (default: auto-detected or 80, min 33)
      *
      *  \param value Output width
@@ -6783,6 +6821,17 @@ public:
     ARGPARSE_ATTR_NODISCARD
     bool
     exit_on_error() const ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Get argument parser 'deprecated' value (default: false)
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Argument parser 'deprecated' value
+     */
+    ARGPARSE_ATTR_NODISCARD
+    bool
+    deprecated() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get output width value (default: auto-detected or 80, min 33)
@@ -8137,6 +8186,7 @@ private:
     detail::func1<Namespace const&>::type m_parse_handle;
     bool m_allow_abbrev;
     bool m_exit_on_error;
+    bool m_deprecated;
 };
 
 // -- implementation ----------------------------------------------------------
@@ -10327,7 +10377,8 @@ Argument::Argument(
       m_action(argparse::store),
       m_type(type),
       m_nargs(NARGS_DEF),
-      m_required()
+      m_required(),
+      m_deprecated()
 {
     m_help.will_have()[std::string()] = std::string();
     m_required.reset(m_type != Optional);
@@ -10368,7 +10419,8 @@ Argument::Argument(
       m_action(argparse::store),
       m_type(type),
       m_nargs(NARGS_DEF),
-      m_required()
+      m_required(),
+      m_deprecated()
 {
     m_help.will_have()[std::string()] = std::string();
     m_required.reset(m_type != Optional);
@@ -10407,7 +10459,8 @@ Argument::Argument(
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
-      m_required()
+      m_required(),
+      m_deprecated()
 {
     m_help.will_have()[std::string()] = std::string();
 }
@@ -10436,7 +10489,8 @@ Argument::Argument(
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
-      m_required()
+      m_required(),
+      m_deprecated()
 {
     m_help.will_have()[std::string()] = std::string();
 }
@@ -10466,7 +10520,8 @@ Argument::Argument(
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
-      m_required()
+      m_required(),
+      m_deprecated()
 {
     m_help.will_have()[std::string()] = std::string();
 }
@@ -10497,7 +10552,8 @@ Argument::Argument(
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
-      m_required()
+      m_required(),
+      m_deprecated()
 {
     m_help.will_have()[std::string()] = std::string();
 }
@@ -10526,7 +10582,8 @@ Argument::Argument(
       m_action(argparse::store),
       m_type(NoType),
       m_nargs(NARGS_DEF),
-      m_required()
+      m_required(),
+      m_deprecated()
 {
     m_help.will_have()[std::string()] = std::string();
 }
@@ -10554,7 +10611,8 @@ Argument::Argument(
       m_action(orig.m_action),
       m_type(orig.m_type),
       m_nargs(orig.m_nargs),
-      m_required(orig.m_required)
+      m_required(orig.m_required),
+      m_deprecated(orig.m_deprecated)
 {
 }
 
@@ -10584,6 +10642,7 @@ Argument::operator =(
         this->m_type        = rhs.m_type;
         this->m_nargs       = rhs.m_nargs;
         this->m_required    = rhs.m_required;
+        this->m_deprecated  = rhs.m_deprecated;
     }
     return *this;
 }
@@ -10612,7 +10671,8 @@ Argument::Argument(
       m_action(std::move(orig.m_action)),
       m_type(std::move(orig.m_type)),
       m_nargs(std::move(orig.m_nargs)),
-      m_required(std::move(orig.m_required))
+      m_required(std::move(orig.m_required)),
+      m_deprecated(std::move(orig.m_deprecated))
 {
 }
 
@@ -10642,6 +10702,7 @@ Argument::operator =(
         this->m_type        = std::move(rhs.m_type);
         this->m_nargs       = std::move(rhs.m_nargs);
         this->m_required    = std::move(rhs.m_required);
+        this->m_deprecated  = std::move(rhs.m_deprecated);
     }
     return *this;
 }
@@ -11091,6 +11152,14 @@ Argument::dest(
 }
 
 ARGPARSE_INL Argument&
+Argument::deprecated(
+        bool value)
+{
+    m_deprecated = value;
+    return *this;
+}
+
+ARGPARSE_INL Argument&
 Argument::handle(
         detail::func1<std::string const&>::type func) ARGPARSE_NOEXCEPT
 {
@@ -11175,6 +11244,12 @@ ARGPARSE_INL std::string const&
 Argument::dest() const ARGPARSE_NOEXCEPT
 {
     return m_dest.front();
+}
+
+ARGPARSE_INL bool
+Argument::deprecated() const ARGPARSE_NOEXCEPT
+{
+    return m_deprecated;
 }
 
 ARGPARSE_INL void
@@ -13534,7 +13609,8 @@ ArgumentParser::ArgumentParser(
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
-      m_exit_on_error(true)
+      m_exit_on_error(true),
+      m_deprecated()
 {
     initialize_parser();
     this->prog(prog);
@@ -13573,7 +13649,8 @@ ArgumentParser::ArgumentParser(
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
-      m_exit_on_error(true)
+      m_exit_on_error(true),
+      m_deprecated()
 {
     initialize_parser();
     read_args(argc, argv);
@@ -13614,7 +13691,8 @@ ArgumentParser::ArgumentParser(
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
-      m_exit_on_error(true)
+      m_exit_on_error(true),
+      m_deprecated()
 {
     initialize_parser();
     read_args(argc, argv);
@@ -13896,6 +13974,14 @@ ArgumentParser::exit_on_error(
 }
 
 ARGPARSE_INL ArgumentParser&
+ArgumentParser::deprecated(
+        bool value) ARGPARSE_NOEXCEPT
+{
+    m_deprecated = value;
+    return *this;
+}
+
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::output_width(
         std::size_t value) ARGPARSE_NOEXCEPT
 {
@@ -14015,6 +14101,12 @@ ARGPARSE_INL bool
 ArgumentParser::exit_on_error() const ARGPARSE_NOEXCEPT
 {
     return m_exit_on_error;
+}
+
+ARGPARSE_INL bool
+ArgumentParser::deprecated() const ARGPARSE_NOEXCEPT
+{
+    return m_deprecated;
 }
 
 ARGPARSE_INL std::size_t
@@ -14846,6 +14938,22 @@ ArgumentParser::parse_arguments(
         pArgument const tmp
                 = get_optional_arg_by_flag(was_pseudo_arg, parsers.back(), arg);
         if (tmp && !remainder) {
+            if (tmp->deprecated()) {
+                switch (tmp->m_type) {
+                    case Argument::Optional :
+                        std::cerr << parsers.back().parser->prog()
+                                  << ": warning: option '" << arg
+                                  << "' is deprecated" << std::endl;
+                        break;
+                    case Argument::Operand :
+                        std::cerr << parsers.back().parser->prog()
+                                  << ": warning: operand '" << arg
+                                  << "' is deprecated" << std::endl;
+                        break;
+                    default :
+                        break;
+                }
+            }
             switch (tmp->action()) {
                 case argparse::store :
                     parsers.front().storage.at(tmp).clear();
@@ -15407,6 +15515,11 @@ ArgumentParser::match_positionals(
     if (finish == pos) {
         return;
     }
+    if (positional.at(pos)->deprecated()) {
+        std::cerr << parsers.back().parser->prog()
+                  << ": warning: argument '" << positional.at(pos)->get_dest()
+                  << "' is deprecated" << std::endl;
+    }
     if (min_args == arguments.size()) {
         for ( ; pos < finish; ++pos) {
             match_positional_minimum(parsers, arguments, positional.at(pos));
@@ -15552,6 +15665,11 @@ ArgumentParser::try_capture_parser(
             detail::_append_value_to("'" + alias + "'", choices, ", ");
         }
         if ((*it)->m_name == name || detail::_exists(name, (*it)->aliases())) {
+            if ((*it)->deprecated()) {
+                std::cerr << parsers.back().parser->prog()
+                          << ": warning: command '" << name
+                          << "' is deprecated" << std::endl;
+            }
             std::string const& lang = parsers.back().lang;
             parsers.push_back(parser_info((*it).get(), _Storage(),
                                           (*it)->subparsers_info(true, pos)));
