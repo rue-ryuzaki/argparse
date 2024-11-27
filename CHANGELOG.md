@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.9.5] - 2024-11-27
+
+  * Add: Argument::deprecated support
+  * Add: ArgumentParser::deprecated support
+
 ## [1.9.4] - 2024-09-22
 
   * Add: unicode 16 to upper case support

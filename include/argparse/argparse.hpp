@@ -5,7 +5,7 @@
  *                         __| |
  * MIT License
  *
- * Argument parser for C++ (ArgumentParser v1.9.4)
+ * Argument parser for C++ (ArgumentParser v1.9.5)
  *
  * Copyright (c) 2021-2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  *
@@ -84,7 +84,7 @@
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 9
-#define ARGPARSE_VERSION_PATCH 4
+#define ARGPARSE_VERSION_PATCH 5
 
 /*!
  *  This macro turns the version numbers into a numeric value:
@@ -3404,7 +3404,7 @@ public:
      *
      *  \param value Deprecated value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.5
      *
      *  \return Current argument reference
      */
@@ -3544,7 +3544,7 @@ public:
     /*!
      *  \brief Get argument 'deprecated' value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.5
      *
      *  \return Argument 'deprecated' value
      */
@@ -6615,7 +6615,7 @@ public:
      *
      *  \param value Deprecated flag
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.5
      *
      *  \return Current argument parser reference
      */
@@ -6825,7 +6825,7 @@ public:
     /*!
      *  \brief Get argument parser 'deprecated' value (default: false)
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.5
      *
      *  \return Argument parser 'deprecated' value
      */
