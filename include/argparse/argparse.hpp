@@ -1652,7 +1652,9 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-template <class T>
+#ifdef ARGPARSE_CXX_11
+template <class T,
+          typename enable_if<!is_same<bool, T>::value>::type* = nullptr>
 inline std::string
 _to_string(
         T const& value)
@@ -1661,6 +1663,36 @@ _to_string(
     ss << value;
     return ss.str();
 }
+
+template <class T,
+          typename enable_if<is_same<bool, T>::value>::type* = nullptr>
+inline std::string
+_to_string(
+        T const& value)
+{
+    return value ? "1" : "";
+}
+#else
+template <class T>
+inline std::string
+_to_string(
+        T const& value,
+        typename enable_if<!is_same<bool, T>::value, bool>::type = true)
+{
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+template <class T>
+inline std::string
+_to_string(
+        T const& value,
+        typename enable_if<is_same<bool, T>::value, bool>::type = true)
+{
+    return value ? "1" : "";
+}
+#endif  // C++11+
 
 template <class T>
 std::vector<std::string>

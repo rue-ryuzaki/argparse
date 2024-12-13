@@ -167,3 +167,17 @@ TEST_CASE("1. default values", "[argument_parser]")
         REQUIRE(args2.get<std::string>("bar") == new_default);
     }
 }
+
+TEST_CASE("2. default typed values", "[argument]")
+{
+    SECTION("2.1. boolean value") {
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action(argparse::BooleanOptionalAction).default_value(true);
+        parser.add_argument("--bar").action(argparse::BooleanOptionalAction).default_value(false);
+
+        argparse::Namespace args = parser.parse_args("");
+        CHECK(args.get<bool>("foo") == true);
+        CHECK(args.get<bool>("bar") == false);
+    }
+}
