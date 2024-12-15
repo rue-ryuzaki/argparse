@@ -30,31 +30,33 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-message(STATUS "argparse version: ${PROJECT_VERSION}")
-message(STATUS "argparse build standard: C++${CMAKE_CXX_STANDARD}")
+set(LIBRARY_NAME argparse)
+
+message(STATUS "${LIBRARY_NAME} version: ${PROJECT_VERSION}")
+message(STATUS "${LIBRARY_NAME} build standard: C++${CMAKE_CXX_STANDARD}")
 
 file(GLOB LIBRARY_HEADER "include/argparse/argparse*.hpp")
 
 if (${CMAKE_VERSION} VERSION_LESS "3.19")
-    add_library(argparse INTERFACE)
+    add_library(${LIBRARY_NAME} INTERFACE)
 else()
-    add_library(argparse INTERFACE ${LIBRARY_HEADER})
+    add_library(${LIBRARY_NAME} INTERFACE ${LIBRARY_HEADER})
 endif()
-add_library(argparse::argparse ALIAS argparse)
+add_library(argparse::argparse ALIAS ${LIBRARY_NAME})
 
 include(GNUInstallDirs)
 
 target_include_directories(
-    argparse INTERFACE
+    ${LIBRARY_NAME} INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-option(ARGPARSE_STATIC "Build argparse as a static lib" OFF)
+option(ARGPARSE_STATIC "Build ${LIBRARY_NAME} as a static lib argparse_static" OFF)
 option(ARGPARSE_STATIC_PIC "Build argparse_static with -fPIC" ON)
 
 if (ARGPARSE_STATIC)
-    message(STATUS "Build argparse as a static lib")
+    message(STATUS "Build ${LIBRARY_NAME} as a static lib")
 
     add_library(argparse_static STATIC src/argparse_impl.cpp)
     add_library(argparse::argparse_static ALIAS argparse_static)
@@ -154,8 +156,8 @@ endif()
 
 include(CPack)
 
-option(ARGPARSE_BUILD_EXAMPLES "Build argparse examples" OFF)
-option(ARGPARSE_BUILD_TESTS "Build argparse unit tests" ON)
+option(ARGPARSE_BUILD_EXAMPLES "Build ${LIBRARY_NAME} examples" OFF)
+option(ARGPARSE_BUILD_TESTS "Build ${LIBRARY_NAME} unit tests" ON)
 
 if (ARGPARSE_BUILD_EXAMPLES OR ARGPARSE_BUILD_TESTS)
     # argparse implementation (internal)
@@ -175,13 +177,13 @@ if (ARGPARSE_BUILD_EXAMPLES OR ARGPARSE_BUILD_TESTS)
     set(ARGPARSE_THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
     if (ARGPARSE_BUILD_EXAMPLES)
-        message(STATUS "Build argparse examples")
+        message(STATUS "Build ${LIBRARY_NAME} examples")
 
         add_subdirectory(examples)
     endif()
 
     if (ARGPARSE_BUILD_TESTS)
-        message(STATUS "Build argparse unit tests")
+        message(STATUS "Build ${LIBRARY_NAME} unit tests")
 
         enable_testing()
         add_subdirectory(tests)
