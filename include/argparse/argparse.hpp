@@ -6643,6 +6643,17 @@ public:
             bool value) ARGPARSE_NOEXCEPT;
 
     /*!
+     *  \brief Set argument parser 'suggest_on_error' value (default: false)
+     *
+     *  \param value Suggest on error flag
+     *
+     *  \return Current argument parser reference
+     */
+    ArgumentParser&
+    suggest_on_error(
+            bool value) ARGPARSE_NOEXCEPT;
+
+    /*!
      *  \brief Set argument parser 'deprecated' value (default: false)
      *
      *  \param value Deprecated flag
@@ -6853,6 +6864,15 @@ public:
     ARGPARSE_ATTR_NODISCARD
     bool
     exit_on_error() const ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Get argument parser 'suggest_on_error' value (default: false)
+     *
+     *  \return Argument parser 'suggest_on_error' value
+     */
+    ARGPARSE_ATTR_NODISCARD
+    bool
+    suggest_on_error() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'deprecated' value (default: false)
@@ -8218,6 +8238,7 @@ private:
     detail::func1<Namespace const&>::type m_parse_handle;
     bool m_allow_abbrev;
     bool m_exit_on_error;
+    bool m_suggest_on_error;
     bool m_deprecated;
 };
 
@@ -13642,6 +13663,7 @@ ArgumentParser::ArgumentParser(
       m_parse_handle(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
       m_exit_on_error(true),
+      m_suggest_on_error(false),
       m_deprecated()
 {
     initialize_parser();
@@ -13682,6 +13704,7 @@ ArgumentParser::ArgumentParser(
       m_parse_handle(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
       m_exit_on_error(true),
+      m_suggest_on_error(false),
       m_deprecated()
 {
     initialize_parser();
@@ -13724,6 +13747,7 @@ ArgumentParser::ArgumentParser(
       m_parse_handle(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
       m_exit_on_error(true),
+      m_suggest_on_error(false),
       m_deprecated()
 {
     initialize_parser();
@@ -14006,6 +14030,14 @@ ArgumentParser::exit_on_error(
 }
 
 ARGPARSE_INL ArgumentParser&
+ArgumentParser::suggest_on_error(
+        bool value) ARGPARSE_NOEXCEPT
+{
+    m_suggest_on_error = value;
+    return *this;
+}
+
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::deprecated(
         bool value) ARGPARSE_NOEXCEPT
 {
@@ -14133,6 +14165,12 @@ ARGPARSE_INL bool
 ArgumentParser::exit_on_error() const ARGPARSE_NOEXCEPT
 {
     return m_exit_on_error;
+}
+
+ARGPARSE_INL bool
+ArgumentParser::suggest_on_error() const ARGPARSE_NOEXCEPT
+{
+    return m_suggest_on_error;
 }
 
 ARGPARSE_INL bool

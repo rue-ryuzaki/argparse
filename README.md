@@ -745,6 +745,7 @@ int main(int argc, char const* const argv[])
 - [x] add_help - Add a ```-h/--help``` option to the parser (default: ```true```)
 - [x] allow_abbrev - Allows long options to be abbreviated if the abbreviation is unambiguous. (default: ```true```)
 - [x] exit_on_error - Determines whether or not ArgumentParser exits with error info when an error occurs. (default: ```true```)
+- [ ] suggest_on_error - Enables suggestions for mistyped argument choices and subparser names (default: ```false```)
 ## The add_argument(name or flags) method support
 - [x] name or flags - Either a name or a list of option strings, e.g. ```foo```, ```foo=``` or ```-f, --foo```.
 - [x] action - The basic type of action to be taken when this argument is encountered at the command line.
