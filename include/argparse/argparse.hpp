@@ -3994,6 +3994,91 @@ private:
 };
 
 /*!
+ *  \brief MutuallyExclusiveGroup class
+ */
+ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
+{
+    friend class ArgumentParser;
+    friend class HelpFormatter;
+
+    explicit
+    MutuallyExclusiveGroup(
+            std::string& prefix_chars,
+            pArgumentData& parent_data,
+            detail::SValue<std::string>& argument_default);
+
+    static MutuallyExclusiveGroup
+    make_mutex_group(
+            std::string& prefix_chars,
+            pArgumentData& parent_data,
+            detail::SValue<std::string>& argument_default);
+
+public:
+    using _ArgumentGroup::add_argument;
+
+    /*!
+     *  \brief Create mutually exclusive group object from another
+     *   mutually exclusive group
+     *
+     *  \param orig Mutually exclusive group object to copy
+     *
+     *  \return Mutually exclusive group object
+     */
+    MutuallyExclusiveGroup(
+            MutuallyExclusiveGroup const& orig);
+
+    /*!
+     *  \brief Copy mutually exclusive group object from another
+     *  mutually exclusive group
+     *
+     *  \param rhs Mutually exclusive group object to copy
+     *
+     *  \return Current mutually exclusive group reference
+     */
+    MutuallyExclusiveGroup&
+    operator =(
+            MutuallyExclusiveGroup const& rhs);
+
+    /*!
+     *  \brief Set mutually exclusive group 'required' value
+     *
+     *  \param value Required flag
+     *
+     *  \return Current mutually exclusive group reference
+     */
+    MutuallyExclusiveGroup&
+    required(
+            bool value) ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Get mutually exclusive group 'required' value
+     *
+     *  \return Mutually exclusive group 'required' value
+     */
+    ARGPARSE_ATTR_NODISCARD
+    bool
+    required() const ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Add argument
+     *
+     *  \param argument Argument
+     *
+     *  \return Current mutually exclusive group reference
+     */
+    MutuallyExclusiveGroup&
+    add_argument(
+            Argument const& argument);
+
+private:
+    std::string
+    usage(HelpFormatter const& formatter) const;
+
+    // -- data ----------------------------------------------------------------
+    bool m_required;
+};
+
+/*!
  *  \brief ArgumentGroup class
  */
 ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
@@ -4094,91 +4179,6 @@ private:
             std::size_t limit,
             std::size_t width,
             std::string const& lang) const ARGPARSE_OVERRIDE;
-};
-
-/*!
- *  \brief MutuallyExclusiveGroup class
- */
-ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
-{
-    friend class ArgumentParser;
-    friend class HelpFormatter;
-
-    explicit
-    MutuallyExclusiveGroup(
-            std::string& prefix_chars,
-            pArgumentData& parent_data,
-            detail::SValue<std::string>& argument_default);
-
-    static MutuallyExclusiveGroup
-    make_mutex_group(
-            std::string& prefix_chars,
-            pArgumentData& parent_data,
-            detail::SValue<std::string>& argument_default);
-
-public:
-    using _ArgumentGroup::add_argument;
-
-    /*!
-     *  \brief Create mutually exclusive group object from another
-     *   mutually exclusive group
-     *
-     *  \param orig Mutually exclusive group object to copy
-     *
-     *  \return Mutually exclusive group object
-     */
-    MutuallyExclusiveGroup(
-            MutuallyExclusiveGroup const& orig);
-
-    /*!
-     *  \brief Copy mutually exclusive group object from another
-     *  mutually exclusive group
-     *
-     *  \param rhs Mutually exclusive group object to copy
-     *
-     *  \return Current mutually exclusive group reference
-     */
-    MutuallyExclusiveGroup&
-    operator =(
-            MutuallyExclusiveGroup const& rhs);
-
-    /*!
-     *  \brief Set mutually exclusive group 'required' value
-     *
-     *  \param value Required flag
-     *
-     *  \return Current mutually exclusive group reference
-     */
-    MutuallyExclusiveGroup&
-    required(
-            bool value) ARGPARSE_NOEXCEPT;
-
-    /*!
-     *  \brief Get mutually exclusive group 'required' value
-     *
-     *  \return Mutually exclusive group 'required' value
-     */
-    ARGPARSE_ATTR_NODISCARD
-    bool
-    required() const ARGPARSE_NOEXCEPT;
-
-    /*!
-     *  \brief Add argument
-     *
-     *  \param argument Argument
-     *
-     *  \return Current mutually exclusive group reference
-     */
-    MutuallyExclusiveGroup&
-    add_argument(
-            Argument const& argument);
-
-private:
-    std::string
-    usage(HelpFormatter const& formatter) const;
-
-    // -- data ----------------------------------------------------------------
-    bool m_required;
 };
 
 /*!
@@ -12263,6 +12263,84 @@ _ArgumentGroup::process_add_argument()
     }
 }
 
+// -- MutuallyExclusiveGroup --------------------------------------------------
+ARGPARSE_INL
+MutuallyExclusiveGroup::MutuallyExclusiveGroup(
+        std::string& prefix_chars,
+        pArgumentData& parent_data,
+        detail::SValue<std::string>& argument_default)
+    : _ArgumentGroup(prefix_chars, parent_data, argument_default, true),
+      m_required(false)
+{
+}
+
+ARGPARSE_INL MutuallyExclusiveGroup
+MutuallyExclusiveGroup::make_mutex_group(
+        std::string& prefix_chars,
+        pArgumentData& parent_data,
+        detail::SValue<std::string>& argument_default)
+{
+    return MutuallyExclusiveGroup(prefix_chars, parent_data, argument_default);
+}
+
+ARGPARSE_INL
+MutuallyExclusiveGroup::MutuallyExclusiveGroup(
+        MutuallyExclusiveGroup const& orig)
+    : _ArgumentGroup(orig),
+      m_required(orig.m_required)
+{
+}
+
+ARGPARSE_INL MutuallyExclusiveGroup&
+MutuallyExclusiveGroup::operator =(
+        MutuallyExclusiveGroup const& rhs)
+{
+    if (this != &rhs) {
+        m_data              = rhs.m_data;
+        m_prefix_chars      = rhs.m_prefix_chars;
+        m_parent_data       = rhs.m_parent_data;
+        m_argument_default  = rhs.m_argument_default;
+        m_required          = rhs.m_required;
+    }
+    return *this;
+}
+
+ARGPARSE_INL MutuallyExclusiveGroup&
+MutuallyExclusiveGroup::required(
+        bool value) ARGPARSE_NOEXCEPT
+{
+    m_required = value;
+    return *this;
+}
+
+ARGPARSE_INL bool
+MutuallyExclusiveGroup::required() const ARGPARSE_NOEXCEPT
+{
+    return m_required;
+}
+
+ARGPARSE_INL MutuallyExclusiveGroup&
+MutuallyExclusiveGroup::add_argument(
+        Argument const& argument)
+{
+    m_data->validate_argument(Argument(argument), m_prefix_chars);
+    process_add_argument();
+    return *this;
+}
+
+ARGPARSE_INL std::string
+MutuallyExclusiveGroup::usage(
+        HelpFormatter const& formatter) const
+{
+    std::string res;
+    for (arg_iterator it = m_data->m_arguments.begin();
+         it != m_data->m_arguments.end(); ++it) {
+        detail::_append_value_to((*it)->usage(formatter), res, " | ");
+    }
+    return res.empty() ? std::string()
+                       : (m_required ? "(" + res + ")" : "[" + res + "]");
+}
+
 // -- ArgumentGroup -----------------------------------------------------------
 ARGPARSE_INL
 ArgumentGroup::ArgumentGroup(
@@ -12377,84 +12455,6 @@ ArgumentGroup::print_help(
             os << "\n" << (*it)->print(formatter, limit, width, lang);
         }
     }
-}
-
-// -- MutuallyExclusiveGroup --------------------------------------------------
-ARGPARSE_INL
-MutuallyExclusiveGroup::MutuallyExclusiveGroup(
-        std::string& prefix_chars,
-        pArgumentData& parent_data,
-        detail::SValue<std::string>& argument_default)
-    : _ArgumentGroup(prefix_chars, parent_data, argument_default, true),
-      m_required(false)
-{
-}
-
-ARGPARSE_INL MutuallyExclusiveGroup
-MutuallyExclusiveGroup::make_mutex_group(
-        std::string& prefix_chars,
-        pArgumentData& parent_data,
-        detail::SValue<std::string>& argument_default)
-{
-    return MutuallyExclusiveGroup(prefix_chars, parent_data, argument_default);
-}
-
-ARGPARSE_INL
-MutuallyExclusiveGroup::MutuallyExclusiveGroup(
-        MutuallyExclusiveGroup const& orig)
-    : _ArgumentGroup(orig),
-      m_required(orig.m_required)
-{
-}
-
-ARGPARSE_INL MutuallyExclusiveGroup&
-MutuallyExclusiveGroup::operator =(
-        MutuallyExclusiveGroup const& rhs)
-{
-    if (this != &rhs) {
-        m_data              = rhs.m_data;
-        m_prefix_chars      = rhs.m_prefix_chars;
-        m_parent_data       = rhs.m_parent_data;
-        m_argument_default  = rhs.m_argument_default;
-        m_required          = rhs.m_required;
-    }
-    return *this;
-}
-
-ARGPARSE_INL MutuallyExclusiveGroup&
-MutuallyExclusiveGroup::required(
-        bool value) ARGPARSE_NOEXCEPT
-{
-    m_required = value;
-    return *this;
-}
-
-ARGPARSE_INL bool
-MutuallyExclusiveGroup::required() const ARGPARSE_NOEXCEPT
-{
-    return m_required;
-}
-
-ARGPARSE_INL MutuallyExclusiveGroup&
-MutuallyExclusiveGroup::add_argument(
-        Argument const& argument)
-{
-    m_data->validate_argument(Argument(argument), m_prefix_chars);
-    process_add_argument();
-    return *this;
-}
-
-ARGPARSE_INL std::string
-MutuallyExclusiveGroup::usage(
-        HelpFormatter const& formatter) const
-{
-    std::string res;
-    for (arg_iterator it = m_data->m_arguments.begin();
-         it != m_data->m_arguments.end(); ++it) {
-        detail::_append_value_to((*it)->usage(formatter), res, " | ");
-    }
-    return res.empty() ? std::string()
-                       : (m_required ? "(" + res + ")" : "[" + res + "]");
 }
 
 // -- _Storage::mapped_type ---------------------------------------------------
