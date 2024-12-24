@@ -6657,6 +6657,7 @@ public:
 
     /*!
      *  \brief Set argument parser 'deprecated' value (default: false)
+     *  (for subparsers)
      *
      *  \param value Deprecated flag
      *
@@ -16383,6 +16384,8 @@ ArgumentParser::test_overview(
     os << "add_help: " << detail::_bool_to_string(add_help()) << "\n";
     os << "allow_abbrev: " << detail::_bool_to_string(allow_abbrev()) << "\n";
     os << "exit_on_error: " << detail::_bool_to_string(exit_on_error()) << "\n";
+    os << "suggest_on_error: " << detail::_bool_to_string(suggest_on_error())
+       << "\n";
     if (m_output_width != 0) {
         os << "output_width [override]: " << output_width() << "\n";
     } else {
