@@ -6647,6 +6647,8 @@ public:
      *
      *  \param value Suggest on error flag
      *
+     *  \since NEXT_RELEASE
+     *
      *  \return Current argument parser reference
      */
     ArgumentParser&
@@ -6867,6 +6869,8 @@ public:
 
     /*!
      *  \brief Get argument parser 'suggest_on_error' value (default: false)
+     *
+     *  \since NEXT_RELEASE
      *
      *  \return Argument parser 'suggest_on_error' value
      */
@@ -9889,6 +9893,104 @@ _process_separate_arg_abbrev(
         return false;
     }
     return true;
+}
+
+ARGPARSE_INL std::size_t
+_match_pattern(
+        std::string const& a,
+        std::size_t left,
+        std::string const& b,
+        std::size_t right)
+{
+    std::size_t i, j, k, m;
+    std::size_t length = 0;
+    std::size_t leftReset = 0;
+    std::size_t rightReset = 0;
+
+    for (i = 0; i < left - length; ++i) {
+        for (j = 0; j < right - length; ++j) {
+            if (a.at(i) == b.at(j) && a.at(i + length) == b.at(j + length)) {
+                for (k = i + 1, m = j + 1;
+                  k < a.size() && m < b.size() && a.at(k) == b.at(m); ++k, ++m);
+
+                if (k > length + i) {
+                    leftReset = i;
+                    rightReset = j;
+                    length = k - i;
+                }
+            }
+        }
+    }
+
+    if (length == 0) {
+        return 0;
+    }
+
+    i = leftReset + length;
+    j = rightReset + length;
+
+    left -= i;
+    right -= j;
+
+    std::size_t leftMatch = (leftReset != 0 && rightReset != 0)
+            ? _match_pattern(a, leftReset, b, rightReset): 0;
+    std::size_t rightMatch = (left != 0 && right != 0)
+            ? _match_pattern(a.substr(i), left, b.substr(j), right) : 0;
+    return length + leftMatch + rightMatch;
+}
+
+ARGPARSE_INL float
+_gestalt(
+        std::string const& a,
+        std::string const& b)
+{
+    std::size_t K = _match_pattern(a, a.size(), b, b.size());
+    return static_cast<float>(2 * K) / static_cast<float>(a.size() + b.size());
+}
+
+ARGPARSE_INL std::string
+_get_close_matches(
+        std::string const& word,
+        std::vector<std::string> const& possibilities,
+        float cutoff = 0.6f)
+{
+    std::pair<std::string, float> best;
+    for (std::size_t i = 0; i < possibilities.size(); ++i) {
+        std::string const& str = possibilities.at(i);
+        float ratio = _gestalt(str, word);
+        if (ratio >= cutoff && ratio > best.second) {
+            best.first = str;
+            best.second = ratio;
+        }
+    }
+    return best.first;
+}
+
+ARGPARSE_INL std::string
+_suggest_message(
+        std::string const& choice,
+        std::vector<std::string> const& choices,
+        bool suggest = false)
+{
+    if (!suggest || choices.empty() || choice.empty()) {
+        return std::string();
+    }
+    std::string suggestion = _get_close_matches(choice, choices);
+    if (!suggestion.empty()) {
+        return ", maybe you meant '" + suggestion + "'?";
+    }
+    return std::string();
+}
+
+ARGPARSE_INL std::string
+_invalid_choice(
+        std::string const& choice,
+        std::vector<std::string> const& choices,
+        bool suggest = false)
+{
+    return ": invalid choice: '" + choice + "'"
+            + _suggest_message(choice, choices, suggest)
+            + " (choose from " + _join(choices, ", ", "'") + ")";
 }
 }  // namespace detail
 
@@ -15154,8 +15256,8 @@ ArgumentParser::validate_argument_value(
             parser->throw_error(
                         "argument " + (arg.m_flags.empty()
                                        ? arg.dest() : arg.m_flags.front())
-                        + ": invalid choice: '" + str + "' (choose from "
-                       + detail::_join(arg.m_choices.value(), ", ", "'") + ")");
+                        + detail::_invalid_choice(
+                            str, arg.m_choices.value(), m_suggest_on_error));
         }
     }
 }
@@ -15724,16 +15826,10 @@ ArgumentParser::try_capture_parser(
     match_positionals(parsers, pos, positional, args, finish,
                       ++min_args, one_args, more_args);
     std::string const& name = args.front();
-    std::string const& dest = parsers.back().subparsers.first->dest();
-    std::string choices;
-    std::list<pParser> const lst_parsers
-            = parsers.back().subparsers.first->list_parsers();
+    pSubParsers const& last = parsers.back().subparsers.first;
+    std::string const& dest = last->dest();
+    std::list<pParser> const lst_parsers = last->list_parsers();
     for (prs_iterator it = lst_parsers.begin(); it != lst_parsers.end(); ++it) {
-        detail::_append_value_to("'" + (*it)->m_name + "'", choices, ", ");
-        for (std::size_t a = 0; a < (*it)->aliases().size(); ++a) {
-            std::string const& alias = (*it)->aliases().at(a);
-            detail::_append_value_to("'" + alias + "'", choices, ", ");
-        }
         if ((*it)->m_name == name || detail::_exists(name, (*it)->aliases())) {
             if ((*it)->deprecated()) {
                 std::cerr << parsers.back().parser->prog()
@@ -15767,8 +15863,8 @@ ArgumentParser::try_capture_parser(
             return true;
         }
     }
-    throw_error("argument " + parsers.back().subparsers.first->flags_to_string()
-            + ": invalid choice: '" + name + "' (choose from " + choices + ")");
+    throw_error("argument " + last->flags_to_string() + detail::_invalid_choice(
+                    name, last->parser_names(), m_suggest_on_error));
     return false;
 }
 
