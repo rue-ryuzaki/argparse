@@ -14967,9 +14967,26 @@ ArgumentParser::parser_info(
         _Storage const& storage,
         SubParsersInfo const& subparsers)
 {
-    return ParserInfo(parser, storage, subparsers,
-                      parser->m_data->get_optional(true, true),
-                      parser->m_data->get_operand(true, true));
+    pArguments optional = parser->m_data->get_optional(true, true);
+    pArguments operand = parser->m_data->get_operand(true, true);
+    for (mtx_it i = parser->m_mutex_groups.begin();
+         i != parser->m_mutex_groups.end(); ++i) {
+        pArguments sub_optional = (*i).m_data->get_optional(true, true);
+        pArguments sub_operand = (*i).m_data->get_operand(true, true);
+        for (pArguments::const_iterator it = sub_optional.begin();
+             it != sub_optional.end(); ++it) {
+            if (!detail::_exists(*it, optional)) {
+                optional.push_back((*it));
+            }
+        }
+        for (pArguments::const_iterator it = sub_operand.begin();
+             it != sub_operand.end(); ++it) {
+            if (!detail::_exists(*it, operand)) {
+                operand.push_back((*it));
+            }
+        }
+    }
+    return ParserInfo(parser, storage, subparsers, optional, operand);
 }
 
 ARGPARSE_INL void
