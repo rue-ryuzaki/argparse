@@ -12481,7 +12481,8 @@ ArgumentGroup::print_help(
         detail::_print_raw_text_formatter(
                     formatter,
                     detail::_replace(description, "%(prog)s", prog),
-                    width, os, eat_ln, title.empty() ? "\n" : "", 2, "\n");
+                    width, os, eat_ln, title.empty() ? "\n" : "", 2,
+                    m_data->m_arguments.empty() ? "" : "\n");
         for (arg_iterator it = m_data->m_arguments.begin();
              it != m_data->m_arguments.end(); ++it) {
             os << "\n" << (*it)->print(formatter, limit, width, lang);
