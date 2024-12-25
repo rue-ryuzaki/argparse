@@ -3999,6 +3999,7 @@ private:
 ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
 {
     friend class ArgumentParser;
+    friend class ArgumentGroup;
     friend class HelpFormatter;
 
     explicit
@@ -4091,7 +4092,8 @@ ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
             std::string const& description,
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::SValue<std::string>& argument_default);
+            detail::SValue<std::string>& argument_default,
+            std::list<MutuallyExclusiveGroup>& mutex_groups);
 
     static detail::shared_ptr<ArgumentGroup>
     make_argument_group(
@@ -4099,7 +4101,8 @@ ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
             std::string const& description,
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::SValue<std::string>& argument_default);
+            detail::SValue<std::string>& argument_default,
+            std::list<MutuallyExclusiveGroup>& mutex_groups);
 
 public:
     using _ArgumentGroup::add_argument;
@@ -4163,6 +4166,19 @@ public:
     add_argument(
             Argument const& argument);
 
+    /*!
+     *  \brief Add mutually exclusive group
+     *
+     *  \param required Required flag (default: false)
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current mutually exclusive group reference
+     */
+    MutuallyExclusiveGroup&
+    add_mutually_exclusive_group(
+            bool required = false);
+
 private:
     void
     limit_help_flags(
@@ -4179,6 +4195,9 @@ private:
             std::size_t limit,
             std::size_t width,
             std::string const& lang) const ARGPARSE_OVERRIDE;
+
+    // -- data ----------------------------------------------------------------
+    std::list<MutuallyExclusiveGroup>& m_mutex_groups;
 };
 
 /*!
@@ -12346,9 +12365,11 @@ ArgumentGroup::ArgumentGroup(
         std::string const& description,
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::SValue<std::string>& argument_default)
+        detail::SValue<std::string>& argument_default,
+        std::list<MutuallyExclusiveGroup>& mutex_groups)
     : _Group(title, description),
-      _ArgumentGroup(prefix_chars, parent_data, argument_default, false)
+      _ArgumentGroup(prefix_chars, parent_data, argument_default, false),
+      m_mutex_groups(mutex_groups)
 {
 }
 
@@ -12358,18 +12379,20 @@ ArgumentGroup::make_argument_group(
         std::string const& description,
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::SValue<std::string>& argument_default)
+        detail::SValue<std::string>& argument_default,
+        std::list<MutuallyExclusiveGroup>& mutex_groups)
 {
     return detail::make_shared<ArgumentGroup>(
                 ArgumentGroup(title, description, prefix_chars,
-                              parent_data, argument_default));
+                              parent_data, argument_default, mutex_groups));
 }
 
 ARGPARSE_INL
 ArgumentGroup::ArgumentGroup(
         ArgumentGroup const& orig)
     : _Group(orig),
-      _ArgumentGroup(orig)
+      _ArgumentGroup(orig),
+      m_mutex_groups(orig.m_mutex_groups)
 {
 }
 
@@ -12384,6 +12407,7 @@ ArgumentGroup::operator =(
         m_prefix_chars      = rhs.m_prefix_chars;
         m_argument_default  = rhs.m_argument_default;
         m_parent_data       = rhs.m_parent_data;
+        m_mutex_groups      = rhs.m_mutex_groups;
     }
     return *this;
 }
@@ -12413,6 +12437,16 @@ ArgumentGroup::add_argument(
     m_data->validate_argument(Argument(argument), m_prefix_chars);
     process_add_argument();
     return *this;
+}
+
+ARGPARSE_INL MutuallyExclusiveGroup&
+ArgumentGroup::add_mutually_exclusive_group(
+        bool required)
+{
+    m_mutex_groups.push_back(
+                MutuallyExclusiveGroup::make_mutex_group(
+                    m_prefix_chars, m_data, m_argument_default));
+    return m_mutex_groups.back().required(required);
 }
 
 ARGPARSE_INL void
@@ -14358,7 +14392,8 @@ ArgumentParser::add_argument_group(
 {
     detail::shared_ptr<ArgumentGroup> group
             = ArgumentGroup::make_argument_group(
-                title, description, m_prefix_chars, m_data, m_argument_default);
+                title, description, m_prefix_chars, m_data,
+                m_argument_default, m_mutex_groups);
     m_groups.push_back(pGroup(group));
     return *group;
 }
@@ -15092,6 +15127,9 @@ ArgumentParser::parse_arguments(
     check_intermixed_remainder(intermixed, positional);
 
     parsers.back().storage.create(m_data->get_arguments(true), true);
+    for (mtx_it i = m_mutex_groups.begin(); i != m_mutex_groups.end(); ++i) {
+        parsers.back().storage.create((*i).m_data->get_arguments(true), true);
+    }
 
     std::vector<std::string> unrecognized_args;
     std::list<std::string> intermixed_args;
