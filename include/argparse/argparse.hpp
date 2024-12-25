@@ -4263,7 +4263,8 @@ private:
             mapped_type const& value = mapped_type());
 
     void
-    create(std::vector<key_type> const& keys);
+    create(std::vector<key_type> const& keys,
+            bool validate = false);
 
     void
     have_value(
@@ -7912,10 +7913,6 @@ private:
             bool only_known,
             detail::rval<_Storage>::type storage,
             detail::rval<std::vector<std::string> >::type unrecognized_args);
-
-    static void
-    validate_arguments(
-            pArguments const& args);
 
     void
     validate_argument_value(
@@ -12593,9 +12590,13 @@ _Storage::create(
 
 ARGPARSE_INL void
 _Storage::create(
-        std::vector<key_type> const& keys)
+        std::vector<key_type> const& keys,
+        bool validate)
 {
     for (std::size_t i = 0; i < keys.size(); ++i) {
+        if (validate) {
+            keys.at(i)->validate();
+        }
         create(keys.at(i));
     }
 }
@@ -15090,8 +15091,7 @@ ArgumentParser::parse_arguments(
     pArguments positional = m_data->get_positional(true, true);
     check_intermixed_remainder(intermixed, positional);
 
-    validate_arguments(m_data->get_arguments(true));
-    parsers.back().storage.create(m_data->get_arguments(true));
+    parsers.back().storage.create(m_data->get_arguments(true), true);
 
     std::vector<std::string> unrecognized_args;
     std::list<std::string> intermixed_args;
@@ -15233,15 +15233,6 @@ ArgumentParser::create_namespace(
     return only_known ? Namespace(ARGPARSE_MOVE(storage),
                                   ARGPARSE_MOVE(unrecognized_args))
                       : Namespace(ARGPARSE_MOVE(storage));
-}
-
-ARGPARSE_INL void
-ArgumentParser::validate_arguments(
-        pArguments const& args)
-{
-    for (std::size_t i = 0; i < args.size(); ++i) {
-        args.at(i)->validate();
-    }
 }
 
 ARGPARSE_INL void
@@ -15844,7 +15835,6 @@ ArgumentParser::try_capture_parser(
                 parsers.back().lang = lang;
             }
             parsers.back().parser->handle(parsers.back().parser->m_name);
-            validate_arguments((*it)->m_data->get_arguments(true));
             if (!dest.empty()) {
                 pArgument subparsers_arg = Argument::make_argument(
                             detail::_vector(dest), dest, Argument::Positional);
@@ -15855,7 +15845,7 @@ ArgumentParser::try_capture_parser(
             }
             for (pi_iterator j = parsers.begin(); j != parsers.end(); ++j) {
                 (*j).storage.create(
-                            parsers.back().parser->m_data->get_arguments(true));
+                      parsers.back().parser->m_data->get_arguments(true), true);
             }
             pArguments sub_positional
                     = parsers.back().parser->m_data->get_positional(true, true);
