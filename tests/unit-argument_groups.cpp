@@ -116,3 +116,17 @@ TEST_CASE("2. mutual exclusion", "[argument_parser]")
         REQUIRE_THROWS_WITH(parser.parse_args(""), "ValueError: mutually exclusive arguments must be optional");
     }
 }
+
+TEST_CASE("3. argument group with mutual exclusion", "[argument_parser]")
+{
+    argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+    argparse::ArgumentGroup& group1 = parser.add_argument_group("group 1", "desc");
+
+    argparse::MutuallyExclusiveGroup& group = group1.add_mutually_exclusive_group();
+    group.add_argument("--foo").action("store_true");
+    group.add_argument("--bar").action("store_false");
+    group.add_argument("baz=").required(false);
+
+    REQUIRE_NOTHROW(parser.parse_args("--foo").contains("foo"));
+}
