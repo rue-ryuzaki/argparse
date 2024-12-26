@@ -2663,6 +2663,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     action(std::string const& value);
 
@@ -2673,6 +2674,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     action(Action value);
 
@@ -2683,6 +2685,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     nargs(std::size_t num);
 
@@ -2695,6 +2698,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     nargs(std::string const& value,
             std::size_t num = 1);
@@ -2706,6 +2710,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     nargs(_REMAINDER value);
 
@@ -2718,6 +2723,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     nargs(_SUPPRESS value);
 
@@ -2729,6 +2735,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     optional(
             std::size_t num = 1)
@@ -2744,6 +2751,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     zero_or_one(
             std::size_t num = 1)
@@ -2759,6 +2767,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     zero_or_more(
             std::size_t num = 1)
@@ -2774,6 +2783,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     one_or_more(
             std::size_t num = 1)
@@ -2786,6 +2796,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     remainder()
     {
@@ -2799,6 +2810,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     suppresser()
     {
@@ -2812,6 +2824,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     const_value(
             std::string const& value);
@@ -2828,11 +2841,13 @@ public:
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     const_value(
             T const& value)
 #else
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     const_value(
             T const& value,
@@ -2852,6 +2867,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     default_value(
             std::string const& value);
@@ -2868,11 +2884,13 @@ public:
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     default_value(
             T const& value)
 #else
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     default_value(
             T const& value,
@@ -2892,6 +2910,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     default_value(
             _SUPPRESS value);
@@ -2904,6 +2923,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     implicit_value(
             std::string const& value);
@@ -2922,11 +2942,13 @@ public:
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     implicit_value(
             T const& value)
 #else
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     implicit_value(
             T const& value,
@@ -2946,6 +2968,7 @@ public:
      *  \return Current argument reference
      */
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     type()
     {
@@ -2960,6 +2983,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     type(std::string const& value);
 
@@ -2973,6 +2997,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     type(detail::func2<std::string const&, void*>::type func) ARGPARSE_NOEXCEPT;
 
@@ -2985,6 +3010,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choice(std::string const& value);
 
@@ -2995,6 +3021,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choices(std::string const& value);
 
@@ -3012,6 +3039,7 @@ public:
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     choice(T const& value)
     {
@@ -3034,6 +3062,7 @@ public:
     template <class T, class... Args,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     choices(T const& value1,
             T const& value2,
@@ -3055,6 +3084,7 @@ public:
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choices(std::initializer_list<T> const& value)
     {
@@ -3073,6 +3103,7 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     choices(std::string const& value1,
             std::string const& value2,
@@ -3090,6 +3121,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choices(std::initializer_list<std::string> const& value);
 #else
@@ -3104,6 +3136,7 @@ public:
      *  \return Current argument reference
      */
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     choice(T const& value,
             typename detail::enable_if<
@@ -3127,6 +3160,7 @@ public:
      *  \return Current argument reference
      */
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     choices(T const& value1,
             T const& value2,
@@ -3153,6 +3187,7 @@ public:
      *  \return Current argument reference
      */
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     choices(T const& value1,
             T const& value2,
@@ -3182,6 +3217,7 @@ public:
      *  \return Current argument reference
      */
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     choices(T const& value1,
             T const& value2,
@@ -3209,6 +3245,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choices(std::string const& value1,
             std::string const& value2);
@@ -3224,6 +3261,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choices(std::string const& value1,
             std::string const& value2,
@@ -3241,6 +3279,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choices(std::string const& value1,
             std::string const& value2,
@@ -3262,10 +3301,12 @@ public:
     template <class T,
               typename std::enable_if<
                   !detail::is_string_ctor<T>::value>::type* = nullptr>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     choices(std::vector<T> const& value)
 #else
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     choices(std::vector<T> const& value,
             typename detail::enable_if<
@@ -3283,6 +3324,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choices(std::vector<std::string> const& value);
 
@@ -3293,6 +3335,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     required(
             bool value);
@@ -3305,6 +3348,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     help(std::string const& value,
             std::string const& lang = std::string());
@@ -3316,6 +3360,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     help(_SUPPRESS value);
 
@@ -3326,6 +3371,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     version(std::string const& value);
 
@@ -3336,6 +3382,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     metavar(std::vector<std::string> const& value);
 
@@ -3349,6 +3396,7 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     metavar(std::string const& value,
             Args... args)
@@ -3365,6 +3413,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     metavar(std::initializer_list<std::string> const& value);
 #else
@@ -3375,6 +3424,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     metavar(std::string const& value);
 
@@ -3386,6 +3436,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     metavar(std::string const& value1,
             std::string const& value2);
@@ -3399,6 +3450,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     metavar(std::string const& value1,
             std::string const& value2,
@@ -3414,6 +3466,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     metavar(std::string const& value1,
             std::string const& value2,
@@ -3428,6 +3481,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     dest(std::string const& value);
 
@@ -3440,6 +3494,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     deprecated(
             bool value);
@@ -3452,6 +3507,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     handle(detail::func1<std::string const&>::type func) ARGPARSE_NOEXCEPT;
 
@@ -3887,6 +3943,7 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     add_argument(
             Args... flags)
@@ -3903,6 +3960,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::initializer_list<std::string> const& flags);
@@ -3914,6 +3972,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::string const& flag);
@@ -3926,6 +3985,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::string const& flag1,
@@ -3942,6 +4002,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::string const& flag1,
@@ -3960,6 +4021,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::string const& flag1,
@@ -3975,6 +4037,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::vector<std::string> const& flags);
@@ -4047,6 +4110,7 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     MutuallyExclusiveGroup&
     required(
             bool value) ARGPARSE_NOEXCEPT;
@@ -4067,6 +4131,7 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     MutuallyExclusiveGroup&
     add_argument(
             Argument const& argument);
@@ -4138,6 +4203,7 @@ public:
      *
      *  \return Current argument group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentGroup&
     title(std::string const& value,
             std::string const& lang = std::string());
@@ -4150,6 +4216,7 @@ public:
      *
      *  \return Current argument group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentGroup&
     description(
             std::string const& value,
@@ -4162,6 +4229,7 @@ public:
      *
      *  \return Current argument group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentGroup&
     add_argument(
             Argument const& argument);
@@ -4175,6 +4243,7 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
+    ARGPARSE_ATTR_NODISCARD
     MutuallyExclusiveGroup&
     add_mutually_exclusive_group(
             bool required = false);
@@ -5892,6 +5961,7 @@ public:
      *
      *  \return Current parser group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
     title(std::string const& value,
             std::string const& lang = std::string());
@@ -5904,6 +5974,7 @@ public:
      *
      *  \return Current parser group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
     description(
             std::string const& value,
@@ -5917,6 +5988,7 @@ public:
      *
      *  \return Current parser group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
     help(std::string const& value,
             std::string const& lang = std::string());
@@ -5928,6 +6000,7 @@ public:
      *
      *  \return Current parser group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
     help(_SUPPRESS value);
 
@@ -5938,6 +6011,7 @@ public:
      *
      *  \return Current parser group reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
     metavar(std::string const& value);
 
@@ -5948,6 +6022,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_NODISCARD
     ArgumentParser&
     add_parser(
             std::string const& name);
@@ -6002,6 +6077,7 @@ public:
      *
      *  \return Current subparsers reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     title(std::string const& value,
             std::string const& lang = std::string());
@@ -6014,6 +6090,7 @@ public:
      *
      *  \return Current subparsers reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     description(
             std::string const& value,
@@ -6026,6 +6103,7 @@ public:
      *
      *  \return Current subparsers reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     prog(std::string const& value);
 
@@ -6036,6 +6114,7 @@ public:
      *
      *  \return Current subparsers reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     dest(std::string const& value);
 
@@ -6046,6 +6125,7 @@ public:
      *
      *  \return Current subparsers reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     required(
             bool value) ARGPARSE_NOEXCEPT;
@@ -6058,6 +6138,7 @@ public:
      *
      *  \return Current subparsers reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     help(std::string const& value,
             std::string const& lang = std::string());
@@ -6071,6 +6152,7 @@ public:
      *
      *  \return Current subparsers reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     help(_SUPPRESS value);
 
@@ -6081,6 +6163,7 @@ public:
      *
      *  \return Current subparsers reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     metavar(std::string const& value);
 
@@ -6118,6 +6201,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_NODISCARD
     ArgumentParser&
     add_parser(
             std::string const& name);
@@ -6130,6 +6214,7 @@ public:
      *
      *  \return Current parser group reference
      */
+    ARGPARSE_ATTR_NODISCARD
     ParserGroup&
     add_parser_group(
             std::string const& title = std::string(),
@@ -6293,6 +6378,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     prog(std::string const& value);
 
@@ -6304,6 +6390,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     usage(std::string const& value,
             std::string const& lang = std::string());
@@ -6317,6 +6404,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     usage(_SUPPRESS value);
 
@@ -6331,6 +6419,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     usage_title(
             std::string const& value,
@@ -6344,6 +6433,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     description(
             std::string const& value,
@@ -6360,6 +6450,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     positionals_title(
             std::string const& value,
@@ -6376,6 +6467,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     operands_title(
             std::string const& value,
@@ -6392,6 +6484,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     optionals_title(
             std::string const& value,
@@ -6405,6 +6498,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     epilog(std::string const& value,
             std::string const& lang = std::string());
@@ -6418,6 +6512,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     help(std::string const& value,
             std::string const& lang = std::string());
@@ -6429,6 +6524,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     aliases(std::vector<std::string> const& value);
 
@@ -6442,6 +6538,7 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline ArgumentParser&
     aliases(std::string const& value,
             Args... args)
@@ -6458,6 +6555,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     aliases(std::initializer_list<std::string> const& value);
 #else
@@ -6468,6 +6566,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     aliases(std::string const& value);
 
@@ -6479,6 +6578,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     aliases(std::string const& value1,
             std::string const& value2);
@@ -6491,6 +6591,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     parents(std::vector<ArgumentParser> const& value);
 
@@ -6504,6 +6605,7 @@ public:
      *  \return Current argument parser reference
      */
     template <class... Args>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline ArgumentParser&
     parents(ArgumentParser const& value,
             Args... args)
@@ -6520,6 +6622,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     parents(std::initializer_list<ArgumentParser> const& value);
 #else
@@ -6530,6 +6633,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     parents(ArgumentParser const& value);
 
@@ -6541,6 +6645,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     parents(ArgumentParser const& value1,
             ArgumentParser const& value2);
@@ -6554,6 +6659,7 @@ public:
      *  \return Current argument parser reference
      */
     template <class T>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     formatter_class(
             T const& value)
@@ -6569,6 +6675,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     prefix_chars(
             std::string const& value);
@@ -6580,6 +6687,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     fromfile_prefix_chars(
             std::string const& value);
@@ -6593,6 +6701,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     comment_prefix_chars(
             std::string const& value);
@@ -6604,6 +6713,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     argument_default(
             std::string const& value);
@@ -6615,6 +6725,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     argument_default(
             _SUPPRESS value);
@@ -6626,6 +6737,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     conflict_handler(
             std::string const& value);
@@ -6637,6 +6749,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     add_help(bool value);
 
@@ -6647,6 +6760,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     allow_abbrev(
             bool value) ARGPARSE_NOEXCEPT;
@@ -6658,6 +6772,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     exit_on_error(
             bool value) ARGPARSE_NOEXCEPT;
@@ -6671,6 +6786,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     suggest_on_error(
             bool value) ARGPARSE_NOEXCEPT;
@@ -6685,6 +6801,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     deprecated(
             bool value) ARGPARSE_NOEXCEPT;
@@ -6696,6 +6813,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     output_width(
             std::size_t value) ARGPARSE_NOEXCEPT;
@@ -6928,6 +7046,7 @@ public:
      *  \return Current argument reference
      */
     template <class... Args>
+    ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
     add_argument(
             Args... flags)
@@ -6944,6 +7063,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::initializer_list<std::string> const& flags);
@@ -6955,6 +7075,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::string const& flag);
@@ -6967,6 +7088,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::string const& flag1,
@@ -6983,6 +7105,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::string const& flag1,
@@ -7001,6 +7124,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::string const& flag1,
@@ -7016,6 +7140,7 @@ public:
      *
      *  \return Current argument reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     add_argument(
             std::vector<std::string> const& flags);
@@ -7027,6 +7152,7 @@ public:
      *
      *  \return Current parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     add_argument(
             Argument const& argument);
@@ -7039,6 +7165,7 @@ public:
      *
      *  \return Current argument group reference
      */
+    ARGPARSE_ATTR_NODISCARD
     ArgumentGroup&
     add_argument_group(
             std::string const& title = std::string(),
@@ -7051,6 +7178,7 @@ public:
      *
      *  \return Current mutually exclusive group reference
      */
+    ARGPARSE_ATTR_NODISCARD
     MutuallyExclusiveGroup&
     add_mutually_exclusive_group(
             bool required = false);
@@ -7063,6 +7191,7 @@ public:
      *
      *  \return Current subparsers reference
      */
+    ARGPARSE_ATTR_NODISCARD
     SubParsers&
     add_subparsers(
             std::string const& title = std::string(),
@@ -7097,6 +7226,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     handle(detail::func1<std::string const&>::type func) ARGPARSE_NOEXCEPT;
 
@@ -7109,6 +7239,7 @@ public:
      *
      *  \return Current argument parser reference
      */
+    ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     handle(detail::func1<Namespace const&>::type func) ARGPARSE_NOEXCEPT;
 
