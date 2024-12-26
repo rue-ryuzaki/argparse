@@ -16,9 +16,13 @@ TEST_CASE("1. split to args", "[argparse]")
     }
 
     SECTION("1.2. with quotes") {
-        REQUIRE(argparse::split_to_args("Homer's dog").size() == 2);
-        REQUIRE(argparse::split_to_args("Homer's\\ dog").size() == 1);
-        REQUIRE(argparse::split_to_args("'Homer's dog'").size() == 1);
-        REQUIRE(argparse::split_to_args("-f='Homer's dog'").size() == 1);
+        CHECK(argparse::split_to_args("Homer\\'s dog").size() == 2);
+        CHECK(argparse::split_to_args("Homer\\'s\\ dog").size() == 1);
+        CHECK(argparse::split_to_args("'Homer\\'s dog'").size() == 1);
+        CHECK(argparse::split_to_args("\"Homer's dog\"").size() == 1);
+        CHECK(argparse::split_to_args("-f='Homer\\'s dog'").size() == 1);
+        CHECK(argparse::split_to_args("-f'Homer\\'s dog'").size() == 1);
+        CHECK(argparse::split_to_args("-f=\"Homer's dog\"").size() == 1);
+        CHECK(argparse::split_to_args("-f\"Homer's dog\"").size() == 1);
     }
 }

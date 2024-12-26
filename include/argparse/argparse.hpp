@@ -9566,21 +9566,13 @@ ARGPARSE_INL void
 _process_quotes(
         std::list<char>& quotes,
         std::string const& value,
-        std::string const& str,
-        char c,
-        std::size_t i)
+        char c)
 {
-    if (c == '\"' || c == '\'') {
-        if (!quotes.empty()
-                && quotes.back() == c
-                && (i == str.size()
-                    || std::isspace(static_cast<unsigned char>(str.at(i)))
-                    || std::ispunct(static_cast<unsigned char>(str.at(i))))) {
-            quotes.pop_back();
-        } else if (value.empty()
-                   || std::ispunct(static_cast<unsigned char>(
-                                       value.at(value.size() - 1)))) {
+    if ((c == '\"' || c == '\'') && (value.empty() || value.back() != '\\')) {
+        if (quotes.empty()) {
             quotes.push_back(c);
+        } else if (quotes.back() == c) {
+            quotes.pop_back();
         }
     }
 }
@@ -10633,7 +10625,6 @@ split_to_args(
             // skip space
             skip = true;
             if (i + 1 == str.size()) {
-                value += c;
                 break;
             }
             if (str.at(i + 1) != detail::_space) {
@@ -10647,7 +10638,7 @@ split_to_args(
                 && quotes.empty()) {
             detail::_store_value_to(value, res);
         } else {
-            detail::_process_quotes(quotes, value, str, c, i + 1);
+            detail::_process_quotes(quotes, value, c);
             value += c;
         }
         skip = false;
