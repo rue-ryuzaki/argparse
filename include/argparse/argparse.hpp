@@ -7263,8 +7263,11 @@ public:
      *  \param pairs List of pairs: { 'argument flag', 'default value' }
      *
      *  \since v1.7.2
+     *
+     *  \return Current argument parser reference
      */
-    void
+    ARGPARSE_ATTR_MAYBE_UNUSED
+    ArgumentParser&
     set_defaults(
       std::initializer_list<std::pair<std::string, std::string> > const& pairs);
 #endif  // C++11+
@@ -7273,8 +7276,11 @@ public:
      *  \brief Set default values for a specific arguments
      *
      *  \param pairs Vector of pairs: { 'argument flag', 'default value' }
+     *
+     *  \return Current argument parser reference
      */
-    void
+    ARGPARSE_ATTR_MAYBE_UNUSED
+    ArgumentParser&
     set_defaults(
             std::vector<std::pair<std::string, std::string> > const& pairs);
 
@@ -14604,15 +14610,15 @@ ArgumentParser::get_default(
 }
 
 #ifdef ARGPARSE_CXX_11
-ARGPARSE_INL void
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::set_defaults(
-       std::initializer_list<std::pair<std::string, std::string> > const& pairs)
+       std::initializer_list<std::pair<std::string, std::string> > const& p)
 {
-    set_defaults(std::vector<std::pair<std::string, std::string> >{ pairs });
+    return set_defaults(std::vector<std::pair<std::string, std::string> >{ p });
 }
 #endif  // C++11+
 
-ARGPARSE_INL void
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::set_defaults(
         std::vector<std::pair<std::string, std::string> > const& pairs)
 {
@@ -14626,6 +14632,7 @@ ArgumentParser::set_defaults(
             m_default_values.push_back(std::make_pair(dest, value));
         }
     }
+    return *this;
 }
 
 ARGPARSE_INL Namespace
