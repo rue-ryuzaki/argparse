@@ -9559,10 +9559,10 @@ _split_equal(
 ARGPARSE_INL void
 _process_quotes(
         std::list<char>& quotes,
-        std::string const& value,
+        std::string const& s,
         char c)
 {
-    if ((c == '\"' || c == '\'') && (value.empty() || value.back() != '\\')) {
+    if ((c == '\"' || c == '\'') && (s.empty() || s.at(s.size() - 1) != '\\')) {
         if (quotes.empty()) {
             quotes.push_back(c);
         } else if (quotes.back() == c) {
