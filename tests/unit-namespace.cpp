@@ -757,6 +757,13 @@ TEST_CASE("3. get", "[namespace]")
         REQUIRE(args.get<std::string>("bar-foo") == bar);
         REQUIRE(args.exists("bar_foo") == true);
         REQUIRE(args.get<std::string>("bar_foo") == bar);
+
+#ifdef ARGPARSE_HAS_STRING_VIEW
+        auto sw_foo = args.get<std::string_view>("foo");
+        auto sw_bar = args.get<std::string_view>("bar");
+        CHECK(sw_foo == foo);
+        CHECK(sw_bar == bar);
+#endif  // ARGPARSE_HAS_STRING_VIEW
     }
 
     SECTION("3.2. second long option containing internal -") {
@@ -779,6 +786,13 @@ TEST_CASE("3. get", "[namespace]")
         REQUIRE(args.get<std::string>("bar-foo") == bar);
         REQUIRE(args.exists("bar_foo") == false);
         REQUIRE_THROWS(args.get<std::string>("bar_foo"));
+
+#ifdef ARGPARSE_HAS_STRING_VIEW
+        auto sw_foo = args.get<std::string_view>("foo");
+        auto sw_bar = args.get<std::string_view>("bar");
+        CHECK(sw_foo == foo);
+        CHECK(sw_bar == bar);
+#endif  // ARGPARSE_HAS_STRING_VIEW
     }
 }
 

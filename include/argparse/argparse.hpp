@@ -1708,10 +1708,6 @@ _to_vecstring(
 }
 
 std::string
-_remove_quotes(
-        std::string const& str);
-
-std::string
 _replace(
         std::string str,
         std::string const& old,
@@ -4505,15 +4501,14 @@ private:
     as_type(key_type const& key,
             std::string const& value)
     {
-        std::string str = detail::_remove_quotes(value);
         if (key->m_factory) {
             T res = T();
-            if (!str.empty()) {
-                key->m_factory(str, &res);
+            if (!value.empty()) {
+                key->m_factory(value, &res);
             }
             return res;
         }
-        return str.empty() ? T() : to_type<T>(str);
+        return value.empty() ? T() : to_type<T>(value);
     }
 
     template <class K, class V>
@@ -4972,19 +4967,18 @@ private:
             key_type const& key,
             std::string const& value)
     {
-        std::string str = detail::_remove_quotes(value);
         if (key->m_factory) {
             T res{};
-            if (!str.empty()) {
+            if (!value.empty()) {
                 try {
-                    key->m_factory(str, &res);
+                    key->m_factory(value, &res);
                 } catch (...) {
                     return std::nullopt;
                 }
             }
             return res;
         }
-        return str.empty() ? T{} : to_opt_type<T>(str);
+        return value.empty() ? T{} : to_opt_type<T>(value);
     }
 
     template <class K, class V>
@@ -8085,7 +8079,7 @@ private:
     storage_store_value(
             Parsers& parsers,
             pArgument const& arg,
-            std::string const& val) const;
+            std::string const& value) const;
 
     void
     storage_store_values(
@@ -11557,7 +11551,7 @@ Argument::handle(
         std::string const& str) const
 {
     if (m_handle) {
-        m_handle(detail::_remove_quotes(str));
+        m_handle(str);
     }
 }
 
@@ -15428,13 +15422,12 @@ ArgumentParser::validate_argument_value(
 {
     if (!(arg.m_nargs & (Argument::REMAINDING | Argument::SUPPRESSING))
             && arg.m_choices.has_value()) {
-        std::string str = detail::_remove_quotes(value);
-        if (!str.empty() && !detail::_exists(str, arg.m_choices.value())) {
+        if (!value.empty() && !detail::_exists(value, arg.m_choices.value())) {
             parser->throw_error(
                         "argument " + (arg.m_flags.empty()
                                        ? arg.dest() : arg.m_flags.front())
                         + detail::_invalid_choice(
-                            str, arg.m_choices.value(), m_suggest_on_error));
+                            value, arg.m_choices.value(), m_suggest_on_error));
         }
     }
 }
@@ -15452,8 +15445,9 @@ ARGPARSE_INL void
 ArgumentParser::storage_store_value(
         Parsers& parsers,
         pArgument const& arg,
-        std::string const& val) const
+        std::string const& value) const
 {
+    std::string val = detail::_remove_quotes(value);
     validate_argument_value(parsers.back().parser, *arg, val);
     parsers.front().storage.store_value(arg, val);
 }
@@ -15464,10 +15458,12 @@ ArgumentParser::storage_store_values(
         pArgument const& arg,
         std::vector<std::string> const& values) const
 {
-    for (std::size_t i = 0; i < values.size(); ++i) {
-        validate_argument_value(parsers.back().parser, *arg, values.at(i));
+    std::vector<std::string> vals = values;
+    for (std::size_t i = 0; i < vals.size(); ++i) {
+        vals.at(i) = detail::_remove_quotes(vals.at(i));
+        validate_argument_value(parsers.back().parser, *arg, vals.at(i));
     }
-    parsers.front().storage.store_values(arg, values);
+    parsers.front().storage.store_values(arg, vals);
 }
 
 ARGPARSE_INL void
@@ -16871,7 +16867,7 @@ ArgumentParser::handle(
         std::string const& str) const
 {
     if (m_handle) {
-        m_handle(detail::_remove_quotes(str));
+        m_handle(str);
     }
 }
 
