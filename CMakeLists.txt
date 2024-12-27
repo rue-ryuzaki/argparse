@@ -42,7 +42,7 @@ if (${CMAKE_VERSION} VERSION_LESS "3.19")
 else()
     add_library(${LIBRARY_NAME} INTERFACE ${LIBRARY_HEADER})
 endif()
-add_library(argparse::argparse ALIAS ${LIBRARY_NAME})
+add_library(argparse::${LIBRARY_NAME} ALIAS ${LIBRARY_NAME})
 
 include(GNUInstallDirs)
 
@@ -52,31 +52,33 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-option(ARGPARSE_STATIC "Build ${LIBRARY_NAME} as a static lib argparse_static" OFF)
-option(ARGPARSE_STATIC_PIC "Build argparse_static with -fPIC" ON)
+set(STATIC_LIBRARY_NAME ${LIBRARY_NAME}_static)
+
+option(ARGPARSE_STATIC "Build ${LIBRARY_NAME} as a static lib ${STATIC_LIBRARY_NAME}" OFF)
+option(ARGPARSE_STATIC_PIC "Build ${STATIC_LIBRARY_NAME} with -fPIC" ON)
 
 if (ARGPARSE_STATIC)
-    message(STATUS "Build ${LIBRARY_NAME} as a static lib")
+    message(STATUS "Build ${LIBRARY_NAME} as a static lib ${STATIC_LIBRARY_NAME}")
 
-    add_library(argparse_static STATIC src/argparse_impl.cpp)
-    add_library(argparse::argparse_static ALIAS argparse_static)
+    add_library(${STATIC_LIBRARY_NAME} STATIC src/argparse_impl.cpp)
+    add_library(argparse::${STATIC_LIBRARY_NAME} ALIAS ${STATIC_LIBRARY_NAME})
 
     foreach(DEFINITION ${ARGPARSE_STATIC_DEFINITIONS})
         if (NOT ${DEFINITION} STREQUAL "ARGPARSE_DECLARATION")
-            target_compile_definitions(argparse_static PRIVATE ${DEFINITION})
+            target_compile_definitions(${STATIC_LIBRARY_NAME} PRIVATE ${DEFINITION})
         endif()
     endforeach()
 
     if (ARGPARSE_STATIC_PIC)
-        message(STATUS "Build argparse_static with -fPIC")
+        message(STATUS "Build ${STATIC_LIBRARY_NAME} with -fPIC")
         set_property(
-            TARGET argparse_static
+            TARGET ${STATIC_LIBRARY_NAME}
             PROPERTY POSITION_INDEPENDENT_CODE ON
         )
     endif()
 
     target_include_directories(
-        argparse_static PUBLIC
+        ${STATIC_LIBRARY_NAME} PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
