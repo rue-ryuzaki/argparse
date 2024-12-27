@@ -86,6 +86,9 @@ if (NOT PROJECT_IS_TOP_LEVEL)
     return()
 endif()
 
+file(GLOB LIBRARY_MARKDOWN "*.md")
+add_custom_target(${LIBRARY_NAME}.md SOURCES ${LIBRARY_MARKDOWN})
+
 if (DEFERED_CMAKE_INSTALL_PREFIX)
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkg-config.pc.in"
