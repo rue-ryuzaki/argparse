@@ -97,20 +97,20 @@ struct std::hash<std::tuple<Ts...> >
 #define AD argparse::detail
 
 #define MACRO_TEST1(L, R) \
-    REQUIRE(L <bool> R);\
-    REQUIRE(L <char> R);\
-    REQUIRE(L <int> R);\
-    REQUIRE(L <std::string> R);
+    CHECK(L <bool> R);\
+    CHECK(L <char> R);\
+    CHECK(L <int> R);\
+    CHECK(L <std::string> R);
 
 #define MACRO_TEST2(L, R) \
-    REQUIRE(L <bool, 1> R);\
-    REQUIRE(L <char, 1> R);\
-    REQUIRE(L <int, 1> R);\
-    REQUIRE(L <std::string, 1> R);
+    CHECK(L <bool, 1> R);\
+    CHECK(L <char, 1> R);\
+    CHECK(L <int, 1> R);\
+    CHECK(L <std::string, 1> R);
 
 #define MACRO_TEST3(L, R) \
-    REQUIRE((L <int, bool> R));\
-    REQUIRE((L <char, std::string> R));
+    CHECK((L <int, bool> R));\
+    CHECK((L <char, std::string> R));
 
 #define MACRO_SIMPLE(M, R) \
     MACRO_TEST1(AD::M,                                      ::value == R)

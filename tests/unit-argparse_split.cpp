@@ -8,11 +8,11 @@
 TEST_CASE("1. split to args", "[argparse]")
 {
     SECTION("1.1. without quotes") {
-        REQUIRE(argparse::split_to_args("").empty());
-        REQUIRE(argparse::split_to_args("abc").size() == 1);
-        REQUIRE(argparse::split_to_args("abc xyz").size() == 2);
-        REQUIRE(argparse::split_to_args("abc\\ xyz").size() == 1);
-        REQUIRE(argparse::split_to_args("-f=abc xyz").size() == 2);
+        CHECK(argparse::split_to_args("").empty());
+        CHECK(argparse::split_to_args("abc").size() == 1);
+        CHECK(argparse::split_to_args("abc xyz").size() == 2);
+        CHECK(argparse::split_to_args("abc\\ xyz").size() == 1);
+        CHECK(argparse::split_to_args("-f=abc xyz").size() == 2);
     }
 
     SECTION("1.2. with quotes") {

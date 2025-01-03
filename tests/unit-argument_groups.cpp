@@ -19,16 +19,16 @@ TEST_CASE("1. argument groups", "[argument_parser]")
     group2.add_argument("--group2").action("store");
 
     argparse::Namespace args0 = parser.parse_args(_make_vec("--foo", "bar"));
-    REQUIRE(args0.get<bool>("foo") == true);
-    REQUIRE(args0.get<std::string>("bar") == "bar");
-    REQUIRE(args0.get<std::string>("group1") == "");
-    REQUIRE(args0.get<std::string>("group2") == "");
+    CHECK(args0.get<bool>("foo") == true);
+    CHECK(args0.get<std::string>("bar") == "bar");
+    CHECK(args0.get<std::string>("group1") == "");
+    CHECK(args0.get<std::string>("group2") == "");
 
     argparse::Namespace args1 = parser.parse_known_args(_make_vec("--foo", "bar", "--group2=2", "--group1=1"));
-    REQUIRE(args1.get<bool>("foo") == true);
-    REQUIRE(args1.get<std::string>("bar") == "bar");
-    REQUIRE(args1.get<std::string>("group1") == "1");
-    REQUIRE(args1.get<std::string>("group2") == "2");
+    CHECK(args1.get<bool>("foo") == true);
+    CHECK(args1.get<std::string>("bar") == "bar");
+    CHECK(args1.get<std::string>("group1") == "1");
+    CHECK(args1.get<std::string>("group2") == "2");
 }
 
 TEST_CASE("2. mutual exclusion", "[argument_parser]")
@@ -42,28 +42,28 @@ TEST_CASE("2. mutual exclusion", "[argument_parser]")
         group.add_argument("baz=").required(false);
 
         argparse::Namespace args0 = parser.parse_args(_make_vec());
-        REQUIRE(args0.get<bool>("foo") == false);
-        REQUIRE(args0.get<bool>("bar") == true);
-        REQUIRE(args0.get<std::string>("baz") == "");
+        CHECK(args0.get<bool>("foo") == false);
+        CHECK(args0.get<bool>("bar") == true);
+        CHECK(args0.get<std::string>("baz") == "");
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("--foo"));
-        REQUIRE(args1.get<bool>("foo") == true);
-        REQUIRE(args1.get<bool>("bar") == true);
-        REQUIRE(args1.get<std::string>("baz") == "");
+        CHECK(args1.get<bool>("foo") == true);
+        CHECK(args1.get<bool>("bar") == true);
+        CHECK(args1.get<std::string>("baz") == "");
 
         argparse::Namespace args2 = parser.parse_args(_make_vec("--bar"));
-        REQUIRE(args2.get<bool>("foo") == false);
-        REQUIRE(args2.get<bool>("bar") == false);
-        REQUIRE(args2.get<std::string>("baz") == "");
+        CHECK(args2.get<bool>("foo") == false);
+        CHECK(args2.get<bool>("bar") == false);
+        CHECK(args2.get<std::string>("baz") == "");
 
         argparse::Namespace args3 = parser.parse_args(_make_vec("baz=1"));
-        REQUIRE(args3.get<bool>("foo") == false);
-        REQUIRE(args3.get<bool>("bar") == true);
-        REQUIRE(args3.get<std::string>("baz") == "1");
+        CHECK(args3.get<bool>("foo") == false);
+        CHECK(args3.get<bool>("bar") == true);
+        CHECK(args3.get<std::string>("baz") == "1");
 
-        REQUIRE_THROWS(parser.parse_args(_make_vec("--foo", "--bar")));
-        REQUIRE_THROWS(parser.parse_args(_make_vec("--foo", "baz=1")));
-        REQUIRE_THROWS(parser.parse_args(_make_vec("--bar", "baz=1")));
+        CHECK_THROWS(parser.parse_args(_make_vec("--foo", "--bar")));
+        CHECK_THROWS(parser.parse_args(_make_vec("--foo", "baz=1")));
+        CHECK_THROWS(parser.parse_args(_make_vec("--bar", "baz=1")));
     }
 
     SECTION("2.2. required=true") {
@@ -72,22 +72,22 @@ TEST_CASE("2. mutual exclusion", "[argument_parser]")
         group.add_argument("--bar").action("store_false");
         group.add_argument("baz=").required(false);
 
-        REQUIRE_THROWS(parser.parse_args(_make_vec()));
+        CHECK_THROWS(parser.parse_args(_make_vec()));
 
         argparse::Namespace args0 = parser.parse_args(_make_vec("--foo"));
-        REQUIRE(args0.get<bool>("foo") == true);
-        REQUIRE(args0.get<bool>("bar") == true);
-        REQUIRE(args0.get<std::string>("baz") == "");
+        CHECK(args0.get<bool>("foo") == true);
+        CHECK(args0.get<bool>("bar") == true);
+        CHECK(args0.get<std::string>("baz") == "");
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("--bar"));
-        REQUIRE(args1.get<bool>("foo") == false);
-        REQUIRE(args1.get<bool>("bar") == false);
-        REQUIRE(args1.get<std::string>("baz") == "");
+        CHECK(args1.get<bool>("foo") == false);
+        CHECK(args1.get<bool>("bar") == false);
+        CHECK(args1.get<std::string>("baz") == "");
 
         argparse::Namespace args2 = parser.parse_args(_make_vec("baz=1"));
-        REQUIRE(args2.get<bool>("foo") == false);
-        REQUIRE(args2.get<bool>("bar") == true);
-        REQUIRE(args2.get<std::string>("baz") == "1");
+        CHECK(args2.get<bool>("foo") == false);
+        CHECK(args2.get<bool>("bar") == true);
+        CHECK(args2.get<std::string>("baz") == "1");
     }
 
     SECTION("2.3. required positional") {
@@ -96,7 +96,7 @@ TEST_CASE("2. mutual exclusion", "[argument_parser]")
         group.add_argument("--bar").action("store_false");
         group.add_argument("baz");
 
-        REQUIRE_THROWS_WITH(parser.parse_args(""), "ValueError: mutually exclusive arguments must be optional");
+        CHECK_THROWS_WITH(parser.parse_args(""), "ValueError: mutually exclusive arguments must be optional");
     }
 
     SECTION("2.4. required operand") {
@@ -105,7 +105,7 @@ TEST_CASE("2. mutual exclusion", "[argument_parser]")
         group.add_argument("--bar").action("store_false");
         group.add_argument("baz=").required(true);
 
-        REQUIRE_THROWS_WITH(parser.parse_args(""), "ValueError: mutually exclusive arguments must be optional");
+        CHECK_THROWS_WITH(parser.parse_args(""), "ValueError: mutually exclusive arguments must be optional");
     }
 
     SECTION("2.5. required optional") {
@@ -113,7 +113,7 @@ TEST_CASE("2. mutual exclusion", "[argument_parser]")
         group.add_argument("--foo").action("store_true").required(true);
         group.add_argument("--bar").action("store_false");
 
-        REQUIRE_THROWS_WITH(parser.parse_args(""), "ValueError: mutually exclusive arguments must be optional");
+        CHECK_THROWS_WITH(parser.parse_args(""), "ValueError: mutually exclusive arguments must be optional");
     }
 }
 
@@ -128,5 +128,5 @@ TEST_CASE("3. argument group with mutual exclusion", "[argument_parser]")
     group.add_argument("--bar").action("store_false");
     group.add_argument("baz=").required(false);
 
-    REQUIRE_NOTHROW(parser.parse_args("--foo").contains("foo"));
+    CHECK_NOTHROW(parser.parse_args("--foo").contains("foo"));
 }

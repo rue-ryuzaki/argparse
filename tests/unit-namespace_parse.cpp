@@ -21,107 +21,107 @@ TEST_CASE("1. namespace", "[argument_parser]")
 
     SECTION("1.1. simple example") {
         argparse::Namespace args0 = parser.parse_args(_make_vec(pos));
-        REQUIRE(args0.get<std::string>("-f") == global_default);
-        REQUIRE(args0.get<std::string>("-b") == local_default);
-        REQUIRE(args0.get<std::string>("--foo") == global_default);
-        REQUIRE(args0.get<std::string>("--bar") == local_default);
-        REQUIRE(args0.get<std::string>("f") == global_default);
-        REQUIRE(args0.get<std::string>("b") == local_default);
-        REQUIRE(args0.get<std::string>("foo") == global_default);
-        REQUIRE(args0.get<std::string>("bar") == local_default);
-        REQUIRE(args0.get<std::string>("pos") == pos);
+        CHECK(args0.get<std::string>("-f") == global_default);
+        CHECK(args0.get<std::string>("-b") == local_default);
+        CHECK(args0.get<std::string>("--foo") == global_default);
+        CHECK(args0.get<std::string>("--bar") == local_default);
+        CHECK(args0.get<std::string>("f") == global_default);
+        CHECK(args0.get<std::string>("b") == local_default);
+        CHECK(args0.get<std::string>("foo") == global_default);
+        CHECK(args0.get<std::string>("bar") == local_default);
+        CHECK(args0.get<std::string>("pos") == pos);
 
         argparse::Namespace args1 = parser.parse_args(_make_vec(pos, "-f", foo));
-        REQUIRE(args1.get<std::string>("-f") == foo);
-        REQUIRE(args1.get<std::string>("-b") == local_default);
-        REQUIRE(args1.get<std::string>("--foo") == foo);
-        REQUIRE(args1.get<std::string>("--bar") == local_default);
-        REQUIRE(args1.get<std::string>("f") == foo);
-        REQUIRE(args1.get<std::string>("b") == local_default);
-        REQUIRE(args1.get<std::string>("foo") == foo);
-        REQUIRE(args1.get<std::string>("bar") == local_default);
-        REQUIRE(args1.get<std::string>("pos") == pos);
+        CHECK(args1.get<std::string>("-f") == foo);
+        CHECK(args1.get<std::string>("-b") == local_default);
+        CHECK(args1.get<std::string>("--foo") == foo);
+        CHECK(args1.get<std::string>("--bar") == local_default);
+        CHECK(args1.get<std::string>("f") == foo);
+        CHECK(args1.get<std::string>("b") == local_default);
+        CHECK(args1.get<std::string>("foo") == foo);
+        CHECK(args1.get<std::string>("bar") == local_default);
+        CHECK(args1.get<std::string>("pos") == pos);
 
         argparse::Namespace args2 = parser.parse_args(_make_vec(foo, "--bar", bar), args1);
-        REQUIRE(args2.get<std::string>("-f") == foo);
-        REQUIRE(args2.get<std::string>("-b") == bar);
-        REQUIRE(args2.get<std::string>("--foo") == foo);
-        REQUIRE(args2.get<std::string>("--bar") == bar);
-        REQUIRE(args2.get<std::string>("f") == foo);
-        REQUIRE(args2.get<std::string>("b") == bar);
-        REQUIRE(args2.get<std::string>("foo") == foo);
-        REQUIRE(args2.get<std::string>("bar") == bar);
-        REQUIRE(args2.get<std::string>("pos") == foo);
+        CHECK(args2.get<std::string>("-f") == foo);
+        CHECK(args2.get<std::string>("-b") == bar);
+        CHECK(args2.get<std::string>("--foo") == foo);
+        CHECK(args2.get<std::string>("--bar") == bar);
+        CHECK(args2.get<std::string>("f") == foo);
+        CHECK(args2.get<std::string>("b") == bar);
+        CHECK(args2.get<std::string>("foo") == foo);
+        CHECK(args2.get<std::string>("bar") == bar);
+        CHECK(args2.get<std::string>("pos") == foo);
 
         argparse::Namespace args3 = parser.parse_args(_make_vec(bar, "--foo", bar, "--bar", bar), args1);
-        REQUIRE(args3.get<std::string>("-f") == bar);
-        REQUIRE(args3.get<std::string>("-b") == bar);
-        REQUIRE(args3.get<std::string>("--foo") == bar);
-        REQUIRE(args3.get<std::string>("--bar") == bar);
-        REQUIRE(args3.get<std::string>("f") == bar);
-        REQUIRE(args3.get<std::string>("b") == bar);
-        REQUIRE(args3.get<std::string>("foo") == bar);
-        REQUIRE(args3.get<std::string>("bar") == bar);
-        REQUIRE(args3.get<std::string>("pos") == bar);
+        CHECK(args3.get<std::string>("-f") == bar);
+        CHECK(args3.get<std::string>("-b") == bar);
+        CHECK(args3.get<std::string>("--foo") == bar);
+        CHECK(args3.get<std::string>("--bar") == bar);
+        CHECK(args3.get<std::string>("f") == bar);
+        CHECK(args3.get<std::string>("b") == bar);
+        CHECK(args3.get<std::string>("foo") == bar);
+        CHECK(args3.get<std::string>("bar") == bar);
+        CHECK(args3.get<std::string>("pos") == bar);
     }
 
     SECTION("1.2. intermixed parsing") {
         argparse::Namespace args1 = parser.parse_args(_make_vec(pos, "-f", foo, "--bar", bar));
-        REQUIRE(args1.get<std::string>("-f") == foo);
-        REQUIRE(args1.get<std::string>("-b") == bar);
-        REQUIRE(args1.get<std::string>("--foo") == foo);
-        REQUIRE(args1.get<std::string>("--bar") == bar);
-        REQUIRE(args1.get<std::string>("f") == foo);
-        REQUIRE(args1.get<std::string>("b") == bar);
-        REQUIRE(args1.get<std::string>("foo") == foo);
-        REQUIRE(args1.get<std::string>("bar") == bar);
-        REQUIRE(args1.get<std::string>("pos") == pos);
+        CHECK(args1.get<std::string>("-f") == foo);
+        CHECK(args1.get<std::string>("-b") == bar);
+        CHECK(args1.get<std::string>("--foo") == foo);
+        CHECK(args1.get<std::string>("--bar") == bar);
+        CHECK(args1.get<std::string>("f") == foo);
+        CHECK(args1.get<std::string>("b") == bar);
+        CHECK(args1.get<std::string>("foo") == foo);
+        CHECK(args1.get<std::string>("bar") == bar);
+        CHECK(args1.get<std::string>("pos") == pos);
 
         std::string baz = "baz";
 
         argparse::Namespace args2 = parser.parse_args(_make_vec(pos, "-f", foo, "--bar", bar));
-        REQUIRE(args2.get<std::string>("-f") == foo);
-        REQUIRE(args2.get<std::string>("-b") == bar);
-        REQUIRE(args2.get<std::string>("--foo") == foo);
-        REQUIRE(args2.get<std::string>("--bar") == bar);
-        REQUIRE(args2.get<std::string>("f") == foo);
-        REQUIRE(args2.get<std::string>("b") == bar);
-        REQUIRE(args2.get<std::string>("foo") == foo);
-        REQUIRE(args2.get<std::string>("bar") == bar);
-        REQUIRE(args2.get<std::string>("pos") == pos);
+        CHECK(args2.get<std::string>("-f") == foo);
+        CHECK(args2.get<std::string>("-b") == bar);
+        CHECK(args2.get<std::string>("--foo") == foo);
+        CHECK(args2.get<std::string>("--bar") == bar);
+        CHECK(args2.get<std::string>("f") == foo);
+        CHECK(args2.get<std::string>("b") == bar);
+        CHECK(args2.get<std::string>("foo") == foo);
+        CHECK(args2.get<std::string>("bar") == bar);
+        CHECK(args2.get<std::string>("pos") == pos);
 
         argparse::ArgumentParser parser2 = argparse::ArgumentParser().exit_on_error(false);
         parser2.add_argument(_make_vec("--baz"));
 
         // if parser2 have arguments in python there are error: AttributeError: 'tuple' object has no attribute 'baz'
-        REQUIRE_THROWS(parser2.parse_args("", parser.parse_known_args(_make_vec(pos, "-f", foo, "--bar", bar))));
-        REQUIRE_THROWS(parser2.parse_args("", parser.parse_known_args(
+        CHECK_THROWS(parser2.parse_args("", parser.parse_known_args(_make_vec(pos, "-f", foo, "--bar", bar))));
+        CHECK_THROWS(parser2.parse_args("", parser.parse_known_args(
                                                 _make_vec(pos, "-f", foo, "--bar", bar, "--baz", baz))));
 
         argparse::Namespace args3 = parser2.parse_args("", args2);
-        REQUIRE(args3.get<std::string>("-f") == foo);
-        REQUIRE(args3.get<std::string>("-b") == bar);
-        REQUIRE(args3.get<std::string>("--foo") == foo);
-        REQUIRE(args3.get<std::string>("--bar") == bar);
-        REQUIRE(args3.get<std::string>("f") == foo);
-        REQUIRE(args3.get<std::string>("b") == bar);
-        REQUIRE(args3.get<std::string>("foo") == foo);
-        REQUIRE(args3.get<std::string>("bar") == bar);
-        REQUIRE(args3.get<std::string>("pos") == pos);
-        REQUIRE(args3.get<std::string>("--baz") == "");
-        REQUIRE(args3.get<std::string>("baz") == "");
+        CHECK(args3.get<std::string>("-f") == foo);
+        CHECK(args3.get<std::string>("-b") == bar);
+        CHECK(args3.get<std::string>("--foo") == foo);
+        CHECK(args3.get<std::string>("--bar") == bar);
+        CHECK(args3.get<std::string>("f") == foo);
+        CHECK(args3.get<std::string>("b") == bar);
+        CHECK(args3.get<std::string>("foo") == foo);
+        CHECK(args3.get<std::string>("bar") == bar);
+        CHECK(args3.get<std::string>("pos") == pos);
+        CHECK(args3.get<std::string>("--baz") == "");
+        CHECK(args3.get<std::string>("baz") == "");
 
         argparse::Namespace args4 = parser2.parse_args(_make_vec("--baz", baz), args2);
-        REQUIRE(args4.get<std::string>("-f") == foo);
-        REQUIRE(args4.get<std::string>("-b") == bar);
-        REQUIRE(args4.get<std::string>("--foo") == foo);
-        REQUIRE(args4.get<std::string>("--bar") == bar);
-        REQUIRE(args4.get<std::string>("f") == foo);
-        REQUIRE(args4.get<std::string>("b") == bar);
-        REQUIRE(args4.get<std::string>("foo") == foo);
-        REQUIRE(args4.get<std::string>("bar") == bar);
-        REQUIRE(args4.get<std::string>("pos") == pos);
-        REQUIRE(args4.get<std::string>("--baz") == baz);
-        REQUIRE(args4.get<std::string>("baz") == baz);
+        CHECK(args4.get<std::string>("-f") == foo);
+        CHECK(args4.get<std::string>("-b") == bar);
+        CHECK(args4.get<std::string>("--foo") == foo);
+        CHECK(args4.get<std::string>("--bar") == bar);
+        CHECK(args4.get<std::string>("f") == foo);
+        CHECK(args4.get<std::string>("b") == bar);
+        CHECK(args4.get<std::string>("foo") == foo);
+        CHECK(args4.get<std::string>("bar") == bar);
+        CHECK(args4.get<std::string>("pos") == pos);
+        CHECK(args4.get<std::string>("--baz") == baz);
+        CHECK(args4.get<std::string>("baz") == baz);
     }
 }

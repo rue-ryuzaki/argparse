@@ -10,16 +10,16 @@ TEST_CASE("1. initization check", "[argument_parser]")
     argparse::ArgumentParser parser = argparse::ArgumentParser();
 
     SECTION("1.1. default values") {
-        REQUIRE(parser.prog() == "untitled");
-        REQUIRE(parser.usage() == "");
-        REQUIRE(parser.description() == "");
-        REQUIRE(parser.epilog() == "");
-        REQUIRE(parser.prefix_chars() == "-");
-        REQUIRE(parser.fromfile_prefix_chars() == "");
-        REQUIRE(parser.argument_default() == "");
-        REQUIRE(parser.add_help() == true);
-        REQUIRE(parser.allow_abbrev() == true);
-        REQUIRE(parser.exit_on_error() == true);
+        CHECK(parser.prog() == "untitled");
+        CHECK(parser.usage() == "");
+        CHECK(parser.description() == "");
+        CHECK(parser.epilog() == "");
+        CHECK(parser.prefix_chars() == "-");
+        CHECK(parser.fromfile_prefix_chars() == "");
+        CHECK(parser.argument_default() == "");
+        CHECK(parser.add_help() == true);
+        CHECK(parser.allow_abbrev() == true);
+        CHECK(parser.exit_on_error() == true);
     }
 
     SECTION("1.2. change values") {
@@ -45,16 +45,16 @@ TEST_CASE("1. initization check", "[argument_parser]")
                 .allow_abbrev(allow_abbrev)
                 .exit_on_error(exit_on_error);
 
-        REQUIRE(parser.prog() == prog);
-        REQUIRE(parser.usage() == usage);
-        REQUIRE(parser.description() == description);
-        REQUIRE(parser.epilog() == epilog);
-        REQUIRE(parser.prefix_chars() == prefix_chars);
-        REQUIRE(parser.fromfile_prefix_chars() == fromfile_prefix_chars);
-        REQUIRE(parser.argument_default() == argument_default);
-        REQUIRE(parser.add_help() == add_help);
-        REQUIRE(parser.allow_abbrev() == allow_abbrev);
-        REQUIRE(parser.exit_on_error() == exit_on_error);
+        CHECK(parser.prog() == prog);
+        CHECK(parser.usage() == usage);
+        CHECK(parser.description() == description);
+        CHECK(parser.epilog() == epilog);
+        CHECK(parser.prefix_chars() == prefix_chars);
+        CHECK(parser.fromfile_prefix_chars() == fromfile_prefix_chars);
+        CHECK(parser.argument_default() == argument_default);
+        CHECK(parser.add_help() == add_help);
+        CHECK(parser.allow_abbrev() == allow_abbrev);
+        CHECK(parser.exit_on_error() == exit_on_error);
 
         // check properties, which can be cleared
         parser.usage("")
@@ -63,16 +63,16 @@ TEST_CASE("1. initization check", "[argument_parser]")
                 .fromfile_prefix_chars("")
                 .argument_default("");
 
-        REQUIRE_FALSE(parser.usage() == usage);
-        REQUIRE_FALSE(parser.description() == description);
-        REQUIRE_FALSE(parser.epilog() == epilog);
-        REQUIRE_FALSE(parser.fromfile_prefix_chars() == fromfile_prefix_chars);
-        REQUIRE_FALSE(parser.argument_default() == argument_default);
+        CHECK_FALSE(parser.usage() == usage);
+        CHECK_FALSE(parser.description() == description);
+        CHECK_FALSE(parser.epilog() == epilog);
+        CHECK_FALSE(parser.fromfile_prefix_chars() == fromfile_prefix_chars);
+        CHECK_FALSE(parser.argument_default() == argument_default);
 
         // check properties, which can't be cleared
         parser.prog("").prefix_chars("");
 
-        REQUIRE(parser.prog() == prog);
-        REQUIRE(parser.prefix_chars() == prefix_chars);
+        CHECK(parser.prog() == prog);
+        CHECK(parser.prefix_chars() == prefix_chars);
     }
 }

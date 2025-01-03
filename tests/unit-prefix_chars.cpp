@@ -14,14 +14,14 @@ TEST_CASE("1. prefix chars '='", "[argument_parser]")
         parser.add_argument("==bar").action("store_false").help("bar help");
 
         argparse::Namespace args0 = parser.parse_args(_make_vec());
-        REQUIRE(args0.get<bool>("f") == false);
-        REQUIRE(args0.get<bool>("foo") == false);
-        REQUIRE(args0.get<bool>("bar") == true);
+        CHECK(args0.get<bool>("f") == false);
+        CHECK(args0.get<bool>("foo") == false);
+        CHECK(args0.get<bool>("bar") == true);
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("=f", "==bar"));
-        REQUIRE(args1.get<bool>("f") == true);
-        REQUIRE(args1.get<bool>("foo") == true);
-        REQUIRE(args1.get<bool>("bar") == false);
+        CHECK(args1.get<bool>("f") == true);
+        CHECK(args1.get<bool>("foo") == true);
+        CHECK(args1.get<bool>("bar") == false);
     }
 
     SECTION("1.2. with store actions") {
@@ -29,13 +29,13 @@ TEST_CASE("1. prefix chars '='", "[argument_parser]")
         parser.add_argument("==bar").action("store").help("bar help");
 
         argparse::Namespace args0 = parser.parse_args(_make_vec());
-        REQUIRE(args0.get<std::string>("f") == "");
-        REQUIRE(args0.get<std::string>("foo") == "");
-        REQUIRE(args0.get<std::string>("bar") == "");
+        CHECK(args0.get<std::string>("f") == "");
+        CHECK(args0.get<std::string>("foo") == "");
+        CHECK(args0.get<std::string>("bar") == "");
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("=f", "foo", "==bar=bar"));
-        REQUIRE(args1.get<std::string>("f") == "foo");
-        REQUIRE(args1.get<std::string>("foo") == "foo");
-        REQUIRE(args1.get<std::string>("bar") == "bar");
+        CHECK(args1.get<std::string>("f") == "foo");
+        CHECK(args1.get<std::string>("foo") == "foo");
+        CHECK(args1.get<std::string>("bar") == "bar");
     }
 }

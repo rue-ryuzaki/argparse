@@ -9,19 +9,19 @@
 void
 parser_a_handle_check(argparse::Namespace const& args)
 {
-    REQUIRE(args.exists("foo") == false);
-    REQUIRE(args.exists("cmd") == true);
-    REQUIRE(args.exists("bar") == true);
-    REQUIRE(args.exists("baz") == false);
+    CHECK(args.exists("foo") == false);
+    CHECK(args.exists("cmd") == true);
+    CHECK(args.exists("bar") == true);
+    CHECK(args.exists("baz") == false);
 }
 
 void
 parser_b_handle_check(argparse::Namespace const& args)
 {
-    REQUIRE(args.exists("foo") == false);
-    REQUIRE(args.exists("cmd") == true);
-    REQUIRE(args.exists("bar") == false);
-    REQUIRE(args.exists("baz") == true);
+    CHECK(args.exists("foo") == false);
+    CHECK(args.exists("cmd") == true);
+    CHECK(args.exists("bar") == false);
+    CHECK(args.exists("baz") == true);
 }
 #endif  // C++11-
 
@@ -41,30 +41,30 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         parser_b.add_argument("--baz").choices("XYZ").help("baz help");
 
         argparse::Namespace args0 = parser.parse_args(_make_vec("--foo"));
-        REQUIRE(args0.exists("cmd") == false);
-        REQUIRE(args0.exists("bar") == false);
-        REQUIRE(args0.exists("baz") == false);
-        REQUIRE(args0.get<bool>("foo") == true);
+        CHECK(args0.exists("cmd") == false);
+        CHECK(args0.exists("bar") == false);
+        CHECK(args0.exists("baz") == false);
+        CHECK(args0.get<bool>("foo") == true);
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("a", "12"));
-        REQUIRE(args1.exists("cmd") == true);
-        REQUIRE(args1.exists("bar") == true);
-        REQUIRE(args1.exists("baz") == false);
-        REQUIRE(args1.get<uint32_t>("bar") == 12);
-        REQUIRE(args1.get<bool>("foo") == false);
-        REQUIRE(args1.get<std::string>("cmd") == "a");
+        CHECK(args1.exists("cmd") == true);
+        CHECK(args1.exists("bar") == true);
+        CHECK(args1.exists("baz") == false);
+        CHECK(args1.get<uint32_t>("bar") == 12);
+        CHECK(args1.get<bool>("foo") == false);
+        CHECK(args1.get<std::string>("cmd") == "a");
 
         argparse::Namespace args2 = parser.parse_args(_make_vec("--foo", "b", "--baz", "Z"));
-        REQUIRE(args2.exists("cmd") == true);
-        REQUIRE(args2.exists("bar") == false);
-        REQUIRE(args2.exists("baz") == true);
-        REQUIRE(args2.get<bool>("foo") == true);
-        REQUIRE(args2.get<std::string>("baz") == "Z");
-        REQUIRE(args2.get<std::string>("cmd") == "b");
+        CHECK(args2.exists("cmd") == true);
+        CHECK(args2.exists("bar") == false);
+        CHECK(args2.exists("baz") == true);
+        CHECK(args2.get<bool>("foo") == true);
+        CHECK(args2.get<std::string>("baz") == "Z");
+        CHECK(args2.get<std::string>("cmd") == "b");
 
-        REQUIRE_THROWS(parser.parse_args(_make_vec("a", "12", "--foo")));
-        REQUIRE_THROWS(parser.parse_args(_make_vec("b", "--foo")));
-        REQUIRE_THROWS(parser.parse_args(_make_vec("--foo", "a", "12", "b", "--baz", "Z")));
+        CHECK_THROWS(parser.parse_args(_make_vec("a", "12", "--foo")));
+        CHECK_THROWS(parser.parse_args(_make_vec("b", "--foo")));
+        CHECK_THROWS(parser.parse_args(_make_vec("--foo", "a", "12", "b", "--baz", "Z")));
     }
 
     SECTION("1.2. main parser with store positional arguments") {
@@ -79,59 +79,59 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         argparse::ArgumentParser& parser_b = subparsers.add_parser("b").help("b help");
         parser_b.add_argument("--baz").choices(_make_vec("X", "Y", "Z")).help("baz help");
 
-        REQUIRE_THROWS(parser.parse_args(_make_vec()));
+        CHECK_THROWS(parser.parse_args(_make_vec()));
 
         argparse::Namespace args0 = parser.parse_args(_make_vec("boo", "--foo"));
-        REQUIRE(args0.exists("cmd") == false);
-        REQUIRE(args0.exists("bar") == false);
-        REQUIRE(args0.exists("baz") == false);
-        REQUIRE(args0.get<std::string>("boo") == "boo");
-        REQUIRE(args0.get<bool>("foo") == true);
+        CHECK(args0.exists("cmd") == false);
+        CHECK(args0.exists("bar") == false);
+        CHECK(args0.exists("baz") == false);
+        CHECK(args0.get<std::string>("boo") == "boo");
+        CHECK(args0.get<bool>("foo") == true);
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("boo", "--foo", "a", "12"));
-        REQUIRE(args1.exists("cmd") == true);
-        REQUIRE(args1.exists("bar") == true);
-        REQUIRE(args1.exists("baz") == false);
-        REQUIRE(args1.get<std::string>("boo") == "boo");
-        REQUIRE(args1.get<uint32_t>("bar") == 12);
-        REQUIRE(args1.get<bool>("foo") == true);
-        REQUIRE(args1.get<std::string>("cmd") == "a");
+        CHECK(args1.exists("cmd") == true);
+        CHECK(args1.exists("bar") == true);
+        CHECK(args1.exists("baz") == false);
+        CHECK(args1.get<std::string>("boo") == "boo");
+        CHECK(args1.get<uint32_t>("bar") == 12);
+        CHECK(args1.get<bool>("foo") == true);
+        CHECK(args1.get<std::string>("cmd") == "a");
 
         argparse::Namespace args2 = parser.parse_args(_make_vec("boo", "--foo", "b", "--baz", "Z"));
-        REQUIRE(args2.exists("cmd") == true);
-        REQUIRE(args2.exists("bar") == false);
-        REQUIRE(args2.exists("baz") == true);
-        REQUIRE(args2.get<std::string>("boo") == "boo");
-        REQUIRE(args2.get<bool>("foo") == true);
-        REQUIRE(args2.get<std::string>("baz") == "Z");
-        REQUIRE(args2.get<std::string>("cmd") == "b");
+        CHECK(args2.exists("cmd") == true);
+        CHECK(args2.exists("bar") == false);
+        CHECK(args2.exists("baz") == true);
+        CHECK(args2.get<std::string>("boo") == "boo");
+        CHECK(args2.get<bool>("foo") == true);
+        CHECK(args2.get<std::string>("baz") == "Z");
+        CHECK(args2.get<std::string>("cmd") == "b");
 
         argparse::Namespace args3 = parser.parse_args(_make_vec("boo", "a", "12"));
-        REQUIRE(args3.exists("cmd") == true);
-        REQUIRE(args3.exists("bar") == true);
-        REQUIRE(args3.exists("baz") == false);
-        REQUIRE(args3.get<std::string>("boo") == "boo");
-        REQUIRE(args3.get<uint32_t>("bar") == 12);
-        REQUIRE(args3.get<bool>("foo") == false);
-        REQUIRE(args3.get<std::string>("cmd") == "a");
+        CHECK(args3.exists("cmd") == true);
+        CHECK(args3.exists("bar") == true);
+        CHECK(args3.exists("baz") == false);
+        CHECK(args3.get<std::string>("boo") == "boo");
+        CHECK(args3.get<uint32_t>("bar") == 12);
+        CHECK(args3.get<bool>("foo") == false);
+        CHECK(args3.get<std::string>("cmd") == "a");
 
         argparse::Namespace args4 = parser.parse_args(_make_vec("--foo", "boo", "a", "12"));
-        REQUIRE(args4.exists("cmd") == true);
-        REQUIRE(args4.exists("bar") == true);
-        REQUIRE(args4.exists("baz") == false);
-        REQUIRE(args4.get<std::string>("boo") == "boo");
-        REQUIRE(args4.get<uint32_t>("bar") == 12);
-        REQUIRE(args4.get<bool>("foo") == true);
-        REQUIRE(args4.get<std::string>("cmd") == "a");
+        CHECK(args4.exists("cmd") == true);
+        CHECK(args4.exists("bar") == true);
+        CHECK(args4.exists("baz") == false);
+        CHECK(args4.get<std::string>("boo") == "boo");
+        CHECK(args4.get<uint32_t>("bar") == 12);
+        CHECK(args4.get<bool>("foo") == true);
+        CHECK(args4.get<std::string>("cmd") == "a");
 
         argparse::Namespace args5 = parser.parse_args(_make_vec("--foo", "boo", "b", "--baz", "Z"));
-        REQUIRE(args5.exists("cmd") == true);
-        REQUIRE(args5.exists("bar") == false);
-        REQUIRE(args5.exists("baz") == true);
-        REQUIRE(args5.get<std::string>("boo") == "boo");
-        REQUIRE(args5.get<bool>("foo") == true);
-        REQUIRE(args5.get<std::string>("baz") == "Z");
-        REQUIRE(args5.get<std::string>("cmd") == "b");
+        CHECK(args5.exists("cmd") == true);
+        CHECK(args5.exists("bar") == false);
+        CHECK(args5.exists("baz") == true);
+        CHECK(args5.get<std::string>("boo") == "boo");
+        CHECK(args5.get<bool>("foo") == true);
+        CHECK(args5.get<std::string>("baz") == "Z");
+        CHECK(args5.get<std::string>("cmd") == "b");
     }
 
     SECTION("1.3. main parser with store_const positional arguments") {
@@ -152,57 +152,57 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         parser.add_argument("coo").action("store_const").const_value(const_value).help("coo help");
 
         argparse::Namespace args0 = parser.parse_args(_make_vec("--foo"));
-        REQUIRE(args0.exists("cmd") == false);
-        REQUIRE(args0.exists("bar") == false);
-        REQUIRE(args0.exists("baz") == false);
-        REQUIRE(args0.get<bool>("boo") == true);
-        REQUIRE(args0.get<bool>("doo") == false);
-        REQUIRE(args0.get<std::string>("coo") == const_value);
-        REQUIRE(args0.get<bool>("foo") == true);
+        CHECK(args0.exists("cmd") == false);
+        CHECK(args0.exists("bar") == false);
+        CHECK(args0.exists("baz") == false);
+        CHECK(args0.get<bool>("boo") == true);
+        CHECK(args0.get<bool>("doo") == false);
+        CHECK(args0.get<std::string>("coo") == const_value);
+        CHECK(args0.get<bool>("foo") == true);
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("--foo", "a", "12"));
-        REQUIRE(args1.exists("cmd") == true);
-        REQUIRE(args1.exists("bar") == true);
-        REQUIRE(args1.exists("baz") == false);
-        REQUIRE(args1.get<bool>("boo") == true);
-        REQUIRE(args1.get<bool>("doo") == false);
-        REQUIRE(args1.get<std::string>("coo") == const_value);
-        REQUIRE(args1.get<uint32_t>("bar") == 12);
-        REQUIRE(args1.get<bool>("foo") == true);
-        REQUIRE(args1.get<std::string>("cmd") == "a");
+        CHECK(args1.exists("cmd") == true);
+        CHECK(args1.exists("bar") == true);
+        CHECK(args1.exists("baz") == false);
+        CHECK(args1.get<bool>("boo") == true);
+        CHECK(args1.get<bool>("doo") == false);
+        CHECK(args1.get<std::string>("coo") == const_value);
+        CHECK(args1.get<uint32_t>("bar") == 12);
+        CHECK(args1.get<bool>("foo") == true);
+        CHECK(args1.get<std::string>("cmd") == "a");
 
         argparse::Namespace args2 = parser.parse_args(_make_vec("--foo", "b", "--baz", "Z"));
-        REQUIRE(args2.exists("cmd") == true);
-        REQUIRE(args2.exists("bar") == false);
-        REQUIRE(args2.exists("baz") == true);
-        REQUIRE(args2.get<bool>("boo") == true);
-        REQUIRE(args2.get<bool>("doo") == false);
-        REQUIRE(args2.get<std::string>("coo") == const_value);
-        REQUIRE(args2.get<bool>("foo") == true);
-        REQUIRE(args2.get<std::string>("baz") == "Z");
-        REQUIRE(args2.get<std::string>("cmd") == "b");
+        CHECK(args2.exists("cmd") == true);
+        CHECK(args2.exists("bar") == false);
+        CHECK(args2.exists("baz") == true);
+        CHECK(args2.get<bool>("boo") == true);
+        CHECK(args2.get<bool>("doo") == false);
+        CHECK(args2.get<std::string>("coo") == const_value);
+        CHECK(args2.get<bool>("foo") == true);
+        CHECK(args2.get<std::string>("baz") == "Z");
+        CHECK(args2.get<std::string>("cmd") == "b");
 
         argparse::Namespace args3 = parser.parse_args(_make_vec("a", "12"));
-        REQUIRE(args3.exists("cmd") == true);
-        REQUIRE(args3.exists("bar") == true);
-        REQUIRE(args3.exists("baz") == false);
-        REQUIRE(args3.get<bool>("boo") == true);
-        REQUIRE(args3.get<bool>("doo") == false);
-        REQUIRE(args3.get<std::string>("coo") == const_value);
-        REQUIRE(args3.get<uint32_t>("bar") == 12);
-        REQUIRE(args3.get<bool>("foo") == false);
-        REQUIRE(args3.get<std::string>("cmd") == "a");
+        CHECK(args3.exists("cmd") == true);
+        CHECK(args3.exists("bar") == true);
+        CHECK(args3.exists("baz") == false);
+        CHECK(args3.get<bool>("boo") == true);
+        CHECK(args3.get<bool>("doo") == false);
+        CHECK(args3.get<std::string>("coo") == const_value);
+        CHECK(args3.get<uint32_t>("bar") == 12);
+        CHECK(args3.get<bool>("foo") == false);
+        CHECK(args3.get<std::string>("cmd") == "a");
 
         argparse::Namespace args4 = parser.parse_args(_make_vec("--foo", "b", "--baz", "Z"));
-        REQUIRE(args4.exists("cmd") == true);
-        REQUIRE(args4.exists("bar") == false);
-        REQUIRE(args4.exists("baz") == true);
-        REQUIRE(args4.get<bool>("boo") == true);
-        REQUIRE(args4.get<bool>("doo") == false);
-        REQUIRE(args4.get<std::string>("coo") == const_value);
-        REQUIRE(args4.get<bool>("foo") == true);
-        REQUIRE(args4.get<std::string>("baz") == "Z");
-        REQUIRE(args4.get<std::string>("cmd") == "b");
+        CHECK(args4.exists("cmd") == true);
+        CHECK(args4.exists("bar") == false);
+        CHECK(args4.exists("baz") == true);
+        CHECK(args4.get<bool>("boo") == true);
+        CHECK(args4.get<bool>("doo") == false);
+        CHECK(args4.get<std::string>("coo") == const_value);
+        CHECK(args4.get<bool>("foo") == true);
+        CHECK(args4.get<std::string>("baz") == "Z");
+        CHECK(args4.get<std::string>("cmd") == "b");
     }
 
     SECTION("1.4. main parser with negative number options present") {
@@ -219,35 +219,35 @@ TEST_CASE("1. subparsers", "[argument_parser]")
 
         // so -1 is an option in main
         argparse::Namespace args0 = parser.parse_args(_make_vec("-1", "x"));
-        REQUIRE(args0.exists("cmd") == false);
-        REQUIRE(args0.exists("bar") == false);
-        REQUIRE(args0.exists("baz") == false);
-        REQUIRE(args0.get<std::string>("one") == "x");
-        REQUIRE(args0.get<bool>("foo") == false);
+        CHECK(args0.exists("cmd") == false);
+        CHECK(args0.exists("bar") == false);
+        CHECK(args0.exists("baz") == false);
+        CHECK(args0.get<std::string>("one") == "x");
+        CHECK(args0.get<bool>("foo") == false);
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("a", "-1"));
-        REQUIRE(args1.exists("cmd") == true);
-        REQUIRE(args1.exists("bar") == true);
-        REQUIRE(args1.exists("baz") == false);
-        REQUIRE(args1.get<std::string>("one") == "");
-        REQUIRE(args1.get<int32_t>("bar") == -1);
-        REQUIRE(args1.get<bool>("foo") == false);
-        REQUIRE(args1.get<std::string>("cmd") == "a");
+        CHECK(args1.exists("cmd") == true);
+        CHECK(args1.exists("bar") == true);
+        CHECK(args1.exists("baz") == false);
+        CHECK(args1.get<std::string>("one") == "");
+        CHECK(args1.get<int32_t>("bar") == -1);
+        CHECK(args1.get<bool>("foo") == false);
+        CHECK(args1.get<std::string>("cmd") == "a");
 
         // so -2 is an option in main
-        REQUIRE_THROWS(parser.parse_args(_make_vec("-2")));
+        CHECK_THROWS(parser.parse_args(_make_vec("-2")));
 
         argparse::Namespace args2 = parser.parse_args(_make_vec("--foo", "a", "-2"));
-        REQUIRE(args2.exists("cmd") == true);
-        REQUIRE(args2.exists("bar") == true);
-        REQUIRE(args2.exists("baz") == false);
-        REQUIRE(args2.get<std::string>("one") == "");
-        REQUIRE(args2.get<int32_t>("bar") == -2);
-        REQUIRE(args2.get<bool>("foo") == true);
-        REQUIRE(args2.get<std::string>("cmd") == "a");
+        CHECK(args2.exists("cmd") == true);
+        CHECK(args2.exists("bar") == true);
+        CHECK(args2.exists("baz") == false);
+        CHECK(args2.get<std::string>("one") == "");
+        CHECK(args2.get<int32_t>("bar") == -2);
+        CHECK(args2.get<bool>("foo") == true);
+        CHECK(args2.get<std::string>("cmd") == "a");
 
         // so both -1s are options in main
-        REQUIRE_THROWS(parser.parse_args(_make_vec("-1", "-1")));
+        CHECK_THROWS(parser.parse_args(_make_vec("-1", "-1")));
     }
 
     SECTION("1.5. subparsers with negative number options present") {
@@ -265,27 +265,27 @@ TEST_CASE("1. subparsers", "[argument_parser]")
 
         // so -1 is an option in subparsers
         argparse::Namespace args0 = parser.parse_args(_make_vec("--boo", "-1", "a", "-1", "x", "1"));
-        REQUIRE(args0.exists("bar") == true);
-        REQUIRE(args0.exists("baz") == false);
-        REQUIRE(args0.get<std::string>("one") == "x");
-        REQUIRE(args0.get<std::string>("boo") == "-1");
-        REQUIRE(args0.get<int32_t>("bar") == 1);
-        REQUIRE(args0.get<bool>("foo") == false);
-        REQUIRE(args0.get<std::string>("cmd") == "a");
+        CHECK(args0.exists("bar") == true);
+        CHECK(args0.exists("baz") == false);
+        CHECK(args0.get<std::string>("one") == "x");
+        CHECK(args0.get<std::string>("boo") == "-1");
+        CHECK(args0.get<int32_t>("bar") == 1);
+        CHECK(args0.get<bool>("foo") == false);
+        CHECK(args0.get<std::string>("cmd") == "a");
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("a", "-1", "x", "1"));
-        REQUIRE(args1.exists("bar") == true);
-        REQUIRE(args1.exists("baz") == false);
-        REQUIRE(args1.get<std::string>("one") == "x");
-        REQUIRE(args1.get<std::string>("boo") == "");
-        REQUIRE(args1.get<int32_t>("bar") == 1);
-        REQUIRE(args1.get<bool>("foo") == false);
-        REQUIRE(args1.get<std::string>("cmd") == "a");
+        CHECK(args1.exists("bar") == true);
+        CHECK(args1.exists("baz") == false);
+        CHECK(args1.get<std::string>("one") == "x");
+        CHECK(args1.get<std::string>("boo") == "");
+        CHECK(args1.get<int32_t>("bar") == 1);
+        CHECK(args1.get<bool>("foo") == false);
+        CHECK(args1.get<std::string>("cmd") == "a");
 
         // so -2 is an option in subparsers
-        REQUIRE_THROWS(parser.parse_args(_make_vec("a", "-1", "x", "-2")));
+        CHECK_THROWS(parser.parse_args(_make_vec("a", "-1", "x", "-2")));
         // so both -1s are options in subparsers
-        REQUIRE_THROWS(parser.parse_args(_make_vec("a", "-1", "-1")));
+        CHECK_THROWS(parser.parse_args(_make_vec("a", "-1", "-1")));
     }
 
     SECTION("1.6. subparsers required=true") {
@@ -300,8 +300,8 @@ TEST_CASE("1. subparsers", "[argument_parser]")
         argparse::ArgumentParser& parser_b = subparsers.add_parser("b").help("b help");
         parser_b.add_argument("--baz").choices("XYZ").help("baz help");
 
-        REQUIRE_THROWS(parser.parse_args(_make_vec()));
-        REQUIRE_THROWS(parser.parse_args(_make_vec("--foo")));
+        CHECK_THROWS(parser.parse_args(_make_vec()));
+        CHECK_THROWS(parser.parse_args(_make_vec("--foo")));
     }
 
     SECTION("1.7. subparsers namespace handle") {
@@ -313,31 +313,31 @@ TEST_CASE("1. subparsers", "[argument_parser]")
 #ifdef ARGPARSE_CXX_11
         parser_a.handle([] (argparse::Namespace const& args)
         {
-            REQUIRE(args.exists("foo") == false);
-            REQUIRE(args.exists("cmd") == true);
-            REQUIRE(args.exists("bar") == true);
-            REQUIRE(args.exists("baz") == false);
+            CHECK(args.exists("foo") == false);
+            CHECK(args.exists("cmd") == true);
+            CHECK(args.exists("bar") == true);
+            CHECK(args.exists("baz") == false);
         });
 #else
         parser_a.handle(&parser_a_handle_check);
 #endif  // C++11+
         parser_a.add_argument("bar").help("bar help");
-        REQUIRE(subparsers.parser_names().size() == 1);
+        CHECK(subparsers.parser_names().size() == 1);
 
         argparse::ArgumentParser& parser_b = subparsers.add_parser("b").help("b help");
 #ifdef ARGPARSE_CXX_11
         parser_b.handle([] (argparse::Namespace const& args)
         {
-             REQUIRE(args.exists("foo") == false);
-             REQUIRE(args.exists("cmd") == true);
-             REQUIRE(args.exists("bar") == false);
-             REQUIRE(args.exists("baz") == true);
+             CHECK(args.exists("foo") == false);
+             CHECK(args.exists("cmd") == true);
+             CHECK(args.exists("bar") == false);
+             CHECK(args.exists("baz") == true);
         });
 #else
         parser_b.handle(&parser_b_handle_check);
 #endif  // C++11+
         parser_b.add_argument("--baz").choices("XYZ").help("baz help");
-        REQUIRE(subparsers.parser_names().size() == 2);
+        CHECK(subparsers.parser_names().size() == 2);
 
         parser.parse_args(_make_vec("--foo"));
         parser.parse_args(_make_vec("a", "12"));

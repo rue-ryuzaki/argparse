@@ -23,42 +23,42 @@ TEST_CASE("1. argument actions", "[argument]")
         parser.add_argument("--count").action(argparse::count);
         parser.add_argument("--extend").action(argparse::extend);
 
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument("--help").action(argparse::help)));
+        CHECK_THROWS(parser.add_argument(argparse::Argument("--help").action(argparse::help)));
         parser.add_argument(argparse::Argument("--my_help").action(argparse::help));
         parser.add_argument(argparse::Argument("--version").action(argparse::version));
 
         // no args
         argparse::Namespace args1 = parser.parse_args(_make_vec());
-        REQUIRE(args1.get<std::string>("--store") == "");
-        REQUIRE(args1.get<std::string>("--store_const") == "");
-        REQUIRE(args1.get<bool>("--store_true") == false);
-        REQUIRE(args1.get<bool>("--store_false") == true);
-        REQUIRE(args1.get<std::string>("--append") == "");
-        REQUIRE(args1.get<std::string>("--append_const") == "");
-        REQUIRE(args1.get<std::size_t>("--count") == 0);
-        REQUIRE(args1.get<std::string>("--extend") == "");
-        REQUIRE(args1.get<std::vector<std::string> >("--store").size() == 0);
-        REQUIRE(args1.get<std::vector<std::string> >("--append").size() == 0);
-        REQUIRE(args1.get<std::vector<std::string> >("--append_const").size() == 0);
-        REQUIRE(args1.get<std::vector<std::string> >("--extend").size() == 0);
+        CHECK(args1.get<std::string>("--store") == "");
+        CHECK(args1.get<std::string>("--store_const") == "");
+        CHECK(args1.get<bool>("--store_true") == false);
+        CHECK(args1.get<bool>("--store_false") == true);
+        CHECK(args1.get<std::string>("--append") == "");
+        CHECK(args1.get<std::string>("--append_const") == "");
+        CHECK(args1.get<std::size_t>("--count") == 0);
+        CHECK(args1.get<std::string>("--extend") == "");
+        CHECK(args1.get<std::vector<std::string> >("--store").size() == 0);
+        CHECK(args1.get<std::vector<std::string> >("--append").size() == 0);
+        CHECK(args1.get<std::vector<std::string> >("--append_const").size() == 0);
+        CHECK(args1.get<std::vector<std::string> >("--extend").size() == 0);
 
         // all args
         argparse::Namespace args2
                 = parser.parse_args(
                       _make_vec("--store", new_value, "--store_const", "--store_true", "--store_false",
                                 "--append", new_value, "--append_const", "--count", "--extend", new_value));
-        REQUIRE(args2.get<std::string>("--store") == new_value);
-        REQUIRE(args2.get<std::string>("--store_const") == const_value);
-        REQUIRE(args2.get<bool>("--store_true") == true);
-        REQUIRE(args2.get<bool>("--store_false") == false);
-        REQUIRE(args2.get<std::string>("--append") == new_value);  // return array value
-        REQUIRE(args2.get<std::string>("--append_const") == const_value);  // return array value
-        REQUIRE(args2.get<std::size_t>("--count") == 1);
-        REQUIRE(args2.get<std::string>("--extend") == new_value);  // return array value
-        REQUIRE(args2.get<std::vector<std::string> >("--store").size() == 1);
-        REQUIRE(args2.get<std::vector<std::string> >("--append").size() == 1);
-        REQUIRE(args2.get<std::vector<std::string> >("--append_const").size() == 1);
-        REQUIRE(args2.get<std::vector<std::string> >("--extend").size() == 1);
+        CHECK(args2.get<std::string>("--store") == new_value);
+        CHECK(args2.get<std::string>("--store_const") == const_value);
+        CHECK(args2.get<bool>("--store_true") == true);
+        CHECK(args2.get<bool>("--store_false") == false);
+        CHECK(args2.get<std::string>("--append") == new_value);  // return array value
+        CHECK(args2.get<std::string>("--append_const") == const_value);  // return array value
+        CHECK(args2.get<std::size_t>("--count") == 1);
+        CHECK(args2.get<std::string>("--extend") == new_value);  // return array value
+        CHECK(args2.get<std::vector<std::string> >("--store").size() == 1);
+        CHECK(args2.get<std::vector<std::string> >("--append").size() == 1);
+        CHECK(args2.get<std::vector<std::string> >("--append_const").size() == 1);
+        CHECK(args2.get<std::vector<std::string> >("--extend").size() == 1);
     }
 
     SECTION("1.2. positional arguments") {
@@ -73,29 +73,29 @@ TEST_CASE("1. argument actions", "[argument]")
         parser.add_argument("count").action(argparse::count);
         parser.add_argument("extend").action(argparse::extend);
 
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument(_make_vec("required_true")).required(true)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument(_make_vec("required_false")).required(false)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument(_make_vec("dest")).dest("dest")));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument(_make_vec("help")).action(argparse::help)));
-        REQUIRE_THROWS(parser.add_argument(argparse::Argument(_make_vec("version")).action(argparse::version)));
+        CHECK_THROWS(parser.add_argument(argparse::Argument("required_true").required(true)));
+        CHECK_THROWS(parser.add_argument(argparse::Argument("required_false").required(false)));
+        CHECK_THROWS(parser.add_argument(argparse::Argument("dest").dest("dest")));
+        CHECK_THROWS(parser.add_argument(argparse::Argument("help").action(argparse::help)));
+        CHECK_THROWS(parser.add_argument(argparse::Argument("version").action(argparse::version)));
 
-        REQUIRE_THROWS(parser.parse_args(_make_vec()));
-        REQUIRE_THROWS(parser.parse_args(_make_vec(new_value)));
-        REQUIRE_THROWS(parser.parse_args(_make_vec(new_value, new_value)));
+        CHECK_THROWS(parser.parse_args(_make_vec()));
+        CHECK_THROWS(parser.parse_args(_make_vec(new_value)));
+        CHECK_THROWS(parser.parse_args(_make_vec(new_value, new_value)));
 
         argparse::Namespace args = parser.parse_args(_make_vec(new_value, new_value, new_value));
-        REQUIRE(args.get<std::string>("store") == new_value);
-        REQUIRE(args.get<std::string>("store_const") == const_value);
-        REQUIRE(args.get<bool>("store_true") == true);
-        REQUIRE(args.get<bool>("store_false") == false);
-        REQUIRE(args.get<std::string>("append") == new_value);  // return array value
-        REQUIRE(args.get<std::string>("append_const") == const_value);  // return array value
-        REQUIRE(args.get<std::size_t>("count") == 1);
-        REQUIRE(args.get<std::string>("extend") == new_value);  // return array value
-        REQUIRE(args.get<std::vector<std::string> >("store").size() == 1);
-        REQUIRE(args.get<std::vector<std::string> >("append").size() == 1);
-        REQUIRE(args.get<std::vector<std::string> >("append_const").size() == 1);
-        REQUIRE(args.get<std::vector<std::string> >("extend").size() == 1);
+        CHECK(args.get<std::string>("store") == new_value);
+        CHECK(args.get<std::string>("store_const") == const_value);
+        CHECK(args.get<bool>("store_true") == true);
+        CHECK(args.get<bool>("store_false") == false);
+        CHECK(args.get<std::string>("append") == new_value);  // return array value
+        CHECK(args.get<std::string>("append_const") == const_value);  // return array value
+        CHECK(args.get<std::size_t>("count") == 1);
+        CHECK(args.get<std::string>("extend") == new_value);  // return array value
+        CHECK(args.get<std::vector<std::string> >("store").size() == 1);
+        CHECK(args.get<std::vector<std::string> >("append").size() == 1);
+        CHECK(args.get<std::vector<std::string> >("append_const").size() == 1);
+        CHECK(args.get<std::vector<std::string> >("extend").size() == 1);
     }
 
     SECTION("1.3. BooleanOptionalAction example") {
@@ -105,27 +105,27 @@ TEST_CASE("1. argument actions", "[argument]")
 
         parser.add_argument("--foo").action(argparse::BooleanOptionalAction).default_value(default_value);
 
-        REQUIRE(parser.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
+        CHECK(parser.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
 
         // no args -> empty or default value
         argparse::Namespace args0 = parser.parse_args();
 
-        REQUIRE(args0.get<std::string>("foo") == default_value);
-        REQUIRE(args0.to_string("foo") == default_value);
+        CHECK(args0.get<std::string>("foo") == default_value);
+        CHECK(args0.to_string("foo") == default_value);
 
         // set --foo -> foo = true
         argparse::Namespace args1 = parser.parse_args("--foo");
 
-        REQUIRE(args1.get<std::string>("foo") == "1");
-        REQUIRE(args1.get<bool>("foo") == true);
-        REQUIRE(args1.to_string("foo") == "true");
+        CHECK(args1.get<std::string>("foo") == "1");
+        CHECK(args1.get<bool>("foo") == true);
+        CHECK(args1.to_string("foo") == "true");
 
         // set --no-foo -> foo = false
         argparse::Namespace args2 = parser.parse_args("--no-foo");
 
-        REQUIRE(args2.get<std::string>("foo") == "");
-        REQUIRE(args2.get<bool>("foo") == false);
-        REQUIRE(args2.to_string("foo") == "false");
+        CHECK(args2.get<std::string>("foo") == "");
+        CHECK(args2.get<bool>("foo") == false);
+        CHECK(args2.to_string("foo") == "false");
     }
 
     SECTION("1.4. BooleanOptionalAction conflict options [1]") {
@@ -134,7 +134,7 @@ TEST_CASE("1. argument actions", "[argument]")
         parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
         parser.add_argument("--no-bar").action(argparse::store_true);
 
-        REQUIRE_THROWS(parser.parse_args("--no-"));  // --no-foo or --no-bar?
+        CHECK_THROWS(parser.parse_args("--no-"));  // --no-foo or --no-bar?
     }
 
     SECTION("1.5. BooleanOptionalAction conflict options [2]") {
@@ -158,7 +158,7 @@ TEST_CASE("1. argument actions", "[argument]")
         parser1.add_argument("--foo").action(argparse::BooleanOptionalAction);
         parser1.add_argument("--no-foo").action(argparse::store_true);
 
-        REQUIRE(parser1.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
+        CHECK(parser1.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
 
         argparse::ArgumentParser parser2
                 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
@@ -166,7 +166,7 @@ TEST_CASE("1. argument actions", "[argument]")
         parser2.add_argument("--no-foo").action(argparse::store_true);
         parser2.add_argument("--foo").action(argparse::BooleanOptionalAction);
 
-        REQUIRE(parser2.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
+        CHECK(parser2.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
 
         argparse::ArgumentParser parser3
                 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
@@ -174,7 +174,7 @@ TEST_CASE("1. argument actions", "[argument]")
         parser3.add_argument(argparse::Argument(_make_vec("--foo")).action(argparse::BooleanOptionalAction));
         parser3.add_argument(argparse::Argument(_make_vec("--no-foo")).action(argparse::store_true));
 
-        REQUIRE(parser3.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
+        CHECK(parser3.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
 
         argparse::ArgumentParser parser4
                 = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
@@ -182,7 +182,7 @@ TEST_CASE("1. argument actions", "[argument]")
         parser4.add_argument(argparse::Argument(_make_vec("--no-foo")).action(argparse::store_true));
         parser4.add_argument(argparse::Argument(_make_vec("--foo")).action(argparse::BooleanOptionalAction));
 
-        REQUIRE(parser4.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
+        CHECK(parser4.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
     }
 
     SECTION("1.8. BooleanOptionalAction conflict options resolved [2]") {
@@ -196,22 +196,22 @@ TEST_CASE("1. argument actions", "[argument]")
 
         argparse::Namespace args0 = parser.parse_args(_make_vec());
 
-        REQUIRE(args0.to_string("bar") == default_value);
-        REQUIRE(args0.get<bool>("foo") == false);
-        REQUIRE(args0.to_string("foo") == "false");
+        CHECK(args0.to_string("bar") == default_value);
+        CHECK(args0.get<bool>("foo") == false);
+        CHECK(args0.to_string("foo") == "false");
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("--foo"));
 
-        REQUIRE(args1.to_string("bar") == default_value);
-        REQUIRE(args1.get<bool>("foo") == true);
-        REQUIRE(args1.to_string("foo") == "true");
+        CHECK(args1.to_string("bar") == default_value);
+        CHECK(args1.get<bool>("foo") == true);
+        CHECK(args1.to_string("foo") == "true");
 
         argparse::Namespace args2 = parser.parse_args(_make_vec("--no-foo"));
 
-        REQUIRE(args2.get<bool>("bar") == false);
-        REQUIRE(args2.to_string("bar") == "false");
-        REQUIRE(args2.get<bool>("foo") == false);
-        REQUIRE(args2.to_string("foo") == "false");
+        CHECK(args2.get<bool>("bar") == false);
+        CHECK(args2.to_string("bar") == "false");
+        CHECK(args2.get<bool>("foo") == false);
+        CHECK(args2.to_string("foo") == "false");
     }
 
     SECTION("1.9. shared argument dest") {
@@ -222,10 +222,10 @@ TEST_CASE("1. argument actions", "[argument]")
         parser.add_argument("--arg").dest("arg").default_value(default_value);
         parser.add_argument("--no-arg").action("store_const").dest("arg").const_value(const_value);
 
-        REQUIRE(parser.parse_args("").get<std::string>("arg") == default_value);
-        REQUIRE(parser.parse_args("--no-arg").get<std::string>("arg") == const_value);
-        REQUIRE(parser.parse_args("--arg x").get<std::string>("arg") == "x");
-        REQUIRE(parser.parse_args("--arg x --no-arg").get<std::string>("arg") == const_value);
+        CHECK(parser.parse_args("").get<std::string>("arg") == default_value);
+        CHECK(parser.parse_args("--no-arg").get<std::string>("arg") == const_value);
+        CHECK(parser.parse_args("--arg x").get<std::string>("arg") == "x");
+        CHECK(parser.parse_args("--arg x --no-arg").get<std::string>("arg") == const_value);
     }
 
     SECTION("1.10. shared argument dest action count") {
@@ -234,9 +234,9 @@ TEST_CASE("1. argument actions", "[argument]")
         parser.add_argument("--arg").action("count").dest("arg");
         parser.add_argument("--no-arg").action("count").dest("arg");
 
-        REQUIRE(parser.parse_args("").get<uint32_t>("arg") == 0);
-        REQUIRE(parser.parse_args("--no-arg").get<uint32_t>("arg") == 1);
-        REQUIRE(parser.parse_args("--arg").get<uint32_t>("arg") == 1);
-        REQUIRE(parser.parse_args("--arg --no-arg").get<uint32_t>("arg") == 2);
+        CHECK(parser.parse_args("").get<uint32_t>("arg") == 0);
+        CHECK(parser.parse_args("--no-arg").get<uint32_t>("arg") == 1);
+        CHECK(parser.parse_args("--arg").get<uint32_t>("arg") == 1);
+        CHECK(parser.parse_args("--arg --no-arg").get<uint32_t>("arg") == 2);
     }
 }

@@ -17,12 +17,12 @@ TEST_CASE("1. default values", "[argument_parser]")
         parser.add_argument("--foo").action("store").help("foo help");
         parser.add_argument("--bar").action("store").default_value(local_default).help("bar help");
 
-        REQUIRE(parser.get_default("foo") == global_default);
-        REQUIRE(parser.get_default("bar") == local_default);
+        CHECK(parser.get_default("foo") == global_default);
+        CHECK(parser.get_default("bar") == local_default);
 
         argparse::Namespace args0 = parser.parse_args(_make_vec());
-        REQUIRE(args0.get<std::string>("foo") == global_default);
-        REQUIRE(args0.get<std::string>("bar") == local_default);
+        CHECK(args0.get<std::string>("foo") == global_default);
+        CHECK(args0.get<std::string>("bar") == local_default);
 
 #ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foo", new_default } });
@@ -31,12 +31,12 @@ TEST_CASE("1. default values", "[argument_parser]")
         values1.push_back(std::make_pair("foo", new_default));
         parser.set_defaults(values1);
 #endif  // C++11+
-        REQUIRE(parser.get_default("foo") == new_default);
-        REQUIRE(parser.get_default("bar") == local_default);
+        CHECK(parser.get_default("foo") == new_default);
+        CHECK(parser.get_default("bar") == local_default);
 
         argparse::Namespace args1 = parser.parse_args(_make_vec());
-        REQUIRE(args1.get<std::string>("foo") == new_default);
-        REQUIRE(args1.get<std::string>("bar") == local_default);
+        CHECK(args1.get<std::string>("foo") == new_default);
+        CHECK(args1.get<std::string>("bar") == local_default);
 
 #ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foobaz", new_default } });
@@ -45,14 +45,14 @@ TEST_CASE("1. default values", "[argument_parser]")
         values2.push_back(std::make_pair("foobaz", new_default));
         parser.set_defaults(values2);
 #endif  // C++11+
-        REQUIRE(parser.get_default("foo") == new_default);
-        REQUIRE(parser.get_default("bar") == local_default);
-        REQUIRE(parser.get_default("foobaz") == new_default);
+        CHECK(parser.get_default("foo") == new_default);
+        CHECK(parser.get_default("bar") == local_default);
+        CHECK(parser.get_default("foobaz") == new_default);
 
         argparse::Namespace args2 = parser.parse_args(_make_vec());
-        REQUIRE(args2.get<std::string>("foo") == new_default);
-        REQUIRE(args2.get<std::string>("bar") == local_default);
-        REQUIRE(args2.get<std::string>("foobaz") == new_default);
+        CHECK(args2.get<std::string>("foo") == new_default);
+        CHECK(args2.get<std::string>("bar") == local_default);
+        CHECK(args2.get<std::string>("foobaz") == new_default);
     }
 
     SECTION("1.2. no global value") {
@@ -61,12 +61,12 @@ TEST_CASE("1. default values", "[argument_parser]")
         parser.add_argument("--foo").action("store").help("foo help");
         parser.add_argument("--bar").action("store").default_value(local_default).help("bar help");
 
-        REQUIRE(parser.get_default("foo") == "");
-        REQUIRE(parser.get_default("bar") == local_default);
+        CHECK(parser.get_default("foo") == "");
+        CHECK(parser.get_default("bar") == local_default);
 
         argparse::Namespace args0 = parser.parse_args(_make_vec());
-        REQUIRE(args0.get<std::string>("foo") == "");
-        REQUIRE(args0.get<std::string>("bar") == local_default);
+        CHECK(args0.get<std::string>("foo") == "");
+        CHECK(args0.get<std::string>("bar") == local_default);
 
 #ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foo", new_default } });
@@ -75,12 +75,12 @@ TEST_CASE("1. default values", "[argument_parser]")
         values1.push_back(std::make_pair("foo", new_default));
         parser.set_defaults(values1);
 #endif  // C++11+
-        REQUIRE(parser.get_default("foo") == new_default);
-        REQUIRE(parser.get_default("bar") == local_default);
+        CHECK(parser.get_default("foo") == new_default);
+        CHECK(parser.get_default("bar") == local_default);
 
         argparse::Namespace args1 = parser.parse_args(_make_vec());
-        REQUIRE(args1.get<std::string>("foo") == new_default);
-        REQUIRE(args1.get<std::string>("bar") == local_default);
+        CHECK(args1.get<std::string>("foo") == new_default);
+        CHECK(args1.get<std::string>("bar") == local_default);
 
 #ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foobaz", new_default } });
@@ -89,14 +89,14 @@ TEST_CASE("1. default values", "[argument_parser]")
         values2.push_back(std::make_pair("foobaz", new_default));
         parser.set_defaults(values2);
 #endif  // C++11+
-        REQUIRE(parser.get_default("foo") == new_default);
-        REQUIRE(parser.get_default("bar") == local_default);
-        REQUIRE(parser.get_default("foobaz") == new_default);
+        CHECK(parser.get_default("foo") == new_default);
+        CHECK(parser.get_default("bar") == local_default);
+        CHECK(parser.get_default("foobaz") == new_default);
 
         argparse::Namespace args2 = parser.parse_args(_make_vec());
-        REQUIRE(args2.get<std::string>("foo") == new_default);
-        REQUIRE(args2.get<std::string>("bar") == local_default);
-        REQUIRE(args2.get<std::string>("foobaz") == new_default);
+        CHECK(args2.get<std::string>("foo") == new_default);
+        CHECK(args2.get<std::string>("bar") == local_default);
+        CHECK(args2.get<std::string>("foobaz") == new_default);
     }
 
     SECTION("1.3. suppress global value") {
@@ -106,17 +106,17 @@ TEST_CASE("1. default values", "[argument_parser]")
         parser.add_argument("--foo").action("store").help("foo help");
         parser.add_argument("--bar").action("store").default_value(local_default).help("bar help");
 
-        REQUIRE(parser.get_default("foo") == argparse::detail::_suppress);
-        REQUIRE(parser.get_default("bar") == local_default);
+        CHECK(parser.get_default("foo") == argparse::detail::_suppress);
+        CHECK(parser.get_default("bar") == local_default);
 
         argparse::Namespace args0 = parser.parse_args(_make_vec());
-        REQUIRE(args0.exists("foo") == false);
-        REQUIRE_THROWS(args0.get<std::string>("foo"));
-        REQUIRE(args0.get<std::string>("bar") == local_default);
+        CHECK(args0.exists("foo") == false);
+        CHECK_THROWS(args0.get<std::string>("foo"));
+        CHECK(args0.get<std::string>("bar") == local_default);
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("--foo", new_default));
-        REQUIRE(args1.get<std::string>("foo") == new_default);
-        REQUIRE(args1.get<std::string>("bar") == local_default);
+        CHECK(args1.get<std::string>("foo") == new_default);
+        CHECK(args1.get<std::string>("bar") == local_default);
 
 #ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "foo", new_default } });
@@ -125,12 +125,12 @@ TEST_CASE("1. default values", "[argument_parser]")
         values1.push_back(std::make_pair("foo", new_default));
         parser.set_defaults(values1);
 #endif  // C++11+
-        REQUIRE(parser.get_default("foo") == new_default);
-        REQUIRE(parser.get_default("bar") == local_default);
+        CHECK(parser.get_default("foo") == new_default);
+        CHECK(parser.get_default("bar") == local_default);
 
         argparse::Namespace args2 = parser.parse_args(_make_vec());
-        REQUIRE(args2.get<std::string>("foo") == new_default);
-        REQUIRE(args2.get<std::string>("bar") == local_default);
+        CHECK(args2.get<std::string>("foo") == new_default);
+        CHECK(args2.get<std::string>("bar") == local_default);
     }
 
     SECTION("1.4. suppress local value") {
@@ -140,17 +140,17 @@ TEST_CASE("1. default values", "[argument_parser]")
         parser.add_argument("--foo").action("store").help("foo help");
         parser.add_argument("--bar").action("store").default_value(argparse::SUPPRESS).help("bar help");
 
-        REQUIRE(parser.get_default("foo") == global_default);
-        REQUIRE(parser.get_default("bar") == argparse::detail::_suppress);
+        CHECK(parser.get_default("foo") == global_default);
+        CHECK(parser.get_default("bar") == argparse::detail::_suppress);
 
         argparse::Namespace args0 = parser.parse_args(_make_vec());
-        REQUIRE(args0.get<std::string>("foo") == global_default);
-        REQUIRE(args0.exists("bar") == false);
-        REQUIRE_THROWS(args0.get<std::string>("bar"));
+        CHECK(args0.get<std::string>("foo") == global_default);
+        CHECK(args0.exists("bar") == false);
+        CHECK_THROWS(args0.get<std::string>("bar"));
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("--bar", new_default));
-        REQUIRE(args1.get<std::string>("foo") == global_default);
-        REQUIRE(args1.get<std::string>("bar") == new_default);
+        CHECK(args1.get<std::string>("foo") == global_default);
+        CHECK(args1.get<std::string>("bar") == new_default);
 
 #ifdef ARGPARSE_CXX_11
         parser.set_defaults({ { "bar", new_default } });
@@ -159,12 +159,12 @@ TEST_CASE("1. default values", "[argument_parser]")
         values1.push_back(std::make_pair("bar", new_default));
         parser.set_defaults(values1);
 #endif  // C++11+
-        REQUIRE(parser.get_default("foo") == global_default);
-        REQUIRE(parser.get_default("bar") == new_default);
+        CHECK(parser.get_default("foo") == global_default);
+        CHECK(parser.get_default("bar") == new_default);
 
         argparse::Namespace args2 = parser.parse_args(_make_vec());
-        REQUIRE(args2.get<std::string>("foo") == global_default);
-        REQUIRE(args2.get<std::string>("bar") == new_default);
+        CHECK(args2.get<std::string>("foo") == global_default);
+        CHECK(args2.get<std::string>("bar") == new_default);
     }
 }
 

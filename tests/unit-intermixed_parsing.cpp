@@ -14,22 +14,22 @@ TEST_CASE("1. parse known arguments", "[argument_parser]")
 
     SECTION("1.1. all known arguments") {
         argparse::Namespace args0 = parser.parse_args(_make_vec("--foo", "bar"));
-        REQUIRE(args0.get<bool>("foo") == true);
-        REQUIRE(args0.get<std::string>("bar") == "bar");
+        CHECK(args0.get<bool>("foo") == true);
+        CHECK(args0.get<std::string>("bar") == "bar");
 
         argparse::Namespace args1 = parser.parse_known_args(_make_vec("--foo", "bar"));
-        REQUIRE(args1.get<bool>("foo") == true);
-        REQUIRE(args1.get<std::string>("bar") == "bar");
+        CHECK(args1.get<bool>("foo") == true);
+        CHECK(args1.get<std::string>("bar") == "bar");
     }
 
     SECTION("1.2. have unknown arguments") {
-        REQUIRE_THROWS(parser.parse_args(_make_vec("--foo", "--boo", "bar", "baz")));
+        CHECK_THROWS(parser.parse_args(_make_vec("--foo", "--boo", "bar", "baz")));
 
         argparse::Namespace args = parser.parse_known_args(_make_vec("--foo", "--boo", "bar", "baz"));
-        REQUIRE(args.get<bool>("foo") == true);
-        REQUIRE(args.get<std::string>("bar") == "bar");
-        REQUIRE(args.unrecognized_args().size() == 2);
-        REQUIRE(args.unrecognized_args_to_args() == "--boo baz");
+        CHECK(args.get<bool>("foo") == true);
+        CHECK(args.get<std::string>("bar") == "bar");
+        CHECK(args.unrecognized_args().size() == 2);
+        CHECK(args.unrecognized_args_to_args() == "--boo baz");
     }
 }
 
@@ -43,16 +43,16 @@ TEST_CASE("2. intermixed parsing", "[argument_parser]")
         parser.add_argument("rest").nargs("*");
 
         argparse::Namespace args0 = parser.parse_known_args(_make_vec("doit", "1", "--foo", "bar", "2", "3"));
-        REQUIRE(args0.get<std::string>("cmd") == "doit");
-        REQUIRE(args0.get<std::string>("foo") == "bar");
-        REQUIRE(args0.get<int>("rest") == 1);
-        REQUIRE(args0.get<std::vector<int> >("rest").size() == 1);
+        CHECK(args0.get<std::string>("cmd") == "doit");
+        CHECK(args0.get<std::string>("foo") == "bar");
+        CHECK(args0.get<int>("rest") == 1);
+        CHECK(args0.get<std::vector<int> >("rest").size() == 1);
 
         argparse::Namespace args1 = parser.parse_intermixed_args(_make_vec("doit", "1", "--foo", "bar", "2", "3"));
-        REQUIRE(args1.get<std::string>("cmd") == "doit");
-        REQUIRE(args1.get<std::string>("foo") == "bar");
-        REQUIRE(args1.get<std::vector<int> >("rest").size() == 3);
-        REQUIRE(args1.to_string("rest") == "[1, 2, 3]");
+        CHECK(args1.get<std::string>("cmd") == "doit");
+        CHECK(args1.get<std::string>("foo") == "bar");
+        CHECK(args1.get<std::vector<int> >("rest").size() == 3);
+        CHECK(args1.to_string("rest") == "[1, 2, 3]");
     }
 
     SECTION("2.2. subparsers") {
@@ -66,8 +66,8 @@ TEST_CASE("2. intermixed parsing", "[argument_parser]")
         argparse::ArgumentParser& parser_b = subparsers.add_parser("b").help("b help");
         parser_b.add_argument("--baz").choices("XYZ").help("baz help");
 
-        REQUIRE_THROWS(parser.parse_intermixed_args(_make_vec()));
-        REQUIRE_THROWS(parser.parse_intermixed_args(_make_vec("a", "11")));
-        REQUIRE_THROWS(parser.parse_intermixed_args(_make_vec("b", "--baz")));
+        CHECK_THROWS(parser.parse_intermixed_args(_make_vec()));
+        CHECK_THROWS(parser.parse_intermixed_args(_make_vec("a", "11")));
+        CHECK_THROWS(parser.parse_intermixed_args(_make_vec("b", "--baz")));
     }
 }

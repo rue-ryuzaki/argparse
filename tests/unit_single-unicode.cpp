@@ -1489,11 +1489,11 @@ TEST_CASE("1. unicode to upper", "[detail]")
         table_map[0x1e943] = 0x1e921;
         for (uint32_t i = 0; i < 0x1e9ff; ++i) {
             if (table_map.count(i) == 0) {
-                REQUIRE(argparse::detail::_to_upper_codepoint(i) == i);
+                CHECK(argparse::detail::_to_upper_codepoint(i) == i);
             }
         }
         for (std::map<uint32_t, uint32_t>::const_iterator it = table_map.begin(); it != table_map.end(); ++it) {
-            REQUIRE(argparse::detail::_to_upper_codepoint(it->first) == it->second);
+            CHECK(argparse::detail::_to_upper_codepoint(it->first) == it->second);
         }
     }
 }

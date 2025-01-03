@@ -12,10 +12,10 @@ TEST_CASE("1. parents", "[argument_parser]")
         argparse::ArgumentParser parent2 = argparse::ArgumentParser().add_help(false);
         argparse::ArgumentParser parent3 = argparse::ArgumentParser().prefix_chars("+");
 
-        REQUIRE_THROWS(argparse::ArgumentParser().parents(parent1));
-        REQUIRE_NOTHROW(argparse::ArgumentParser().add_help(false).parents(parent1));
-        REQUIRE_NOTHROW(argparse::ArgumentParser().parents(parent2));
-        REQUIRE_NOTHROW(argparse::ArgumentParser().parents(parent3));
+        CHECK_THROWS(argparse::ArgumentParser().parents(parent1));
+        CHECK_NOTHROW(argparse::ArgumentParser().add_help(false).parents(parent1));
+        CHECK_NOTHROW(argparse::ArgumentParser().parents(parent2));
+        CHECK_NOTHROW(argparse::ArgumentParser().parents(parent3));
     }
 
     SECTION("1.2. Parser help conflict") {
@@ -26,9 +26,9 @@ TEST_CASE("1. parents", "[argument_parser]")
         argparse::ArgumentParser parser = argparse::ArgumentParser();
         argparse::SubParsers& subparsers = parser.add_subparsers();
 
-        REQUIRE_THROWS(subparsers.add_parser("1").parents(parent1));
-        REQUIRE_NOTHROW(subparsers.add_parser("2").add_help(false).parents(parent1));
-        REQUIRE_NOTHROW(subparsers.add_parser("3").parents(parent2));
-        REQUIRE_NOTHROW(subparsers.add_parser("4").parents(parent3));
+        CHECK_THROWS(subparsers.add_parser("1").parents(parent1));
+        CHECK_NOTHROW(subparsers.add_parser("2").add_help(false).parents(parent1));
+        CHECK_NOTHROW(subparsers.add_parser("3").parents(parent2));
+        CHECK_NOTHROW(subparsers.add_parser("4").parents(parent3));
     }
 }
