@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+ * Copyright (c) 2024-2025 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  */
 
 #define ARGPARSE_DECLARATION
