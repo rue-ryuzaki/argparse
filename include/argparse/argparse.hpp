@@ -1022,6 +1022,18 @@ struct is_string_ctor
 };
 
 template <class T, class = void>
+struct has_container_type                  { static bool const value = false; };
+template <class T>
+struct has_container_type<T, typename voider<
+         typename T::container_type>::type> { static bool const value = true; };
+
+template <class T, class = void>
+struct has_value_compare                   { static bool const value = false; };
+template <class T>
+struct has_value_compare<T, typename voider<
+          typename T::value_compare>::type> { static bool const value = true; };
+
+template <class T, class = void>
 struct has_value_type                      { static bool const value = false; };
 template <class T>
 struct has_value_type<T, typename voider<
@@ -1098,17 +1110,18 @@ template <class T>
 struct is_stl_array                                               :false_type{};
 
 template <class T>
-struct is_stl_container
+struct is_stl_queue
 {
-    static bool const value = has_vector_ctor<T>::value
-                          && !is_string_ctor<T>::value && !is_stl_map<T>::value;
+    static bool const value = has_container_type<T>::value
+                          && !has_value_compare<T>::value;
 };
 
 template <class T>
-struct is_stl_queue
+struct is_stl_container
 {
-    static bool const value = has_deque_ctor<T>::value
-                          && !has_vector_ctor<T>::value;
+    static bool const value = has_vector_ctor<T>::value
+                          && !is_stl_queue<T>::value
+                          && !is_string_ctor<T>::value && !is_stl_map<T>::value;
 };
 
 template <class T, class = void>
