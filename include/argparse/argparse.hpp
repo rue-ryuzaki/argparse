@@ -5283,6 +5283,19 @@ public:
     func(Namespace const& args) const;
 
     /*!
+     *  \brief Check parser function exists in parsed arguments
+     *
+     *  \param key Argument destination name or flag
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return True if parser function exists, otherwise false
+     */
+    ARGPARSE_ATTR_NODISCARD
+    bool
+    has_func() const ARGPARSE_NOEXCEPT;
+
+    /*!
      *  \brief Get parsed argument value as boolean, byte, floating point
      *  or string types.
      *  If argument not parsed, returns default value.
@@ -13106,6 +13119,12 @@ Namespace::func(
     } else {
         throw AttributeError("'Namespace' object has no attribute 'func'");
     }
+}
+
+ARGPARSE_INL bool
+Namespace::has_func() const ARGPARSE_NOEXCEPT
+{
+    return m_func != ARGPARSE_NULLPTR;
 }
 
 ARGPARSE_INL void
