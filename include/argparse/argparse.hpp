@@ -5224,21 +5224,25 @@ ARGPARSE_EXPORT class Namespace
 
     explicit
     Namespace(
-            _Storage const& storage = _Storage());
+            _Storage const& storage = _Storage(),
+            detail::func1<Namespace const&>::type const& fn = ARGPARSE_NULLPTR);
 
     explicit
     Namespace(
             _Storage const& storage,
+            detail::func1<Namespace const&>::type const& func,
             std::vector<std::string> const& args);
 
 #ifdef ARGPARSE_CXX_11
     explicit
     Namespace(
-            _Storage&& storage) ARGPARSE_NOEXCEPT;
+            _Storage&& storage,
+            detail::func1<Namespace const&>::type&& func) ARGPARSE_NOEXCEPT;
 
     explicit
     Namespace(
             _Storage&& storage,
+            detail::func1<Namespace const&>::type&& func,
             std::vector<std::string>&& args) ARGPARSE_NOEXCEPT;
 #endif  // C++11+
 
@@ -5267,6 +5271,16 @@ public:
     ARGPARSE_ATTR_NODISCARD
     bool
     exists(std::string const& key) const;
+
+    /*!
+     *  \brief Execute parser function with selected object
+     *
+     *  \param args Object with parsed arguments
+     *
+     *  \since NEXT_RELEASE
+     */
+    void
+    func(Namespace const& args) const;
 
     /*!
      *  \brief Get parsed argument value as boolean, byte, floating point
@@ -5787,6 +5801,7 @@ private:
 
     // -- data ----------------------------------------------------------------
     _Storage m_storage;
+    detail::func1<Namespace const&>::type m_func;
     detail::Value<std::vector<std::string> > m_unrecognized_args;
 };
 
@@ -7279,6 +7294,21 @@ public:
             std::vector<std::pair<std::string, std::string> > const& pairs);
 
     /*!
+     *  \brief Set argument parser defaults function. This function may be
+     *  called manually later
+     *
+     *  \param func Function
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument parser reference
+     */
+    ARGPARSE_ATTR_MAYBE_UNUSED
+    ArgumentParser&
+    set_defaults_func(
+            detail::func1<Namespace const&>::type func) ARGPARSE_NOEXCEPT;
+
+    /*!
      *  \brief Parse command line arguments
      *
      *  \param space Parsed arguments namespace (default: none)
@@ -8061,6 +8091,7 @@ private:
     static Namespace
     create_namespace(
             bool only_known,
+            detail::func1<Namespace const&>::type func,
             detail::rval<_Storage>::type storage,
             detail::rval<std::vector<std::string> >::type unrecognized_args);
 
@@ -8357,6 +8388,7 @@ private:
     void
     parse_handle(
             bool only_known,
+            detail::func1<Namespace const&>::type const& func,
             _Storage const& storage,
             std::vector<std::string> const& unrecognized_args) const;
 
@@ -8388,6 +8420,7 @@ private:
     std::size_t m_subparsers_position;
     detail::func1<std::string const&>::type m_handle;
     detail::func1<Namespace const&>::type m_parse_handle;
+    detail::func1<Namespace const&>::type m_default_func;
     bool m_allow_abbrev;
     bool m_exit_on_error;
     bool m_suggest_on_error;
@@ -13006,8 +13039,10 @@ _Storage::on_process_store(
 // -- Namespace ---------------------------------------------------------------
 ARGPARSE_INL
 Namespace::Namespace(
-        _Storage const& storage)
+        _Storage const& storage,
+        detail::func1<Namespace const&>::type const& func)
     : m_storage(storage),
+      m_func(func),
       m_unrecognized_args()
 {
 }
@@ -13015,8 +13050,10 @@ Namespace::Namespace(
 ARGPARSE_INL
 Namespace::Namespace(
         _Storage const& storage,
+        detail::func1<Namespace const&>::type const& func,
         std::vector<std::string> const& args)
     : m_storage(storage),
+      m_func(func),
       m_unrecognized_args(args)
 {
 }
@@ -13024,8 +13061,10 @@ Namespace::Namespace(
 #ifdef ARGPARSE_CXX_11
 ARGPARSE_INL
 Namespace::Namespace(
-        _Storage&& storage) ARGPARSE_NOEXCEPT
+        _Storage&& storage,
+        detail::func1<Namespace const&>::type&& func) ARGPARSE_NOEXCEPT
     : m_storage(std::move(storage)),
+      m_func(std::move(func)),
       m_unrecognized_args()
 {
 }
@@ -13033,8 +13072,10 @@ Namespace::Namespace(
 ARGPARSE_INL
 Namespace::Namespace(
         _Storage&& storage,
+        detail::func1<Namespace const&>::type&& func,
         std::vector<std::string>&& args) ARGPARSE_NOEXCEPT
     : m_storage(std::move(storage)),
+      m_func(std::move(func)),
       m_unrecognized_args(std::move(args))
 {
 }
@@ -13054,6 +13095,17 @@ Namespace::exists(
         std::string const& key) const
 {
     return contains(key);
+}
+
+ARGPARSE_INL void
+Namespace::func(
+        Namespace const& args) const
+{
+    if (m_func) {
+        m_func(args);
+    } else {
+        throw AttributeError("'Namespace' object has no attribute 'func'");
+    }
 }
 
 ARGPARSE_INL void
@@ -13922,6 +13974,7 @@ ArgumentParser::ArgumentParser(
       m_subparsers_position(),
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
+      m_default_func(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
       m_exit_on_error(true),
       m_suggest_on_error(false),
@@ -13963,6 +14016,7 @@ ArgumentParser::ArgumentParser(
       m_subparsers_position(),
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
+      m_default_func(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
       m_exit_on_error(true),
       m_suggest_on_error(false),
@@ -14006,6 +14060,7 @@ ArgumentParser::ArgumentParser(
       m_subparsers_position(),
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
+      m_default_func(ARGPARSE_NULLPTR),
       m_allow_abbrev(true),
       m_exit_on_error(true),
       m_suggest_on_error(false),
@@ -14617,6 +14672,14 @@ ArgumentParser::set_defaults(
             m_default_values.push_back(std::make_pair(dest, value));
         }
     }
+    return *this;
+}
+
+ArgumentParser&
+ArgumentParser::set_defaults_func(
+        detail::func1<Namespace const&>::type func) ARGPARSE_NOEXCEPT
+{
+    m_default_func = ARGPARSE_MOVE(func);
     return *this;
 }
 
@@ -15359,7 +15422,8 @@ ArgumentParser::parse_arguments(
     check_unrecognized_args(only_known, unrecognized_args);
     default_values_post_trigger(parsers.front().storage);
     namespace_post_trigger(parsers, only_known, unrecognized_args);
-    return create_namespace(only_known, ARGPARSE_MOVE(parsers.front().storage),
+    return create_namespace(only_known, parsers.back().parser->m_default_func,
+                            ARGPARSE_MOVE(parsers.front().storage),
                             ARGPARSE_MOVE(unrecognized_args));
 }
 
@@ -15406,12 +15470,13 @@ ArgumentParser::check_intermixed_remainder(
 ARGPARSE_INL Namespace
 ArgumentParser::create_namespace(
         bool only_known,
+        detail::func1<Namespace const&>::type func,
         detail::rval<_Storage>::type storage,
         detail::rval<std::vector<std::string> >::type unrecognized_args)
 {
-    return only_known ? Namespace(ARGPARSE_MOVE(storage),
+    return only_known ? Namespace(ARGPARSE_MOVE(storage), ARGPARSE_MOVE(func),
                                   ARGPARSE_MOVE(unrecognized_args))
-                      : Namespace(ARGPARSE_MOVE(storage));
+                      : Namespace(ARGPARSE_MOVE(storage), ARGPARSE_MOVE(func));
 }
 
 ARGPARSE_INL void
@@ -16401,7 +16466,8 @@ ArgumentParser::namespace_post_trigger(
         std::vector<std::string> const& unrecognized_args)
 {
     parsers.front().parser->parse_handle(
-                only_known, parsers.front().storage, unrecognized_args);
+                only_known, parsers.front().parser->m_default_func,
+                parsers.front().storage, unrecognized_args);
     pi_iterator p = parsers.begin();
     _Storage const* storage = &(*p).storage;
     for (++p; p != parsers.end(); ++p) {
@@ -16414,7 +16480,8 @@ ArgumentParser::namespace_post_trigger(
                 it = current.erase(it);
             }
         }
-        (*p).parser->parse_handle(only_known, current, unrecognized_args);
+        (*p).parser->parse_handle(only_known, (*p).parser->m_default_func,
+                                  current, unrecognized_args);
         storage = &(*p).storage;
     }
 }
@@ -16874,12 +16941,13 @@ ArgumentParser::handle(
 ARGPARSE_INL void
 ArgumentParser::parse_handle(
         bool only_known,
+        detail::func1<Namespace const&>::type const& func,
         _Storage const& storage,
         std::vector<std::string> const& unrecognized_args) const
 {
     if (m_parse_handle) {
-        m_parse_handle(only_known ? Namespace(storage, unrecognized_args)
-                                  : Namespace(storage));
+        m_parse_handle(only_known ? Namespace(storage, func, unrecognized_args)
+                                  : Namespace(storage, func));
     }
 }
 #endif  // ARGPARSE_INL
