@@ -80,7 +80,7 @@ jobs:
       fail-fast: false
       matrix:
         sys: [mingw64]
-        standard: [98, 11, 14, 17, 20]
+        standard: [98, 11, 14, 17, 20, 23]
 
     defaults:
       run:
@@ -168,7 +168,7 @@ jobs:
       fail-fast: false
       matrix:
         version: ['17.0.1']
-        standard: [14, 17, 20]
+        standard: [14, 17, 20, 23]
 
     steps:
     - uses: actions/checkout@v4
