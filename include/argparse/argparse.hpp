@@ -5,7 +5,7 @@
  *                         __| |
  * MIT License
  *
- * Argument parser for C++ (ArgumentParser v1.9.5)
+ * Argument parser for C++ (ArgumentParser v1.9.6)
  *
  * Copyright (c) 2021-2025 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  *
@@ -4248,7 +4248,7 @@ public:
      *
      *  \param required Required flag (default: false)
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.6
      *
      *  \return Current mutually exclusive group reference
      */
@@ -5290,7 +5290,7 @@ public:
      *
      *  \param args Object with parsed arguments
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.6
      */
     void
     func(Namespace const& args) const;
@@ -5300,7 +5300,7 @@ public:
      *
      *  \param key Argument destination name or flag
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.6
      *
      *  \return True if parser function exists, otherwise false
      */
@@ -6817,7 +6817,7 @@ public:
      *
      *  \param value Suggest on error flag
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.6
      *
      *  \return Current argument parser reference
      */
@@ -7044,7 +7044,7 @@ public:
     /*!
      *  \brief Get argument parser 'suggest_on_error' value (default: false)
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.6
      *
      *  \return Argument parser 'suggest_on_error' value
      */
@@ -7325,7 +7325,7 @@ public:
      *
      *  \param func Function
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.6
      *
      *  \return Current argument parser reference
      */

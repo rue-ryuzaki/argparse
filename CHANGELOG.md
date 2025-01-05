@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.6] - 2025-01-05
+
+  * Fix: Argument::default_value(false)
+  * Fix: ArgumentGroup::print_help
+  * Fix: Namespace::get\<std::string_view>()
+  * Add: ArgumentGroup::add_mutually_exclusive_group() function
+  * Add: ArgumentParser::set_defaults_func(std::function\<void(Namespace)>) function
+  * Add: ArgumentParser::suggest_on_error support
+  * Add: Namespace::func(Namespace const&) function
+  * Add: Namespace::has_func() function
+  * Add: C++23 support
+
 ## [1.9.5] - 2024-11-27
 
   * Add: Argument::deprecated support
