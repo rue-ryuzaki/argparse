@@ -84,7 +84,7 @@
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 9
-#define ARGPARSE_VERSION_PATCH 5
+#define ARGPARSE_VERSION_PATCH 6
 
 /*!
  *  This macro turns the version numbers into a numeric value:
