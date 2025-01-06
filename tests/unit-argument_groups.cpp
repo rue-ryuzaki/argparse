@@ -47,6 +47,29 @@ TEST_CASE("1. argument groups", "[argument_parser]")
         CHECK(args.get<std::string>("foo1") == "1");
         CHECK(args.get<std::string>("foo2") == "2");
     }
+
+    SECTION("1.3. parser's conflict_handler") {
+        parser.conflict_handler("resolve");
+
+        argparse::ArgumentGroup& group1 = parser.add_argument_group("group1", "desc1");
+        group1.add_argument("--foo1");
+        CHECK_NOTHROW(group1.add_argument("--foo1"));
+
+        argparse::ArgumentGroup& group2 = parser.add_argument_group("group2", "desc2");
+        group2.add_argument("--foo2");
+        CHECK_NOTHROW(group2.add_argument("--foo2"));
+    }
+
+    SECTION("1.4. group's conflict_handler") {
+        argparse::ArgumentGroup& group1 = parser.add_argument_group("group1", "desc1");
+        group1.conflict_handler("resolve");
+        group1.add_argument("--foo1");
+        CHECK_NOTHROW(group1.add_argument("--foo1"));
+
+        argparse::ArgumentGroup& group2 = parser.add_argument_group("group2", "desc2");
+        group2.add_argument("--foo2");
+        CHECK_THROWS(group2.add_argument("--foo2"));
+    }
 }
 
 TEST_CASE("2. mutual exclusion", "[argument_parser]")

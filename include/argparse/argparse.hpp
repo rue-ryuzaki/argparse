@@ -4260,6 +4260,20 @@ public:
             _SUPPRESS value);
 
     /*!
+     *  \brief Set argument group 'conflict_handler' value
+     *
+     *  \param value Conflict handler value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument group reference
+     */
+    ARGPARSE_ATTR_MAYBE_UNUSED
+    ArgumentGroup&
+    conflict_handler(
+            std::string const& value);
+
+    /*!
      *  \brief Add argument
      *
      *  \param argument Argument
@@ -4295,6 +4309,17 @@ public:
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     argument_default() const ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Get argument group 'conflict_handler' value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Argument group 'conflict_handler' value
+     */
+    ARGPARSE_ATTR_NODISCARD
+    std::string const&
+    conflict_handler() const ARGPARSE_NOEXCEPT;
 
 private:
     void
@@ -12369,6 +12394,8 @@ _ArgumentGroup::_ArgumentGroup(
       m_argument_default(argument_default),
       m_is_mutex_group(is_mutex_group)
 {
+    m_data->m_conflict_handler = m_parent_data->m_conflict_handler;
+    m_data->m_conflict_handler_str = m_parent_data->m_conflict_handler_str;
 }
 
 ARGPARSE_INL
@@ -12667,6 +12694,22 @@ ArgumentGroup::argument_default(
 }
 
 ARGPARSE_INL ArgumentGroup&
+ArgumentGroup::conflict_handler(
+        std::string const& value)
+{
+    if (value == "resolve") {
+        m_data->m_conflict_handler = detail::_conflict_resolve;
+    } else if (value == "error") {
+        m_data->m_conflict_handler = detail::_conflict_error;
+    } else {
+        throw AttributeError("'_ArgumentGroup' object has no attribute "
+                             "'_handle_conflict_" + value + "'");
+    }
+    m_data->m_conflict_handler_str = value;
+    return *this;
+}
+
+ARGPARSE_INL ArgumentGroup&
 ArgumentGroup::add_argument(
         Argument const& argument)
 {
@@ -12689,6 +12732,12 @@ ARGPARSE_INL std::string const&
 ArgumentGroup::argument_default() const ARGPARSE_NOEXCEPT
 {
     return m_argument_default.value();
+}
+
+ARGPARSE_INL std::string const&
+ArgumentGroup::conflict_handler() const ARGPARSE_NOEXCEPT
+{
+    return m_data->m_conflict_handler_str;
 }
 
 ARGPARSE_INL void
