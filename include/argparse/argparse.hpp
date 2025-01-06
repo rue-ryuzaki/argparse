@@ -6832,7 +6832,7 @@ public:
     /*!
      *  \brief Set argument parser 'conflict_handler' value
      *
-     *  \param value Argument default value
+     *  \param value Conflict handler value
      *
      *  \return Current argument parser reference
      */
