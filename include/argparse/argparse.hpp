@@ -3913,7 +3913,7 @@ protected:
     _ArgumentGroup(
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::SValue<std::string>& argument_default,
+            detail::SValue<std::string> const& argument_default,
             bool is_mutex_group);
 
 public:
@@ -4059,7 +4059,7 @@ protected:
     pArgumentData m_data;
     std::string& m_prefix_chars;
     pArgumentData& m_parent_data;
-    detail::SValue<std::string>& m_argument_default;
+    detail::SValue<std::string> m_argument_default;
 
 private:
     bool m_is_mutex_group;
@@ -4078,13 +4078,13 @@ ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
     MutuallyExclusiveGroup(
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::SValue<std::string>& argument_default);
+            detail::SValue<std::string> const& argument_default);
 
     static MutuallyExclusiveGroup
     make_mutex_group(
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::SValue<std::string>& argument_default);
+            detail::SValue<std::string> const& argument_default);
 
 public:
     using _ArgumentGroup::add_argument;
@@ -4166,7 +4166,7 @@ ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
             std::string const& description,
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::SValue<std::string>& argument_default,
+            detail::SValue<std::string> const& argument_default,
             std::list<MutuallyExclusiveGroup>& mutex_groups);
 
     static detail::shared_ptr<ArgumentGroup>
@@ -4175,7 +4175,7 @@ ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
             std::string const& description,
             std::string& prefix_chars,
             pArgumentData& parent_data,
-            detail::SValue<std::string>& argument_default,
+            detail::SValue<std::string> const& argument_default,
             std::list<MutuallyExclusiveGroup>& mutex_groups);
 
 public:
@@ -4232,6 +4232,34 @@ public:
             std::string const& lang = std::string());
 
     /*!
+     *  \brief Set argument group 'argument_default' value
+     *
+     *  \param value Argument default value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument group reference
+     */
+    ARGPARSE_ATTR_MAYBE_UNUSED
+    ArgumentGroup&
+    argument_default(
+            std::string const& value);
+
+    /*!
+     *  \brief Suppress argument group 'argument_default' value
+     *
+     *  \param value argparse::SUPPRESS
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument group reference
+     */
+    ARGPARSE_ATTR_MAYBE_UNUSED
+    ArgumentGroup&
+    argument_default(
+            _SUPPRESS value);
+
+    /*!
      *  \brief Add argument
      *
      *  \param argument Argument
@@ -4256,6 +4284,17 @@ public:
     MutuallyExclusiveGroup&
     add_mutually_exclusive_group(
             bool required = false);
+
+    /*!
+     *  \brief Get argument group 'argument_default' value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Argument group 'argument_default' value
+     */
+    ARGPARSE_ATTR_NODISCARD
+    std::string const&
+    argument_default() const ARGPARSE_NOEXCEPT;
 
 private:
     void
@@ -12322,7 +12361,7 @@ ARGPARSE_INL
 _ArgumentGroup::_ArgumentGroup(
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::SValue<std::string>& argument_default,
+        detail::SValue<std::string> const& argument_default,
         bool is_mutex_group)
     : m_data(_ArgumentData::make_argument_data()),
       m_prefix_chars(prefix_chars),
@@ -12466,7 +12505,7 @@ ARGPARSE_INL
 MutuallyExclusiveGroup::MutuallyExclusiveGroup(
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::SValue<std::string>& argument_default)
+        detail::SValue<std::string> const& argument_default)
     : _ArgumentGroup(prefix_chars, parent_data, argument_default, true),
       m_required(false)
 {
@@ -12476,7 +12515,7 @@ ARGPARSE_INL MutuallyExclusiveGroup
 MutuallyExclusiveGroup::make_mutex_group(
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::SValue<std::string>& argument_default)
+        detail::SValue<std::string> const& argument_default)
 {
     return MutuallyExclusiveGroup(prefix_chars, parent_data, argument_default);
 }
@@ -12546,7 +12585,7 @@ ArgumentGroup::ArgumentGroup(
         std::string const& description,
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::SValue<std::string>& argument_default,
+        detail::SValue<std::string> const& argument_default,
         std::list<MutuallyExclusiveGroup>& mutex_groups)
     : _Group(title, description),
       _ArgumentGroup(prefix_chars, parent_data, argument_default, false),
@@ -12560,7 +12599,7 @@ ArgumentGroup::make_argument_group(
         std::string const& description,
         std::string& prefix_chars,
         pArgumentData& parent_data,
-        detail::SValue<std::string>& argument_default,
+        detail::SValue<std::string> const& argument_default,
         std::list<MutuallyExclusiveGroup>& mutex_groups)
 {
     return detail::make_shared<ArgumentGroup>(
@@ -12612,6 +12651,22 @@ ArgumentGroup::description(
 }
 
 ARGPARSE_INL ArgumentGroup&
+ArgumentGroup::argument_default(
+        std::string const& value)
+{
+    m_argument_default = value;
+    return *this;
+}
+
+ARGPARSE_INL ArgumentGroup&
+ArgumentGroup::argument_default(
+        _SUPPRESS value)
+{
+    m_argument_default = value;
+    return *this;
+}
+
+ARGPARSE_INL ArgumentGroup&
 ArgumentGroup::add_argument(
         Argument const& argument)
 {
@@ -12628,6 +12683,12 @@ ArgumentGroup::add_mutually_exclusive_group(
                 MutuallyExclusiveGroup::make_mutex_group(
                     m_prefix_chars, m_data, m_argument_default));
     return m_mutex_groups.back().required(required);
+}
+
+ARGPARSE_INL std::string const&
+ArgumentGroup::argument_default() const ARGPARSE_NOEXCEPT
+{
+    return m_argument_default.value();
 }
 
 ARGPARSE_INL void

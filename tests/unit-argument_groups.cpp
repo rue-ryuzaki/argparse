@@ -9,26 +9,44 @@ TEST_CASE("1. argument groups", "[argument_parser]")
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
 
-    parser.add_argument("--foo").action("store_true");
-    parser.add_argument("bar");
+    SECTION("1.1. example") {
+        parser.add_argument("--foo").action("store_true");
+        parser.add_argument("bar");
 
-    argparse::ArgumentGroup& group1 = parser.add_argument_group("group 1", "desc");
-    group1.add_argument("--group1").action("store");
+        argparse::ArgumentGroup& group1 = parser.add_argument_group("group 1", "desc1");
+        group1.add_argument("--group1").action("store");
 
-    argparse::ArgumentGroup& group2 = parser.add_argument_group("group 2", "desc");
-    group2.add_argument("--group2").action("store");
+        argparse::ArgumentGroup& group2 = parser.add_argument_group("group 2", "desc2");
+        group2.add_argument("--group2").action("store");
 
-    argparse::Namespace args0 = parser.parse_args(_make_vec("--foo", "bar"));
-    CHECK(args0.get<bool>("foo") == true);
-    CHECK(args0.get<std::string>("bar") == "bar");
-    CHECK(args0.get<std::string>("group1") == "");
-    CHECK(args0.get<std::string>("group2") == "");
+        argparse::Namespace args0 = parser.parse_args(_make_vec("--foo", "bar"));
+        CHECK(args0.get<bool>("foo") == true);
+        CHECK(args0.get<std::string>("bar") == "bar");
+        CHECK(args0.get<std::string>("group1") == "");
+        CHECK(args0.get<std::string>("group2") == "");
 
-    argparse::Namespace args1 = parser.parse_known_args(_make_vec("--foo", "bar", "--group2=2", "--group1=1"));
-    CHECK(args1.get<bool>("foo") == true);
-    CHECK(args1.get<std::string>("bar") == "bar");
-    CHECK(args1.get<std::string>("group1") == "1");
-    CHECK(args1.get<std::string>("group2") == "2");
+        argparse::Namespace args1 = parser.parse_known_args(_make_vec("--foo", "bar", "--group2=2", "--group1=1"));
+        CHECK(args1.get<bool>("foo") == true);
+        CHECK(args1.get<std::string>("bar") == "bar");
+        CHECK(args1.get<std::string>("group1") == "1");
+        CHECK(args1.get<std::string>("group2") == "2");
+    }
+
+    SECTION("1.2. argument_default") {
+        parser.argument_default("0");
+        parser.add_argument("--foo0");
+
+        argparse::ArgumentGroup& group1 = parser.add_argument_group("group1", "desc1").argument_default("1");
+        group1.add_argument("--foo1");
+
+        argparse::ArgumentGroup& group2 = parser.add_argument_group("group2", "desc2").argument_default("2");
+        group2.add_argument("--foo2");
+
+        argparse::Namespace args = parser.parse_args("");
+        CHECK(args.get<std::string>("foo0") == "0");
+        CHECK(args.get<std::string>("foo1") == "1");
+        CHECK(args.get<std::string>("foo2") == "2");
+    }
 }
 
 TEST_CASE("2. mutual exclusion", "[argument_parser]")
