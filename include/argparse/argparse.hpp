@@ -7969,6 +7969,9 @@ public:
      *
      *  \since v1.7.2
      */
+    ARGPARSE_ATTR_DEPRECATED_REASON(
+            "use argparse::utils::print_bash_completion() instead. "
+            "will be removed in the next minor release (v1.10.0)")
     void
     print_bash_completion(
             std::ostream& os = std::cout) const;
@@ -8025,6 +8028,9 @@ public:
      *
      *  \return Bash completion string
      */
+    ARGPARSE_ATTR_DEPRECATED_REASON(
+            "use argparse::utils::format_bash_completion() instead. "
+            "will be removed in the next minor release (v1.10.0)")
     ARGPARSE_ATTR_NODISCARD
     std::string
     format_bash_completion() const;
