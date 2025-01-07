@@ -2472,6 +2472,7 @@ ARGPARSE_EXPORT class Argument
     friend class HelpFormatter;
     friend class MutuallyExclusiveGroup;
     friend class Namespace;
+    friend class utils;
 
     enum Nargs ARGPARSE_ENUM_TYPE(uint8_t)
     {
@@ -3830,6 +3831,7 @@ class _ArgumentData
     friend class ArgumentParser;
     friend class HelpFormatter;
     friend class MutuallyExclusiveGroup;
+    friend class utils;
 
     typedef detail::shared_ptr<Argument> pArgument;
     typedef std::list<pArgument>::const_iterator arg_iterator;
@@ -4074,6 +4076,7 @@ ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
     friend class ArgumentParser;
     friend class ArgumentGroup;
     friend class HelpFormatter;
+    friend class utils;
 
     explicit
     MutuallyExclusiveGroup(
@@ -6149,6 +6152,7 @@ ARGPARSE_EXPORT class SubParsers : public _ParserGroup
     friend class ArgumentParser;
     friend class HelpFormatter;
     friend class ParserGroup;
+    friend class utils;
 
     typedef detail::shared_ptr<ParserGroup> pParserGroup;
     typedef std::list<pParserGroup>::const_iterator pgr_iterator;
@@ -8456,29 +8460,6 @@ private:
             std::string const& parent_prog);
 
     void
-    test_overview(
-            std::string const& lang,
-            std::ostream& os) const;
-
-    static void
-    overview_subparsers(
-            ArgumentParser const* parser,
-            std::string const& indent,
-            std::ostream& os);
-
-    bool
-    test_diagnostics(
-            std::string const& lang,
-            std::ostream& os) const;
-
-    static void
-    test_argument_parser(
-            std::string const& lang,
-            std::ostream& os,
-            ArgumentParser const* parser,
-            std::pair<std::size_t, std::size_t>& diagnostics);
-
-    void
     handle(std::string const& str) const;
 
     void
@@ -8528,10 +8509,77 @@ private:
  */
 ARGPARSE_EXPORT class utils
 {
+    typedef detail::shared_ptr<Argument> pArgument;
+    typedef detail::shared_ptr<ArgumentParser> pParser;
+    typedef std::list<pParser>::const_iterator prs_iterator;
+    typedef std::list<pArgument>::const_iterator arg_iterator;
+    typedef std::list<MutuallyExclusiveGroup>::const_iterator mtx_it;
+
     utils() ARGPARSE_NOEXCEPT { }
     ~utils() ARGPARSE_NOEXCEPT { }
 
+    static void
+    test_overview(
+            ArgumentParser const& parser,
+            std::string const& lang,
+            std::ostream& os);
+
+    static void
+    overview_subparsers(
+            ArgumentParser const* parser,
+            std::string const& indent,
+            std::ostream& os);
+
+    static bool
+    test_diagnostics(
+            ArgumentParser const& parser,
+            std::string const& lang,
+            std::ostream& os);
+
+    static void
+    test_argument_parser(
+            std::string const& lang,
+            std::ostream& os,
+            ArgumentParser const* parser,
+            std::pair<std::size_t, std::size_t>& diagnostics);
+
 public:
+    /*!
+     *  \brief Run self-test and print report to output stream
+     *  for default language
+     *
+     *  \param parser Argument parser
+     *  \param os Output stream (default: std::cout)
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return True if no warnings or errors were found, false otherwise
+     */
+    ARGPARSE_ATTR_MAYBE_UNUSED
+    static bool
+    self_test(
+            ArgumentParser const& parser,
+            std::ostream& os = std::cout);
+
+    /*!
+     *  \brief Run self-test and print report for selected language
+     *  to output stream
+     *
+     *  \param parser Argument parser
+     *  \param lang Language value
+     *  \param os Output stream (default: std::cout)
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return True if no warnings or errors were found, false otherwise
+     */
+    ARGPARSE_ATTR_MAYBE_UNUSED
+    static bool
+    self_test(
+            ArgumentParser const& parser,
+            std::string const& lang,
+            std::ostream& os = std::cout);
+
     /*!
      *  \brief Return a string containing a bash completion.
      *  Copy the contents to ~/.bashrc or create a script file and use it
@@ -15164,24 +15212,7 @@ ArgumentParser::self_test(
         std::string const& language,
         std::ostream& os) const
 {
-    std::string lang = !language.empty() ? language : default_language();
-    std::size_t const limit = 79;
-    char const filler = '-';
-    std::stringstream ss;
-    ss << "cpp-argparse v"
-       << ARGPARSE_VERSION_MAJOR << "."
-       << ARGPARSE_VERSION_MINOR << "."
-       << ARGPARSE_VERSION_PATCH << " self-test report";
-    os << detail::_filled_string(ss.str(), limit, filler) << "\n";
-    os << detail::_filled_string(
-              "This report contains parser information and displays "
-              "diagnostic warnings", limit, detail::_space) << "\n";
-    os << detail::_filled_string("overview", limit, filler) << "\n";
-    test_overview(lang, os);
-    os << detail::_filled_string("diagnostics", limit, filler) << "\n";
-    bool res = test_diagnostics(lang, os);
-    os << detail::_filled_string("end report", limit, filler) << std::endl;
-    return res;
+    return utils::self_test(*this, language, os);
 }
 
 ARGPARSE_INL void
@@ -16763,68 +16794,92 @@ ArgumentParser::update_prog(
 }
 
 ARGPARSE_INL void
-ArgumentParser::test_overview(
+ArgumentParser::handle(
+        std::string const& str) const
+{
+    if (m_handle) {
+        m_handle(str);
+    }
+}
+
+ARGPARSE_INL void
+ArgumentParser::parse_handle(
+        bool only_known,
+        detail::func1<Namespace const&>::type const& func,
+        _Storage const& storage,
+        std::vector<std::string> const& unrecognized_args) const
+{
+    if (m_parse_handle) {
+        m_parse_handle(only_known ? Namespace(storage, func, unrecognized_args)
+                                  : Namespace(storage, func));
+    }
+}
+
+// -- utils -------------------------------------------------------------------
+ARGPARSE_INL void
+utils::test_overview(
+        ArgumentParser const& p,
         std::string const& lang,
-        std::ostream& os) const
+        std::ostream& os)
 {
     if (lang.empty()) {
         os << "default language\n";
     } else {
         os << "language: " << lang << "\n";
     }
-    os << "prog: " << prog() << "\n";
-    for (arg_iterator it = m_data->m_arguments.begin();
-         it != m_data->m_arguments.end(); ++it) {
+    os << "prog: " << p.prog() << "\n";
+    for (arg_iterator it = p.m_data->m_arguments.begin();
+         it != p.m_data->m_arguments.end(); ++it) {
         if ((*it)->action() == argparse::version) {
             os << "version: " << (*it)->version() << "\n";
         }
     }
-    if (!m_usage.suppress()) {
-        std::string tr_usage = detail::_tr(m_usage.value(), lang);
+    if (!p.m_usage.suppress()) {
+        std::string tr_usage = detail::_tr(p.m_usage.value(), lang);
         if (!tr_usage.empty()) {
-            os << "usage: " << despecify(tr_usage) << "\n";
+            os << "usage: " << p.despecify(tr_usage) << "\n";
         }
     }
-    std::string tr_description = detail::_tr(m_description, lang);
+    std::string tr_description = detail::_tr(p.m_description, lang);
     if (!tr_description.empty()) {
-        os << "description: " << despecify(tr_description) << "\n";
+        os << "description: " << p.despecify(tr_description) << "\n";
     }
-    std::string tr_epilog = detail::_tr(m_epilog, lang);
+    std::string tr_epilog = detail::_tr(p.m_epilog, lang);
     if (!tr_epilog.empty()) {
-        os << "epilog: " << despecify(tr_epilog) << "\n";
+        os << "epilog: " << p.despecify(tr_epilog) << "\n";
     }
-    os << "prefix_chars: '" << prefix_chars() << "'\n";
-    if (!fromfile_prefix_chars().empty()) {
-        os << "fromfile_prefix_chars: '" << fromfile_prefix_chars() << "'\n";
+    os << "prefix_chars: '" << p.prefix_chars() << "'\n";
+    if (!p.fromfile_prefix_chars().empty()) {
+        os << "fromfile_prefix_chars: '" << p.fromfile_prefix_chars() << "'\n";
     }
-    if (!comment_prefix_chars().empty()) {
-        os << "comment_prefix_chars: '" << comment_prefix_chars() << "'\n";
+    if (!p.comment_prefix_chars().empty()) {
+        os << "comment_prefix_chars: '" << p.comment_prefix_chars() << "'\n";
     }
-    if (m_argument_default.has_value()) {
-        os << "argument_default: " << argument_default() << "\n";
+    if (p.m_argument_default.has_value()) {
+        os << "argument_default: " << p.argument_default() << "\n";
     }
-    if (!conflict_handler().empty()) {
-        os << "conflict_handler: " << conflict_handler() << "\n";
+    if (!p.conflict_handler().empty()) {
+        os << "conflict_handler: " << p.conflict_handler() << "\n";
     }
-    os << "add_help: " << detail::_bool_to_string(add_help()) << "\n";
-    os << "allow_abbrev: " << detail::_bool_to_string(allow_abbrev()) << "\n";
-    os << "exit_on_error: " << detail::_bool_to_string(exit_on_error()) << "\n";
-    os << "suggest_on_error: " << detail::_bool_to_string(suggest_on_error())
+    os << "add_help: " << detail::_bool_to_string(p.add_help()) << "\n";
+    os << "allow_abbrev: " << detail::_bool_to_string(p.allow_abbrev()) << "\n";
+    os << "exit_on_error: " << detail::_bool_to_string(p.exit_on_error()) << "\n";
+    os << "suggest_on_error: " << detail::_bool_to_string(p.suggest_on_error())
        << "\n";
-    if (m_output_width != 0) {
-        os << "output_width [override]: " << output_width() << "\n";
+    if (p.m_output_width != 0) {
+        os << "output_width [override]: " << p.output_width() << "\n";
     } else {
 #ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
-        os << "output_width [detected]: " << output_width() << "\n";
+        os << "output_width [detected]: " << p.output_width() << "\n";
 #else
-        os << "output_width [default]: " << output_width() << "\n";
+        os << "output_width [default]: " << p.output_width() << "\n";
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
     }
-    overview_subparsers(this, std::string(), os);
+    overview_subparsers(&p, std::string(), os);
 }
 
 ARGPARSE_INL void
-ArgumentParser::overview_subparsers(
+utils::overview_subparsers(
         ArgumentParser const* parser,
         std::string const& indent,
         std::ostream& os)
@@ -16846,9 +16901,10 @@ ArgumentParser::overview_subparsers(
 }
 
 ARGPARSE_INL bool
-ArgumentParser::test_diagnostics(
+utils::test_diagnostics(
+        ArgumentParser const& p,
         std::string const& lang,
-        std::ostream& os) const
+        std::ostream& os)
 {
     std::string const _ok    = "[ OK ]";
     std::string const _warn  = "[WARN]";
@@ -16856,29 +16912,29 @@ ArgumentParser::test_diagnostics(
     typedef std::pair<std::size_t, std::size_t> WarnErrAmount;
     WarnErrAmount diagnostics;
     // check prog
-    if (prog() == detail::_prog) {
+    if (p.prog() == detail::_prog) {
         ++diagnostics.first;
         os << _warn << " used default `prog` value, "
            << "override it or pass command line options\n";
     }
     // check prefix chars
-    if (!fromfile_prefix_chars().empty()) {
-        for (std::size_t i = 0; i < fromfile_prefix_chars().size(); ++i) {
-            char c = fromfile_prefix_chars().at(i);
-            if (detail::_exists(c, prefix_chars())) {
+    if (!p.fromfile_prefix_chars().empty()) {
+        for (std::size_t i = 0; i < p.fromfile_prefix_chars().size(); ++i) {
+            char c = p.fromfile_prefix_chars().at(i);
+            if (detail::_exists(c, p.prefix_chars())) {
                 ++diagnostics.first;
                 os << _warn << " fromfile prefix char '" << std::string(1, c)
                    << "' exists in prefix_chars\n";
             }
         }
-        for (std::size_t i = 0; i < comment_prefix_chars().size(); ++i) {
-            char c = comment_prefix_chars().at(i);
-            if (detail::_exists(c, prefix_chars())) {
+        for (std::size_t i = 0; i < p.comment_prefix_chars().size(); ++i) {
+            char c = p.comment_prefix_chars().at(i);
+            if (detail::_exists(c, p.prefix_chars())) {
                 ++diagnostics.first;
                 os << _warn << " comment prefix char '" << std::string(1, c)
                    << "' exists in prefix_chars\n";
             }
-            if (detail::_exists(c, fromfile_prefix_chars())) {
+            if (detail::_exists(c, p.fromfile_prefix_chars())) {
                 ++diagnostics.first;
                 os << _warn << " comment prefix char '" << std::string(1, c)
                    << "' exists in fromfile_prefix_chars\n";
@@ -16886,7 +16942,7 @@ ArgumentParser::test_diagnostics(
         }
     }
     // check parser
-    test_argument_parser(lang, os, this, diagnostics);
+    test_argument_parser(lang, os, &p, diagnostics);
     // end diagnostics
     bool res = diagnostics.first == 0 && diagnostics.second == 0;
     if (res) {
@@ -16903,7 +16959,7 @@ ArgumentParser::test_diagnostics(
 }
 
 ARGPARSE_INL void
-ArgumentParser::test_argument_parser(
+utils::test_argument_parser(
         std::string const& lang,
         std::ostream& os,
         ArgumentParser const* p,
@@ -17116,29 +17172,40 @@ ArgumentParser::test_argument_parser(
     }
 }
 
-ARGPARSE_INL void
-ArgumentParser::handle(
-        std::string const& str) const
+ARGPARSE_INL bool
+utils::self_test(
+        ArgumentParser const& parser,
+        std::ostream& os)
 {
-    if (m_handle) {
-        m_handle(str);
-    }
+    return self_test(parser, std::string(), os);
 }
 
-ARGPARSE_INL void
-ArgumentParser::parse_handle(
-        bool only_known,
-        detail::func1<Namespace const&>::type const& func,
-        _Storage const& storage,
-        std::vector<std::string> const& unrecognized_args) const
+ARGPARSE_INL bool
+utils::self_test(
+        ArgumentParser const& parser,
+        std::string const& language,
+        std::ostream& os)
 {
-    if (m_parse_handle) {
-        m_parse_handle(only_known ? Namespace(storage, func, unrecognized_args)
-                                  : Namespace(storage, func));
-    }
+    std::string lang = !language.empty() ? language : parser.default_language();
+    std::size_t const limit = 79;
+    char const filler = '-';
+    std::stringstream ss;
+    ss << "cpp-argparse v"
+       << ARGPARSE_VERSION_MAJOR << "."
+       << ARGPARSE_VERSION_MINOR << "."
+       << ARGPARSE_VERSION_PATCH << " self-test report";
+    os << detail::_filled_string(ss.str(), limit, filler) << "\n";
+    os << detail::_filled_string(
+              "This report contains parser information and displays "
+              "diagnostic warnings", limit, detail::_space) << "\n";
+    os << detail::_filled_string("overview", limit, filler) << "\n";
+    test_overview(parser, lang, os);
+    os << detail::_filled_string("diagnostics", limit, filler) << "\n";
+    bool res = test_diagnostics(parser, lang, os);
+    os << detail::_filled_string("end report", limit, filler) << std::endl;
+    return res;
 }
 
-// -- utils -------------------------------------------------------------------
 ARGPARSE_INL std::string
 utils::format_bash_completion(
         ArgumentParser const& parser)
