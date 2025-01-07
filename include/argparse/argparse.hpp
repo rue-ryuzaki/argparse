@@ -7943,6 +7943,9 @@ public:
      *
      *  \return True if no warnings or errors were found, false otherwise
      */
+    ARGPARSE_ATTR_DEPRECATED_REASON(
+            "use argparse::utils::self_test() instead. "
+            "will be removed in the next minor release (v1.10.0)")
     ARGPARSE_ATTR_MAYBE_UNUSED
     bool
     self_test(
@@ -7959,6 +7962,9 @@ public:
      *
      *  \return True if no warnings or errors were found, false otherwise
      */
+    ARGPARSE_ATTR_DEPRECATED_REASON(
+            "use argparse::utils::self_test() instead. "
+            "will be removed in the next minor release (v1.10.0)")
     ARGPARSE_ATTR_MAYBE_UNUSED
     bool
     self_test(
