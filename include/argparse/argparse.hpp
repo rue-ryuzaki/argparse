@@ -8536,6 +8536,8 @@ public:
      *  \brief Return a string containing a bash completion.
      *  Copy the contents to ~/.bashrc or create a script file and use it
      *
+     *  \param parser Argument parser
+     *
      *  \since NEXT_RELEASE
      *
      *  \return Bash completion string
@@ -8549,6 +8551,7 @@ public:
      *  \brief Print a bash completion to output stream.
      *  Copy the contents to ~/.bashrc or create a script file and use it
      *
+     *  \param parser Argument parser
      *  \param os Output stream (default: std::cout)
      *
      *  \since NEXT_RELEASE
