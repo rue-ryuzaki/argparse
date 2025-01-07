@@ -8019,11 +8019,9 @@ public:
      *  \brief Return a string containing a bash completion.
      *  Copy the contents to ~/.bashrc or create a script file and use it
      *
-     *  \param lang Language value
-     *
      *  \since v1.7.2
      *
-     *  \return Bash completion
+     *  \return Bash completion string
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
