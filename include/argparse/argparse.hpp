@@ -2271,6 +2271,7 @@ class ArgumentParser;
 ARGPARSE_EXPORT class HelpFormatter
 {
     friend class ArgumentParser;
+    friend class utils;
 
     typedef detail::shared_ptr<Argument> pArgument;
 
@@ -6386,6 +6387,7 @@ ARGPARSE_EXPORT class ArgumentParser
     friend class HelpFormatter;
     friend class ParserGroup;
     friend class SubParsers;
+    friend class utils;
 
     typedef detail::shared_ptr<Argument> pArgument;
     typedef std::vector<pArgument> pArguments;
@@ -8513,6 +8515,42 @@ private:
     bool m_exit_on_error;
     bool m_suggest_on_error;
     bool m_deprecated;
+};
+
+/*!
+ *  \brief utils
+ */
+ARGPARSE_EXPORT class utils
+{
+    utils() ARGPARSE_NOEXCEPT { }
+    ~utils() ARGPARSE_NOEXCEPT { }
+
+public:
+    /*!
+     *  \brief Return a string containing a bash completion.
+     *  Copy the contents to ~/.bashrc or create a script file and use it
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Bash completion string
+     */
+    ARGPARSE_ATTR_NODISCARD
+    static std::string
+    format_bash_completion(
+            ArgumentParser const& parser);
+
+    /*!
+     *  \brief Print a bash completion to output stream.
+     *  Copy the contents to ~/.bashrc or create a script file and use it
+     *
+     *  \param os Output stream (default: std::cout)
+     *
+     *  \since NEXT_RELEASE
+     */
+    static void
+    print_bash_completion(
+            ArgumentParser const& parser,
+            std::ostream& os = std::cout);
 };
 
 // -- implementation ----------------------------------------------------------
@@ -15141,7 +15179,7 @@ ARGPARSE_INL void
 ArgumentParser::print_bash_completion(
         std::ostream& os) const
 {
-    os << format_bash_completion() << std::endl;
+    utils::print_bash_completion(*this, os);
 }
 
 ARGPARSE_INL void
@@ -15183,7 +15221,7 @@ ArgumentParser::print_help(
 ARGPARSE_INL std::string
 ArgumentParser::format_bash_completion() const
 {
-    return m_formatter->_format_bash_completion(this);
+    return utils::format_bash_completion(*this);
 }
 
 ARGPARSE_INL std::string
@@ -17089,6 +17127,22 @@ ArgumentParser::parse_handle(
         m_parse_handle(only_known ? Namespace(storage, func, unrecognized_args)
                                   : Namespace(storage, func));
     }
+}
+
+// -- utils -------------------------------------------------------------------
+ARGPARSE_INL std::string
+utils::format_bash_completion(
+        ArgumentParser const& parser)
+{
+    return parser.m_formatter->_format_bash_completion(&parser);
+}
+
+ARGPARSE_INL void
+utils::print_bash_completion(
+        ArgumentParser const& parser,
+        std::ostream& os)
+{
+    os << format_bash_completion(parser) << std::endl;
 }
 #endif  // ARGPARSE_INL
 }  // namespace argparse
