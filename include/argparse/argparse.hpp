@@ -216,6 +216,12 @@
 # endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #endif  // ARGPARSE_INL
 
+// -- utils -------------------------------------------------------------------
+#undef ARGPARSE_ENABLE_UTILS
+#if !defined ARGPARSE_DISABLE_UTILS
+# define ARGPARSE_ENABLE_UTILS
+#endif  // ARGPARSE_ENABLE_UTILS
+
 // -- #include ----------------------------------------------------------------
 #ifdef ARGPARSE_CXX_11
 # include <array>
@@ -7933,6 +7939,7 @@ public:
     std::list<std::pair<std::string, std::string> > const&
     list_env() const;
 
+#ifdef ARGPARSE_ENABLE_UTILS
     /*!
      *  \brief Run self-test and print report to output stream
      *  for default language
@@ -7985,6 +7992,7 @@ public:
     void
     print_bash_completion(
             std::ostream& os = std::cout) const;
+#endif  // ARGPARSE_ENABLE_UTILS
 
     /*!
      *  \brief Print a program usage for default language to output stream
@@ -8030,6 +8038,7 @@ public:
             std::string const& lang,
             std::ostream& os = std::cout) const;
 
+#ifdef ARGPARSE_ENABLE_UTILS
     /*!
      *  \brief Return a string containing a bash completion.
      *  Copy the contents to ~/.bashrc or create a script file and use it
@@ -8044,6 +8053,7 @@ public:
     ARGPARSE_ATTR_NODISCARD
     std::string
     format_bash_completion() const;
+#endif  // ARGPARSE_ENABLE_UTILS
 
     /*!
      *  \brief Return a string containing a program usage for selected language
@@ -8510,6 +8520,7 @@ private:
     bool m_deprecated;
 };
 
+#ifdef ARGPARSE_ENABLE_UTILS
 /*!
  *  \brief utils
  */
@@ -8615,6 +8626,7 @@ public:
             ArgumentParser const& parser,
             std::ostream& os = std::cout);
 };
+#endif  // ARGPARSE_ENABLE_UTILS
 
 // -- implementation ----------------------------------------------------------
 #ifdef ARGPARSE_INL
@@ -15206,6 +15218,7 @@ ArgumentParser::list_env() const
     return m_env_variables;
 }
 
+#ifdef ARGPARSE_ENABLE_UTILS
 ARGPARSE_INL bool
 ArgumentParser::self_test(
         std::ostream& os) const
@@ -15227,6 +15240,7 @@ ArgumentParser::print_bash_completion(
 {
     utils::print_bash_completion(*this, os);
 }
+#endif  // ARGPARSE_ENABLE_UTILS
 
 ARGPARSE_INL void
 ArgumentParser::print_usage(
@@ -15264,11 +15278,13 @@ ArgumentParser::print_help(
     }
 }
 
+#ifdef ARGPARSE_ENABLE_UTILS
 ARGPARSE_INL std::string
 ArgumentParser::format_bash_completion() const
 {
     return utils::format_bash_completion(*this);
 }
+#endif  // ARGPARSE_ENABLE_UTILS
 
 ARGPARSE_INL std::string
 ArgumentParser::format_usage(
@@ -16822,6 +16838,7 @@ ArgumentParser::parse_handle(
 }
 
 // -- utils -------------------------------------------------------------------
+#ifdef ARGPARSE_ENABLE_UTILS
 ARGPARSE_INL void
 utils::test_overview(
         ArgumentParser const& p,
@@ -17226,6 +17243,7 @@ utils::print_bash_completion(
 {
     os << format_bash_completion(parser) << std::endl;
 }
+#endif  // ARGPARSE_ENABLE_UTILS
 #endif  // ARGPARSE_INL
 }  // namespace argparse
 
