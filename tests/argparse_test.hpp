@@ -5,6 +5,7 @@
 #ifndef _ARGPARSE_TESTS_ARGPARSE_TEST_HPP_
 #define _ARGPARSE_TESTS_ARGPARSE_TEST_HPP_
 
+#define ARGPARSE_DISABLE_UTILS
 #define ARGPARSE_KEEP_MACROS
 #include <argparse/argparse.hpp>
 
