@@ -81,70 +81,6 @@
 #undef ARGPARSE_USE_CONSTEXPR
 
 // -- #define -----------------------------------------------------------------
-// -- version -----------------------------------------------------------------
-#define ARGPARSE_VERSION_MAJOR 1
-#define ARGPARSE_VERSION_MINOR 9
-#define ARGPARSE_VERSION_PATCH 6
-
-/*!
- *  This macro turns the version numbers into a numeric value:
- *  \verbatim
-    (1,2,3) -> (10203)
-    \endverbatim
- */
-#define ARGPARSE_VERSION_NUM(X, Y, Z) ((X) * 10000 + (Y) * 100 + (Z))
-
-/*!
- *  This is the version number macro for the current argparse version.
- */
-#define ARGPARSE_VERSION_COMPILED \
-    ARGPARSE_VERSION_NUM(ARGPARSE_VERSION_MAJOR, \
-                         ARGPARSE_VERSION_MINOR, \
-                         ARGPARSE_VERSION_PATCH)
-
-/*!
- *  This macro will evaluate to true if compiled with argparse at least X.Y.Z.
- */
-#define ARGPARSE_VERSION_AT_LEAST(X, Y, Z) \
-    (ARGPARSE_VERSION_COMPILED >= ARGPARSE_VERSION_NUM(X, Y, Z))
-
-// -- standard ----------------------------------------------------------------
-#define ARGPARSE_CXX_98
-
-#ifdef _MSVC_LANG
-# if _MSVC_LANG >= 201103L
-#  define ARGPARSE_CXX_11
-# endif  // C++11+
-# if _MSVC_LANG >  201103L
-#  define ARGPARSE_CXX_14
-# endif  // C++14+
-# if _MSVC_LANG >  201402L
-#  define ARGPARSE_CXX_17
-# endif  // C++17+
-# if _MSVC_LANG >  201703L
-#  define ARGPARSE_CXX_20
-# endif  // C++20+
-# if _MSVC_LANG >  202002L
-#  define ARGPARSE_CXX_23
-# endif  // C++23+
-#else
-# if __cplusplus >= 201103L
-#  define ARGPARSE_CXX_11
-# endif  // C++11+
-# if __cplusplus >  201103L
-#  define ARGPARSE_CXX_14
-# endif  // C++14+
-# if __cplusplus >  201402L
-#  define ARGPARSE_CXX_17
-# endif  // C++17+
-# if __cplusplus >  201703L
-#  define ARGPARSE_CXX_20
-# endif  // C++20+
-# if __cplusplus >  202002L
-#  define ARGPARSE_CXX_23
-# endif  // C++23+
-#endif  // _MSVC_LANG
-
 // -- static building ---------------------------------------------------------
 #undef ARGPARSE_INL
 #ifdef ARGPARSE_DECLARATION
@@ -216,11 +152,42 @@
 # endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #endif  // ARGPARSE_INL
 
-// -- utils -------------------------------------------------------------------
-#undef ARGPARSE_ENABLE_UTILS
-#if !defined ARGPARSE_DISABLE_UTILS
-# define ARGPARSE_ENABLE_UTILS
-#endif  // ARGPARSE_ENABLE_UTILS
+// -- standard ----------------------------------------------------------------
+#define ARGPARSE_CXX_98
+
+#ifdef _MSVC_LANG
+# if _MSVC_LANG >= 201103L
+#  define ARGPARSE_CXX_11
+# endif  // C++11+
+# if _MSVC_LANG >  201103L
+#  define ARGPARSE_CXX_14
+# endif  // C++14+
+# if _MSVC_LANG >  201402L
+#  define ARGPARSE_CXX_17
+# endif  // C++17+
+# if _MSVC_LANG >  201703L
+#  define ARGPARSE_CXX_20
+# endif  // C++20+
+# if _MSVC_LANG >  202002L
+#  define ARGPARSE_CXX_23
+# endif  // C++23+
+#else
+# if __cplusplus >= 201103L
+#  define ARGPARSE_CXX_11
+# endif  // C++11+
+# if __cplusplus >  201103L
+#  define ARGPARSE_CXX_14
+# endif  // C++14+
+# if __cplusplus >  201402L
+#  define ARGPARSE_CXX_17
+# endif  // C++17+
+# if __cplusplus >  201703L
+#  define ARGPARSE_CXX_20
+# endif  // C++20+
+# if __cplusplus >  202002L
+#  define ARGPARSE_CXX_23
+# endif  // C++23+
+#endif  // _MSVC_LANG
 
 // -- #include ----------------------------------------------------------------
 #ifdef ARGPARSE_CXX_11
@@ -266,6 +233,39 @@
 #  include <string_view>
 # endif  // ARGPARSE_HAS_STRING_VIEW
 #endif  // ARGPARSE_INL
+
+// -- version -----------------------------------------------------------------
+#define ARGPARSE_VERSION_MAJOR 1
+#define ARGPARSE_VERSION_MINOR 9
+#define ARGPARSE_VERSION_PATCH 6
+
+/*!
+ *  This macro turns the version numbers into a numeric value:
+ *  \verbatim
+    (1,2,3) -> (10203)
+    \endverbatim
+ */
+#define ARGPARSE_VERSION_NUM(X, Y, Z) ((X) * 10000 + (Y) * 100 + (Z))
+
+/*!
+ *  This is the version number macro for the current argparse version.
+ */
+#define ARGPARSE_VERSION_COMPILED \
+    ARGPARSE_VERSION_NUM(ARGPARSE_VERSION_MAJOR, \
+                         ARGPARSE_VERSION_MINOR, \
+                         ARGPARSE_VERSION_PATCH)
+
+/*!
+ *  This macro will evaluate to true if compiled with argparse at least X.Y.Z.
+ */
+#define ARGPARSE_VERSION_AT_LEAST(X, Y, Z) \
+    (ARGPARSE_VERSION_COMPILED >= ARGPARSE_VERSION_NUM(X, Y, Z))
+
+// -- utils -------------------------------------------------------------------
+#undef ARGPARSE_ENABLE_UTILS
+#if !defined ARGPARSE_DISABLE_UTILS
+# define ARGPARSE_ENABLE_UTILS
+#endif  // ARGPARSE_ENABLE_UTILS
 
 // -- attributes --------------------------------------------------------------
 #ifdef ARGPARSE_CXX_11
