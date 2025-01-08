@@ -37,6 +37,8 @@ The work of the parser on older versions of compilers is not guaranteed.
 ```ARGPARSE_DECLARATION``` - Use argparse library as a declaration header. You can use ```#include <argparse/argparse_decl.hpp>``` instead of ```#include <argparse/argparse.hpp>```
 
 ```ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely <Windows.h> on OS Windows). Does not make sense to use with ```ARGPARSE_DECLARATION```
+
+```ARGPARSE_DISABLE_UTILS`` - If you don't want to use utils (bash completion, self test).
 ### Can be read
 ```ARGPARSE_VERSION_MAJOR``` - Major version of the argparse library
 
@@ -775,7 +777,7 @@ ArgumentParser can help you to create bash completion file for your program (thi
 ```cpp
 std::ofstream file;
 file.open("path-to-script.sh", std::ios::trunc);
-parser.print_bash_completion(file);
+argparse::utils::print_bash_completion(parser, file);
 ```
 and add to your ```.bashrc``` file:
 ```sh
@@ -784,11 +786,10 @@ and add to your ```.bashrc``` file:
 ## Self test
 You can check that you parser is created correctly by calling the ```self_test``` function.
 ```cpp
-parser.self_test();
+argparse::utils::self_test(parser);
 ```
 ## Execute unit tests
 To compile and run the tests, you need to execute
-
 ```sh
 $ mkdir build
 $ cd build
