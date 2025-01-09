@@ -69,6 +69,8 @@
 #undef ARGPARSE_ATTR_UNLIKELY
 // C++23+
 #undef ARGPARSE_ATTR_ASSUME
+// C++26+
+#undef ARGPARSE_ATTR_INDETERMINATE
 // -- specifiers --------------------------------------------------------------
 #undef ARGPARSE_CONSTEXPR
 #undef ARGPARSE_ENUM_TYPE
@@ -321,6 +323,12 @@
 #else
 # define ARGPARSE_ATTR_ASSUME(X)
 #endif  // C++23+
+
+#ifdef ARGPARSE_CXX_26
+# define ARGPARSE_ATTR_INDETERMINATE        [[indeterminate]]
+#else
+# define ARGPARSE_ATTR_INDETERMINATE
+#endif  // C++26+
 
 // -- specifiers --------------------------------------------------------------
 #define ARGPARSE_EXPORT
@@ -17287,6 +17295,8 @@ utils::print_bash_completion(
 #undef ARGPARSE_ATTR_UNLIKELY
 // C++23+
 #undef ARGPARSE_ATTR_ASSUME
+// C++26+
+#undef ARGPARSE_ATTR_INDETERMINATE
 // -- specifiers --------------------------------------------------------------
 #undef ARGPARSE_CONSTEXPR
 #undef ARGPARSE_ENUM_TYPE
