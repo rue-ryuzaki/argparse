@@ -47,6 +47,7 @@
 #undef ARGPARSE_CXX_17
 #undef ARGPARSE_CXX_20
 #undef ARGPARSE_CXX_23
+#undef ARGPARSE_CXX_26
 // -- features ----------------------------------------------------------------
 #undef ARGPARSE_HAS_OPTIONAL
 #undef ARGPARSE_HAS_STRING_VIEW
@@ -171,6 +172,9 @@
 # if _MSVC_LANG >  202002L
 #  define ARGPARSE_CXX_23
 # endif  // C++23+
+# if _MSVC_LANG >  202302L
+#  define ARGPARSE_CXX_26
+# endif  // C++26+
 #else
 # if __cplusplus >= 201103L
 #  define ARGPARSE_CXX_11
@@ -187,6 +191,9 @@
 # if __cplusplus >  202002L
 #  define ARGPARSE_CXX_23
 # endif  // C++23+
+# if __cplusplus >  202302L
+#  define ARGPARSE_CXX_26
+# endif  // C++26+
 #endif  // _MSVC_LANG
 
 // -- #include ----------------------------------------------------------------
@@ -17257,6 +17264,7 @@ utils::print_bash_completion(
 # undef ARGPARSE_CXX_17
 # undef ARGPARSE_CXX_20
 # undef ARGPARSE_CXX_23
+# undef ARGPARSE_CXX_26
 // -- features ----------------------------------------------------------------
 # undef ARGPARSE_HAS_OPTIONAL
 # undef ARGPARSE_HAS_STRING_VIEW
