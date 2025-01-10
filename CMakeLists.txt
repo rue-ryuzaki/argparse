@@ -166,15 +166,16 @@ option(ARGPARSE_BUILD_TESTS "Build ${LIBRARY_NAME} unit tests" ON)
 
 if (ARGPARSE_BUILD_EXAMPLES OR ARGPARSE_BUILD_TESTS)
     # argparse implementation (internal)
+    set(LIBRARY_IMPL_NAME ${LIBRARY_NAME}_impl)
     add_library(
-        argparse_impl OBJECT
+        ${LIBRARY_IMPL_NAME} OBJECT
         ${CMAKE_CURRENT_SOURCE_DIR}/src/argparse_impl.cpp
     )
     target_include_directories(
-        argparse_impl PUBLIC
+        ${LIBRARY_IMPL_NAME} PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
-    set_target_properties(argparse_impl PROPERTIES
+    set_target_properties(${LIBRARY_IMPL_NAME} PROPERTIES
         COMPILE_DEFINITIONS "$<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>"
         COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:/EHsc;$<$<CONFIG:Release>:/Od>>"
     )
