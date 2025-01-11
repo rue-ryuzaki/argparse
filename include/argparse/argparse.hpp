@@ -15238,7 +15238,7 @@ ARGPARSE_INL bool
 ArgumentParser::self_test(
         std::ostream& os) const
 {
-    return self_test(std::string(), os);
+    return utils::self_test(*this, os);
 }
 
 ARGPARSE_INL bool
