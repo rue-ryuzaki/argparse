@@ -6,6 +6,7 @@
 | (C++1z) C++17 | gcc: (5.1) 5.1 or higher<br />clang: (3.5-4.0.1) 5.0.0 or higher | gcc: 7.1 or higher<br />clang: 5.0.0 or higher |
 | (C++2a) C++20 | gcc: (8.1-9.5) 10.1 or higher<br />clang: (5.0.0-9.0.1) 10.0.0 or higher | gcc: 8.1 or higher<br />clang: 5.0.0 or higher |
 | (C++2b) C++23 | gcc: (11.1) 11.1 or higher<br />clang: (12.0.0-16.0.6) 17.0.1 or higher | gcc: 11.1 or higher<br />clang: 12.0.0 or higher |
+| (C++2c) C++26 | gcc: (14.1) 14.1 or higher<br />clang: (17.0.1) 17.0.1 or higher | gcc: 14.1 or higher<br />clang: 17.0.1 or higher |
 
 other compilers: no actual data
 
@@ -43,3 +44,4 @@ other compilers: no actual data
  - string_view
 ### C++20 standard requirement
 ### C++23 standard requirement
+### C++26 standard requirement
