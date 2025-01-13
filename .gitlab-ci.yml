@@ -19,7 +19,7 @@ build:
       - src/*
   parallel:
     matrix:
-      - standard: [98, 11, 14, 17, 20, 23]
+      - standard: [98, 11, 14, 17, 20, 23, 26]
   script:
     - cmake -S . -B build/${standard} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_STANDARD=${standard}
     - cmake --build build/${standard} --config ${BUILD_TYPE}
