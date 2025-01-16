@@ -375,11 +375,13 @@ TEST_CASE("1. to string", "[namespace]")
 
     SECTION("1.14. optional action count") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+        parser.add_argument("-c").action("count").default_value("4");
+        parser.add_argument("-d").action("count").default_value(4);
         parser.add_argument("-f", "--foo").action("count");
 
-        CHECK(parser.parse_args("").to_string()       == "Namespace(foo=None)");
-        CHECK(parser.parse_args("-f").to_string()     == "Namespace(foo=1)");
-        CHECK(parser.parse_args("-f -f").to_string()  == "Namespace(foo=2)");
+        CHECK(parser.parse_args("").to_string()         == "Namespace(c='4', d=4, foo=None)");
+        CHECK(parser.parse_args("-f -cc").to_string()   == "Namespace(c=6, d=4, foo=1)");
+        CHECK(parser.parse_args("-f -f -d").to_string() == "Namespace(c='4', d=5, foo=2)");
     }
 
     SECTION("1.15. positional action store without default value") {
@@ -672,9 +674,11 @@ TEST_CASE("1. to string", "[namespace]")
 
     SECTION("1.27. positional action count") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+        parser.add_argument("c").action("count").default_value("4");
+        parser.add_argument("d").action("count").default_value(4);
         parser.add_argument("foo").action("count");
 
-        CHECK(parser.parse_args("").to_string() == "Namespace(foo=1)");
+        CHECK(parser.parse_args("").to_string() == "Namespace(c=5, d=5, foo=1)");
         CHECK_THROWS(parser.parse_args("a"));
         CHECK_THROWS(parser.parse_args("a a"));
     }

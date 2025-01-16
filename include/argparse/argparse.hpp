@@ -5438,6 +5438,11 @@ public:
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         if (args.first->action() == argparse::count) {
+            if (args.first->m_default.has_value()) {
+                std::string value = args.first->m_default.value();
+                std::size_t res = _Storage::to_type<std::size_t>(value);
+                return static_cast<T>(res + args.second.size());
+            }
             return static_cast<T>(args.second.size());
         }
         return _Storage::get_single_value<T>(key, args);
@@ -13438,6 +13443,17 @@ Namespace::to_string(
         case argparse::BooleanOptionalAction :
             return detail::_boolean_option_to_string(key, args, quotes);
         case argparse::count :
+            if (args.first->m_default.has_value()) {
+                std::string value = args.first->m_default.value();
+                if (args.second.empty()) {
+                    if (args.first->m_type_name.has_value()) {
+                        return value;
+                    }
+                    return quotes + value + quotes;
+                }
+                std::size_t res = _Storage::to_type<std::size_t>(value);
+                return detail::_to_string(res + args.second.size());
+            }
             return args.second.empty()
                     ? detail::_none : detail::_to_string(args.second.size());
         case argparse::store :
