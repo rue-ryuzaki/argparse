@@ -28,7 +28,7 @@ TEST_CASE("1. type name", "[detail]")
         CHECK(argparse::detail::Type::name<int>() == "int");
         CHECK(argparse::detail::Type::name<char>() == "char");
         CHECK(argparse::detail::Type::name<float>() == "float");
-        CHECK(argparse::detail::Type::name<double>() == "double");
+        CHECK(argparse::detail::Type::name<double>() == "float");
         CHECK(argparse::detail::Type::name<std::string>() == "std::string");
 #ifdef ARGPARSE_HAS_STRING_VIEW
         CHECK(argparse::detail::Type::name<std::string_view>() == "std::string");
@@ -86,7 +86,7 @@ TEST_CASE("1. type name", "[detail]")
         CHECK(argparse::detail::Type::basic<int>() == "int");
         CHECK(argparse::detail::Type::basic<char>() == "char");
         CHECK(argparse::detail::Type::basic<float>() == "float");
-        CHECK(argparse::detail::Type::basic<double>() == "double");
+        CHECK(argparse::detail::Type::basic<double>() == "float");
         CHECK(argparse::detail::Type::basic<std::string>() == "std::string");
 #ifdef ARGPARSE_HAS_STRING_VIEW
         CHECK(argparse::detail::Type::basic<std::string_view>() == "std::string");

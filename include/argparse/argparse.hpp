@@ -1880,6 +1880,14 @@ public:
     }
 
     template <class T, typename enable_if<
+                  is_floating_point<T>::value>::type* = nullptr>
+    static std::string
+    name()
+    {
+        return "float";
+    }
+
+    template <class T, typename enable_if<
                   is_stl_array<T>::value>::type* = nullptr>
     static std::string
     name()
@@ -1932,6 +1940,7 @@ public:
 
     template <class T, typename enable_if<
                   !is_string_ctor<T>::value
+                  && !is_floating_point<T>::value
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
                   && !is_stl_map<T>::value
@@ -1949,6 +1958,13 @@ public:
     name(typename enable_if<is_string_ctor<T>::value, bool>::type = true)
     {
         return "std::string";
+    }
+
+    template <class T>
+    static std::string
+    name(typename enable_if<is_floating_point<T>::value, bool>::type = true)
+    {
+        return "float";
     }
 
     template <class T>
@@ -1983,6 +1999,7 @@ public:
     template <class T>
     static std::string
     name(typename enable_if<!is_string_ctor<T>::value
+                            && !is_floating_point<T>::value
                             && !is_stl_container<T>::value
                             && !is_stl_map<T>::value
                             && !is_stl_pair<T>::value
