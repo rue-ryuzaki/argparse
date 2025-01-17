@@ -1037,6 +1037,13 @@ struct is_byte_type
 };
 
 template <class T>
+struct is_integer_type
+{
+    static bool const value = is_integral<T>::value
+                         && !is_byte_type<T>::value && !is_same<bool, T>::value;
+};
+
+template <class T>
 struct is_string_ctor
 {
     static bool const value = is_constructible<std::string, T>::value;
@@ -1880,6 +1887,14 @@ public:
     }
 
     template <class T, typename enable_if<
+                  is_integer_type<T>::value>::type* = nullptr>
+    static std::string
+    name()
+    {
+        return "int";
+    }
+
+    template <class T, typename enable_if<
                   is_floating_point<T>::value>::type* = nullptr>
     static std::string
     name()
@@ -1940,6 +1955,7 @@ public:
 
     template <class T, typename enable_if<
                   !is_string_ctor<T>::value
+                  && !is_integer_type<T>::value
                   && !is_floating_point<T>::value
                   && !is_stl_array<T>::value
                   && !is_stl_container<T>::value
@@ -1958,6 +1974,13 @@ public:
     name(typename enable_if<is_string_ctor<T>::value, bool>::type = true)
     {
         return "std::string";
+    }
+
+    template <class T>
+    static std::string
+    name(typename enable_if<is_integer_type<T>::value, bool>::type = true)
+    {
+        return "int";
     }
 
     template <class T>
@@ -1999,6 +2022,7 @@ public:
     template <class T>
     static std::string
     name(typename enable_if<!is_string_ctor<T>::value
+                            && !is_integer_type<T>::value
                             && !is_floating_point<T>::value
                             && !is_stl_container<T>::value
                             && !is_stl_map<T>::value

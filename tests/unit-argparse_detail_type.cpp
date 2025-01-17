@@ -25,7 +25,11 @@
 TEST_CASE("1. type name", "[detail]")
 {
     SECTION("1.1. current type") {
+        CHECK(argparse::detail::Type::name<bool>() == "bool");
+        CHECK(argparse::detail::Type::name<short>() == "int");
         CHECK(argparse::detail::Type::name<int>() == "int");
+        CHECK(argparse::detail::Type::name<long>() == "int");
+        CHECK(argparse::detail::Type::name<long long>() == "int");
         CHECK(argparse::detail::Type::name<char>() == "char");
         CHECK(argparse::detail::Type::name<float>() == "float");
         CHECK(argparse::detail::Type::name<double>() == "float");
@@ -83,7 +87,11 @@ TEST_CASE("1. type name", "[detail]")
     }
 
     SECTION("1.2. basic type") {
+        CHECK(argparse::detail::Type::basic<bool>() == "bool");
+        CHECK(argparse::detail::Type::basic<short>() == "int");
         CHECK(argparse::detail::Type::basic<int>() == "int");
+        CHECK(argparse::detail::Type::basic<long>() == "int");
+        CHECK(argparse::detail::Type::basic<long long>() == "int");
         CHECK(argparse::detail::Type::basic<char>() == "char");
         CHECK(argparse::detail::Type::basic<float>() == "float");
         CHECK(argparse::detail::Type::basic<double>() == "float");
@@ -139,7 +147,7 @@ TEST_CASE("1. type name", "[detail]")
     }
 }
 
-TEST_CASE("3. byte type check", "[detail]")
+TEST_CASE("2. byte type check", "[detail]")
 {
     // true
     CHECK(argparse::detail::is_byte_type<char>::value == true);
