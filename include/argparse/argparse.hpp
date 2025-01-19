@@ -15018,7 +15018,7 @@ ArgumentParser::set_defaults(
     return *this;
 }
 
-ArgumentParser&
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::set_defaults_func(
         detail::func1<Namespace const&>::type func) ARGPARSE_NOEXCEPT
 {
