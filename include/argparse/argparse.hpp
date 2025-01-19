@@ -50,6 +50,7 @@
 #undef ARGPARSE_CXX_26
 // -- features ----------------------------------------------------------------
 #undef ARGPARSE_HAS_OPTIONAL
+#undef ARGPARSE_HAS_SPAN
 #undef ARGPARSE_HAS_STRING_VIEW
 // -- attributes --------------------------------------------------------------
 // C++11+
@@ -232,6 +233,15 @@
 #ifdef ARGPARSE_HAS_OPTIONAL
 # include <optional>
 #endif  // ARGPARSE_HAS_OPTIONAL
+
+#if __has_include(<version>)
+# include <version>
+#endif  // __has_include(<version>)
+
+#ifdef __cpp_lib_span
+# include <span>
+# define ARGPARSE_HAS_SPAN
+#endif  // __cpp_lib_span
 
 #ifdef ARGPARSE_INL
 # include <fstream>
@@ -1176,6 +1186,9 @@ struct is_stl_matrix
 template <class T>
 struct is_stl_tuple                                               :false_type{};
 
+template <class T>
+struct is_stl_span                                                :false_type{};
+
 #ifdef ARGPARSE_CXX_11
 template <class T, std::size_t N>
 struct is_stl_array<std::array                          <T, N> >   :true_type{};
@@ -1189,6 +1202,11 @@ struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
     static bool const value = is_stl_tuple<typename T::value_type>::value;
 };
 #endif  // C++11+
+
+#ifdef ARGPARSE_HAS_SPAN
+template <class... Args>
+struct is_stl_span<std::span                            <Args...> >:true_type{};
+#endif  // ARGPARSE_HAS_SPAN
 
 #ifdef ARGPARSE_CXX_11
 template <class T>
@@ -17332,6 +17350,7 @@ utils::print_bash_completion(
 # undef ARGPARSE_CXX_26
 // -- features ----------------------------------------------------------------
 # undef ARGPARSE_HAS_OPTIONAL
+# undef ARGPARSE_HAS_SPAN
 # undef ARGPARSE_HAS_STRING_VIEW
 #endif  // ARGPARSE_KEEP_MACROS
 // -- attributes --------------------------------------------------------------
