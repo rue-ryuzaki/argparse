@@ -274,7 +274,7 @@ int main(int argc, char const* const argv[])
 }
 ```
 ## Namespace::get<> types support (+ try_get with std::optional, since C++17)
-- base types (bool, integral types, floating point types, std::string)
+- base types (bool, integer types, floating point types, std::string, std::string_view (since C++17))
 - byte types (char, signed/unsigned char, int8_t, uint8_t, std::byte (since C++17), char8_t (since C++20))
 - containers (std::array (since C++11), std::deque, std::forward_list (since C++11), std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset (since C++11), std::unordered_set (since C++11))
 - containers with std::pair/std::tuple (since C++11)
@@ -286,7 +286,7 @@ int main(int argc, char const* const argv[])
 ### Don't work:
 - pointer and reference types
 - plain C arrays
-- non-own C++17+ types and containers (std::string_view, std::span)
+- non-own C++20+ types and containers (std::span)
 ### Note:
 For types with std::pair and std::tuple (also for std::map) needs to specify delimiter (by default it ```'='```) between key and value (for std::pair/std::map) / values (for std::tuple). For space delimiter ```' '``` all values are parsed from separated command line arguments, otherwise from individual command line argument.
 
