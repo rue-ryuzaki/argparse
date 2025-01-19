@@ -4932,13 +4932,7 @@ private:
     get_vector(
             value_type const& value)
     {
-        std::vector<T> res;
-        for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
-            std::vector<T> vector = as_subvector<T>(
-                        value.first, value.second.sub_values(i));
-            res.insert(res.end(), vector.begin(), vector.end());
-        }
-        return res;
+        return as_subvector<T>(value.first, value.second());
     }
 
     template <class T>
