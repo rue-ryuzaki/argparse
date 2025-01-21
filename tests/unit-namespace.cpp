@@ -926,12 +926,14 @@ TEST_CASE("4. value types check", "[namespace]")
         CHECK(args1.exists("foo") == true);
         CHECK(args1.get<std::string>("foo") == "key:value");
         CHECK(args1.get<std::vector<std::string> >("foo").size() == 1);
+        CHECK(args1.get<std::vector<std::pair<std::string, std::string> > >("foo", ':').size() == 1);
         CHECK((args1.get<std::pair<std::string, std::string> >("foo", ':').first == "key"));
         CHECK((args1.get<std::pair<std::string, std::string> >("foo", ':').second == "value"));
 #ifdef ARGPARSE_HAS_OPTIONAL
         CHECK(args1.try_get<std::string>("foo").operator bool() == true);
         CHECK(args1.try_get<std::string>("foo").value() == "key:value");
         CHECK(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
+        CHECK(args1.try_get<std::vector<std::pair<std::string, std::string> > >("foo", ':')->size() == 1);
         CHECK(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->first == "key");
         CHECK(args1.try_get<std::pair<std::string, std::string> >("foo", ':')->second == "value");
 #endif  // ARGPARSE_HAS_OPTIONAL
@@ -955,10 +957,12 @@ TEST_CASE("4. value types check", "[namespace]")
         // or parser2.parse_args("--foo key value");
         CHECK(args2.exists("foo") == true);
         CHECK(args2.get<std::vector<std::string> >("foo").size() == 2);
+        CHECK(args2.get<std::vector<std::pair<std::string, std::string> > >("foo", ' ').size() == 1);
         CHECK((args2.get<std::pair<std::string, std::string> >("foo", ' ').first == "key"));
         CHECK((args2.get<std::pair<std::string, std::string> >("foo", ' ').second == "value"));
 #ifdef ARGPARSE_HAS_OPTIONAL
         CHECK(args2.try_get<std::vector<std::string> >("foo")->size() == 2);
+        CHECK(args2.try_get<std::vector<std::pair<std::string, std::string> > >("foo", ' ')->size() == 1);
         CHECK(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->first == "key");
         CHECK(args2.try_get<std::pair<std::string, std::string> >("foo", ' ')->second == "value");
 #endif  // ARGPARSE_HAS_OPTIONAL
@@ -981,6 +985,7 @@ TEST_CASE("4. value types check", "[namespace]")
         CHECK(args1.exists("foo") == true);
         CHECK(args1.get<std::string>("foo") == "1:value:3");
         CHECK(args1.get<std::vector<std::string> >("foo").size() == 1);
+        CHECK(args1.get<std::vector<std::tuple<int, std::string, int> > >("foo", ':').size() == 1);
         CHECK(std::get<0>(tuple1) == 1);
         CHECK(std::get<1>(tuple1) == "value");
         CHECK(std::get<2>(tuple1) == 3);
@@ -988,6 +993,7 @@ TEST_CASE("4. value types check", "[namespace]")
         CHECK(args1.try_get<std::string>("foo").operator bool() == true);
         CHECK(args1.try_get<std::string>("foo").value() == "1:value:3");
         CHECK(args1.try_get<std::vector<std::string> >("foo")->size() == 1);
+        CHECK(args1.try_get<std::vector<std::tuple<int, std::string, int> > >("foo", ':')->size() == 1);
         auto try_tuple1 = args1.try_get<std::tuple<int, std::string, int> >("foo", ':');
         CHECK(std::get<0>(try_tuple1.value()) == 1);
         CHECK(std::get<1>(try_tuple1.value()) == "value");
@@ -1021,11 +1027,13 @@ TEST_CASE("4. value types check", "[namespace]")
         auto tuple2 = args2.get<std::tuple<int, std::string, int> >("foo", ' ');
         CHECK(args2.exists("foo") == true);
         CHECK(args2.get<std::vector<std::string> >("foo").size() == 3);
+        CHECK(args2.get<std::vector<std::tuple<int, std::string, int> > >("foo", ' ').size() == 1);
         CHECK(std::get<0>(tuple2) == 1);
         CHECK(std::get<1>(tuple2) == "value");
         CHECK(std::get<2>(tuple2) == 3);
 #ifdef ARGPARSE_HAS_OPTIONAL
         CHECK(args2.try_get<std::vector<std::string> >("foo")->size() == 3);
+        CHECK(args2.try_get<std::vector<std::tuple<int, std::string, int> > >("foo", ' ')->size() == 1);
         auto try_tuple2 = args2.try_get<std::tuple<int, std::string, int> >("foo", ' ');
         CHECK(std::get<0>(try_tuple2.value()) == 1);
         CHECK(std::get<1>(try_tuple2.value()) == "value");
