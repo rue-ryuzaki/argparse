@@ -1155,10 +1155,18 @@ struct is_stl_queue
 };
 
 template <class T>
+struct is_stl_span                                                :false_type{};
+
+#ifdef ARGPARSE_HAS_SPAN
+template <class T>
+struct is_stl_span<std::span                            <T> >      :true_type{};
+#endif  // ARGPARSE_HAS_SPAN
+
+template <class T>
 struct is_stl_container
 {
     static bool const value = has_vector_ctor<T>::value
-                          && !is_stl_queue<T>::value
+                          && !is_stl_queue<T>::value && !is_stl_span<T>::value
                           && !is_string_ctor<T>::value && !is_stl_map<T>::value;
 };
 
@@ -1186,9 +1194,6 @@ struct is_stl_matrix
 template <class T>
 struct is_stl_tuple                                               :false_type{};
 
-template <class T>
-struct is_stl_span                                                :false_type{};
-
 #ifdef ARGPARSE_CXX_11
 template <class T, std::size_t N>
 struct is_stl_array<std::array                          <T, N> >   :true_type{};
@@ -1202,11 +1207,6 @@ struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
     static bool const value = is_stl_tuple<typename T::value_type>::value;
 };
 #endif  // C++11+
-
-#ifdef ARGPARSE_HAS_SPAN
-template <class... Args>
-struct is_stl_span<std::span                            <Args...> >:true_type{};
-#endif  // ARGPARSE_HAS_SPAN
 
 #ifdef ARGPARSE_CXX_11
 template <class T>
@@ -1829,7 +1829,8 @@ public:
     template <class T, typename enable_if<
                   is_stl_array<T>::value
                   || is_stl_container<T>::value
-                  || is_stl_queue<T>::value>::type* = nullptr>
+                  || is_stl_queue<T>::value
+                  || is_stl_span<T>::value>::type* = nullptr>
     static std::string
     basic()
     {
@@ -1852,6 +1853,7 @@ public:
                   && !is_stl_map<T>::value
                   && !is_stl_pair<T>::value
                   && !is_stl_queue<T>::value
+                  && !is_stl_span<T>::value
                   && !is_stl_tuple<T>::value>::type* = nullptr>
     static std::string
     basic()

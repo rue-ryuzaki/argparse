@@ -181,6 +181,9 @@ struct std::hash<std::tuple<Ts...> >
     MACRO_TEST1(AD::M<C<std::unordered_multiset,            > >::value == R)\
     MACRO_TEST1(AD::M<C<std::unordered_set,                 > >::value == R)
 
+#define MACRO_SPAN(M, R) \
+    MACRO_TEST1(AD::M<std::span,                            >::value == R)
+
 TEST_CASE("1. templates", "[detail]")
 {
     SECTION("1.1 is_stl_array") {
@@ -191,6 +194,7 @@ TEST_CASE("1. templates", "[detail]")
         bool is_map = false;
         bool is_queue = false;
         bool is_matrix = false;
+        bool is_span = false;
 
         MACRO_SIMPLE(is_stl_array, false);
         MACRO_CONTAINER(is_stl_array, is_container);
@@ -211,6 +215,9 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX11(is_stl_array, std::list, is_matrix);
         MACRO_MATRIX11(is_stl_array, std::vector, is_matrix);
 #endif  // C++11+
+#ifdef ARGPARSE_HAS_SPAN
+        MACRO_SPAN(is_stl_array, is_span);
+#endif  // ARGPARSE_HAS_SPAN
     }
 
     SECTION("1.2 is_stl_container") {
@@ -221,6 +228,7 @@ TEST_CASE("1. templates", "[detail]")
         bool is_map = false;
         bool is_queue = false;
         bool is_matrix = true;
+        bool is_span = false;
 
         MACRO_SIMPLE(is_stl_container, false);
         MACRO_CONTAINER(is_stl_container, is_container);
@@ -240,6 +248,9 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX11(is_stl_container, std::list, is_matrix);
         MACRO_MATRIX11(is_stl_container, std::vector, is_matrix);
 #endif  // C++11+
+#ifdef ARGPARSE_HAS_SPAN
+        MACRO_SPAN(is_stl_container, is_span);
+#endif  // ARGPARSE_HAS_SPAN
     }
 
     SECTION("1.3 is_stl_container_paired") {
@@ -250,6 +261,7 @@ TEST_CASE("1. templates", "[detail]")
         bool is_map = false;
         bool is_queue = false;
         bool is_matrix = false;
+        bool is_span = false;
 
         MACRO_SIMPLE(is_stl_container_paired, false);
         MACRO_CONTAINER(is_stl_container_paired, is_container);
@@ -269,6 +281,9 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX11(is_stl_container_paired, std::list, is_matrix);
         MACRO_MATRIX11(is_stl_container_paired, std::vector, is_matrix);
 #endif  // C++11+
+#ifdef ARGPARSE_HAS_SPAN
+        MACRO_SPAN(is_stl_container_paired, is_span);
+#endif  // ARGPARSE_HAS_SPAN
     }
 
     SECTION("1.4 is_stl_container_tupled") {
@@ -279,6 +294,7 @@ TEST_CASE("1. templates", "[detail]")
         bool is_map = false;
         bool is_queue = false;
         bool is_matrix = false;
+        bool is_span = false;
 
         MACRO_SIMPLE(is_stl_container_tupled, false);
         MACRO_CONTAINER(is_stl_container_tupled, is_container);
@@ -298,6 +314,9 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX11(is_stl_container_tupled, std::list, is_matrix);
         MACRO_MATRIX11(is_stl_container_tupled, std::vector, is_matrix);
 #endif  // C++11+
+#ifdef ARGPARSE_HAS_SPAN
+        MACRO_SPAN(is_stl_container_tupled, is_span);
+#endif  // ARGPARSE_HAS_SPAN
     }
 
     SECTION("1.5 is_stl_map") {
@@ -308,6 +327,7 @@ TEST_CASE("1. templates", "[detail]")
         bool is_map = true;
         bool is_queue = false;
         bool is_matrix = false;
+        bool is_span = false;
 
         MACRO_SIMPLE(is_stl_map, false);
         MACRO_CONTAINER(is_stl_map, is_container);
@@ -327,6 +347,9 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX11(is_stl_map, std::list, is_matrix);
         MACRO_MATRIX11(is_stl_map, std::vector, is_matrix);
 #endif  // C++11+
+#ifdef ARGPARSE_HAS_SPAN
+        MACRO_SPAN(is_stl_map, is_span);
+#endif  // ARGPARSE_HAS_SPAN
     }
 
     SECTION("1.6 is_stl_queue") {
@@ -337,6 +360,7 @@ TEST_CASE("1. templates", "[detail]")
         bool is_map = false;
         bool is_queue = true;
         bool is_matrix = false;
+        bool is_span = false;
 
         MACRO_SIMPLE(is_stl_queue, false);
         MACRO_CONTAINER(is_stl_queue, is_container);
@@ -356,6 +380,9 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX11(is_stl_queue, std::list, is_matrix);
         MACRO_MATRIX11(is_stl_queue, std::vector, is_matrix);
 #endif  // C++11+
+#ifdef ARGPARSE_HAS_SPAN
+        MACRO_SPAN(is_stl_queue, is_span);
+#endif  // ARGPARSE_HAS_SPAN
     }
 
     SECTION("1.7 is_stl_matrix") {
@@ -366,6 +393,7 @@ TEST_CASE("1. templates", "[detail]")
         bool is_map = false;
         bool is_queue = false;
         bool is_matrix = true;
+        bool is_span = false;
 
         MACRO_SIMPLE(is_stl_matrix, false);
         MACRO_CONTAINER(is_stl_matrix, is_container);
@@ -385,5 +413,41 @@ TEST_CASE("1. templates", "[detail]")
         MACRO_MATRIX11(is_stl_matrix, std::list, is_matrix);
         MACRO_MATRIX11(is_stl_matrix, std::vector, is_matrix);
 #endif  // C++11+
+#ifdef ARGPARSE_HAS_SPAN
+        MACRO_SPAN(is_stl_matrix, is_span);
+#endif  // ARGPARSE_HAS_SPAN
+    }
+
+    SECTION("1.8 is_stl_span") {
+        bool is_array = false;
+        bool is_container = false;
+        bool is_container_pair = false;
+        bool is_container_tuple = false;
+        bool is_map = false;
+        bool is_queue = false;
+        bool is_matrix = false;
+        bool is_span = true;
+
+        MACRO_SIMPLE(is_stl_span, false);
+        MACRO_CONTAINER(is_stl_span, is_container);
+        MACRO_CONTAINER_PAIR(is_stl_span, is_container_pair);
+        MACRO_MAP(is_stl_span, is_map);
+        MACRO_QUEUE(is_stl_span, is_queue);
+        MACRO_MATRIX(is_stl_span, std::deque, is_matrix);
+        MACRO_MATRIX(is_stl_span, std::list, is_matrix);
+        MACRO_MATRIX(is_stl_span, std::vector, is_matrix);
+#ifdef ARGPARSE_CXX_11
+        MACRO_ARRAY(is_stl_span, is_array);
+        MACRO_CONTAINER11(is_stl_span, is_container);
+        MACRO_CONTAINER_PAIR11(is_stl_span, is_container_pair);
+        MACRO_CONTAINER_TUPLE(is_stl_span, is_container_tuple);
+        MACRO_MAP11(is_stl_span, is_map);
+        MACRO_MATRIX11(is_stl_span, std::deque, is_matrix);
+        MACRO_MATRIX11(is_stl_span, std::list, is_matrix);
+        MACRO_MATRIX11(is_stl_span, std::vector, is_matrix);
+#endif  // C++11+
+#ifdef ARGPARSE_HAS_SPAN
+        MACRO_SPAN(is_stl_span, is_span);
+#endif  // ARGPARSE_HAS_SPAN
     }
 }
