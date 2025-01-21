@@ -5349,7 +5349,7 @@ private:
             if (!vector.has_value()) {
                 return std::nullopt;
             }
-            res.push_back(make_container<V>(vector.value()));
+            push_to_container<T>(res, make_container<V>(vector.value()));
         }
         return res;
     }
@@ -5821,8 +5821,7 @@ public:
                 return std::nullopt;
             }
             return _Storage::opt_matrix<T>(args.value());
-        }
-        if constexpr ((detail::is_stl_container<
+        } else if constexpr ((detail::is_stl_container<
                     typename std::decay<T>::type>::value
                 && !detail::is_stl_container_paired<
                     typename std::decay<T>::type>::value

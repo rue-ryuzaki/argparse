@@ -3,6 +3,7 @@
  */
 
 #include <map>
+#include <queue>
 
 #define ARGPARSE_DECLARATION
 #include "./argparse_test.hpp"
@@ -1041,4 +1042,20 @@ TEST_CASE("4. value types check", "[namespace]")
 #endif  // ARGPARSE_HAS_OPTIONAL
     }
 #endif  // C++11+
+
+    SECTION("4.4. matrix") {
+        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+        parser.add_argument("--foo").action("append").nargs("*").help("foo help");
+
+        argparse::Namespace args = parser.parse_args("--foo 1 2 3 4 5 --foo 5 4 3 2 1");
+        CHECK(args.get<std::vector<std::vector<std::string> > >("foo").size() == 2);
+        CHECK(args.get<std::list<std::list<std::string> > >("foo").size() == 2);
+        CHECK(args.get<std::queue<std::queue<std::string> > >("foo").size() == 2);
+#ifdef ARGPARSE_HAS_OPTIONAL
+        CHECK(args.try_get<std::vector<std::vector<std::string> > >("foo")->size() == 2);
+        CHECK(args.try_get<std::list<std::list<std::string> > >("foo")->size() == 2);
+        CHECK(args.try_get<std::queue<std::queue<std::string> > >("foo")->size() == 2);
+#endif  // ARGPARSE_HAS_OPTIONAL
+    }
 }
