@@ -56,6 +56,9 @@ TEST_CASE("1. type name", "[detail]")
         CHECK(argparse::detail::Type::name<std::vector<int> >() == "std::vector<int>");
         CHECK(argparse::detail::Type::name<std::stack<int> >() == "std::stack<int>");
         CHECK(argparse::detail::Type::name<std::queue<int> >() == "std::queue<int>");
+#ifdef ARGPARSE_HAS_SPAN
+        CHECK(argparse::detail::Type::name<std::span<int> >() == "std::span<int>");
+#endif  // ARGPARSE_HAS_SPAN
 
 #ifdef ARGPARSE_CXX_11
         CHECK(argparse::detail::Type::name<std::array<std::string, 1> >() == "std::array<std::string, 1>");
@@ -118,6 +121,9 @@ TEST_CASE("1. type name", "[detail]")
         CHECK(argparse::detail::Type::basic<std::vector<int> >() == "int");
         CHECK(argparse::detail::Type::basic<std::stack<int> >() == "int");
         CHECK(argparse::detail::Type::basic<std::queue<int> >() == "int");
+#ifdef ARGPARSE_HAS_SPAN
+        CHECK(argparse::detail::Type::basic<std::span<int> >() == "int");
+#endif  // ARGPARSE_HAS_SPAN
 
 #ifdef ARGPARSE_CXX_11
         CHECK(argparse::detail::Type::basic<std::array<std::string, 1> >() == "std::string");

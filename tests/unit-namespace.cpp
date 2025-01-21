@@ -927,7 +927,7 @@ TEST_CASE("4. value types check", "[namespace]")
         CHECK(args1.exists("foo") == true);
         CHECK(args1.get<std::string>("foo") == "key:value");
         CHECK(args1.get<std::vector<std::string> >("foo").size() == 1);
-        CHECK(args1.get<std::vector<std::pair<std::string, std::string> > >("foo", ':').size() == 1);
+        CHECK((args1.get<std::vector<std::pair<std::string, std::string> > >("foo", ':').size() == 1));
         CHECK((args1.get<std::pair<std::string, std::string> >("foo", ':').first == "key"));
         CHECK((args1.get<std::pair<std::string, std::string> >("foo", ':').second == "value"));
 #ifdef ARGPARSE_HAS_OPTIONAL
@@ -958,7 +958,7 @@ TEST_CASE("4. value types check", "[namespace]")
         // or parser2.parse_args("--foo key value");
         CHECK(args2.exists("foo") == true);
         CHECK(args2.get<std::vector<std::string> >("foo").size() == 2);
-        CHECK(args2.get<std::vector<std::pair<std::string, std::string> > >("foo", ' ').size() == 1);
+        CHECK((args2.get<std::vector<std::pair<std::string, std::string> > >("foo", ' ').size() == 1));
         CHECK((args2.get<std::pair<std::string, std::string> >("foo", ' ').first == "key"));
         CHECK((args2.get<std::pair<std::string, std::string> >("foo", ' ').second == "value"));
 #ifdef ARGPARSE_HAS_OPTIONAL
