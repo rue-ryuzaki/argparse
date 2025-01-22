@@ -4751,6 +4751,16 @@ private:
         return T(std::deque<typename T::value_type>(vec.begin(), vec.end()));
     }
 
+    template <class T>
+    static typename detail::enable_if<
+        detail::is_stl_span<typename detail::decay<T>::type>::value, T
+    >::type
+    make_container(
+            std::vector<typename T::value_type> const& vec)
+    {
+        return T(vec);
+    }
+
 #ifdef ARGPARSE_CXX_11
     template <class T>
     static typename detail::enable_if<
@@ -5513,6 +5523,27 @@ public:
     }
 
     /*!
+     *  \brief Get parsed argument value as stl span string.
+     *  If argument not parsed, returns empty container.
+     *
+     *  \param key Argument destination name or flag
+     *
+     *  \return Parsed argument value
+     */
+    template <class T>
+    ARGPARSE_ATTR_NODISCARD
+    typename detail::enable_if<
+        detail::is_stl_span<typename detail::decay<T>::type>::value, T
+    >::type
+    get(std::string const& key) const
+    {
+        _Storage::value_type const& args = data(key);
+        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
+        detail::_check_non_count_action(key, args.first->action());
+        return _Storage::make_container<T>(args.second());
+    }
+
+    /*!
      *  \brief Get parsed argument value as stl container types.
      *  If argument not parsed, returns empty container.
      *
@@ -5723,7 +5754,8 @@ public:
         && !detail::is_stl_container<typename detail::decay<T>::type>::value
         && !detail::is_stl_map<typename detail::decay<T>::type>::value
         && !detail::is_stl_pair<typename detail::decay<T>::type>::value
-        && !detail::is_stl_queue<typename detail::decay<T>::type>::value, T
+        && !detail::is_stl_queue<typename detail::decay<T>::type>::value
+        && !detail::is_stl_span<typename detail::decay<T>::type>::value, T
     >::type
     get(std::string const& key) const
     {
@@ -5832,6 +5864,9 @@ public:
                 return std::nullopt;
             }
             return _Storage::opt_matrix<T>(args.value());
+        } else if constexpr (detail::is_stl_span<
+                typename std::decay<T>::type>::value) {
+            return _Storage::make_container<T>(args->second());
         } else if constexpr ((detail::is_stl_container<
                     typename std::decay<T>::type>::value
                 && !detail::is_stl_container_paired<

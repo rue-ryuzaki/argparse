@@ -1057,5 +1057,19 @@ TEST_CASE("4. value types check", "[namespace]")
         CHECK(args.try_get<std::list<std::list<std::string> > >("foo")->size() == 2);
         CHECK(args.try_get<std::queue<std::queue<std::string> > >("foo")->size() == 2);
 #endif  // ARGPARSE_HAS_OPTIONAL
+#ifdef ARGPARSE_HAS_SPAN
+        auto span1 = args.get<std::span<std::string const> >("foo");
+        CHECK(span1.size() == 10);
+        CHECK(span1[0] == "1");
+        CHECK(span1[1] == "2");
+        CHECK(span1[2] == "3");
+        CHECK(span1[3] == "4");
+        CHECK(span1[4] == "5");
+        CHECK(span1[5] == "5");
+        CHECK(span1[6] == "4");
+        CHECK(span1[7] == "3");
+        CHECK(span1[8] == "2");
+        CHECK(span1[9] == "1");
+#endif  // ARGPARSE_HAS_SPAN
     }
 }
