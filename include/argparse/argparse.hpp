@@ -1947,6 +1947,14 @@ public:
     }
 
     template <class T, typename enable_if<
+                  is_stl_span<T>::value>::type* = nullptr>
+    static std::string
+    name()
+    {
+        return "std::span<" + name<typename T::value_type>() + ">";
+    }
+
+    template <class T, typename enable_if<
                   is_stl_map<T>::value>::type* = nullptr>
     static std::string
     name()
@@ -1982,6 +1990,7 @@ public:
                   && !is_stl_map<T>::value
                   && !is_stl_pair<T>::value
                   && !is_stl_queue<T>::value
+                  && !is_stl_span<T>::value
                   && !is_stl_tuple<T>::value>::type* = nullptr>
     static std::string
     name()
