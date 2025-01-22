@@ -18,7 +18,7 @@ foreach(file ${files})
     get_filename_component(file_basename ${file} NAME_WE)
     string(REGEX REPLACE "unit-([^$]+)" "test-\\1" testcase ${file_basename})
 
-    add_executable(${testcase} $<TARGET_OBJECTS:${CATCH_OBJECT_NAME}> $<TARGET_OBJECTS:argparse_impl> ${file})
+    add_executable(${testcase} $<TARGET_OBJECTS:${CATCH_OBJECT_NAME}> $<TARGET_OBJECTS:${LIBRARY_IMPL_NAME}> ${file})
     add_test(${testcase} ${testcase})
 endforeach()
 
