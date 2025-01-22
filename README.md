@@ -279,6 +279,7 @@ int main(int argc, char const* const argv[])
 - containers (std::array (since C++11), std::deque, std::forward_list (since C++11), std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset (since C++11), std::unordered_set (since C++11))
 - containers with std::pair/std::tuple (since C++11)
 - 2 dimensional containers
+- non-own std::span<std::string const>
 - mapped types (std::map, std::multimap, std::unordered_map (since C++11), std::unordered_multimap (since C++11))
 - std::pair
 - std::tuple (since C++11)
@@ -286,7 +287,7 @@ int main(int argc, char const* const argv[])
 ### Don't work:
 - pointer and reference types
 - plain C arrays
-- non-own C++20+ types and containers (std::span)
+- Namespace::try_get<> with non-own C++17+ types and containers (std::string_view, std::span)
 ### Note:
 For types with std::pair and std::tuple (also for std::map) needs to specify delimiter (by default it ```'='```) between key and value (for std::pair/std::map) / values (for std::tuple). For space delimiter ```' '``` all values are parsed from separated command line arguments, otherwise from individual command line argument.
 
