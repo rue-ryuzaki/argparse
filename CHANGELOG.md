@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.9.7] - 2025-01-25
+
+  * Fix: ArgumentParser::set_defaults_func impl
+  * Fix: Namespace::try_get with 2D containers
+  * Add: ArgumentGroup::argument_default() function
+  * Add: ArgumentGroup::conflict_handler() function
+  * Add: argparse::utils::self_test functions
+  * Add: argparse::utils::format_bash_completion function
+  * Add: argparse::utils::print_bash_completion function
+  * Add: ARGPARSE_DISABLE_UTILS define to disable utils
+  * Add: default value support for count actions
+  * Add: 'float' type name for floating point types
+  * Add: 'int' type name for integer types
+  * Add: C++26 support
+  * Add: Namespace::get\<std::span\<std::string const> > support
+  * Deprecated: ArgumentParser::self_test functions (use argparse::utils)
+  * Deprecated: ArgumentParser::format_bash_completion function (use argparse::utils)
+  * Deprecated: ArgumentParser::print_bash_completion function (use argparse::utils)
+
 ## [1.9.6] - 2025-01-05
 
   * Fix: Argument::default_value(false)

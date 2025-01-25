@@ -5,7 +5,7 @@
  *                         __| |
  * MIT License
  *
- * Argument parser for C++ (ArgumentParser v1.9.6)
+ * Argument parser for C++ (ArgumentParser v1.9.7)
  *
  * Copyright (c) 2021-2025 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  *
@@ -256,7 +256,7 @@
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 9
-#define ARGPARSE_VERSION_PATCH 6
+#define ARGPARSE_VERSION_PATCH 7
 
 /*!
  *  This macro turns the version numbers into a numeric value:
@@ -4331,7 +4331,7 @@ public:
      *
      *  \param value Argument default value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.7
      *
      *  \return Current argument group reference
      */
@@ -4345,7 +4345,7 @@ public:
      *
      *  \param value argparse::SUPPRESS
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.7
      *
      *  \return Current argument group reference
      */
@@ -4359,7 +4359,7 @@ public:
      *
      *  \param value Conflict handler value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.7
      *
      *  \return Current argument group reference
      */
@@ -4397,7 +4397,7 @@ public:
     /*!
      *  \brief Get argument group 'argument_default' value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.7
      *
      *  \return Argument group 'argument_default' value
      */
@@ -4408,7 +4408,7 @@ public:
     /*!
      *  \brief Get argument group 'conflict_handler' value
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.7
      *
      *  \return Argument group 'conflict_handler' value
      */
@@ -8686,7 +8686,7 @@ public:
      *  \param parser Argument parser
      *  \param os Output stream (default: std::cout)
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.7
      *
      *  \return True if no warnings or errors were found, false otherwise
      */
@@ -8704,7 +8704,7 @@ public:
      *  \param lang Language value
      *  \param os Output stream (default: std::cout)
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.7
      *
      *  \return True if no warnings or errors were found, false otherwise
      */
@@ -8721,7 +8721,7 @@ public:
      *
      *  \param parser Argument parser
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.7
      *
      *  \return Bash completion string
      */
@@ -8737,7 +8737,7 @@ public:
      *  \param parser Argument parser
      *  \param os Output stream (default: std::cout)
      *
-     *  \since NEXT_RELEASE
+     *  \since v1.9.7
      */
     static void
     print_bash_completion(
