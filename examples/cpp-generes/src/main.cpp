@@ -186,7 +186,9 @@ main(int argc,
     argparse::ArgumentParser parser = argparse::ArgumentParser(argc, argv)
             .description("Tool to generate C++ files with binary resources")
             .epilog("by rue-ryuzaki (c) 2022-2024")
+            .comment_prefix_chars("#")
             .fromfile_prefix_chars("@")
+            .suggest_on_error(true)
             .formatter_class(argparse::ArgumentDefaultsHelpFormatter);
     parser.add_argument("--version")
             .action("version")

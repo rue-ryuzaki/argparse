@@ -37,7 +37,9 @@ main(int argc,
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser(argc, argv)
             .description("Simple CLI C++ sudoku puzzles solver")
+            .comment_prefix_chars("#")
             .fromfile_prefix_chars("@")
+            .suggest_on_error(true)
             .epilog("by rue-ryuzaki (c) 2022-2024");
     parser.add_argument("--version")
             .action("version")

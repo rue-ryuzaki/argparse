@@ -42,6 +42,7 @@ main(int argc,
     argparse::ArgumentParser parser = argparse::ArgumentParser(argc, argv)
             .comment_prefix_chars("#")
             .fromfile_prefix_chars("@")
+            .suggest_on_error(true)
             .description("Version manager for C/C++ projects")
             .epilog("by rue-ryuzaki (c) 2022-2024");
     parser.add_argument("--type")

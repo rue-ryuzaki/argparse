@@ -42,6 +42,7 @@ main(int argc,
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser(argc, argv)
             .description("Tool for checking the width of lines of code")
+            .comment_prefix_chars("#")
             .fromfile_prefix_chars("@")
             .formatter_class(argparse::ArgumentDefaultsHelpFormatter)
             .epilog("by rue-ryuzaki (c) 2022-2024");
@@ -53,7 +54,7 @@ main(int argc,
             .help("show line numbers");
     parser.add_argument("-l", "--limit")
             .action("store")
-            .default_value<std::size_t>(default_limit)
+            .default_value(default_limit)
             .help("set line width limit");
     parser.add_argument("file")
             .action("extend")
