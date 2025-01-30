@@ -5355,9 +5355,8 @@ private:
     }
 
     template <class T>
-    static std::optional<typename detail::enable_if<
-        detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
-    >::type>
+    static std::optional<std::enable_if_t<
+        detail::is_stl_matrix<std::decay_t<T> >::value, T> >
     opt_matrix(
             value_type const& value)
     {
@@ -5820,12 +5819,12 @@ public:
      */
     template <class T>
     ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        !detail::is_stl_container_paired<typename std::decay<T>::type>::value
-        && !detail::is_stl_container_tupled<typename std::decay<T>::type>::value
-        && !detail::is_stl_map<typename std::decay<T>::type>::value
-        && !detail::is_stl_pair<typename std::decay<T>::type>::value
-        && !detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
+    std::optional<std::enable_if_t<
+        !detail::is_stl_container_paired<std::decay_t<T> >::value
+        && !detail::is_stl_container_tupled<std::decay_t<T> >::value
+        && !detail::is_stl_map<std::decay_t<T> >::value
+        && !detail::is_stl_pair<std::decay_t<T> >::value
+        && !detail::is_stl_tuple<std::decay_t<T> >::value, T> >
     try_get(std::string const& key) const
     {
         auto args = opt_data(key);
@@ -5855,8 +5854,7 @@ public:
         if (args->first->action() == argparse::count) {
             return std::nullopt;
         }
-        if constexpr (detail::is_stl_matrix<
-                typename std::decay<T>::type>::value) {
+        if constexpr (detail::is_stl_matrix<std::decay_t<T> >::value) {
             if (args->first->action() != argparse::append
                     || !(args->first->m_nargs
                          & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
@@ -5864,19 +5862,15 @@ public:
                 return std::nullopt;
             }
             return _Storage::opt_matrix<T>(args.value());
-        } else if constexpr (detail::is_stl_span<
-                typename std::decay<T>::type>::value) {
+        } else if constexpr (detail::is_stl_span<std::decay_t<T> >::value) {
             return _Storage::make_container<T>(args->second());
-        } else if constexpr ((detail::is_stl_container<
-                    typename std::decay<T>::type>::value
-                && !detail::is_stl_container_paired<
-                    typename std::decay<T>::type>::value
-                && !detail::is_stl_container_tupled<
-                    typename std::decay<T>::type>::value
-                && !detail::is_stl_matrix<typename std::decay<T>::type>::value)
-                || ((detail::is_stl_array<typename std::decay<T>::type>::value
-                   || detail::is_stl_queue<typename std::decay<T>::type>::value)
-              && !detail::is_stl_matrix<typename std::decay<T>::type>::value)) {
+        } else if constexpr ((detail::is_stl_container<std::decay_t<T> >::value
+                && !detail::is_stl_container_paired<std::decay_t<T> >::value
+                && !detail::is_stl_container_tupled<std::decay_t<T> >::value
+                && !detail::is_stl_matrix<std::decay_t<T> >::value)
+                || ((detail::is_stl_array<std::decay_t<T> >::value
+                   || detail::is_stl_queue<std::decay_t<T> >::value)
+                    && !detail::is_stl_matrix<std::decay_t<T> >::value)) {
             auto vector = _Storage::opt_vector<
                     typename T::value_type>(args.value());
             if (!vector.has_value()) {
@@ -5908,12 +5902,12 @@ public:
      */
     template <class T>
     ARGPARSE_ATTR_NODISCARD
-    std::optional<typename std::enable_if<
-        detail::is_stl_container_paired<typename std::decay<T>::type>::value
-        || detail::is_stl_container_tupled<typename std::decay<T>::type>::value
-        || detail::is_stl_map<typename std::decay<T>::type>::value
-        || detail::is_stl_pair<typename std::decay<T>::type>::value
-        || detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type>
+    std::optional<std::enable_if_t<
+        detail::is_stl_container_paired<std::decay_t<T> >::value
+        || detail::is_stl_container_tupled<std::decay_t<T> >::value
+        || detail::is_stl_map<std::decay_t<T> >::value
+        || detail::is_stl_pair<std::decay_t<T> >::value
+        || detail::is_stl_tuple<std::decay_t<T> >::value, T> >
     try_get(std::string const& key,
             char sep = detail::_equal) const
     {
@@ -17015,7 +17009,8 @@ utils::test_overview(
     }
     os << "add_help: " << detail::_bool_to_string(p.add_help()) << "\n";
     os << "allow_abbrev: " << detail::_bool_to_string(p.allow_abbrev()) << "\n";
-    os << "exit_on_error: " << detail::_bool_to_string(p.exit_on_error()) << "\n";
+    os << "exit_on_error: " << detail::_bool_to_string(p.exit_on_error())
+       << "\n";
     os << "suggest_on_error: " << detail::_bool_to_string(p.suggest_on_error())
        << "\n";
     if (p.m_output_width != 0) {
