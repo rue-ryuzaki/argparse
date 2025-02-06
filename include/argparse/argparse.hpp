@@ -2429,7 +2429,7 @@ private:
             ArgumentParser const* parser) const;
 
     void
-    _print_parser_completion(
+    _print_parser_bash_completion(
             std::ostream& os,
             ArgumentParser const* parser,
             std::string const& prog,
@@ -10599,7 +10599,7 @@ HelpFormatter::_bash_completion_info(
 }
 
 ARGPARSE_INL void
-HelpFormatter::_print_parser_completion(
+HelpFormatter::_print_parser_bash_completion(
         std::ostream& os,
         ArgumentParser const* p,
         std::string const& prog,
@@ -10610,7 +10610,7 @@ HelpFormatter::_print_parser_completion(
     if (p->has_subparsers()) {
         std::list<pParser> const parsers = p->m_subparsers->list_parsers();
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
-            _print_parser_completion(
+            _print_parser_bash_completion(
                         os, (*it).get(), prog + "_" + (*it)->m_name, false);
         }
     }
@@ -10728,7 +10728,7 @@ HelpFormatter::_format_bash_completion(
        << ARGPARSE_VERSION_MAJOR << "."
        << ARGPARSE_VERSION_MINOR << "."
        << ARGPARSE_VERSION_PATCH << "\n\n";
-    _print_parser_completion(ss, p, p->prog(), true);
+    _print_parser_bash_completion(ss, p, p->prog(), true);
     ss << "complete -F _" << p->prog() << " " << p->prog();
     return ss.str();
 }
