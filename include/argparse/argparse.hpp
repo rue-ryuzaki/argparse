@@ -2424,16 +2424,16 @@ private:
         std::vector<std::pair<pArgument, std::string> > options;
     };
 
-    CompletionInfo
+    static CompletionInfo
     _bash_completion_info(
-            ArgumentParser const* parser) const;
+            ArgumentParser const* parser);
 
-    void
+    static void
     _print_parser_bash_completion(
             std::ostream& os,
             ArgumentParser const* parser,
             std::string const& prog,
-            bool is_root) const;
+            bool is_root);
 
     void
     _print_custom_usage(
@@ -2441,9 +2441,9 @@ private:
             ArgumentParser const* parser,
             std::string const& usage_title) const;
 
-    std::string
+    static std::string
     _format_bash_completion(
-            ArgumentParser const* parser) const;
+            ArgumentParser const* parser);
 
     std::string
     _format_usage(
@@ -10548,7 +10548,7 @@ HelpFormatter::_split_lines(
 
 ARGPARSE_INL HelpFormatter::CompletionInfo
 HelpFormatter::_bash_completion_info(
-        ArgumentParser const* parser) const
+        ArgumentParser const* parser)
 {
     CompletionInfo res;
     detail::pArguments optional = parser->m_data->get_optional(false, true);
@@ -10603,7 +10603,7 @@ HelpFormatter::_print_parser_bash_completion(
         std::ostream& os,
         ArgumentParser const* p,
         std::string const& prog,
-        bool is_root) const
+        bool is_root)
 {
     typedef detail::shared_ptr<ArgumentParser> pParser;
     typedef std::list<pParser>::const_iterator prs_iterator;
@@ -10720,7 +10720,7 @@ HelpFormatter::_print_custom_usage(
 
 ARGPARSE_INL std::string
 HelpFormatter::_format_bash_completion(
-        ArgumentParser const* p) const
+        ArgumentParser const* p)
 {
     std::stringstream ss;
     ss << "# bash completion for " << p->prog() << "\n";
