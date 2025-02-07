@@ -2362,7 +2362,6 @@ class ArgumentParser;
 ARGPARSE_EXPORT class HelpFormatter
 {
     friend class ArgumentParser;
-    friend class utils;
 
     typedef detail::shared_ptr<Argument> pArgument;
 
@@ -2412,38 +2411,11 @@ public:
             std::size_t width) const;
 
 private:
-    struct CompletionInfo
-    {
-        CompletionInfo()
-            : args(),
-              options()
-        { }
-
-        // -- data ------------------------------------------------------------
-        std::string args;
-        std::vector<std::pair<pArgument, std::string> > options;
-    };
-
-    static CompletionInfo
-    _bash_completion_info(
-            ArgumentParser const* parser);
-
-    static void
-    _print_parser_bash_completion(
-            std::ostream& os,
-            ArgumentParser const* parser,
-            std::string const& prog,
-            bool is_root);
-
     void
     _print_custom_usage(
             std::ostream& os,
             ArgumentParser const* parser,
             std::string const& usage_title) const;
-
-    static std::string
-    _format_bash_completion(
-            ArgumentParser const* parser);
 
     std::string
     _format_usage(
@@ -8672,6 +8644,29 @@ ARGPARSE_EXPORT class utils
             ArgumentParser const* parser,
             std::pair<std::size_t, std::size_t>& diagnostics);
 
+    struct CompletionInfo
+    {
+        CompletionInfo()
+            : args(),
+              options()
+        { }
+
+        // -- data ------------------------------------------------------------
+        std::string args;
+        std::vector<std::pair<pArgument, std::string> > options;
+    };
+
+    static CompletionInfo
+    _bash_completion_info(
+            ArgumentParser const* parser);
+
+    static void
+    _print_parser_bash_completion(
+            std::ostream& os,
+            ArgumentParser const* parser,
+            std::string const& prog,
+            bool is_root);
+
 public:
     /*!
      *  \brief Run self-test and print report to output stream
@@ -10546,126 +10541,6 @@ HelpFormatter::_split_lines(
     return res;
 }
 
-ARGPARSE_INL HelpFormatter::CompletionInfo
-HelpFormatter::_bash_completion_info(
-        ArgumentParser const* parser)
-{
-    CompletionInfo res;
-    detail::pArguments optional = parser->m_data->get_optional(false, true);
-    detail::pArguments operand = parser->m_data->get_operand(false, true);
-    detail::pArguments positional = parser->m_data->get_positional(false, true);
-    res.options.reserve(optional.size());
-    std::vector<std::string> options;
-    for (std::size_t i = 0; i < optional.size(); ++i) {
-        pArgument const& arg = optional.at(i);
-        detail::_insert_to_end(arg->flags(), options);
-        res.options.push_back(std::make_pair(arg, std::string()));
-        if (arg->m_nargs != Argument::SUPPRESSING
-                && (arg->action()
-                    & (detail::_store_action | argparse::language))) {
-            if (!arg->choices().empty()) {
-                res.options.back().second
-                        = " -W \"" + detail::_join(arg->choices()) + "\"";
-            } else {
-                res.options.back().second = " -df";
-            }
-        }
-    }
-    for (std::size_t i = 0; i < operand.size(); ++i) {
-        pArgument const& arg = operand.at(i);
-        for (std::size_t j = 0; j < arg->flags().size(); ++j) {
-            options.push_back(arg->flags().at(j) + "=");
-            options.push_back(options.back() + "A");
-        }
-    }
-    bool have_fs_args = false;
-    for (std::size_t i = 0; i < positional.size(); ++i) {
-        pArgument const& arg = positional.at(i);
-        if (!(arg->action() & detail::_store_action)) {
-            continue;
-        }
-        have_fs_args = have_fs_args || (arg->m_nargs != Argument::SUPPRESSING);
-    }
-    if (parser->has_subparsers()) {
-        detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
-    }
-    if (have_fs_args) {
-        res.args += " -df";
-    }
-    if (!options.empty()) {
-        res.args += " -W \"" + detail::_join(options) + "\"";
-    }
-    return res;
-}
-
-ARGPARSE_INL void
-HelpFormatter::_print_parser_bash_completion(
-        std::ostream& os,
-        ArgumentParser const* p,
-        std::string const& prog,
-        bool is_root)
-{
-    typedef detail::shared_ptr<ArgumentParser> pParser;
-    typedef std::list<pParser>::const_iterator prs_iterator;
-    if (p->has_subparsers()) {
-        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
-        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
-            _print_parser_bash_completion(
-                        os, (*it).get(), prog + "_" + (*it)->m_name, false);
-        }
-    }
-    os << "_" << prog << "()\n";
-    os << "{\n";
-    if (p->has_subparsers()) {
-        if (is_root) {
-            os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
-        } else {
-            os << "  for (( i=$1; i < ${COMP_CWORD}; ((++i)) )); do\n";
-        }
-        os << "    case \"${COMP_WORDS[$i]}\" in\n";
-        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
-        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
-            std::string name = "\"" + (*it)->m_name + "\"";
-            if (!(*it)->aliases().empty()) {
-                name += "|" + detail::_join((*it)->aliases(), "|", "\"");
-            }
-            os << "      " << name << ")\n";
-            os << "        _" << prog << "_" << (*it)->m_name << " $((i+1))\n";
-            os << "        return;;\n";
-        }
-        os << "      *);;\n";
-        os << "    esac\n";
-        os << "  done\n";
-    }
-    CompletionInfo info = _bash_completion_info(p);
-    if (!info.options.empty()) {
-        os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
-        for (std::size_t j = 0; j < info.options.size(); ++j) {
-            std::pair<pArgument, std::string> const& a = info.options.at(j);
-            os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
-            if (a.first->action() & (detail::_const_action
-                                     | detail::_bool_action
-                                     | argparse::BooleanOptionalAction)) {
-                os << "      ;;\n";
-            } else {
-                if (!a.second.empty()) {
-                    os << "      COMPREPLY=($(compgen" << a.second
-                       << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
-                }
-                os << "      return;;\n";
-            }
-        }
-        os << "    *);;\n";
-        os << "  esac\n";
-    }
-    if (!info.args.empty()) {
-        os << "  COMPREPLY=($(compgen" << info.args
-           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
-    }
-    os << "  return\n";
-    os << "}\n\n";
-}
-
 ARGPARSE_INL void
 HelpFormatter::_print_custom_usage(
         std::ostream& os,
@@ -10716,21 +10591,6 @@ HelpFormatter::_print_custom_usage(
         detail::_add_arg_usage(res, info.first->usage(), true);
     }
     os << detail::_format_output(head_prog, res, 1, indent, w);
-}
-
-ARGPARSE_INL std::string
-HelpFormatter::_format_bash_completion(
-        ArgumentParser const* p)
-{
-    std::stringstream ss;
-    ss << "# bash completion for " << p->prog() << "\n";
-    ss << "# generated with cpp-argparse v"
-       << ARGPARSE_VERSION_MAJOR << "."
-       << ARGPARSE_VERSION_MINOR << "."
-       << ARGPARSE_VERSION_PATCH << "\n\n";
-    _print_parser_bash_completion(ss, p, p->prog(), true);
-    ss << "complete -F _" << p->prog() << " " << p->prog();
-    return ss.str();
 }
 
 ARGPARSE_INL std::string
@@ -17319,6 +17179,126 @@ utils::test_argument_parser(
     }
 }
 
+ARGPARSE_INL HelpFormatter::CompletionInfo
+utils::_bash_completion_info(
+        ArgumentParser const* parser)
+{
+    CompletionInfo res;
+    detail::pArguments optional = parser->m_data->get_optional(false, true);
+    detail::pArguments operand = parser->m_data->get_operand(false, true);
+    detail::pArguments positional = parser->m_data->get_positional(false, true);
+    res.options.reserve(optional.size());
+    std::vector<std::string> options;
+    for (std::size_t i = 0; i < optional.size(); ++i) {
+        pArgument const& arg = optional.at(i);
+        detail::_insert_to_end(arg->flags(), options);
+        res.options.push_back(std::make_pair(arg, std::string()));
+        if (arg->m_nargs != Argument::SUPPRESSING
+                && (arg->action()
+                    & (detail::_store_action | argparse::language))) {
+            if (!arg->choices().empty()) {
+                res.options.back().second
+                        = " -W \"" + detail::_join(arg->choices()) + "\"";
+            } else {
+                res.options.back().second = " -df";
+            }
+        }
+    }
+    for (std::size_t i = 0; i < operand.size(); ++i) {
+        pArgument const& arg = operand.at(i);
+        for (std::size_t j = 0; j < arg->flags().size(); ++j) {
+            options.push_back(arg->flags().at(j) + "=");
+            options.push_back(options.back() + "A");
+        }
+    }
+    bool have_fs_args = false;
+    for (std::size_t i = 0; i < positional.size(); ++i) {
+        pArgument const& arg = positional.at(i);
+        if (!(arg->action() & detail::_store_action)) {
+            continue;
+        }
+        have_fs_args = have_fs_args || (arg->m_nargs != Argument::SUPPRESSING);
+    }
+    if (parser->has_subparsers()) {
+        detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
+    }
+    if (have_fs_args) {
+        res.args += " -df";
+    }
+    if (!options.empty()) {
+        res.args += " -W \"" + detail::_join(options) + "\"";
+    }
+    return res;
+}
+
+ARGPARSE_INL void
+utils::_print_parser_bash_completion(
+        std::ostream& os,
+        ArgumentParser const* p,
+        std::string const& prog,
+        bool is_root)
+{
+    typedef detail::shared_ptr<ArgumentParser> pParser;
+    typedef std::list<pParser>::const_iterator prs_iterator;
+    if (p->has_subparsers()) {
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            _print_parser_bash_completion(
+                        os, (*it).get(), prog + "_" + (*it)->m_name, false);
+        }
+    }
+    os << "_" << prog << "()\n";
+    os << "{\n";
+    if (p->has_subparsers()) {
+        if (is_root) {
+            os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
+        } else {
+            os << "  for (( i=$1; i < ${COMP_CWORD}; ((++i)) )); do\n";
+        }
+        os << "    case \"${COMP_WORDS[$i]}\" in\n";
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            std::string name = "\"" + (*it)->m_name + "\"";
+            if (!(*it)->aliases().empty()) {
+                name += "|" + detail::_join((*it)->aliases(), "|", "\"");
+            }
+            os << "      " << name << ")\n";
+            os << "        _" << prog << "_" << (*it)->m_name << " $((i+1))\n";
+            os << "        return;;\n";
+        }
+        os << "      *);;\n";
+        os << "    esac\n";
+        os << "  done\n";
+    }
+    CompletionInfo info = _bash_completion_info(p);
+    if (!info.options.empty()) {
+        os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
+        for (std::size_t j = 0; j < info.options.size(); ++j) {
+            std::pair<pArgument, std::string> const& a = info.options.at(j);
+            os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
+            if (a.first->action() & (detail::_const_action
+                                     | detail::_bool_action
+                                     | argparse::BooleanOptionalAction)) {
+                os << "      ;;\n";
+            } else {
+                if (!a.second.empty()) {
+                    os << "      COMPREPLY=($(compgen" << a.second
+                       << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+                }
+                os << "      return;;\n";
+            }
+        }
+        os << "    *);;\n";
+        os << "  esac\n";
+    }
+    if (!info.args.empty()) {
+        os << "  COMPREPLY=($(compgen" << info.args
+           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+    }
+    os << "  return\n";
+    os << "}\n\n";
+}
+
 ARGPARSE_INL bool
 utils::self_test(
         ArgumentParser const& parser,
@@ -17357,7 +17337,15 @@ ARGPARSE_INL std::string
 utils::format_bash_completion(
         ArgumentParser const& parser)
 {
-    return parser.m_formatter->_format_bash_completion(&parser);
+    std::stringstream ss;
+    ss << "# bash completion for " << parser.prog() << "\n";
+    ss << "# generated with cpp-argparse v"
+       << ARGPARSE_VERSION_MAJOR << "."
+       << ARGPARSE_VERSION_MINOR << "."
+       << ARGPARSE_VERSION_PATCH << "\n\n";
+    _print_parser_bash_completion(ss, &parser, parser.prog(), true);
+    ss << "complete -F _" << parser.prog() << " " << parser.prog();
+    return ss.str();
 }
 
 ARGPARSE_INL void
