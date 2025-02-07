@@ -17179,7 +17179,7 @@ utils::test_argument_parser(
     }
 }
 
-ARGPARSE_INL HelpFormatter::CompletionInfo
+ARGPARSE_INL utils::CompletionInfo
 utils::_bash_completion_info(
         ArgumentParser const* parser)
 {
