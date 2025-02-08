@@ -774,15 +774,11 @@ int main(int argc, char const* const argv[])
 - [x] "extend" - This stores a list, and extends each argument value to the list.
 - [x] argparse::BooleanOptionalAction - Adds support for boolean actions such as ```--foo``` and ```--no-foo```
 ## Bash completion
-ArgumentParser can help you to create bash completion file for your program (this function is experimental):
+ArgumentParser can help you to create bash completion file for your program, create file in the ```completions``` subdir of ```$BASH_COMPLETION_USER_DIR``` (defaults to ```$XDG_DATA_HOME/bash-completion``` or ```~/.local/share/bash-completion``` if $XDG_DATA_HOME is not set), [see bash-completion readme](https://github.com/scop/bash-completion/blob/main/README.md):
 ```cpp
 std::ofstream file;
-file.open("path-to-script.sh", std::ios::trunc);
+file.open("bash-completion-user-dir/completions/" + parser.prog(), std::ios::trunc);
 argparse::utils::print_bash_completion(parser, file);
-```
-and add to your ```.bashrc``` file:
-```sh
-. path-to-script.sh
 ```
 ## Self test
 You can check that you parser is created correctly by calling the ```self_test``` function.

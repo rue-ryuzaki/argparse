@@ -8706,7 +8706,9 @@ public:
 
     /*!
      *  \brief Return a string containing a bash completion.
-     *  Copy the contents to ~/.bashrc or create a script file and use it
+     *  Put `prog` file with this content in the `completions` subdir of
+     *  $BASH_COMPLETION_USER_DIR (defaults to $XDG_DATA_HOME/bash-completion
+     *  or ~/.local/share/bash-completion if $XDG_DATA_HOME is not set)
      *
      *  \param parser Argument parser
      *
@@ -8721,7 +8723,9 @@ public:
 
     /*!
      *  \brief Print a bash completion to output stream.
-     *  Copy the contents to ~/.bashrc or create a script file and use it
+     *  Put `prog` file with this content in the `completions` subdir of
+     *  $BASH_COMPLETION_USER_DIR (defaults to $XDG_DATA_HOME/bash-completion
+     *  or ~/.local/share/bash-completion if $XDG_DATA_HOME is not set)
      *
      *  \param parser Argument parser
      *  \param os Output stream (default: std::cout)
