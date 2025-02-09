@@ -76,6 +76,7 @@ The work of the parser on older versions of compilers is not guaranteed.
   - [add_argument() actions](#the-add_argument-actions-support)
 - Utils:
   - [bash completion](#bash-completion)
+  - [zsh completion](#zsh-completion)
   - [self test](#self-test)
 - [Execute unit tests](#execute-unit-tests)
 - [License](#license)
@@ -779,6 +780,13 @@ ArgumentParser can help you to create bash completion file for your program, cre
 std::ofstream file;
 file.open("bash-completion-user-dir/completions/" + parser.prog(), std::ios::trunc);
 argparse::utils::print_bash_completion(parser, file);
+```
+## Zsh completion
+ArgumentParser can help you to create zsh completion (this function is experimental and under development) file (with name beginning with an underscore _) for your program, this file should be placed in a directory listed in the $fpath variable. You can add a directory to $fpath by adding a line like this to your ~/.zshrc file: ```fpath=(~/zsh-completion-user-dir $fpath)```, [see zsh-completion readme](https://github.com/zsh-users/zsh-completions/blob/master/zsh-completions-howto.org#telling-zsh-which-function-to-use-for-completing-a-command):
+```cpp
+std::ofstream file;
+file.open("zsh-completion-user-dir/_" + parser.prog(), std::ios::trunc);
+argparse::utils::print_zsh_completion(parser, file);
 ```
 ## Self test
 You can check that you parser is created correctly by calling the ```self_test``` function.

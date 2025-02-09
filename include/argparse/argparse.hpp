@@ -8667,6 +8667,13 @@ ARGPARSE_EXPORT class utils
             std::string const& prog,
             bool is_root);
 
+    static void
+    _print_parser_zsh_completion(
+            std::ostream& os,
+            ArgumentParser const* parser,
+            std::string const& prog,
+            bool is_root);
+
 public:
     /*!
      *  \brief Run self-test and print report to output stream
@@ -8722,6 +8729,22 @@ public:
             ArgumentParser const& parser);
 
     /*!
+     *  \brief Return a string containing a zsh completion.
+     *  Copy content to file ${DIR}/_${PROG}, add ${DIR} to `fpath` in ~/.zshrc
+     *  `fpath=(${DIR} $fpath)`
+     *
+     *  \param parser Argument parser
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Zsh completion string
+     */
+    ARGPARSE_ATTR_NODISCARD
+    static std::string
+    format_zsh_completion(
+            ArgumentParser const& parser);
+
+    /*!
      *  \brief Print a bash completion to output stream.
      *  Put `prog` file with this content in the `completions` subdir of
      *  $BASH_COMPLETION_USER_DIR (defaults to $XDG_DATA_HOME/bash-completion
@@ -8734,6 +8757,21 @@ public:
      */
     static void
     print_bash_completion(
+            ArgumentParser const& parser,
+            std::ostream& os = std::cout);
+
+    /*!
+     *  \brief Print a zsh completion to output stream.
+     *  Copy content to file ${DIR}/_${PROG}, add ${DIR} to `fpath` in ~/.zshrc
+     *  `fpath=(${DIR} $fpath)`
+     *
+     *  \param parser Argument parser
+     *  \param os Output stream (default: std::cout)
+     *
+     *  \since NEXT_RELEASE
+     */
+    static void
+    print_zsh_completion(
             ArgumentParser const& parser,
             std::ostream& os = std::cout);
 };
@@ -17303,6 +17341,83 @@ utils::_print_parser_bash_completion(
     os << "}\n\n";
 }
 
+ARGPARSE_INL void
+utils::_print_parser_zsh_completion(
+        std::ostream& os,
+        ArgumentParser const* p,
+        std::string const& prog,
+        bool /*is_root*/)
+{
+    typedef detail::shared_ptr<ArgumentParser> pParser;
+    typedef std::list<pParser>::const_iterator prs_iterator;
+    if (p->has_subparsers()) {
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            _print_parser_zsh_completion(
+                        os, (*it).get(), prog + "_" + (*it)->m_name, false);
+        }
+    }
+    detail::pArguments optional = p->m_data->get_optional(false, true);
+    os << "_" << prog << "()\n";
+    os << "{\n";
+    os << "  local -a arguments\n";
+    os << "  local curcontext=\"$curcontext\" state ret=1\n";
+    os << "  typeset -A opt_args\n";
+    os << "\n";
+    os << "  arguments=(\n";
+    for (std::size_t i = 0; i < optional.size(); ++i) {
+        pArgument const& arg = optional.at(i);
+        os << "    ";
+        if ((arg->action() & (argparse::append | argparse::append_const
+                              | argparse::count | argparse::extend))) {
+            os << "\\*";
+        }
+        if (arg->flags().size() > 1) {
+            os << "'(" << detail::_join(arg->flags(), " ") << ")'"
+               << "{" << detail::_join(arg->flags(), ",") << "}";
+        } else {
+            os << "'" << arg->flags().front() << "'";
+        }
+        std::string help = detail::_replace(arg->help(), "'", "\\'");
+        help = detail::_replace(help, "\"", "\\\"");
+        help = detail::_replace(help, "[", "\\[");
+        help = detail::_replace(help, "]", "\\]");
+        os << "\"[" << detail::_replace(help, "`", "\\`") << "]\"";
+        if (arg->m_nargs != Argument::SUPPRESSING
+                && (arg->action()
+                    & (detail::_store_action | argparse::language))) {
+            if (!arg->choices().empty()) {
+                os << "':" << arg->get_metavar()
+                   << ":(" << detail::_join(arg->choices()) << ")'";
+            } else {
+                os << "': :_files'";
+            }
+        }
+        os << "\n";
+    }
+    if (p->has_subparsers()) {
+        os << "    '*::" << prog << " commands:->command'\n";
+    }
+    os << "  )\n";
+    os << "\n";
+    os << "  _arguments -C $arguments && ret=0\n";
+    os << "\n";
+    if (p->has_subparsers()) {
+        os << "  case \"$state\" in\n";
+        os << "    command)\n";
+        os << "      if (( $+functions[_" << prog << "_${words[1]}] )); then\n";
+        os << "        _" << prog << "_${words[1]} && ret=0\n";
+        os << "      else\n";
+        os << "        ret=0\n";
+        os << "      fi\n";
+        os << "      ;;\n";
+        os << "  esac\n";
+        os << "\n";
+    }
+    os << "  return $ret\n";
+    os << "}\n\n";
+}
+
 ARGPARSE_INL bool
 utils::self_test(
         ArgumentParser const& parser,
@@ -17352,12 +17467,51 @@ utils::format_bash_completion(
     return ss.str();
 }
 
+ARGPARSE_INL std::string
+utils::format_zsh_completion(
+        ArgumentParser const& parser)
+{
+    char const filler = '-';
+    std::stringstream ss;
+    ss << "#compdef " << parser.prog() << "\n";
+    ss << "# " << std::string(77, filler) << "\n";
+    ss << "# generated with cpp-argparse v"
+       << ARGPARSE_VERSION_MAJOR << "."
+       << ARGPARSE_VERSION_MINOR << "."
+       << ARGPARSE_VERSION_PATCH << "\n";
+    ss << "# " << std::string(77, filler) << "\n";
+    ss << "# Description\n";
+    ss << "# -----------\n";
+    ss << "#\n";
+    ss << "#  Completion script for " << parser.prog();
+    ss << "\n";
+    ss << "#\n";
+    ss << "# " << std::string(77, filler) << "\n";
+    ss << "# Authors\n";
+    ss << "# -------\n";
+    ss << "#\n";
+    ss << "# * cpp-argparse (https://github.com/rue-ryuzaki/argparse)\n";
+    ss << "#\n";
+    ss << "# " << std::string(77, filler) << "\n\n";
+    _print_parser_zsh_completion(ss, &parser, parser.prog(), true);
+    ss << "compdef _" << parser.prog() << " " << parser.prog();
+    return ss.str();
+}
+
 ARGPARSE_INL void
 utils::print_bash_completion(
         ArgumentParser const& parser,
         std::ostream& os)
 {
     os << format_bash_completion(parser) << std::endl;
+}
+
+ARGPARSE_INL void
+utils::print_zsh_completion(
+        ArgumentParser const& parser,
+        std::ostream& os)
+{
+    os << format_zsh_completion(parser) << std::endl;
 }
 #endif  // ARGPARSE_ENABLE_UTILS
 #endif  // ARGPARSE_INL
