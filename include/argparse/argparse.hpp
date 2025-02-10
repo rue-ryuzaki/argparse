@@ -17244,11 +17244,12 @@ utils::_bash_completion_info(
     std::vector<std::string> options;
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
+        if (arg->m_nargs == Argument::SUPPRESSING) {
+            continue;
+        }
         detail::_insert_to_end(arg->flags(), options);
         res.options.push_back(std::make_pair(arg, std::string()));
-        if (arg->m_nargs != Argument::SUPPRESSING
-                && (arg->action()
-                    & (detail::_store_action | argparse::language))) {
+        if (arg->action() & (detail::_store_action | argparse::language)) {
             if (!arg->choices().empty()) {
                 res.options.back().second
                         = " -W \"" + detail::_join(arg->choices()) + "\"";
@@ -17259,6 +17260,9 @@ utils::_bash_completion_info(
     }
     for (std::size_t i = 0; i < operand.size(); ++i) {
         pArgument const& arg = operand.at(i);
+        if (arg->m_nargs == Argument::SUPPRESSING) {
+            continue;
+        }
         for (std::size_t j = 0; j < arg->flags().size(); ++j) {
             options.push_back(arg->flags().at(j) + "=");
             options.push_back(options.back() + "A");
@@ -17382,6 +17386,9 @@ utils::_print_parser_zsh_completion(
     os << "  arguments=(\n";
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
+        if (arg->m_nargs == Argument::SUPPRESSING) {
+            continue;
+        }
         os << "    ";
         bool can_repeat
                 = (arg->action() & (argparse::append | argparse::append_const
@@ -17397,9 +17404,7 @@ utils::_print_parser_zsh_completion(
             os << "'" << arg->flags().front() << "'";
         }
         os << "\"[" << detail::_zsh_help(arg->help()) << "]\"";
-        if (arg->m_nargs != Argument::SUPPRESSING
-                && (arg->action()
-                    & (detail::_store_action | argparse::language))) {
+        if (arg->action() & (detail::_store_action | argparse::language)) {
             if (!arg->choices().empty()) {
                 os << "':" << arg->get_metavar()
                    << ":(" << detail::_join(arg->choices()) << ")'";
