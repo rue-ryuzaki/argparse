@@ -17361,20 +17361,27 @@ utils::_print_parser_zsh_completion(
     os << "_" << prog << "()\n";
     os << "{\n";
     os << "  local -a arguments\n";
-    os << "  local curcontext=\"$curcontext\" state ret=1\n";
+    if (p->has_subparsers()) {
+        os << "  local curcontext=\"$curcontext\" state ret=1\n";
+    } else {
+        os << "  local curcontext=\"$curcontext\" ret=1\n";
+    }
     os << "  typeset -A opt_args\n";
     os << "\n";
     os << "  arguments=(\n";
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
         os << "    ";
-        if ((arg->action() & (argparse::append | argparse::append_const
-                              | argparse::count | argparse::extend))) {
+        bool can_repeat
+                = (arg->action() & (argparse::append | argparse::append_const
+                                    | argparse::count | argparse::extend));
+        if (can_repeat) {
             os << "\\*";
+        } else if (arg->flags().size() > 1) {
+            os << "'(" << detail::_join(arg->flags(), " ") << ")'";
         }
         if (arg->flags().size() > 1) {
-            os << "'(" << detail::_join(arg->flags(), " ") << ")'"
-               << "{" << detail::_join(arg->flags(), ",") << "}";
+            os << "{" << detail::_join(arg->flags(), ",") << "}";
         } else {
             os << "'" << arg->flags().front() << "'";
         }
