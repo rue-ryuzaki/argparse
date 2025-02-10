@@ -10515,6 +10515,17 @@ _invalid_choice(
             + _suggest_message(choice, choices, suggest)
             + " (choose from " + _join(choices, ", ", "'") + ")";
 }
+
+ARGPARSE_INL std::string
+_zsh_help(
+        std::string const& str)
+{
+    std::string help = _replace(str, "'", "\\'");
+    help = _replace(help, "\"", "\\\"");
+    help = _replace(help, "[", "\\[");
+    help = _replace(help, "]", "\\]");
+    return _replace(help, "`", "\\`");
+}
 }  // namespace detail
 
 // -- HelpFormatter -----------------------------------------------------------
@@ -17385,11 +17396,7 @@ utils::_print_parser_zsh_completion(
         } else {
             os << "'" << arg->flags().front() << "'";
         }
-        std::string help = detail::_replace(arg->help(), "'", "\\'");
-        help = detail::_replace(help, "\"", "\\\"");
-        help = detail::_replace(help, "[", "\\[");
-        help = detail::_replace(help, "]", "\\]");
-        os << "\"[" << detail::_replace(help, "`", "\\`") << "]\"";
+        os << "\"[" << detail::_zsh_help(arg->help()) << "]\"";
         if (arg->m_nargs != Argument::SUPPRESSING
                 && (arg->action()
                     & (detail::_store_action | argparse::language))) {
