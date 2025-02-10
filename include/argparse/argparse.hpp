@@ -17451,12 +17451,36 @@ utils::_print_parser_zsh_completion(
     os << "  _arguments -C $arguments && ret=0\n";
     os << "\n";
     if (p->has_subparsers()) {
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
         os << "  case \"$state\" in\n";
         os << "    command)\n";
-        os << "      if (( $+functions[_" << prog << "_${words[1]}] )); then\n";
-        os << "        _" << prog << "_${words[1]} && ret=0\n";
+        os << "      local cmd=${words[1]}\n";
+        os << "      case ${cmd} in\n";
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            if ((*it)->aliases().empty()) {
+                continue;
+            }
+            os << "        " << detail::_join((*it)->aliases(), "|") << ")\n";
+            os << "          cmd=" << (*it)->m_name << "\n";
+            os << "          ;;\n";
+        }
+        os << "        *);;\n";
+        os << "      esac\n";
+        os << "      if (( $+functions[_" << prog << "_${cmd}] )); then\n";
+        os << "        _" << prog << "_${cmd} && ret=0\n";
         os << "      else\n";
-        os << "        ret=0\n";
+        os << "        local -a subcommands=(\n";
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            os << "          '" << (*it)->m_name << "':\""
+               << detail::_zsh_help((*it)->help()) << "\"\n";
+            for (std::size_t i = 0; i < (*it)->aliases().size(); ++i) {
+                os << "          '" << (*it)->aliases().at(i) << "':\""
+                   << detail::_zsh_help((*it)->help()) << "\"\n";
+            }
+        }
+        os << "        )\n";
+        os << "        _describe '" << detail::_zsh_help(
+                  p->subparsers()->help()) << "' subcommands && ret=0\n";
         os << "      fi\n";
         os << "      ;;\n";
         os << "  esac\n";
