@@ -17373,6 +17373,7 @@ utils::_print_parser_zsh_completion(
         }
     }
     detail::pArguments optional = p->m_data->get_optional(false, true);
+    detail::pArguments operand = p->m_data->get_operand(false, true);
     os << "_" << prog << "()\n";
     os << "{\n";
     os << "  local -a arguments\n";
@@ -17419,6 +17420,34 @@ utils::_print_parser_zsh_completion(
     }
     os << "  )\n";
     os << "\n";
+    if (!operand.empty()) {
+        std::stringstream op;
+        for (std::size_t i = 0; i < operand.size(); ++i) {
+            pArgument const& arg = operand.at(i);
+            if (arg->m_nargs == Argument::SUPPRESSING) {
+                continue;
+            }
+            op << "    ";
+            op << "\\*";
+            op << "\"" << arg->flags().front() << "["
+               << detail::_zsh_help(arg->help()) << "]\"";
+            if (!arg->choices().empty()) {
+                op << "':" << arg->get_metavar()
+                   << ":(" << detail::_join(arg->choices()) << ")'";
+            } else {
+                op << "': :_files'";
+            }
+            op << "\n";
+        }
+        if (!op.str().empty()) {
+            os << "  local -a operands=(\n";
+            os << op.str();
+            os << "  )\n";
+            os << "\n";
+            os << "  _values -w 'operand' $operands\n";
+            os << "\n";
+        }
+    }
     os << "  _arguments -C $arguments && ret=0\n";
     os << "\n";
     if (p->has_subparsers()) {
