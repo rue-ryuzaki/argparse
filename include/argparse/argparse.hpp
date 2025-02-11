@@ -17374,9 +17374,8 @@ utils::_print_parser_zsh_completion(
     }
     detail::pArguments optional = p->m_data->get_optional(false, true);
     detail::pArguments operand = p->m_data->get_operand(false, true);
-    os << "_" << prog << "()\n";
+    os << "\n\n_" << prog << "()\n";
     os << "{\n";
-    os << "  local -a arguments\n";
     if (p->has_subparsers()) {
         os << "  local curcontext=\"$curcontext\" state ret=1\n";
     } else {
@@ -17384,7 +17383,7 @@ utils::_print_parser_zsh_completion(
     }
     os << "  typeset -A opt_args\n";
     os << "\n";
-    os << "  arguments=(\n";
+    os << "  local -a arguments=(\n";
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
         if (arg->m_nargs == Argument::SUPPRESSING) {
@@ -17487,7 +17486,7 @@ utils::_print_parser_zsh_completion(
         os << "\n";
     }
     os << "  return $ret\n";
-    os << "}\n\n";
+    os << "}";
 }
 
 ARGPARSE_INL bool
@@ -17564,9 +17563,8 @@ utils::format_zsh_completion(
     ss << "#\n";
     ss << "# * cpp-argparse (https://github.com/rue-ryuzaki/argparse)\n";
     ss << "#\n";
-    ss << "# " << std::string(77, filler) << "\n\n";
+    ss << "# " << std::string(77, filler);
     _print_parser_zsh_completion(ss, &parser, parser.prog(), true);
-    ss << "compdef _" << parser.prog() << " " << parser.prog();
     return ss.str();
 }
 
