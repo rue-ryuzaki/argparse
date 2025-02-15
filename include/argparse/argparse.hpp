@@ -10517,6 +10517,13 @@ _invalid_choice(
 }
 
 ARGPARSE_INL std::string
+_zsh_action(
+        std::string const& str)
+{
+    return _replace(str, "'", " ");
+}
+
+ARGPARSE_INL std::string
 _zsh_help(
         std::string const& str)
 {
@@ -10525,6 +10532,22 @@ _zsh_help(
     help = _replace(help, "[", "\\[");
     help = _replace(help, "]", "\\]");
     return _replace(help, "`", "\\`");
+}
+
+ARGPARSE_INL std::string
+_argument_action(
+        pArgument const& arg,
+        std::string const& metavar,
+        std::size_t num_args)
+{
+    std::string str = ":" + _zsh_action(metavar) + ":" + (
+         arg->choices().empty() ? "_files" : "(" + _join(arg->choices()) + ")");
+    std::string res;
+    res.reserve(str.size() * num_args);
+    for (std::size_t i = 0; i < num_args; ++i) {
+        res += str;
+    }
+    return res;
 }
 }  // namespace detail
 
@@ -17374,6 +17397,7 @@ utils::_print_parser_zsh_completion(
     }
     detail::pArguments optional = p->m_data->get_optional(false, true);
     detail::pArguments operand = p->m_data->get_operand(false, true);
+    detail::pArguments positional = p->m_data->get_positional(false, true);
     os << "\n\n_" << prog << "()\n";
     os << "{\n";
     if (p->has_subparsers()) {
@@ -17405,16 +17429,26 @@ utils::_print_parser_zsh_completion(
         }
         os << "\"[" << detail::_zsh_help(arg->help()) << "]\"";
         if (arg->action() & (detail::_store_action | argparse::language)) {
-            if (!arg->choices().empty()) {
-                os << "':" << arg->get_metavar()
-                   << ":(" << detail::_join(arg->choices()) << ")'";
-            } else {
-                os << "': :_files'";
-            }
+            os << "'" << detail::_argument_action(
+                      arg, arg->get_metavar(), arg->m_num_args) << "'";
         }
         os << "\n";
     }
-    if (p->has_subparsers()) {
+    ArgumentParser::SubParsersInfo const info = p->subparsers_info(false);
+    std::size_t n = 1;
+    for (std::size_t i = 0; i < positional.size(); ++i) {
+        pArgument const& arg = positional.at(i);
+        if (info.first && info.second == i) {
+            os << "    '" << n << "::" << prog << " commands:->command'\n";
+            ++n;
+        }
+        for (std::size_t j = 0; j < arg->m_num_args; ++j) {
+            os << "    '" << n << ":" << detail::_zsh_action(arg->get_metavar())
+               << ":_files'";
+            ++n;
+        }
+    }
+    if (positional.empty() && p->has_subparsers()) {
         os << "    '*::" << prog << " commands:->command'\n";
     }
     os << "  )\n";
@@ -17427,15 +17461,10 @@ utils::_print_parser_zsh_completion(
                 continue;
             }
             op << "    ";
-            op << "\\*";
             op << "\"" << arg->flags().front() << "["
                << detail::_zsh_help(arg->help()) << "]\"";
-            if (!arg->choices().empty()) {
-                op << "':" << arg->get_metavar()
-                   << ":(" << detail::_join(arg->choices()) << ")'";
-            } else {
-                op << "': :_files'";
-            }
+            op << "'" << detail::_argument_action(
+                      arg, arg->get_metavar(), arg->m_num_args) << "'";
             op << "\n";
         }
         if (!op.str().empty()) {
