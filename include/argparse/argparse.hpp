@@ -10432,7 +10432,10 @@ _match_pattern(
 
     for (i = 0; i < left - length; ++i) {
         for (j = 0; j < right - length; ++j) {
-            if (a.at(i) == b.at(j) && a.at(i + length) == b.at(j + length)) {
+            if (a.at(i) == b.at(j)
+                    && i + length < a.size()
+                    && j + length < b.size()
+                    && a.at(i + length) == b.at(j + length)) {
                 for (k = i + 1, m = j + 1;
                   k < a.size() && m < b.size() && a.at(k) == b.at(m); ++k, ++m);
 
