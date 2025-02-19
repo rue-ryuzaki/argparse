@@ -234,9 +234,11 @@
 # include <optional>
 #endif  // ARGPARSE_HAS_OPTIONAL
 
-#if __has_include(<version>)
-# include <version>
-#endif  // __has_include(<version>)
+#ifdef __has_include
+# if __has_include(<version>)
+#  include <version>
+# endif  // __has_include(<version>)
+#endif  // __has_include
 
 #ifdef __cpp_lib_span
 # include <span>
