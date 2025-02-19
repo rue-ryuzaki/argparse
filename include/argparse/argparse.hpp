@@ -1055,8 +1055,12 @@ struct is_integer_type
                          && !is_byte_type<T>::value && !is_same<bool, T>::value;
 };
 
+template <class T, class = void>
+struct is_string_ctor                      { static bool const value = false; };
+
 template <class T>
-struct is_string_ctor
+struct is_string_ctor<T, typename enable_if<!is_floating_point<T>::value
+                                            && !is_integral<T>::value>::type>
 {
     static bool const value = is_constructible<std::string, T>::value;
 };
