@@ -13411,7 +13411,7 @@ Namespace::func(
 ARGPARSE_INL bool
 Namespace::has_func() const ARGPARSE_NOEXCEPT
 {
-    return m_func != ARGPARSE_NULLPTR;
+    return static_cast<bool>(m_func);
 }
 
 ARGPARSE_INL void
