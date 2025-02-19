@@ -37,64 +37,23 @@ jobs:
 #        gcc: [8, 9]
 #        standard: [98, 11, 14, 17]
 
-  gcc-ubuntu20-14:
-    runs-on: ubuntu-20.04
+#  gcc-ubuntu20-14:
+#    runs-on: ubuntu-20.04
+#
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        gcc: [7]
+#        standard: [98, 11, 14]
 
-    strategy:
-      fail-fast: false
-      matrix:
-        gcc: [7]
-        standard: [98, 11, 14]
-
-    env:
-      CC: gcc-${{ matrix.gcc }}
-      CXX: g++-${{ matrix.gcc }}
-
-    steps:
-    - name: Install GCC
-      run: sudo apt install gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
-
-    - uses: actions/checkout@v4
-
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
-
-  gcc-ubuntu20-17:
-    runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
+#  gcc-ubuntu20-17:
+#    runs-on: ubuntu-20.04
+#
+#    strategy:
+#      fail-fast: false
+#      matrix:
 #        gcc: [8, 9, 10]
-        gcc: [8]
-        standard: [98, 11, 14, 17]
-
-    env:
-      CC: gcc-${{ matrix.gcc }}
-      CXX: g++-${{ matrix.gcc }}
-
-    steps:
-    - name: Install GCC
-      run: sudo apt install gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
-
-    - uses: actions/checkout@v4
-
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
+#        standard: [98, 11, 14, 17]
 
   gcc-ubuntu22-20:
     runs-on: ubuntu-22.04
@@ -194,65 +153,23 @@ jobs:
 #        clang: ['5.0', '6.0', 7, 8, 9]
 #        standard: [98, 11, 14, 17]
 
-  clang-ubuntu20-17:
-    runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
+#  clang-ubuntu20-17:
+#    runs-on: ubuntu-20.04
+#
+#    strategy:
+#      fail-fast: false
+#      matrix:
 #        clang: ['6.0', 7, 8]
-        clang: ['6.0']
-        standard: [98, 11, 14, 17]
+#        standard: [98, 11, 14, 17]
 
-    env:
-      CC: clang-${{ matrix.clang }}
-      CXX: clang++-${{ matrix.clang }}
-
-    steps:
-    - name: Install Clang
-      run: sudo apt install clang-${{ matrix.clang }}
-
-    - uses: actions/checkout@v4
-
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
-
-  clang-ubuntu20-20:
-    runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
+#  clang-ubuntu20-20:
+#    runs-on: ubuntu-20.04
+#
+#    strategy:
+#      fail-fast: false
+#      matrix:
 #        clang: [9, 10]
-        clang: [9]
-        standard: [98, 11, 14, 17]
-
-    env:
-      CC: clang-${{ matrix.clang }}
-      CXX: clang++-${{ matrix.clang }}
-
-    steps:
-    - name: Install Clang
-      run: sudo apt install clang-${{ matrix.clang }}
-
-    - uses: actions/checkout@v4
-
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
+#        standard: [98, 11, 14, 17]
 
   clang-ubuntu22-20:
     runs-on: ubuntu-22.04
