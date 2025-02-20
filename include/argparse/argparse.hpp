@@ -219,6 +219,7 @@
 #include <deque>
 #include <iostream>
 #include <list>
+#include <queue>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -1055,15 +1056,28 @@ struct is_integer_type
                          && !is_byte_type<T>::value && !is_same<bool, T>::value;
 };
 
-template <class T, class = void>
-struct is_string_ctor                      { static bool const value = false; };
-
+#ifdef ARGPARSE_CXX_11
 template <class T>
-struct is_string_ctor<T, typename enable_if<!is_floating_point<T>::value
-                                            && !is_integral<T>::value>::type>
+struct is_string_ctor
 {
     static bool const value = is_constructible<std::string, T>::value;
 };
+#else
+template <class>
+struct is_char_array                       { static bool const value = false; };
+template <class T, std::size_t N>
+struct is_char_array<T[N]>
+{
+    static bool const value = is_same<char, T>::value;
+};
+
+template <class T>
+struct is_string_ctor
+{
+    static bool const value = is_same<std::string, T>::value
+                           || is_char_array<T>::value;
+};
+#endif  // C++11+
 
 template <class T, class = void>
 struct has_container_type                  { static bool const value = false; };
@@ -1084,14 +1098,6 @@ struct has_value_type<T, typename voider<
              typename T::value_type>::type> { static bool const value = true; };
 
 template <class T, class = void>
-struct has_sub_string_ctor                 { static bool const value = false; };
-template <class T>
-struct has_sub_string_ctor<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value = is_string_ctor<typename T::value_type>::value;
-};
-
-template <class T, class = void>
 struct has_vector_ctor                     { static bool const value = false; };
 template <class T>
 struct has_vector_ctor<T, typename voider<typename T::value_type>::type>
@@ -1108,22 +1114,6 @@ struct has_deque_ctor<T, typename voider<typename T::value_type>::type>
 {
     static bool const value = is_constructible<
             T, typename std::deque<typename T::value_type> >::value;
-};
-
-template <class T, class = void>
-struct has_sub_vector_ctor                 { static bool const value = false; };
-template <class T>
-struct has_sub_vector_ctor<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value = has_vector_ctor<typename T::value_type>::value;
-};
-
-template <class T, class = void>
-struct has_sub_deque_ctor                  { static bool const value = false; };
-template <class T>
-struct has_sub_deque_ctor<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value = has_deque_ctor<typename T::value_type>::value;
 };
 
 template <class T, class = void>
@@ -1154,32 +1144,62 @@ template <class T>
 struct is_stl_array                                               :false_type{};
 
 template <class T>
+struct is_priority_queue                                          :false_type{};
+#ifdef ARGPARSE_CXX_11
+template <class... Args>
+struct is_priority_queue<std::priority_queue            <Args...> >:true_type{};
+#else
+template <class T>
+struct is_priority_queue<std::priority_queue            <T> >      :true_type{};
+#endif  // C++11+
+
+template <class T>
 struct is_stl_queue
 {
     static bool const value = has_container_type<T>::value
-                          && !has_value_compare<T>::value;
+                          && !is_priority_queue<T>::value;
 };
 
 template <class T>
 struct is_stl_span                                                :false_type{};
-
 #ifdef ARGPARSE_HAS_SPAN
 template <class T>
-struct is_stl_span<std::span                            <T> >      :true_type{};
+struct is_stl_span<std::span                                  <T> >:true_type{};
 #endif  // ARGPARSE_HAS_SPAN
 
+template <class T, class = void>
+struct is_stl_container                    { static bool const value = false; };
 template <class T>
-struct is_stl_container
+struct is_stl_container<T, typename enable_if<!is_stl_queue<T>::value>::type>
 {
-    static bool const value = has_vector_ctor<T>::value
-                          && !is_stl_queue<T>::value && !is_stl_span<T>::value
-                          && !is_string_ctor<T>::value && !is_stl_map<T>::value;
+    static bool const value = has_vector_ctor<T>::value && !is_stl_map<T>::value
+                         && !is_string_ctor<T>::value && !is_stl_span<T>::value;
+};
+
+template <class T, class = void, class = void>
+struct has_sub_vector_ctor                 { static bool const value = false; };
+template <class T>
+struct has_sub_vector_ctor<T, typename voider<typename T::value_type>::type,
+       typename enable_if<!is_string_ctor<typename T::value_type>::value
+                         && !is_stl_queue<typename T::value_type>::value>::type>
+{
+    static bool const value = has_vector_ctor<typename T::value_type>::value;
+};
+
+template <class T, class = void, class = void>
+struct has_sub_deque_ctor                  { static bool const value = false; };
+template <class T>
+struct has_sub_deque_ctor<T, typename voider<typename T::value_type>::type,
+       typename enable_if<!is_string_ctor<typename T::value_type>::value
+                     && !is_stl_container<typename T::value_type>::value>::type>
+{
+    static bool const value = has_deque_ctor<typename T::value_type>::value;
 };
 
 template <class T, class = void>
-struct is_stl_sub_array                    { static bool const value = false; };
+struct has_stl_sub_array                   { static bool const value = false; };
 template <class T>
-struct is_stl_sub_array<T, typename voider<typename T::value_type>::type>
+struct has_stl_sub_array<T, typename voider<typename T::value_type>::type>
 {
     static bool const value = is_stl_array<typename T::value_type>::value;
 };
@@ -1187,14 +1207,12 @@ struct is_stl_sub_array<T, typename voider<typename T::value_type>::type>
 template <class T>
 struct is_stl_matrix
 {
-    static bool const value =
-            (is_stl_array<T>::value
-             || is_stl_container<T>::value
-             || is_stl_queue<T>::value)
-            && (is_stl_sub_array<T>::value
-                || (has_sub_vector_ctor<T>::value
-                    && !has_sub_string_ctor<T>::value)
-                || has_sub_deque_ctor<T>::value);
+    static bool const value = (is_stl_array<T>::value
+                               || is_stl_container<T>::value
+                               || is_stl_queue<T>::value)
+                              && (has_stl_sub_array<T>::value
+                                  || has_sub_vector_ctor<T>::value
+                                  || has_sub_deque_ctor<T>::value);
 };
 
 template <class T>
@@ -2358,26 +2376,24 @@ _check_non_count_action(
         Action action);
 
 template <class T>
-static typename enable_if<
-    is_stl_container<typename decay<T>::type>::value, T
->::type
-make_container(
+typename enable_if<is_stl_container<typename decay<T>::type>::value, T>::type
+_make_container(
         std::vector<typename T::value_type> const& vec)
 {
     return T(vec.begin(), vec.end());
 }
 
 template <class T>
-static typename enable_if<is_stl_queue<typename decay<T>::type>::value, T>::type
-make_container(
+typename enable_if<is_stl_queue<typename decay<T>::type>::value, T>::type
+_make_container(
         std::vector<typename T::value_type> const& vec)
 {
     return T(std::deque<typename T::value_type>(vec.begin(), vec.end()));
 }
 
 template <class T>
-static typename enable_if<is_stl_span<typename decay<T>::type>::value, T>::type
-make_container(
+typename enable_if<is_stl_span<typename decay<T>::type>::value, T>::type
+_make_container(
         std::vector<typename T::value_type> const& vec)
 {
     return T(vec);
@@ -2385,8 +2401,8 @@ make_container(
 
 #ifdef ARGPARSE_CXX_11
 template <class T>
-static typename enable_if<is_stl_array<typename decay<T>::type>::value, T>::type
-make_container(
+typename enable_if<is_stl_array<typename decay<T>::type>::value, T>::type
+_make_container(
         std::vector<typename T::value_type> const& vec)
 {
     T res{};
@@ -4943,7 +4959,7 @@ private:
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             std::vector<VV> vector = as_subvector<VV>(
                         value.first, value.second.sub_values(i));
-            push_to_container<T>(res, detail::make_container<V>(vector));
+            push_to_container<T>(res, detail::_make_container<V>(vector));
         }
         return res;
     }
@@ -4974,7 +4990,7 @@ private:
         for (std::size_t i = 0; i < size; ++i) {
             std::vector<VV> vector = as_subvector<VV>(
                         value.first, value.second.sub_values(i));
-            push_to_container(vec, detail::make_container<V>(vector));
+            push_to_container(vec, detail::_make_container<V>(vector));
         }
         typedef typename std::vector<V>::difference_type dtype;
         std::move(vec.begin(), std::next(
@@ -5342,7 +5358,7 @@ private:
             if (!vector.has_value()) {
                 return std::nullopt;
             }
-            push_to_container(res, detail::make_container<V>(vector.value()));
+            push_to_container(res, detail::_make_container<V>(vector.value()));
         }
         return res;
     }
@@ -5512,7 +5528,7 @@ public:
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
-        return detail::make_container<T>(args.second());
+        return detail::_make_container<T>(args.second());
     }
 
     /*!
@@ -5539,7 +5555,7 @@ public:
         _Storage::value_type const& args = data(key);
         detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
         detail::_check_non_count_action(key, args.first->action());
-        return detail::make_container<T>(
+        return detail::_make_container<T>(
                     _Storage::get_vector<typename T::value_type>(args));
     }
 
@@ -5567,7 +5583,7 @@ public:
         typedef typename T::value_type::second_type V;
         std::vector<std::pair<K, V> > vector
                 = _Storage::as_vector_pair<K, V>(key, args, sep);
-        return detail::make_container<T>(vector);
+        return detail::_make_container<T>(vector);
     }
 
     /*!
@@ -5677,7 +5693,7 @@ public:
         detail::_check_non_count_action(key, args.first->action());
         auto vector = _Storage::as_vector_tuple<typename T::value_type>(
                     key, args, sep);
-        return detail::make_container<T>(vector);
+        return detail::_make_container<T>(vector);
     }
 
     /*!
@@ -5836,7 +5852,7 @@ public:
             }
             return _Storage::opt_matrix<T>(args.value());
         } else if constexpr (detail::is_stl_span<std::decay_t<T> >::value) {
-            return detail::make_container<T>(args->second());
+            return detail::_make_container<T>(args->second());
         } else if constexpr ((detail::is_stl_container<std::decay_t<T> >::value
                 && !detail::is_stl_container_paired<std::decay_t<T> >::value
                 && !detail::is_stl_container_tupled<std::decay_t<T> >::value
@@ -5849,7 +5865,7 @@ public:
             if (!vector.has_value()) {
                 return std::nullopt;
             }
-            return detail::make_container<T>(vector.value());
+            return detail::_make_container<T>(vector.value());
         } else {
             if constexpr (detail::is_string_ctor<T>::value
                     || std::is_floating_point<T>::value
@@ -5908,7 +5924,7 @@ public:
             if (!vector.has_value()) {
                 return std::nullopt;
             }
-            return detail::make_container<T>(vector.value());
+            return detail::_make_container<T>(vector.value());
         }
         if constexpr (detail::is_stl_container_tupled<
                 typename std::decay<T>::type>::value) {
@@ -5917,7 +5933,7 @@ public:
             if (!vector.has_value()) {
                 return std::nullopt;
             }
-            return detail::make_container<T>(vector.value());
+            return detail::_make_container<T>(vector.value());
         }
         if constexpr (detail::is_stl_map<typename std::decay<T>::type>::value) {
             T res{};
