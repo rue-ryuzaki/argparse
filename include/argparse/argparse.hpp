@@ -2376,6 +2376,66 @@ _check_non_count_action(
         Action action);
 
 template <class T>
+struct need_operator_in
+{
+    static bool const value = !is_same<bool, T>::value
+            && !is_string_ctor<T>::value
+            && !is_byte_type<T>::value;
+};
+
+template <class T>
+typename enable_if<is_string_ctor<T>::value, T>::type
+_to_type(
+        std::string const& data)
+{
+    return T(data);
+}
+
+template <class T>
+typename enable_if<is_same<bool, T>::value, T>::type
+_to_type(
+        std::string const& data) ARGPARSE_NOEXCEPT
+{
+    return _string_to_bool(data);
+}
+
+template <class T>
+typename enable_if<is_byte_type<T>::value, T>::type
+_to_type(
+        std::string const& data)
+{
+    if (data.size() != 1) {
+        throw TypeError("got a data-array in value '" + data + "'");
+    }
+    return static_cast<T>(data.at(0));
+}
+
+template <class T>
+typename enable_if<
+    has_operator_in<T>::value && need_operator_in<T>::value, T>::type
+_to_type(
+        std::string const& data)
+{
+    T res = T();
+    std::stringstream ss(data);
+    ss >> res;
+    if (ss.fail() || !ss.eof()) {
+        throw
+        TypeError("invalid " + Type::name<T>() + " value: '" + data + "'");
+    }
+    return res;
+}
+
+template <class T>
+typename enable_if<
+    !has_operator_in<T>::value && need_operator_in<T>::value, T>::type
+_to_type(
+        std::string const&)
+{
+    throw TypeError("unsupported type " + Type::name<T>());
+}
+
+template <class T>
 typename enable_if<is_stl_container<typename decay<T>::type>::value, T>::type
 _make_container(
         std::vector<typename T::value_type> const& vec)
@@ -4648,67 +4708,12 @@ private:
     typedef std::vector<std::string>::difference_type                     dtype;
 
     template <class T>
-    struct need_operator_in
-    {
-        static bool const value = !detail::is_same<bool, T>::value
-                && !detail::is_string_ctor<T>::value
-                && !detail::is_byte_type<T>::value;
-    };
-
-    template <class T>
     struct simple_element
     {
         static bool const value = detail::is_floating_point<T>::value
                 || detail::is_string_ctor<T>::value
                 || detail::is_integral<T>::value;
     };
-
-    template <class T>
-    static typename detail::enable_if<detail::is_string_ctor<T>::value, T>::type
-    to_type(std::string const& data)
-    {
-        return T(data);
-    }
-
-    template <class T>
-    static typename detail::enable_if<detail::is_same<bool, T>::value, T>::type
-    to_type(std::string const& data) ARGPARSE_NOEXCEPT
-    {
-        return detail::_string_to_bool(data);
-    }
-
-    template <class T>
-    static typename detail::enable_if<detail::is_byte_type<T>::value, T>::type
-    to_type(std::string const& data)
-    {
-        if (data.size() != 1) {
-            throw TypeError("got a data-array in value '" + data + "'");
-        }
-        return static_cast<T>(data.at(0));
-    }
-
-    template <class T>
-    static typename detail::enable_if<
-       detail::has_operator_in<T>::value && need_operator_in<T>::value, T>::type
-    to_type(std::string const& data)
-    {
-        T res = T();
-        std::stringstream ss(data);
-        ss >> res;
-        if (ss.fail() || !ss.eof()) {
-            throw TypeError("invalid " + detail::Type::name<T>()
-                            + " value: '" + data + "'");
-        }
-        return res;
-    }
-
-    template <class T>
-    static typename detail::enable_if<
-      !detail::has_operator_in<T>::value && need_operator_in<T>::value, T>::type
-    to_type(std::string const&)
-    {
-        throw TypeError("unsupported type " + detail::Type::name<T>());
-    }
 
     template <class T>
     static T
@@ -4722,7 +4727,7 @@ private:
             }
             return res;
         }
-        return value.empty() ? T() : to_type<T>(value);
+        return value.empty() ? T() : detail::_to_type<T>(value);
     }
 
     template <class K, class V>
@@ -5114,7 +5119,7 @@ private:
             return static_cast<T>(data.front());
         }
         if constexpr (detail::has_operator_in<T>::value
-                && need_operator_in<T>::value) {
+                && detail::need_operator_in<T>::value) {
             T res{};
             std::stringstream ss(data);
             ss >> res;
@@ -5502,7 +5507,7 @@ public:
         if (args.first->action() == argparse::count) {
             if (args.first->m_default.has_value()) {
                 std::string value = args.first->m_default.value();
-                std::size_t res = _Storage::to_type<std::size_t>(value);
+                std::size_t res = detail::_to_type<std::size_t>(value);
                 return static_cast<T>(res + args.second.size());
             }
             return static_cast<T>(args.second.size());
@@ -13499,7 +13504,7 @@ Namespace::to_string(
                     }
                     return quotes + value + quotes;
                 }
-                std::size_t res = _Storage::to_type<std::size_t>(value);
+                std::size_t res = detail::_to_type<std::size_t>(value);
                 return detail::_to_string(res + args.second.size());
             }
             return args.second.empty()
