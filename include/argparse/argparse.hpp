@@ -3955,6 +3955,67 @@ private:
     bool                        m_deprecated;
 };
 
+namespace detail {
+class StorageData
+{
+public:
+    StorageData();
+
+    explicit
+    StorageData(
+            std::vector<std::string> const& values);
+
+    void
+    clear();
+
+    bool
+    exists() const ARGPARSE_NOEXCEPT;
+
+    bool
+    is_default() const ARGPARSE_NOEXCEPT;
+
+    std::vector<std::string> const&
+    operator ()() const ARGPARSE_NOEXCEPT;
+
+    std::size_t
+    size() const ARGPARSE_NOEXCEPT;
+
+    bool
+    empty() const ARGPARSE_NOEXCEPT;
+
+    std::string const&
+    front() const ARGPARSE_NOEXCEPT;
+
+    std::string const&
+    at(std::size_t i) const;
+
+    void
+    push_back(
+            std::string const& value,
+            bool is_default = false);
+
+    void
+    push_values(
+            std::vector<std::string> const& values);
+
+    std::vector<std::size_t> const&
+    indexes() const ARGPARSE_NOEXCEPT;
+
+    std::vector<std::string>
+    sub_values(
+            std::size_t i) const;
+
+private:
+    // -- data ----------------------------------------------------------------
+    bool m_exists;
+    bool m_is_default;
+    std::vector<std::string> m_values;
+    std::vector<std::size_t> m_indexes;
+};
+
+typedef std::pair<shared_ptr<Argument>, StorageData> storage_value;
+}  // namespace detail
+
 /*!
  *  \brief _Group class
  */
@@ -4547,69 +4608,9 @@ class _Storage
     friend class ArgumentParser;
     friend class Namespace;
 
-    class mapped_type
-    {
-    public:
-        mapped_type();
-
-        explicit
-        mapped_type(
-                std::vector<std::string> const& values);
-
-        void
-        clear();
-
-        bool
-        exists() const ARGPARSE_NOEXCEPT;
-
-        bool
-        is_default() const ARGPARSE_NOEXCEPT;
-
-        std::vector<std::string> const&
-        operator ()() const ARGPARSE_NOEXCEPT;
-
-        std::size_t
-        size() const ARGPARSE_NOEXCEPT;
-
-        bool
-        empty() const ARGPARSE_NOEXCEPT;
-
-        std::string const&
-        front() const ARGPARSE_NOEXCEPT;
-
-        std::string const&
-        at(std::size_t i) const;
-
-        void
-        push_back(
-                std::string const& value,
-                bool is_default = false);
-
-        void
-        push_values(
-                std::vector<std::string> const& values);
-
-        std::vector<std::size_t> const&
-        indexes() const ARGPARSE_NOEXCEPT;
-
-        std::vector<std::string>
-        sub_values(
-                std::size_t i) const;
-
-    private:
-        // -- data ------------------------------------------------------------
-        bool m_exists;
-        bool m_is_default;
-        std::vector<std::string> m_values;
-        std::vector<std::size_t> m_indexes;
-    };
-
+    typedef detail::StorageData                     mapped_type;
     typedef detail::shared_ptr<Argument>            key_type;
-
-public:
-    typedef std::pair<key_type, mapped_type>        value_type;
-
-private:
+    typedef detail::storage_value                   value_type;
     typedef std::list<value_type>                   map_type;
     typedef map_type::iterator                      iterator;
     typedef map_type::const_iterator                const_iterator;
@@ -10062,7 +10063,7 @@ _matrix_to_string(
 ARGPARSE_INL std::string
 _boolean_option_to_args(
         std::string const& key,
-        _Storage::value_type const& args)
+        storage_value const& args)
 {
     if (args.second.empty()) {
         return _bool_to_string(args.first->default_value());
@@ -10078,7 +10079,7 @@ _boolean_option_to_args(
 ARGPARSE_INL std::string
 _boolean_option_to_string(
         std::string const& key,
-        _Storage::value_type const& args,
+        storage_value const& args,
         std::string const& quotes)
 {
     if (args.second.empty()) {
@@ -10573,6 +10574,115 @@ _argument_action(
         res += str;
     }
     return res;
+}
+
+// -- StorageData -------------------------------------------------------------
+ARGPARSE_INL
+StorageData::StorageData()
+    : m_exists(),
+      m_is_default(),
+      m_values(),
+      m_indexes()
+{ }
+
+ARGPARSE_INL
+StorageData::StorageData(
+        std::vector<std::string> const& values)
+    : m_exists(true),
+      m_is_default(true),
+      m_values(values),
+      m_indexes()
+{
+    m_indexes.push_back(m_values.size());
+}
+
+ARGPARSE_INL void
+StorageData::clear()
+{
+    m_values.clear();
+    m_indexes.clear();
+    m_exists = false;
+    m_is_default = false;
+}
+
+ARGPARSE_INL bool
+StorageData::exists() const ARGPARSE_NOEXCEPT
+{
+    return m_exists;
+}
+
+ARGPARSE_INL bool
+StorageData::is_default() const ARGPARSE_NOEXCEPT
+{
+    return m_is_default;
+}
+
+ARGPARSE_INL std::vector<std::string> const&
+StorageData::operator ()() const ARGPARSE_NOEXCEPT
+{
+    return m_values;
+}
+
+ARGPARSE_INL std::size_t
+StorageData::size() const ARGPARSE_NOEXCEPT
+{
+    return m_values.size();
+}
+
+ARGPARSE_INL bool
+StorageData::empty() const ARGPARSE_NOEXCEPT
+{
+    return m_values.empty();
+}
+
+ARGPARSE_INL std::string const&
+StorageData::front() const ARGPARSE_NOEXCEPT
+{
+    return m_values.front();
+}
+
+ARGPARSE_INL std::string const&
+StorageData::at(
+        std::size_t i) const
+{
+    return m_values.at(i);
+}
+
+ARGPARSE_INL void
+StorageData::push_back(
+        std::string const& value,
+        bool is_default)
+{
+    m_is_default = is_default;
+    m_values.push_back(value);
+    m_indexes.push_back(m_values.size());
+    m_exists = true;
+}
+
+ARGPARSE_INL void
+StorageData::push_values(
+        std::vector<std::string> const& values)
+{
+    detail::_insert_to_end(values, m_values);
+    m_indexes.push_back(m_values.size());
+    m_exists = true;
+}
+
+ARGPARSE_INL std::vector<std::size_t> const&
+StorageData::indexes() const ARGPARSE_NOEXCEPT
+{
+    return m_indexes;
+}
+
+ARGPARSE_INL std::vector<std::string>
+StorageData::sub_values(
+        std::size_t i) const
+{
+    typedef std::vector<std::string>::difference_type dtype;
+    return std::vector<std::string>(
+                m_values.begin() + static_cast<dtype>(
+                    i == 0 ? 0 : m_indexes.at(i - 1)),
+                m_values.begin() + static_cast<dtype>(m_indexes.at(i)));
 }
 }  // namespace detail
 
@@ -12965,113 +13075,6 @@ ArgumentGroup::print_help(
     }
 }
 
-// -- _Storage::mapped_type ---------------------------------------------------
-ARGPARSE_INL
-_Storage::mapped_type::mapped_type()
-    : m_exists(),
-      m_is_default(),
-      m_values(),
-      m_indexes()
-{ }
-
-ARGPARSE_INL
-_Storage::mapped_type::mapped_type(
-        std::vector<std::string> const& values)
-    : m_exists(true),
-      m_is_default(true),
-      m_values(values),
-      m_indexes()
-{
-    m_indexes.push_back(m_values.size());
-}
-
-ARGPARSE_INL void
-_Storage::mapped_type::clear()
-{
-    m_values.clear();
-    m_indexes.clear();
-    m_exists = false;
-    m_is_default = false;
-}
-
-ARGPARSE_INL bool
-_Storage::mapped_type::exists() const ARGPARSE_NOEXCEPT
-{
-    return m_exists;
-}
-
-ARGPARSE_INL bool
-_Storage::mapped_type::is_default() const ARGPARSE_NOEXCEPT
-{
-    return m_is_default;
-}
-
-ARGPARSE_INL std::vector<std::string> const&
-_Storage::mapped_type::operator ()() const ARGPARSE_NOEXCEPT
-{
-    return m_values;
-}
-
-ARGPARSE_INL std::size_t
-_Storage::mapped_type::size() const ARGPARSE_NOEXCEPT
-{
-    return m_values.size();
-}
-
-ARGPARSE_INL bool
-_Storage::mapped_type::empty() const ARGPARSE_NOEXCEPT
-{
-    return m_values.empty();
-}
-
-ARGPARSE_INL std::string const&
-_Storage::mapped_type::front() const ARGPARSE_NOEXCEPT
-{
-    return m_values.front();
-}
-
-ARGPARSE_INL std::string const&
-_Storage::mapped_type::at(
-        std::size_t i) const
-{
-    return m_values.at(i);
-}
-
-ARGPARSE_INL void
-_Storage::mapped_type::push_back(
-        std::string const& value,
-        bool is_default)
-{
-    m_is_default = is_default;
-    m_values.push_back(value);
-    m_indexes.push_back(m_values.size());
-    m_exists = true;
-}
-
-ARGPARSE_INL void
-_Storage::mapped_type::push_values(
-        std::vector<std::string> const& values)
-{
-    detail::_insert_to_end(values, m_values);
-    m_indexes.push_back(m_values.size());
-    m_exists = true;
-}
-
-ARGPARSE_INL std::vector<std::size_t> const&
-_Storage::mapped_type::indexes() const ARGPARSE_NOEXCEPT
-{
-    return m_indexes;
-}
-
-ARGPARSE_INL std::vector<std::string>
-_Storage::mapped_type::sub_values(
-        std::size_t i) const
-{
-    return std::vector<std::string>(
-                m_values.begin() + static_cast<dtype>(
-                    i == 0 ? 0 : m_indexes.at(i - 1)),
-                m_values.begin() + static_cast<dtype>(m_indexes.at(i)));
-}
 // -- _Storage ----------------------------------------------------------------
 ARGPARSE_INL
 _Storage::_Storage()
