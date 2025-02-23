@@ -2479,6 +2479,100 @@ _make_container(
                   vec.begin(), static_cast<dtype>(size)), res.begin());
     return res;
 }
+
+template <class T, typename enable_if<has_push_back<T>::value>::type* = nullptr>
+void
+_push_to_container(
+        T& container,
+        typename T::value_type const& value)
+{
+    container.push_back(value);
+}
+
+template <class T, typename enable_if<
+              has_push<T>::value
+              && !has_push_back<T>::value>::type* = nullptr>
+void
+_push_to_container(
+        T& container,
+        typename T::value_type const& value)
+{
+    container.push(value);
+}
+
+template <class T, typename enable_if<
+              has_insert<T>::value
+              && !has_push<T>::value
+              && !has_push_back<T>::value>::type* = nullptr>
+void
+_push_to_container(
+        T& container,
+        typename T::value_type const& value)
+{
+    container.insert(value);
+}
+
+template <class T, typename enable_if<
+              has_push_front<T>::value
+              && !has_insert<T>::value
+              && !has_push<T>::value
+              && !has_push_back<T>::value>::type* = nullptr>
+void
+_push_to_container(
+        T& container,
+        typename T::value_type const& value)
+{
+    container.push_front(value);
+}
+#else
+template <class T>
+void
+_push_to_container(
+        T& container,
+        typename T::value_type const& value,
+        typename enable_if<has_push_back<T>::value, bool>::type = true)
+{
+    container.push_back(value);
+}
+
+template <class T>
+void
+_push_to_container(
+        T& container,
+        typename T::value_type const& value,
+        typename enable_if<
+            has_push<T>::value
+            && !has_push_back<T>::value, bool>::type = true)
+{
+    container.push(value);
+}
+
+template <class T>
+void
+_push_to_container(
+        T& container,
+        typename T::value_type const& value,
+        typename enable_if<
+            has_insert<T>::value
+            && !has_push<T>::value
+            && !has_push_back<T>::value, bool>::type = true)
+{
+    container.insert(value);
+}
+
+template <class T>
+void
+_push_to_container(
+        T& container,
+        typename T::value_type const& value,
+        typename enable_if<
+            has_push_front<T>::value
+            && !has_insert<T>::value
+            && !has_push<T>::value
+            && !has_push_back<T>::value, bool>::type = true)
+{
+    container.push_front(value);
+}
 #endif  // C++11+
 }  // namespace detail
 
@@ -3844,6 +3938,30 @@ public:
     bool
     deprecated() const ARGPARSE_NOEXCEPT;
 
+    /*!
+     *  \brief Convert argument value from string to type T
+     *
+     *  \param value Argument value
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Converted value
+     */
+    template <class T>
+    ARGPARSE_ATTR_NODISCARD
+    T
+    get(std::string const& value) const
+    {
+        if (m_factory) {
+            T res = T();
+            if (!value.empty()) {
+                m_factory(value, &res);
+            }
+            return res;
+        }
+        return value.empty() ? T() : detail::_to_type<T>(value);
+    }
+
 private:
     void
     handle(std::string const& str) const;
@@ -4014,6 +4132,219 @@ private:
 };
 
 typedef std::pair<shared_ptr<Argument>, StorageData> storage_value;
+typedef std::vector<std::string>::const_iterator     data_const_iterator;
+typedef std::vector<std::string>::difference_type    dtype;
+
+template <class T>
+T
+_as_type(
+        shared_ptr<Argument> const& key,
+        std::string const& value)
+{
+    return key->template get<T>(value);
+}
+
+template <class K, class V>
+std::pair<K, V>
+_as_pair(
+        std::string const& name,
+        shared_ptr<Argument> const& key,
+        data_const_iterator beg,
+        data_const_iterator end,
+        char sep)
+{
+    std::size_t size = static_cast<std::size_t>(end - beg);
+    if (std::isspace(static_cast<unsigned char>(sep))) {
+        if (size == 2) {
+            return std::make_pair(_as_type<K>(key, *(beg)),
+                                  _as_type<V>(key, *(beg + 1)));
+        }
+        throw TypeError("invalid data for paired argument '" + name + "'");
+    }
+    if (size != 1) {
+        throw TypeError("got a data-array for argument '" + name + "'");
+    }
+    std::vector<std::string> pair = _split(*(beg), std::string(1, sep), 1);
+    pair.resize(2);
+    return std::make_pair(_as_type<K>(key, pair.at(0)),
+                          _as_type<V>(key, pair.at(1)));
+}
+
+template <class K, class V>
+std::vector<std::pair<K, V> >
+_as_vector_pair(
+        std::string const& key,
+        storage_value const& v,
+        char sep)
+{
+    std::vector<std::string> const& vs = v.second();
+    std::size_t st = std::isspace(static_cast<unsigned char>(sep)) ? 2 : 1;
+    if (vs.size() % st != 0) {
+        throw ValueError("invalid stored argument amount");
+    }
+    std::vector<std::pair<K, V> > res;
+    res.reserve(vs.size() / st);
+    for (std::size_t i = 0; i < vs.size(); i += st) {
+        res.push_back(_as_pair<K, V>(
+                          key, v.first, vs.begin() + static_cast<dtype>(i),
+                          vs.begin() + static_cast<dtype>(i + st), sep));
+    }
+    return res;
+}
+
+#ifdef ARGPARSE_CXX_11
+template <class... Ts, std::size_t... Idxs>
+std::tuple<Ts...>
+_mk_tuple(
+        shared_ptr<Argument> const& key,
+        std::vector<std::string> const& values,
+        integer_sequence<std::size_t, Idxs...>)
+{
+    return std::make_tuple(_as_type<Ts>(key, values[Idxs])...);
+}
+
+template <class... Ts>
+std::tuple<Ts...>
+_gen_tuple(
+        shared_ptr<Argument> const& key,
+        type_tag<std::tuple<Ts...> >,
+        std::vector<std::string> const& values)
+{
+    return _mk_tuple<Ts...>(key, values,
+               make_integer_sequence<std::size_t, sizeof...(Ts)>());
+}
+
+template <class T>
+T
+_as_tuple(
+        std::string const& name,
+        shared_ptr<Argument> const& key,
+        data_const_iterator beg,
+        data_const_iterator end,
+        char sep)
+{
+    std::size_t tuple_sz = std::tuple_size<T>{};
+    if (tuple_sz == 0) {
+        throw TypeError("unsupported empty tuple");
+    }
+    std::size_t size = static_cast<std::size_t>(end - beg);
+    if (std::isspace(static_cast<unsigned char>(sep))) {
+        if (size == tuple_sz) {
+            return _gen_tuple(key, type_tag<T>{}, { beg, end });
+        }
+        throw TypeError("invalid data for tuple argument '" + name + "'");
+    }
+    if (size != 1) {
+        throw TypeError("got a data-array for argument '" + name + "'");
+    }
+    auto vals = _split(*(beg), std::string(1, sep),
+                               static_cast<int32_t>(tuple_sz) - 1);
+    vals.resize(tuple_sz);
+    return _gen_tuple(key, type_tag<T>{}, vals);
+}
+
+template <class T>
+static std::vector<T>
+_as_vector_tuple(
+        std::string const& key,
+        storage_value const& v,
+        char sep)
+{
+    std::vector<std::string> const& vs = v.second();
+    std::size_t tuple_sz = std::tuple_size<T>{};
+    auto st = std::isspace(static_cast<unsigned char>(sep)) ? tuple_sz : 1;
+    if (st == 0 || vs.size() % st != 0) {
+        throw ValueError("invalid stored argument amount");
+    }
+    std::vector<T> res;
+    res.reserve(vs.size() / st);
+    for (std::size_t i = 0; i < vs.size(); i += st) {
+        res.push_back(_as_tuple<T>(
+                          key, v.first, vs.begin() + static_cast<dtype>(i),
+                          vs.begin() + static_cast<dtype>(i + st), sep));
+    }
+    return res;
+}
+#endif  // C++11+
+
+template <class T>
+typename enable_if<
+    is_stl_container_paired<typename decay<T>::type>::value, T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        char sep)
+{
+    _check_type(type_name, Type::basic<T>());
+    typedef typename T::value_type::first_type K;
+    typedef typename T::value_type::second_type V;
+    return _make_container<T>(_as_vector_pair<K, V>(key, args, sep));
+}
+
+template <class T>
+typename enable_if<is_stl_map<typename decay<T>::type>::value, T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        char sep)
+{
+    _check_type(type_name, Type::basic<T>());
+    typedef typename T::key_type K;
+    typedef typename T::mapped_type V;
+    T res = T();
+    std::vector<std::pair<K, V> > vector = _as_vector_pair<K, V>(key, args, sep);
+    for (std::size_t i = 0; i < vector.size(); ++i) {
+        res.insert(std::make_pair(vector.at(i).first, vector.at(i).second));
+    }
+    return res;
+}
+
+template <class T>
+typename enable_if<is_stl_pair<typename decay<T>::type>::value, T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        char sep)
+{
+    _check_type(type_name, Type::name<T>());
+    if (args.second.empty()) {
+        return T();
+    }
+    typedef typename T::first_type K;
+    typedef typename T::second_type V;
+    return _as_pair<K, V>(
+          key, args.first, args.second().begin(), args.second().end(), sep);
+}
+
+#ifdef ARGPARSE_CXX_11
+template <class T>
+typename enable_if<
+    is_stl_container_tupled<typename decay<T>::type>::value, T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        char sep)
+{
+    _check_type(type_name, Type::basic<T>());
+    auto vector = _as_vector_tuple<typename T::value_type>(key, args, sep);
+    return detail::_make_container<T>(vector);
+}
+
+template <class T>
+typename enable_if<is_stl_tuple<typename decay<T>::type>::value, T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        char sep)
+{
+    _check_type(type_name, Type::name<T>());
+    if (args.second.empty()) {
+        return T();
+    }
+    return _as_tuple<T>(
+          key, args.first, args.second().begin(), args.second().end(), sep);
+}
+#endif  // C++11+
 }  // namespace detail
 
 /*!
@@ -4716,144 +5047,6 @@ class _Storage
                 || detail::is_integral<T>::value;
     };
 
-    template <class T>
-    static T
-    as_type(key_type const& key,
-            std::string const& value)
-    {
-        if (key->m_factory) {
-            T res = T();
-            if (!value.empty()) {
-                key->m_factory(value, &res);
-            }
-            return res;
-        }
-        return value.empty() ? T() : detail::_to_type<T>(value);
-    }
-
-    template <class K, class V>
-    static std::pair<K, V>
-    as_pair(std::string const& name,
-            key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end,
-            char sep)
-    {
-        std::size_t size = static_cast<std::size_t>(end - beg);
-        if (std::isspace(static_cast<unsigned char>(sep))) {
-            if (size == 2) {
-                return std::make_pair(as_type<K>(key, *(beg)),
-                                      as_type<V>(key, *(beg + 1)));
-            }
-            throw TypeError("invalid data for paired argument '" + name + "'");
-        }
-        if (size != 1) {
-            throw TypeError("got a data-array for argument '" + name + "'");
-        }
-        std::vector<std::string> pair
-                = detail::_split(*(beg), std::string(1, sep), 1);
-        pair.resize(2);
-        return std::make_pair(as_type<K>(key, pair.at(0)),
-                              as_type<V>(key, pair.at(1)));
-    }
-
-    template <class K, class V>
-    static std::vector<std::pair<K, V> >
-    as_vector_pair(
-            std::string const& key,
-            value_type const& v,
-            char sep)
-    {
-        std::vector<std::string> const& vs = v.second();
-        std::size_t st = std::isspace(static_cast<unsigned char>(sep)) ? 2 : 1;
-        if (vs.size() % st != 0) {
-            throw ValueError("invalid stored argument amount");
-        }
-        std::vector<std::pair<K, V> > res;
-        res.reserve(vs.size() / st);
-        for (std::size_t i = 0; i < vs.size(); i += st) {
-            res.push_back(as_pair<K, V>(
-                              key, v.first, vs.begin() + static_cast<dtype>(i),
-                              vs.begin() + static_cast<dtype>(i + st), sep));
-        }
-        return res;
-    }
-
-#ifdef ARGPARSE_CXX_11
-    template <class... Ts, std::size_t... Idxs>
-    static std::tuple<Ts...>
-    mk_tuple(
-            key_type const& key,
-            std::vector<std::string> const& values,
-            detail::integer_sequence<std::size_t, Idxs...>)
-    {
-        return std::make_tuple(as_type<Ts>(key, values[Idxs])...);
-    }
-
-    template <class... Ts>
-    static std::tuple<Ts...>
-    gen_tuple(
-            key_type const& key,
-            detail::type_tag<std::tuple<Ts...> >,
-            std::vector<std::string> const& values)
-    {
-        return mk_tuple<Ts...>(key, values,
-                   detail::make_integer_sequence<std::size_t, sizeof...(Ts)>());
-    }
-
-    template <class T>
-    static T
-    as_tuple(
-            std::string const& name,
-            key_type const& key,
-            data_const_iterator beg,
-            data_const_iterator end,
-            char sep)
-    {
-        std::size_t tuple_sz = std::tuple_size<T>{};
-        if (tuple_sz == 0) {
-            throw TypeError("unsupported empty tuple");
-        }
-        std::size_t size = static_cast<std::size_t>(end - beg);
-        if (std::isspace(static_cast<unsigned char>(sep))) {
-            if (size == tuple_sz) {
-                return gen_tuple(key, detail::type_tag<T>{}, { beg, end });
-            }
-            throw TypeError("invalid data for tuple argument '" + name + "'");
-        }
-        if (size != 1) {
-            throw TypeError("got a data-array for argument '" + name + "'");
-        }
-        auto vals = detail::_split(*(beg), std::string(1, sep),
-                                   static_cast<int32_t>(tuple_sz) - 1);
-        vals.resize(tuple_sz);
-        return gen_tuple(key, detail::type_tag<T>{}, vals);
-    }
-
-    template <class T>
-    static std::vector<T>
-    as_vector_tuple(
-            std::string const& key,
-            value_type const& v,
-            char sep)
-    {
-        std::vector<std::string> const& vs = v.second();
-        std::size_t tuple_sz = std::tuple_size<T>{};
-        auto st = std::isspace(static_cast<unsigned char>(sep)) ? tuple_sz : 1;
-        if (st == 0 || vs.size() % st != 0) {
-            throw ValueError("invalid stored argument amount");
-        }
-        std::vector<T> res;
-        res.reserve(vs.size() / st);
-        for (std::size_t i = 0; i < vs.size(); i += st) {
-            res.push_back(as_tuple<T>(
-                              key, v.first, vs.begin() + static_cast<dtype>(i),
-                              vs.begin() + static_cast<dtype>(i + st), sep));
-        }
-        return res;
-    }
-#endif  // C++11+
-
 #ifdef ARGPARSE_CXX_11
     template <class T, typename detail::enable_if<
                   simple_element<T>::value>::type* = nullptr>
@@ -4874,7 +5067,7 @@ class _Storage
         std::vector<T> res;
         res.reserve(vs.size());
         for (data_const_iterator it = vs.begin(); it != vs.end(); ++it) {
-            res.push_back(as_type<T>(key, *it));
+            res.push_back(detail::_as_type<T>(key, *it));
         }
         return res;
     }
@@ -4916,7 +5109,7 @@ class _Storage
             std::vector<std::string> values(
                         vs.begin() + static_cast<dtype>(i),
                         vs.begin() + static_cast<dtype>(i + st));
-            res.push_back(as_type<T>(key, detail::_join(values)));
+            res.push_back(detail::_as_type<T>(key, detail::_join(values)));
         }
         return res;
     }
@@ -4931,7 +5124,7 @@ class _Storage
             throw TypeError("got a data-array for argument '" + key + "'");
         }
         return value.second.empty()
-                ? T() : as_type<T>(value.first, value.second.front());
+                ? T() : detail::_as_type<T>(value.first, value.second.front());
     }
 
     template <class T>
@@ -4940,7 +5133,7 @@ class _Storage
             value_type const& value)
     {
         return value.second.empty()
-                ? T() : as_type<T>(value.first, detail::_join(value.second()));
+        ? T() : detail::_as_type<T>(value.first, detail::_join(value.second()));
     }
 
     template <class T>
@@ -4965,7 +5158,7 @@ class _Storage
         for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
             std::vector<VV> vector = as_subvector<VV>(
                         value.first, value.second.sub_values(i));
-            push_to_container<T>(res, detail::_make_container<V>(vector));
+            detail::_push_to_container(res, detail::_make_container<V>(vector));
         }
         return res;
     }
@@ -4996,108 +5189,12 @@ class _Storage
         for (std::size_t i = 0; i < size; ++i) {
             std::vector<VV> vector = as_subvector<VV>(
                         value.first, value.second.sub_values(i));
-            push_to_container(vec, detail::_make_container<V>(vector));
+            detail::_push_to_container(vec, detail::_make_container<V>(vector));
         }
         typedef typename std::vector<V>::difference_type dtype;
         std::move(vec.begin(), std::next(
                       vec.begin(), static_cast<dtype>(size)), res.begin());
         return res;
-    }
-
-    template <class T, typename detail::enable_if<
-                  detail::has_push_back<T>::value>::type* = nullptr>
-    static void
-    push_to_container(
-            T& container,
-            typename T::value_type const& value)
-    {
-        container.push_back(value);
-    }
-
-    template <class T, typename detail::enable_if<
-                  detail::has_push<T>::value
-                  && !detail::has_push_back<T>::value>::type* = nullptr>
-    static void
-    push_to_container(
-            T& container,
-            typename T::value_type const& value)
-    {
-        container.push(value);
-    }
-
-    template <class T, typename detail::enable_if<
-                  detail::has_insert<T>::value
-                  && !detail::has_push<T>::value
-                  && !detail::has_push_back<T>::value>::type* = nullptr>
-    static void
-    push_to_container(
-            T& container,
-            typename T::value_type const& value)
-    {
-        container.insert(value);
-    }
-
-    template <class T, typename detail::enable_if<
-                  detail::has_push_front<T>::value
-                  && !detail::has_insert<T>::value
-                  && !detail::has_push<T>::value
-                  && !detail::has_push_back<T>::value>::type* = nullptr>
-    static void
-    push_to_container(
-            T& container,
-            typename T::value_type const& value)
-    {
-        container.push_front(value);
-    }
-#else
-    template <class T>
-    static void
-    push_to_container(
-            T& container,
-            typename T::value_type const& value,
-            typename detail::enable_if<
-                detail::has_push_back<T>::value, bool>::type = true)
-    {
-        container.push_back(value);
-    }
-
-    template <class T>
-    static void
-    push_to_container(
-            T& container,
-            typename T::value_type const& value,
-            typename detail::enable_if<
-                detail::has_push<T>::value
-                && !detail::has_push_back<T>::value, bool>::type = true)
-    {
-        container.push(value);
-    }
-
-    template <class T>
-    static void
-    push_to_container(
-            T& container,
-            typename T::value_type const& value,
-            typename detail::enable_if<
-                detail::has_insert<T>::value
-                && !detail::has_push<T>::value
-                && !detail::has_push_back<T>::value, bool>::type = true)
-    {
-        container.insert(value);
-    }
-
-    template <class T>
-    static void
-    push_to_container(
-            T& container,
-            typename T::value_type const& value,
-            typename detail::enable_if<
-                detail::has_push_front<T>::value
-                && !detail::has_insert<T>::value
-                && !detail::has_push<T>::value
-                && !detail::has_push_back<T>::value, bool>::type = true)
-    {
-        container.push_front(value);
     }
 #endif  // C++11+
 
@@ -5216,7 +5313,7 @@ class _Storage
             std::vector<std::string> const& values)
     {
         try {
-            auto res = mk_tuple<Ts...>(key, values,
+            auto res = detail::_mk_tuple<Ts...>(key, values,
                    detail::make_integer_sequence<std::size_t, sizeof...(Ts)>());
             return res;
         } catch (...) {
@@ -5364,7 +5461,8 @@ class _Storage
             if (!vector.has_value()) {
                 return std::nullopt;
             }
-            push_to_container(res, detail::_make_container<V>(vector.value()));
+            detail::_push_to_container(
+                        res, detail::_make_container<V>(vector.value()));
         }
         return res;
     }
@@ -5566,63 +5664,6 @@ public:
     }
 
     /*!
-     *  \brief Get parsed argument value as paired container types.
-     *  If argument not parsed, returns empty container.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<
-      detail::is_stl_container_paired<typename detail::decay<T>::type>::value, T
-    >::type
-    get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        typedef typename T::value_type::first_type K;
-        typedef typename T::value_type::second_type V;
-        std::vector<std::pair<K, V> > vector
-                = _Storage::as_vector_pair<K, V>(key, args, sep);
-        return detail::_make_container<T>(vector);
-    }
-
-    /*!
-     *  \brief Get parsed argument value as mapped types.
-     *  If argument not parsed, returns empty map.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<
-        detail::is_stl_map<typename detail::decay<T>::type>::value, T>::type
-    get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        typedef typename T::key_type K;
-        typedef typename T::mapped_type V;
-        T res = T();
-        std::vector<std::pair<K, V> > vector
-                = _Storage::as_vector_pair<K, V>(key, args, sep);
-        for (std::size_t i = 0; i < vector.size(); ++i) {
-            res.insert(std::make_pair(vector.at(i).first, vector.at(i).second));
-        }
-        return res;
-    }
-
-    /*!
      *  \brief Get parsed argument value as 2D stl containers.
      *  If argument not parsed, returns empty container.
      *
@@ -5647,87 +5688,6 @@ public:
         }
         return _Storage::get_matrix<T>(args);
     }
-
-    /*!
-     *  \brief Get parsed argument value as paired types.
-     *  If argument not parsed, returns default pair.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<
-        detail::is_stl_pair<typename detail::decay<T>::type>::value, T>::type
-    get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        if (args.second.empty()) {
-            return T();
-        }
-        typedef typename T::first_type K;
-        typedef typename T::second_type V;
-        return _Storage::as_pair<K, V>(
-              key, args.first, args.second().begin(), args.second().end(), sep);
-    }
-
-#ifdef ARGPARSE_CXX_11
-    /*!
-     *  \brief Get parsed argument value as tupled container types.
-     *  If argument not parsed, returns empty container.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
-    typename std::enable_if<
-        detail::is_stl_container_tupled<typename std::decay<T>::type>::value, T
-    >::type
-    get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        auto const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        auto vector = _Storage::as_vector_tuple<typename T::value_type>(
-                    key, args, sep);
-        return detail::_make_container<T>(vector);
-    }
-
-    /*!
-     *  \brief Get parsed argument value as tuple types.
-     *  If argument not parsed, returns empty tuple.
-     *
-     *  \param key Argument destination name or flag
-     *  \param sep Separator (default: '=')
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
-    typename std::enable_if<
-        detail::is_stl_tuple<typename std::decay<T>::type>::value, T>::type
-    get(std::string const& key,
-            char sep = detail::_equal) const
-    {
-        auto const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        if (args.second.empty()) {
-            return T();
-        }
-        return _Storage::as_tuple<T>(
-              key, args.first, args.second().begin(), args.second().end(), sep);
-    }
-#endif  // C++11+
 
     /*!
      *  \brief Get parsed argument value as custom type.
@@ -5757,6 +5717,33 @@ public:
         detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
         detail::_check_non_count_action(key, args.first->action());
         return _Storage::get_custom_value<T>(args);
+    }
+
+    /*!
+     *  \brief Get parsed argument value as paired container types,
+     *  tupled container types, mapped types, paired types or tuple types.
+     *  If argument not parsed, returns default constructed value.
+     *
+     *  \param key Argument destination name or flag
+     *  \param sep Separator (default: '=')
+     *
+     *  \return Parsed argument value
+     */
+    template <class T>
+    ARGPARSE_ATTR_NODISCARD
+    typename detail::enable_if<
+        detail::is_stl_container_paired<typename detail::decay<T>::type>::value
+     || detail::is_stl_container_tupled<typename detail::decay<T>::type>::value
+     || detail::is_stl_map<typename detail::decay<T>::type>::value
+     || detail::is_stl_pair<typename detail::decay<T>::type>::value
+     || detail::is_stl_tuple<typename detail::decay<T>::type>::value, T
+    >::type
+    get(std::string const& key,
+            char sep = detail::_equal) const
+    {
+        _Storage::value_type const& args = data(key);
+        detail::_check_non_count_action(key, args.first->action());
+        return detail::_get<T>(key, args, args.first->m_type_name, sep);
     }
 
     /*!
