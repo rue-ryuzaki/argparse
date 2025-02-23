@@ -559,6 +559,20 @@ ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _spaces[]            = " ";
 ARGPARSE_INLINE_VARIABLE int32_t ARGPARSE_USE_CONSTEXPR
 _store_action = argparse::store | argparse::append | argparse::extend;
 
+enum Nargs ARGPARSE_ENUM_TYPE(uint8_t)
+{
+    NARGS_DEF       = 0x01,  // ""
+    NARGS_NUM       = 0x02,  // "N"
+    ONE_OR_MORE     = 0x04,  // "+"
+    ZERO_OR_ONE     = 0x08,  // "?"
+    ZERO_OR_MORE    = 0x10,  // "*"
+    REMAINDING      = 0x20,  // argparse::REMAINDER
+    SUPPRESSING     = 0x40,  // argparse::SUPPRESS
+};
+
+static uint8_t ARGPARSE_USE_CONSTEXPR
+_NARGS_COMBINED = NARGS_NUM | ONE_OR_MORE | ZERO_OR_ONE | ZERO_OR_MORE;
+
 // -- standard type traits ----------------------------------------------------
 typedef int8_t _yes;
 typedef int16_t _no;
@@ -1080,22 +1094,22 @@ struct is_string_ctor
 #endif  // C++11+
 
 template <class T, class = void>
-struct has_container_type                  { static bool const value = false; };
+struct has_container_type                                         :false_type{};
 template <class T>
 struct has_container_type<T, typename voider<
-         typename T::container_type>::type> { static bool const value = true; };
+                                 typename T::container_type>::type>:true_type{};
 
 template <class T, class = void>
-struct has_value_compare                   { static bool const value = false; };
+struct has_value_compare                                          :false_type{};
 template <class T>
 struct has_value_compare<T, typename voider<
-          typename T::value_compare>::type> { static bool const value = true; };
+                                  typename T::value_compare>::type>:true_type{};
 
 template <class T, class = void>
-struct has_value_type                      { static bool const value = false; };
+struct has_value_type                                             :false_type{};
 template <class T>
 struct has_value_type<T, typename voider<
-             typename T::value_type>::type> { static bool const value = true; };
+                                     typename T::value_type>::type>:true_type{};
 
 template <class T, class = void>
 struct has_vector_ctor                     { static bool const value = false; };
@@ -1137,11 +1151,28 @@ struct is_stl_container_paired<T, typename voider<typename T::value_type>::type>
           = is_stl_pair<typename T::value_type>::value && !is_stl_map<T>::value;
 };
 
+template <class T>
+struct is_stl_array                                               :false_type{};
+
+template <class T>
+struct is_stl_tuple                                               :false_type{};
+
 template <class T, class = void>
 struct is_stl_container_tupled             { static bool const value = false; };
 
+#ifdef ARGPARSE_CXX_11
+template <class T, std::size_t N>
+struct is_stl_array<std::array                          <T, N> >   :true_type{};
+
+template <class... Args>
+struct is_stl_tuple<std::tuple                          <Args...> >:true_type{};
+
 template <class T>
-struct is_stl_array                                               :false_type{};
+struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
+{
+    static bool const value = is_stl_tuple<typename T::value_type>::value;
+};
+#endif  // C++11+
 
 template <class T>
 struct is_priority_queue                                          :false_type{};
@@ -1170,10 +1201,11 @@ struct is_stl_span<std::span                                  <T> >:true_type{};
 template <class T, class = void>
 struct is_stl_container                    { static bool const value = false; };
 template <class T>
-struct is_stl_container<T, typename enable_if<!is_stl_queue<T>::value>::type>
+struct is_stl_container<T, typename enable_if<
+        !is_string_ctor<T>::value && !is_stl_queue<T>::value>::type>
 {
-    static bool const value = has_vector_ctor<T>::value && !is_stl_map<T>::value
-                         && !is_string_ctor<T>::value && !is_stl_span<T>::value;
+    static bool const value = has_vector_ctor<T>::value
+            && !is_stl_map<T>::value && !is_stl_span<T>::value;
 };
 
 template <class T, class = void, class = void>
@@ -1214,23 +1246,6 @@ struct is_stl_matrix
                                   || has_sub_vector_ctor<T>::value
                                   || has_sub_deque_ctor<T>::value);
 };
-
-template <class T>
-struct is_stl_tuple                                               :false_type{};
-
-#ifdef ARGPARSE_CXX_11
-template <class T, std::size_t N>
-struct is_stl_array<std::array                          <T, N> >   :true_type{};
-
-template <class... Args>
-struct is_stl_tuple<std::tuple                          <Args...> >:true_type{};
-
-template <class T>
-struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value = is_stl_tuple<typename T::value_type>::value;
-};
-#endif  // C++11+
 
 #ifdef ARGPARSE_CXX_11
 template <class T>
@@ -2761,20 +2776,6 @@ ARGPARSE_EXPORT class Argument
     friend class Namespace;
     friend class utils;
 
-    enum Nargs ARGPARSE_ENUM_TYPE(uint8_t)
-    {
-        NARGS_DEF       = 0x01,  // ""
-        NARGS_NUM       = 0x02,  // "N"
-        ONE_OR_MORE     = 0x04,  // "+"
-        ZERO_OR_ONE     = 0x08,  // "?"
-        ZERO_OR_MORE    = 0x10,  // "*"
-        REMAINDING      = 0x20,  // argparse::REMAINDER
-        SUPPRESSING     = 0x40,  // argparse::SUPPRESS
-    };
-
-    static uint8_t ARGPARSE_USE_CONSTEXPR
-    _NARGS_COMBINED = NARGS_NUM | ONE_OR_MORE | ZERO_OR_ONE | ZERO_OR_MORE;
-
     enum Type ARGPARSE_ENUM_TYPE(uint8_t)
     {
         NoType      = 0x00,
@@ -4268,6 +4269,296 @@ _as_vector_tuple(
 #endif  // C++11+
 
 template <class T>
+T
+_single_value(
+        std::string const& key,
+        storage_value const& value)
+{
+    if (value.second.size() > 1) {
+        throw TypeError("got a data-array for argument '" + key + "'");
+    }
+    return value.second.empty()
+            ? T() : _as_type<T>(value.first, value.second.front());
+}
+
+template <class T>
+T
+_custom_value(
+        storage_value const& value)
+{
+    return value.second.empty()
+            ? T() : _as_type<T>(value.first, _join(value.second()));
+}
+
+template <class T>
+struct simple_element
+{
+    static bool const value = is_floating_point<T>::value
+            || is_string_ctor<T>::value
+            || is_integral<T>::value;
+};
+
+#ifdef ARGPARSE_CXX_11
+template <class T, typename detail::enable_if<
+              simple_element<T>::value>::type* = nullptr>
+std::vector<T>
+_as_subvector(
+        shared_ptr<Argument> const& key,
+        std::vector<std::string> const& vs,
+        uint8_t /*nargs*/,
+        std::size_t /*num_args*/)
+#else
+template <class T>
+std::vector<T>
+_as_subvector(
+        shared_ptr<Argument> const& key,
+        std::vector<std::string> const& vs,
+        uint8_t /*nargs*/,
+        std::size_t /*num_args*/,
+        typename enable_if<simple_element<T>::value, bool>::type = true)
+#endif  // C++11+
+{
+    std::vector<T> res;
+    res.reserve(vs.size());
+    for (data_const_iterator it = vs.begin(); it != vs.end(); ++it) {
+        res.push_back(_as_type<T>(key, *it));
+    }
+    return res;
+}
+
+#ifdef ARGPARSE_CXX_11
+template <class T, typename enable_if<
+              !simple_element<T>::value>::type* = nullptr>
+std::vector<T>
+_as_subvector(
+        shared_ptr<Argument> const& key,
+        std::vector<std::string> const& vs,
+        uint8_t nargs,
+        std::size_t num_args)
+#else
+template <class T>
+std::vector<T>
+_as_subvector(
+        shared_ptr<Argument> const& key,
+        std::vector<std::string> const& vs,
+        uint8_t nargs,
+        std::size_t num_args,
+        typename enable_if<!simple_element<T>::value, bool>::type = true)
+#endif  // C++11+
+{
+    std::vector<T> res;
+    if (vs.empty()) {
+        return res;
+    }
+    std::size_t st = 1;
+    if ((key->action() & _store_action)
+            && (nargs & detail::_NARGS_COMBINED)) {
+        st = num_args;
+    }
+    if (st == 0) {
+        throw TypeError("unsupported argument with nargs=0");
+    }
+    if (vs.size() % st != 0) {
+        throw ValueError("invalid stored argument amount");
+    }
+    res.reserve(vs.size() / st);
+    for (std::size_t i = 0; i < vs.size(); i += st) {
+        std::vector<std::string> values(
+                    vs.begin() + static_cast<dtype>(i),
+                    vs.begin() + static_cast<dtype>(i + st));
+        res.push_back(_as_type<T>(key, detail::_join(values)));
+    }
+    return res;
+}
+
+template <class T>
+std::vector<T>
+_get_vector(
+        storage_value const& value,
+        uint8_t nargs,
+        std::size_t num_args)
+{
+    return _as_subvector<T>(value.first, value.second(), nargs, num_args);
+}
+
+template <class T>
+typename enable_if<
+    is_stl_matrix<typename decay<T>::type>::value
+    && !is_stl_array<typename decay<T>::type>::value, T>::type
+_get_matrix(
+        storage_value const& value,
+        uint8_t nargs,
+        std::size_t num_args)
+{
+    typedef typename T::value_type V;
+    typedef typename V::value_type VV;
+    T res;
+    for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
+        std::vector<VV> vector = _as_subvector<VV>(
+                    value.first, value.second.sub_values(i), nargs, num_args);
+        _push_to_container<T>(res, _make_container<V>(vector));
+    }
+    return res;
+}
+
+#ifdef ARGPARSE_CXX_11
+template <class T>
+typename enable_if<
+    is_stl_matrix<typename decay<T>::type>::value
+    && is_stl_array<typename decay<T>::type>::value, T>::type
+_get_matrix(
+        storage_value const& value,
+        uint8_t nargs,
+        std::size_t num_args)
+{
+    typedef typename T::value_type V;
+    typedef typename V::value_type VV;
+    T res;
+    if (res.size() != value.second.indexes().size()) {
+        std::cerr << "argparse error [skip]: array size mismatch: was "
+                  << res.size() << ", expected "
+                  << value.second.indexes().size() << std::endl;
+    }
+    auto size = res.size();
+    if (size > value.second.indexes().size()) {
+        size = value.second.indexes().size();
+    }
+    std::vector<V> vec;
+    vec.reserve(size);
+    for (std::size_t i = 0; i < size; ++i) {
+        std::vector<VV> vector = _as_subvector<VV>(
+                    value.first, value.second.sub_values(i), nargs, num_args);
+        _push_to_container(vec, _make_container<V>(vector));
+    }
+    typedef typename std::vector<V>::difference_type dtype;
+    std::move(vec.begin(), std::next(
+                  vec.begin(), static_cast<dtype>(size)), res.begin());
+    return res;
+}
+#endif  // C++11+
+
+template <class T>
+typename enable_if<
+    is_string_ctor<T>::value
+    || is_floating_point<T>::value
+    || is_same<bool, T>::value
+    || is_byte_type<T>::value, T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        SValue<std::string> const& /*default_value*/,
+        uint8_t /*nargs*/,
+        std::size_t /*num_args*/)
+{
+    _check_non_count_action(key, args.first->action());
+    _check_type(type_name, Type::name<T>());
+    return _single_value<T>(key, args);
+}
+
+template <class T>
+typename enable_if<
+    is_integral<T>::value
+    && !is_same<bool, T>::value
+    && !is_byte_type<T>::value, T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        SValue<std::string> const& default_value,
+        uint8_t /*nargs*/,
+        std::size_t /*num_args*/)
+{
+    _check_type(type_name, Type::name<T>());
+    if (args.first->action() == argparse::count) {
+        if (default_value.has_value()) {
+            std::string value = default_value.value();
+            std::size_t res = _to_type<std::size_t>(value);
+            return static_cast<T>(res + args.second.size());
+        }
+        return static_cast<T>(args.second.size());
+    }
+    return _single_value<T>(key, args);
+}
+
+template <class T>
+typename enable_if<is_stl_span<T>::value, T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        SValue<std::string> const& /*default_value*/,
+        uint8_t /*nargs*/,
+        std::size_t /*num_args*/)
+{
+    _check_non_count_action(key, args.first->action());
+    _check_type(type_name, Type::basic<T>());
+    return _make_container<T>(args.second());
+}
+
+template <class T>
+typename enable_if<
+    (is_stl_container<typename decay<T>::type>::value
+ && !is_stl_container_tupled<typename decay<T>::type>::value
+ && !is_stl_container_paired<typename decay<T>::type>::value
+ && !is_stl_matrix<typename decay<T>::type>::value)
+  || ((is_stl_array<typename decay<T>::type>::value
+       || is_stl_queue<typename decay<T>::type>::value)
+ && !is_stl_matrix<typename decay<T>::type>::value), T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        SValue<std::string> const& /*default_value*/,
+        uint8_t nargs,
+        std::size_t num_args)
+{
+    _check_non_count_action(key, args.first->action());
+    _check_type(type_name, Type::basic<T>());
+    return _make_container<T>(
+                _get_vector<typename T::value_type>(args, nargs, num_args));
+}
+
+template <class T>
+typename enable_if<is_stl_matrix<T>::value, T>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        SValue<std::string> const& /*default_value*/,
+        uint8_t nargs,
+        std::size_t num_args)
+{
+    if (args.first->action() != argparse::append
+            || !(nargs & (detail::NARGS_NUM | detail::ONE_OR_MORE
+                          | detail::ZERO_OR_MORE))) {
+        throw TypeError("got an invalid type for argument '" + key + "'");
+    }
+    _check_type(type_name, Type::basic<T>());
+    return _get_matrix<T>(args, nargs, num_args);
+}
+
+template <class T>
+typename enable_if<
+    !is_string_ctor<T>::value
+    && !is_floating_point<T>::value
+    && !is_integral<T>::value
+    && !is_stl_array<typename decay<T>::type>::value
+    && !is_stl_tuple<typename decay<T>::type>::value
+    && !is_stl_container<typename decay<T>::type>::value
+    && !is_stl_map<typename decay<T>::type>::value
+    && !is_stl_pair<typename decay<T>::type>::value
+    && !is_stl_queue<typename decay<T>::type>::value
+    && !is_stl_span<typename decay<T>::type>::value, T
+>::type
+_get(std::string const& key,
+        storage_value const& args,
+        Value<std::string> const& type_name,
+        SValue<std::string> const& /*default_value*/,
+        uint8_t /*nargs*/,
+        std::size_t /*num_args*/)
+{
+    _check_non_count_action(key, args.first->action());
+    _check_type(type_name, Type::name<T>());
+    return _custom_value<T>(args);
+}
+
+template <class T>
 typename enable_if<
     is_stl_container_paired<typename decay<T>::type>::value, T>::type
 _get(std::string const& key,
@@ -5039,165 +5330,6 @@ class _Storage
     typedef std::vector<std::string>::const_iterator        data_const_iterator;
     typedef std::vector<std::string>::difference_type                     dtype;
 
-    template <class T>
-    struct simple_element
-    {
-        static bool const value = detail::is_floating_point<T>::value
-                || detail::is_string_ctor<T>::value
-                || detail::is_integral<T>::value;
-    };
-
-#ifdef ARGPARSE_CXX_11
-    template <class T, typename detail::enable_if<
-                  simple_element<T>::value>::type* = nullptr>
-    static std::vector<T>
-    as_subvector(
-            key_type const& key,
-            std::vector<std::string> const& vs)
-#else
-    template <class T>
-    static std::vector<T>
-    as_subvector(
-            key_type const& key,
-            std::vector<std::string> const& vs,
-            typename detail::enable_if<
-                simple_element<T>::value, bool>::type = true)
-#endif  // C++11+
-    {
-        std::vector<T> res;
-        res.reserve(vs.size());
-        for (data_const_iterator it = vs.begin(); it != vs.end(); ++it) {
-            res.push_back(detail::_as_type<T>(key, *it));
-        }
-        return res;
-    }
-
-#ifdef ARGPARSE_CXX_11
-    template <class T, typename detail::enable_if<
-                  !simple_element<T>::value>::type* = nullptr>
-    static std::vector<T>
-    as_subvector(
-            key_type const& key,
-            std::vector<std::string> const& vs)
-#else
-    template <class T>
-    static std::vector<T>
-    as_subvector(
-            key_type const& key,
-            std::vector<std::string> const& vs,
-            typename detail::enable_if<
-                !simple_element<T>::value, bool>::type = true)
-#endif  // C++11+
-    {
-        std::vector<T> res;
-        if (vs.empty()) {
-            return res;
-        }
-        std::size_t st = 1;
-        if ((key->action() & detail::_store_action)
-                && (key->m_nargs & Argument::_NARGS_COMBINED)) {
-            st = key->m_num_args;
-        }
-        if (st == 0) {
-            throw TypeError("unsupported argument with nargs=0");
-        }
-        if (vs.size() % st != 0) {
-            throw ValueError("invalid stored argument amount");
-        }
-        res.reserve(vs.size() / st);
-        for (std::size_t i = 0; i < vs.size(); i += st) {
-            std::vector<std::string> values(
-                        vs.begin() + static_cast<dtype>(i),
-                        vs.begin() + static_cast<dtype>(i + st));
-            res.push_back(detail::_as_type<T>(key, detail::_join(values)));
-        }
-        return res;
-    }
-
-    template <class T>
-    static T
-    get_single_value(
-            std::string const& key,
-            value_type const& value)
-    {
-        if (value.second.size() > 1) {
-            throw TypeError("got a data-array for argument '" + key + "'");
-        }
-        return value.second.empty()
-                ? T() : detail::_as_type<T>(value.first, value.second.front());
-    }
-
-    template <class T>
-    static T
-    get_custom_value(
-            value_type const& value)
-    {
-        return value.second.empty()
-        ? T() : detail::_as_type<T>(value.first, detail::_join(value.second()));
-    }
-
-    template <class T>
-    static std::vector<T>
-    get_vector(
-            value_type const& value)
-    {
-        return as_subvector<T>(value.first, value.second());
-    }
-
-    template <class T>
-    static typename detail::enable_if<
-        detail::is_stl_matrix<typename detail::decay<T>::type>::value
-        && !detail::is_stl_array<typename detail::decay<T>::type>::value, T
-    >::type
-    get_matrix(
-            value_type const& value)
-    {
-        typedef typename T::value_type V;
-        typedef typename V::value_type VV;
-        T res;
-        for (std::size_t i = 0; i < value.second.indexes().size(); ++i) {
-            std::vector<VV> vector = as_subvector<VV>(
-                        value.first, value.second.sub_values(i));
-            detail::_push_to_container(res, detail::_make_container<V>(vector));
-        }
-        return res;
-    }
-
-#ifdef ARGPARSE_CXX_11
-    template <class T>
-    static typename detail::enable_if<
-        detail::is_stl_matrix<typename detail::decay<T>::type>::value
-        && detail::is_stl_array<typename detail::decay<T>::type>::value, T
-    >::type
-    get_matrix(
-            value_type const& value)
-    {
-        typedef typename T::value_type V;
-        typedef typename V::value_type VV;
-        T res;
-        if (res.size() != value.second.indexes().size()) {
-            std::cerr << "argparse error [skip]: array size mismatch: was "
-                      << res.size() << ", expected "
-                      << value.second.indexes().size() << std::endl;
-        }
-        auto size = res.size();
-        if (size > value.second.indexes().size()) {
-            size = value.second.indexes().size();
-        }
-        std::vector<V> vec;
-        vec.reserve(size);
-        for (std::size_t i = 0; i < size; ++i) {
-            std::vector<VV> vector = as_subvector<VV>(
-                        value.first, value.second.sub_values(i));
-            detail::_push_to_container(vec, detail::_make_container<V>(vector));
-        }
-        typedef typename std::vector<V>::difference_type dtype;
-        std::move(vec.begin(), std::next(
-                      vec.begin(), static_cast<dtype>(size)), res.begin());
-        return res;
-    }
-#endif  // C++11+
-
 #ifdef ARGPARSE_HAS_OPTIONAL
     template <class T>
     static std::optional<T>
@@ -5385,7 +5517,7 @@ class _Storage
         if (vs.empty()) {
             return res;
         }
-        if constexpr (simple_element<T>::value) {
+        if constexpr (detail::simple_element<T>::value) {
             res.reserve(vs.size());
             for (auto const& value : vs) {
                 auto el = as_opt_type<T>(key, value);
@@ -5397,7 +5529,7 @@ class _Storage
         } else {
             std::size_t st = 1;
             if ((key->action() & detail::_store_action)
-                    && (key->m_nargs & Argument::_NARGS_COMBINED)) {
+                    && (key->m_nargs & detail::_NARGS_COMBINED)) {
                 st = key->m_num_args;
             }
             if (st == 0 || vs.size() % st != 0) {
@@ -5564,8 +5696,8 @@ public:
     has_func() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  \brief Get parsed argument value as boolean, byte, floating point
-     *  or string types.
+     *  \brief Get parsed argument value as boolean, byte, floating point,
+     *  integer, stl span string, stl container, 2D stl containers, custom type.
      *  If argument not parsed, returns default value.
      *
      *  \param key Argument destination name or flag
@@ -5574,149 +5706,19 @@ public:
      */
     template <class T>
     ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<detail::is_string_ctor<T>::value
-                               || detail::is_floating_point<T>::value
-                               || detail::is_same<bool, T>::value
-                               || detail::is_byte_type<T>::value, T>::type
-    get(std::string const& key) const
-    {
-        _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        return _Storage::get_single_value<T>(key, args);
-    }
-
-    /*!
-     *  \brief Get parsed argument value as integer types.
-     *  If argument not parsed, returns default value.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<detail::is_integral<T>::value
-                               && !detail::is_same<bool, T>::value
-                               && !detail::is_byte_type<T>::value, T>::type
-    get(std::string const& key) const
-    {
-        _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
-        if (args.first->action() == argparse::count) {
-            if (args.first->m_default.has_value()) {
-                std::string value = args.first->m_default.value();
-                std::size_t res = detail::_to_type<std::size_t>(value);
-                return static_cast<T>(res + args.second.size());
-            }
-            return static_cast<T>(args.second.size());
-        }
-        return _Storage::get_single_value<T>(key, args);
-    }
-
-    /*!
-     *  \brief Get parsed argument value as stl span string.
-     *  If argument not parsed, returns empty container.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
     typename detail::enable_if<
-        detail::is_stl_span<typename detail::decay<T>::type>::value, T
-    >::type
-    get(std::string const& key) const
-    {
-        _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        return detail::_make_container<T>(args.second());
-    }
-
-    /*!
-     *  \brief Get parsed argument value as stl container types.
-     *  If argument not parsed, returns empty container.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<
-        (detail::is_stl_container<typename detail::decay<T>::type>::value
+        !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
      && !detail::is_stl_container_tupled<typename detail::decay<T>::type>::value
-     && !detail::is_stl_container_paired<typename detail::decay<T>::type>::value
-     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value)
-      || ((detail::is_stl_array<typename detail::decay<T>::type>::value
-           || detail::is_stl_queue<typename detail::decay<T>::type>::value)
-     && !detail::is_stl_matrix<typename detail::decay<T>::type>::value), T
+     && !detail::is_stl_map<typename detail::decay<T>::type>::value
+     && !detail::is_stl_pair<typename detail::decay<T>::type>::value
+     && !detail::is_stl_tuple<typename detail::decay<T>::type>::value, T
     >::type
     get(std::string const& key) const
     {
         _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        return detail::_make_container<T>(
-                    _Storage::get_vector<typename T::value_type>(args));
-    }
-
-    /*!
-     *  \brief Get parsed argument value as 2D stl containers.
-     *  If argument not parsed, returns empty container.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<
-        detail::is_stl_matrix<typename detail::decay<T>::type>::value, T
-    >::type
-    get(std::string const& key) const
-    {
-        _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::basic<T>());
-        if (args.first->action() != argparse::append
-                || !(args.first->m_nargs
-                     & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
-                        | Argument::ZERO_OR_MORE))) {
-            throw TypeError("got an invalid type for argument '" + key + "'");
-        }
-        return _Storage::get_matrix<T>(args);
-    }
-
-    /*!
-     *  \brief Get parsed argument value as custom type.
-     *  If argument not parsed, returns default custom type.
-     *
-     *  \param key Argument destination name or flag
-     *
-     *  \return Parsed argument value
-     */
-    template <class T>
-    ARGPARSE_ATTR_NODISCARD
-    typename detail::enable_if<
-        !detail::is_string_ctor<T>::value
-        && !detail::is_floating_point<T>::value
-        && !detail::is_integral<T>::value
-        && !detail::is_stl_array<typename detail::decay<T>::type>::value
-        && !detail::is_stl_tuple<typename detail::decay<T>::type>::value
-        && !detail::is_stl_container<typename detail::decay<T>::type>::value
-        && !detail::is_stl_map<typename detail::decay<T>::type>::value
-        && !detail::is_stl_pair<typename detail::decay<T>::type>::value
-        && !detail::is_stl_queue<typename detail::decay<T>::type>::value
-        && !detail::is_stl_span<typename detail::decay<T>::type>::value, T
-    >::type
-    get(std::string const& key) const
-    {
-        _Storage::value_type const& args = data(key);
-        detail::_check_type(args.first->m_type_name, detail::Type::name<T>());
-        detail::_check_non_count_action(key, args.first->action());
-        return _Storage::get_custom_value<T>(args);
+        return detail::_get<T>(
+                    key, args, args.first->m_type_name, args.first->m_default,
+                    args.first->m_nargs, args.first->m_num_args);
     }
 
     /*!
@@ -5839,8 +5841,8 @@ public:
         if constexpr (detail::is_stl_matrix<std::decay_t<T> >::value) {
             if (args->first->action() != argparse::append
                     || !(args->first->m_nargs
-                         & (Argument::NARGS_NUM | Argument::ONE_OR_MORE
-                            | Argument::ZERO_OR_MORE))) {
+                         & (detail::NARGS_NUM | detail::ONE_OR_MORE
+                            | detail::ZERO_OR_MORE))) {
                 return std::nullopt;
             }
             return _Storage::opt_matrix<T>(args.value());
@@ -10977,8 +10979,8 @@ _ArgumentDefaultsHelpFormatter::_get_help_string(
     std::string res = detail::_tr(action->m_help.value(), lang);
     if (!res.empty() && !detail::_contains_substr(res, "%(default)s")) {
         if (((action->m_type & (Argument::Optional | Argument::Operand))
-             || (action->m_nargs & (Argument::ZERO_OR_ONE
-                                    | Argument::ZERO_OR_MORE)))
+             || (action->m_nargs & (detail::ZERO_OR_ONE
+                                    | detail::ZERO_OR_MORE)))
                 && !(action->action() & (argparse::help | argparse::version))) {
             res += " (default: %(default)s)";
         }
@@ -11074,7 +11076,7 @@ Argument::Argument(
       m_post_trigger(),
       m_action(argparse::store),
       m_type(type),
-      m_nargs(NARGS_DEF),
+      m_nargs(detail::NARGS_DEF),
       m_required(),
       m_deprecated()
 {
@@ -11116,7 +11118,7 @@ Argument::Argument(
       m_post_trigger(),
       m_action(argparse::store),
       m_type(type),
-      m_nargs(NARGS_DEF),
+      m_nargs(detail::NARGS_DEF),
       m_required(),
       m_deprecated()
 {
@@ -11156,7 +11158,7 @@ Argument::Argument(
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
-      m_nargs(NARGS_DEF),
+      m_nargs(detail::NARGS_DEF),
       m_required(),
       m_deprecated()
 {
@@ -11186,7 +11188,7 @@ Argument::Argument(
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
-      m_nargs(NARGS_DEF),
+      m_nargs(detail::NARGS_DEF),
       m_required(),
       m_deprecated()
 {
@@ -11217,7 +11219,7 @@ Argument::Argument(
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
-      m_nargs(NARGS_DEF),
+      m_nargs(detail::NARGS_DEF),
       m_required(),
       m_deprecated()
 {
@@ -11249,7 +11251,7 @@ Argument::Argument(
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
-      m_nargs(NARGS_DEF),
+      m_nargs(detail::NARGS_DEF),
       m_required(),
       m_deprecated()
 {
@@ -11279,7 +11281,7 @@ Argument::Argument(
       m_post_trigger(),
       m_action(argparse::store),
       m_type(NoType),
-      m_nargs(NARGS_DEF),
+      m_nargs(detail::NARGS_DEF),
       m_required(),
       m_deprecated()
 {
@@ -11454,7 +11456,7 @@ Argument::action(
             // fallthrough
         case argparse::BooleanOptionalAction :
             m_const.reset("1");
-            m_nargs = NARGS_NUM;
+            m_nargs = detail::NARGS_NUM;
             m_nargs_str = std::string("0");
             m_num_args = 0;
             m_choices.reset();
@@ -11467,7 +11469,7 @@ Argument::action(
         case argparse::store_const :
         case argparse::append_const :
             m_const.reset();
-            m_nargs = NARGS_NUM;
+            m_nargs = detail::NARGS_NUM;
             m_nargs_str = std::string("0");
             m_num_args = 0;
             m_choices.reset();
@@ -11481,7 +11483,7 @@ Argument::action(
             // fallthrough
         case argparse::count :
             m_const.reset();
-            m_nargs = NARGS_NUM;
+            m_nargs = detail::NARGS_NUM;
             m_nargs_str = std::string("0");
             m_num_args = 0;
             m_choices.reset();
@@ -11491,7 +11493,7 @@ Argument::action(
         case argparse::extend :
             m_const.reset();
             if (m_num_args == 0) {
-                m_nargs = NARGS_DEF;
+                m_nargs = detail::NARGS_DEF;
                 m_nargs_str = std::string("1");
                 m_num_args = 1;
             }
@@ -11499,7 +11501,7 @@ Argument::action(
         case argparse::language :
             detail::_check_argument_type(m_type == Positional);
             m_const.reset();
-            m_nargs = NARGS_DEF;
+            m_nargs = detail::NARGS_DEF;
             m_nargs_str = std::string("1");
             m_num_args = 1;
             break;
@@ -11554,7 +11556,7 @@ Argument::nargs(
         default:
             throw ValueError("unknown action");
     }
-    m_nargs = NARGS_NUM;
+    m_nargs = detail::NARGS_NUM;
     m_nargs_str = detail::_to_string(num);
     m_num_args = num;
     return *this;
@@ -11569,11 +11571,11 @@ Argument::nargs(
         throw TypeError("got an unexpected keyword argument 'nargs'");
     }
     if (value == "?") {
-        m_nargs = ZERO_OR_ONE;
+        m_nargs = detail::ZERO_OR_ONE;
     } else if (value == "*") {
-        m_nargs = ZERO_OR_MORE;
+        m_nargs = detail::ZERO_OR_MORE;
     } else if (value == "+") {
-        m_nargs = ONE_OR_MORE;
+        m_nargs = detail::ONE_OR_MORE;
     } else {
         throw ValueError("invalid nargs value '" + value + "'");
     }
@@ -11589,7 +11591,7 @@ Argument::nargs(
     if (!(action() & detail::_store_action) || m_type == Operand) {
         throw TypeError("got an unexpected keyword argument 'nargs'");
     }
-    m_nargs = REMAINDING;
+    m_nargs = detail::REMAINDING;
     m_nargs_str = std::string("0");
     m_num_args = 0;
     return *this;
@@ -11602,7 +11604,7 @@ Argument::nargs(
     if (!(action() & detail::_store_action) || m_type == Operand) {
         throw TypeError("got an unexpected keyword argument 'nargs'");
     }
-    m_nargs = SUPPRESSING;
+    m_nargs = detail::SUPPRESSING;
     m_nargs_str = std::string("0");
     m_num_args = 0;
     return *this;
@@ -11613,9 +11615,10 @@ Argument::const_value(
         std::string const& value)
 {
     if ((action() & detail::_const_action)
-            || (m_nargs == ZERO_OR_ONE && (action() & detail::_store_action))) {
+            || (m_nargs == detail::ZERO_OR_ONE
+                && (action() & detail::_store_action))) {
         m_const = value;
-    } else if (m_type == Optional && m_nargs != ZERO_OR_ONE
+    } else if (m_type == Optional && m_nargs != detail::ZERO_OR_ONE
                && (action() & detail::_store_action)) {
         throw ValueError("nargs must be \"?\" to supply const");
     } else {
@@ -12082,16 +12085,16 @@ ARGPARSE_INL std::string
 Argument::get_nargs() const
 {
     switch (m_nargs) {
-        case NARGS_DEF :
+        case detail::NARGS_DEF :
             return detail::_none;
-        case NARGS_NUM :
-        case ONE_OR_MORE :
-        case ZERO_OR_ONE :
-        case ZERO_OR_MORE :
+        case detail::NARGS_NUM :
+        case detail::ONE_OR_MORE :
+        case detail::ZERO_OR_ONE :
+        case detail::ZERO_OR_MORE :
             return m_nargs_str;
-        case REMAINDING :
+        case detail::REMAINDING :
             return "...";
-        case SUPPRESSING :
+        case detail::SUPPRESSING :
             return "";
         default :
             return "Undefined";
@@ -12207,7 +12210,7 @@ Argument::process_nargs_suffix(
         return;
     }
     std::vector<std::string> names = get_argument_name(formatter);
-    bool nargs_check = (m_nargs & _NARGS_COMBINED);
+    bool nargs_check = (m_nargs & detail::_NARGS_COMBINED);
     if (names.size() > 1 && (!nargs_check || names.size() != m_num_args)) {
         throw TypeError("length of metavar tuple does not match nargs");
     }
@@ -12215,30 +12218,30 @@ Argument::process_nargs_suffix(
         names.resize(m_num_args, names.front());
     }
     std::string const name = detail::_join(names);
-    if (m_type == Optional && !name.empty() && m_nargs != SUPPRESSING) {
+    if (m_type == Optional && !name.empty() && m_nargs != detail::SUPPRESSING) {
         res += detail::_spaces;
     }
     if (m_type == Operand && !name.empty()) {
         res += detail::_equal;
     }
     switch (m_nargs) {
-        case NARGS_DEF :
-        case NARGS_NUM :
+        case detail::NARGS_DEF :
+        case detail::NARGS_NUM :
             res += name;
             break;
-        case ZERO_OR_ONE :
+        case detail::ZERO_OR_ONE :
             res += "[" + name + "]";
             break;
-        case ONE_OR_MORE :
+        case detail::ONE_OR_MORE :
             res += name + detail::_spaces;
             // fallthrough
-        case ZERO_OR_MORE :
+        case detail::ZERO_OR_MORE :
             res += "[" + name + " ...]";
             break;
-        case REMAINDING :
+        case detail::REMAINDING :
             res += "...";
             break;
-        case SUPPRESSING :
+        case detail::SUPPRESSING :
         default :
             break;
     }
@@ -12279,27 +12282,27 @@ Argument::error_nargs(
         std::string const& arg) const
 {
     switch (m_nargs) {
-        case NARGS_DEF :
+        case detail::NARGS_DEF :
             return "argument " + arg + ": expected one argument";
-        case NARGS_NUM :
+        case detail::NARGS_NUM :
             return "argument " + arg + ": expected " + nargs() + " arguments";
-        case ONE_OR_MORE :
+        case detail::ONE_OR_MORE :
             if (m_num_args > 1) {
                 return "argument " + arg + ": expected at least "
                         + detail::_to_string(m_num_args) + "x arguments";
             }
             return "argument " + arg + ": expected at least one argument";
-        case ZERO_OR_ONE :
+        case detail::ZERO_OR_ONE :
             return "argument " + arg + ": expected 0 or "
                     + detail::_to_string(m_num_args) + " arguments";
-        case ZERO_OR_MORE :
+        case detail::ZERO_OR_MORE :
             if (m_num_args > 1) {
                 return "argument " + arg + ": expected 0 or at least "
                         + detail::_to_string(m_num_args) + "x arguments";
             }
             // fallthrough
-        case REMAINDING :
-        case SUPPRESSING :
+        case detail::REMAINDING :
+        case detail::SUPPRESSING :
         default :
             return std::string();
     }
@@ -12637,7 +12640,7 @@ _ArgumentData::validate_argument(
             throw ValueError("dest supplied twice for positional argument");
         }
         if (arg.m_const.has_value()
-                && !(arg.m_nargs == Argument::ZERO_OR_ONE
+                && !(arg.m_nargs == detail::ZERO_OR_ONE
                      && (arg.action() & detail::_store_action))
                 && !(arg.action() & detail::_const_action)) {
             throw TypeError("got an unexpected keyword argument 'const'");
@@ -12647,7 +12650,7 @@ _ArgumentData::validate_argument(
             // only store and language actions can be operand
             throw TypeError("got an unexpected keyword argument 'action'");
         }
-        if (arg.m_nargs != Argument::NARGS_DEF) {
+        if (arg.m_nargs != detail::NARGS_DEF) {
             throw TypeError("got an unexpected keyword argument 'nargs'");
         }
         if (arg.m_metavar.has_value() && arg.m_metavar.value().size() != 1) {
@@ -13551,28 +13554,28 @@ Namespace::store_actions_to_string(
 {
     if (((args.first->action() & (argparse::store | argparse::language))
          && (args.first->m_nargs
-             & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE)))
+             & (detail::NARGS_DEF | detail::ZERO_OR_ONE)))
             || (!args.second.exists()
                 && args.first->m_type == Argument::Optional)
-            || args.first->m_nargs == Argument::SUPPRESSING
+            || args.first->m_nargs == detail::SUPPRESSING
             || args.second.is_default()) {
         return detail::_vector_to_string(
                     args.second(), ", ", quotes, false, detail::_none);
     }
     if (args.first->action() != argparse::append
             || (args.first->m_nargs
-                & (Argument::NARGS_DEF | Argument::ZERO_OR_ONE))) {
+                & (detail::NARGS_DEF | detail::ZERO_OR_ONE))) {
         std::string none
                 = (args.first->m_nargs
-                   & (Argument::ZERO_OR_MORE | Argument::REMAINDING))
+                   & (detail::ZERO_OR_MORE | detail::REMAINDING))
                 || (args.first->action() == argparse::extend
-                    && args.first->m_nargs == Argument::ZERO_OR_ONE)
+                    && args.first->m_nargs == detail::ZERO_OR_ONE)
                 ? std::string() : detail::_none;
         return detail::_vector_to_string(args.second(),
                                          ", ", quotes, false, none, "[", "]");
     } else {
         std::string none = (args.first->m_nargs
-                            & (Argument::ZERO_OR_MORE | Argument::REMAINDING))
+                            & (detail::ZERO_OR_MORE | detail::REMAINDING))
                 ? std::string() : detail::_none;
         return detail::_matrix_to_string(args.second(), args.second.indexes(),
                                          ", ", quotes, false, none, "[", "]");
@@ -15774,7 +15777,7 @@ ArgumentParser::check_intermixed_remainder(
         return;
     }
     for (std::size_t i = 0; i < positional.size(); ++i) {
-        if (positional.at(i)->m_nargs == Argument::REMAINDING) {
+        if (positional.at(i)->m_nargs == detail::REMAINDING) {
             throw TypeError(
                     "parse_intermixed_args: positional arg with nargs=...");
         }
@@ -15799,7 +15802,7 @@ ArgumentParser::validate_argument_value(
         Argument const& arg,
         std::string const& value) const
 {
-    if (!(arg.m_nargs & (Argument::REMAINDING | Argument::SUPPRESSING))
+    if (!(arg.m_nargs & (detail::REMAINDING | detail::SUPPRESSING))
             && arg.m_choices.has_value()) {
         if (!value.empty() && !detail::_exists(value, arg.m_choices.value())) {
             parser->throw_error(
@@ -15889,12 +15892,12 @@ ArgumentParser::storage_optional_store_func(
 {
     if (n == 0) {
         switch (tmp->m_nargs) {
-            case Argument::NARGS_DEF :
-            case Argument::NARGS_NUM :
-            case Argument::ONE_OR_MORE :
+            case detail::NARGS_DEF :
+            case detail::NARGS_NUM :
+            case detail::ONE_OR_MORE :
                 parsers.back().parser->throw_error(tmp->error_nargs(arg));
                 break;
-            case Argument::ZERO_OR_ONE :
+            case detail::ZERO_OR_ONE :
                 if (tmp->m_const.has_value()) {
                     if (tmp->action() == argparse::extend) {
                         if (tmp->const_value().empty()) {
@@ -15918,18 +15921,18 @@ ArgumentParser::storage_optional_store_func(
                     storage_have_value(parsers, tmp);
                 }
                 break;
-            case Argument::SUPPRESSING :
+            case detail::SUPPRESSING :
                 storage_store_default_value(parsers, tmp);
                 break;
-            case Argument::ZERO_OR_MORE :
-            case Argument::REMAINDING :
+            case detail::ZERO_OR_MORE :
+            case detail::REMAINDING :
             default :
                 storage_have_value(parsers, tmp);
                 break;
         }
-    } else if ((tmp->m_nargs & Argument::_NARGS_COMBINED)
+    } else if ((tmp->m_nargs & detail::_NARGS_COMBINED)
                && (n < tmp->m_num_args
-                   || (tmp->m_nargs != Argument::NARGS_NUM
+                   || (tmp->m_nargs != detail::NARGS_NUM
                        && tmp->m_num_args > 1 && n % tmp->m_num_args != 0))) {
         parsers.back().parser->throw_error(tmp->error_nargs(arg));
     }
@@ -15959,8 +15962,8 @@ ArgumentParser::storage_optional_store(
                 break;
             } else {
                 std::string const& next = args.at(i);
-                if (tmp->m_nargs != Argument::SUPPRESSING
-                        && (tmp->m_nargs == Argument::REMAINDING
+                if (tmp->m_nargs != detail::SUPPRESSING
+                        && (tmp->m_nargs == detail::REMAINDING
                             || (detail::_is_not_operand(
                                    was_pseudo_arg, parsers.back().operand, next)
                                 && detail::_not_optional(
@@ -15977,17 +15980,17 @@ ArgumentParser::storage_optional_store(
                 }
             }
             switch (tmp->m_nargs) {
-                case Argument::NARGS_DEF :
+                case detail::NARGS_DEF :
                     read_next = false;
                     break;
-                case Argument::NARGS_NUM :
-                case Argument::ZERO_OR_ONE :
+                case detail::NARGS_NUM :
+                case detail::ZERO_OR_ONE :
                     read_next = tmp->m_num_args != n;
                     break;
-                case Argument::ONE_OR_MORE :
-                case Argument::ZERO_OR_MORE :
-                case Argument::REMAINDING :
-                case Argument::SUPPRESSING :
+                case detail::ONE_OR_MORE :
+                case detail::ZERO_OR_MORE :
+                case detail::REMAINDING :
+                case detail::SUPPRESSING :
                     read_next = true;
                     break;
                 default :
@@ -15999,11 +16002,11 @@ ArgumentParser::storage_optional_store(
             storage_store_values(parsers, tmp, values);
         }
     } else {
-        if (tmp->m_nargs == Argument::SUPPRESSING) {
+        if (tmp->m_nargs == detail::SUPPRESSING) {
             parsers.back().parser->throw_error(
                        detail::_ignore_explicit(equals.front(), equals.back()));
         }
-        if (tmp->m_nargs != Argument::NARGS_DEF && tmp->m_num_args > 1) {
+        if (tmp->m_nargs != detail::NARGS_DEF && tmp->m_num_args > 1) {
             parsers.back().parser->throw_error(tmp->error_nargs(arg));
         }
         storage_store_value(parsers, tmp, equals.back());
@@ -16079,7 +16082,7 @@ ArgumentParser::match_positional_minimum(
         return;
     }
     if (arg->action() == argparse::BooleanOptionalAction
-            || arg->m_nargs == Argument::SUPPRESSING) {
+            || arg->m_nargs == detail::SUPPRESSING) {
         storage_store_default_value(parsers, arg);
         return;
     }
@@ -16087,20 +16090,20 @@ ArgumentParser::match_positional_minimum(
         parsers.front().storage.at(arg).clear();
     }
     switch (arg->m_nargs) {
-        case Argument::NARGS_DEF :
+        case detail::NARGS_DEF :
             storage_store_value(parsers, arg, arguments.front());
             arguments.pop_front();
             break;
-        case Argument::ONE_OR_MORE :
-        case Argument::NARGS_NUM :
+        case detail::ONE_OR_MORE :
+        case detail::NARGS_NUM :
             storage_store_n_values(parsers, arg, arguments, arg->m_num_args);
             break;
-        case Argument::ZERO_OR_ONE :
-        case Argument::ZERO_OR_MORE :
+        case detail::ZERO_OR_ONE :
+        case detail::ZERO_OR_MORE :
             storage_store_default_value(parsers, arg);
             break;
-        case Argument::REMAINDING :
-        case Argument::SUPPRESSING :
+        case detail::REMAINDING :
+        case detail::SUPPRESSING :
         default :
             break;
     }
@@ -16117,7 +16120,7 @@ ArgumentParser::match_positional_more_zero(
         return;
     }
     if (arg->action() == argparse::BooleanOptionalAction
-            || arg->m_nargs == Argument::SUPPRESSING) {
+            || arg->m_nargs == detail::SUPPRESSING) {
         storage_store_default_value(parsers, arg);
         return;
     }
@@ -16125,31 +16128,31 @@ ArgumentParser::match_positional_more_zero(
         parsers.front().storage.at(arg).clear();
     }
     switch (arg->m_nargs) {
-        case Argument::NARGS_DEF :
+        case detail::NARGS_DEF :
             storage_store_value(parsers, arg, arguments.front());
             arguments.pop_front();
             break;
-        case Argument::NARGS_NUM :
+        case detail::NARGS_NUM :
             storage_store_n_values(parsers, arg, arguments, arg->m_num_args);
             break;
-        case Argument::ONE_OR_MORE :
+        case detail::ONE_OR_MORE :
             storage_store_n_values(
                         parsers, arg, arguments, arg->m_num_args + over_args);
             over_args = 0;
             break;
-        case Argument::ZERO_OR_ONE :
+        case detail::ZERO_OR_ONE :
             storage_store_default_value(parsers, arg);
             break;
-        case Argument::ZERO_OR_MORE :
-        case Argument::REMAINDING :
+        case detail::ZERO_OR_MORE :
+        case detail::REMAINDING :
             if (over_args > 0) {
                 storage_store_n_values(parsers, arg, arguments, over_args);
                 over_args = 0;
-            } else if (arg->m_nargs == Argument::ZERO_OR_MORE) {
+            } else if (arg->m_nargs == detail::ZERO_OR_MORE) {
                 storage_store_default_value(parsers, arg);
             }
             break;
-        case Argument::SUPPRESSING :
+        case detail::SUPPRESSING :
         default :
             break;
     }
@@ -16167,7 +16170,7 @@ ArgumentParser::match_positional_optional(
         return;
     }
     if (arg->action() == argparse::BooleanOptionalAction
-            || arg->m_nargs == Argument::SUPPRESSING) {
+            || arg->m_nargs == detail::SUPPRESSING) {
         storage_store_default_value(parsers, arg);
         return;
     }
@@ -16175,14 +16178,14 @@ ArgumentParser::match_positional_optional(
         parsers.front().storage.at(arg).clear();
     }
     switch (arg->m_nargs) {
-        case Argument::NARGS_DEF :
+        case detail::NARGS_DEF :
             storage_store_value(parsers, arg, arguments.front());
             arguments.pop_front();
             break;
-        case Argument::NARGS_NUM :
+        case detail::NARGS_NUM :
             storage_store_n_values(parsers, arg, arguments, arg->m_num_args);
             break;
-        case Argument::ZERO_OR_ONE :
+        case detail::ZERO_OR_ONE :
             if (over_args + arg->m_num_args <= one_args) {
                 storage_store_n_values(
                             parsers, arg, arguments, arg->m_num_args);
@@ -16191,10 +16194,10 @@ ArgumentParser::match_positional_optional(
                 storage_store_default_value(parsers, arg);
             }
             break;
-        case Argument::ONE_OR_MORE :
-        case Argument::ZERO_OR_MORE :
-        case Argument::REMAINDING :
-        case Argument::SUPPRESSING :
+        case detail::ONE_OR_MORE :
+        case detail::ZERO_OR_MORE :
+        case detail::REMAINDING :
+        case detail::SUPPRESSING :
         default :
             break;
     }
@@ -16210,14 +16213,14 @@ ArgumentParser::match_positional_default(
         return;
     }
     if (arg->action() == argparse::BooleanOptionalAction
-            || arg->m_nargs == Argument::SUPPRESSING) {
+            || arg->m_nargs == detail::SUPPRESSING) {
         storage_store_default_value(parsers, arg);
         return;
     }
     if (arg->action() == argparse::store) {
         parsers.front().storage.at(arg).clear();
     }
-    if (arg->m_nargs == Argument::NARGS_DEF) {
+    if (arg->m_nargs == detail::NARGS_DEF) {
         storage_store_value(parsers, arg, arguments.front());
         arguments.pop_front();
     } else {
@@ -16282,23 +16285,23 @@ ArgumentParser::finish_analyze_positional(
     }
     std::size_t min_amount = 0;
     switch (arg->m_nargs) {
-        case Argument::NARGS_DEF :
-        case Argument::NARGS_NUM :
+        case detail::NARGS_DEF :
+        case detail::NARGS_NUM :
             min_amount += arg->m_num_args;
             break;
-        case Argument::ZERO_OR_ONE :
+        case detail::ZERO_OR_ONE :
             one_args += arg->m_num_args;
             break;
-        case Argument::ONE_OR_MORE :
+        case detail::ONE_OR_MORE :
             min_amount += arg->m_num_args;
             // fallthrough
-        case Argument::ZERO_OR_MORE :
+        case detail::ZERO_OR_MORE :
             more_args = true;
             break;
-        case Argument::REMAINDING :
+        case detail::REMAINDING :
             more_args = true;
             break;
-        case Argument::SUPPRESSING :
+        case detail::SUPPRESSING :
         default :
             break;
     }
@@ -16306,7 +16309,7 @@ ArgumentParser::finish_analyze_positional(
         return true;
     }
     min_args += min_amount;
-    if (arg->m_nargs == Argument::REMAINDING && !first && !read_all_args) {
+    if (arg->m_nargs == detail::REMAINDING && !first && !read_all_args) {
         return true;
     }
     return false;
@@ -16485,7 +16488,7 @@ ArgumentParser::is_remainder_positional(
         Parsers const& parsers)
 {
     return pos < positional.size()
-            && positional.at(pos)->m_nargs == Argument::REMAINDING
+            && positional.at(pos)->m_nargs == detail::REMAINDING
             && !parsers.front().storage.at(positional.at(pos)).empty();
 }
 
@@ -16554,7 +16557,7 @@ ArgumentParser::process_positional_args(
     std::list<std::string> args;
     args.push_back(parsed_arguments.at(i));
     bool remainder = pos < positional.size()
-            && positional.at(pos)->m_nargs == Argument::REMAINDING;
+            && positional.at(pos)->m_nargs == detail::REMAINDING;
     while (true) {
         if (++i == parsed_arguments.size()) {
             break;
@@ -16675,16 +16678,16 @@ ArgumentParser::skip_positional_required_check(
         return true;
     }
     if (arg->action() == argparse::extend
-            && arg->m_nargs == Argument::ZERO_OR_ONE) {
+            && arg->m_nargs == detail::ZERO_OR_ONE) {
         throw TypeError("'NoneType' object is not iterable");
     }
-    if ((arg->m_nargs & (Argument::ZERO_OR_ONE | Argument::ZERO_OR_MORE
-                         | Argument::SUPPRESSING))
+    if ((arg->m_nargs & (detail::ZERO_OR_ONE | detail::ZERO_OR_MORE
+                         | detail::SUPPRESSING))
             || arg->action() == argparse::BooleanOptionalAction) {
         storage_store_default_value(parsers, arg);
         return true;
     }
-    if (arg->m_nargs == Argument::REMAINDING) {
+    if (arg->m_nargs == detail::REMAINDING) {
         return true;
     }
     return false;
@@ -17164,7 +17167,7 @@ utils::test_argument_parser(
                               | argparse::append_const
                               | argparse::language))) {
             std::size_t size = arg->get_argument_name(*(p->m_formatter)).size();
-            if (size > 1 && (!(arg->m_nargs & Argument::_NARGS_COMBINED)
+            if (size > 1 && (!(arg->m_nargs & detail::_NARGS_COMBINED)
                              || size != arg->m_num_args)) {
                 ++diagnostics.second;
                 os << _error << " " << argument << ": length of "
@@ -17282,7 +17285,7 @@ utils::_bash_completion_info(
     std::vector<std::string> options;
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
-        if (arg->m_nargs == Argument::SUPPRESSING) {
+        if (arg->m_nargs == detail::SUPPRESSING) {
             continue;
         }
         detail::_insert_to_end(arg->flags(), options);
@@ -17298,7 +17301,7 @@ utils::_bash_completion_info(
     }
     for (std::size_t i = 0; i < operand.size(); ++i) {
         pArgument const& arg = operand.at(i);
-        if (arg->m_nargs == Argument::SUPPRESSING) {
+        if (arg->m_nargs == detail::SUPPRESSING) {
             continue;
         }
         for (std::size_t j = 0; j < arg->flags().size(); ++j) {
@@ -17312,7 +17315,7 @@ utils::_bash_completion_info(
         if (!(arg->action() & detail::_store_action)) {
             continue;
         }
-        have_fs_args = have_fs_args || (arg->m_nargs != Argument::SUPPRESSING);
+        have_fs_args = have_fs_args || (arg->m_nargs != detail::SUPPRESSING);
     }
     if (parser->has_subparsers()) {
         detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
@@ -17425,7 +17428,7 @@ utils::_print_parser_zsh_completion(
     os << "  local -a arguments=(\n";
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
-        if (arg->m_nargs == Argument::SUPPRESSING) {
+        if (arg->m_nargs == detail::SUPPRESSING) {
             continue;
         }
         os << "    ";
@@ -17472,7 +17475,7 @@ utils::_print_parser_zsh_completion(
         std::stringstream op;
         for (std::size_t i = 0; i < operand.size(); ++i) {
             pArgument const& arg = operand.at(i);
-            if (arg->m_nargs == Argument::SUPPRESSING) {
+            if (arg->m_nargs == detail::SUPPRESSING) {
                 continue;
             }
             op << "    ";
