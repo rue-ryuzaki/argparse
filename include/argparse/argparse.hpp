@@ -211,6 +211,7 @@
 # include <unordered_map>
 #else
 # include <stdint.h>
+# include <set>
 #endif  // C++11+
 
 #include <cctype>
@@ -999,6 +1000,246 @@ template <class T>
 struct has_operator_in : _stream_check::has_loading_support<std::istream, T> {};
 
 template <class T>
+struct is_byte_type
+{
+    static bool const value
+                        = sizeof(T) == sizeof(char) && !is_same<bool, T>::value;
+};
+
+template <class T>
+struct is_integer_type
+{
+    static bool const value = is_integral<T>::value
+                         && !is_byte_type<T>::value && !is_same<bool, T>::value;
+};
+
+#ifdef ARGPARSE_CXX_11
+template <class T>
+struct is_string_ctor
+{
+    static bool const value = is_constructible<std::string, T>::value;
+};
+#else
+template <class>
+struct is_char_array                       { static bool const value = false; };
+template <class T, std::size_t N>
+struct is_char_array<T[N]>
+{
+    static bool const value = is_same<char, T>::value;
+};
+
+template <class T>
+struct is_string_ctor
+{
+    static bool const value = is_same<std::string, T>::value
+                           || is_char_array<T>::value;
+};
+#endif  // C++11+
+
+template <class T, class = void>
+struct has_container_type                                         :false_type{};
+template <class T>
+struct has_container_type<T, typename voider<
+                                 typename T::container_type>::type>:true_type{};
+
+template <class T, class = void>
+struct has_value_compare                                          :false_type{};
+template <class T>
+struct has_value_compare<T, typename voider<
+                                  typename T::value_compare>::type>:true_type{};
+
+template <class T, class = void>
+struct has_value_type                                             :false_type{};
+template <class T>
+struct has_value_type<T, typename voider<
+                                     typename T::value_type>::type>:true_type{};
+
+template <class T>
+struct is_priority_queue                                          :false_type{};
+#ifdef ARGPARSE_CXX_11
+template <class... Args>
+struct is_priority_queue<std::priority_queue            <Args...> >:true_type{};
+#else
+template <class T>
+struct is_priority_queue<std::priority_queue            <T> >      :true_type{};
+#endif  // C++11+
+
+#ifdef ARGPARSE_CXX_11
+template <class T, class = void>
+struct has_vector_ctor                     { static bool const value = false; };
+template <class T>
+struct has_vector_ctor<T, typename voider<typename T::value_type>::type>
+{
+    static bool const value = is_constructible<
+            T, typename std::vector<typename T::value_type>::iterator,
+               typename std::vector<typename T::value_type>::iterator>::value;
+};
+#else
+template <class T>
+struct is_stl_deque                                               :false_type{};
+template <class T>
+struct is_stl_deque<std::deque                          <T> >      :true_type{};
+
+template <class T>
+struct is_stl_list                                                :false_type{};
+template <class T>
+struct is_stl_list<std::list                            <T> >      :true_type{};
+
+template <class T>
+struct is_stl_multiset                                            :false_type{};
+template <class T>
+struct is_stl_multiset<std::multiset                    <T> >      :true_type{};
+
+template <class T>
+struct is_stl_set                                                 :false_type{};
+template <class T>
+struct is_stl_set<std::set                              <T> >      :true_type{};
+
+template <class T>
+struct is_stl_vector                                              :false_type{};
+template <class T>
+struct is_stl_vector<std::vector                        <T> >      :true_type{};
+
+template <class T>
+struct has_vector_ctor
+{
+    static bool const value = is_priority_queue<T>::value
+            || is_stl_deque<T>::value
+            || is_stl_list<T>::value
+            || is_stl_multiset<T>::value
+            || is_stl_set<T>::value
+            || is_stl_vector<T>::value;
+};
+#endif  // C++11+
+
+template <class T>
+struct is_stl_queue
+{
+    static bool const value = has_container_type<T>::value
+                          && !is_priority_queue<T>::value;
+};
+
+#ifdef ARGPARSE_CXX_11
+template <class T, class = void>
+struct has_deque_ctor                      { static bool const value = false; };
+template <class T>
+struct has_deque_ctor<T, typename voider<typename T::value_type>::type>
+{
+    static bool const value = is_constructible<
+            T, typename std::deque<typename T::value_type> >::value;
+};
+#else
+template <class T>
+struct has_deque_ctor
+{
+    static bool const value = is_stl_queue<T>::value;
+};
+#endif  // C++11+
+
+template <class T, class = void>
+struct is_stl_map                                                 :false_type{};
+template <class T>
+struct is_stl_map<T, typename voider<typename T::key_type,
+                                    typename T::mapped_type>::type>:true_type{};
+
+template <class T, class = void>
+struct is_stl_pair                                                :false_type{};
+template <class T>
+struct is_stl_pair<T, typename voider<typename T::first_type,
+                                    typename T::second_type>::type>:true_type{};
+
+template <class T, class = void>
+struct is_stl_container_paired             { static bool const value = false; };
+template <class T>
+struct is_stl_container_paired<T, typename voider<typename T::value_type>::type>
+{
+    static bool const value
+          = is_stl_pair<typename T::value_type>::value && !is_stl_map<T>::value;
+};
+
+template <class T>
+struct is_stl_array                                               :false_type{};
+
+template <class T>
+struct is_stl_tuple                                               :false_type{};
+
+template <class T, class = void>
+struct is_stl_container_tupled             { static bool const value = false; };
+
+#ifdef ARGPARSE_CXX_11
+template <class T, std::size_t N>
+struct is_stl_array<std::array                          <T, N> >   :true_type{};
+
+template <class... Args>
+struct is_stl_tuple<std::tuple                          <Args...> >:true_type{};
+
+template <class T>
+struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
+{
+    static bool const value = is_stl_tuple<typename T::value_type>::value;
+};
+#endif  // C++11+
+
+template <class T>
+struct is_stl_span                                                :false_type{};
+#ifdef ARGPARSE_HAS_SPAN
+template <class T>
+struct is_stl_span<std::span                                  <T> >:true_type{};
+#endif  // ARGPARSE_HAS_SPAN
+
+template <class T, class = void>
+struct is_stl_container                    { static bool const value = false; };
+template <class T>
+struct is_stl_container<T, typename enable_if<
+        !is_string_ctor<T>::value
+        && !is_stl_queue<T>::value
+        && !is_stl_map<T>::value>::type>
+{
+    static bool const value
+            = has_vector_ctor<T>::value && !is_stl_span<T>::value;
+};
+
+template <class T, class = void, class = void>
+struct has_sub_vector_ctor                 { static bool const value = false; };
+template <class T>
+struct has_sub_vector_ctor<T, typename voider<typename T::value_type>::type,
+       typename enable_if<!is_string_ctor<typename T::value_type>::value
+                         && !is_stl_queue<typename T::value_type>::value>::type>
+{
+    static bool const value = has_vector_ctor<typename T::value_type>::value;
+};
+
+template <class T, class = void, class = void>
+struct has_sub_deque_ctor                  { static bool const value = false; };
+template <class T>
+struct has_sub_deque_ctor<T, typename voider<typename T::value_type>::type,
+       typename enable_if<!is_string_ctor<typename T::value_type>::value
+                     && !is_stl_container<typename T::value_type>::value>::type>
+{
+    static bool const value = has_deque_ctor<typename T::value_type>::value;
+};
+
+template <class T, class = void>
+struct has_stl_sub_array                   { static bool const value = false; };
+template <class T>
+struct has_stl_sub_array<T, typename voider<typename T::value_type>::type>
+{
+    static bool const value = is_stl_array<typename T::value_type>::value;
+};
+
+template <class T>
+struct is_stl_matrix
+{
+    static bool const value = (is_stl_array<T>::value
+                               || is_stl_container<T>::value
+                               || is_stl_queue<T>::value)
+                              && (has_stl_sub_array<T>::value
+                                  || has_sub_vector_ctor<T>::value
+                                  || has_sub_deque_ctor<T>::value);
+};
+
+#ifdef ARGPARSE_CXX_11
+template <class T>
 struct has_insert
 {
     template <class C>
@@ -1055,197 +1296,35 @@ struct has_push_front
 
     static bool const value = sizeof(test<T>(NULL)) == sizeof(_yes);
 };
-
-template <class T>
-struct is_byte_type
-{
-    static bool const value
-                        = sizeof(T) == sizeof(char) && !is_same<bool, T>::value;
-};
-
-template <class T>
-struct is_integer_type
-{
-    static bool const value = is_integral<T>::value
-                         && !is_byte_type<T>::value && !is_same<bool, T>::value;
-};
-
-#ifdef ARGPARSE_CXX_11
-template <class T>
-struct is_string_ctor
-{
-    static bool const value = is_constructible<std::string, T>::value;
-};
-#else
-template <class>
-struct is_char_array                       { static bool const value = false; };
-template <class T, std::size_t N>
-struct is_char_array<T[N]>
-{
-    static bool const value = is_same<char, T>::value;
-};
-
-template <class T>
-struct is_string_ctor
-{
-    static bool const value = is_same<std::string, T>::value
-                           || is_char_array<T>::value;
-};
-#endif  // C++11+
-
-template <class T, class = void>
-struct has_container_type                                         :false_type{};
-template <class T>
-struct has_container_type<T, typename voider<
-                                 typename T::container_type>::type>:true_type{};
-
-template <class T, class = void>
-struct has_value_compare                                          :false_type{};
-template <class T>
-struct has_value_compare<T, typename voider<
-                                  typename T::value_compare>::type>:true_type{};
-
-template <class T, class = void>
-struct has_value_type                                             :false_type{};
-template <class T>
-struct has_value_type<T, typename voider<
-                                     typename T::value_type>::type>:true_type{};
-
-template <class T, class = void>
-struct has_vector_ctor                     { static bool const value = false; };
-template <class T>
-struct has_vector_ctor<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value = is_constructible<
-            T, typename std::vector<typename T::value_type>::iterator,
-               typename std::vector<typename T::value_type>::iterator>::value;
-};
-
-template <class T, class = void>
-struct has_deque_ctor                      { static bool const value = false; };
-template <class T>
-struct has_deque_ctor<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value = is_constructible<
-            T, typename std::deque<typename T::value_type> >::value;
-};
-
-template <class T, class = void>
-struct is_stl_map                                                 :false_type{};
-template <class T>
-struct is_stl_map<T, typename voider<typename T::key_type,
-                                    typename T::mapped_type>::type>:true_type{};
-
-template <class T, class = void>
-struct is_stl_pair                                                :false_type{};
-template <class T>
-struct is_stl_pair<T, typename voider<typename T::first_type,
-                                    typename T::second_type>::type>:true_type{};
-
-template <class T, class = void>
-struct is_stl_container_paired             { static bool const value = false; };
-template <class T>
-struct is_stl_container_paired<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value
-          = is_stl_pair<typename T::value_type>::value && !is_stl_map<T>::value;
-};
-
-template <class T>
-struct is_stl_array                                               :false_type{};
-
-template <class T>
-struct is_stl_tuple                                               :false_type{};
-
-template <class T, class = void>
-struct is_stl_container_tupled             { static bool const value = false; };
-
-#ifdef ARGPARSE_CXX_11
-template <class T, std::size_t N>
-struct is_stl_array<std::array                          <T, N> >   :true_type{};
-
-template <class... Args>
-struct is_stl_tuple<std::tuple                          <Args...> >:true_type{};
-
-template <class T>
-struct is_stl_container_tupled<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value = is_stl_tuple<typename T::value_type>::value;
-};
-#endif  // C++11+
-
-template <class T>
-struct is_priority_queue                                          :false_type{};
-#ifdef ARGPARSE_CXX_11
-template <class... Args>
-struct is_priority_queue<std::priority_queue            <Args...> >:true_type{};
 #else
 template <class T>
-struct is_priority_queue<std::priority_queue            <T> >      :true_type{};
+struct has_insert
+{
+    static bool const value = is_stl_set<T>::value || is_stl_multiset<T>::value;
+};
+
+template <class T>
+struct has_push
+{
+    static bool const value = is_stl_queue<T>::value
+            || is_priority_queue<T>::value;
+};
+
+template <class T>
+struct has_push_back
+{
+    static bool const value = is_stl_deque<T>::value
+            || is_stl_list<T>::value
+            || is_stl_vector<T>::value;
+};
+
+// for std::forward_list
+template <class T>
+struct has_push_front
+{
+    static bool const value = false;
+};
 #endif  // C++11+
-
-template <class T>
-struct is_stl_queue
-{
-    static bool const value = has_container_type<T>::value
-                          && !is_priority_queue<T>::value;
-};
-
-template <class T>
-struct is_stl_span                                                :false_type{};
-#ifdef ARGPARSE_HAS_SPAN
-template <class T>
-struct is_stl_span<std::span                                  <T> >:true_type{};
-#endif  // ARGPARSE_HAS_SPAN
-
-template <class T, class = void>
-struct is_stl_container                    { static bool const value = false; };
-template <class T>
-struct is_stl_container<T, typename enable_if<
-        !is_string_ctor<T>::value && !is_stl_queue<T>::value>::type>
-{
-    static bool const value = has_vector_ctor<T>::value
-            && !is_stl_map<T>::value && !is_stl_span<T>::value;
-};
-
-template <class T, class = void, class = void>
-struct has_sub_vector_ctor                 { static bool const value = false; };
-template <class T>
-struct has_sub_vector_ctor<T, typename voider<typename T::value_type>::type,
-       typename enable_if<!is_string_ctor<typename T::value_type>::value
-                         && !is_stl_queue<typename T::value_type>::value>::type>
-{
-    static bool const value = has_vector_ctor<typename T::value_type>::value;
-};
-
-template <class T, class = void, class = void>
-struct has_sub_deque_ctor                  { static bool const value = false; };
-template <class T>
-struct has_sub_deque_ctor<T, typename voider<typename T::value_type>::type,
-       typename enable_if<!is_string_ctor<typename T::value_type>::value
-                     && !is_stl_container<typename T::value_type>::value>::type>
-{
-    static bool const value = has_deque_ctor<typename T::value_type>::value;
-};
-
-template <class T, class = void>
-struct has_stl_sub_array                   { static bool const value = false; };
-template <class T>
-struct has_stl_sub_array<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value = is_stl_array<typename T::value_type>::value;
-};
-
-template <class T>
-struct is_stl_matrix
-{
-    static bool const value = (is_stl_array<T>::value
-                               || is_stl_container<T>::value
-                               || is_stl_queue<T>::value)
-                              && (has_stl_sub_array<T>::value
-                                  || has_sub_vector_ctor<T>::value
-                                  || has_sub_deque_ctor<T>::value);
-};
 
 #ifdef ARGPARSE_CXX_11
 template <class T>
@@ -1268,6 +1347,7 @@ struct func2 { typedef void (*type)(T, U); };
 
 struct ref_count_data
 {
+    // -- data ----------------------------------------------------------------
     std::size_t weak_count;
     std::size_t use_count;
 };
@@ -1318,6 +1398,7 @@ public:
     }
 
 private:
+    // -- data ----------------------------------------------------------------
     ref_count_data ref_counts;
 };
 
@@ -1508,6 +1589,7 @@ private:
         }
     }
 
+    // -- data ----------------------------------------------------------------
     element_type* px;
     reference_count* pn;
 };
@@ -1627,6 +1709,7 @@ public:
     }
 
 private:
+    // -- data ----------------------------------------------------------------
     element_type* px;
     reference_count* pn;
 };
