@@ -1,6 +1,6 @@
 | Standard | Standard option `-std=` or `/std:` support | Library requires |
 |-|-|-|
-| C++98/C++03 | | gcc: 4.4 or higher<br />clang: 2.7 or higher |
+| C++98/C++03 | | gcc: 3.0 or higher<br />clang: 2.7 or higher |
 | (C++0x) C++11 | gcc: (4.3-4.6.4) 4.7.1 or higher<br />clang: (2.7-2.9) 3.0 or higher | gcc: 4.4 or higher<br />clang: 3.3 or higher |
 | (C++1y) C++14 | gcc: (4.8.1-4.8.5) 4.9.0 or higher<br />clang: (3.2-3.4.2) 3.5 or higher<br />msvc: v19.20 vs16.0 or higher | gcc: 4.8.1 or higher<br />clang: 3.4 or higher<br />msvc: v19.20 vs16.0 or higher |
 | (C++1z/latest) C++17 | gcc: (5.1) 5.1 or higher<br />clang: (3.5-4.0.1) 5.0.0 or higher<br />msvc: v19.20 vs16.0 or higher | gcc: 7.1 or higher<br />clang: 5.0.0 or higher<br />msvc: v19.20 vs16.0 or higher |
@@ -23,6 +23,7 @@ other compilers: no actual data
  - fstream
  - iostream
  - list
+ - queue
  - sstream
  - stdexcept
  - string
