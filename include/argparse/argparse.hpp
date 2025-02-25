@@ -766,195 +766,6 @@ struct _replace_array_with_pointer
     >::type type;
 };
 
-template <class T,
-          class AT_1 = void,
-          class AT_2 = void,
-          class AT_3 = void,
-          class AT_4 = void>
-struct _is_constructible_impl
-{
-    typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
-    typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
-    typedef typename _replace_array_with_pointer<AT_3>::type AU_3;
-    typedef typename _replace_array_with_pointer<AT_4>::type AU_4;
-
-    template <class C_T, class C_AT_1, class C_AT_2, class C_AT_3, class C_AT_4>
-    static _yes test(
-        typename enable_if<
-            sizeof(C_T) ==
-            sizeof(C_T(
-                static_cast<C_AT_1>(
-                  *static_cast<typename remove_reference<C_AT_1>::type*>(NULL)),
-                static_cast<C_AT_2>(
-                  *static_cast<typename remove_reference<C_AT_2>::type*>(NULL)),
-                static_cast<C_AT_3>(
-                  *static_cast<typename remove_reference<C_AT_3>::type*>(NULL)),
-                static_cast<C_AT_4>(
-                  *static_cast<typename remove_reference<C_AT_4>::type*>(NULL))
-            ))
-        >::type*
-    );
-
-    template <class, class, class, class, class>
-    static _no test(...);
-
-    static bool const value
-              = (sizeof(test<T, AU_1, AU_2, AU_3, AU_4>(NULL)) == sizeof(_yes));
-};
-
-template <class T, class AT_1, class AT_2, class AT_3>
-struct _is_constructible_impl<T, AT_1, AT_2, AT_3, void>
-{
-    typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
-    typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
-    typedef typename _replace_array_with_pointer<AT_3>::type AU_3;
-
-    template <class C_T, class C_AT_1, class C_AT_2, class C_AT_3>
-    static _yes test(
-        typename enable_if<
-            sizeof(C_T) ==
-            sizeof(C_T(
-                static_cast<C_AT_1>(
-                  *static_cast<typename remove_reference<C_AT_1>::type*>(NULL)),
-                static_cast<C_AT_2>(
-                  *static_cast<typename remove_reference<C_AT_2>::type*>(NULL)),
-                static_cast<C_AT_3>(
-                  *static_cast<typename remove_reference<C_AT_3>::type*>(NULL))
-            ))
-        >::type*
-    );
-
-    template <class, class, class, class>
-    static _no test(...);
-
-    static bool const value
-                    = (sizeof(test<T, AU_1, AU_2, AU_3>(NULL)) == sizeof(_yes));
-};
-
-template <class T, class AT_1, class AT_2>
-struct _is_constructible_impl<T, AT_1, AT_2, void, void>
-{
-    typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
-    typedef typename _replace_array_with_pointer<AT_2>::type AU_2;
-
-    template <class C_T, class C_AT_1, class C_AT_2>
-    static _yes test(
-        typename enable_if<
-            sizeof(C_T) ==
-            sizeof(C_T(
-                static_cast<C_AT_1>(
-                  *static_cast<typename remove_reference<C_AT_1>::type*>(NULL)),
-                static_cast<C_AT_2>(
-                  *static_cast<typename remove_reference<C_AT_2>::type*>(NULL))
-            ))
-        >::type*
-    );
-
-    template <class, class, class>
-    static _no test(...);
-
-    static bool const value
-                          = (sizeof(test<T, AU_1, AU_2>(NULL)) == sizeof(_yes));
-};
-
-template <class T, class AT_1>
-struct _is_constructible_impl<T, AT_1, void, void, void>
-{
-    typedef typename _replace_array_with_pointer<AT_1>::type AU_1;
-
-    template <class C_T, class C_AT_1>
-    static _yes test(
-        typename enable_if<
-            sizeof(C_T) ==
-            sizeof(C_T(
-                static_cast<C_AT_1>(
-                   *static_cast<typename remove_reference<C_AT_1>::type*>(NULL))
-            ))
-        >::type*
-    );
-
-    template <class, class>
-    static _no test(...);
-
-    static bool const value = (sizeof(test<T, AU_1>(NULL)) == sizeof(_yes));
-};
-
-template <class T>
-struct _is_constructible_impl<T, void, void, void, void>
-{
-    template <class C_T>
-    static C_T testFun(C_T);
-
-    template <class C_T>
-    static _yes test(
-            typename enable_if<sizeof(C_T)
-                    == sizeof(_is_constructible_impl::testFun(C_T()))>::type*);
-
-    template <class>
-    static _no test(...);
-
-    static bool const value = (sizeof(test<T>(NULL)) == sizeof(_yes));
-};
-
-template <class T,
-          class AT_1 = void,
-          class AT_2 = void,
-          class AT_3 = void,
-          class AT_4 = void>
-struct _is_constructible_impl_ptr
-{
-    static bool const value = false;
-};
-
-template <class T, class AT_1>
-struct _is_constructible_impl_ptr<T, AT_1,
-        typename enable_if<is_pointer<
-            typename remove_reference<T>::type>::value, void>::type, void, void>
-{
-    template <class C_T>
-    static _yes test(C_T);
-
-    template <class>
-    static _no test(...);
-
-    static bool const value
-                   = (sizeof(test<T>(static_cast<AT_1>(NULL))) == sizeof(_yes));
-};
-
-template <class T>
-struct _is_constructible_impl_ptr<T, void, void, void, void>
-{
-    static bool const value = true;
-};
-
-template <class T,
-          class AT_1 = void,
-          class AT_2 = void,
-          class AT_3 = void,
-          class AT_4 = void>
-struct is_constructible
-{
-    typedef typename _replace_array_with_pointer<T>::type U;
-
-    static bool const value = (
-        is_pointer<typename remove_reference<U>::type>::value
-                ? _is_constructible_impl_ptr<U, AT_1, AT_2, AT_3, AT_4>::value
-                : _is_constructible_impl<U, AT_1, AT_2, AT_3, AT_4>::value
-    );
-};
-
-template <>
-struct is_constructible<std::string, _SUPPRESS>
-{
-    static bool const value = false;
-};
-
-template <>
-struct is_constructible<std::string, std::vector<std::string> >
-{
-    static bool const value = false;
-};
-
 template <class T, class = void>
 struct voider { typedef void type; };
 #endif  // C++11+
@@ -1064,7 +875,23 @@ template <class T>
 struct is_priority_queue<std::priority_queue            <T> >      :true_type{};
 #endif  // C++11+
 
+template <class T>
+struct is_stl_queue
+{
+    static bool const value = has_container_type<T>::value
+                          && !is_priority_queue<T>::value;
+};
+
 #ifdef ARGPARSE_CXX_11
+template <class T, class = void>
+struct has_deque_ctor                      { static bool const value = false; };
+template <class T>
+struct has_deque_ctor<T, typename voider<typename T::value_type>::type>
+{
+    static bool const value = is_constructible<
+            T, typename std::deque<typename T::value_type> >::value;
+};
+
 template <class T, class = void>
 struct has_vector_ctor                     { static bool const value = false; };
 template <class T>
@@ -1101,6 +928,12 @@ template <class T>
 struct is_stl_vector<std::vector                        <T> >      :true_type{};
 
 template <class T>
+struct has_deque_ctor
+{
+    static bool const value = is_stl_queue<T>::value;
+};
+
+template <class T>
 struct has_vector_ctor
 {
     static bool const value = is_priority_queue<T>::value
@@ -1109,30 +942,6 @@ struct has_vector_ctor
             || is_stl_multiset<T>::value
             || is_stl_set<T>::value
             || is_stl_vector<T>::value;
-};
-#endif  // C++11+
-
-template <class T>
-struct is_stl_queue
-{
-    static bool const value = has_container_type<T>::value
-                          && !is_priority_queue<T>::value;
-};
-
-#ifdef ARGPARSE_CXX_11
-template <class T, class = void>
-struct has_deque_ctor                      { static bool const value = false; };
-template <class T>
-struct has_deque_ctor<T, typename voider<typename T::value_type>::type>
-{
-    static bool const value = is_constructible<
-            T, typename std::deque<typename T::value_type> >::value;
-};
-#else
-template <class T>
-struct has_deque_ctor
-{
-    static bool const value = is_stl_queue<T>::value;
 };
 #endif  // C++11+
 
@@ -1833,27 +1642,6 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-#ifdef ARGPARSE_CXX_11
-template <class T,
-          typename enable_if<!is_same<bool, T>::value>::type* = nullptr>
-inline std::string
-_to_string(
-        T const& value)
-{
-    std::stringstream ss;
-    ss << value;
-    return ss.str();
-}
-
-template <class T,
-          typename enable_if<is_same<bool, T>::value>::type* = nullptr>
-inline std::string
-_to_string(
-        T const& value)
-{
-    return value ? "1" : "";
-}
-#else
 template <class T>
 inline std::string
 _to_string(
@@ -1873,7 +1661,6 @@ _to_string(
 {
     return value ? "1" : "";
 }
-#endif  // C++11+
 
 template <class T>
 std::vector<std::string>
@@ -1937,64 +1724,21 @@ _get_type_name()
 class Type
 {
 public:
-#ifdef ARGPARSE_CXX_11
-    template <class T, typename enable_if<
-                  is_string_ctor<T>::value
-                  || is_stl_pair<T>::value
-                  || is_stl_tuple<T>::value>::type* = nullptr>
-    static std::string
-    basic()
-    {
-        return name<T>();
-    }
-
-    template <class T, typename enable_if<
-                  is_stl_array<T>::value
-                  || is_stl_container<T>::value
-                  || is_stl_queue<T>::value
-                  || is_stl_span<T>::value>::type* = nullptr>
-    static std::string
-    basic()
-    {
-        return basic<typename T::value_type>();
-    }
-
-    template <class T, typename enable_if<
-                  is_stl_map<T>::value>::type* = nullptr>
-    static std::string
-    basic()
-    {
-        return "std::pair<" + name<typename T::key_type>()
-                + ", " + name<typename T::mapped_type>() + ">";
-    }
-
-    template <class T, typename enable_if<
-                  !is_string_ctor<T>::value
-                  && !is_stl_array<T>::value
-                  && !is_stl_container<T>::value
-                  && !is_stl_map<T>::value
-                  && !is_stl_pair<T>::value
-                  && !is_stl_queue<T>::value
-                  && !is_stl_span<T>::value
-                  && !is_stl_tuple<T>::value>::type* = nullptr>
-    static std::string
-    basic()
-    {
-        return name<T>();
-    }
-#else
     template <class T>
     static std::string
     basic(typename enable_if<is_string_ctor<T>::value
-                             || is_stl_pair<T>::value, bool>::type = true)
+                             || is_stl_pair<T>::value
+                             || is_stl_tuple<T>::value, bool>::type = true)
     {
         return name<T>();
     }
 
     template <class T>
     static std::string
-    basic(typename enable_if<is_stl_container<T>::value
-                             || is_stl_queue<T>::value, bool>::type = true)
+    basic(typename enable_if<is_stl_array<T>::value
+                             || is_stl_container<T>::value
+                             || is_stl_queue<T>::value
+                             || is_stl_span<T>::value, bool>::type = true)
     {
         return basic<typename T::value_type>();
     }
@@ -2010,116 +1754,17 @@ public:
     template <class T>
     static std::string
     basic(typename enable_if<!is_string_ctor<T>::value
+                             && !is_stl_array<T>::value
                              && !is_stl_container<T>::value
                              && !is_stl_map<T>::value
                              && !is_stl_pair<T>::value
-                             && !is_stl_queue<T>::value, bool>::type = true)
+                             && !is_stl_queue<T>::value
+                             && !is_stl_span<T>::value
+                             && !is_stl_tuple<T>::value, bool>::type = true)
     {
         return name<T>();
     }
-#endif  // C++11+
 
-#ifdef ARGPARSE_CXX_11
-    template <class T, typename enable_if<
-                  is_string_ctor<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        return "std::string";
-    }
-
-    template <class T, typename enable_if<
-                  is_integer_type<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        return "int";
-    }
-
-    template <class T, typename enable_if<
-                  is_floating_point<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        return "float";
-    }
-
-    template <class T, typename enable_if<
-                  is_stl_array<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        auto str = _replace(_get_type_name<T>(), "__cxx11::", std::string());
-        str = _replace(str, "__1::", std::string());
-        return str.substr(0, str.find('<'))
-                + "<" + name<typename T::value_type>()
-                + ", " + std::to_string(std::tuple_size<T>::value) + ">";
-    }
-
-    template <class T, typename enable_if<
-                  is_stl_container<T>::value
-                  || is_stl_queue<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        auto str = _replace(_get_type_name<T>(), "__cxx11::", std::string());
-        str = _replace(str, "__1::", std::string());
-        return str.substr(0, str.find('<'))
-                + "<" + name<typename T::value_type>() + ">";
-    }
-
-    template <class T, typename enable_if<
-                  is_stl_span<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        return "std::span<" + name<typename T::value_type>() + ">";
-    }
-
-    template <class T, typename enable_if<
-                  is_stl_map<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        auto str = _replace(_get_type_name<T>(), "__1::", std::string());
-        return str.substr(0, str.find('<')) + "<" + name<typename T::key_type>()
-                + ", " + name<typename T::mapped_type>() + ">";
-    }
-
-    template <class T, typename enable_if<
-                  is_stl_pair<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        return "std::pair<" + name<typename T::first_type>()
-                + ", " + name<typename T::second_type>() + ">";
-    }
-
-    template <class T, typename enable_if<
-                  is_stl_tuple<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        return tuple_as_string(type_tag<T>{});
-    }
-
-    template <class T, typename enable_if<
-                  !is_string_ctor<T>::value
-                  && !is_integer_type<T>::value
-                  && !is_floating_point<T>::value
-                  && !is_stl_array<T>::value
-                  && !is_stl_container<T>::value
-                  && !is_stl_map<T>::value
-                  && !is_stl_pair<T>::value
-                  && !is_stl_queue<T>::value
-                  && !is_stl_span<T>::value
-                  && !is_stl_tuple<T>::value>::type* = nullptr>
-    static std::string
-    name()
-    {
-        return _get_type_name<T>();
-    }
-#else
     template <class T>
     static std::string
     name(typename enable_if<is_string_ctor<T>::value, bool>::type = true)
@@ -2139,6 +1784,17 @@ public:
     name(typename enable_if<is_floating_point<T>::value, bool>::type = true)
     {
         return "float";
+    }
+
+    template <class T>
+    static std::string
+    name(typename enable_if<is_stl_array<T>::value, bool>::type = true)
+    {
+        return "std::array<" + name<typename T::value_type>()
+#ifdef ARGPARSE_CXX_11
+                + ", " + std::to_string(std::tuple_size<T>::value)
+#endif  // C++11+
+                + ">";
     }
 
     template <class T>
@@ -2172,17 +1828,37 @@ public:
 
     template <class T>
     static std::string
+    name(typename enable_if<is_stl_span<T>::value, bool>::type = true)
+    {
+        return "std::span<" + name<typename T::value_type>() + ">";
+    }
+
+    template <class T>
+    static std::string
+    name(typename enable_if<is_stl_tuple<T>::value, bool>::type = true)
+    {
+#ifdef ARGPARSE_CXX_11
+        return tuple_as_string(type_tag<T>{});
+#else
+        return "std::tuple<>";
+#endif  // C++11+
+    }
+
+    template <class T>
+    static std::string
     name(typename enable_if<!is_string_ctor<T>::value
                             && !is_integer_type<T>::value
                             && !is_floating_point<T>::value
+                            && !is_stl_array<T>::value
                             && !is_stl_container<T>::value
                             && !is_stl_map<T>::value
                             && !is_stl_pair<T>::value
-                            && !is_stl_queue<T>::value, bool>::type = true)
+                            && !is_stl_queue<T>::value
+                            && !is_stl_span<T>::value
+                            && !is_stl_tuple<T>::value, bool>::type = true)
     {
         return _get_type_name<T>();
     }
-#endif  // C++11+
 
 private:
 #ifdef ARGPARSE_CXX_11
@@ -2481,148 +2157,6 @@ struct need_operator_in
             && !is_byte_type<T>::value;
 };
 
-#ifdef ARGPARSE_CXX_11
-template <class T>
-typename enable_if<is_string_ctor<T>::value, T>::type
-_to_type(
-        std::string const& data)
-{
-    return T(data);
-}
-
-template <class T>
-typename enable_if<is_same<bool, T>::value, T>::type
-_to_type(
-        std::string const& data) ARGPARSE_NOEXCEPT
-{
-    return _string_to_bool(data);
-}
-
-template <class T>
-typename enable_if<is_byte_type<T>::value, T>::type
-_to_type(
-        std::string const& data)
-{
-    if (data.size() != 1) {
-        throw TypeError("got a data-array in value '" + data + "'");
-    }
-    return static_cast<T>(data.at(0));
-}
-
-template <class T>
-typename enable_if<
-    has_operator_in<T>::value && need_operator_in<T>::value, T>::type
-_to_type(
-        std::string const& data)
-{
-    T res = T();
-    std::stringstream ss(data);
-    ss >> res;
-    if (ss.fail() || !ss.eof()) {
-        throw
-        TypeError("invalid " + Type::name<T>() + " value: '" + data + "'");
-    }
-    return res;
-}
-
-template <class T>
-typename enable_if<
-    !has_operator_in<T>::value && need_operator_in<T>::value, T>::type
-_to_type(
-        std::string const&)
-{
-    throw TypeError("unsupported type " + Type::name<T>());
-}
-
-template <class T>
-typename enable_if<is_stl_container<typename decay<T>::type>::value, T>::type
-_make_container(
-        std::vector<typename T::value_type> const& vec)
-{
-    return T(vec.begin(), vec.end());
-}
-
-template <class T>
-typename enable_if<is_stl_queue<typename decay<T>::type>::value, T>::type
-_make_container(
-        std::vector<typename T::value_type> const& vec)
-{
-    return T(std::deque<typename T::value_type>(vec.begin(), vec.end()));
-}
-
-template <class T>
-typename enable_if<is_stl_span<typename decay<T>::type>::value, T>::type
-_make_container(
-        std::vector<typename T::value_type> const& vec)
-{
-    return T(vec);
-}
-
-template <class T>
-typename enable_if<is_stl_array<typename decay<T>::type>::value, T>::type
-_make_container(
-        std::vector<typename T::value_type> const& vec)
-{
-    T res{};
-    if (res.size() != vec.size()) {
-        std::cerr << "argparse error [skip]: array size mismatch: was "
-                  << res.size() << ", expected " << vec.size() << std::endl;
-    }
-    auto size = res.size();
-    if (size > vec.size()) {
-        size = vec.size();
-    }
-    typedef typename std::vector<typename T::value_type>::difference_type dtype;
-    std::move(vec.begin(), std::next(
-                  vec.begin(), static_cast<dtype>(size)), res.begin());
-    return res;
-}
-
-template <class T, typename enable_if<has_push_back<T>::value>::type* = nullptr>
-void
-_push_to_container(
-        T& container,
-        typename T::value_type const& value)
-{
-    container.push_back(value);
-}
-
-template <class T, typename enable_if<
-              has_push<T>::value
-              && !has_push_back<T>::value>::type* = nullptr>
-void
-_push_to_container(
-        T& container,
-        typename T::value_type const& value)
-{
-    container.push(value);
-}
-
-template <class T, typename enable_if<
-              has_insert<T>::value
-              && !has_push<T>::value
-              && !has_push_back<T>::value>::type* = nullptr>
-void
-_push_to_container(
-        T& container,
-        typename T::value_type const& value)
-{
-    container.insert(value);
-}
-
-template <class T, typename enable_if<
-              has_push_front<T>::value
-              && !has_insert<T>::value
-              && !has_push<T>::value
-              && !has_push_back<T>::value>::type* = nullptr>
-void
-_push_to_container(
-        T& container,
-        typename T::value_type const& value)
-{
-    container.push_front(value);
-}
-#else
 template <class T>
 T
 _to_type(
@@ -2711,6 +2245,28 @@ _make_container(
     return T(vec);
 }
 
+#ifdef ARGPARSE_CXX_11
+template <class T>
+typename enable_if<is_stl_array<typename decay<T>::type>::value, T>::type
+_make_container(
+        std::vector<typename T::value_type> const& vec)
+{
+    T res{};
+    if (res.size() != vec.size()) {
+        std::cerr << "argparse error [skip]: array size mismatch: was "
+                  << res.size() << ", expected " << vec.size() << std::endl;
+    }
+    auto size = res.size();
+    if (size > vec.size()) {
+        size = vec.size();
+    }
+    typedef typename std::vector<typename T::value_type>::difference_type dtype;
+    std::move(vec.begin(), std::next(
+                  vec.begin(), static_cast<dtype>(size)), res.begin());
+    return res;
+}
+#endif  // C++11+
+
 template <class T>
 void
 _push_to_container(
@@ -2759,7 +2315,6 @@ _push_to_container(
 {
     container.push_front(value);
 }
-#endif  // C++11+
 }  // namespace detail
 
 // Forward declaration
@@ -4469,16 +4024,6 @@ struct simple_element
             || is_integral<T>::value;
 };
 
-#ifdef ARGPARSE_CXX_11
-template <class T, typename detail::enable_if<
-              simple_element<T>::value>::type* = nullptr>
-std::vector<T>
-_as_subvector(
-        shared_ptr<Argument> const& key,
-        std::vector<std::string> const& vs,
-        uint8_t /*nargs*/,
-        std::size_t /*num_args*/)
-#else
 template <class T>
 std::vector<T>
 _as_subvector(
@@ -4487,7 +4032,6 @@ _as_subvector(
         uint8_t /*nargs*/,
         std::size_t /*num_args*/,
         typename enable_if<simple_element<T>::value, bool>::type = true)
-#endif  // C++11+
 {
     std::vector<T> res;
     res.reserve(vs.size());
@@ -4497,16 +4041,6 @@ _as_subvector(
     return res;
 }
 
-#ifdef ARGPARSE_CXX_11
-template <class T, typename enable_if<
-              !simple_element<T>::value>::type* = nullptr>
-std::vector<T>
-_as_subvector(
-        shared_ptr<Argument> const& key,
-        std::vector<std::string> const& vs,
-        uint8_t nargs,
-        std::size_t num_args)
-#else
 template <class T>
 std::vector<T>
 _as_subvector(
@@ -4515,7 +4049,6 @@ _as_subvector(
         uint8_t nargs,
         std::size_t num_args,
         typename enable_if<!simple_element<T>::value, bool>::type = true)
-#endif  // C++11+
 {
     std::vector<T> res;
     if (vs.empty()) {
@@ -4607,178 +4140,6 @@ _get_matrix(
     return res;
 }
 #endif  // C++11+
-
-#ifdef ARGPARSE_CXX_11
-template <class T>
-typename enable_if<
-    is_string_ctor<T>::value
-    || is_floating_point<T>::value
-    || is_same<bool, T>::value
-    || is_byte_type<T>::value, T>::type
-_get(std::string const& key,
-        storage_value const& args,
-        Value<std::string> const& type_name,
-        SValue<std::string> const& /*default_value*/,
-        uint8_t /*nargs*/,
-        std::size_t /*num_args*/)
-{
-    _check_non_count_action(key, args.first->action());
-    _check_type(type_name, Type::name<T>());
-    return _single_value<T>(key, args);
-}
-
-template <class T>
-typename enable_if<
-    is_integral<T>::value
-    && !is_same<bool, T>::value
-    && !is_byte_type<T>::value, T>::type
-_get(std::string const& key,
-        storage_value const& args,
-        Value<std::string> const& type_name,
-        SValue<std::string> const& default_value,
-        uint8_t /*nargs*/,
-        std::size_t /*num_args*/)
-{
-    _check_type(type_name, Type::name<T>());
-    if (args.first->action() == argparse::count) {
-        if (default_value.has_value()) {
-            std::string value = default_value.value();
-            std::size_t res = _to_type<std::size_t>(value);
-            return static_cast<T>(res + args.second.size());
-        }
-        return static_cast<T>(args.second.size());
-    }
-    return _single_value<T>(key, args);
-}
-
-template <class T>
-typename enable_if<is_stl_span<T>::value, T>::type
-_get(std::string const& key,
-        storage_value const& args,
-        Value<std::string> const& type_name,
-        SValue<std::string> const& /*default_value*/,
-        uint8_t /*nargs*/,
-        std::size_t /*num_args*/)
-{
-    _check_non_count_action(key, args.first->action());
-    _check_type(type_name, Type::basic<T>());
-    return _make_container<T>(args.second());
-}
-
-template <class T>
-typename enable_if<
-    (is_stl_container<typename decay<T>::type>::value
- && !is_stl_container_tupled<typename decay<T>::type>::value
- && !is_stl_container_paired<typename decay<T>::type>::value
- && !is_stl_matrix<typename decay<T>::type>::value)
-  || ((is_stl_array<typename decay<T>::type>::value
-       || is_stl_queue<typename decay<T>::type>::value)
- && !is_stl_matrix<typename decay<T>::type>::value), T>::type
-_get(std::string const& key,
-        storage_value const& args,
-        Value<std::string> const& type_name,
-        SValue<std::string> const& /*default_value*/,
-        uint8_t nargs,
-        std::size_t num_args)
-{
-    _check_non_count_action(key, args.first->action());
-    _check_type(type_name, Type::basic<T>());
-    return _make_container<T>(
-                _get_vector<typename T::value_type>(args, nargs, num_args));
-}
-
-template <class T>
-typename enable_if<is_stl_matrix<T>::value, T>::type
-_get(std::string const& key,
-        storage_value const& args,
-        Value<std::string> const& type_name,
-        SValue<std::string> const& /*default_value*/,
-        uint8_t nargs,
-        std::size_t num_args)
-{
-    if (args.first->action() != argparse::append
-            || !(nargs & (detail::NARGS_NUM | detail::ONE_OR_MORE
-                          | detail::ZERO_OR_MORE))) {
-        throw TypeError("got an invalid type for argument '" + key + "'");
-    }
-    _check_type(type_name, Type::basic<T>());
-    return _get_matrix<T>(args, nargs, num_args);
-}
-
-template <class T>
-typename enable_if<
-    !is_string_ctor<T>::value
-    && !is_floating_point<T>::value
-    && !is_integral<T>::value
-    && !is_stl_array<typename decay<T>::type>::value
-    && !is_stl_tuple<typename decay<T>::type>::value
-    && !is_stl_container<typename decay<T>::type>::value
-    && !is_stl_map<typename decay<T>::type>::value
-    && !is_stl_pair<typename decay<T>::type>::value
-    && !is_stl_queue<typename decay<T>::type>::value
-    && !is_stl_span<typename decay<T>::type>::value, T
->::type
-_get(std::string const& key,
-        storage_value const& args,
-        Value<std::string> const& type_name,
-        SValue<std::string> const& /*default_value*/,
-        uint8_t /*nargs*/,
-        std::size_t /*num_args*/)
-{
-    _check_non_count_action(key, args.first->action());
-    _check_type(type_name, Type::name<T>());
-    return _custom_value<T>(args);
-}
-
-template <class T>
-typename enable_if<
-    is_stl_container_paired<typename decay<T>::type>::value, T>::type
-_get(std::string const& key,
-        storage_value const& args,
-        Value<std::string> const& type_name,
-        char sep)
-{
-    _check_type(type_name, Type::basic<T>());
-    typedef typename T::value_type::first_type K;
-    typedef typename T::value_type::second_type V;
-    return _make_container<T>(_as_vector_pair<K, V>(key, args, sep));
-}
-
-template <class T>
-typename enable_if<is_stl_map<typename decay<T>::type>::value, T>::type
-_get(std::string const& key,
-        storage_value const& args,
-        Value<std::string> const& type_name,
-        char sep)
-{
-    _check_type(type_name, Type::basic<T>());
-    typedef typename T::key_type K;
-    typedef typename T::mapped_type V;
-    T res = T();
-    std::vector<std::pair<K, V> > vector = _as_vector_pair<K, V>(key, args, sep);
-    for (std::size_t i = 0; i < vector.size(); ++i) {
-        res.insert(std::make_pair(vector.at(i).first, vector.at(i).second));
-    }
-    return res;
-}
-
-template <class T>
-typename enable_if<is_stl_pair<typename decay<T>::type>::value, T>::type
-_get(std::string const& key,
-        storage_value const& args,
-        Value<std::string> const& type_name,
-        char sep)
-{
-    _check_type(type_name, Type::name<T>());
-    if (args.second.empty()) {
-        return T();
-    }
-    typedef typename T::first_type K;
-    typedef typename T::second_type V;
-    return _as_pair<K, V>(
-          key, args.first, args.second().begin(), args.second().end(), sep);
-}
-#else
 
 template <class T>
 T
@@ -4955,7 +4316,6 @@ _get(std::string const& key,
     return _as_pair<K, V>(
           key, args.first, args.second().begin(), args.second().end(), sep);
 }
-#endif  // C++11+
 
 #ifdef ARGPARSE_CXX_11
 template <class T>
