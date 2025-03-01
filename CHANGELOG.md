@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.8] - 2025-03-01
+
+  * Fix: out of range exception in find suggestion
+  * Fix: broken build with gcc 4.4-4.9.1
+  * Fix: Namespace::has_func() impl
+  * Add: initial zsh completion support
+  * Add: gcc 3.0-4.2 build support
+
 ## [1.9.7] - 2025-01-25
 
   * Fix: ArgumentParser::set_defaults_func impl
