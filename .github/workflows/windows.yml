@@ -160,8 +160,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['17.0.1']
-        standard: [14, 17, 20, 23]
+        version: ['18.1.0']
+        standard: [14, 17, 20, 23, 26]
 
     steps:
     - uses: actions/checkout@v4
