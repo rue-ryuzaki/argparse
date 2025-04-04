@@ -826,11 +826,23 @@ struct is_integer_type
 
 #ifdef ARGPARSE_CXX_11
 template <class T>
+struct has_string_ctor
+{
+    static bool const value = is_constructible<T, std::string>::value;
+};
+
+template <class T>
 struct is_string_ctor
 {
     static bool const value = is_constructible<std::string, T>::value;
 };
 #else
+template <class T>
+struct has_string_ctor
+{
+    static bool const value = is_same<std::string, T>::value;
+};
+
 template <class>
 struct is_char_array                       { static bool const value = false; };
 template <class T, std::size_t N>
@@ -1000,7 +1012,7 @@ template <class T, class = void>
 struct is_stl_container                    { static bool const value = false; };
 template <class T>
 struct is_stl_container<T, typename enable_if<
-        !is_string_ctor<T>::value
+        !has_string_ctor<T>::value
         && !is_stl_queue<T>::value
         && !is_stl_map<T>::value>::type>
 {
@@ -1012,7 +1024,7 @@ template <class T, class = void, class = void>
 struct has_sub_vector_ctor                 { static bool const value = false; };
 template <class T>
 struct has_sub_vector_ctor<T, typename voider<typename T::value_type>::type,
-       typename enable_if<!is_string_ctor<typename T::value_type>::value
+       typename enable_if<!has_string_ctor<typename T::value_type>::value
                          && !is_stl_queue<typename T::value_type>::value>::type>
 {
     static bool const value = has_vector_ctor<typename T::value_type>::value;
@@ -1022,7 +1034,7 @@ template <class T, class = void, class = void>
 struct has_sub_deque_ctor                  { static bool const value = false; };
 template <class T>
 struct has_sub_deque_ctor<T, typename voider<typename T::value_type>::type,
-       typename enable_if<!is_string_ctor<typename T::value_type>::value
+       typename enable_if<!has_string_ctor<typename T::value_type>::value
                      && !is_stl_container<typename T::value_type>::value>::type>
 {
     static bool const value = has_deque_ctor<typename T::value_type>::value;
@@ -2153,7 +2165,7 @@ template <class T>
 struct need_operator_in
 {
     static bool const value = !is_same<bool, T>::value
-            && !is_string_ctor<T>::value
+            && !has_string_ctor<T>::value
             && !is_byte_type<T>::value;
 };
 
@@ -2161,7 +2173,7 @@ template <class T>
 T
 _to_type(
         std::string const& data,
-        typename enable_if<is_string_ctor<T>::value, bool>::type = true)
+        typename enable_if<has_string_ctor<T>::value, bool>::type = true)
 {
     return T(data);
 }
@@ -4020,7 +4032,7 @@ template <class T>
 struct simple_element
 {
     static bool const value = is_floating_point<T>::value
-            || is_string_ctor<T>::value
+            || has_string_ctor<T>::value
             || is_integral<T>::value;
 };
 
@@ -4149,7 +4161,7 @@ _get(std::string const& key,
         SValue<std::string> const& /*default_value*/,
         uint8_t /*nargs*/,
         std::size_t /*num_args*/,
-        typename enable_if<is_string_ctor<T>::value
+        typename enable_if<has_string_ctor<T>::value
             || is_floating_point<T>::value
             || is_same<bool, T>::value
             || is_byte_type<T>::value, bool>::type = true)
@@ -4247,7 +4259,7 @@ _get(std::string const& key,
         SValue<std::string> const& /*default_value*/,
         uint8_t /*nargs*/,
         std::size_t /*num_args*/,
-        typename enable_if<!is_string_ctor<T>::value
+        typename enable_if<!has_string_ctor<T>::value
             && !is_floating_point<T>::value
             && !is_integral<T>::value
             && !is_stl_array<typename decay<T>::type>::value
@@ -5046,7 +5058,7 @@ class _Storage
     to_opt_type(
             std::string const& data)
     {
-        if constexpr (detail::is_string_ctor<T>::value) {
+        if constexpr (detail::has_string_ctor<T>::value) {
             return T(data);
         }
         if constexpr (detail::is_same<bool, T>::value) {
@@ -5526,7 +5538,7 @@ public:
             return std::nullopt;
         }
         if constexpr (detail::has_value_type<T>::value
-                && !detail::is_string_ctor<T>::value) {
+                && !detail::has_string_ctor<T>::value) {
             if (!detail::_is_type_correct(args->first->type_name(),
                                           detail::Type::basic<T>())) {
                 return std::nullopt;
@@ -5572,7 +5584,7 @@ public:
             }
             return detail::_make_container<T>(vector.value());
         } else {
-            if constexpr (detail::is_string_ctor<T>::value
+            if constexpr (detail::has_string_ctor<T>::value
                     || std::is_floating_point<T>::value
                     || std::is_same<bool, T>::value
                     || detail::is_byte_type<T>::value) {
