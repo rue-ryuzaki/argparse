@@ -109,10 +109,10 @@ else()
     )
 endif()
 
-set(LIBRARY_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc)
+set(LIBRARY_CONFIG "${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc")
 
-install(FILES ${LIBRARY_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/argparse)
-install(FILES ${LIBRARY_CONFIG} DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig)
+install(FILES ${LIBRARY_HEADER} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/argparse")
+install(FILES ${LIBRARY_CONFIG} DESTINATION "${CMAKE_INSTALL_DATADIR}/pkgconfig")
 
 set(CPACK_PACKAGE_NAME "cpp-argparse-dev")
 set(CPACK_PACKAGE_MAINTAINER "Mikhail Golubchikov")
@@ -167,18 +167,18 @@ if (ARGPARSE_BUILD_EXAMPLES OR ARGPARSE_BUILD_TESTS)
     set(LIBRARY_IMPL_NAME ${LIBRARY_NAME}_impl)
     add_library(
         ${LIBRARY_IMPL_NAME} OBJECT
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/argparse_impl.cpp
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/argparse_impl.cpp"
     )
     target_include_directories(
         ${LIBRARY_IMPL_NAME} PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
     )
     set_target_properties(${LIBRARY_IMPL_NAME} PROPERTIES
         COMPILE_DEFINITIONS "$<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS> ARGPARSE_DISABLE_UTILS"
         COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:/EHsc;$<$<CONFIG:Release>:/Od>>"
     )
 
-    set(ARGPARSE_THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+    set(ARGPARSE_THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
 
     if (ARGPARSE_BUILD_EXAMPLES)
         message(STATUS "Build ${LIBRARY_NAME} examples")
