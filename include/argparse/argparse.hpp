@@ -4303,7 +4303,8 @@ _get(std::string const& key,
     typedef typename T::key_type K;
     typedef typename T::mapped_type V;
     T res = T();
-    std::vector<std::pair<K, V> > vector = _as_vector_pair<K, V>(key, args, sep);
+    std::vector<std::pair<K, V> > vector
+            = _as_vector_pair<K, V>(key, args, sep);
     for (std::size_t i = 0; i < vector.size(); ++i) {
         res.insert(std::make_pair(vector.at(i).first, vector.at(i).second));
     }
