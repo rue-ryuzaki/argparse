@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.9] - 2025-06-01
+
+  * Add: string ctors support for Namespace::get<> (C++11+)
+
 ## [1.9.8] - 2025-03-01
 
   * Fix: out of range exception in find suggestion
