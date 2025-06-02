@@ -9769,7 +9769,7 @@ _matrix_to_string(
                         separator, quotes,replace_space, none, begin, end),
                     res, separator);
     }
-    return begin + (res.empty() ? (begin + end) : res) + end;
+    return begin + (res.empty() ? (begin + end) : ARGPARSE_MOVE(res)) + end;
 }
 
 ARGPARSE_INL std::string
@@ -10269,7 +10269,7 @@ _zsh_help(
     help = _replace(help, "\"", "\\\"");
     help = _replace(help, "[", "\\[");
     help = _replace(help, "]", "\\]");
-    return _replace(help, "`", "\\`");
+    return _replace(ARGPARSE_MOVE(help), "`", "\\`");
 }
 
 ARGPARSE_INL std::string
@@ -11661,7 +11661,8 @@ ARGPARSE_INL std::string
 Argument::metavar() const
 {
     std::string res = detail::_join(m_metavar.value(), ", ");
-    return m_metavar.value().size() > 1 ? ("(" + res + ")") : res;
+    return m_metavar.value().size() > 1
+            ? ("(" + ARGPARSE_MOVE(res) + ")") : ARGPARSE_MOVE(res);
 }
 
 ARGPARSE_INL std::string const&
