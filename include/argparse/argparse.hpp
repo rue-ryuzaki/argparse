@@ -9635,7 +9635,7 @@ _split(std::string const& str,
             }
         }
     }
-    res.push_back(value);
+    res.push_back(ARGPARSE_MOVE(value));
     return res;
 }
 
@@ -12169,7 +12169,7 @@ _ArgumentData::update_help(
             pArgument arg = Argument::make_argument(
                         ARGPARSE_MOVE(help_flags), "help", Argument::Optional);
             arg->help("show this help message and exit").action(argparse::help);
-            m_arguments.push_front(arg);
+            m_arguments.push_front(ARGPARSE_MOVE(arg));
             m_optional.push_front(std::make_pair(m_arguments.front(), false));
             m_help_added = true;
         }
@@ -12317,7 +12317,7 @@ _ArgumentData::create_argument(
     if (type == Argument::Optional) {
         data->check_conflict_arg(arg.get());
     }
-    data->m_arguments.push_back(arg);
+    data->m_arguments.push_back(ARGPARSE_MOVE(arg));
     if (type == Argument::Optional) {
         data->m_arguments.back()->m_post_trigger = data;
     }
@@ -12787,8 +12787,8 @@ ArgumentGroup::print_help(
             os << title << ":";
         }
         detail::_print_raw_text_formatter(
-                    formatter,
-                    detail::_replace(description, "%(prog)s", prog),
+                    formatter, detail::_replace(
+                        ARGPARSE_MOVE(description), "%(prog)s", prog),
                     width, os, eat_ln, title.empty() ? "\n" : "", 2,
                     m_data->m_arguments.empty() ? "" : "\n");
         for (arg_iterator it = m_data->m_arguments.begin();
@@ -15456,7 +15456,7 @@ ArgumentParser::parse_arguments(
                    && detail::_is_optional(
                        arg, parsers.back().parser->prefix_chars(),
                        parsers.back().have_negative_args, was_pseudo_arg)) {
-            unrecognized_args.push_back(arg);
+            unrecognized_args.push_back(ARGPARSE_MOVE(arg));
         } else {
             process_positional_args(parsed_arguments, i, parsers,
                                     was_pseudo_arg, intermixed, intermixed_args,
@@ -16235,7 +16235,8 @@ ArgumentParser::get_optional_arg_by_flag(
         return ARGPARSE_NULLPTR;
     }
     pArgument const opt = detail::_find_arg_by_flag(info.optional, key);
-    return opt ? opt : detail::_find_arg_by_flag(info.operand, key);
+    return opt ? ARGPARSE_MOVE(opt)
+               : detail::_find_arg_by_flag(info.operand, key);
 }
 
 ARGPARSE_INL void
