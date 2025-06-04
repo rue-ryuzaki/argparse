@@ -5554,7 +5554,16 @@ public:
                 && !std::is_same<bool, T>::value
                 && !detail::is_byte_type<T>::value) {
             if (args->first->action() == argparse::count) {
-                return static_cast<T>(args->second.size());
+                T res = static_cast<T>(args->second.size());
+                if (args->first->m_default.has_value()) {
+                    auto def = _Storage::to_opt_type<T>(
+                                args->first->m_default.value());
+                    if (!def.has_value()) {
+                        return std::nullopt;
+                    }
+                    return res + def.value();
+                }
+                return res;
             }
             return _Storage::opt_single_value<T>(args.value());
         }

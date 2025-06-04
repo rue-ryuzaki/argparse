@@ -382,7 +382,13 @@ TEST_CASE("1. to string", "[namespace]")
 
         CHECK(parser.parse_args("").to_string()         == "Namespace(c='4', d=4, foo=None)");
         CHECK(parser.parse_args("-f -cc").to_string()   == "Namespace(c=6, d=4, foo=1)");
+        CHECK(parser.parse_args("-f -cc").get<std::size_t>("c") == 6);
         CHECK(parser.parse_args("-f -f -d").to_string() == "Namespace(c='4', d=5, foo=2)");
+        CHECK(parser.parse_args("-f -f -d").get<std::size_t>("d") == 5);
+#ifdef ARGPARSE_HAS_OPTIONAL
+        CHECK(parser.parse_args("-f -cc").try_get<std::size_t>("c").value() == 6);
+        CHECK(parser.parse_args("-f -f -d").try_get<std::size_t>("d").value() == 5);
+#endif  // ARGPARSE_HAS_OPTIONAL
     }
 
     SECTION("1.15. positional action store without default value") {
