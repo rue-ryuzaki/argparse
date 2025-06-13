@@ -3750,6 +3750,11 @@ private:
     get_type() const;
 
     std::string
+    get_help(
+            HelpFormatter const& formatter,
+            std::string const& lang) const;
+
+    std::string
     print(HelpFormatter const& formatter,
             std::size_t limit,
             std::size_t width,
@@ -11853,10 +11858,8 @@ Argument::get_type() const
 }
 
 ARGPARSE_INL std::string
-Argument::print(
+Argument::get_help(
         HelpFormatter const& formatter,
-        std::size_t limit,
-        std::size_t width,
         std::string const& lang) const
 {
     std::string help = formatter._get_help_string(this, lang);
@@ -11926,10 +11929,18 @@ Argument::print(
         pos = res.find(beg);
     }
 #endif  // C++11+
-    text += res;
-    std::swap(res, text);
-    return detail::_help_formatter("  " + flags_to_string(formatter),
-                                   formatter, res, width, limit);
+    return text + res;
+}
+
+ARGPARSE_INL std::string
+Argument::print(
+        HelpFormatter const& formatter,
+        std::size_t limit,
+        std::size_t width,
+        std::string const& lang) const
+{
+    return detail::_help_formatter("  " + flags_to_string(formatter), formatter,
+                                   get_help(formatter, lang), width, limit);
 }
 
 ARGPARSE_INL void
@@ -17179,7 +17190,8 @@ utils::_print_parser_zsh_completion(
         } else {
             os << "'" << arg->flags().front() << "'";
         }
-        os << "\"[" << detail::_zsh_help(arg->help()) << "]\"";
+        os << "\"[" << detail::_zsh_help(
+                  p->despecify(arg->get_help(*p->m_formatter, ""))) << "]\"";
         if (arg->action() & (detail::_store_action | argparse::language)) {
             os << "'" << detail::_argument_action(
                       arg, arg->get_metavar(), arg->m_num_args) << "'";
@@ -17213,8 +17225,8 @@ utils::_print_parser_zsh_completion(
                 continue;
             }
             op << "    ";
-            op << "\"" << arg->flags().front() << "["
-               << detail::_zsh_help(arg->help()) << "]\"";
+            op << "\"" << arg->flags().front() << "[" << detail::_zsh_help(
+                     p->despecify(arg->get_help(*p->m_formatter, ""))) << "]\"";
             op << "'" << detail::_argument_action(
                       arg, arg->get_metavar(), arg->m_num_args) << "'";
             op << "\n";
@@ -17252,15 +17264,15 @@ utils::_print_parser_zsh_completion(
         os << "        local -a subcommands=(\n";
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
             os << "          '" << (*it)->m_name << "':\""
-               << detail::_zsh_help((*it)->help()) << "\"\n";
+               << detail::_zsh_help(p->despecify((*it)->help())) << "\"\n";
             for (std::size_t i = 0; i < (*it)->aliases().size(); ++i) {
                 os << "          '" << (*it)->aliases().at(i) << "':\""
-                   << detail::_zsh_help((*it)->help()) << "\"\n";
+                   << detail::_zsh_help(p->despecify((*it)->help())) << "\"\n";
             }
         }
         os << "        )\n";
         os << "        _describe '" << detail::_zsh_help(
-                  p->subparsers()->help()) << "' subcommands && ret=0\n";
+           p->despecify(p->subparsers()->help())) << "' subcommands && ret=0\n";
         os << "      fi\n";
         os << "      ;;\n";
         os << "  esac\n";
