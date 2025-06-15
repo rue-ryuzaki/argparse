@@ -17221,7 +17221,7 @@ utils::_print_parser_zsh_completion(
         }
         for (std::size_t j = 0; j < arg->m_num_args; ++j) {
             os << "    '" << n << ":" << detail::_zsh_action(arg->get_metavar())
-               << ":_files'";
+               << ":_files'\n";
             ++n;
         }
     }
