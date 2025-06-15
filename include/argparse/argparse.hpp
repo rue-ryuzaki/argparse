@@ -5762,6 +5762,7 @@ class _ParserGroup : public _Group
 {
     friend class ArgumentParser;
     friend class HelpFormatter;
+    friend class utils;
 
 protected:
     typedef detail::shared_ptr<ArgumentParser> pParser;
@@ -6190,7 +6191,8 @@ private:
             std::string const& lang) const ARGPARSE_OVERRIDE;
 
     std::list<pParser>
-    list_parsers() const;
+    list_parsers(
+            bool add_suppress) const;
 
     std::string
     prog_name() const;
@@ -13899,10 +13901,17 @@ SubParsers::print_help(
 }
 
 ARGPARSE_INL std::list<SubParsers::pParser>
-SubParsers::list_parsers() const
+SubParsers::list_parsers(
+        bool add_suppress) const
 {
-    std::list<pParser> res = m_parsers;
+    std::list<pParser> res;
+    if (!m_help.suppress() || add_suppress) {
+        res = m_parsers;
+    }
     for (pgr_iterator it = m_groups.begin(); it != m_groups.end(); ++it) {
+        if ((*it)->m_help.suppress() && !add_suppress) {
+            continue;
+        }
         res.insert(res.end(), (*it)->m_parsers.begin(), (*it)->m_parsers.end());
     }
     return res;
@@ -13926,7 +13935,7 @@ SubParsers::update_prog(
     m_parent_prog = parent_prog;
     m_parent_args = parent_args;
     std::string const program = prog_name();
-    std::list<SubParsers::pParser> parsers = list_parsers();
+    std::list<SubParsers::pParser> parsers = list_parsers(true);
     for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
         (*it)->update_prog(program);
     }
@@ -16127,7 +16136,7 @@ ArgumentParser::try_capture_parser(
     std::string const& name = args.front();
     pSubParsers const& last = parsers.back().subparsers.first;
     std::string const& dest = last->dest();
-    std::list<pParser> const lst_parsers = last->list_parsers();
+    std::list<pParser> const lst_parsers = last->list_parsers(true);
     for (prs_iterator it = lst_parsers.begin(); it != lst_parsers.end(); ++it) {
         if ((*it)->m_name == name || detail::_exists(name, (*it)->aliases())) {
             if ((*it)->deprecated()) {
@@ -16731,7 +16740,7 @@ utils::overview_subparsers(
         std::ostream& os)
 {
     if (parser->has_subparsers()) {
-        std::list<pParser> const parsers = parser->m_subparsers->list_parsers();
+        std::list<pParser> parsers = parser->m_subparsers->list_parsers(true);
         os << indent << "subparsers list:\n";
         std::size_t i = 0;
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
@@ -16948,7 +16957,7 @@ utils::test_argument_parser(
     }
     // check subparsers
     if (p->has_subparsers()) {
-        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers(true);
         if (parsers.empty()) {
             ++diagnostics.first;
             os << _warn << " subparsers created but no parsers were added\n";
@@ -17030,12 +17039,10 @@ utils::_bash_completion_info(
     std::vector<std::string> options;
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
-        if (arg->m_nargs == detail::SUPPRESSING) {
-            continue;
-        }
         detail::_insert_to_end(arg->flags(), options);
         res.options.push_back(std::make_pair(arg, std::string()));
-        if (arg->action() & (detail::_store_action | argparse::language)) {
+        if (arg->m_nargs != detail::SUPPRESSING
+            && (arg->action() & (detail::_store_action | argparse::language))) {
             if (!arg->choices().empty()) {
                 res.options.back().second
                         = " -W \"" + detail::_join(arg->choices()) + "\"";
@@ -17046,9 +17053,6 @@ utils::_bash_completion_info(
     }
     for (std::size_t i = 0; i < operand.size(); ++i) {
         pArgument const& arg = operand.at(i);
-        if (arg->m_nargs == detail::SUPPRESSING) {
-            continue;
-        }
         for (std::size_t j = 0; j < arg->flags().size(); ++j) {
             options.push_back(arg->flags().at(j) + "=");
             options.push_back(options.back() + "A");
@@ -17063,7 +17067,18 @@ utils::_bash_completion_info(
         have_fs_args = have_fs_args || (arg->m_nargs != detail::SUPPRESSING);
     }
     if (parser->has_subparsers()) {
-        detail::_insert_to_end(parser->m_subparsers->parser_names(), options);
+        if (!parser->m_subparsers->m_help.suppress()) {
+            detail::_insert_to_end(
+                        parser->m_subparsers->_parser_names(), options);
+        }
+        typedef detail::shared_ptr<ParserGroup> pParserGroup;
+        typedef std::list<pParserGroup>::const_iterator pgr_iterator;
+        for (pgr_iterator it = parser->m_subparsers->m_groups.begin();
+                it != parser->m_subparsers->m_groups.end(); ++it) {
+            if (!(*it)->m_help.suppress()) {
+                detail::_insert_to_end((*it)->_parser_names(), options);
+            }
+        }
     }
     if (have_fs_args) {
         res.args += " -df";
@@ -17083,8 +17098,8 @@ utils::_print_parser_bash_completion(
 {
     typedef detail::shared_ptr<ArgumentParser> pParser;
     typedef std::list<pParser>::const_iterator prs_iterator;
-    if (p->has_subparsers()) {
-        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+    if (p->has_subparsers() && !p->m_subparsers->is_suppress()) {
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers(false);
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
             _print_parser_bash_completion(
                         os, (*it).get(), prog + "_" + (*it)->m_name, false);
@@ -17092,14 +17107,14 @@ utils::_print_parser_bash_completion(
     }
     os << "_" << prog << "()\n";
     os << "{\n";
-    if (p->has_subparsers()) {
+    if (p->has_subparsers() && !p->m_subparsers->is_suppress()) {
         if (is_root) {
             os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
         } else {
             os << "  for (( i=$1; i < ${COMP_CWORD}; ((++i)) )); do\n";
         }
         os << "    case \"${COMP_WORDS[$i]}\" in\n";
-        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers(false);
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
             std::string name = "\"" + (*it)->m_name + "\"";
             if (!(*it)->aliases().empty()) {
@@ -17151,8 +17166,8 @@ utils::_print_parser_zsh_completion(
 {
     typedef detail::shared_ptr<ArgumentParser> pParser;
     typedef std::list<pParser>::const_iterator prs_iterator;
-    if (p->has_subparsers()) {
-        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+    if (p->has_subparsers() && !p->m_subparsers->is_suppress()) {
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers(false);
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
             _print_parser_zsh_completion(
                         os, (*it).get(), prog + "_" + (*it)->m_name, false);
@@ -17163,7 +17178,7 @@ utils::_print_parser_zsh_completion(
     detail::pArguments positional = p->m_data->get_positional(false, true);
     os << "\n\n_" << prog << "()\n";
     os << "{\n";
-    if (p->has_subparsers()) {
+    if (p->has_subparsers() && !p->m_subparsers->is_suppress()) {
         os << "  local curcontext=\"$curcontext\" state ret=1\n";
     } else {
         os << "  local curcontext=\"$curcontext\" ret=1\n";
@@ -17173,9 +17188,6 @@ utils::_print_parser_zsh_completion(
     os << "  local -a arguments=(\n";
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
-        if (arg->m_nargs == detail::SUPPRESSING) {
-            continue;
-        }
         os << "    ";
         bool can_repeat
                 = (arg->action() & (argparse::append | argparse::append_const
@@ -17192,7 +17204,8 @@ utils::_print_parser_zsh_completion(
         }
         os << "\"[" << detail::_zsh_help(
                   p->despecify(arg->get_help(*p->m_formatter, ""))) << "]\"";
-        if (arg->action() & (detail::_store_action | argparse::language)) {
+        if (arg->m_nargs != detail::SUPPRESSING
+            && (arg->action() & (detail::_store_action | argparse::language))) {
             os << "'" << detail::_argument_action(
                       arg, arg->get_metavar(), arg->m_num_args) << "'";
         }
@@ -17212,7 +17225,8 @@ utils::_print_parser_zsh_completion(
             ++n;
         }
     }
-    if (positional.empty() && p->has_subparsers()) {
+    if (positional.empty()
+            && p->has_subparsers() && !p->m_subparsers->is_suppress()) {
         os << "    '*::" << prog << " commands:->command'\n";
     }
     os << "  )\n";
@@ -17221,9 +17235,6 @@ utils::_print_parser_zsh_completion(
         std::stringstream op;
         for (std::size_t i = 0; i < operand.size(); ++i) {
             pArgument const& arg = operand.at(i);
-            if (arg->m_nargs == detail::SUPPRESSING) {
-                continue;
-            }
             op << "    ";
             op << "\"" << arg->flags().front() << "[" << detail::_zsh_help(
                      p->despecify(arg->get_help(*p->m_formatter, ""))) << "]\"";
@@ -17242,8 +17253,8 @@ utils::_print_parser_zsh_completion(
     }
     os << "  _arguments -C $arguments && ret=0\n";
     os << "\n";
-    if (p->has_subparsers()) {
-        std::list<pParser> const parsers = p->m_subparsers->list_parsers();
+    if (p->has_subparsers() && !p->m_subparsers->is_suppress()) {
+        std::list<pParser> const parsers = p->m_subparsers->list_parsers(false);
         os << "  case \"$state\" in\n";
         os << "    command)\n";
         os << "      local cmd=${words[1]}\n";
