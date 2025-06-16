@@ -5813,6 +5813,12 @@ protected:
             std::size_t width,
             std::string const& lang) const ARGPARSE_OVERRIDE;
 
+    std::string
+    get_help(
+            std::string const& prog,
+            bool required,
+            std::string const& lang) const;
+
     void
     print_parser_group(
             std::ostream& os,
@@ -13432,19 +13438,12 @@ _ParserGroup::print_help(
     print_parser_group(os, formatter, prog, required, limit, width, lang);
 }
 
-ARGPARSE_INL void
-_ParserGroup::print_parser_group(
-        std::ostream& os,
-        HelpFormatter const& formatter,
+ARGPARSE_INL std::string
+_ParserGroup::get_help(
         std::string const& prog,
         bool required,
-        std::size_t limit,
-        std::size_t width,
         std::string const& lang) const
 {
-    if (m_help.suppress()) {
-        return;
-    }
     // despecify parser group help
     std::string help = detail::_tr(m_help.value(), lang);
     std::string res = help;
@@ -13500,13 +13499,27 @@ _ParserGroup::print_parser_group(
         pos = res.find(beg);
     }
 #endif  // C++11+
-    text += res;
-    std::swap(res, text);
-    os << "\n" << detail::_help_formatter(
-              "  " + _flags_to_string(), formatter, res, width, limit);
+    return text + res;
+}
+
+ARGPARSE_INL void
+_ParserGroup::print_parser_group(
+        std::ostream& os,
+        HelpFormatter const& formatter,
+        std::string const& prog,
+        bool required,
+        std::size_t limit,
+        std::size_t width,
+        std::string const& lang) const
+{
+    if (m_help.suppress()) {
+        return;
+    }
+    os << "\n" << detail::_help_formatter("  " + _flags_to_string(), formatter,
+                                get_help(prog, required, lang), width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
         // despecify group's parser help
-        help = detail::_tr((*it)->m_help, lang);
+        std::string help = detail::_tr((*it)->m_help, lang);
         if (!help.empty()) {
             std::string metavar = (*it)->m_name;
             std::string aliases = detail::_join((*it)->aliases(), ", ");
@@ -13514,9 +13527,11 @@ _ParserGroup::print_parser_group(
                 metavar += " (" + aliases + ")";
             }
             std::string name = "    " + metavar;
-            res = help;
-            text.clear();
+            std::string res = help;
+            std::string text;
 #ifdef ARGPARSE_CXX_11
+            std::regex const r("%[(]([a-z_]*)[)]s");
+            std::smatch match;
             std::unordered_map<std::string, std::function<std::string()> > const
                     specifiers2 =
             {
@@ -13539,7 +13554,9 @@ _ParserGroup::print_parser_group(
                 res = match.suffix();
             }
 #else
-            pos = res.find(beg);
+            std::string const beg = "%(";
+            std::string const end = ")s";
+            std::string::size_type pos = res.find(beg);
             while (pos != std::string::npos) {
                 std::string::size_type next = res.find(end, pos + beg.size());
                 if (next == std::string::npos) {
@@ -13568,9 +13585,8 @@ _ParserGroup::print_parser_group(
             }
 #endif  // C++11+
             text += res;
-            std::swap(res, text);
             os << "\n"
-               << detail::_help_formatter(name, formatter, res, width, limit);
+               << detail::_help_formatter(name, formatter, text, width, limit);
         }
     }
 }
@@ -17283,7 +17299,9 @@ utils::_print_parser_zsh_completion(
         }
         os << "        )\n";
         os << "        _describe '" << detail::_zsh_help(
-           p->despecify(p->subparsers()->help())) << "' subcommands && ret=0\n";
+                  p->despecify(p->subparsers()->get_help(
+                                   p->prog(), p->subparsers()->required(), "")))
+           << "' subcommands && ret=0\n";
         os << "      fi\n";
         os << "      ;;\n";
         os << "  esac\n";
