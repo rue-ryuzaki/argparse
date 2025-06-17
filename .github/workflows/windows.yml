@@ -20,28 +20,15 @@ jobs:
 #        architecture: [Win32, x64]
 #        standard: [11, 14, 17]
 
-  msvc-2019:
-    runs-on: windows-2019
-    env:
-      GENERATOR: "Visual Studio 16 2019"
-    strategy:
-      fail-fast: false
-      matrix:
-        architecture: [Win32, x64]
-        standard: [14, 17, 20]
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -G"${{env.GENERATOR}}" -A ${{ matrix.architecture }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
+#  msvc-2019:
+#    runs-on: windows-2019
+#    env:
+#      GENERATOR: "Visual Studio 16 2019"
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        architecture: [Win32, x64]
+#        standard: [14, 17, 20]
 
   msvc-2022:
     runs-on: windows-2022
@@ -102,57 +89,21 @@ jobs:
       working-directory: '${{github.workspace}}/build'
       run: ctest -C ${{env.BUILD_TYPE}}
 
-  clang-2019-17:
-    runs-on: windows-2019
-
-    strategy:
-      fail-fast: false
-      matrix:
+#  clang-2019-17:
+#    runs-on: windows-2019
+#    strategy:
+#      fail-fast: false
+#      matrix:
 #        version: [11, 12, 13]
-        version: [11]
-        standard: [14, 17]
+#        standard: [14, 17]
 
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install Clang
-      run: curl -fsSL -o LLVM${{ matrix.version }}.exe https://github.com/llvm/llvm-project/releases/download/llvmorg-${{ matrix.version }}.0.0/LLVM-${{ matrix.version }}.0.0-win64.exe ; 7z x LLVM${{ matrix.version }}.exe -y -o"C:/Program Files/LLVM"
-
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -G"MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
-
-  clang-2019-20:
-    runs-on: windows-2019
-
-    strategy:
-      fail-fast: false
-      matrix:
+#  clang-2019-20:
+#    runs-on: windows-2019
+#    strategy:
+#      fail-fast: false
+#      matrix:
 #        version: [14, 15, 16]
-        version: [14]
-        standard: [14, 17, 20]
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install Clang
-      run: curl -fsSL -o LLVM${{ matrix.version }}.exe https://github.com/llvm/llvm-project/releases/download/llvmorg-${{ matrix.version }}.0.0/LLVM-${{ matrix.version }}.0.0-win64.exe ; 7z x LLVM${{ matrix.version }}.exe -y -o"C:/Program Files/LLVM"
-
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_CXX_COMPILER="C:/Program Files/LLVM/bin/clang++.exe" -G"MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_STANDARD=${{ matrix.standard }}
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
+#        standard: [14, 17, 20]
 
   clang-2022:
     runs-on: windows-2022
