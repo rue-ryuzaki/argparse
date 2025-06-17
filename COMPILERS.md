@@ -15,13 +15,14 @@ other compilers: no actual data
 ### C++98/C++03 standard requirement
  - SFINAE
 #### Required headers
- - stdint.h (current standard)
+ - stdint.h (C++98 only)
  - cctype
  - cstddef
  - cstdlib
  - deque
  - fstream
  - iostream
+ - limits
  - list
  - queue
  - sstream

@@ -220,6 +220,7 @@
 #include <deque>
 #include <iostream>
 #include <list>
+#include <limits>
 #include <queue>
 #include <sstream>
 #include <stdexcept>
@@ -4190,12 +4191,15 @@ _get(std::string const& key,
 {
     _check_type(type_name, Type::name<T>());
     if (args.first->action() == argparse::count) {
+        T res = static_cast<T>(args.second.size());
         if (default_value.has_value()) {
-            std::string value = default_value.value();
-            std::size_t res = _to_type<std::size_t>(value);
-            return static_cast<T>(res + args.second.size());
+            T def = _to_type<T>(default_value.value());
+            if (def > std::numeric_limits<T>::max() - res) {
+                throw std::domain_error("integer overflow");
+            }
+            return res + def;
         }
-        return static_cast<T>(args.second.size());
+        return res;
     }
     return _single_value<T>(key, args);
 }
@@ -5563,7 +5567,8 @@ public:
                 if (args->first->m_default.has_value()) {
                     auto def = _Storage::to_opt_type<T>(
                                 args->first->m_default.value());
-                    if (!def.has_value()) {
+                    if (!def.has_value()
+                         || def.value() > std::numeric_limits<T>::max() - res) {
                         return std::nullopt;
                     }
                     return res + def.value();
