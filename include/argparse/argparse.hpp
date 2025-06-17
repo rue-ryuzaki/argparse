@@ -17013,6 +17013,14 @@ utils::test_argument_parser(
             ++diagnostics.first;
             os << _warn << " help for subparsers is not set\n";
         }
+        for (SubParsers::pgr_iterator it = p->m_subparsers->m_groups.begin();
+             it != p->m_subparsers->m_groups.end(); ++it) {
+            if (detail::_tr((*it)->m_help.value(), lang).empty()) {
+                ++diagnostics.first;
+                os << _warn << " help for subparser group '"
+                   << detail::_tr((*it)->m_title, lang) << "' is not set\n";
+            }
+        }
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
             std::string const& name = (*it)->m_name;
             // check name
