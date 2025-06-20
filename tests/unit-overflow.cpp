@@ -5,13 +5,13 @@
 #define ARGPARSE_DECLARATION
 #include "./argparse_test.hpp"
 
-uint16_t const int16_t_max_plus_1 = std::numeric_limits<int16_t>::max() + 1;
+uint16_t const int16_t_max_plus_1 = static_cast<uint16_t>(std::numeric_limits<int16_t>::max()) + 1;
 
 TEST_CASE("1. default_value", "[argument]")
 {
     SECTION("1.1. optional action store") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
-        parser.add_argument("-f").default_value(std::to_string(int16_t_max_plus_1));
+        parser.add_argument("-f").default_value(argparse::detail::_to_string(int16_t_max_plus_1));
 
         argparse::Namespace const args = parser.parse_args("");
 
@@ -25,7 +25,7 @@ TEST_CASE("1. default_value", "[argument]")
 
     SECTION("1.2. optional action count") {
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
-        parser.add_argument("-f").action("count").default_value(std::to_string(int16_t_max_plus_1));
+        parser.add_argument("-f").action("count").default_value(argparse::detail::_to_string(int16_t_max_plus_1));
 
         argparse::Namespace const args = parser.parse_args("");
 
@@ -61,7 +61,7 @@ TEST_CASE("2. get", "[namespace]")
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("-f");
 
-        argparse::Namespace const args = parser.parse_args("-f=" + std::to_string(int16_t_max_plus_1));
+        argparse::Namespace const args = parser.parse_args("-f=" + argparse::detail::_to_string(int16_t_max_plus_1));
 
         CHECK(args.get<uint16_t>("f") == int16_t_max_plus_1);
         CHECK_THROWS(args.get<int16_t>("f"));
