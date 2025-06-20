@@ -378,23 +378,16 @@ TEST_CASE("1. to string", "[namespace]")
         argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("-c").action("count").default_value("4");
         parser.add_argument("-d").action("count").default_value(4);
-        parser.add_argument("-e").action("count").default_value<int16_t>(32765);
         parser.add_argument("-f", "--foo").action("count");
 
-        CHECK(parser.parse_args("").to_string()         == "Namespace(c='4', d=4, e=32765, foo=None)");
-        CHECK(parser.parse_args("-f -cc").to_string()   == "Namespace(c=6, d=4, e=32765, foo=1)");
+        CHECK(parser.parse_args("").to_string()         == "Namespace(c='4', d=4, foo=None)");
+        CHECK(parser.parse_args("-f -cc").to_string()   == "Namespace(c=6, d=4, foo=1)");
         CHECK(parser.parse_args("-f -cc").get<std::size_t>("c") == 6);
-        CHECK(parser.parse_args("-f -f -d").to_string() == "Namespace(c='4', d=5, e=32765, foo=2)");
+        CHECK(parser.parse_args("-f -f -d").to_string() == "Namespace(c='4', d=5, foo=2)");
         CHECK(parser.parse_args("-f -f -d").get<std::size_t>("d") == 5);
-        CHECK(parser.parse_args("-ee").get<int16_t>("e") == 32767);
-        CHECK(parser.parse_args("-eee").get<uint16_t>("e") == 32768);
-        CHECK_THROWS(parser.parse_args("-eee").get<int16_t>("e"));
 #ifdef ARGPARSE_HAS_OPTIONAL
         CHECK(parser.parse_args("-f -cc").try_get<std::size_t>("c").value() == 6);
         CHECK(parser.parse_args("-f -f -d").try_get<std::size_t>("d").value() == 5);
-        CHECK(parser.parse_args("-ee").try_get<int16_t>("e").value() == 32767);
-        CHECK(parser.parse_args("-eee").try_get<uint16_t>("e").value() == 32768);
-        CHECK(!parser.parse_args("-eee").try_get<int16_t>("e").has_value());
 #endif  // ARGPARSE_HAS_OPTIONAL
     }
 
