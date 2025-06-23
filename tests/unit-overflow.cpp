@@ -9,8 +9,9 @@ uint16_t const int16_t_max_plus_1 = static_cast<uint16_t>(std::numeric_limits<in
 
 TEST_CASE("1. default_value", "[argument]")
 {
+    argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
     SECTION("1.1. optional action store") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("-f").default_value(argparse::detail::_to_string(int16_t_max_plus_1));
 
         argparse::Namespace const args = parser.parse_args("");
@@ -24,7 +25,6 @@ TEST_CASE("1. default_value", "[argument]")
     }
 
     SECTION("1.2. optional action count") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("-f").action("count").default_value(argparse::detail::_to_string(int16_t_max_plus_1));
 
         argparse::Namespace const args = parser.parse_args("");
@@ -38,7 +38,6 @@ TEST_CASE("1. default_value", "[argument]")
     }
 
     SECTION("1.3. optional action count increment") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
         parser.add_argument("-f").action("count").default_value<int16_t>(int16_t_max_plus_1 - 3);
 
         argparse::Namespace const args2 = parser.parse_args("-ff");
@@ -55,13 +54,28 @@ TEST_CASE("1. default_value", "[argument]")
     }
 }
 
-TEST_CASE("2. get", "[namespace]")
+TEST_CASE("2. get | try_get", "[namespace]")
 {
-    SECTION("2.1. first long option containing internal -") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+    argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("2.1. parse integer value") {
         parser.add_argument("-f");
 
         argparse::Namespace const args = parser.parse_args("-f=" + argparse::detail::_to_string(int16_t_max_plus_1));
+
+        CHECK(args.get<uint16_t>("f") == int16_t_max_plus_1);
+        CHECK_THROWS(args.get<int16_t>("f"));
+#ifdef ARGPARSE_HAS_STRING_VIEW
+        CHECK(args.try_get<uint16_t>("f").value() == int16_t_max_plus_1);
+        CHECK(!args.try_get<int16_t>("f").has_value());
+#endif  // ARGPARSE_HAS_STRING_VIEW
+    }
+
+    SECTION("2.2. integer count action") {
+        parser.add_argument("-f").action("count");
+        std::string max_plus_1 = "-" + std::string(int16_t_max_plus_1, 'f');
+
+        argparse::Namespace const args = parser.parse_args(max_plus_1);
 
         CHECK(args.get<uint16_t>("f") == int16_t_max_plus_1);
         CHECK_THROWS(args.get<int16_t>("f"));

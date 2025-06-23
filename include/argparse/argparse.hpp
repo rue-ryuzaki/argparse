@@ -4191,11 +4191,14 @@ _get(std::string const& key,
 {
     _check_type(type_name, Type::name<T>());
     if (args.first->action() == argparse::count) {
+        if (args.second.size() > std::numeric_limits<T>::max()) {
+            throw TypeError("integer value overflow");
+        }
         T res = static_cast<T>(args.second.size());
         if (default_value.has_value()) {
             T def = _to_type<T>(default_value.value());
             if (def > std::numeric_limits<T>::max() - res) {
-                throw std::domain_error("integer overflow");
+                throw TypeError("integer value overflow");
             }
             return res + def;
         }
@@ -5563,6 +5566,9 @@ public:
                 && !std::is_same<bool, T>::value
                 && !detail::is_byte_type<T>::value) {
             if (args->first->action() == argparse::count) {
+                if (args->second.size() > std::numeric_limits<T>::max()) {
+                    return std::nullopt;
+                }
                 T res = static_cast<T>(args->second.size());
                 if (args->first->m_default.has_value()) {
                     auto def = _Storage::to_opt_type<T>(
