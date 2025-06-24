@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.10] - 2025-06-24
+
+  * Add: integer overflow check for count actions with default value
+  * Fix: default value for count actions in Namespace::try_get<>
+  * Fix: \[bash, zsh\] suppress arguments behavior
+  * Fix: \[zsh\] despecify help
+  * Fix: \[zsh\] add missing newline for positional arguments
+
 ## [1.9.9] - 2025-06-01
 
   * Add: string ctors support for Namespace::get<> (C++11+)
