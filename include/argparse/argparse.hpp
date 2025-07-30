@@ -9409,7 +9409,7 @@ _trim_sw(
 #endif  // ARGPARSE_HAS_STRING_VIEW
 
 ARGPARSE_INL std::string
-_file_name(
+_basename(
         std::string const& path)
 {
     return path.substr(path.find_last_of("/\\") + 1);
@@ -14016,7 +14016,7 @@ ArgumentParser::read_args(
         char const* const argv[])
 {
     if (argc > 0 && argv && argv[0]) {
-        m_prog = detail::_file_name(std::string(argv[0]));
+        m_prog = detail::_basename(std::string(argv[0]));
         m_parsed_arguments.reserve(std::size_t(argc - 1));
         for (int i = 1; i < argc && argv[i]; ++i) {
             m_parsed_arguments.push_back(std::string(argv[i]));
