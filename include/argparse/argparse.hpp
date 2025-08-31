@@ -8542,6 +8542,35 @@ public:
     print_zsh_completion(
             ArgumentParser const& parser,
             std::ostream& os = std::cout);
+
+    /*!
+     *  \brief Return a string containing a man page.
+     *
+     *  \param parser Argument parser
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return String with a man page
+     */
+    ARGPARSE_ATTR_DEPRECATED_REASON("[under development]")
+    ARGPARSE_ATTR_NODISCARD
+    static std::string
+    format_man_page(
+            ArgumentParser const& parser);
+
+    /*!
+     *  \brief Print a man page to output stream.
+     *
+     *  \param parser Argument parser
+     *  \param os Output stream (default: std::cout)
+     *
+     *  \since NEXT_RELEASE
+     */
+    ARGPARSE_ATTR_DEPRECATED_REASON("[under development]")
+    static void
+    print_man_page(
+            ArgumentParser const& parser,
+            std::ostream& os = std::cout);
 };
 #endif  // ARGPARSE_ENABLE_UTILS
 
@@ -17423,6 +17452,34 @@ utils::print_zsh_completion(
         std::ostream& os)
 {
     os << format_zsh_completion(parser) << std::endl;
+}
+
+ARGPARSE_INL std::string
+utils::format_man_page(
+        ArgumentParser const& parser)
+{
+    std::stringstream ss;
+    ss << ".\\\" Manpage for " << parser.prog() << ".\n";
+    ss << ".\\\" Generated with cpp-argparse v"
+       << ARGPARSE_VERSION_MAJOR << "."
+       << ARGPARSE_VERSION_MINOR << "."
+       << ARGPARSE_VERSION_PATCH << ".";
+    ss << "\n.TH man 1";
+    ss << "\n.SH SYNOPSIS\n"
+       << parser.format_usage();
+    if (!parser.description().empty()) {
+        ss << "\n.SH DESCRIPTION\n"
+           << parser.description();
+    }
+    return ss.str();
+}
+
+ARGPARSE_INL void
+utils::print_man_page(
+        ArgumentParser const& parser,
+        std::ostream& os)
+{
+    os << format_man_page(parser) << std::endl;
 }
 #endif  // ARGPARSE_ENABLE_UTILS
 #endif  // ARGPARSE_INL
