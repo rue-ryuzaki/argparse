@@ -345,6 +345,8 @@
 # define ARGPARSE_ATTR_INDETERMINATE
 #endif  // C++26+
 
+#define ARGPARSE_DEVELOP    ARGPARSE_ATTR_DEPRECATED_REASON("[in development]")
+
 // -- specifiers --------------------------------------------------------------
 #define ARGPARSE_EXPORT
 
@@ -8552,7 +8554,7 @@ public:
      *
      *  \return String with a man page
      */
-    ARGPARSE_ATTR_DEPRECATED_REASON("[under development]")
+    ARGPARSE_DEVELOP
     ARGPARSE_ATTR_NODISCARD
     static std::string
     format_man_page(
@@ -8566,7 +8568,7 @@ public:
      *
      *  \since NEXT_RELEASE
      */
-    ARGPARSE_ATTR_DEPRECATED_REASON("[under development]")
+    ARGPARSE_DEVELOP
     static void
     print_man_page(
             ArgumentParser const& parser,
@@ -17521,6 +17523,7 @@ utils::print_man_page(
 #undef ARGPARSE_ATTR_ASSUME
 // C++26+
 #undef ARGPARSE_ATTR_INDETERMINATE
+#undef ARGPARSE_DEVELOP
 // -- specifiers --------------------------------------------------------------
 #undef ARGPARSE_CONSTEXPR
 #undef ARGPARSE_ENUM_TYPE
