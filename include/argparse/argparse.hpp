@@ -2342,6 +2342,7 @@ class ArgumentParser;
 ARGPARSE_EXPORT class HelpFormatter
 {
     friend class ArgumentParser;
+    friend class utils;
 
     typedef detail::shared_ptr<Argument> pArgument;
 
@@ -8583,6 +8584,7 @@ public:
 // -- implementation ----------------------------------------------------------
 #ifdef ARGPARSE_INL
 namespace detail {
+ARGPARSE_INLINE_VARIABLE std::size_t ARGPARSE_USE_CONSTEXPR _def_width     = 80;
 ARGPARSE_INLINE_VARIABLE std::size_t ARGPARSE_USE_CONSTEXPR _min_width     = 33;
 ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _prefix_char         = '-';
 ARGPARSE_INLINE_VARIABLE char ARGPARSE_USE_CONSTEXPR _prefix_chars[]      = "-";
@@ -9335,7 +9337,7 @@ ARGPARSE_INL std::pair<std::size_t, std::size_t>
 _get_terminal_size(
         bool default_values = false)
 {
-    std::size_t width  = 80;
+    std::size_t width  = _def_width;
     std::size_t height = 24;
     if (default_values) {
         return std::make_pair(width, height);
@@ -17387,7 +17389,7 @@ utils::self_test(
         std::ostream& os)
 {
     std::string lang = !language.empty() ? language : parser.default_language();
-    std::size_t const limit = 79;
+    std::size_t const limit = detail::_def_width - 1;
     char const filler = '-';
     std::stringstream ss;
     ss << "cpp-argparse v"
@@ -17472,6 +17474,7 @@ utils::format_man_page(
         ArgumentParser const& parser)
 {
     std::stringstream ss;
+    std::size_t indent = 1 + detail::_utf8_length(parser.prog()).second;
     ss << ".\\\" Manpage for " << parser.prog() << ".\n";
     ss << ".\\\" Generated with cpp-argparse v"
        << ARGPARSE_VERSION_MAJOR << "."
@@ -17479,7 +17482,9 @@ utils::format_man_page(
        << ARGPARSE_VERSION_PATCH << ".";
     ss << "\n.TH man 1";
     ss << "\n.SH SYNOPSIS\n"
-       << parser.format_usage();
+       << detail::_format_output(
+              parser.prog(), parser.m_formatter->_usage_args(&parser),
+              1, indent, detail::_def_width);
     if (!parser.description().empty()) {
         ss << "\n.SH DESCRIPTION\n"
            << parser.description();
