@@ -8904,7 +8904,7 @@ ARGPARSE_INL codepoint
 _to_upper_codepoint(
         codepoint cp)
 {
-    // unicode 16 to upper case
+    // unicode 17 to upper case
     // BASIC LATIN
     if (0x0061 <= cp && cp <= 0x007a) return cp - 0x20;
     // LATIN-1 SUPPLEMENT
@@ -9121,8 +9121,7 @@ _to_upper_codepoint(
         && ((0xa722 <= cp && cp <= 0xa72f) || (0xa732 <= cp && cp <= 0xa76f)
          || (0xa77e <= cp && cp <= 0xa787) || (0xa790 <= cp && cp <= 0xa793)
          || (0xa796 <= cp && cp <= 0xa7a9) || (0xa7b4 <= cp && cp <= 0xa7c3)
-         || (0xa7cd == cp)
-         || (0xa7d0 <= cp && cp <= 0xa7d1) || (0xa7d6 <= cp && cp <= 0xa7db))) {
+         || (0xa7cd <= cp && cp <= 0xa7db))) {
         return cp - 0x1;
     }
     if (!(cp & 1)
@@ -9154,6 +9153,8 @@ _to_upper_codepoint(
     if (0x118c0 <= cp && cp <= 0x118df) return cp - 0x20;
     // MEDEFAIDRIN
     if (0x16e60 <= cp && cp <= 0x16e7f) return cp - 0x20;
+    // BERIA ERFE
+    if (0x16ebb <= cp && cp <= 0x16ed3) return cp - 0x1b;
     // ADLAM
     if (0x1e922 <= cp && cp <= 0x1e943) return cp - 0x22;
     return cp;
