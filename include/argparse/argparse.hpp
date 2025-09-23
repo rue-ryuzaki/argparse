@@ -2391,6 +2391,10 @@ public:
             std::size_t width) const;
 
 private:
+    std::string
+    _usage_args(
+            ArgumentParser const* parser) const;
+
     void
     _print_custom_usage(
             std::ostream& os,
@@ -10528,11 +10532,9 @@ HelpFormatter::_split_lines(
     return res;
 }
 
-ARGPARSE_INL void
-HelpFormatter::_print_custom_usage(
-        std::ostream& os,
-        ArgumentParser const* p,
-        std::string const& usage_title) const
+ARGPARSE_INL std::string
+HelpFormatter::_usage_args(
+        ArgumentParser const* p) const
 {
     typedef ArgumentParser::mtx_it _mt;
     typedef ArgumentParser::arg_iterator _arg;
@@ -10540,10 +10542,6 @@ HelpFormatter::_print_custom_usage(
     detail::pArguments operand = p->m_data->get_operand(false, true);
     detail::pArguments options = p->m_data->get_optional(false, true);
     ArgumentParser::SubParsersInfo const info = p->subparsers_info(false);
-    std::size_t const w = p->output_width();
-    std::string head_prog = usage_title + " " + p->prog();
-    std::size_t indent = 1 + detail::_utf8_length(
-                w > detail::_min_width ? head_prog : usage_title).second;
     std::string res;
     for (_mt i = p->m_mutex_groups.begin(); i != p->m_mutex_groups.end(); ++i) {
         for (_arg j = (*i).m_data->m_arguments.begin();
@@ -10577,7 +10575,20 @@ HelpFormatter::_print_custom_usage(
             && !info.first->is_suppress()) {
         detail::_add_arg_usage(res, info.first->usage(), true);
     }
-    os << detail::_format_output(head_prog, res, 1, indent, w);
+    return res;
+}
+
+ARGPARSE_INL void
+HelpFormatter::_print_custom_usage(
+        std::ostream& os,
+        ArgumentParser const* p,
+        std::string const& usage_title) const
+{
+    std::size_t const w = p->output_width();
+    std::string head_prog = usage_title + " " + p->prog();
+    std::size_t indent = 1 + detail::_utf8_length(
+                w > detail::_min_width ? head_prog : usage_title).second;
+    os << detail::_format_output(head_prog, _usage_args(p), 1, indent, w);
 }
 
 ARGPARSE_INL std::string
