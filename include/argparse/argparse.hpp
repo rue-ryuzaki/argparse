@@ -8559,7 +8559,6 @@ public:
      *
      *  \return String with a man page
      */
-    ARGPARSE_DEVELOP
     ARGPARSE_ATTR_NODISCARD
     static std::string
     format_man_page(
