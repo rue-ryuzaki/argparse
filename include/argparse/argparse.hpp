@@ -2396,12 +2396,6 @@ private:
     _usage_args(
             ArgumentParser const* parser) const;
 
-    void
-    _print_custom_usage(
-            std::ostream& os,
-            ArgumentParser const* parser,
-            std::string const& usage_title) const;
-
     std::string
     _format_usage(
             ArgumentParser const* parser,
@@ -10580,19 +10574,6 @@ HelpFormatter::_usage_args(
     return res;
 }
 
-ARGPARSE_INL void
-HelpFormatter::_print_custom_usage(
-        std::ostream& os,
-        ArgumentParser const* p,
-        std::string const& usage_title) const
-{
-    std::size_t const w = p->output_width();
-    std::string head_prog = usage_title + " " + p->prog();
-    std::size_t indent = 1 + detail::_utf8_length(
-                w > detail::_min_width ? head_prog : usage_title).second;
-    os << detail::_format_output(head_prog, _usage_args(p), 1, indent, w);
-}
-
 ARGPARSE_INL std::string
 HelpFormatter::_format_usage(
         ArgumentParser const* p,
@@ -10608,7 +10589,11 @@ HelpFormatter::_format_usage(
     if (!tr_usage.empty()) {
         ss << tr_usage_title << " " << p->despecify(tr_usage);
     } else {
-        _print_custom_usage(ss, p, tr_usage_title);
+        std::size_t const w = p->output_width();
+        std::string head_prog = tr_usage_title + " " + p->prog();
+        std::size_t indent = 1 + detail::_utf8_length(
+                    w > detail::_min_width ? head_prog : tr_usage_title).second;
+        ss << detail::_format_output(head_prog, _usage_args(p), 1, indent, w);
     }
     return ss.str();
 }
