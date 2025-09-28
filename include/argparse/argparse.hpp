@@ -17415,25 +17415,25 @@ utils::format_zsh_completion(
     char const filler = '-';
     std::stringstream ss;
     ss << "#compdef " << parser.prog() << "\n";
-    ss << "# " << std::string(77, filler) << "\n";
+    ss << "# " << std::string(detail::_def_width - 3, filler) << "\n";
     ss << "# generated with cpp-argparse v"
        << ARGPARSE_VERSION_MAJOR << "."
        << ARGPARSE_VERSION_MINOR << "."
        << ARGPARSE_VERSION_PATCH << "\n";
-    ss << "# " << std::string(77, filler) << "\n";
+    ss << "# " << std::string(detail::_def_width - 3, filler) << "\n";
     ss << "# Description\n";
     ss << "# -----------\n";
     ss << "#\n";
     ss << "#  Completion script for " << parser.prog();
     ss << "\n";
     ss << "#\n";
-    ss << "# " << std::string(77, filler) << "\n";
+    ss << "# " << std::string(detail::_def_width - 3, filler) << "\n";
     ss << "# Authors\n";
     ss << "# -------\n";
     ss << "#\n";
     ss << "# * cpp-argparse (https://github.com/rue-ryuzaki/argparse)\n";
     ss << "#\n";
-    ss << "# " << std::string(77, filler);
+    ss << "# " << std::string(detail::_def_width - 3, filler);
     _print_parser_zsh_completion(ss, &parser, parser.prog(), true);
     return ss.str();
 }
@@ -17469,7 +17469,7 @@ utils::format_man_page(
     ss << "\n.SH SYNOPSIS\n"
        << detail::_format_output(
               parser.prog(), parser.m_formatter->_usage_args(&parser),
-              1, indent, detail::_def_width);
+              1, indent, detail::_def_width - std::string("SYNOPSIS").size());
     if (!parser.description().empty()) {
         ss << "\n.SH DESCRIPTION\n"
            << parser.description();
