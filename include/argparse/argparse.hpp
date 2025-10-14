@@ -11817,16 +11817,14 @@ Argument::flags_to_string(
 {
     std::string res;
     if (m_type & (Optional | Operand)) {
-        for (std::size_t i = 0; i < flags().size(); ++i) {
-            detail::_append_value_to(flags().at(i), res, ", ");
-            process_nargs_suffix(res, formatter);
-        }
+        res = detail::_join(flags(), ", ");
+        process_nargs_suffix(res, formatter);
     } else {
         std::vector<std::string> names = get_argument_name(formatter);
         if (names.size() != 1) {
             throw ValueError("too many values to unpack (expected 1)");
         }
-        res += names.front();
+        res = names.front();
     }
     return res;
 }
