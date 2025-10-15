@@ -2350,7 +2350,8 @@ ARGPARSE_EXPORT class HelpFormatter
 
 public:
     HelpFormatter()
-        : m_tab_size(c_default_tab_size)
+        : m_tab_size(c_default_tab_size),
+          m_color(true)
     { }
     virtual ~HelpFormatter() ARGPARSE_NOEXCEPT { }
 
@@ -2408,6 +2409,7 @@ private:
 
     // -- data ----------------------------------------------------------------
     std::size_t m_tab_size;
+    bool m_color;
 };
 
 /*!
@@ -6628,7 +6630,9 @@ public:
     formatter_class(
             T const& value)
     {
+        bool tmp = m_formatter->m_color;
         m_formatter = detail::make_shared<T>(value);
+        m_formatter->m_color = tmp;
         return *this;
     }
 
@@ -6754,6 +6758,19 @@ public:
     ArgumentParser&
     suggest_on_error(
             bool value) ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Set argument parser 'color' value (default: true)
+     *
+     *  \param value Color flag
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Current argument parser reference
+     */
+    ARGPARSE_ATTR_MAYBE_UNUSED
+    ArgumentParser&
+    color(bool value) ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Set argument parser 'deprecated' value (default: false)
@@ -6980,6 +6997,17 @@ public:
     ARGPARSE_ATTR_NODISCARD
     bool
     suggest_on_error() const ARGPARSE_NOEXCEPT;
+
+    /*!
+     *  \brief Get argument parser 'color' value (default: true)
+     *
+     *  \since NEXT_RELEASE
+     *
+     *  \return Argument parser 'color' value
+     */
+    ARGPARSE_ATTR_NODISCARD
+    bool
+    color() const ARGPARSE_NOEXCEPT;
 
     /*!
      *  \brief Get argument parser 'deprecated' value (default: false)
@@ -14068,7 +14096,7 @@ ArgumentParser::read_env(
 ARGPARSE_INL void
 ArgumentParser::initialize_parser()
 {
-    formatter_class(HelpFormatter());
+    m_formatter = detail::make_shared<HelpFormatter>();
     m_data->update_help(true, m_prefix_chars);
     // init translations
     m_usage.will_have()[std::string()] = std::string();
@@ -14491,6 +14519,14 @@ ArgumentParser::suggest_on_error(
 }
 
 ARGPARSE_INL ArgumentParser&
+ArgumentParser::color(
+        bool value) ARGPARSE_NOEXCEPT
+{
+    m_formatter->m_color = value;
+    return *this;
+}
+
+ARGPARSE_INL ArgumentParser&
 ArgumentParser::deprecated(
         bool value) ARGPARSE_NOEXCEPT
 {
@@ -14624,6 +14660,12 @@ ARGPARSE_INL bool
 ArgumentParser::suggest_on_error() const ARGPARSE_NOEXCEPT
 {
     return m_suggest_on_error;
+}
+
+ARGPARSE_INL bool
+ArgumentParser::color() const ARGPARSE_NOEXCEPT
+{
+    return m_formatter->m_color;
 }
 
 ARGPARSE_INL bool
