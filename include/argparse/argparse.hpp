@@ -3758,12 +3758,6 @@ private:
             HelpFormatter const& formatter,
             std::string const& lang) const;
 
-    std::string
-    print(HelpFormatter const& formatter,
-            std::size_t limit,
-            std::size_t width,
-            std::string const& lang) const;
-
     void
     process_nargs_suffix(
             std::string& res,
@@ -10672,8 +10666,10 @@ HelpFormatter::_format_help(
         for (std::size_t i = 0; i < positional.size(); ++i) {
             p->print_subparsers(sub_positional, sub_info, i,
                                 *this, p->prog(), size, width, lang, ss);
-            ss << "\n" << p->despecify(positional.at(i)->print(
-                                           *this, size, width, lang));
+            std::string h = positional.at(i)->get_help(*this, lang);
+            ss << "\n" << detail::_help_formatter(
+                      "  " + positional.at(i)->flags_to_string(*this),
+                      *this, p->despecify(h), width, size);
         }
         p->print_subparsers(sub_positional, sub_info, positional.size(),
                             *this, p->prog(), size, width, lang, ss);
@@ -10682,16 +10678,20 @@ HelpFormatter::_format_help(
         detail::_eat_ln(ss, eat_ln);
         ss << detail::_tr(p->m_operands_title, lang) << ":";
         for (std::size_t i = 0; i < operand.size(); ++i) {
-            ss << "\n" << p->despecify(operand.at(i)->print(
-                                           *this, size, width, lang));
+            std::string h = operand.at(i)->get_help(*this, lang);
+            ss << "\n" << detail::_help_formatter(
+                      "  " + operand.at(i)->flags_to_string(*this),
+                      *this, p->despecify(h), width, size);
         }
     }
     if (!optional.empty()) {
         detail::_eat_ln(ss, eat_ln);
         ss << detail::_tr(p->m_optionals_title, lang) << ":";
         for (std::size_t i = 0; i < optional.size(); ++i) {
-            ss << "\n" << p->despecify(optional.at(i)->print(
-                                           *this, size, width, lang));
+            std::string h = optional.at(i)->get_help(*this, lang);
+            ss << "\n" << detail::_help_formatter(
+                      "  " + optional.at(i)->flags_to_string(*this),
+                      *this, p->despecify(h), width, size);
         }
     }
     for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
@@ -12006,17 +12006,6 @@ Argument::get_help(
     return text + res;
 }
 
-ARGPARSE_INL std::string
-Argument::print(
-        HelpFormatter const& formatter,
-        std::size_t limit,
-        std::size_t width,
-        std::string const& lang) const
-{
-    return detail::_help_formatter("  " + flags_to_string(formatter), formatter,
-                                   get_help(formatter, lang), width, limit);
-}
-
 ARGPARSE_INL void
 Argument::process_nargs_suffix(
         std::string& res,
@@ -12878,7 +12867,11 @@ ArgumentGroup::print_help(
                     m_data->m_arguments.empty() ? "" : "\n");
         for (arg_iterator it = m_data->m_arguments.begin();
              it != m_data->m_arguments.end(); ++it) {
-            os << "\n" << (*it)->print(formatter, limit, width, lang);
+            std::string h = (*it)->get_help(formatter, lang);
+            os << "\n" << detail::_help_formatter(
+                      "  " + (*it)->flags_to_string(formatter),
+                      formatter, detail::_replace(
+                          ARGPARSE_MOVE(h), "%(prog)s", prog), width, limit);
         }
     }
 }
