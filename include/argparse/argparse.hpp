@@ -9986,7 +9986,8 @@ _format_output_func(
         std::string const& str)
 {
     std::size_t size = _utf8_length(value).second;
-    if (size > indent && size + 1 + _utf8_length(str).second + head_size > width) {
+    if (size > indent
+            && size + 1 + _utf8_length(str).second + head_size > width) {
         _store_value_to(value, res);
         size = _utf8_length(value).second;
         head_size = 0;
@@ -10021,8 +10022,8 @@ _format_output(
         if (sep == "\n") {
             _format_output_func(indent, width, res, head_size, value, str);
         } else if (str.empty()) {
-            value.resize(value.size() + indent - _utf8_length(value).second - head_size,
-                         _space);
+            value.resize(value.size() + indent - _utf8_length(value).second
+                         - head_size, _space);
             _store_value_to(value, res, true);
             head_size = 0;
         } else {
