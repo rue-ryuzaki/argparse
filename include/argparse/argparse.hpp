@@ -153,6 +153,8 @@
 #   include <fcntl.h>
 #   include <unistd.h>
 #  endif  // _WIN32
+# elif !defined(_WIN32)
+#   include <unistd.h>
 # endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #endif  // ARGPARSE_INL
 
@@ -10538,7 +10540,11 @@ Colorize::colored() const
 ARGPARSE_INL bool
 Colorize::can_colorize()
 {
+#ifdef _WIN32
     return false;
+#else
+    return isatty(STDOUT_FILENO);
+#endif  // _WIN32
 }
 
 // -- StorageData -------------------------------------------------------------
