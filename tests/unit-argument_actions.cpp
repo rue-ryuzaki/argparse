@@ -99,7 +99,8 @@ TEST_CASE("1. argument actions", "[argument]")
     }
 
     SECTION("1.3. BooleanOptionalAction example") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().output_width(80).exit_on_error(false);
+        argparse::ArgumentParser parser = argparse::ArgumentParser()
+                        .output_width(80).exit_on_error(false).color(false);
 
         std::string default_value = "default";
 
@@ -152,32 +153,32 @@ TEST_CASE("1. argument actions", "[argument]")
     }
 
     SECTION("1.7. BooleanOptionalAction conflict options resolved [1]") {
-        argparse::ArgumentParser parser1
-                = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser()
+                        .conflict_handler("resolve").output_width(80).exit_on_error(false).color(false);
 
         parser1.add_argument("--foo").action(argparse::BooleanOptionalAction);
         parser1.add_argument("--no-foo").action(argparse::store_true);
 
         CHECK(parser1.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
 
-        argparse::ArgumentParser parser2
-                = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
+        argparse::ArgumentParser parser2 = argparse::ArgumentParser()
+                        .conflict_handler("resolve").output_width(80).exit_on_error(false).color(false);
 
         parser2.add_argument("--no-foo").action(argparse::store_true);
         parser2.add_argument("--foo").action(argparse::BooleanOptionalAction);
 
         CHECK(parser2.format_usage() == "usage: untitled [-h] [--foo | --no-foo]");
 
-        argparse::ArgumentParser parser3
-                = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
+        argparse::ArgumentParser parser3 = argparse::ArgumentParser()
+                        .conflict_handler("resolve").output_width(80).exit_on_error(false).color(false);
 
         parser3.add_argument(argparse::Argument(_make_vec("--foo")).action(argparse::BooleanOptionalAction));
         parser3.add_argument(argparse::Argument(_make_vec("--no-foo")).action(argparse::store_true));
 
         CHECK(parser3.format_usage() == "usage: untitled [-h] [--foo] [--no-foo]");
 
-        argparse::ArgumentParser parser4
-                = argparse::ArgumentParser().conflict_handler("resolve").output_width(80).exit_on_error(false);
+        argparse::ArgumentParser parser4 = argparse::ArgumentParser()
+                        .conflict_handler("resolve").output_width(80).exit_on_error(false).color(false);
 
         parser4.add_argument(argparse::Argument(_make_vec("--no-foo")).action(argparse::store_true));
         parser4.add_argument(argparse::Argument(_make_vec("--foo")).action(argparse::BooleanOptionalAction));

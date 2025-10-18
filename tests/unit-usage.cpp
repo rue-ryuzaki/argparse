@@ -8,7 +8,7 @@
 TEST_CASE("1. main usage", "[argument_parser]")
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser()
-            .output_width(60).exit_on_error(false);
+            .output_width(60).exit_on_error(false).color(false);
 
     parser.add_argument("store").action(argparse::store);
     parser.add_argument("--true").action(argparse::store_true);
@@ -58,7 +58,7 @@ TEST_CASE("1. main usage", "[argument_parser]")
 TEST_CASE("2. subparser usage", "[argument_parser]")
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser()
-            .output_width(80).exit_on_error(false);
+            .output_width(80).exit_on_error(false).color(false);
 
     parser.add_argument("--true").action(argparse::store_true);
     parser.add_argument("--false").action(argparse::store_false);
