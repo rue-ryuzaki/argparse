@@ -13057,6 +13057,8 @@ ArgumentGroup::print_help(
         if (!title.empty()) {
             detail::_eat_ln(os, eat_ln);
             os.add(detail::clr_heading, title + ":");
+        } else if (description.empty()) {
+            detail::_eat_ln(os, eat_ln, "");
         }
         detail::_print_raw_text_formatter(
                     formatter, detail::_replace(
