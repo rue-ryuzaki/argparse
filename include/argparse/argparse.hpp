@@ -676,7 +676,7 @@ struct integral_constant
 {
     typedef integral_constant type;
     typedef T value_type;
-    enum {
+    enum _ {
         value = Val
     };
 };
@@ -4265,7 +4265,8 @@ _get(std::string const& key,
 {
     _check_type(type_name, Type::name<T>());
     if (args.first->action() == argparse::count) {
-        if (args.second.size() > std::numeric_limits<T>::max()) {
+        if (static_cast<uint64_t>(args.second.size())
+                > static_cast<uint64_t>(std::numeric_limits<T>::max())) {
             throw TypeError("integer value overflow");
         }
         T res = static_cast<T>(args.second.size());
@@ -5640,7 +5641,8 @@ public:
                 && !std::is_same<bool, T>::value
                 && !detail::is_byte_type<T>::value) {
             if (args->first->action() == argparse::count) {
-                if (args->second.size() > std::numeric_limits<T>::max()) {
+                if (static_cast<uint64_t>(args->second.size())
+                       > static_cast<uint64_t>(std::numeric_limits<T>::max())) {
                     return std::nullopt;
                 }
                 T res = static_cast<T>(args->second.size());
