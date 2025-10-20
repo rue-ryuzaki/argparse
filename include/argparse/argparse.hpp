@@ -2333,15 +2333,15 @@ _push_to_container(
     container.push_front(value);
 }
 
-// -- Colorize ----------------------------------------------------------------
+// -- colorstream -------------------------------------------------------------
 typedef std::pair<uint32_t, std::string> color_word;
 typedef std::list<color_word> color_text;
 
-class Colorize
+class colorstream
 {
 public:
     explicit
-    Colorize(
+    colorstream(
             bool colorize = false)
         : m_text(),
           m_colorize(colorize)
@@ -2354,15 +2354,26 @@ public:
         m_colorize = value;
     }
 
-    inline void
-    add(uint32_t type,
-            std::string const& text)
+    inline colorstream&
+    operator <<(uint32_t type)
     {
-        m_text.push_back(std::make_pair(type, text));
+        m_text.push_back(std::make_pair(type, std::string()));
+        return *this;
     }
 
-    void
-    add(Colorize const& text);
+    inline colorstream&
+    operator <<(std::string const& str)
+    {
+        if (!text().empty()) {
+            m_text.back().second += str;
+        } else {
+            m_text.push_back(std::make_pair(0, str));
+        }
+        return *this;
+    }
+
+    colorstream&
+    operator <<(colorstream const& text);
 
     inline color_text const&
     text() const
@@ -2463,12 +2474,12 @@ private:
     _usage_args(
             ArgumentParser const* parser) const;
 
-    detail::Colorize
+    detail::colorstream
     _format_usage(
             ArgumentParser const* parser,
             std::string const& lang) const;
 
-    detail::Colorize
+    detail::colorstream
     _format_help(
             ArgumentParser const* parser,
             std::string const& lang) const;
@@ -3788,7 +3799,7 @@ private:
     std::string
     usage(HelpFormatter const& formatter) const;
 
-    detail::Colorize
+    detail::colorstream
     flags_to_string(
             HelpFormatter const& formatter) const;
 
@@ -4480,7 +4491,7 @@ protected:
 
     virtual void
     print_help(
-            detail::Colorize& os,
+            detail::colorstream& os,
             bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
@@ -5007,7 +5018,7 @@ private:
 
     void
     print_help(
-            detail::Colorize& os,
+            detail::colorstream& os,
             bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
@@ -5878,7 +5889,7 @@ protected:
 
     void
     print_help(
-            detail::Colorize& os,
+            detail::colorstream& os,
             bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
@@ -5895,7 +5906,7 @@ protected:
 
     void
     print_parser_group(
-            detail::Colorize& os,
+            detail::colorstream& os,
             HelpFormatter const& formatter,
             std::string const& prog,
             bool required,
@@ -6261,7 +6272,7 @@ private:
 
     void
     print_help(
-            detail::Colorize& os,
+            detail::colorstream& os,
             bool& eat_ln,
             HelpFormatter const& formatter,
             std::string const& prog,
@@ -8411,7 +8422,7 @@ private:
             std::size_t size,
             std::size_t width,
             std::string const& lang,
-            detail::Colorize& os);
+            detail::colorstream& os);
 
     void
     update_prog(
@@ -9966,15 +9977,28 @@ _ignore_explicit(
     return "argument " + arg + ": ignored explicit argument '" + value + "'";
 }
 
+// -- ColorType ---------------------------------------------------------------
+enum ColorType {
+    clr_reset = 0,
+    clr_heading,
+    clr_label,
+    clr_long_option,
+    clr_prog,
+    clr_prog_extra,
+    clr_short_option,
+    clr_usage,
+};
+// ----------------------------------------------------------------------------
+
 ARGPARSE_INL void
-_eat_ln(Colorize& os,
+_eat_ln(colorstream& os,
         bool& eat_ln,
         std::string const& begin = std::string("\n"))
 {
     if (eat_ln) {
         eat_ln = false;
     } else {
-        os.add(0, "\n" + begin);
+        os << clr_reset << "\n" << begin;
     }
 }
 
@@ -10080,7 +10104,7 @@ _print_raw_text_formatter(
         HelpFormatter const& formatter,
         std::string const& text,
         std::size_t width,
-        Colorize& os,
+        colorstream& os,
         bool& eat_ln,
         std::string const& begin = std::string("\n"),
         std::size_t indent = 0,
@@ -10088,7 +10112,7 @@ _print_raw_text_formatter(
 {
     if (!text.empty()) {
         _eat_ln(os, eat_ln, begin);
-        os.add(0, formatter._fill_text(text, width, indent) + end);
+        os << clr_reset << formatter._fill_text(text, width, indent) << end;
     }
 }
 
@@ -10451,28 +10475,17 @@ _argument_action(
     return res;
 }
 
-// -- ColorType ---------------------------------------------------------------
-enum ColorType {
-    clr_reset = 0,
-    clr_heading,
-    clr_label,
-    clr_long_option,
-    clr_prog,
-    clr_prog_extra,
-    clr_short_option,
-    clr_usage,
-};
-
-// -- Colorize ----------------------------------------------------------------
-ARGPARSE_INL void
-Colorize::add(
-        Colorize const& text)
+// -- colorstream -------------------------------------------------------------
+ARGPARSE_INL colorstream&
+colorstream::operator <<(
+        colorstream const& text)
 {
     _insert_to_end(text.text(), m_text);
+    return *this;
 }
 
 ARGPARSE_INL std::string
-Colorize::code(
+colorstream::code(
         uint32_t type)
 {
 #ifdef _WIN32
@@ -10501,7 +10514,7 @@ Colorize::code(
 }
 
 ARGPARSE_INL std::string
-Colorize::reset_code() const
+colorstream::reset_code() const
 {
 #ifdef _WIN32
     return "";
@@ -10511,7 +10524,7 @@ Colorize::reset_code() const
 }
 
 ARGPARSE_INL std::string
-Colorize::str() const
+colorstream::str() const
 {
     std::string res;
     for (std::list<color_word>::const_iterator it = text().begin();
@@ -10522,7 +10535,7 @@ Colorize::str() const
 }
 
 ARGPARSE_INL std::string
-Colorize::colored() const
+colorstream::colored() const
 {
     std::stringstream ss;
     for (std::list<color_word>::const_iterator it = text().begin();
@@ -10538,7 +10551,7 @@ Colorize::colored() const
 }
 
 ARGPARSE_INL bool
-Colorize::can_colorize()
+colorstream::can_colorize()
 {
 #ifdef _WIN32
     return false;
@@ -10769,12 +10782,12 @@ HelpFormatter::_usage_args(
     return res;
 }
 
-ARGPARSE_INL detail::Colorize
+ARGPARSE_INL detail::colorstream
 HelpFormatter::_format_usage(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::Colorize ss(m_color);
+    detail::colorstream ss(m_color);
     if (p->m_usage.suppress()) {
         return ss;
     }
@@ -10782,29 +10795,26 @@ HelpFormatter::_format_usage(
     std::string tr_usage_title = detail::_tr(p->m_usage_title, lang) + ":";
     std::string tr_usage = detail::_tr(p->m_usage.value(), lang);
     if (!tr_usage.empty()) {
-        ss.add(detail::clr_usage, tr_usage_title);
-        ss.add(detail::clr_reset, " ");
-        ss.add(detail::clr_prog_extra, p->despecify(tr_usage));
+        ss << detail::clr_usage << tr_usage_title << detail::clr_reset << " "
+           << detail::clr_prog_extra << p->despecify(tr_usage);
     } else {
         std::size_t const w = p->output_width();
         std::string head_prog = tr_usage_title + " " + p->prog();
         std::size_t indent = 1 + detail::_utf8_length(
                     w > detail::_min_width ? head_prog : tr_usage_title).second;
-        ss.add(detail::clr_usage, tr_usage_title);
-        ss.add(0, " ");
-        ss.add(detail::clr_prog, p->prog());
-        ss.add(0,
-               detail::_format_output(head_prog, _usage_args(p), 1, indent, w));
+        ss << detail::clr_usage << tr_usage_title << detail::clr_reset << " ";
+        ss << detail::clr_prog << p->prog() << detail::clr_reset
+           << detail::_format_output(head_prog, _usage_args(p), 1, indent, w);
     }
     return ss;
 }
 
-ARGPARSE_INL detail::Colorize
+ARGPARSE_INL detail::colorstream
 HelpFormatter::_format_help(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::Colorize ss(m_color);
+    detail::colorstream ss(m_color);
     typedef std::list<ArgumentParser::pGroup>::const_iterator grp_iterator;
     std::string lang = !language.empty() ? language : p->default_language();
     detail::pArguments positional = p->m_data->get_positional(false, false);
@@ -10841,45 +10851,42 @@ HelpFormatter::_format_help(
     detail::_limit_to_max(size, p->output_width() - p->argument_help_limit());
     if (!positional.empty() || sub_positional) {
         detail::_eat_ln(ss, eat_ln);
-        ss.add(detail::clr_heading,
-               detail::_tr(p->m_positionals_title, lang) + ":");
+        ss << detail::clr_heading
+           << detail::_tr(p->m_positionals_title, lang) << ":";
         for (std::size_t i = 0; i < positional.size(); ++i) {
             p->print_subparsers(sub_positional, sub_info, i,
                                 *this, p->prog(), size, width, lang, ss);
-            detail::Colorize f = positional.at(i)->flags_to_string(*this);
+            detail::colorstream f = positional.at(i)->flags_to_string(*this);
             std::string h = positional.at(i)->get_help(*this, lang);
-            ss.add(0, "\n  ");
-            ss.add(f);
-            ss.add(0, detail::_help_formatter(
-                       "  " + f.str(), *this, p->despecify(h), width, size));
+            ss << detail::clr_reset << "\n  " << f << detail::clr_reset
+               << detail::_help_formatter(
+                      "  " + f.str(), *this, p->despecify(h), width, size);
         }
         p->print_subparsers(sub_positional, sub_info, positional.size(),
                             *this, p->prog(), size, width, lang, ss);
     }
     if (!operand.empty()) {
         detail::_eat_ln(ss, eat_ln);
-        ss.add(detail::clr_heading,
-               detail::_tr(p->m_operands_title, lang) + ":");
+        ss << detail::clr_heading
+           << detail::_tr(p->m_operands_title, lang) << ":";
         for (std::size_t i = 0; i < operand.size(); ++i) {
-            detail::Colorize f = operand.at(i)->flags_to_string(*this);
+            detail::colorstream f = operand.at(i)->flags_to_string(*this);
             std::string h = operand.at(i)->get_help(*this, lang);
-            ss.add(0, "\n  ");
-            ss.add(f);
-            ss.add(0, detail::_help_formatter(
-                       "  " + f.str(), *this, p->despecify(h), width, size));
+            ss << detail::clr_reset << "\n  " << f << detail::clr_reset
+               << detail::_help_formatter(
+                      "  " + f.str(), *this, p->despecify(h), width, size);
         }
     }
     if (!optional.empty()) {
         detail::_eat_ln(ss, eat_ln);
-        ss.add(detail::clr_heading,
-               detail::_tr(p->m_optionals_title, lang) + ":");
+        ss << detail::clr_heading
+           << detail::_tr(p->m_optionals_title, lang) << ":";
         for (std::size_t i = 0; i < optional.size(); ++i) {
-            detail::Colorize f = optional.at(i)->flags_to_string(*this);
+            detail::colorstream f = optional.at(i)->flags_to_string(*this);
             std::string h = optional.at(i)->get_help(*this, lang);
-            ss.add(0, "\n  ");
-            ss.add(f);
-            ss.add(0, detail::_help_formatter(
-                       "  " + f.str(), *this, p->despecify(h), width, size));
+            ss << detail::clr_reset << "\n  " << f << detail::clr_reset
+               << detail::_help_formatter(
+                      "  " + f.str(), *this, p->despecify(h), width, size);
         }
     }
     for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
@@ -12027,29 +12034,29 @@ Argument::usage(
     return res;
 }
 
-ARGPARSE_INL detail::Colorize
+ARGPARSE_INL detail::colorstream
 Argument::flags_to_string(
         HelpFormatter const& formatter) const
 {
-    detail::Colorize res;
+    detail::colorstream res;
     if (m_type & (Optional | Operand)) {
         for (std::size_t i = 0; i < flags().size(); ++i) {
             if (i != 0) {
-                res.add(0, ", ");
+                res << detail::clr_reset << ", ";
             }
-            res.add(flags().at(i).size() > 2
-                    ? detail::clr_long_option
-                    : detail::clr_short_option, flags().at(i));
+            res << (flags().at(i).size() > 2 ? detail::clr_long_option
+                                             : detail::clr_short_option)
+                << flags().at(i);
         }
         std::string suffix;
         process_nargs_suffix(suffix, formatter);
-        res.add(detail::clr_label, suffix);
+        res << detail::clr_label << suffix;
     } else {
         std::vector<std::string> names = get_argument_name(formatter);
         if (names.size() != 1) {
             throw ValueError("too many values to unpack (expected 1)");
         }
-        res.add(detail::clr_short_option, names.front());
+        res << detail::clr_short_option << names.front();
     }
     return res;
 }
@@ -13042,7 +13049,7 @@ ArgumentGroup::limit_help_flags(
 
 ARGPARSE_INL void
 ArgumentGroup::print_help(
-        detail::Colorize& os,
+        detail::colorstream& os,
         bool& eat_ln,
         HelpFormatter const& formatter,
         std::string const& prog,
@@ -13056,7 +13063,7 @@ ArgumentGroup::print_help(
         std::string const title = detail::_tr(m_title, lang);
         if (!title.empty()) {
             detail::_eat_ln(os, eat_ln);
-            os.add(detail::clr_heading, title + ":");
+            os << detail::clr_heading << title << ":";
         } else if (description.empty()) {
             detail::_eat_ln(os, eat_ln, "");
         }
@@ -13067,13 +13074,12 @@ ArgumentGroup::print_help(
                     m_data->m_arguments.empty() ? "" : "\n");
         for (arg_iterator it = m_data->m_arguments.begin();
              it != m_data->m_arguments.end(); ++it) {
-            detail::Colorize f = (*it)->flags_to_string(formatter);
+            detail::colorstream f = (*it)->flags_to_string(formatter);
             std::string h = (*it)->get_help(formatter, lang);
-            os.add(0, "\n  ");
-            os.add(f);
-            os.add(0, detail::_help_formatter(
-                       "  " + f.str(), formatter, detail::_replace(
-                           ARGPARSE_MOVE(h), "%(prog)s", prog), width, limit));
+            os << detail::clr_reset << "\n  " << f << detail::clr_reset
+               << detail::_help_formatter(
+                      "  " + f.str(), formatter, detail::_replace(
+                          ARGPARSE_MOVE(h), "%(prog)s", prog), width, limit);
         }
     }
 }
@@ -13676,7 +13682,7 @@ _ParserGroup::limit_help_flags(
 
 ARGPARSE_INL void
 _ParserGroup::print_help(
-        detail::Colorize& os,
+        detail::colorstream& os,
         bool& eat_ln,
         HelpFormatter const& formatter,
         std::string const& prog,
@@ -13690,7 +13696,7 @@ _ParserGroup::print_help(
     }
     detail::_eat_ln(os, eat_ln);
     std::string const title = detail::_tr(m_title, lang);
-    os.add(detail::clr_heading, (title.empty() ? "subcommands" : title) + ":");
+    os << detail::clr_heading << (title.empty() ? "subcommands" : title) << ":";
     detail::_print_raw_text_formatter(
                 formatter,
                 detail::_replace(
@@ -13765,7 +13771,7 @@ _ParserGroup::get_help(
 
 ARGPARSE_INL void
 _ParserGroup::print_parser_group(
-        detail::Colorize& os,
+        detail::colorstream& os,
         HelpFormatter const& formatter,
         std::string const& prog,
         bool required,
@@ -13777,11 +13783,9 @@ _ParserGroup::print_parser_group(
         return;
     }
     std::string f = _flags_to_string();
-    os.add(0, "\n  ");
-    os.add(detail::clr_short_option, f);
-    os.add(0, detail::_help_formatter(
-               "  " + f, formatter,
-               get_help(prog, required, lang), width, limit));
+    os << detail::clr_reset << "\n  " << detail::clr_short_option << f
+       << detail::clr_reset << detail::_help_formatter(
+             "  " + f, formatter, get_help(prog, required, lang), width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
         // despecify group's parser help
         std::string help = detail::_tr((*it)->m_help, lang);
@@ -13850,10 +13854,9 @@ _ParserGroup::print_parser_group(
             }
 #endif  // C++11+
             text += res;
-            os.add(0, "\n");
-            os.add(detail::clr_short_option, name);
-            os.add(0, detail::_help_formatter(
-                       name, formatter, text, width, limit));
+            os << detail::clr_reset << "\n"
+               << detail::clr_short_option << name << detail::clr_reset
+               << detail::_help_formatter(name, formatter, text, width, limit);
         }
     }
 }
@@ -14169,7 +14172,7 @@ SubParsers::limit_help_flags(
 
 ARGPARSE_INL void
 SubParsers::print_help(
-        detail::Colorize& os,
+        detail::colorstream& os,
         bool& eat_ln,
         HelpFormatter const& formatter,
         std::string const& prog,
@@ -16927,7 +16930,7 @@ ArgumentParser::print_subparsers(
         std::size_t size,
         std::size_t width,
         std::string const& lang,
-        detail::Colorize& os)
+        detail::colorstream& os)
 {
     if (need_print && info.second == index) {
         info.first->print_parser_group(
