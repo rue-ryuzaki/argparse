@@ -3835,9 +3835,8 @@ private:
             HelpFormatter const& formatter,
             std::string const& lang) const;
 
-    void
-    process_nargs_suffix(
-            std::string& res,
+    std::string
+    nargs_suffix(
             HelpFormatter const& formatter) const;
 
     std::vector<std::string>
@@ -10496,21 +10495,21 @@ colorstream::code(
 #else
     switch (type) {
         case clr_heading :
-            return "[1;34m";
+            return "\033[1;34m";
         case clr_label :
-            return "[1;33m";
+            return "\033[1;33m";
         case clr_long_option :
-            return "[1;36m";
+            return "\033[1;36m";
         case clr_prog :
-            return "[1;95m";
+            return "\033[1;95m";
         case clr_prog_extra :
-            return "[0;35m";
+            return "\033[0;35m";
         case clr_short_option :
-            return "[1;32m";
+            return "\033[1;32m";
         case clr_usage :
-            return "[1;34m";
+            return "\033[1;34m";
         default:
-            return "[0m";
+            return "\033[0m";
     }
 #endif  // _WIN32
 }
@@ -10521,7 +10520,7 @@ colorstream::reset_code() const
 #ifdef _WIN32
     return "";
 #else
-    return "[0m";
+    return "\033[0m";
 #endif  // _WIN32
 }
 
@@ -10543,8 +10542,7 @@ colorstream::colored() const
     for (std::list<color_word>::const_iterator it = text().begin();
          it != text().end(); ++it) {
         if (colorize() && (*it).first != 0 && !(*it).second.empty()) {
-            ss << '\033' << code((*it).first) << (*it).second
-               << '\033' << reset_code();
+            ss << code((*it).first) << (*it).second << reset_code();
         } else {
             ss << (*it).second;
         }
@@ -12032,8 +12030,7 @@ Argument::usage(
     } else if (m_type == Operand) {
         res = m_flags.front();
     }
-    process_nargs_suffix(res, formatter);
-    return res;
+    return res + nargs_suffix(formatter);
 }
 
 ARGPARSE_INL detail::colorstream
@@ -12050,9 +12047,7 @@ Argument::flags_to_string(
                                              : detail::clr_short_option)
                 << flags().at(i);
         }
-        std::string suffix;
-        process_nargs_suffix(suffix, formatter);
-        res << detail::clr_label << suffix;
+        res << detail::clr_label << nargs_suffix(formatter);
     } else {
         std::vector<std::string> names = get_argument_name(formatter);
         if (names.size() != 1) {
@@ -12212,15 +12207,15 @@ Argument::get_help(
     return text + res;
 }
 
-ARGPARSE_INL void
-Argument::process_nargs_suffix(
-        std::string& res,
+ARGPARSE_INL std::string
+Argument::nargs_suffix(
         HelpFormatter const& formatter) const
 {
+    std::string res;
     if (!(action() & (detail::_store_action
                       | argparse::append_const
                       | argparse::language))) {
-        return;
+        return res;
     }
     std::vector<std::string> names = get_argument_name(formatter);
     bool nargs_check = (m_nargs & detail::_NARGS_COMBINED);
@@ -12258,6 +12253,7 @@ Argument::process_nargs_suffix(
         default :
             break;
     }
+    return res;
 }
 
 ARGPARSE_INL std::vector<std::string>
