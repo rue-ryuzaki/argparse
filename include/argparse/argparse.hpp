@@ -2355,14 +2355,16 @@ public:
     }
 
     inline colorstream&
-    operator <<(uint32_t type)
+    operator <<(
+            uint32_t type)
     {
         m_text.push_back(std::make_pair(type, std::string()));
         return *this;
     }
 
     inline colorstream&
-    operator <<(std::string const& str)
+    operator <<(
+            std::string const& str)
     {
         if (!text().empty()) {
             m_text.back().second += str;
@@ -2373,7 +2375,11 @@ public:
     }
 
     colorstream&
-    operator <<(colorstream const& text);
+    operator <<(
+            colorstream const& text);
+
+    void
+    print(std::ostream& os) const;
 
     inline color_text const&
     text() const
@@ -10485,6 +10491,21 @@ colorstream::operator <<(
     return *this;
 }
 
+ARGPARSE_INL void
+colorstream::print(
+        std::ostream& os) const
+{
+    for (std::list<color_word>::const_iterator it = text().begin();
+         it != text().end(); ++it) {
+        if (colorize() && (*it).first != 0 && !(*it).second.empty()) {
+            os << code((*it).first) << (*it).second
+               << reset_code();
+        } else {
+            os << (*it).second;
+        }
+    }
+}
+
 ARGPARSE_INL std::string
 colorstream::code(
         uint32_t type)
@@ -10539,14 +10560,7 @@ ARGPARSE_INL std::string
 colorstream::colored() const
 {
     std::stringstream ss;
-    for (std::list<color_word>::const_iterator it = text().begin();
-         it != text().end(); ++it) {
-        if (colorize() && (*it).first != 0 && !(*it).second.empty()) {
-            ss << code((*it).first) << (*it).second << reset_code();
-        } else {
-            ss << (*it).second;
-        }
-    }
+    print(ss);
     return ss.str();
 }
 
@@ -15386,9 +15400,10 @@ ArgumentParser::print_usage(
         std::string const& language,
         std::ostream& os) const
 {
-    std::string res = format_usage(language);
-    if (!res.empty()) {
-        os << res << std::endl;
+    detail::colorstream cs = m_formatter->_format_usage(this, language);
+    if (!cs.text().empty()) {
+        cs.print(os);
+        os << std::endl;
     }
 }
 
@@ -15404,9 +15419,10 @@ ArgumentParser::print_help(
         std::string const& language,
         std::ostream& os) const
 {
-    std::string res = format_help(language);
-    if (!res.empty()) {
-        os << res << std::endl;
+    detail::colorstream cs = m_formatter->_format_help(this, language);
+    if (!cs.text().empty()) {
+        cs.print(os);
+        os << std::endl;
     }
 }
 
