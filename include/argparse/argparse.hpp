@@ -3802,7 +3802,7 @@ private:
     void
     make_no_flags();
 
-    std::string
+    detail::colorstream
     usage(HelpFormatter const& formatter) const;
 
     detail::colorstream
@@ -4841,7 +4841,7 @@ public:
             Argument const& argument);
 
 private:
-    std::string
+    detail::colorstream
     usage(HelpFormatter const& formatter) const;
 
     // -- data ----------------------------------------------------------------
@@ -9993,6 +9993,9 @@ enum ColorType {
     clr_prog,
     clr_prog_extra,
     clr_short_option,
+    clr_summary_label,
+    clr_summary_long_option,
+    clr_summary_short_option,
     clr_usage,
 };
 // ----------------------------------------------------------------------------
@@ -10006,6 +10009,22 @@ _eat_ln(colorstream& os,
         eat_ln = false;
     } else {
         os << clr_reset << "\n" << begin;
+    }
+}
+
+ARGPARSE_INL void
+_add_arg_usage(
+        colorstream& ss,
+        colorstream const& str,
+        bool required)
+{
+    if (!ss.text().empty()) {
+        ss << clr_reset << "\n";
+    }
+    if (required) {
+        ss << str;
+    } else {
+        ss << detail::clr_reset << "[" << str << detail::clr_reset << "]";
     }
 }
 
@@ -10247,15 +10266,6 @@ _is_not_operand(
 {
     return was_pseudo_arg || !_find_arg_by_flag(
                 args, _split(key, _equals, 1).front());
-}
-
-ARGPARSE_INL void
-_add_arg_usage(
-        std::string& res,
-        std::string const& str,
-        bool required)
-{
-    _append_value_to(required ? str : "[" + str + "]", res, "\n");
 }
 
 ARGPARSE_INL void
@@ -10527,6 +10537,12 @@ colorstream::code(
             return "\033[0;35m";
         case clr_short_option :
             return "\033[1;32m";
+        case clr_summary_label :
+            return "\033[0;33m";
+        case clr_summary_long_option :
+            return "\033[0;36m";
+        case clr_summary_short_option :
+            return "\033[0;32m";
         case clr_usage :
             return "\033[1;34m";
         default:
@@ -10760,7 +10776,7 @@ HelpFormatter::_usage_args(
     detail::pArguments operand = p->m_data->get_operand(false, true);
     detail::pArguments options = p->m_data->get_optional(false, true);
     ArgumentParser::SubParsersInfo const info = p->subparsers_info(false);
-    std::string res;
+    detail::colorstream res;
     for (_mt i = p->m_mutex_groups.begin(); i != p->m_mutex_groups.end(); ++i) {
         for (_arg j = (*i).m_data->m_arguments.begin();
              j != (*i).m_data->m_arguments.end(); ++j) {
@@ -10781,19 +10797,25 @@ HelpFormatter::_usage_args(
     }
     for (std::size_t i = 0; i < positional.size(); ++i) {
         if (info.first && info.second == i && !info.first->is_suppress()) {
-            detail::_add_arg_usage(res, info.first->usage(), true);
+            if (!res.text().empty()) {
+                res << detail::clr_reset << "\n";
+            }
+            res << detail::clr_summary_short_option << info.first->usage();
         }
-        std::string const str = positional.at(i)->usage(*this);
-        if (str.empty()) {
+        detail::colorstream str = positional.at(i)->usage(*this);
+        if (str.str().empty()) {
             continue;
         }
         detail::_add_arg_usage(res, str, true);
     }
     if (info.first && info.second == positional.size()
             && !info.first->is_suppress()) {
-        detail::_add_arg_usage(res, info.first->usage(), true);
+        if (!res.text().empty()) {
+            res << detail::clr_reset << "\n";
+        }
+        res << detail::clr_summary_short_option << info.first->usage();
     }
-    return res;
+    return res.str();
 }
 
 ARGPARSE_INL detail::colorstream
@@ -12033,18 +12055,23 @@ Argument::make_no_flags()
     }
 }
 
-ARGPARSE_INL std::string
+ARGPARSE_INL detail::colorstream
 Argument::usage(
         HelpFormatter const& formatter) const
 {
-    std::string res;
+    detail::colorstream res;
     if (m_type == Optional) {
-        res = action() == argparse::BooleanOptionalAction
+        std::string flag = action() == argparse::BooleanOptionalAction
                 ? detail::_join(flags(), " | ") : m_flags.front();
+        res << (flag.size() > 2 ? detail::clr_summary_long_option
+                                : detail::clr_summary_short_option)
+            << flag;
     } else if (m_type == Operand) {
-        res = m_flags.front();
+        res << detail::clr_summary_long_option << m_flags.front();
     }
-    return res + nargs_suffix(formatter);
+    res << (m_type == Positional ? detail::clr_summary_short_option
+                        : detail::clr_summary_label) << nargs_suffix(formatter);
+    return res;
 }
 
 ARGPARSE_INL detail::colorstream
@@ -12899,17 +12926,24 @@ MutuallyExclusiveGroup::add_argument(
     return *this;
 }
 
-ARGPARSE_INL std::string
+ARGPARSE_INL detail::colorstream
 MutuallyExclusiveGroup::usage(
         HelpFormatter const& formatter) const
 {
-    std::string res;
+    detail::colorstream ss;
+    if (m_data->m_arguments.empty()) {
+        return ss;
+    }
+    ss << detail::clr_reset << (m_required ? "(" : "[");
     for (arg_iterator it = m_data->m_arguments.begin();
          it != m_data->m_arguments.end(); ++it) {
-        detail::_append_value_to((*it)->usage(formatter), res, " | ");
+        if (it != m_data->m_arguments.begin()) {
+            ss << detail::clr_reset << " | ";
+        }
+        ss << (*it)->usage(formatter);
     }
-    return res.empty() ? std::string()
-                       : (m_required ? "(" + res + ")" : "[" + res + "]");
+    ss << detail::clr_reset << (m_required ? ")" : "]");
+    return ss;
 }
 
 // -- ArgumentGroup -----------------------------------------------------------
@@ -16929,7 +16963,7 @@ ArgumentParser::subparsers_prog_args() const
     SubParsersInfo info = subparsers_info(add_suppress);
     pArguments args = m_data->get_positional(add_suppress, true);
     for (std::size_t i = 0; i < args.size() && i != info.second; ++i) {
-        detail::_append_value_to(args.at(i)->usage(*m_formatter), res);
+        detail::_append_value_to(args.at(i)->usage(*m_formatter).str(), res);
     }
     return res;
 }
