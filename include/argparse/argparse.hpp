@@ -2476,7 +2476,7 @@ public:
             std::size_t width) const;
 
 private:
-    std::string
+    detail::colorstream
     _usage_args(
             ArgumentParser const* parser) const;
 
@@ -10052,15 +10052,16 @@ _format_output_func(
     }
 }
 
-ARGPARSE_INL std::string
+ARGPARSE_INL colorstream
 _format_output(
         std::string const& head,
-        std::string const& body,
+        colorstream const& cs,
         std::size_t interlayer,
         std::size_t indent,
         std::size_t width,
         std::string const& sep = std::string("\n"))
 {
+    std::string body = cs.str();
     std::vector<std::string> res;
     std::size_t head_size = _utf8_length(head).second;
     std::string value;
@@ -10089,7 +10090,9 @@ _format_output(
         }
     }
     _store_value_to(value, res);
-    return _join(res, "\n");
+    colorstream r;
+    r << _join(res, "\n");
+    return r;
 }
 
 ARGPARSE_INL std::string
@@ -10766,7 +10769,7 @@ HelpFormatter::_split_lines(
     return res;
 }
 
-ARGPARSE_INL std::string
+ARGPARSE_INL detail::colorstream
 HelpFormatter::_usage_args(
         ArgumentParser const* p) const
 {
@@ -10815,7 +10818,7 @@ HelpFormatter::_usage_args(
         }
         res << detail::clr_summary_short_option << info.first->usage();
     }
-    return res.str();
+    return res;
 }
 
 ARGPARSE_INL detail::colorstream
@@ -17752,24 +17755,22 @@ utils::print_zsh_completion(
 
 ARGPARSE_INL std::string
 utils::format_man_page(
-        ArgumentParser const& parser)
+        ArgumentParser const& p)
 {
     std::stringstream ss;
-    std::size_t indent = 1 + detail::_utf8_length(parser.prog()).second;
-    ss << ".\\\" Manpage for " << parser.prog() << ".\n";
+    std::size_t indent = 1 + detail::_utf8_length(p.prog()).second;
+    ss << ".\\\" Manpage for " << p.prog() << ".\n";
     ss << ".\\\" Generated with cpp-argparse v"
        << ARGPARSE_VERSION_MAJOR << "."
        << ARGPARSE_VERSION_MINOR << "."
        << ARGPARSE_VERSION_PATCH << ".";
     ss << "\n.TH man 1";
     ss << "\n.SH SYNOPSIS\n"
-       << parser.prog()
-       << detail::_format_output(
-              parser.prog(), parser.m_formatter->_usage_args(&parser),
-              1, indent, detail::_def_width - std::string("SYNOPSIS").size());
-    if (!parser.description().empty()) {
-        ss << "\n.SH DESCRIPTION\n"
-           << parser.description();
+       << p.prog() << detail::_format_output(
+              p.prog(), p.m_formatter->_usage_args(&p), 1, indent,
+              detail::_def_width - std::string("SYNOPSIS").size()).str();
+    if (!p.description().empty()) {
+        ss << "\n.SH DESCRIPTION\n" << p.description();
     }
     return ss.str();
 }
