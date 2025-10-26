@@ -10495,6 +10495,110 @@ _argument_action(
     return res;
 }
 
+#ifdef _WIN32
+// -- win_stdout --------------------------------------------------------------
+class win_stdout
+{
+public:
+    static win_stdout&
+    instance()
+    {
+        static win_stdout res;
+        return res;
+    }
+
+    bool
+    is_active() const
+    {
+        return m_handle != INVALID_HANDLE_VALUE && m_handle != NULL;
+    }
+
+    void
+    use(WORD type)
+    {
+        switch (type) {
+            case clr_heading :
+                return set_attribute(FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+            case clr_label :
+                return set_attribute(FOREGROUND_INTENSITY
+                                     | FOREGROUND_RED | FOREGROUND_GREEN);
+            case clr_long_option :
+                return set_attribute(FOREGROUND_INTENSITY
+                                     | FOREGROUND_GREEN | FOREGROUND_BLUE);
+            case clr_prog :
+                return set_attribute(FOREGROUND_INTENSITY
+                                     | FOREGROUND_RED | FOREGROUND_BLUE);
+            case clr_prog_extra :
+                return set_attribute(FOREGROUND_RED | FOREGROUND_BLUE);
+            case clr_short_option :
+                return set_attribute(FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+            case clr_summary_label :
+                return set_attribute(FOREGROUND_RED | FOREGROUND_GREEN);
+            case clr_summary_long_option :
+                return set_attribute(FOREGROUND_GREEN | FOREGROUND_BLUE);
+            case clr_summary_short_option :
+                return set_attribute(FOREGROUND_GREEN);
+            case clr_usage :
+                return set_attribute(FOREGROUND_INTENSITY | FOREGROUND_BLUE);
+            default:
+                return set_attribute(m_fore);
+        }
+    }
+
+private:
+    win_stdout()
+        : m_handle(GetStdHandle(STD_OUTPUT_HANDLE)),
+          m_fore(),
+          m_back()
+    {
+        if (is_active()) {
+            CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
+            GetConsoleScreenBufferInfo(m_handle, &csbiInfo);
+            m_fore = static_cast<WORD>(csbiInfo.wAttributes & ~(BACKGROUND_RED
+                  | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY));
+            m_back = static_cast<WORD>(csbiInfo.wAttributes & ~(FOREGROUND_RED
+                  | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY));
+        }
+    }
+
+    win_stdout(
+            win_stdout const& orig)
+        : m_handle(orig.m_handle),
+          m_fore(orig.m_fore),
+          m_back(orig.m_back)
+    { }
+
+    ~win_stdout()
+    { }
+
+    win_stdout&
+    operator =(
+            win_stdout const& rhs)
+    {
+        if (this != &rhs) {
+            this->m_handle  = rhs.m_handle;
+            this->m_fore    = rhs.m_fore;
+            this->m_back    = rhs.m_back;
+        }
+        return *this;
+    }
+
+    void
+    set_attribute(
+            WORD attribute)
+    {
+        if (is_active()) {
+            SetConsoleTextAttribute(m_handle, attribute | m_back);
+        }
+    }
+
+    // -- data ----------------------------------------------------------------
+    HANDLE m_handle;
+    WORD m_fore;
+    WORD m_back;
+};
+#endif  // _WIN32
+
 // -- colorstream -------------------------------------------------------------
 ARGPARSE_INL colorstream&
 colorstream::operator <<(
@@ -10524,7 +10628,7 @@ colorstream::code(
         uint32_t type)
 {
 #ifdef _WIN32
-    (void)type;
+    win_stdout::instance().use(static_cast<WORD>(type));
     return "";
 #else
     switch (type) {
@@ -10558,6 +10662,7 @@ ARGPARSE_INL std::string
 colorstream::reset_code() const
 {
 #ifdef _WIN32
+    win_stdout::instance().use(0);
     return "";
 #else
     return "\033[0m";
@@ -10587,7 +10692,7 @@ ARGPARSE_INL bool
 colorstream::can_colorize()
 {
 #ifdef _WIN32
-    return false;
+    return win_stdout::instance().is_active();
 #else
     return isatty(STDOUT_FILENO);
 #endif  // _WIN32
