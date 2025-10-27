@@ -107,55 +107,53 @@
 #endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 
 #ifdef ARGPARSE_INL
-# ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
-#  if defined(_WIN32)
-#   undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#   undef ARGPARSE_DEFINE_VC_EXTRALEAN
+# if defined(_WIN32)
+#  undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#  undef ARGPARSE_DEFINE_VC_EXTRALEAN
 
-#   ifndef WIN32_LEAN_AND_MEAN
-#    define WIN32_LEAN_AND_MEAN
-#    define ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#   endif  // WIN32_LEAN_AND_MEAN
+#  ifndef WIN32_LEAN_AND_MEAN
+#   define WIN32_LEAN_AND_MEAN
+#   define ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#  endif  // WIN32_LEAN_AND_MEAN
 
-#   ifndef VC_EXTRALEAN
-#    define VC_EXTRALEAN
-#    define ARGPARSE_DEFINE_VC_EXTRALEAN
-#   endif  // VC_EXTRALEAN
+#  ifndef VC_EXTRALEAN
+#   define VC_EXTRALEAN
+#   define ARGPARSE_DEFINE_VC_EXTRALEAN
+#  endif  // VC_EXTRALEAN
 
-#   ifndef NOMINMAX
-#    define NOMINMAX
-#    define ARGPARSE_DEFINE_NOMINMAX
-#   endif  // NOMINMAX
+#  ifndef NOMINMAX
+#   define NOMINMAX
+#   define ARGPARSE_DEFINE_NOMINMAX
+#  endif  // NOMINMAX
 
-#   ifdef _MSC_VER
-#    include <Windows.h>
-#   else
-#    include <windows.h>
-#   endif  // _MSC_VER
+#  ifdef _MSC_VER
+#   include <Windows.h>
+#  else
+#   include <windows.h>
+#  endif  // _MSC_VER
 
-#   ifdef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#    undef WIN32_LEAN_AND_MEAN
-#   endif  // ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#  ifdef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#   undef WIN32_LEAN_AND_MEAN
+#  endif  // ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
 
-#   ifdef ARGPARSE_DEFINE_VC_EXTRALEAN
-#    undef VC_EXTRALEAN
-#   endif  // ARGPARSE_DEFINE_VC_EXTRALEAN
+#  ifdef ARGPARSE_DEFINE_VC_EXTRALEAN
+#   undef VC_EXTRALEAN
+#  endif  // ARGPARSE_DEFINE_VC_EXTRALEAN
 
-#   ifdef ARGPARSE_DEFINE_NOMINMAX
-#    undef NOMINMAX
-#   endif  // ARGPARSE_DEFINE_NOMINMAX
+#  ifdef ARGPARSE_DEFINE_NOMINMAX
+#   undef NOMINMAX
+#  endif  // ARGPARSE_DEFINE_NOMINMAX
 
-#   undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
-#   undef ARGPARSE_DEFINE_VC_EXTRALEAN
-#   undef ARGPARSE_DEFINE_NOMINMAX
-#  else  // UNIX
+#  undef ARGPARSE_DEFINE_WIN32_LEAN_AND_MEAN
+#  undef ARGPARSE_DEFINE_VC_EXTRALEAN
+#  undef ARGPARSE_DEFINE_NOMINMAX
+# else  // UNIX
+#  ifdef ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #   include <sys/ioctl.h>
 #   include <fcntl.h>
-#   include <unistd.h>
-#  endif  // _WIN32
-# elif !defined(_WIN32)
-#   include <unistd.h>
-# endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+#  endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
+#  include <unistd.h>
+# endif  // _WIN32
 #endif  // ARGPARSE_INL
 
 // -- standard ----------------------------------------------------------------
