@@ -10960,14 +10960,14 @@ HelpFormatter::_format_usage(
     std::string tr_usage_title = detail::_tr(p->m_usage_title, lang) + ":";
     std::string tr_usage = detail::_tr(p->m_usage.value(), lang);
     if (!tr_usage.empty()) {
-        ss << detail::clr_usage << tr_usage_title << detail::clr_reset << " "
+        ss << detail::clr_usage << tr_usage_title << " "
            << detail::clr_prog_extra << p->despecify(tr_usage);
     } else {
         std::size_t const w = p->output_width();
         std::string head_prog = tr_usage_title + " " + p->prog();
         std::size_t indent = 1 + detail::_utf8_length(
                     w > detail::_min_width ? head_prog : tr_usage_title).second;
-        ss << detail::clr_usage << tr_usage_title << detail::clr_reset << " ";
+        ss << detail::clr_usage << tr_usage_title << " ";
         ss << detail::clr_prog << p->prog() << detail::clr_reset
            << detail::_format_output(head_prog, _usage_args(p), 1, indent, w);
     }
@@ -12189,17 +12189,25 @@ Argument::usage(
         HelpFormatter const& formatter) const
 {
     detail::colorstream res;
+    std::string suffix = nargs_suffix(formatter);
     if (m_type == Optional) {
         std::string flag = action() == argparse::BooleanOptionalAction
                 ? detail::_join(flags(), " | ") : m_flags.front();
         res << (flag.size() > 2 ? detail::clr_summary_long_option
-                                : detail::clr_summary_short_option)
-            << flag;
+                                : detail::clr_summary_short_option) << flag;
+        if (!suffix.empty()) {
+            res << suffix.substr(0, 1)
+                << detail::clr_summary_label << suffix.substr(1);
+        }
     } else if (m_type == Operand) {
         res << detail::clr_summary_long_option << m_flags.front();
+        if (!suffix.empty()) {
+            res << suffix.substr(0, 1)
+                << detail::clr_summary_label << suffix.substr(1);
+        }
+    } else {
+        res << detail::clr_summary_short_option << suffix;
     }
-    res << (m_type == Positional ? detail::clr_summary_short_option
-                        : detail::clr_summary_label) << nargs_suffix(formatter);
     return res;
 }
 
@@ -12217,7 +12225,11 @@ Argument::flags_to_string(
                                              : detail::clr_short_option)
                 << flags().at(i);
         }
-        res << detail::clr_label << nargs_suffix(formatter);
+        std::string suffix = nargs_suffix(formatter);
+        if (!suffix.empty()) {
+            res << detail::clr_reset << suffix.substr(0, 1)
+                << detail::clr_label << suffix.substr(1);
+        }
     } else {
         std::vector<std::string> names = get_argument_name(formatter);
         if (names.size() != 1) {
@@ -14029,8 +14041,8 @@ _ParserGroup::print_parser_group(
             }
 #endif  // C++11+
             text += res;
-            os << detail::clr_reset << "\n"
-               << detail::clr_short_option << name << detail::clr_reset
+            os << detail::clr_reset << "\n    "
+               << detail::clr_short_option << metavar << detail::clr_reset
                << detail::_help_formatter(name, formatter, text, width, limit);
         }
     }
