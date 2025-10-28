@@ -2340,37 +2340,22 @@ class colorstream
 public:
     explicit
     colorstream(
-            bool colorize = false)
-        : m_text(),
-          m_colorize(colorize)
-    { }
+            bool colorize = false);
 
-    inline void
+    void
+    clear();
+
+    void
     colorize(
-            bool value)
-    {
-        m_colorize = value;
-    }
+            bool value);
 
-    inline colorstream&
+    colorstream&
     operator <<(
-            uint32_t type)
-    {
-        m_text.push_back(std::make_pair(type, std::string()));
-        return *this;
-    }
+            uint32_t type);
 
-    inline colorstream&
+    colorstream&
     operator <<(
-            std::string const& str)
-    {
-        if (!text().empty()) {
-            m_text.back().second += str;
-        } else {
-            m_text.push_back(std::make_pair(0, str));
-        }
-        return *this;
-    }
+            std::string const& str);
 
     colorstream&
     operator <<(
@@ -2379,17 +2364,11 @@ public:
     void
     print(std::ostream& os) const;
 
-    inline color_text const&
-    text() const
-    {
-        return m_text;
-    }
+    color_text const&
+    text() const;
 
-    inline bool
-    colorize() const
-    {
-        return m_colorize && can_colorize();
-    }
+    bool
+    colorize() const;
 
     static std::string
     code(uint32_t type);
@@ -10030,24 +10009,28 @@ ARGPARSE_INL void
 _format_output_func(
         std::size_t indent,
         std::size_t width,
-        std::vector<std::string>& res,
+        colorstream& res,
         std::size_t& head_size,
-        std::string& value,
-        std::string const& str)
+        std::size_t& size,
+        colorstream& tmp,
+        std::size_t& word_size)
 {
-    std::size_t size = _utf8_length(value).second;
-    if (size > indent
-            && size + 1 + _utf8_length(str).second + head_size > width) {
-        _store_value_to(value, res);
-        size = _utf8_length(value).second;
+    if (size > indent && size + 1 + word_size + head_size > width) {
+        res << clr_reset << "\n";
+        size = 0;
         head_size = 0;
     }
     if (size + head_size < indent) {
-        value.resize(value.size() + indent - size - head_size, _space);
-        value += str;
+        res << clr_reset << std::string(indent - size - head_size, _space);
+        size = indent - head_size;
     } else {
-        value += _spaces + str;
+        res << clr_reset << _spaces;
+        ++size;
     }
+    res << tmp;
+    tmp.clear();
+    size += word_size;
+    word_size = 0;
 }
 
 ARGPARSE_INL colorstream
@@ -10056,41 +10039,29 @@ _format_output(
         colorstream const& cs,
         std::size_t interlayer,
         std::size_t indent,
-        std::size_t width,
-        std::string const& sep = std::string("\n"))
+        std::size_t width)
 {
-    std::string body = cs.str();
-    std::vector<std::string> res;
+    colorstream res;
     std::size_t head_size = _utf8_length(head).second;
-    std::string value;
     if (head_size + interlayer > indent) {
-        _store_value_to(value, res, true);
+        res << clr_reset << "\n";
         head_size = 0;
     }
-    std::vector<std::string> split_str = _split_lines(body);
-    for (std::size_t i = 0; i < split_str.size(); ++i) {
-        std::string const& str = split_str.at(i);
-        if (sep == "\n") {
-            _format_output_func(indent, width, res, head_size, value, str);
-        } else if (str.empty()) {
-            value.resize(value.size() + indent - _utf8_length(value).second
-                         - head_size, _space);
-            _store_value_to(value, res, true);
-            head_size = 0;
+    std::size_t size = 0;
+    std::size_t word = 0;
+    colorstream tmp;
+    for (std::list<color_word>::const_iterator it = cs.text().begin();
+         it != cs.text().end(); ++it) {
+        std::string const& str = (*it).second;
+        if (str == "\n") {
+            _format_output_func(indent, width, res, head_size, size, tmp, word);
         } else {
-            std::vector<std::string> sub_split_str = _split(str, sep);
-            for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
-                std::string const& sub = sub_split_str.at(j);
-                _format_output_func(indent, width, res, head_size, value, sub);
-            }
-            _store_value_to(value, res);
-            head_size = 0;
+            tmp << (*it).first << str;
+            word += _utf8_length(str).second;
         }
     }
-    _store_value_to(value, res);
-    colorstream r;
-    r << _join(res, "\n");
-    return r;
+    _format_output_func(indent, width, res, head_size, size, tmp, word);
+    return res;
 }
 
 ARGPARSE_INL std::string
@@ -10598,6 +10569,46 @@ private:
 #endif  // _WIN32
 
 // -- colorstream -------------------------------------------------------------
+ARGPARSE_INL
+colorstream::colorstream(
+        bool colorize)
+    : m_text(),
+      m_colorize(colorize)
+{ }
+
+ARGPARSE_INL void
+colorstream::clear()
+{
+    m_text.clear();
+}
+
+ARGPARSE_INL void
+colorstream::colorize(
+        bool value)
+{
+    m_colorize = value;
+}
+
+ARGPARSE_INL colorstream&
+colorstream::operator <<(
+        uint32_t type)
+{
+    m_text.push_back(std::make_pair(type, std::string()));
+    return *this;
+}
+
+ARGPARSE_INL colorstream&
+colorstream::operator <<(
+        std::string const& str)
+{
+    if (!text().empty()) {
+        m_text.back().second += str;
+    } else {
+        m_text.push_back(std::make_pair(0, str));
+    }
+    return *this;
+}
+
 ARGPARSE_INL colorstream&
 colorstream::operator <<(
         colorstream const& text)
@@ -10619,6 +10630,18 @@ colorstream::print(
             os << (*it).second;
         }
     }
+}
+
+ARGPARSE_INL color_text const&
+colorstream::text() const
+{
+    return m_text;
+}
+
+ARGPARSE_INL bool
+colorstream::colorize() const
+{
+    return m_colorize && can_colorize();
 }
 
 ARGPARSE_INL std::string
