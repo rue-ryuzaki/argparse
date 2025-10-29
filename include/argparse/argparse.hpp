@@ -6334,11 +6334,6 @@ ARGPARSE_EXPORT class ArgumentParser
     initialize_parser();
 
 public:
-    ARGPARSE_ATTR_DEPRECATED_REASON(
-            "use argparse::SubParsers instead. "
-            "will be removed in the next minor release (v1.10.0)")
-    typedef SubParsers Subparser;
-
     /*!
      *  \brief Construct argument parser with concrete program name
      *  (default: "" don't override default program name "untitled")
@@ -7877,61 +7872,6 @@ public:
     std::list<std::pair<std::string, std::string> > const&
     list_env() const;
 
-#ifdef ARGPARSE_ENABLE_UTILS
-    /*!
-     *  \brief Run self-test and print report to output stream
-     *  for default language
-     *
-     *  \param os Output stream (default: std::cout)
-     *
-     *  \since v1.7.2
-     *
-     *  \return True if no warnings or errors were found, false otherwise
-     */
-    ARGPARSE_ATTR_DEPRECATED_REASON(
-            "use argparse::utils::self_test() instead. "
-            "will be removed in the next minor release (v1.10.0)")
-    ARGPARSE_ATTR_MAYBE_UNUSED
-    bool
-    self_test(
-            std::ostream& os = std::cout) const;
-
-    /*!
-     *  \brief Run self-test and print report for selected language
-     *  to output stream
-     *
-     *  \param lang Language value
-     *  \param os Output stream (default: std::cout)
-     *
-     *  \since v1.7.2
-     *
-     *  \return True if no warnings or errors were found, false otherwise
-     */
-    ARGPARSE_ATTR_DEPRECATED_REASON(
-            "use argparse::utils::self_test() instead. "
-            "will be removed in the next minor release (v1.10.0)")
-    ARGPARSE_ATTR_MAYBE_UNUSED
-    bool
-    self_test(
-            std::string const& lang,
-            std::ostream& os = std::cout) const;
-
-    /*!
-     *  \brief Print a bash completion to output stream.
-     *  Copy the contents to ~/.bashrc or create a script file and use it
-     *
-     *  \param os Output stream (default: std::cout)
-     *
-     *  \since v1.7.2
-     */
-    ARGPARSE_ATTR_DEPRECATED_REASON(
-            "use argparse::utils::print_bash_completion() instead. "
-            "will be removed in the next minor release (v1.10.0)")
-    void
-    print_bash_completion(
-            std::ostream& os = std::cout) const;
-#endif  // ARGPARSE_ENABLE_UTILS
-
     /*!
      *  \brief Print a program usage for default language to output stream
      *
@@ -7975,23 +7915,6 @@ public:
     print_help(
             std::string const& lang,
             std::ostream& os = std::cout) const;
-
-#ifdef ARGPARSE_ENABLE_UTILS
-    /*!
-     *  \brief Return a string containing a bash completion.
-     *  Copy the contents to ~/.bashrc or create a script file and use it
-     *
-     *  \since v1.7.2
-     *
-     *  \return Bash completion string
-     */
-    ARGPARSE_ATTR_DEPRECATED_REASON(
-            "use argparse::utils::format_bash_completion() instead. "
-            "will be removed in the next minor release (v1.10.0)")
-    ARGPARSE_ATTR_NODISCARD
-    std::string
-    format_bash_completion() const;
-#endif  // ARGPARSE_ENABLE_UTILS
 
     /*!
      *  \brief Return a string containing a program usage for selected language
@@ -15545,30 +15468,6 @@ ArgumentParser::list_env() const
     return m_env_variables;
 }
 
-#ifdef ARGPARSE_ENABLE_UTILS
-ARGPARSE_INL bool
-ArgumentParser::self_test(
-        std::ostream& os) const
-{
-    return utils::self_test(*this, os);
-}
-
-ARGPARSE_INL bool
-ArgumentParser::self_test(
-        std::string const& language,
-        std::ostream& os) const
-{
-    return utils::self_test(*this, language, os);
-}
-
-ARGPARSE_INL void
-ArgumentParser::print_bash_completion(
-        std::ostream& os) const
-{
-    utils::print_bash_completion(*this, os);
-}
-#endif  // ARGPARSE_ENABLE_UTILS
-
 ARGPARSE_INL void
 ArgumentParser::print_usage(
         std::ostream& os) const
@@ -15606,14 +15505,6 @@ ArgumentParser::print_help(
         os << std::endl;
     }
 }
-
-#ifdef ARGPARSE_ENABLE_UTILS
-ARGPARSE_INL std::string
-ArgumentParser::format_bash_completion() const
-{
-    return utils::format_bash_completion(*this);
-}
-#endif  // ARGPARSE_ENABLE_UTILS
 
 ARGPARSE_INL std::string
 ArgumentParser::format_usage(
