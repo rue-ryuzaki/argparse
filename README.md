@@ -77,6 +77,7 @@ The work of the parser on older versions of compilers is not guaranteed.
 - Utils:
   - [bash completion](#bash-completion)
   - [zsh completion](#zsh-completion)
+  - [man pages](#man-pages)
   - [self test](#self-test)
 - [Execute unit tests](#execute-unit-tests)
 - [License](#license)
@@ -788,6 +789,11 @@ ArgumentParser can help you to create zsh completion (this function is experimen
 std::ofstream file;
 file.open("zsh-completion-user-dir/_" + parser.prog(), std::ios::trunc);
 argparse::utils::print_zsh_completion(parser, file);
+```
+## Man pages
+ArgumentParser can help you to create man page for your program (this function is experimental and under development).
+```cpp
+argparse::utils::print_man_page(parser);
 ```
 ## Self test
 You can check that you parser is created correctly by calling the ```self_test``` function.

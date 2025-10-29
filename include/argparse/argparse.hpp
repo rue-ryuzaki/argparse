@@ -154,6 +154,7 @@
 #  endif  // ARGPARSE_ENABLE_TERMINAL_SIZE_DETECTION
 #  include <unistd.h>
 # endif  // _WIN32
+# include <time.h>
 #endif  // ARGPARSE_INL
 
 // -- standard ----------------------------------------------------------------
@@ -8472,6 +8473,9 @@ ARGPARSE_EXPORT class utils
     utils() ARGPARSE_NOEXCEPT { }
     ~utils() ARGPARSE_NOEXCEPT { }
 
+    static std::string
+    date();
+
     static void
     test_overview(
             ArgumentParser const& parser,
@@ -8650,7 +8654,6 @@ public:
      *
      *  \since NEXT_RELEASE
      */
-    ARGPARSE_DEVELOP
     static void
     print_man_page(
             ArgumentParser const& parser,
@@ -9239,13 +9242,14 @@ _to_upper_codepoint(
 
 ARGPARSE_INL std::string
 _to_upper(
-        std::string const& str)
+        std::string const& str,
+        bool title = false)
 {
     std::pair<bool, std::size_t> num_chars = _utf8_length(str);
     std::string res;
     if (!num_chars.first) {
         res = str;
-        for (std::size_t i = 0; i < res.size(); ++i) {
+        for (std::size_t i = 0; i < (title ? 1 : res.size()); ++i) {
             res.at(i) = static_cast<char>(
                            std::toupper(static_cast<unsigned char>(res.at(i))));
         }
@@ -9279,7 +9283,9 @@ _to_upper(
                 break;
         }
         i += cp_size;
-        cp = _to_upper_codepoint(cp);
+        if (n == 0 || !title) {
+            cp = _to_upper_codepoint(cp);
+        }
         if (cp < 0x80) {
             // one octet
             res += _u32_to_char(cp);
@@ -17163,6 +17169,17 @@ ArgumentParser::parse_handle(
 
 // -- utils -------------------------------------------------------------------
 #ifdef ARGPARSE_ENABLE_UTILS
+ARGPARSE_INL std::string
+utils::date()
+{
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%m/%d/%Y", &tstruct);
+    return buf;
+}
+
 ARGPARSE_INL void
 utils::test_overview(
         ArgumentParser const& p,
@@ -17896,19 +17913,58 @@ utils::format_man_page(
         ArgumentParser const& p)
 {
     std::stringstream ss;
+    std::string version = detail::_to_upper(p.prog(), true) + " version";
+    for (arg_iterator it = p.m_data->m_arguments.begin();
+         it != p.m_data->m_arguments.end(); ++it) {
+        if ((*it)->action() == argparse::version) {
+            version = p.despecify((*it)->version());
+            break;
+        }
+    }
     std::size_t indent = 1 + detail::_utf8_length(p.prog()).second;
     ss << ".\\\" Manpage for " << p.prog() << ".\n";
     ss << ".\\\" Generated with cpp-argparse v"
        << ARGPARSE_VERSION_MAJOR << "."
        << ARGPARSE_VERSION_MINOR << "."
        << ARGPARSE_VERSION_PATCH << ".";
-    ss << "\n.TH man 1";
-    ss << "\n.SH SYNOPSIS\n"
+    ss << "\n.TH \"" << detail::_to_upper(p.prog()) << "\" \"1\""
+       << " \"" << date() << "\" \"" << detail::_to_upper(version, true) << "\""
+       << " \"" << detail::_to_upper(p.prog(), true) << " Manual\"";
+    ss << "\n.SH \"SYNOPSIS\"\n"
        << p.prog() << detail::_format_output(
               p.prog(), p.m_formatter->_usage_args(&p), 1, indent,
               detail::_def_width - std::string("SYNOPSIS").size()).str();
     if (!p.description().empty()) {
-        ss << "\n.SH DESCRIPTION\n" << p.description();
+        ss << "\n.SH \"DESCRIPTION\"\n" << p.description();
+    }
+    detail::pArguments optional = p.m_data->get_optional(false, true);
+    detail::pArguments operand = p.m_data->get_operand(false, true);
+    detail::pArguments positional = p.m_data->get_positional(false, true);
+    ss << "\n.SH \"OPTIONS\"";
+    for (std::size_t i = 0; i < optional.size(); ++i) {
+        pArgument const& arg = optional.at(i);
+        ss << "\n.PP\n" << detail::_replace(
+                arg->flags_to_string(*(p.m_formatter.get())).str(), "-", "\\-");
+        ss << "\n.RS 4\n" << arg->help() << "\n.RE";
+    }
+    for (std::size_t i = 0; i < operand.size(); ++i) {
+        pArgument const& arg = operand.at(i);
+        ss << "\n.PP\n" << detail::_replace(
+                arg->flags_to_string(*(p.m_formatter.get())).str(), "-", "\\-");
+        ss << "\n.RS 4\n" << arg->help() << "\n.RE";
+    }
+    for (std::size_t i = 0; i < positional.size(); ++i) {
+        pArgument const& arg = positional.at(i);
+        ss << "\n.PP\n" << detail::_replace(
+                arg->flags_to_string(*(p.m_formatter.get())).str(), "-", "\\-");
+        ss << "\n.RS 4\n" << arg->help() << "\n.RE";
+    }
+    if (p.has_subparsers() && !p.m_subparsers->is_suppress()) {
+        std::list<pParser> const parsers = p.m_subparsers->list_parsers(false);
+        for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
+            ss << "\n.PP\n" << detail::_replace((*it)->m_name, "-", "\\-");
+            ss << "\n.RS 4\n" << (*it)->help() << "\n.RE";
+        }
     }
     return ss.str();
 }
