@@ -6,13 +6,13 @@
 | (C++1z/latest) C++17 | gcc: (5.1) 5.1 or higher<br />clang: (3.5-4.0.1) 5.0.0 or higher<br />msvc: v19.20 vs16.0 or higher | gcc: 7.1 or higher<br />clang: 5.0.0 or higher<br />msvc: v19.20 vs16.0 or higher |
 | (C++2a/latest) C++20 | gcc: (8.1-9.5) 10.1 or higher<br />clang: (5.0.0-9.0.1) 10.0.0 or higher<br />msvc: (v19.20 vs16.0-v19.28 vs 16.9) v19.29 vs16.11 or higher | gcc: 8.1 or higher<br />clang: 5.0.0 or higher<br />msvc: v19.20 vs16.0 or higher |
 | (C++2b/latest) C++23 | gcc: (11.1) 11.1 or higher<br />clang: (12.0.0-16.0.6) 17.0.1 or higher<br />msvc: (v19.29 vs16.10 or higher) | gcc: 11.1 or higher<br />clang: 12.0.0 or higher<br />msvc: v19.29 vs16.10 or higher |
-| (C++2c/latest) C++26 | gcc: (14.1) 14.1 or higher<br />clang: (17.0.1) 17.0.1 or higher | gcc: 14.1 or higher<br />clang: 17.0.1 or higher |
+| (C++2c/latest) C++26 | gcc: (14.1) 14.1 or higher<br />clang: (17.0.1) 17.0.1 or higher<br />msvc: v19.43 vs17.13 or higher | gcc: 14.1 or higher<br />clang: 17.0.1 or higher<br />msvc: v19.43 vs17.13 or higher |
 
 msvc: versions starting from 19.20 (visual studio 2019) are tracked; doesn't support C++98 and C++11
 
 other compilers: no actual data
 
-### C++98/C++03 standard requirement
+### C++98/C++03 standard requirements
  - SFINAE
 #### Required headers
  - stdint.h (C++98 only)
@@ -30,7 +30,7 @@ other compilers: no actual data
  - string
  - utility
  - vector
-### C++11 standard requirement
+### C++11 standard requirements
 #### Required headers
  - array
  - cstdint
@@ -41,15 +41,15 @@ other compilers: no actual data
  - tuple
  - type_traits
  - unordered_map
-### C++14 standard requirement
-### C++17 standard requirement
+### C++14 standard requirements
+### C++17 standard requirements
 #### Required headers
  - optional
  - string_view
 #### Optional headers
  - version
-### C++20 standard requirement
+### C++20 standard requirements
 #### Optional headers
  - span
-### C++23 standard requirement
-### C++26 standard requirement
+### C++23 standard requirements
+### C++26 standard requirements
