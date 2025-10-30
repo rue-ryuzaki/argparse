@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.0] - 2025-10-30
+
+  * Add: man pages generation
+  * Add: unicode 17 to upper case support
+  * Add: ArgumentParser::color support (3.14)
+  * Fix: Argument & ArgumentGroup help generation
+  * Fix: compilation warnings
+  * Use: format '-s, --long ARGS' for options (3.13)
+
 ## [1.9.10] - 2025-06-24
 
   * Add: integer overflow check for count actions with default value
