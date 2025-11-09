@@ -10550,9 +10550,10 @@ ARGPARSE_INL void
 colorstream::print(
         std::ostream& os) const
 {
+    bool const use_color = colorize();
     for (std::list<color_word>::const_iterator it = text().begin();
          it != text().end(); ++it) {
-        if (colorize() && (*it).first != 0 && !(*it).second.empty()) {
+        if (use_color && (*it).first != 0 && !(*it).second.empty()) {
             os << code((*it).first) << (*it).second
                << reset_code();
         } else {
