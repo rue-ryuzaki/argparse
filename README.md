@@ -1,4 +1,4 @@
-[![Argument Parser for C++](https://raw.githubusercontent.com/rue-ryuzaki/argparse/master/docs/argparse-logo.png)](https://github.com/rue-ryuzaki/argparse/releases)
+[![Argument Parser for C++](https://raw.githubusercontent.com/rue-ryuzaki/argparse/develop/docs/argparse-logo.png)](https://github.com/rue-ryuzaki/argparse/releases)
 
 [![Language](https://img.shields.io/badge/C%2B%2B-98/11/14/17/20/23/26-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 [![Ubuntu](https://github.com/rue-ryuzaki/argparse/workflows/Ubuntu/badge.svg)](https://github.com/rue-ryuzaki/argparse/actions?query=workflow%3AUbuntu)
