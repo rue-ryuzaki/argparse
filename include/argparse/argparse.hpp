@@ -398,8 +398,6 @@ private:
 
 /*!
  *  \brief Action values
- *
- *  \enum Action
  */
 ARGPARSE_EXPORT enum Action ARGPARSE_ENUM_TYPE(uint16_t)
 {
@@ -428,8 +426,6 @@ public:
      *  \brief Construct ArgumentError handler
      *
      *  \param error Error message
-     *
-     *  \return ArgumentError object
      */
     explicit
     ArgumentError(
@@ -448,8 +444,6 @@ public:
      *  \brief Construct AttributeError handler
      *
      *  \param error Error message
-     *
-     *  \return AttributeError object
      */
     explicit
     AttributeError(
@@ -468,8 +462,6 @@ public:
      *  \brief Construct ValueError handler
      *
      *  \param error Error message
-     *
-     *  \return ValueError object
      */
     explicit
     ValueError(
@@ -488,8 +480,6 @@ public:
      *  \brief Construct IndexError handler
      *
      *  \param error Error message
-     *
-     *  \return IndexError object
      */
     explicit
     IndexError(
@@ -510,8 +500,6 @@ public:
      *  \brief Construct NameError handler
      *
      *  \param error Error message
-     *
-     *  \return NameError object
      */
     explicit
     NameError(
@@ -530,8 +518,6 @@ public:
      *  \brief Construct TypeError handler
      *
      *  \param error Error message
-     *
-     *  \return TypeError object
      */
     explicit
     TypeError(
@@ -542,16 +528,12 @@ public:
 
 /*!
  *  \brief Don't use this enum name! use argparse::SUPPRESS value directly
- *
- *  \enum _SUPPRESS
  */
 ARGPARSE_EXPORT ARGPARSE_INLINE_VARIABLE
 enum _SUPPRESS ARGPARSE_ENUM_TYPE(uint8_t) {} SUPPRESS;
 
 /*!
  *  \brief Don't use this enum name! use argparse::REMAINDER value directly
- *
- *  \enum _REMAINDER
  */
 ARGPARSE_EXPORT ARGPARSE_INLINE_VARIABLE
 enum _REMAINDER ARGPARSE_ENUM_TYPE(uint8_t) {} REMAINDER;
@@ -2619,8 +2601,6 @@ public:
      *  \brief Construct argument object with parsed arguments
      *
      *  \param flags Argument flags
-     *
-     *  \return Argument object
      */
     template <class... Args>
     explicit
@@ -2633,8 +2613,6 @@ public:
      *  \brief Construct argument object with parsed arguments
      *
      *  \param flags Argument flags
-     *
-     *  \return Argument object
      */
     explicit
     Argument(
@@ -2646,8 +2624,6 @@ public:
      *  \brief Construct argument object with parsed arguments
      *
      *  \param flag Argument flag
-     *
-     *  \return Argument object
      */
     explicit
     Argument(
@@ -2658,8 +2634,6 @@ public:
      *
      *  \param flag1 First flag
      *  \param flag2 Second flag
-     *
-     *  \return Argument object
      */
     explicit
     Argument(
@@ -2674,8 +2648,6 @@ public:
      *  \param flag3 Third flag
      *
      *  \since v1.7.2
-     *
-     *  \return Argument object
      */
     explicit
     Argument(
@@ -2692,8 +2664,6 @@ public:
      *  \param flag4 Fourth flag
      *
      *  \since v1.7.2
-     *
-     *  \return Argument object
      */
     explicit
     Argument(
@@ -2707,8 +2677,6 @@ public:
      *  \brief Construct argument object with parsed arguments
      *
      *  \param flags Argument flags
-     *
-     *  \return Argument object
      */
     explicit
     Argument(
@@ -2718,8 +2686,6 @@ public:
      *  \brief Construct argument object from another argument
      *
      *  \param orig Argument object to copy
-     *
-     *  \return Argument object
      */
     Argument(
             Argument const& orig);
@@ -2740,8 +2706,6 @@ public:
      *  \brief Construct argument object from another argument
      *
      *  \param orig Argument object to move
-     *
-     *  \return Argument object
      */
     Argument(
             Argument&& orig) ARGPARSE_NOEXCEPT;
@@ -2933,7 +2897,7 @@ public:
 
     /*!
      *  \brief Set custom argument 'const' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value Const value
      *
@@ -2976,7 +2940,7 @@ public:
 
     /*!
      *  \brief Set custom argument 'default' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value Default value
      *
@@ -3034,7 +2998,7 @@ public:
      *  \brief Set custom argument 'implicit' value (used with nargs="?" or "*",
      *  const_value alternative for optional arguments with nargs="?")
      *  and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value Implicit value
      *
@@ -3065,7 +3029,7 @@ public:
 
     /*!
      *  \brief Set argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \return Current argument reference
      */
@@ -3130,7 +3094,7 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  \brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value Choice value
      *
@@ -3151,7 +3115,7 @@ public:
 
     /*!
      *  \brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value1 First value
      *  \param value2 Second value
@@ -3175,7 +3139,7 @@ public:
 
     /*!
      *  \brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value Choices value
      *
@@ -3229,7 +3193,7 @@ public:
 #else
     /*!
      *  \brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value Choice value
      *
@@ -3252,7 +3216,7 @@ public:
 
     /*!
      *  \brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value1 First value
      *  \param value2 Second value
@@ -3278,7 +3242,7 @@ public:
 
     /*!
      *  \brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value1 First value
      *  \param value2 Second value
@@ -3307,7 +3271,7 @@ public:
 
     /*!
      *  \brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value1 First value
      *  \param value2 Second value
@@ -3391,7 +3355,7 @@ public:
 
     /*!
      *  \brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter and Namespace::get/try_get<T> type check)
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
      *
      *  \param value Choices value
      *
@@ -4593,8 +4557,6 @@ public:
      *  \brief Create argument group object from another argument group
      *
      *  \param orig Argument group object to copy
-     *
-     *  \return Argument group object
      */
     _ArgumentGroup(
             _ArgumentGroup const& orig);
@@ -4767,8 +4729,6 @@ public:
      *   mutually exclusive group
      *
      *  \param orig Mutually exclusive group object to copy
-     *
-     *  \return Mutually exclusive group object
      */
     MutuallyExclusiveGroup(
             MutuallyExclusiveGroup const& orig);
@@ -4860,8 +4820,6 @@ public:
      *  \brief Create argument group object from another argument group
      *
      *  \param orig Argument group object to copy
-     *
-     *  \return Argument group object
      */
     ArgumentGroup(
             ArgumentGroup const& orig);
@@ -5478,8 +5436,6 @@ public:
     /*!
      *  \brief Check parser function exists in parsed arguments
      *
-     *  \param key Argument destination name or flag
-     *
      *  \since v1.9.6
      *
      *  \return True if parser function exists, otherwise false
@@ -5955,8 +5911,6 @@ public:
      *  \brief Create parser group object from another parser group
      *
      *  \param orig Parser group object to copy
-     *
-     *  \return Parser group object
      */
     ParserGroup(
             ParserGroup const& orig);
@@ -6339,8 +6293,6 @@ public:
      *  (default: "" don't override default program name "untitled")
      *
      *  \param prog Program name (default: "")
-     *
-     *  \return Argument parser object
      */
     explicit
     ArgumentParser(
@@ -6354,8 +6306,6 @@ public:
      *  \param argc Number of command line arguments
      *  \param argv Command line arguments data
      *  \param prog Program name (default: "")
-     *
-     *  \return Argument parser object
      */
     explicit
     ArgumentParser(
@@ -6374,8 +6324,6 @@ public:
      *  \param prog Program name (default: "")
      *
      *  \since v1.8.0
-     *
-     *  \return Argument parser object
      */
     explicit
     ArgumentParser(
