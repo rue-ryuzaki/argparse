@@ -159,6 +159,7 @@ endif()
 
 include(CPack)
 
+option(ARGPARSE_BUILD_DOCS "Build ${LIBRARY_NAME} docs" OFF)
 option(ARGPARSE_BUILD_EXAMPLES "Build ${LIBRARY_NAME} examples" OFF)
 option(ARGPARSE_BUILD_TESTS "Build ${LIBRARY_NAME} unit tests" ON)
 
@@ -191,5 +192,18 @@ if (ARGPARSE_BUILD_EXAMPLES OR ARGPARSE_BUILD_TESTS)
 
         enable_testing()
         add_subdirectory(tests)
+    endif()
+endif()
+
+if (ARGPARSE_BUILD_DOCS)
+    find_package(Doxygen)
+    if (DOXYGEN_FOUND)
+        set(LIBRARY_DOCS ${LIBRARY_NAME}_docs)
+        add_custom_target(${LIBRARY_DOCS} ALL ${DOXYGEN_EXECUTABLE}
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/docs"
+            COMMENT "Generating ${LIBRARY_NAME} documentation")
+        add_dependencies(${LIBRARY_DOCS} ${LIBRARY_NAME})
+    else()
+        message(WARNING "Doxygen not found")
     endif()
 endif()
