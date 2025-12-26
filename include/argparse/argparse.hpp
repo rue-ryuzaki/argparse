@@ -7950,7 +7950,7 @@ private:
         _Storage storage;
         SubParsersInfo subparsers;
         std::string lang;
-        bool have_negative_args;
+        bool has_negative_args;
     };
     typedef std::list<ParserInfo> Parsers;
     typedef std::list<ParserInfo>::iterator pi_iterator;
@@ -9448,7 +9448,7 @@ _get_punct(
 }
 
 ARGPARSE_INL bool
-_have_quotes(
+_has_quotes(
         std::string const& str)
 {
     return str.size() > 1 && str.at(0) == str.at(str.size() - 1)
@@ -9459,7 +9459,7 @@ ARGPARSE_INL std::string
 _remove_quotes(
         std::string const& str)
 {
-    return _have_quotes(str) ? str.substr(1, str.size() - 2) : str;
+    return _has_quotes(str) ? str.substr(1, str.size() - 2) : str;
 }
 
 ARGPARSE_INL std::string
@@ -9569,22 +9569,22 @@ ARGPARSE_INL bool
 _is_optional(
         std::string const& arg,
         std::string const& prefix_chars,
-        bool have_negative_args,
+        bool has_negative_args,
         bool was_pseudo_arg)
 {
     return !arg.empty() && _exists(arg.at(0), prefix_chars) && !was_pseudo_arg
-            && (have_negative_args || !_is_negative_number(arg));
+            && (has_negative_args || !_is_negative_number(arg));
 }
 
 ARGPARSE_INL bool
 _not_optional(
         std::string const& arg,
         std::string const& prefix_chars,
-        bool have_negative_args,
+        bool has_negative_args,
         bool was_pseudo_arg)
 {
     return arg.empty() || !_exists(arg.at(0), prefix_chars) || was_pseudo_arg
-            || (!have_negative_args && _is_negative_number(arg));
+            || (!has_negative_args && _is_negative_number(arg));
 }
 
 ARGPARSE_INL std::string
@@ -9752,7 +9752,7 @@ _vector_to_string(
     std::string res;
     for (value_const_iterator it = begvec; it != endvec; ++it) {
         std::string val = *it;
-        if (quotes.empty() && replace_space && !_have_quotes(val)) {
+        if (quotes.empty() && replace_space && !_has_quotes(val)) {
             val = _replace(val, _spaces, "\\ ");
         }
         _append_value_to(quotes + val + quotes, res, separator);
@@ -13165,14 +13165,14 @@ _Storage::create(
     if (key->action() & (argparse::version | argparse::help)) {
         return;
     }
-    bool have_key = false;
+    bool has_key = false;
     for (const_iterator it = m_data.begin(); it != m_data.end(); ++it) {
-        have_key = have_key || (key == (*it).first);
+        has_key = has_key || (key == (*it).first);
         if (key != (*it).first) {
             (*it).first->resolve_conflict_flags(key->flags());
         }
     }
-    if (!have_key) {
+    if (!has_key) {
         m_data.push_back(std::make_pair(key, value));
     }
 }
@@ -13533,7 +13533,7 @@ Namespace::to_args(
             if (args.second.size() != 1) {
                 throw TypeError("got a data-array for argument '" + key + "'");
             }
-            return detail::_have_quotes(args.second.front())
+            return detail::_has_quotes(args.second.front())
                     ? args.second.front()
                     : detail::_replace(
                           args.second.front(), detail::_spaces, "\\ ");
@@ -15524,10 +15524,10 @@ ArgumentParser::ParserInfo::ParserInfo(
       storage(storage),
       subparsers(subparsers),
       lang(),
-      have_negative_args()
+      has_negative_args()
 {
     lang = parser->default_language();
-    have_negative_args = detail::_negative_numbers_presented(
+    has_negative_args = detail::_negative_numbers_presented(
                 optional, parser->prefix_chars());
 }
 
@@ -15540,7 +15540,7 @@ ArgumentParser::ParserInfo::ParserInfo(
       storage(orig.storage),
       subparsers(orig.subparsers),
       lang(orig.lang),
-      have_negative_args(orig.have_negative_args)
+      has_negative_args(orig.has_negative_args)
 { }
 
 ARGPARSE_INL ArgumentParser::ParserInfo&
@@ -15554,7 +15554,7 @@ ArgumentParser::ParserInfo::operator =(
         storage             = rhs.storage;
         subparsers          = rhs.subparsers;
         lang                = rhs.lang;
-        have_negative_args  = rhs.have_negative_args;
+        has_negative_args   = rhs.has_negative_args;
     }
     return *this;
 }
@@ -15816,7 +15816,7 @@ ArgumentParser::parse_arguments(
                    && !remainder
                    && detail::_is_optional(
                        arg, parsers.back().parser->prefix_chars(),
-                       parsers.back().have_negative_args, was_pseudo_arg)) {
+                       parsers.back().has_negative_args, was_pseudo_arg)) {
             unrecognized_args.push_back(ARGPARSE_MOVE(arg));
         } else {
             process_positional_args(parsed_arguments, i, parsers,
@@ -16063,7 +16063,7 @@ ArgumentParser::storage_optional_store(
                                 && detail::_not_optional(
                                     next,
                                     parsers.back().parser->prefix_chars(),
-                                    parsers.back().have_negative_args,
+                                    parsers.back().has_negative_args,
                                     was_pseudo_arg)))) {
                     values.push_back(next);
                     ++n;
@@ -16527,7 +16527,7 @@ ArgumentParser::check_abbreviations(
     if (!arg.empty() && !parsers.front().storage.exists(arg)
             && detail::_is_optional(arg,
                                     parsers.back().parser->prefix_chars(),
-                                    parsers.back().have_negative_args,
+                                    parsers.back().has_negative_args,
                                     was_pseudo_arg)) {
         pArguments const& options = parsers.back().optional;
         std::vector<std::string> temp;
@@ -16663,7 +16663,7 @@ ArgumentParser::process_positional_args(
                               && detail::_not_optional(
                                   next,
                                   parsers.back().parser->prefix_chars(),
-                                  parsers.back().have_negative_args,
+                                  parsers.back().has_negative_args,
                                   was_pseudo_arg))) {
                 args.push_back(next);
             } else {
@@ -17418,13 +17418,13 @@ utils::_bash_completion_info(
             options.push_back(options.back() + "A");
         }
     }
-    bool have_fs_args = false;
+    bool has_fs_args = false;
     for (std::size_t i = 0; i < positional.size(); ++i) {
         pArgument const& arg = positional.at(i);
         if (!(arg->action() & detail::_store_action)) {
             continue;
         }
-        have_fs_args = have_fs_args || (arg->m_nargs != detail::SUPPRESSING);
+        has_fs_args = has_fs_args || (arg->m_nargs != detail::SUPPRESSING);
     }
     if (parser->has_subparsers()) {
         if (!parser->m_subparsers->m_help.suppress()) {
@@ -17440,7 +17440,7 @@ utils::_bash_completion_info(
             }
         }
     }
-    if (have_fs_args) {
+    if (has_fs_args) {
         res.args += " -df";
     }
     if (!options.empty()) {
