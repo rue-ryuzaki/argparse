@@ -3,6 +3,13 @@ name: macOS
 on:
   push:
     branches: [ develop ]
+    paths:
+      - 'CMakeLists.txt'
+      - '.github/workflows/*'
+      - 'cmake/*'
+      - 'include/argparse/*'
+      - 'src/*'
+      - 'tests/*'
   pull_request:
     branches: [ develop ]
 
