@@ -12,11 +12,12 @@ build:
       - merge_requests
       - web
     changes:
+      - .gitlab-ci.yml
       - CMakeLists.txt
       - cmake/*
       - include/argparse/*
-      - tests/*
       - src/*
+      - tests/*
   parallel:
     matrix:
       - standard: [98, 11, 14, 17, 20, 23, 26]
