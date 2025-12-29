@@ -15955,7 +15955,14 @@ ArgumentParser::storage_store_n_values(
     std::vector<std::string> values;
     values.reserve(n);
     for (std::size_t i = 0; i < n; ++i) {
-        values.push_back(arguments.front());
+        if (arg->action() == argparse::extend
+                && arg->m_nargs == detail::ZERO_OR_ONE) {
+            for (std::size_t i = 0; i < arguments.front().size(); ++i) {
+                values.push_back(std::string(1, arguments.front().at(i)));
+            }
+        } else {
+            values.push_back(arguments.front());
+        }
         arguments.pop_front();
     }
     storage_store_values(parsers, arg, values);
@@ -16065,7 +16072,14 @@ ArgumentParser::storage_optional_store(
                                     parsers.back().parser->prefix_chars(),
                                     parsers.back().has_negative_args,
                                     was_pseudo_arg)))) {
-                    values.push_back(next);
+                    if (tmp->action() == argparse::extend
+                            && tmp->m_nargs == detail::ZERO_OR_ONE) {
+                        for (std::size_t i = 0; i < next.size(); ++i) {
+                            values.push_back(std::string(1, next.at(i)));
+                        }
+                    } else {
+                        values.push_back(next);
+                    }
                     ++n;
                 } else {
                     --i;

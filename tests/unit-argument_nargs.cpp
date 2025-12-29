@@ -123,10 +123,10 @@ TEST_CASE("1. argument nargs", "[argument]")
                 = parser.parse_args(_make_vec("--store", new_value, "--append", new_value, "--extend", new_value));
         CHECK(args2.get<std::string>("--store") == new_value);
         CHECK(args2.get<std::string>("--append") == new_value);  // return array value
-        CHECK(args2.get<std::string>("--extend") == new_value);  // return array value
+        CHECK_THROWS(args2.get<std::string>("--extend"));  // return array value
         CHECK(args2.get<std::vector<std::string> >("--store").size() == 1);
         CHECK(args2.get<std::vector<std::string> >("--append").size() == 1);
-        CHECK(args2.get<std::vector<std::string> >("--extend").size() == 1);
+        CHECK(args2.get<std::vector<std::string> >("--extend").size() == 1 * 3);
 
         // override args
         argparse::Namespace args3
@@ -134,13 +134,12 @@ TEST_CASE("1. argument nargs", "[argument]")
                                               "--store", new_value, "--append", new_value, "--extend", new_value));
         CHECK(args3.get<std::vector<std::string> >("--store").size() == 1);
         CHECK(args3.get<std::vector<std::string> >("--append").size() == 2);
-        CHECK(args3.get<std::vector<std::string> >("--extend").size() == 2);
+        CHECK(args3.get<std::vector<std::string> >("--extend").size() == 2 * 3);
     }
 
     SECTION("1.4. nargs ? positional") {
         parser.add_argument("store").action(argparse::store).nargs("?").default_value(default_value);
         parser.add_argument("append").action(argparse::append).nargs("?");
-//        parser.add_argument({ "extend" }).action(argparse::extend).nargs("?");  // invalid in python without arguments
 
         argparse::Namespace args1 = parser.parse_args(_make_vec());
         CHECK(args1.get<std::string>("store") == default_value);
@@ -161,6 +160,43 @@ TEST_CASE("1. argument nargs", "[argument]")
         CHECK(args3.get<std::vector<std::string> >("append").size() == 1);
 
         CHECK_THROWS(parser.parse_args(_make_vec(new_value, new_value, new_value)));
+    }
+
+    SECTION("1.4.1. nargs ? positional extend") {
+        parser.add_argument("extend").action(argparse::extend).nargs("?");  // invalid in python without arguments
+
+        CHECK_THROWS(parser.parse_args(_make_vec()));
+
+        argparse::Namespace args1 = parser.parse_args(_make_vec(new_value));
+        CHECK_THROWS(args1.get<std::string>("extend"));  // return array value
+        CHECK(args1.get<std::vector<std::string> >("extend").size() == 3);
+        CHECK(args1.to_string() == "Namespace(extend=['n', 'e', 'w'])");
+
+        CHECK_THROWS(parser.parse_args(_make_vec(new_value, new_value)));
+        CHECK_THROWS(parser.parse_args(_make_vec(new_value, new_value, new_value)));
+    }
+
+    SECTION("1.4.2. nargs ? optional extend") {
+        parser.add_argument("--extend").action(argparse::extend).nargs("?");
+
+        argparse::Namespace args1 = parser.parse_args(_make_vec("--extend", new_value));
+        CHECK_THROWS(args1.get<std::string>("extend"));  // return array value
+        CHECK(args1.get<std::vector<std::string> >("extend").size() == 3);
+        CHECK(args1.to_string() == "Namespace(extend=['n', 'e', 'w'])");
+    }
+
+    SECTION("1.4.3. nargs ? optional extend with const value") {
+        parser.add_argument("--extend").action(argparse::extend).nargs("?").const_value(new_value);
+
+        argparse::Namespace args0 = parser.parse_args(_make_vec("--extend"));
+        CHECK_THROWS(args0.get<std::string>("extend"));  // return array value
+        CHECK(args0.get<std::vector<std::string> >("extend").size() == 3);
+        CHECK(args0.to_string() == "Namespace(extend=['n', 'e', 'w'])");
+
+        argparse::Namespace args1 = parser.parse_args(_make_vec("--extend", new_value));
+        CHECK_THROWS(args1.get<std::string>("extend"));  // return array value
+        CHECK(args1.get<std::vector<std::string> >("extend").size() == 3);
+        CHECK(args1.to_string() == "Namespace(extend=['n', 'e', 'w'])");
     }
 
     SECTION("1.5. nargs * optional") {
