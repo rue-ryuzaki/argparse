@@ -15950,7 +15950,7 @@ ArgumentParser::storage_store_n_values(
         std::size_t n) const
 {
     if (n > arguments.size()) {
-        throw ValueError("can't store " +  detail::_to_string(n) + " values");
+        throw ValueError("can't store " + detail::_to_string(n) + " values");
     }
     std::vector<std::string> values;
     values.reserve(n);

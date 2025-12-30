@@ -38,7 +38,7 @@ TEST_CASE("1. default_value", "[argument]")
     }
 
     SECTION("1.3. optional action count increment") {
-        parser.add_argument("-f").action("count").default_value<int16_t>(int16_t_max_plus_1 - 3);
+        parser.add_argument("-f").action("count").default_value<int16_t>(static_cast<int16_t>(int16_t_max_plus_1 - 3));
 
         argparse::Namespace const args2 = parser.parse_args("-ff");
         argparse::Namespace const args3 = parser.parse_args("-fff");
