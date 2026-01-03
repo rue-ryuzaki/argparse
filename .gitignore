@@ -58,6 +58,7 @@ x86/
 .vscode/
 
 # QtCreator
+.qtcreator/
 *.autosave
 
 # QMake
