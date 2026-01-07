@@ -25,6 +25,7 @@ other compilers: no actual data
  - limits
  - list
  - queue
+ - set
  - sstream
  - stdexcept
  - string
