@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.10.1] - 2026-01-10
+
+  * Fix: docs generation
+  * Fix: extend arguments with nargs='+' behaviour
+
 ## [1.10.0] - 2025-10-30
 
   * Add: man pages generation
