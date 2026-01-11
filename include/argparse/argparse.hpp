@@ -3798,6 +3798,11 @@ private:
     resolve_conflict_flags(
             std::vector<std::string> const& flags);
 
+    void
+    push_value(
+            std::string const& value,
+            std::vector<std::string>& values) const;
+
     std::string
     error_nargs(
             std::string const& arg) const;
@@ -12348,6 +12353,20 @@ Argument::resolve_conflict_flags(
     detail::_resolve_conflict(flags, m_all_flags);
 }
 
+ARGPARSE_INL void
+Argument::push_value(
+        std::string const& value,
+        std::vector<std::string>& values) const
+{
+    if (action() == argparse::extend && m_nargs == detail::ZERO_OR_ONE) {
+        for (std::size_t i = 0; i < value.size(); ++i) {
+            values.push_back(std::string(1, value.at(i)));
+        }
+    } else {
+        values.push_back(value);
+    }
+}
+
 ARGPARSE_INL std::string
 Argument::error_nargs(
         std::string const& arg) const
@@ -15955,14 +15974,7 @@ ArgumentParser::storage_store_n_values(
     std::vector<std::string> values;
     values.reserve(n);
     for (std::size_t i = 0; i < n; ++i) {
-        if (arg->action() == argparse::extend
-                && arg->m_nargs == detail::ZERO_OR_ONE) {
-            for (std::size_t i = 0; i < arguments.front().size(); ++i) {
-                values.push_back(std::string(1, arguments.front().at(i)));
-            }
-        } else {
-            values.push_back(arguments.front());
-        }
+        arg->push_value(arguments.front(), values);
         arguments.pop_front();
     }
     storage_store_values(parsers, arg, values);
@@ -16000,21 +16012,13 @@ ArgumentParser::storage_optional_store_func(
                 break;
             case detail::ZERO_OR_ONE :
                 if (tmp->m_const.has_value()) {
-                    if (tmp->action() == argparse::extend) {
-                        if (tmp->const_value().empty()) {
-                            storage_have_value(parsers, tmp);
-                        } else {
-                            std::vector<std::string> values;
-                            values.reserve(tmp->const_value().size());
-                            for (std::size_t i = 0;
-                                 i < tmp->const_value().size(); ++i) {
-                                values.push_back(
-                                      std::string(1, tmp->const_value().at(i)));
-                            }
-                            storage_store_values(parsers, tmp, values);
-                        }
+                    if (tmp->action() == argparse::extend
+                            && tmp->const_value().empty()) {
+                        storage_have_value(parsers, tmp);
                     } else {
-                        storage_store_value(parsers, tmp, tmp->const_value());
+                        std::vector<std::string> values;
+                        tmp->push_value(tmp->const_value(), values);
+                        storage_store_values(parsers, tmp, values);
                     }
                 } else if (tmp->action() == argparse::extend) {
                     throw TypeError("'NoneType' object is not iterable");
@@ -16034,7 +16038,7 @@ ArgumentParser::storage_optional_store_func(
     } else if ((tmp->m_nargs & detail::_NARGS_COMBINED)
                && (n < tmp->m_num_args
                    || (tmp->m_nargs != detail::NARGS_NUM
-                       && tmp->m_num_args > 1 && n % tmp->m_num_args != 0))) {
+                       && tmp->m_num_args > 1 && (n % tmp->m_num_args) != 0))) {
         parsers.back().parser->throw_error(tmp->error_nargs(arg));
     }
 }
@@ -16072,14 +16076,7 @@ ArgumentParser::storage_optional_store(
                                     parsers.back().parser->prefix_chars(),
                                     parsers.back().has_negative_args,
                                     was_pseudo_arg)))) {
-                    if (tmp->action() == argparse::extend
-                            && tmp->m_nargs == detail::ZERO_OR_ONE) {
-                        for (std::size_t i = 0; i < next.size(); ++i) {
-                            values.push_back(std::string(1, next.at(i)));
-                        }
-                    } else {
-                        values.push_back(next);
-                    }
+                    tmp->push_value(next, values);
                     ++n;
                 } else {
                     --i;
