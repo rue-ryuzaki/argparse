@@ -1,5 +1,6 @@
 stages:
-- build
+  - build
+  - deploy
 
 build:
   stage: build
@@ -28,3 +29,28 @@ build:
   artifacts:
     reports:
       junit: build/*/*_${OUTPUT_REPORT}
+
+deploy_latest:
+  stage: deploy
+  only:
+    refs:
+      - develop
+    changes:
+      - include/argparse/*
+  script:
+     - 'curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file ${PWD}/include/argparse/argparse.hpp "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/argparse/latest/argparse.hpp"'
+
+deploy_stable:
+  stage: deploy
+  only:
+    refs:
+      - master
+  script:
+     - 'curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file ${PWD}/include/argparse/argparse.hpp "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/argparse/stable/argparse.hpp"'
+
+deploy_tag:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  script:
+     - 'curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file ${PWD}/include/argparse/argparse.hpp "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/argparse/${CI_COMMIT_TAG}/argparse.hpp"'
