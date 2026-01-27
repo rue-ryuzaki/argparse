@@ -179,10 +179,15 @@ TEST_CASE("1. argument nargs", "[argument]")
     SECTION("1.4.2. nargs ? optional extend") {
         parser.add_argument("--extend").action(argparse::extend).nargs("?");
 
-        argparse::Namespace args1 = parser.parse_args(_make_vec("--extend", new_value));
+        argparse::Namespace args1 = parser.parse_args("--extend " + new_value);
         CHECK_THROWS(args1.get<std::string>("extend"));  // return array value
         CHECK(args1.get<std::vector<std::string> >("extend").size() == 3);
         CHECK(args1.to_string() == "Namespace(extend=['n', 'e', 'w'])");
+
+        argparse::Namespace args2 = parser.parse_args("--extend=" + new_value);
+        CHECK_THROWS(args2.get<std::string>("extend"));  // return array value
+        CHECK(args2.get<std::vector<std::string> >("extend").size() == 3);
+        CHECK(args2.to_string() == "Namespace(extend=['n', 'e', 'w'])");
     }
 
     SECTION("1.4.3. nargs ? optional extend with const value") {
@@ -731,5 +736,60 @@ TEST_CASE("1. argument nargs", "[argument]")
         CHECK(parser.parse_args("--bar c").to_string()   == "Namespace(args=[], baz='123', bar='c')");
         CHECK(parser.parse_args("--bar c d").to_string() == "Namespace(args=['d'], baz='123', bar='c')");
         CHECK(parser.parse_args("a --bar c").to_string() == "Namespace(args=['a', '--bar', 'c'], baz='123', bar=None)");
+    }
+}
+
+TEST_CASE("2. combined nargs", "[argument]")
+{
+    argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("2.1. nargs N") {
+        parser.add_argument("-f").nargs(3);
+
+        CHECK_THROWS(parser.parse_args("-f"));
+        CHECK_THROWS(parser.parse_args("-f="));
+        CHECK(parser.parse_args("-f n e w").to_string() == "Namespace(f=['n', 'e', 'w'])");
+    }
+
+    SECTION("2.2. nargs +") {
+        parser.add_argument("-f").nargs("+", 3);
+
+        CHECK_THROWS(parser.parse_args("-f"));
+        CHECK_THROWS(parser.parse_args("-f="));
+        CHECK(parser.parse_args("-f n e w").to_string() == "Namespace(f=['n', 'e', 'w'])");
+    }
+
+    SECTION("2.3. nargs *") {
+        parser.add_argument("-f").nargs("*", 3);
+
+        CHECK(parser.parse_args("-f").to_string()       == "Namespace(f=[])");
+        CHECK(parser.parse_args("-f=").to_string()      == "Namespace(f=[])");
+        CHECK(parser.parse_args("-f n e w").to_string() == "Namespace(f=['n', 'e', 'w'])");
+    }
+
+    SECTION("2.4. nargs ?") {
+        parser.add_argument("-f").nargs("?", 3);
+
+        CHECK(parser.parse_args("-f").to_string()       == "Namespace(f=[])");
+        CHECK(parser.parse_args("-f=").to_string()      == "Namespace(f=[])");
+        CHECK(parser.parse_args("-f n e w").to_string() == "Namespace(f=['n', 'e', 'w'])");
+    }
+
+    SECTION("2.5. nargs ? extend with valid const") {
+        parser.add_argument("-f").action("extend").nargs("?", 3).const_value("con");
+
+        CHECK(parser.parse_args("-f").to_string()       == "Namespace(f=['c', 'o', 'n'])");
+        CHECK(parser.parse_args("-f=").to_string()      == "Namespace(f=[])");
+        CHECK(parser.parse_args("-f=new").to_string()   == "Namespace(f=['n', 'e', 'w'])");
+        CHECK(parser.parse_args("-f new").to_string()   == "Namespace(f=['n', 'e', 'w'])");
+    }
+
+    SECTION("2.6. nargs ? extend with invalid const") {
+        parser.add_argument("-f").action("extend").nargs("?", 3).const_value("const");
+
+        CHECK_THROWS(parser.parse_args("-f"));
+        CHECK(parser.parse_args("-f=").to_string()      == "Namespace(f=[])");
+        CHECK(parser.parse_args("-f=new").to_string()   == "Namespace(f=['n', 'e', 'w'])");
+        CHECK(parser.parse_args("-f new").to_string()   == "Namespace(f=['n', 'e', 'w'])");
     }
 }
