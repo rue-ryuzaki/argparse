@@ -12362,7 +12362,7 @@ Argument::push_value(
         for (std::size_t i = 0; i < value.size(); ++i) {
             values.push_back(std::string(1, value.at(i)));
         }
-    } else {
+    } else if (!value.empty() || m_num_args <= 1) {
         values.push_back(value);
     }
 }
@@ -13658,6 +13658,7 @@ Namespace::store_actions_to_string(
         std::string const& quotes)
 {
     if (((args.first->action() & (argparse::store | argparse::language))
+         && args.first->m_num_args <= 1
          && (args.first->m_nargs
              & (detail::NARGS_DEF | detail::ZERO_OR_ONE)))
             || (!args.second.exists()
@@ -13673,6 +13674,7 @@ Namespace::store_actions_to_string(
         std::string none
                 = (args.first->m_nargs
                    & (detail::ZERO_OR_MORE | detail::REMAINDING))
+                || args.first->m_num_args > 1
                 || (args.first->action() == argparse::extend
                     && args.first->m_nargs == detail::ZERO_OR_ONE)
                 ? std::string() : detail::_none;
@@ -16018,6 +16020,10 @@ ArgumentParser::storage_optional_store_func(
                     } else {
                         std::vector<std::string> values;
                         tmp->push_value(tmp->const_value(), values);
+                        if ((values.size() % tmp->m_num_args) != 0) {
+                            parsers.back().parser->throw_error(
+                                        tmp->error_nargs(arg));
+                        }
                         storage_store_values(parsers, tmp, values);
                     }
                 } else if (tmp->action() == argparse::extend) {
@@ -16076,8 +16082,9 @@ ArgumentParser::storage_optional_store(
                                     parsers.back().parser->prefix_chars(),
                                     parsers.back().has_negative_args,
                                     was_pseudo_arg)))) {
+                    std::size_t before = values.size();
                     tmp->push_value(next, values);
-                    ++n;
+                    n += values.size() - before;
                 } else {
                     --i;
                     storage_optional_store_func(parsers, arg, tmp, n);
@@ -16111,10 +16118,27 @@ ArgumentParser::storage_optional_store(
             parsers.back().parser->throw_error(
                        detail::_ignore_explicit(equals.front(), equals.back()));
         }
-        if (tmp->m_nargs != detail::NARGS_DEF && tmp->m_num_args > 1) {
-            parsers.back().parser->throw_error(tmp->error_nargs(arg));
+        std::vector<std::string> values;
+        tmp->push_value(equals.back(), values);
+        switch (tmp->m_nargs) {
+            case detail::ONE_OR_MORE :
+                if (values.empty()) {
+                    parsers.back().parser->throw_error(tmp->error_nargs(arg));
+                }
+                // fallthrough
+            case detail::ZERO_OR_ONE :
+            case detail::ZERO_OR_MORE :
+                if ((values.size() % tmp->m_num_args) != 0) {
+                    parsers.back().parser->throw_error(tmp->error_nargs(arg));
+                }
+                break;
+            case detail::NARGS_NUM :
+                if (values.size() != tmp->m_num_args) {
+                    parsers.back().parser->throw_error(tmp->error_nargs(arg));
+                }
+                break;
         }
-        storage_store_value(parsers, tmp, equals.back());
+        storage_store_values(parsers, tmp, values);
     }
 }
 
