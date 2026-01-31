@@ -397,7 +397,7 @@ private:
 #endif  // C++11+
 
 /*!
- *  @brief Action values
+ *  @brief Action values.
  */
 ARGPARSE_EXPORT enum Action ARGPARSE_ENUM_TYPE(uint16_t)
 {
@@ -417,14 +417,14 @@ ARGPARSE_EXPORT enum Action ARGPARSE_ENUM_TYPE(uint16_t)
 };
 
 /*!
- *  @brief ArgumentError handler
+ *  @brief ArgumentError handler.
  */
 ARGPARSE_EXPORT class ArgumentError : public std::invalid_argument
 {
 public:
     /*!
-     *  @brief Construct ArgumentError handler
-     *  @param error Error message
+     *  @brief Create an ArgumentError handler.
+     *  @param error Error message.
      */
     explicit
     ArgumentError(
@@ -434,14 +434,14 @@ public:
 };
 
 /*!
- *  @brief AttributeError handler
+ *  @brief AttributeError handler.
  */
 ARGPARSE_EXPORT class AttributeError : public std::invalid_argument
 {
 public:
     /*!
-     *  @brief Construct AttributeError handler
-     *  @param error Error message
+     *  @brief Create an AttributeError handler.
+     *  @param error Error message.
      */
     explicit
     AttributeError(
@@ -451,14 +451,14 @@ public:
 };
 
 /*!
- *  @brief ValueError handler
+ *  @brief ValueError handler.
  */
 ARGPARSE_EXPORT class ValueError : public std::invalid_argument
 {
 public:
     /*!
-     *  @brief Construct ValueError handler
-     *  @param error Error message
+     *  @brief Create a ValueError handler.
+     *  @param error Error message.
      */
     explicit
     ValueError(
@@ -468,14 +468,14 @@ public:
 };
 
 /*!
- *  @brief IndexError handler
+ *  @brief IndexError handler.
  */
 ARGPARSE_EXPORT class IndexError : public std::out_of_range
 {
 public:
     /*!
-     *  @brief Construct IndexError handler
-     *  @param error Error message
+     *  @brief Create an IndexError handler.
+     *  @param error Error message.
      */
     explicit
     IndexError(
@@ -485,15 +485,15 @@ public:
 };
 
 /*!
- *  @brief NameError handler
+ *  @brief NameError handler.
  *  @since v1.7.1
  */
 ARGPARSE_EXPORT class NameError : public std::invalid_argument
 {
 public:
     /*!
-     *  @brief Construct NameError handler
-     *  @param error Error message
+     *  @brief Create a NameError handler.
+     *  @param error Error message.
      */
     explicit
     NameError(
@@ -503,14 +503,14 @@ public:
 };
 
 /*!
- *  @brief TypeError handler
+ *  @brief TypeError handler.
  */
 ARGPARSE_EXPORT class TypeError : public std::invalid_argument
 {
 public:
     /*!
-     *  @brief Construct TypeError handler
-     *  @param error Error message
+     *  @brief Create a TypeError handler.
+     *  @param error Error message.
      */
     explicit
     TypeError(
@@ -520,13 +520,13 @@ public:
 };
 
 /*!
- *  @brief Don't use this enum name! use argparse::SUPPRESS value directly
+ *  @warning Don't use this enum name! Use argparse::SUPPRESS value directly.
  */
 ARGPARSE_EXPORT ARGPARSE_INLINE_VARIABLE
 enum _SUPPRESS ARGPARSE_ENUM_TYPE(uint8_t) {} SUPPRESS;
 
 /*!
- *  @brief Don't use this enum name! use argparse::REMAINDER value directly
+ *  @warning Don't use this enum name! Use argparse::REMAINDER value directly.
  */
 ARGPARSE_EXPORT ARGPARSE_INLINE_VARIABLE
 enum _REMAINDER ARGPARSE_ENUM_TYPE(uint8_t) {} REMAINDER;
@@ -2373,7 +2373,8 @@ class Argument;
 class ArgumentParser;
 
 /*!
- *  @brief Formatter for generating usage messages and argument help strings
+ *  @brief A formatter for generating usage messages and help strings
+ *  for arguments.
  */
 ARGPARSE_EXPORT class HelpFormatter
 {
@@ -2449,7 +2450,7 @@ private:
 };
 
 /*!
- *  @brief Help message formatter which retains any formatting in descriptions
+ *  @brief Help message formatter which retains any formatting in descriptions.
  */
 ARGPARSE_EXPORT
 class _RawDescriptionHelpFormatter : virtual public HelpFormatter
@@ -2471,7 +2472,7 @@ protected:
 } ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
 
 /*!
- *  @brief Help message formatter which retains formatting of all help text
+ *  @brief Help message formatter which retains formatting of all help text.
  */
 ARGPARSE_EXPORT
 class _RawTextHelpFormatter : virtual public _RawDescriptionHelpFormatter
@@ -2486,7 +2487,8 @@ public:
 } ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
 
 /*!
- *  @brief Help message formatter which adds default values to argument help
+ *  @brief Help message formatter which adds default values
+ *  to the argument help.
  */
 ARGPARSE_EXPORT
 class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
@@ -2501,8 +2503,8 @@ public:
 } ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
 
 /*!
- *  @brief Help message formatter which uses the argument 'type' as the default
- *  metavar value (instead of the argument 'dest')
+ *  @brief Help message formatter that uses the argument 'type' as the default
+ *  metavar value (instead of the argument 'dest').
  */
 ARGPARSE_EXPORT
 class _MetavarTypeHelpFormatter : virtual public HelpFormatter
@@ -2521,11 +2523,11 @@ public:
 
 // -- standAlone functions ----------------------------------------------------
 /*!
- *  @brief Split string with command line arguments to arguments container
- *  @param str String to process
- *  @param err Output stream for errors (default: std::cerr)
+ *  @brief Split a string of command line arguments into an arguments container.
+ *  @param str String to process.
+ *  @param err Output stream for errors (default: std::cerr).
  *  @since v1.9.0
- *  @return Container with arguments
+ *  @return An arguments container.
  */
 ARGPARSE_EXPORT std::vector<std::string>
 split_to_args(
@@ -2536,7 +2538,7 @@ split_to_args(
 class _ArgumentData;
 
 /*!
- *  @brief Argument class
+ *  @brief Argument class.
  */
 ARGPARSE_EXPORT class Argument
 {
@@ -2588,8 +2590,8 @@ ARGPARSE_EXPORT class Argument
 public:
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Construct argument object with parsed arguments
-     *  @param flags Argument flags
+     *  @brief Create an argument object with the specified flags.
+     *  @param flags Argument flags.
      */
     template <class... Args>
     explicit
@@ -2599,8 +2601,8 @@ public:
     { }
 
     /*!
-     *  @brief Construct argument object with parsed arguments
-     *  @param flags Argument flags
+     *  @brief Create an argument object with the specified flags.
+     *  @param flags Argument flags.
      */
     explicit
     Argument(
@@ -2609,17 +2611,17 @@ public:
     { }
 #else
     /*!
-     *  @brief Construct argument object with parsed arguments
-     *  @param flag Argument flag
+     *  @brief Create an argument object with the specified flags.
+     *  @param flag Argument flag.
      */
     explicit
     Argument(
             std::string const& flag);
 
     /*!
-     *  @brief Construct argument object with parsed arguments
-     *  @param flag1 First flag
-     *  @param flag2 Second flag
+     *  @brief Create an argument object with the specified flags.
+     *  @param flag1 First flag.
+     *  @param flag2 Second flag.
      */
     explicit
     Argument(
@@ -2627,10 +2629,10 @@ public:
             std::string const& flag2);
 
     /*!
-     *  @brief Construct argument object with parsed arguments
-     *  @param flag1 First flag
-     *  @param flag2 Second flag
-     *  @param flag3 Third flag
+     *  @brief Create an argument object with the specified flags.
+     *  @param flag1 First flag.
+     *  @param flag2 Second flag.
+     *  @param flag3 Third flag.
      *  @since v1.7.2
      */
     explicit
@@ -2640,11 +2642,11 @@ public:
             std::string const& flag3);
 
     /*!
-     *  @brief Construct argument object with parsed arguments
-     *  @param flag1 First flag
-     *  @param flag2 Second flag
-     *  @param flag3 Third flag
-     *  @param flag4 Fourth flag
+     *  @brief Create an argument object with the specified flags.
+     *  @param flag1 First flag.
+     *  @param flag2 Second flag.
+     *  @param flag3 Third flag.
+     *  @param flag4 Fourth flag.
      *  @since v1.7.2
      */
     explicit
@@ -2656,24 +2658,24 @@ public:
 #endif  // C++11+
 
     /*!
-     *  @brief Construct argument object with parsed arguments
-     *  @param flags Argument flags
+     *  @brief Create an argument object with the specified flags.
+     *  @param flags Argument flags.
      */
     explicit
     Argument(
             std::vector<std::string> const& flags);
 
     /*!
-     *  @brief Construct argument object from another argument
-     *  @param orig Argument object to copy
+     *  @brief Create an argument object from another argument.
+     *  @param orig Argument object to copy.
      */
     Argument(
             Argument const& orig);
 
     /*!
-     *  @brief Copy argument object from another argument
-     *  @param rhs Argument object to copy
-     *  @return Current argument reference
+     *  @brief Copy an argument object from another argument.
+     *  @param rhs Argument object to copy.
+     *  @return A reference to the current argument.
      */
     Argument&
     operator =(
@@ -2681,16 +2683,16 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Construct argument object from another argument
-     *  @param orig Argument object to move
+     *  @brief Create an argument object from another argument.
+     *  @param orig Argument object to move.
      */
     Argument(
             Argument&& orig) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Move argument object from another argument
-     *  @param rhs Argument object to move
-     *  @return Current argument reference
+     *  @brief Move an argument object from another argument.
+     *  @param rhs Argument object to move.
+     *  @return A reference to the current argument.
      */
     Argument&
     operator =(
@@ -2698,38 +2700,37 @@ public:
 #endif  // C++11+
 
     /*!
-     *  @brief Set argument 'action' value (default: "store")
-     *  @param value Action value
-     *  @return Current argument reference
+     *  @brief Set the 'action' value (default: "store").
+     *  @param value Action value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     action(std::string const& value);
 
     /*!
-     *  @brief Set argument 'action' value (default: argparse::store)
-     *  @param value Action value
-     *  @return Current argument reference
+     *  @brief Set the 'action' value (default: argparse::store).
+     *  @param value Action value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     action(Action value);
 
     /*!
-     *  @brief Set argument 'nargs' value
-     *  @param num Number of arguments
-     *  @return Current argument reference
+     *  @brief Set the 'nargs' value.
+     *  @param num Number of arguments.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     nargs(std::size_t num);
 
     /*!
-     *  @brief Set argument 'nargs' value
-     *  (combined nargs if num > 1)
-     *  @param value Nargs value: "?", "*", "+"
-     *  @param num Number of arguments (default: 1)
-     *  @return Current argument reference
+     *  @brief Set the 'nargs' value (combined nargs if num > 1).
+     *  @param value Nargs value: "?", "*", "+".
+     *  @param num Number of arguments (default: 1).
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -2737,29 +2738,28 @@ public:
             std::size_t num = 1);
 
     /*!
-     *  @brief Set argument 'nargs' value
-     *  @param value argparse::REMAINDER
-     *  @return Current argument reference
+     *  @brief Set the 'nargs' argparse::REMAINDER value.
+     *  @param value argparse::REMAINDER.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     nargs(_REMAINDER value);
 
     /*!
-     *  @brief Suppress argument 'nargs' value
-     *  @param value argparse::SUPPRESS
+     *  @brief Suppress the 'nargs' value.
+     *  @param value argparse::SUPPRESS.
      *  @since v1.8.0
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     nargs(_SUPPRESS value);
 
     /*!
-     *  @brief Set argument 'nargs' optional ("?") value
-     *  (combined nargs if num > 1)
-     *  @param num Number of arguments (default: 1)
-     *  @return Current argument reference
+     *  @brief Set the 'nargs' optional ("?") value (combined nargs if num > 1).
+     *  @param num Number of arguments (default: 1).
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
@@ -2770,10 +2770,10 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'nargs' zero_or_one ("?") value
-     *  (combined nargs if num > 1)
-     *  @param num Number of arguments (default: 1)
-     *  @return Current argument reference
+     *  @brief Set the 'nargs' zero_or_one ("?") value
+     *  (combined nargs if num > 1).
+     *  @param num Number of arguments (default: 1).
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
@@ -2784,10 +2784,10 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'nargs' zero_or_more ("*") value
-     *  (combined nargs if num > 1)
-     *  @param num Number of arguments (default: 1)
-     *  @return Current argument reference
+     *  @brief Set the 'nargs' zero_or_more ("*") value
+     *  (combined nargs if num > 1).
+     *  @param num Number of arguments (default: 1).
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
@@ -2798,10 +2798,10 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'nargs' one_or_more ("+") value
-     *  (combined nargs if num > 1)
-     *  @param num Number of arguments (default: 1)
-     *  @return Current argument reference
+     *  @brief Set the 'nargs' one_or_more ("+") value
+     *  (combined nargs if num > 1).
+     *  @param num Number of arguments (default: 1).
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
@@ -2812,8 +2812,8 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'nargs' argparse::REMAINDER value
-     *  @return Current argument reference
+     *  @brief Set the 'nargs' argparse::REMAINDER value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
@@ -2823,9 +2823,9 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'nargs' argparse::SUPPRESS value
+     *  @brief Set the 'nargs' argparse::SUPPRESS value.
      *  @since v1.9.0
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     inline Argument&
@@ -2835,9 +2835,9 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'const' value
-     *  @param value Const value
-     *  @return Current argument reference
+     *  @brief Set the 'const' value.
+     *  @param value Const value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -2845,10 +2845,10 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Set custom argument 'const' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value Const value
-     *  @return Current argument reference
+     *  @brief Set the custom 'const' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value Const value.
+     *  @return A reference to the current argument.
      */
 #ifdef ARGPARSE_CXX_11
     template <class T,
@@ -2874,9 +2874,9 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'default' value
-     *  @param value Default value
-     *  @return Current argument reference
+     *  @brief Set the 'default' value.
+     *  @param value Default value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -2884,10 +2884,10 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Set custom argument 'default' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value Default value
-     *  @return Current argument reference
+     *  @brief Set the custom 'default' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value Default value.
+     *  @return A reference to the current argument.
      */
 #ifdef ARGPARSE_CXX_11
     template <class T,
@@ -2913,9 +2913,9 @@ public:
     }
 
     /*!
-     *  @brief Suppress argument 'default' value
-     *  @param value argparse::SUPPRESS
-     *  @return Current argument reference
+     *  @brief Suppress the 'default' value.
+     *  @param value argparse::SUPPRESS.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -2923,10 +2923,10 @@ public:
             _SUPPRESS value);
 
     /*!
-     *  @brief Set argument 'implicit' value (used with nargs="?" or "*",
-     *  const_value alternative for optional arguments with nargs="?")
-     *  @param value Implicit value
-     *  @return Current argument reference
+     *  @brief Set the 'implicit' value (used with nargs="?" or "*",
+     *  const_value alternative for optional arguments with nargs="?").
+     *  @param value Implicit value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -2934,12 +2934,12 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Set custom argument 'implicit' value (used with nargs="?" or "*",
+     *  @brief Set the custom 'implicit' value (used with nargs="?" or "*",
      *  const_value alternative for optional arguments with nargs="?")
      *  and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value Implicit value
-     *  @return Current argument reference
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value Implicit value.
+     *  @return A reference to the current argument.
      */
 #ifdef ARGPARSE_CXX_11
     template <class T,
@@ -2965,9 +2965,9 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @return Current argument reference
+     *  @brief Set the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @return A reference to the current argument.
      */
     template <class T>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2979,39 +2979,39 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'type' name (for MetavarTypeHelpFormatter)
-     *  @param value Type name value
-     *  @return Current argument reference
+     *  @brief Set the 'type' name (for MetavarTypeHelpFormatter).
+     *  @param value Type name value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     type(std::string const& value);
 
     /*!
-     *  @brief Set argument 'type' factory function.
-     *  Called in Namespace::get/try_get<>
-     *  @param func Type factory function
+     *  @brief Set the 'type' factory function.
+     *  Called in Namespace::get/try_get<>.
+     *  @param func Type factory function.
      *  @since v1.8.4
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     type(detail::func2<std::string const&, void*>::type func) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Set argument 'choices' value
-     *  @param value Choice value
+     *  @brief Set the 'choices' value.
+     *  @param value Choice value.
      *  @since v1.7.1
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choice(std::string const& value);
 
     /*!
-     *  @brief Set argument 'choices' value. Each character is a separate choice
-     *  @param value Choices value
-     *  @return Current argument reference
+     *  @brief Set the 'choices' value. Each character is a separate choice.
+     *  @param value Choices value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3019,11 +3019,11 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value Choice value
+     *  @brief Set the 'choices' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value Choice value.
      *  @since v1.9.3
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     template <class T,
               typename std::enable_if<
@@ -3037,13 +3037,13 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @param args Other values
+     *  @brief Set the 'choices' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @param args Other values.
      *  @since v1.9.3
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     template <class T, class... Args,
               typename std::enable_if<
@@ -3058,11 +3058,11 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value Choices value
+     *  @brief Set the 'choices' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value Choices value.
      *  @since v1.9.3
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     template <class T,
               typename std::enable_if<
@@ -3075,12 +3075,12 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'choices' value
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @param args Other values
+     *  @brief Set the 'choices' value.
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @param args Other values.
      *  @since v1.7.1
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     template <class... Args>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3093,21 +3093,21 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'choices' value
-     *  @param value Choices value
+     *  @brief Set the 'choices' value.
+     *  @param value Choices value.
      *  @since v1.7.2
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choices(std::initializer_list<std::string> const& value);
 #else
     /*!
-     *  @brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value Choice value
+     *  @brief Set the 'choices' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value Choice value.
      *  @since v1.9.3
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     template <class T>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3123,12 +3123,12 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value1 First value
-     *  @param value2 Second value
+     *  @brief Set the 'choices' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value1 First value.
+     *  @param value2 Second value.
      *  @since v1.9.3
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     template <class T>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3146,13 +3146,13 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @param value3 Third value
+     *  @brief Set the 'choices' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @param value3 Third value.
      *  @since v1.9.3
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     template <class T>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3172,14 +3172,14 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @param value3 Third value
-     *  @param value4 Fourth value
+     *  @brief Set the 'choices' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @param value3 Third value.
+     *  @param value4 Fourth value.
      *  @since v1.9.3
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     template <class T>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3201,11 +3201,11 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'choices' value
-     *  @param value1 First value
-     *  @param value2 Second value
+     *  @brief Set the 'choices' value.
+     *  @param value1 First value.
+     *  @param value2 Second value.
      *  @since v1.7.1
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3213,12 +3213,12 @@ public:
             std::string const& value2);
 
     /*!
-     *  @brief Set argument 'choices' value
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @param value3 Third value
+     *  @brief Set the 'choices' value.
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @param value3 Third value.
      *  @since v1.7.1
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3227,13 +3227,13 @@ public:
             std::string const& value3);
 
     /*!
-     *  @brief Set argument 'choices' value
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @param value3 Third value
-     *  @param value4 Fourth value
+     *  @brief Set the 'choices' value.
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @param value3 Third value.
+     *  @param value4 Fourth value.
      *  @since v1.7.1
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3244,11 +3244,11 @@ public:
 #endif  // C++11+
 
     /*!
-     *  @brief Set argument 'choices' value and argument 'type' name
-     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *  @param value Choices value
+     *  @brief Set the 'choices' value and the 'type' name
+     *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check).
+     *  @param value Choices value.
      *  @since v1.9.3
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
 #ifdef ARGPARSE_CXX_11
     template <class T,
@@ -3271,18 +3271,18 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'choices' value
-     *  @param value Choices value
-     *  @return Current argument reference
+     *  @brief Set the 'choices' value.
+     *  @param value Choices value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     choices(std::vector<std::string> const& value);
 
     /*!
-     *  @brief Set 'required' value for non-positionals arguments
-     *  @param value Required flag
-     *  @return Current argument reference
+     *  @brief Set the 'required' value for non-positionals arguments.
+     *  @param value Required flag.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3290,10 +3290,10 @@ public:
             bool value);
 
     /*!
-     *  @brief Set argument 'help' message for selected language
-     *  @param value Help message
-     *  @param lang Language value (default: "")
-     *  @return Current argument reference
+     *  @brief Set the 'help' message for the selected language.
+     *  @param value Help message.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3301,27 +3301,27 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Suppress argument 'help' message
-     *  @param value argparse::SUPPRESS
-     *  @return Current argument reference
+     *  @brief Suppress the 'help' message.
+     *  @param value argparse::SUPPRESS.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     help(_SUPPRESS value);
 
     /*!
-     *  @brief Set argument 'version' for arguments with 'version' action
-     *  @param value Version value
-     *  @return Current argument reference
+     *  @brief Set the 'version' for arguments with the 'version' action.
+     *  @param value Version value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     version(std::string const& value);
 
     /*!
-     *  @brief Set argument 'metavar' value
-     *  @param value Metavar values
-     *  @return Current argument reference
+     *  @brief Set the 'metavar' value.
+     *  @param value Metavar values.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3329,10 +3329,10 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Set argument 'metavar' value
-     *  @param value First value
-     *  @param args Other values
-     *  @return Current argument reference
+     *  @brief Set the 'metavar' value.
+     *  @param value First value.
+     *  @param args Other values.
+     *  @return A reference to the current argument.
      */
     template <class... Args>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3344,29 +3344,29 @@ public:
     }
 
     /*!
-     *  @brief Set argument 'metavar' value
-     *  @param value Metavar values
+     *  @brief Set the 'metavar' value.
+     *  @param value Metavar values.
      *  @since v1.7.2
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     metavar(std::initializer_list<std::string> const& value);
 #else
     /*!
-     *  @brief Set argument 'metavar' value
-     *  @param value Metavar value
-     *  @return Current argument reference
+     *  @brief Set the 'metavar' value.
+     *  @param value Metavar value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     metavar(std::string const& value);
 
     /*!
-     *  @brief Set argument 'metavar' value
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @return Current argument reference
+     *  @brief Set the 'metavar' value.
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3374,11 +3374,11 @@ public:
             std::string const& value2);
 
     /*!
-     *  @brief Set argument 'metavar' value
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @param value3 Third value
-     *  @return Current argument reference
+     *  @brief Set the 'metavar' value.
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @param value3 Third value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3387,12 +3387,12 @@ public:
             std::string const& value3);
 
     /*!
-     *  @brief Set argument 'metavar' value
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @param value3 Third value
-     *  @param value4 Fourth value
-     *  @return Current argument reference
+     *  @brief Set the 'metavar' value.
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @param value3 Third value.
+     *  @param value4 Fourth value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3403,19 +3403,19 @@ public:
 #endif  // C++11+
 
     /*!
-     *  @brief Set argument 'dest' value for non-positionals arguments
-     *  @param value Destination value
-     *  @return Current argument reference
+     *  @brief Set the 'dest' value for non-positionals arguments.
+     *  @param value Destination value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     dest(std::string const& value);
 
     /*!
-     *  @brief Set argument 'deprecated' value
-     *  @param value Deprecated value
+     *  @brief Set the 'deprecated' value.
+     *  @param value Deprecated value.
      *  @since v1.9.5
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -3423,134 +3423,134 @@ public:
             bool value);
 
     /*!
-     *  @brief Set argument 'handle' function.
-     *  Called when the argument is present and passed the value of the argument
-     *  @param func Handle function
-     *  @return Current argument reference
+     *  @brief Set the 'handle' function. Called when the argument is present
+     *  and passed the value of the argument.
+     *  @param func Handle function.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
     handle(detail::func1<std::string const&>::type func) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument flags values
-     *  @return Argument flags values
+     *  @brief Get the flags value.
+     *  @return The flags value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::vector<std::string> const&
     flags() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'action' value (default: argparse::store)
-     *  @return Argument 'action' value
+     *  @brief Get the 'action' value (default: argparse::store).
+     *  @return The 'action' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     Action
     action() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'nargs' value
-     *  @return Argument 'nargs' value
+     *  @brief Get the 'nargs' value.
+     *  @return The 'nargs' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     nargs() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'const' value
-     *  @return Argument 'const' value
+     *  @brief Get the 'const' value.
+     *  @return The 'const' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     const_value() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'default' value
-     *  @return Argument 'default' value
+     *  @brief Get the 'default' value.
+     *  @return The 'default' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     default_value() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'implicit' value (used with nargs="?" or "*",
-     *  const_value alternative for optional arguments with nargs="?")
-     *  @return Argument 'implicit' value
+     *  @brief Get the 'implicit' value (used with nargs="?" or "*",
+     *  const_value alternative for optional arguments with nargs="?").
+     *  @return The 'implicit' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     implicit_value() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'type' name (for MetavarTypeHelpFormatter)
-     *  @return Argument 'type' name
+     *  @brief Get the 'type' name (for MetavarTypeHelpFormatter).
+     *  @return The 'type' name of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     type_name() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'choices' value
-     *  @return Argument 'choices' value
+     *  @brief Get the 'choices' value.
+     *  @return The 'choices' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::vector<std::string> const&
     choices() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'required' value
-     *  @return Argument 'required' value
+     *  @brief Get the 'required' value.
+     *  @return The 'required' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     required() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'help' message for default language
-     *  @return Argument 'help' message
+     *  @brief Get the 'help' message for the default language.
+     *  @return The 'help' message of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     help() const;
 
     /*!
-     *  @brief Get argument 'version' value
-     *  @return Argument 'version' value
+     *  @brief Get the 'version' value.
+     *  @return The 'version' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     version() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'metavar' value
-     *  @return Argument 'metavar' value
+     *  @brief Get the 'metavar' value.
+     *  @return The 'metavar' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
     metavar() const;
 
     /*!
-     *  @brief Get argument 'dest' value
-     *  @return Argument 'dest' value
+     *  @brief Get the 'dest' value.
+     *  @return The 'dest' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     dest() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument 'deprecated' value
+     *  @brief Get the 'deprecated' value.
      *  @since v1.9.5
-     *  @return Argument 'deprecated' value
+     *  @return The 'deprecated' value of the argument.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     deprecated() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Convert argument value from string to type T
-     *  @param value Argument value
+     *  @brief Convert the argument value from string to type T.
+     *  @param value Argument value.
      *  @since v1.9.8
-     *  @return Converted value
+     *  @return Converted value.
      */
     template <class T>
     ARGPARSE_ATTR_NODISCARD
@@ -4238,7 +4238,7 @@ _get(std::string const& key,
 }  // namespace detail
 
 /*!
- *  @brief _Group class
+ *  @brief _Group class.
  */
 class _Group
 {
@@ -4251,21 +4251,21 @@ protected:
 
 public:
     /*!
-     *  @brief Destroy group
+     *  @brief Destroy the group.
      */
     virtual ~_Group() ARGPARSE_NOEXCEPT { }
 
     /*!
-     *  @brief Get group 'title' value for default language
-     *  @return Group 'title' value
+     *  @brief Get the 'title' value for the default language.
+     *  @return Group 'title' value of the group.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     title() const;
 
     /*!
-     *  @brief Get group 'description' value for default language
-     *  @return Group 'description' value
+     *  @brief Get the 'description' value for the default language.
+     *  @return The 'description' value of the group.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
@@ -4294,7 +4294,7 @@ protected:
 };
 
 /*!
- *  @brief _ArgumentData class
+ *  @brief _ArgumentData class.
  */
 class _ArgumentData
 {
@@ -4375,7 +4375,7 @@ class _ArgumentData
 };
 
 /*!
- *  @brief _ArgumentGroup class
+ *  @brief _ArgumentGroup class.
  */
 class _ArgumentGroup
 {
@@ -4394,21 +4394,21 @@ protected:
 
 public:
     /*!
-     *  @brief Create argument group object from another argument group
-     *  @param orig Argument group object to copy
+     *  @brief Create an argument group object from another argument group.
+     *  @param orig Argument group object to copy.
      */
     _ArgumentGroup(
             _ArgumentGroup const& orig);
 
     /*!
-     *  @brief Destroy argument group object
+     *  @brief Destroy the argument group object.
      */
     virtual ~_ArgumentGroup() ARGPARSE_NOEXCEPT { }
 
     /*!
-     *  @brief Copy argument group object from another argument group
-     *  @param rhs Argument group object to copy
-     *  @return Current argument group reference
+     *  @brief Copy an argument group object from another argument group.
+     *  @param rhs Argument group object to copy.
+     *  @return A reference to the current argument group.
      */
     _ArgumentGroup&
     operator =(
@@ -4416,9 +4416,9 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Add argument with flags
-     *  @param flags Flag values
-     *  @return Current argument reference
+     *  @brief Add an argument with the specified flags.
+     *  @param flags Flags value.
+     *  @return A reference to the current argument.
      */
     template <class... Args>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4430,10 +4430,10 @@ public:
     }
 
     /*!
-     *  @brief Add argument with flags
-     *  @param flags Flag values
+     *  @brief Add an argument with the specified flags.
+     *  @param flags Flags value.
      *  @since v1.7.2
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -4441,9 +4441,9 @@ public:
             std::initializer_list<std::string> const& flags);
 #else
     /*!
-     *  @brief Add argument with flag
-     *  @param flag Flag value
-     *  @return Current argument reference
+     *  @brief Add an argument with a flag.
+     *  @param flag Flag value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -4451,10 +4451,10 @@ public:
             std::string const& flag);
 
     /*!
-     *  @brief Add argument with 2 flags
-     *  @param flag1 First value
-     *  @param flag2 Second value
-     *  @return Current argument reference
+     *  @brief Add an argument with 2 flags.
+     *  @param flag1 First value.
+     *  @param flag2 Second value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -4463,12 +4463,12 @@ public:
             std::string const& flag2);
 
     /*!
-     *  @brief Add argument with 3 flags
-     *  @param flag1 First value
-     *  @param flag2 Second value
-     *  @param flag3 Third value
+     *  @brief Add an argument with 3 flags.
+     *  @param flag1 First value.
+     *  @param flag2 Second value.
+     *  @param flag3 Third value.
      *  @since v1.7.2
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -4478,13 +4478,13 @@ public:
             std::string const& flag3);
 
     /*!
-     *  @brief Add argument with 4 flags
-     *  @param flag1 First value
-     *  @param flag2 Second value
-     *  @param flag3 Third value
-     *  @param flag4 Fourth value
+     *  @brief Add an argument with 4 flags.
+     *  @param flag1 First value.
+     *  @param flag2 Second value.
+     *  @param flag3 Third value.
+     *  @param flag4 Fourth value.
      *  @since v1.7.2
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -4496,9 +4496,9 @@ public:
 #endif  // C++11+
 
     /*!
-     *  @brief Add argument with flags
-     *  @param flags Flags values
-     *  @return Current argument reference
+     *  @brief Add an argument with the specified flags.
+     *  @param flags Flags value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -4520,7 +4520,7 @@ private:
 };
 
 /*!
- *  @brief MutuallyExclusiveGroup class
+ *  @brief MutuallyExclusiveGroup class.
  */
 ARGPARSE_EXPORT class MutuallyExclusiveGroup : public _ArgumentGroup
 {
@@ -4545,27 +4545,27 @@ public:
     using _ArgumentGroup::add_argument;
 
     /*!
-     *  @brief Create mutually exclusive group object from another
-     *   mutually exclusive group
-     *  @param orig Mutually exclusive group object to copy
+     *  @brief Create a mutually exclusive group object from another
+     *  mutually exclusive group.
+     *  @param orig Mutually exclusive group object to copy.
      */
     MutuallyExclusiveGroup(
             MutuallyExclusiveGroup const& orig);
 
     /*!
-     *  @brief Copy mutually exclusive group object from another
-     *  mutually exclusive group
-     *  @param rhs Mutually exclusive group object to copy
-     *  @return Current mutually exclusive group reference
+     *  @brief Copy a mutually exclusive group object from another
+     *  mutually exclusive group.
+     *  @param rhs Mutually exclusive group object to copy.
+     *  @return A reference to the current mutually exclusive group.
      */
     MutuallyExclusiveGroup&
     operator =(
             MutuallyExclusiveGroup const& rhs);
 
     /*!
-     *  @brief Set mutually exclusive group 'required' value
-     *  @param value Required flag
-     *  @return Current mutually exclusive group reference
+     *  @brief Set the 'required' value.
+     *  @param value Required flag.
+     *  @return A reference to the current mutually exclusive group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     MutuallyExclusiveGroup&
@@ -4573,17 +4573,17 @@ public:
             bool value) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get mutually exclusive group 'required' value
-     *  @return Mutually exclusive group 'required' value
+     *  @brief Get the 'required' value.
+     *  @return The 'required' value of the mutually exclusive group.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     required() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Add argument
-     *  @param argument Argument
-     *  @return Current mutually exclusive group reference
+     *  @brief Add an argument.
+     *  @param argument Argument.
+     *  @return A reference to the current mutually exclusive group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     MutuallyExclusiveGroup&
@@ -4599,7 +4599,7 @@ private:
 };
 
 /*!
- *  @brief ArgumentGroup class
+ *  @brief ArgumentGroup class.
  */
 ARGPARSE_EXPORT class ArgumentGroup : public _Group, public _ArgumentGroup
 {
@@ -4629,26 +4629,26 @@ public:
     using _Group::description;
 
     /*!
-     *  @brief Create argument group object from another argument group
-     *  @param orig Argument group object to copy
+     *  @brief Create an argument group object from another argument group.
+     *  @param orig Argument group object to copy.
      */
     ArgumentGroup(
             ArgumentGroup const& orig);
 
     /*!
-     *  @brief Copy argument group object from another argument group
-     *  @param rhs Argument group object to copy
-     *  @return Current argument group reference
+     *  @brief Copy an argument group object from another argument group.
+     *  @param rhs Argument group object to copy.
+     *  @return A reference to the current argument group.
      */
     ArgumentGroup&
     operator =(
             ArgumentGroup const& rhs);
 
     /*!
-     *  @brief Set argument group 'title' value for selected language
-     *  @param value Title value
-     *  @param lang Language value (default: "")
-     *  @return Current argument group reference
+     *  @brief Set the 'title' value for the selected language.
+     *  @param value Title value.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current argument group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentGroup&
@@ -4656,10 +4656,10 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set argument group 'description' value for selected language
-     *  @param value Description value
-     *  @param lang Language value (default: "")
-     *  @return Current argument group reference
+     *  @brief Set the 'description' value for the selected language.
+     *  @param value Description value.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current argument group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentGroup&
@@ -4668,10 +4668,10 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set argument group 'argument_default' value
-     *  @param value Argument default value
+     *  @brief Set the 'argument_default' value.
+     *  @param value Default argument value.
      *  @since v1.9.7
-     *  @return Current argument group reference
+     *  @return A reference to the current argument group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentGroup&
@@ -4679,10 +4679,10 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Suppress argument group 'argument_default' value
-     *  @param value argparse::SUPPRESS
+     *  @brief Suppress the 'argument_default' value.
+     *  @param value argparse::SUPPRESS.
      *  @since v1.9.7
-     *  @return Current argument group reference
+     *  @return A reference to the current argument group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentGroup&
@@ -4690,10 +4690,10 @@ public:
             _SUPPRESS value);
 
     /*!
-     *  @brief Set argument group 'conflict_handler' value
-     *  @param value Conflict handler value
+     *  @brief Set the 'conflict_handler' value.
+     *  @param value Conflict handler value.
      *  @since v1.9.7
-     *  @return Current argument group reference
+     *  @return A reference to the current argument group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentGroup&
@@ -4701,9 +4701,9 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Add argument
-     *  @param argument Argument
-     *  @return Current argument group reference
+     *  @brief Add an argument.
+     *  @param argument Argument.
+     *  @return A reference to the current argument group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentGroup&
@@ -4711,10 +4711,10 @@ public:
             Argument const& argument);
 
     /*!
-     *  @brief Add mutually exclusive group
-     *  @param required Required flag (default: false)
+     *  @brief Add a mutually exclusive group.
+     *  @param required Required flag (default: false).
      *  @since v1.9.6
-     *  @return Current mutually exclusive group reference
+     *  @return A reference to the current mutually exclusive group.
      */
     ARGPARSE_ATTR_NODISCARD
     MutuallyExclusiveGroup&
@@ -4722,18 +4722,18 @@ public:
             bool required = false);
 
     /*!
-     *  @brief Get argument group 'argument_default' value
+     *  @brief Get the 'argument_default' value.
      *  @since v1.9.7
-     *  @return Argument group 'argument_default' value
+     *  @return The 'argument_default' value of the argument group.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     argument_default() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument group 'conflict_handler' value
+     *  @brief Get the 'conflict_handler' value.
      *  @since v1.9.7
-     *  @return Argument group 'conflict_handler' value
+     *  @return The 'conflict_handler' value of the argument group.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
@@ -4761,7 +4761,7 @@ private:
 };
 
 /*!
- *  @brief _Storage class
+ *  @brief _Storage class.
  */
 class _Storage
 {
@@ -5154,7 +5154,7 @@ class _Storage
 };
 
 /*!
- *  @brief Object with parsed arguments
+ *  @brief Object with parsed arguments.
  */
 ARGPARSE_EXPORT class Namespace
 {
@@ -5186,10 +5186,12 @@ ARGPARSE_EXPORT class Namespace
 
 public:
     /*!
-     *  @brief Check if argument name exists and specified in parsed arguments
-     *  @param key Argument destination name or flag
+     *  @brief Check if the argument name exists and is specified
+     *  in the parsed arguments.
+     *  @param key Argument destination name or flag.
      *  @since v1.7.5
-     *  @return True if argument name exists and specified, otherwise false
+     *  @return True if the argument name exists and is specified,
+     *  otherwise false.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
@@ -5197,37 +5199,40 @@ public:
             std::string const& key) const;
 
     /*!
-     *  @brief Check if argument name exists and specified in parsed arguments
-     *  @param key Argument destination name or flag
-     *  @return True if argument name exists and specified, otherwise false
+     *  @brief Check if the argument name exists and is specified
+     *  in the parsed arguments.
+     *  @param key Argument destination name or flag.
+     *  @return True if the argument name exists and is specified,
+     *  otherwise false.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     exists(std::string const& key) const;
 
     /*!
-     *  @brief Execute parser function with selected object
-     *  @param args Object with parsed arguments
+     *  @brief Execute the parser function with the selected object.
+     *  @param args Object with parsed arguments.
      *  @since v1.9.6
      */
     void
     func(Namespace const& args) const;
 
     /*!
-     *  @brief Check parser function exists in parsed arguments
+     *  @brief Check if the parser function exists in the parsed arguments.
      *  @since v1.9.6
-     *  @return True if parser function exists, otherwise false
+     *  @return True if parser function exists, otherwise false.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     has_func() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get parsed argument value as boolean, byte, floating point,
-     *  integer, stl span string, stl container, 2D stl containers, custom type.
-     *  If argument not parsed, returns default value.
-     *  @param key Argument destination name or flag
-     *  @return Parsed argument value
+     *  @brief Get the parsed value of the argument as boolean, byte,
+     *  floating point, integer, stl span string, stl container,
+     *  2D stl containers or custom type. If the argument was not processed,
+     *  a default-constructed value is returned.
+     *  @param key Argument destination name or flag.
+     *  @return The parsed value of the argument.
      */
     template <class T>
     ARGPARSE_ATTR_NODISCARD
@@ -5247,12 +5252,12 @@ public:
     }
 
     /*!
-     *  @brief Get parsed argument value as paired container types,
-     *  tupled container types, mapped types, paired types or tuple types.
-     *  If argument not parsed, returns default constructed value.
-     *  @param key Argument destination name or flag
-     *  @param sep Separator (default: '=')
-     *  @return Parsed argument value
+     *  @brief Get the parsed value of the argument as paired container types,
+     *  tupled container types, mapped types, paired types or tuple types. If
+     *  the argument was not processed, a default-constructed value is returned.
+     *  @param key Argument destination name or flag.
+     *  @param sep Separator (default: '=').
+     *  @return The parsed value of the argument.
      */
     template <class T>
     ARGPARSE_ATTR_NODISCARD
@@ -5272,26 +5277,26 @@ public:
     }
 
     /*!
-     *  @brief Print namespace to output stream (default: std::cout)
-     *  @param os Output stream
+     *  @brief Print namespace in the output stream.
+     *  @param os Output stream (default: std::cout).
      */
     void
     print(std::ostream& os = std::cout) const;
 
     /*!
-     *  @brief Get parsed argument value as args string
-     *  @param key Argument destination name or flag
-     *  @return Parsed argument value as args string
+     *  @brief Get the parsed value of the argument as args string.
+     *  @param key Argument destination name or flag.
+     *  @return The parsed value of the argument as args string.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
     to_args(std::string const& key) const;
 
     /*!
-     *  @brief Get parsed argument value as string
-     *  @param key Argument destination name or flag
-     *  @param quotes Value quotes (default: "")
-     *  @return Parsed argument value as string
+     *  @brief Get the parsed value of the argument as string.
+     *  @param key Argument destination name or flag.
+     *  @param quotes Value quotes (default: "").
+     *  @return The parsed value of the argument as string.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
@@ -5300,8 +5305,8 @@ public:
             std::string const& quotes = std::string()) const;
 
     /*!
-     *  @brief Get namespace as string
-     *  @return Namespace as string
+     *  @brief Get an object as a string.
+     *  @return Object as a string.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
@@ -5309,12 +5314,12 @@ public:
 
 #ifdef ARGPARSE_HAS_OPTIONAL
     /*!
-     *  @brief Try get parsed argument value as boolean, byte, floating point,
-     *  integer, string, stl container, 2D stl container or custom types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *  @param key Argument destination name or flag
-     *  @return Parsed argument value or std::nullopt
+     *  @brief Try get the parsed value of the argument as boolean, byte,
+     *  floating point, integer, string, stl container, 2D stl container
+     *  or custom types. If the type is invalid, the argument does not exist,
+     *  was not parsed, or cannot be parsed, std::nullopt is returned.
+     *  @param key Argument destination name or flag.
+     *  @return The parsed value of the argument or std::nullopt.
      */
     template <class T>
     ARGPARSE_ATTR_NODISCARD
@@ -5403,13 +5408,13 @@ public:
     }
 
     /*!
-     *  @brief Try get parsed argument value as paired container,
+     *  @brief Try get the parsed value of the argument as paired container,
      *  tupled container, mapped, paired or tuple types.
-     *  If invalid type, argument not exists, not parsed or can't be parsed,
-     *  returns std::nullopt.
-     *  @param key Argument destination name or flag
-     *  @param sep Separator (default: '=')
-     *  @return Parsed argument value or std::nullopt
+     *  If the type is invalid, the argument does not exist, was not parsed,
+     *  or cannot be parsed, std::nullopt is returned.
+     *  @param key Argument destination name or flag.
+     *  @param sep Separator (default: '=').
+     *  @return The parsed value of the argument or std::nullopt.
      */
     template <class T>
     ARGPARSE_ATTR_NODISCARD
@@ -5487,16 +5492,16 @@ public:
 #endif  // ARGPARSE_HAS_OPTIONAL
 
     /*!
-     *  @brief Get unrecognized arguments
-     *  @return Unrecognized arguments
+     *  @brief Get the unrecognized arguments.
+     *  @return Container with the unrecognized arguments.
      */
     ARGPARSE_ATTR_NODISCARD
     std::vector<std::string> const&
     unrecognized_args() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get unrecognized arguments as args string
-     *  @return Unrecognized arguments as args string
+     *  @brief Get the unrecognized arguments as args string.
+     *  @return String with the unrecognized arguments.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
@@ -5527,10 +5532,10 @@ private:
 };
 
 /*!
- *  @brief Output stream overload for Namespace
- *  @param os Output stream
- *  @param obj Namespace object
- *  @return Output stream reference
+ *  @brief Overloading the output stream for a Namespace.
+ *  @param os Output stream.
+ *  @param obj Namespace object.
+ *  @return A reference to the output stream.
  */
 inline std::ostream&
 operator <<(
@@ -5542,7 +5547,7 @@ operator <<(
 }
 
 /*!
- *  @brief _ParserGroup class
+ *  @brief _ParserGroup class.
  */
 class _ParserGroup : public _Group
 {
@@ -5565,16 +5570,16 @@ protected:
 
 public:
     /*!
-     *  @brief Get parser group 'help' message for default language
-     *  @return Parser group 'help' message
+     *  @brief Get the 'help' message for the default language.
+     *  @return The 'help' message of the parser group.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     help() const;
 
     /*!
-     *  @brief Get parser group 'metavar' value
-     *  @return Parser group 'metavar' value
+     *  @brief Get the 'metavar' value.
+     *  @return The 'metavar' value of the parser group.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
@@ -5638,7 +5643,7 @@ protected:
 class SubParsers;
 
 /*!
- *  @brief ParserGroup class
+ *  @brief ParserGroup class.
  *  @since v1.9.0
  */
 ARGPARSE_EXPORT class ParserGroup : public _ParserGroup
@@ -5665,26 +5670,26 @@ public:
     using _ParserGroup::metavar;
 
     /*!
-     *  @brief Create parser group object from another parser group
-     *  @param orig Parser group object to copy
+     *  @brief Create a parser group object from another parser group.
+     *  @param orig Parser group object to copy.
      */
     ParserGroup(
             ParserGroup const& orig);
 
     /*!
-     *  @brief Copy parser group object from another parser group
-     *  @param rhs Parser group object to copy
-     *  @return Current parser group reference
+     *  @brief Copy a parser group object from another parser group.
+     *  @param rhs Parser group object to copy.
+     *  @return A reference to the current parser group.
      */
     ParserGroup&
     operator =(
             ParserGroup const& rhs);
 
     /*!
-     *  @brief Set parser group 'title' value for selected language
-     *  @param value Title value
-     *  @param lang Language value (default: "")
-     *  @return Current parser group reference
+     *  @brief Set the 'title' value for the selected language.
+     *  @param value Title value.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current parser group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
@@ -5692,10 +5697,10 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set parser group 'description' value for selected language
-     *  @param value Description value
-     *  @param lang Language value (default: "")
-     *  @return Current parser group reference
+     *  @brief Set the 'description' value for the selected language.
+     *  @param value Description value.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current parser group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
@@ -5704,10 +5709,10 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set parser group 'help' message for selected language
-     *  @param value Help message
-     *  @param lang Language value (default: "")
-     *  @return Current parser group reference
+     *  @brief Set the 'help' message for the selected language.
+     *  @param value Help message.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current parser group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
@@ -5715,27 +5720,27 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Suppress parser group 'help' message
-     *  @param value argparse::SUPPRESS
-     *  @return Current parser group reference
+     *  @brief Suppress the 'help' message.
+     *  @param value argparse::SUPPRESS.
+     *  @return A reference to the current parser group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
     help(_SUPPRESS value);
 
     /*!
-     *  @brief Set parser group 'metavar' value
-     *  @param value Metavar value
-     *  @return Current parser group reference
+     *  @brief Set the 'metavar' value.
+     *  @param value Metavar value.
+     *  @return A reference to the current parser group.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ParserGroup&
     metavar(std::string const& value);
 
     /*!
-     *  @brief Add argument parser with concrete name
-     *  @param name Parser name
-     *  @return Current argument parser reference
+     *  @brief Add an argument parser with concrete name.
+     *  @param name Parser name.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     ArgumentParser&
@@ -5743,8 +5748,8 @@ public:
             std::string const& name);
 
     /*!
-     *  @brief Get parser names
-     *  @return Parser names container
+     *  @brief Get a container with parser names.
+     *  @return A container with parser names.
      */
     ARGPARSE_ATTR_NODISCARD
     std::vector<std::string>
@@ -5756,7 +5761,7 @@ private:
 };
 
 /*!
- *  @brief SubParsers class
+ *  @brief SubParsers class.
  */
 ARGPARSE_EXPORT class SubParsers : public _ParserGroup
 {
@@ -5785,10 +5790,10 @@ public:
     using _ParserGroup::metavar;
 
     /*!
-     *  @brief Set subparsers 'title' value for selected language
-     *  @param value Title value
-     *  @param lang Language value (default: "")
-     *  @return Current subparsers reference
+     *  @brief Set the 'title' value for the selected language.
+     *  @param value Title value.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current subparsers.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
@@ -5796,10 +5801,10 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set subparsers 'description' value for selected language
-     *  @param value Description value
-     *  @param lang Language value (default: "")
-     *  @return Current subparsers reference
+     *  @brief Set the 'description' value for the selected language.
+     *  @param value Description value.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current subparsers.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
@@ -5808,27 +5813,27 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set subparsers 'prog' value
-     *  @param value Program value
-     *  @return Current subparsers reference
+     *  @brief Set the 'prog' value.
+     *  @param value Program value.
+     *  @return A reference to the current subparsers.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     prog(std::string const& value);
 
     /*!
-     *  @brief Set subparsers 'dest' value
-     *  @param value Destination value
-     *  @return Current subparsers reference
+     *  @brief Set the 'dest' value.
+     *  @param value Destination value.
+     *  @return A reference to the current subparsers.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     dest(std::string const& value);
 
     /*!
-     *  @brief Set subparsers 'required' value
-     *  @param value Required flag
-     *  @return Current subparsers reference
+     *  @brief Set the 'required' value.
+     *  @param value Required flag.
+     *  @return A reference to the current subparsers.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
@@ -5836,10 +5841,10 @@ public:
             bool value) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Set subparsers 'help' message for selected language
-     *  @param value Help message
-     *  @param lang Language value (default: "")
-     *  @return Current subparsers reference
+     *  @brief Set the 'help' message for the selected language.
+     *  @param value Help message.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current subparsers.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
@@ -5847,52 +5852,52 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Suppress subparsers 'help' message
-     *  @param value argparse::SUPPRESS
+     *  @brief Suppress the 'help' message.
+     *  @param value argparse::SUPPRESS.
      *  @since v1.7.3
-     *  @return Current subparsers reference
+     *  @return A reference to the current subparsers.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     help(_SUPPRESS value);
 
     /*!
-     *  @brief Set subparsers 'metavar' value
-     *  @param value Metavar value
-     *  @return Current subparsers reference
+     *  @brief Set the 'metavar' value.
+     *  @param value Metavar value.
+     *  @return A reference to the current subparsers.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     SubParsers&
     metavar(std::string const& value);
 
     /*!
-     *  @brief Get subparsers 'prog' value
-     *  @return Subparsers 'prog' value
+     *  @brief Get the 'prog' value.
+     *  @return The 'prog' value of the subparsers.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     prog() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get subparsers 'dest' value
-     *  @return Subparsers 'dest' value
+     *  @brief Get the 'dest' value.
+     *  @return The 'dest' value of the subparsers.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     dest() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get subparsers 'required' value
-     *  @return Subparsers 'required' value
+     *  @brief Get the 'required' value.
+     *  @return The 'required' value of the subparsers.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     required() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Add argument parser with concrete name
-     *  @param name Parser name
-     *  @return Current argument parser reference
+     *  @brief Add an argument parser with concrete name.
+     *  @param name Parser name.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     ArgumentParser&
@@ -5900,10 +5905,10 @@ public:
             std::string const& name);
 
     /*!
-     *  @brief Add parser group
-     *  @param title Parser group title (default: "")
-     *  @param description Parser group description (default: "")
-     *  @return Current parser group reference
+     *  @brief Add a parser group.
+     *  @param title Parser group title (default: "").
+     *  @param description Parser group description (default: "").
+     *  @return A reference to the current parser group.
      */
     ARGPARSE_ATTR_NODISCARD
     ParserGroup&
@@ -5912,8 +5917,8 @@ public:
             std::string const& description = std::string());
 
     /*!
-     *  @brief Get parser names
-     *  @return Parser names container
+     *  @brief Get a container with parser names.
+     *  @return A container with parser names.
      */
     ARGPARSE_ATTR_NODISCARD
     std::vector<std::string>
@@ -5971,7 +5976,7 @@ private:
 };
 
 /*!
- *  @brief ArgumentParser objects
+ *  @brief ArgumentParser class.
  */
 ARGPARSE_EXPORT class ArgumentParser
 {
@@ -6005,21 +6010,21 @@ ARGPARSE_EXPORT class ArgumentParser
 
 public:
     /*!
-     *  @brief Construct argument parser with concrete program name
-     *  (default: "" don't override default program name "untitled")
-     *  @param prog Program name (default: "")
+     *  @brief Create an argument parser with concrete program name
+     *  (default: "" don't override default program name "untitled").
+     *  @param prog Program name (default: "").
      */
     explicit
     ArgumentParser(
             std::string const& prog = std::string());
 
     /*!
-     *  @brief Construct argument parser from command line arguments
+     *  @brief Create an argument parser from command line arguments
      *  with concrete program name
-     *  (default: "" don't override argv[0] or default program name "untitled")
-     *  @param argc Number of command line arguments
-     *  @param argv Command line arguments data
-     *  @param prog Program name (default: "")
+     *  (default: "" don't override argv[0] or default program name "untitled").
+     *  @param argc Number of command line arguments.
+     *  @param argv Command line arguments.
+     *  @param prog Program name (default: "").
      */
     explicit
     ArgumentParser(
@@ -6028,13 +6033,13 @@ public:
             std::string const& prog = std::string());
 
     /*!
-     *  @brief Construct argument parser from command line arguments
+     *  @brief Create an argument parser from command line arguments
      *  with environment variables and concrete program name
-     *  (default: "" don't override argv[0] or default program name "untitled")
-     *  @param argc Number of command line arguments
-     *  @param argv Command line arguments data
-     *  @param envp Execution environment variables
-     *  @param prog Program name (default: "")
+     *  (default: "" don't override argv[0] or default program name "untitled").
+     *  @param argc Number of command line arguments.
+     *  @param argv Command line arguments.
+     *  @param envp Execution environment variables.
+     *  @param prog Program name (default: "").
      *  @since v1.8.0
      */
     explicit
@@ -6045,24 +6050,24 @@ public:
             std::string const& prog = std::string());
 
     /*!
-     *  @brief Destroy argument parser
+     *  @brief Destroy the argument parser.
      */
     virtual ~ArgumentParser() ARGPARSE_NOEXCEPT { }
 
     /*!
-     *  @brief Set argument parser 'prog' value (default: argv[0] or "untitled")
-     *  @param value Program name
-     *  @return Current argument parser reference
+     *  @brief Set the 'prog' value (default: argv[0] or "untitled").
+     *  @param value Program name.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     prog(std::string const& value);
 
     /*!
-     *  @brief Set argument parser 'usage' value for selected language
-     *  @param value Usage value
-     *  @param lang Language value (default: "")
-     *  @return Current argument parser reference
+     *  @brief Set the 'usage' value for the selected language.
+     *  @param value Usage value.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6070,22 +6075,22 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Suppress argument parser 'usage' value
-     *  @param value argparse::SUPPRESS
+     *  @brief Suppress the 'usage' value.
+     *  @param value argparse::SUPPRESS.
      *  @since v1.9.0
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     usage(_SUPPRESS value);
 
     /*!
-     *  @brief Set title for argument parser 'usage' (default: "usage")
-     *  for selected language
-     *  @param value Title for usage
-     *  @param lang Language value (default: "")
+     *  @brief Set the 'usage' title for the selected language
+     *  (default: "usage").
+     *  @param value Usage title.
+     *  @param lang Language value (default: "").
      *  @since v1.7.1
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6094,10 +6099,10 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set argument parser 'description' value for selected language
-     *  @param value Description value
-     *  @param lang Language value (default: "")
-     *  @return Current argument parser reference
+     *  @brief Set the 'description' value for the selected language.
+     *  @param value Description value.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6106,12 +6111,12 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set title for positional arguments
-     *  (default: "positional arguments") for selected language
-     *  @param value Title for positional arguments
-     *  @param lang Language value (default: "")
+     *  @brief Set title for positional arguments for the selected language
+     *  (default: "positional arguments").
+     *  @param value Title for positional arguments.
+     *  @param lang Language value (default: "").
      *  @since v1.7.0
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6120,12 +6125,12 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set title for operand arguments
-     *  (default: "operands") for selected language
-     *  @param value Title for operand arguments
-     *  @param lang Language value (default: "")
+     *  @brief Set the title for operand arguments for the selected language
+     *  (default: "operands").
+     *  @param value Title for operand arguments.
+     *  @param lang Language value (default: "").
      *  @since v1.8.0
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6134,12 +6139,12 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set title for optional arguments
-     *  (default: "options") for selected language
-     *  @param value Title for optional arguments
-     *  @param lang Language value (default: "")
+     *  @brief Set the title for optional arguments for the selected language
+     *  (default: "options").
+     *  @param value Title for optional arguments.
+     *  @param lang Language value (default: "").
      *  @since v1.7.0
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6148,10 +6153,10 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set argument parser 'epilog' value for selected language
-     *  @param value Epilog value
-     *  @param lang Language value (default: "")
-     *  @return Current argument parser reference
+     *  @brief Set the 'epilog' value for the selected language.
+     *  @param value Epilog value.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6159,11 +6164,11 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set argument parser 'help' message (for subparsers)
-     *  for selected language
-     *  @param value Help message
-     *  @param lang Language value (default: "")
-     *  @return Current argument parser reference
+     *  @brief Set the 'help' message for the selected language
+     *  (for subparsers).
+     *  @param value Help message.
+     *  @param lang Language value (default: "").
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6171,9 +6176,9 @@ public:
             std::string const& lang = std::string());
 
     /*!
-     *  @brief Set argument parser 'aliases' value (for subparsers)
-     *  @param value Aliases values
-     *  @return Current argument parser reference
+     *  @brief Set the 'aliases' value (for subparsers).
+     *  @param value Aliases value.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6181,10 +6186,10 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Set argument parser 'aliases' value (for subparsers)
-     *  @param value First value
-     *  @param args Other values
-     *  @return Current argument parser reference
+     *  @brief Set the 'aliases' value (for subparsers).
+     *  @param value First value.
+     *  @param args Other values.
+     *  @return A reference to the current argument parser.
      */
     template <class... Args>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6196,29 +6201,29 @@ public:
     }
 
     /*!
-     *  @brief Set argument parser 'aliases' value (for subparsers)
-     *  @param value Aliases values
+     *  @brief Set the 'aliases' value (for subparsers).
+     *  @param value Aliases value.
      *  @since v1.7.2
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     aliases(std::initializer_list<std::string> const& value);
 #else
     /*!
-     *  @brief Set argument parser 'aliases' value (for subparsers)
-     *  @param value First value
-     *  @return Current argument parser reference
+     *  @brief Set the 'aliases' value (for subparsers).
+     *  @param value First value.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     aliases(std::string const& value);
 
     /*!
-     *  @brief Set argument parser 'aliases' value (for subparsers)
-     *  @param value1 First value
-     *  @param value2 Second value
-     *  @return Current argument parser reference
+     *  @brief Set the 'aliases' value (for subparsers).
+     *  @param value1 First value.
+     *  @param value2 Second value.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6227,9 +6232,9 @@ public:
 #endif  // C++11+
 
     /*!
-     *  @brief Set argument parser 'parents' value
-     *  @param value Parents values
-     *  @return Current argument parser reference
+     *  @brief Set the 'parents' value.
+     *  @param value Parents value.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6237,10 +6242,10 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Set argument parser 'parents' value
-     *  @param value Parent value
-     *  @param args Parents values
-     *  @return Current argument parser reference
+     *  @brief Set the 'parents' value.
+     *  @param value Parent value.
+     *  @param args Parents value.
+     *  @return A reference to the current argument parser.
      */
     template <class... Args>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6252,29 +6257,29 @@ public:
     }
 
     /*!
-     *  @brief Set argument parser 'parents' value
-     *  @param value Parents values
+     *  @brief Set the 'parents' value.
+     *  @param value Parents value.
      *  @since v1.7.2
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     parents(std::initializer_list<ArgumentParser> const& value);
 #else
     /*!
-     *  @brief Set argument parser 'parents' value
-     *  @param value Parent value
-     *  @return Current argument parser reference
+     *  @brief Set the 'parents' value.
+     *  @param value Parent value.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     parents(ArgumentParser const& value);
 
     /*!
-     *  @brief Set argument parser 'parents' value
-     *  @param value1 Parent value1
-     *  @param value2 Parent value2
-     *  @return Current argument parser reference
+     *  @brief Set the 'parents' value.
+     *  @param value1 Parent value1.
+     *  @param value2 Parent value2.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6283,9 +6288,9 @@ public:
 #endif  // C++11+
 
     /*!
-     *  @brief Set argument parser 'formatter_class' value
-     *  @param value HelpFormatter value
-     *  @return Current argument parser reference
+     *  @brief Set the 'formatter_class' value.
+     *  @param value HelpFormatter value.
+     *  @return A reference to the current argument parser.
      */
     template <class T>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6300,9 +6305,9 @@ public:
     }
 
     /*!
-     *  @brief Set argument parser 'prefix_chars' value (default: "-")
-     *  @param value Prefix chars values (only punctuation characters)
-     *  @return Current argument parser reference
+     *  @brief Set the 'prefix_chars' value (default: "-").
+     *  @param value Prefix chars values (only punctuation characters).
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6310,9 +6315,9 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Set argument parser 'fromfile_prefix_chars' value
-     *  @param value Fromfile prefix chars values (only punctuation characters)
-     *  @return Current argument parser reference
+     *  @brief Set the 'fromfile_prefix_chars' value.
+     *  @param value Fromfile prefix chars values (only punctuation characters).
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6320,10 +6325,10 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Set argument parser 'comment_prefix_chars' value
-     *  @param value Comment prefix chars values (only punctuation characters)
+     *  @brief Set the 'comment_prefix_chars' value.
+     *  @param value Comment prefix chars values (only punctuation characters).
      *  @since v1.8.1
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6331,9 +6336,9 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Set argument parser 'argument_default' value
-     *  @param value Argument default value
-     *  @return Current argument parser reference
+     *  @brief Set the 'argument_default' value.
+     *  @param value Default argument value.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6341,9 +6346,9 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Suppress argument parser 'argument_default' value
-     *  @param value argparse::SUPPRESS
-     *  @return Current argument parser reference
+     *  @brief Suppress the 'argument_default' value.
+     *  @param value argparse::SUPPRESS.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6351,9 +6356,9 @@ public:
             _SUPPRESS value);
 
     /*!
-     *  @brief Set argument parser 'conflict_handler' value
-     *  @param value Conflict handler value
-     *  @return Current argument parser reference
+     *  @brief Set the 'conflict_handler' value.
+     *  @param value Conflict handler value.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6361,18 +6366,18 @@ public:
             std::string const& value);
 
     /*!
-     *  @brief Set argument parser 'add_help' value (default: true)
-     *  @param value Add help flag
-     *  @return Current argument parser reference
+     *  @brief Set the 'add_help' value (default: true).
+     *  @param value Add help flag.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     add_help(bool value);
 
     /*!
-     *  @brief Set argument parser 'allow_abbrev' value (default: true)
-     *  @param value Allow abbrev flag
-     *  @return Current argument parser reference
+     *  @brief Set the 'allow_abbrev' value (default: true).
+     *  @param value Allow abbrev flag.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6380,9 +6385,9 @@ public:
             bool value) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Set argument parser 'exit_on_error' value (default: true)
-     *  @param value Exit on error flag
-     *  @return Current argument parser reference
+     *  @brief Set the 'exit_on_error' value (default: true).
+     *  @param value Exit on error flag.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6390,10 +6395,11 @@ public:
             bool value) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Set argument parser 'suggest_on_error' value (default: false)
-     *  @param value Suggest on error flag
+     *  @brief Set the 'suggest_on_error' value if the argument parser
+     *  (default: false).
+     *  @param value Suggest on error flag.
      *  @since v1.9.6
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6401,21 +6407,20 @@ public:
             bool value) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Set argument parser 'color' value (default: true)
-     *  @param value Color flag
+     *  @brief Set the 'color' value (default: true).
+     *  @param value Color flag.
      *  @since v1.10.0
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     color(bool value) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Set argument parser 'deprecated' value (default: false)
-     *  (for subparsers)
-     *  @param value Deprecated flag
+     *  @brief Set the 'deprecated' value (for subparsers, default: false).
+     *  @param value Deprecated flag.
      *  @since v1.9.5
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6423,9 +6428,9 @@ public:
             bool value) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Set output width value (default: auto-detected or 80, min 33)
-     *  @param value Output width
-     *  @return Current argument parser reference
+     *  @brief Set the output width (default: auto-detected or 80, min 33).
+     *  @param value Width of the output.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6433,198 +6438,197 @@ public:
             std::size_t value) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'prog' value (default: argv[0] or "untitled")
-     *  @return Argument parser 'prog' value
+     *  @brief Get the 'prog' (default: argv[0] or "untitled").
+     *  @return The 'prog' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     prog() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'usage' value for default language
-     *  @return Argument parser 'usage' value
+     *  @brief Get the 'usage' for the default language.
+     *  @return The 'usage' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     usage() const;
 
     /*!
-     *  @brief Get title for argument parser 'usage' for default language
-     *  (default: "usage")
+     *  @brief Get the 'usage' title for the default language
+     *  (default: "usage").
      *  @since v1.7.1
-     *  @return Title for argument parser 'usage'
+     *  @return The 'usage' title of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     usage_title() const;
 
     /*!
-     *  @brief Get argument parser 'description' value for default language
-     *  @return Argument parser 'description' value
+     *  @brief Get the 'description' for the default language.
+     *  @return The 'description' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     description() const;
 
     /*!
-     *  @brief Get title for positional arguments for default language
-     *  (default: "positional arguments")
+     *  @brief Get the title for positional arguments for the default language
+     *  (default: "positional arguments").
      *  @since v1.7.0
-     *  @return Title for positional arguments
+     *  @return The title for positional arguments.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     positionals_title() const;
 
     /*!
-     *  @brief Get title for operand arguments for default language
-     *  (default: "operands")
+     *  @brief Get the title for operand arguments for the default language
+     *  (default: "operands").
      *  @since v1.8.0
-     *  @return Title for operand arguments
+     *  @return The title for operand arguments.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     operands_title() const;
 
     /*!
-     *  @brief Get title for optional arguments for default language
-     *  (default: "options")
+     *  @brief Get the title for optional arguments for the default language
+     *  (default: "options").
      *  @since v1.7.0
-     *  @return Title for optional arguments
+     *  @return The title for optional arguments.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     optionals_title() const;
 
     /*!
-     *  @brief Get argument parser 'epilog' value for default language
-     *  @return Argument parser 'epilog' value
+     *  @brief Get the 'epilog' for the default language.
+     *  @return The 'epilog' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     epilog() const;
 
     /*!
-     *  @brief Get argument parser 'help' message for default language
-     *  (for subparsers)
-     *  @return Argument parser 'help' message
+     *  @brief Get the 'help' message for the default language (for subparsers).
+     *  @return The 'help' message of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     help() const;
 
     /*!
-     *  @brief Get argument parser 'aliases' value (for subparsers)
-     *  @return Argument parser 'aliases' value
+     *  @brief Get the 'aliases' (for subparsers).
+     *  @return The 'aliases' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::vector<std::string> const&
     aliases() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'formatter_class' value
+     *  @brief Get the 'formatter_class'.
      *  @since v1.7.5
-     *  @return Argument parser 'formatter_class' value
+     *  @return The 'formatter_class' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     HelpFormatter&
     formatter_class() ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'prefix_chars' value (default: "-")
-     *  @return Argument parser 'prefix_chars' value
+     *  @brief Get the 'prefix_chars' (default: "-").
+     *  @return The 'prefix_chars' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     prefix_chars() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'fromfile_prefix_chars' value
-     *  @return Argument parser 'fromfile_prefix_chars' value
+     *  @brief Get the 'fromfile_prefix_chars'.
+     *  @return The 'fromfile_prefix_chars' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     fromfile_prefix_chars() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'comment_prefix_chars' value
+     *  @brief Get the 'comment_prefix_chars'.
      *  @since v1.8.1
-     *  @return Argument parser 'comment_prefix_chars' value
+     *  @return The 'comment_prefix_chars' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     comment_prefix_chars() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'argument_default' value
-     *  @return Argument parser 'argument_default' value
+     *  @brief Get the 'argument_default'.
+     *  @return The 'argument_default' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     argument_default() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'conflict_handler' value
-     *  @return Argument parser 'conflict_handler' value
+     *  @brief Get the 'conflict_handler'.
+     *  @return The 'conflict_handler' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
     conflict_handler() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'add_help' value (default: true)
-     *  @return Argument parser 'add_help' value
+     *  @brief Get the 'add_help' (default: true).
+     *  @return The 'add_help' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     add_help() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'allow_abbrev' value (default: true)
-     *  @return Argument parser 'allow_abbrev' value
+     *  @brief Get the 'allow_abbrev' (default: true).
+     *  @return The 'allow_abbrev' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     allow_abbrev() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'exit_on_error' value (default: true)
-     *  @return Argument parser 'exit_on_error' value
+     *  @brief Get the 'exit_on_error' (default: true).
+     *  @return The 'allow_abbrev' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     exit_on_error() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'suggest_on_error' value (default: false)
+     *  @brief Get the 'suggest_on_error' (default: false).
      *  @since v1.9.6
-     *  @return Argument parser 'suggest_on_error' value
+     *  @return The 'suggest_on_error' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     suggest_on_error() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'color' value (default: true)
+     *  @brief Get the 'color' (default: false).
      *  @since v1.10.0
-     *  @return Argument parser 'color' value
+     *  @return The 'color' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     color() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get argument parser 'deprecated' value (default: false)
+     *  @brief Get the 'deprecated' (default: false).
      *  @since v1.9.5
-     *  @return Argument parser 'deprecated' value
+     *  @return The 'deprecated' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     deprecated() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get output width value (default: auto-detected or 80, min 33)
-     *  @return Output width value
+     *  @brief Get the output width (default: auto-detected or 80, min 33).
+     *  @return The output width.
      */
     ARGPARSE_ATTR_NODISCARD
     std::size_t
@@ -6632,9 +6636,9 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Add argument with flags
-     *  @param flags Flag values
-     *  @return Current argument reference
+     *  @brief Add an argument with the specified flags.
+     *  @param flags Flags value.
+     *  @return A reference to the current argument.
      */
     template <class... Args>
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6646,10 +6650,10 @@ public:
     }
 
     /*!
-     *  @brief Add argument with flags
-     *  @param flags Flag values
+     *  @brief Add an argument with the specified flags.
+     *  @param flags Flags value.
      *  @since v1.7.2
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -6657,9 +6661,9 @@ public:
             std::initializer_list<std::string> const& flags);
 #else
     /*!
-     *  @brief Add argument with flag
-     *  @param flag Flag value
-     *  @return Current argument reference
+     *  @brief Add an argument with a flag.
+     *  @param flag Flag value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -6667,10 +6671,10 @@ public:
             std::string const& flag);
 
     /*!
-     *  @brief Add argument with 2 flags
-     *  @param flag1 First value
-     *  @param flag2 Second value
-     *  @return Current argument reference
+     *  @brief Add an argument with 2 flags.
+     *  @param flag1 First value.
+     *  @param flag2 Second value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -6679,12 +6683,12 @@ public:
             std::string const& flag2);
 
     /*!
-     *  @brief Add argument with 3 flags
-     *  @param flag1 First value
-     *  @param flag2 Second value
-     *  @param flag3 Third value
+     *  @brief Add an argument with 3 flags.
+     *  @param flag1 First value.
+     *  @param flag2 Second value.
+     *  @param flag3 Third value.
      *  @since v1.7.2
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -6694,13 +6698,13 @@ public:
             std::string const& flag3);
 
     /*!
-     *  @brief Add argument with 4 flags
-     *  @param flag1 First value
-     *  @param flag2 Second value
-     *  @param flag3 Third value
-     *  @param flag4 Fourth value
+     *  @brief Add an argument with 4 flags.
+     *  @param flag1 First value.
+     *  @param flag2 Second value.
+     *  @param flag3 Third value.
+     *  @param flag4 Fourth value.
      *  @since v1.7.2
-     *  @return Current argument reference
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -6712,9 +6716,9 @@ public:
 #endif  // C++11+
 
     /*!
-     *  @brief Add argument with flags
-     *  @param flags Flags values
-     *  @return Current argument reference
+     *  @brief Add an argument with the specified flags.
+     *  @param flags Flags value.
+     *  @return A reference to the current argument.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Argument&
@@ -6722,9 +6726,9 @@ public:
             std::vector<std::string> const& flags);
 
     /*!
-     *  @brief Add argument
-     *  @param argument Argument
-     *  @return Current parser reference
+     *  @brief Add an argument.
+     *  @param argument Argument.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6732,10 +6736,10 @@ public:
             Argument const& argument);
 
     /*!
-     *  @brief Add argument group
-     *  @param title Group title (default: "")
-     *  @param description Group description (default: "")
-     *  @return Current argument group reference
+     *  @brief Add an argument group.
+     *  @param title Group title (default: "").
+     *  @param description Group description (default: "").
+     *  @return A reference to the current argument group.
      */
     ARGPARSE_ATTR_NODISCARD
     ArgumentGroup&
@@ -6744,9 +6748,9 @@ public:
             std::string const& description = std::string());
 
     /*!
-     *  @brief Add mutually exclusive group
-     *  @param required Required flag (default: false)
-     *  @return Current mutually exclusive group reference
+     *  @brief Add a mutually exclusive group.
+     *  @param required Required flag (default: false).
+     *  @return A reference to the current mutually exclusive group.
      */
     ARGPARSE_ATTR_NODISCARD
     MutuallyExclusiveGroup&
@@ -6754,10 +6758,10 @@ public:
             bool required = false);
 
     /*!
-     *  @brief Add subparsers. Only arguments of one subparser are allowed
-     *  @param title Subparsers title (default: "")
-     *  @param description Subparsers description (default: "")
-     *  @return Current subparsers reference
+     *  @brief Add a subparsers. Arguments for only one subparser are allowed.
+     *  @param title Subparsers title (default: "").
+     *  @param description Subparsers description (default: "").
+     *  @return A reference to the current subparsers.
      */
     ARGPARSE_ATTR_NODISCARD
     SubParsers&
@@ -6766,17 +6770,17 @@ public:
             std::string const& description = std::string());
 
     /*!
-     *  @brief Get subparsers. If no subparsers was added, returns nullptr
-     *  @return Current subparsers pointer or nullptr
+     *  @brief Get subparsers. If no subparsers were added, returns nullptr.
+     *  @return A pointer to the current subparsers or nullptr.
      */
     ARGPARSE_ATTR_NODISCARD
     SubParsers*
     subparsers() const ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Check if subparsers was added
+     *  @brief Check if subparsers were added.
      *  @since v1.8.3
-     *  @return True if subparsers was added, false otherwise
+     *  @return True if subparsers were added, false otherwise.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
@@ -6785,9 +6789,9 @@ public:
     /*!
      *  @brief Set argument parser 'handle' function.
      *  Called when the parser is executed and passed the value of the
-     *  parser
-     *  @param func Handle function
-     *  @return Current argument parser reference
+     *  parser.
+     *  @param func Handle function.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6796,19 +6800,19 @@ public:
     /*!
      *  @brief Set argument parser 'handle' function.
      *  Called when the parser is executed and passed the namespace
-     *  of the parser
-     *  @param func Parse handle function
-     *  @return Current argument parser reference
+     *  of the parser.
+     *  @param func Handle function.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
     handle(detail::func1<Namespace const&>::type func) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Get the default value for a specific argument.
+     *  @brief Get the default value for a given argument.
      *  If argument not found, returns empty string.
-     *  @param dest Argument destination name or flag
-     *  @return Default value for a specific argument
+     *  @param dest Argument destination name or flag.
+     *  @return Default value for a given argument.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
@@ -6817,10 +6821,10 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Set default values for a specific arguments
-     *  @param pairs List of pairs: { 'argument flag', 'default value' }
+     *  @brief Set default values for a given arguments.
+     *  @param pairs List of pairs: { 'argument flag', 'default value' }.
      *  @since v1.7.2
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6829,9 +6833,9 @@ public:
 #endif  // C++11+
 
     /*!
-     *  @brief Set default values for a specific arguments
-     *  @param pairs Vector of pairs: { 'argument flag', 'default value' }
-     *  @return Current argument parser reference
+     *  @brief Set default values for a given arguments.
+     *  @param pairs Vector of pairs: { 'argument flag', 'default value' }.
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6839,11 +6843,11 @@ public:
             std::vector<std::pair<std::string, std::string> > const& pairs);
 
     /*!
-     *  @brief Set argument parser defaults function. This function may be
-     *  called manually later
-     *  @param func Function
+     *  @brief Set argument parser defaults function.
+     *  This function may be called manually later.
+     *  @param func Function.
      *  @since v1.9.6
-     *  @return Current argument parser reference
+     *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     ArgumentParser&
@@ -6851,9 +6855,9 @@ public:
             detail::func1<Namespace const&>::type func) ARGPARSE_NOEXCEPT;
 
     /*!
-     *  @brief Parse command line arguments
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse command line arguments.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6861,10 +6865,10 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6873,10 +6877,10 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6885,9 +6889,9 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse known command line arguments
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse known command line arguments.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6895,10 +6899,10 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse known concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse known concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6907,10 +6911,10 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse known concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse known concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6919,9 +6923,9 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse intermixed command line arguments
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse intermixed command line arguments.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6929,10 +6933,10 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse intermixed concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse intermixed concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6941,10 +6945,10 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse intermixed concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse intermixed concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6953,9 +6957,9 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse known intermixed command line arguments
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse known intermixed command line arguments.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6963,10 +6967,10 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse known intermixed concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse known intermixed concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6975,10 +6979,10 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse known intermixed concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
-     *  @return Object with parsed arguments
+     *  @brief Parse known intermixed concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -6988,11 +6992,11 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /*!
-     *  @brief Parse concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Parse concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.2
-     *  @return Object with parsed arguments
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -7001,11 +7005,11 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse known concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Parse known concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.2
-     *  @return Object with parsed arguments
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -7014,11 +7018,11 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse intermixed concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Parse intermixed concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.2
-     *  @return Object with parsed arguments
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -7027,11 +7031,11 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Parse known intermixed concrete arguments
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Parse known intermixed concrete arguments.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.2
-     *  @return Object with parsed arguments
+     *  @return Object with parsed arguments.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     Namespace
@@ -7042,11 +7046,11 @@ public:
 
 #ifdef ARGPARSE_HAS_OPTIONAL
     /*!
-     *  @brief Try parse command line arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse command line arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7054,12 +7058,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7068,12 +7072,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.2
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7082,12 +7086,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7096,11 +7100,11 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse known command line arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse known command line arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7108,12 +7112,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse known concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse known concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7122,12 +7126,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse known concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse known concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.2
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7136,12 +7140,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse known concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse known concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7150,11 +7154,11 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse intermixed command line arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse intermixed command line arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7162,12 +7166,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse intermixed concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse intermixed concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7176,12 +7180,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse intermixed concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse intermixed concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.2
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7190,12 +7194,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse intermixed concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse intermixed concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7204,11 +7208,11 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse known intermixed command line arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse known intermixed command line arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7216,12 +7220,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse known intermixed concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse known intermixed concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7230,12 +7234,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse known intermixed concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse known intermixed concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.2
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7244,12 +7248,12 @@ public:
             Namespace const& space = Namespace()) const;
 
     /*!
-     *  @brief Try parse known intermixed concrete arguments.
-     *  If arguments can't be parsed, returns std::nullopt.
-     *  @param args Arguments to parse
-     *  @param space Parsed arguments namespace (default: none)
+     *  @brief Attempt to parse known intermixed concrete arguments.
+     *  If the arguments can't be parsed, returns std::nullopt.
+     *  @param args Arguments for parsing.
+     *  @param space Namespace of parsed arguments (default: none).
      *  @since v1.7.1
-     *  @return Object with parsed arguments or std::nullopt
+     *  @return Object with parsed arguments or std::nullopt.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     std::optional<Namespace>
@@ -7259,46 +7263,50 @@ public:
 #endif  // ARGPARSE_HAS_OPTIONAL
 
     /*!
-     *  @brief Check if environment variable with name exists (from envp[])
-     *  @param name Environment variable name
+     *  @brief Check if an environment variable with chosen name exists
+     *  (from envp[]).
+     *  @param name Environment variable name.
      *  @since v1.8.3
-     *  @return True if environment variable name with exists, false otherwise
+     *  @return True if an environment variable exists, false otherwise.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
     has_env(std::string const& name) const;
 
     /*!
-     *  @brief Get environment variable value (from envp[])
-     *  @param name Environment variable name
+     *  @brief Get the value of an environment variable (from envp[]).
+     *  @param name Environment variable name.
      *  @since v1.8.0
-     *  @return Environment variable value if exists, empty string otherwise
+     *  @return The value of an environment variable if exists,
+     *  empty string otherwise.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
     get_env(std::string const& name) const;
 
     /*!
-     *  @brief Get environment variables list (from envp[])
+     *  @brief Get a list of environment variables (from envp[]).
      *  @since v1.8.2
-     *  @return Environment variable values list
+     *  @return A list of environment variable.
      */
     ARGPARSE_ATTR_NODISCARD
     std::list<std::pair<std::string, std::string> > const&
     list_env() const;
 
     /*!
-     *  @brief Print a program usage for default language to output stream
-     *  @param os Output stream (default: std::cout)
+     *  @brief Print a program usage for the default language
+     *  in the output stream.
+     *  @param os Output stream (default: std::cout).
      */
     void
     print_usage(
             std::ostream& os = std::cout) const;
 
     /*!
-     *  @brief Print a program usage for selected language to output stream
-     *  @param lang Language value
-     *  @param os Output stream (default: std::cout)
+     *  @brief Print a program usage for the selected language
+     *  in the output stream.
+     *  @param lang Language value.
+     *  @param os Output stream (default: std::cout).
      *  @since v1.7.1
      */
     void
@@ -7307,17 +7315,19 @@ public:
             std::ostream& os = std::cout) const;
 
     /*!
-     *  @brief Print a help message for default language to output stream
-     *  @param os Output stream (default: std::cout)
+     *  @brief Print a help message for the default language
+     *  in the output stream.
+     *  @param os Output stream (default: std::cout).
      */
     void
     print_help(
             std::ostream& os = std::cout) const;
 
     /*!
-     *  @brief Print a help message for selected language to output stream
-     *  @param lang Language value
-     *  @param os Output stream (default: std::cout)
+     *  @brief Print a help message for the selected language
+     *  in the output stream.
+     *  @param lang Language value.
+     *  @param os Output stream (default: std::cout).
      *  @since v1.7.1
      */
     void
@@ -7326,9 +7336,10 @@ public:
             std::ostream& os = std::cout) const;
 
     /*!
-     *  @brief Return a string containing a program usage for selected language
-     *  @param lang Language value (default: "")
-     *  @return Program usage for selected language
+     *  @brief Return a string containing a program usage
+     *  for the selected language.
+     *  @param lang Language value (default: "").
+     *  @return A string containing a program usage.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
@@ -7336,9 +7347,10 @@ public:
             std::string const& lang = std::string()) const;
 
     /*!
-     *  @brief Return a string containing a help message for selected language
-     *  @param lang Language value (default: "")
-     *  @return Help message for selected language
+     *  @brief Return a string containing a help message
+     *  for the selected language.
+     *  @param lang Language value (default: "").
+     *  @return A string containing a help message.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string
@@ -7347,9 +7359,9 @@ public:
 
     /*!
      *  @brief Terminates the program, exiting with the specified status and,
-     *  if given, prints a message before that
-     *  @param status Status code (default: 0)
-     *  @param message Error message (default: "")
+     *  if given, prints a message before that.
+     *  @param status Status code (default: 0).
+     *  @param message Error message (default: "").
      */
     virtual void
     exit(int status = 0,
@@ -7357,19 +7369,18 @@ public:
 
     /*!
      *  @brief Prints a usage message including the message to the
-     *  standard error and terminates the program with a status code of 2
-     *  @param message Error message
+     *  standard error and terminates the program with a status code of 2.
+     *  @param message Error message.
      */
     void
     error(std::string const& message) const;
 
     /*!
      *  @brief Arguments that are read from a file
-     *  (see the fromfile_prefix_chars function)
-     *  are read one argument per line.
-     *  convert_arg_line_to_args() can be overridden for fancier reading
-     *  @param arg_line Line with arguments
-     *  @return Arguments to parse
+     *  (see the fromfile_prefix_chars function) are read one argument per line.
+     *  convert_arg_line_to_args() can be overridden for fancier reading.
+     *  @param arg_line Line with arguments.
+     *  @return Container with read arguments.
      */
     virtual std::vector<std::string>
     convert_arg_line_to_args(
@@ -7784,7 +7795,7 @@ private:
 
 #ifdef ARGPARSE_ENABLE_UTILS
 /*!
- *  @brief utils
+ *  @brief utils class.
  */
 ARGPARSE_EXPORT class utils
 {
@@ -7857,12 +7868,12 @@ ARGPARSE_EXPORT class utils
 
 public:
     /*!
-     *  @brief Run self-test and print report to output stream
-     *  for default language
-     *  @param parser Argument parser
-     *  @param os Output stream (default: std::cout)
+     *  @brief Perform a self-test and print a report for the default language
+     *  in the output stream.
+     *  @param parser Argument parser.
+     *  @param os Output stream (default: std::cout).
      *  @since v1.9.7
-     *  @return True if no warnings or errors were found, false otherwise
+     *  @return True if no warnings or errors are found, false otherwise.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     static bool
@@ -7871,13 +7882,13 @@ public:
             std::ostream& os = std::cout);
 
     /*!
-     *  @brief Run self-test and print report for selected language
-     *  to output stream
-     *  @param parser Argument parser
-     *  @param lang Language value
-     *  @param os Output stream (default: std::cout)
+     *  @brief Perform a self-test and print a report for the selected language
+     *  in the output stream.
+     *  @param parser Argument parser.
+     *  @param lang Language value.
+     *  @param os Output stream (default: std::cout).
      *  @since v1.9.7
-     *  @return True if no warnings or errors were found, false otherwise
+     *  @return True if no warnings or errors are found, false otherwise.
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
     static bool
@@ -7890,10 +7901,10 @@ public:
      *  @brief Return a string containing a bash completion.
      *  Put `prog` file with this content in the `completions` subdir of
      *  $BASH_COMPLETION_USER_DIR (defaults to $XDG_DATA_HOME/bash-completion
-     *  or ~/.local/share/bash-completion if $XDG_DATA_HOME is not set)
-     *  @param parser Argument parser
+     *  or ~/.local/share/bash-completion if $XDG_DATA_HOME is not set).
+     *  @param parser Argument parser.
      *  @since v1.9.7
-     *  @return Bash completion string
+     *  @return A string containing a bash completion.
      */
     ARGPARSE_ATTR_NODISCARD
     static std::string
@@ -7903,10 +7914,10 @@ public:
     /*!
      *  @brief Return a string containing a zsh completion.
      *  Copy content to file ${DIR}/_${PROG}, add ${DIR} to `fpath` in ~/.zshrc
-     *  `fpath=(${DIR} $fpath)`
-     *  @param parser Argument parser
+     *  `fpath=(${DIR} $fpath)`.
+     *  @param parser Argument parser.
      *  @since v1.9.8
-     *  @return Zsh completion string
+     *  @return A string containing a zsh completion.
      */
     ARGPARSE_ATTR_NODISCARD
     static std::string
@@ -7914,12 +7925,12 @@ public:
             ArgumentParser const& parser);
 
     /*!
-     *  @brief Print a bash completion to output stream.
+     *  @brief Print a bash completion in the output stream.
      *  Put `prog` file with this content in the `completions` subdir of
      *  $BASH_COMPLETION_USER_DIR (defaults to $XDG_DATA_HOME/bash-completion
-     *  or ~/.local/share/bash-completion if $XDG_DATA_HOME is not set)
-     *  @param parser Argument parser
-     *  @param os Output stream (default: std::cout)
+     *  or ~/.local/share/bash-completion if $XDG_DATA_HOME is not set).
+     *  @param parser Argument parser.
+     *  @param os Output stream (default: std::cout).
      *  @since v1.9.7
      */
     static void
@@ -7928,11 +7939,11 @@ public:
             std::ostream& os = std::cout);
 
     /*!
-     *  @brief Print a zsh completion to output stream.
+     *  @brief Print a zsh completion in the output stream.
      *  Copy content to file ${DIR}/_${PROG}, add ${DIR} to `fpath` in ~/.zshrc
-     *  `fpath=(${DIR} $fpath)`
-     *  @param parser Argument parser
-     *  @param os Output stream (default: std::cout)
+     *  `fpath=(${DIR} $fpath)`.
+     *  @param parser Argument parser.
+     *  @param os Output stream (default: std::cout).
      *  @since v1.9.8
      */
     static void
@@ -7942,9 +7953,9 @@ public:
 
     /*!
      *  @brief Return a string containing a man page.
-     *  @param parser Argument parser
+     *  @param parser Argument parser.
      *  @since v1.10.0
-     *  @return String with a man page
+     *  @return A string containing a man page.
      */
     ARGPARSE_ATTR_NODISCARD
     static std::string
@@ -7952,9 +7963,9 @@ public:
             ArgumentParser const& parser);
 
     /*!
-     *  @brief Print a man page to output stream.
-     *  @param parser Argument parser
-     *  @param os Output stream (default: std::cout)
+     *  @brief Print a man page in the output stream.
+     *  @param parser Argument parser.
+     *  @param os Output stream (default: std::cout).
      *  @since v1.10.0
      */
     static void
