@@ -424,7 +424,6 @@ ARGPARSE_EXPORT class ArgumentError : public std::invalid_argument
 public:
     /*!
      *  @brief Construct ArgumentError handler
-     *
      *  @param error Error message
      */
     explicit
@@ -442,7 +441,6 @@ ARGPARSE_EXPORT class AttributeError : public std::invalid_argument
 public:
     /*!
      *  @brief Construct AttributeError handler
-     *
      *  @param error Error message
      */
     explicit
@@ -460,7 +458,6 @@ ARGPARSE_EXPORT class ValueError : public std::invalid_argument
 public:
     /*!
      *  @brief Construct ValueError handler
-     *
      *  @param error Error message
      */
     explicit
@@ -478,7 +475,6 @@ ARGPARSE_EXPORT class IndexError : public std::out_of_range
 public:
     /*!
      *  @brief Construct IndexError handler
-     *
      *  @param error Error message
      */
     explicit
@@ -490,7 +486,6 @@ public:
 
 /*!
  *  @brief NameError handler
- *
  *  @since v1.7.1
  */
 ARGPARSE_EXPORT class NameError : public std::invalid_argument
@@ -498,7 +493,6 @@ ARGPARSE_EXPORT class NameError : public std::invalid_argument
 public:
     /*!
      *  @brief Construct NameError handler
-     *
      *  @param error Error message
      */
     explicit
@@ -516,7 +510,6 @@ ARGPARSE_EXPORT class TypeError : public std::invalid_argument
 public:
     /*!
      *  @brief Construct TypeError handler
-     *
      *  @param error Error message
      */
     explicit
@@ -2529,12 +2522,9 @@ public:
 // -- standAlone functions ----------------------------------------------------
 /*!
  *  @brief Split string with command line arguments to arguments container
- *
  *  @param str String to process
  *  @param err Output stream for errors (default: std::cerr)
- *
  *  @since v1.9.0
- *
  *  @return Container with arguments
  */
 ARGPARSE_EXPORT std::vector<std::string>
@@ -2599,7 +2589,6 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  @brief Construct argument object with parsed arguments
-     *
      *  @param flags Argument flags
      */
     template <class... Args>
@@ -2611,7 +2600,6 @@ public:
 
     /*!
      *  @brief Construct argument object with parsed arguments
-     *
      *  @param flags Argument flags
      */
     explicit
@@ -2622,7 +2610,6 @@ public:
 #else
     /*!
      *  @brief Construct argument object with parsed arguments
-     *
      *  @param flag Argument flag
      */
     explicit
@@ -2631,7 +2618,6 @@ public:
 
     /*!
      *  @brief Construct argument object with parsed arguments
-     *
      *  @param flag1 First flag
      *  @param flag2 Second flag
      */
@@ -2642,11 +2628,9 @@ public:
 
     /*!
      *  @brief Construct argument object with parsed arguments
-     *
      *  @param flag1 First flag
      *  @param flag2 Second flag
      *  @param flag3 Third flag
-     *
      *  @since v1.7.2
      */
     explicit
@@ -2657,12 +2641,10 @@ public:
 
     /*!
      *  @brief Construct argument object with parsed arguments
-     *
      *  @param flag1 First flag
      *  @param flag2 Second flag
      *  @param flag3 Third flag
      *  @param flag4 Fourth flag
-     *
      *  @since v1.7.2
      */
     explicit
@@ -2675,7 +2657,6 @@ public:
 
     /*!
      *  @brief Construct argument object with parsed arguments
-     *
      *  @param flags Argument flags
      */
     explicit
@@ -2684,7 +2665,6 @@ public:
 
     /*!
      *  @brief Construct argument object from another argument
-     *
      *  @param orig Argument object to copy
      */
     Argument(
@@ -2692,9 +2672,7 @@ public:
 
     /*!
      *  @brief Copy argument object from another argument
-     *
      *  @param rhs Argument object to copy
-     *
      *  @return Current argument reference
      */
     Argument&
@@ -2704,7 +2682,6 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  @brief Construct argument object from another argument
-     *
      *  @param orig Argument object to move
      */
     Argument(
@@ -2712,9 +2689,7 @@ public:
 
     /*!
      *  @brief Move argument object from another argument
-     *
      *  @param rhs Argument object to move
-     *
      *  @return Current argument reference
      */
     Argument&
@@ -2724,9 +2699,7 @@ public:
 
     /*!
      *  @brief Set argument 'action' value (default: "store")
-     *
      *  @param value Action value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2735,9 +2708,7 @@ public:
 
     /*!
      *  @brief Set argument 'action' value (default: argparse::store)
-     *
      *  @param value Action value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2746,9 +2717,7 @@ public:
 
     /*!
      *  @brief Set argument 'nargs' value
-     *
      *  @param num Number of arguments
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2758,10 +2727,8 @@ public:
     /*!
      *  @brief Set argument 'nargs' value
      *  (combined nargs if num > 1)
-     *
      *  @param value Nargs value: "?", "*", "+"
      *  @param num Number of arguments (default: 1)
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2771,9 +2738,7 @@ public:
 
     /*!
      *  @brief Set argument 'nargs' value
-     *
      *  @param value argparse::REMAINDER
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2782,11 +2747,8 @@ public:
 
     /*!
      *  @brief Suppress argument 'nargs' value
-     *
      *  @param value argparse::SUPPRESS
-     *
      *  @since v1.8.0
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2796,9 +2758,7 @@ public:
     /*!
      *  @brief Set argument 'nargs' optional ("?") value
      *  (combined nargs if num > 1)
-     *
      *  @param num Number of arguments (default: 1)
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2812,9 +2772,7 @@ public:
     /*!
      *  @brief Set argument 'nargs' zero_or_one ("?") value
      *  (combined nargs if num > 1)
-     *
      *  @param num Number of arguments (default: 1)
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2828,9 +2786,7 @@ public:
     /*!
      *  @brief Set argument 'nargs' zero_or_more ("*") value
      *  (combined nargs if num > 1)
-     *
      *  @param num Number of arguments (default: 1)
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2844,9 +2800,7 @@ public:
     /*!
      *  @brief Set argument 'nargs' one_or_more ("+") value
      *  (combined nargs if num > 1)
-     *
      *  @param num Number of arguments (default: 1)
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2859,7 +2813,6 @@ public:
 
     /*!
      *  @brief Set argument 'nargs' argparse::REMAINDER value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2871,9 +2824,7 @@ public:
 
     /*!
      *  @brief Set argument 'nargs' argparse::SUPPRESS value
-     *
      *  @since v1.9.0
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2885,9 +2836,7 @@ public:
 
     /*!
      *  @brief Set argument 'const' value
-     *
      *  @param value Const value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2898,9 +2847,7 @@ public:
     /*!
      *  @brief Set custom argument 'const' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value Const value
-     *
      *  @return Current argument reference
      */
 #ifdef ARGPARSE_CXX_11
@@ -2928,9 +2875,7 @@ public:
 
     /*!
      *  @brief Set argument 'default' value
-     *
      *  @param value Default value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2941,9 +2886,7 @@ public:
     /*!
      *  @brief Set custom argument 'default' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value Default value
-     *
      *  @return Current argument reference
      */
 #ifdef ARGPARSE_CXX_11
@@ -2971,9 +2914,7 @@ public:
 
     /*!
      *  @brief Suppress argument 'default' value
-     *
      *  @param value argparse::SUPPRESS
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2984,9 +2925,7 @@ public:
     /*!
      *  @brief Set argument 'implicit' value (used with nargs="?" or "*",
      *  const_value alternative for optional arguments with nargs="?")
-     *
      *  @param value Implicit value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -2999,9 +2938,7 @@ public:
      *  const_value alternative for optional arguments with nargs="?")
      *  and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value Implicit value
-     *
      *  @return Current argument reference
      */
 #ifdef ARGPARSE_CXX_11
@@ -3030,7 +2967,6 @@ public:
     /*!
      *  @brief Set argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @return Current argument reference
      */
     template <class T>
@@ -3044,9 +2980,7 @@ public:
 
     /*!
      *  @brief Set argument 'type' name (for MetavarTypeHelpFormatter)
-     *
      *  @param value Type name value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3056,11 +2990,8 @@ public:
     /*!
      *  @brief Set argument 'type' factory function.
      *  Called in Namespace::get/try_get<>
-     *
      *  @param func Type factory function
-     *
      *  @since v1.8.4
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3069,11 +3000,8 @@ public:
 
     /*!
      *  @brief Set argument 'choices' value
-     *
      *  @param value Choice value
-     *
      *  @since v1.7.1
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3082,9 +3010,7 @@ public:
 
     /*!
      *  @brief Set argument 'choices' value. Each character is a separate choice
-     *
      *  @param value Choices value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3095,11 +3021,8 @@ public:
     /*!
      *  @brief Set argument 'choices' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value Choice value
-     *
      *  @since v1.9.3
-     *
      *  @return Current argument reference
      */
     template <class T,
@@ -3116,13 +3039,10 @@ public:
     /*!
      *  @brief Set argument 'choices' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value1 First value
      *  @param value2 Second value
      *  @param args Other values
-     *
      *  @since v1.9.3
-     *
      *  @return Current argument reference
      */
     template <class T, class... Args,
@@ -3140,11 +3060,8 @@ public:
     /*!
      *  @brief Set argument 'choices' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value Choices value
-     *
      *  @since v1.9.3
-     *
      *  @return Current argument reference
      */
     template <class T,
@@ -3159,13 +3076,10 @@ public:
 
     /*!
      *  @brief Set argument 'choices' value
-     *
      *  @param value1 First value
      *  @param value2 Second value
      *  @param args Other values
-     *
      *  @since v1.7.1
-     *
      *  @return Current argument reference
      */
     template <class... Args>
@@ -3180,11 +3094,8 @@ public:
 
     /*!
      *  @brief Set argument 'choices' value
-     *
      *  @param value Choices value
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3194,11 +3105,8 @@ public:
     /*!
      *  @brief Set argument 'choices' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value Choice value
-     *
      *  @since v1.9.3
-     *
      *  @return Current argument reference
      */
     template <class T>
@@ -3217,12 +3125,9 @@ public:
     /*!
      *  @brief Set argument 'choices' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value1 First value
      *  @param value2 Second value
-     *
      *  @since v1.9.3
-     *
      *  @return Current argument reference
      */
     template <class T>
@@ -3243,13 +3148,10 @@ public:
     /*!
      *  @brief Set argument 'choices' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value1 First value
      *  @param value2 Second value
      *  @param value3 Third value
-     *
      *  @since v1.9.3
-     *
      *  @return Current argument reference
      */
     template <class T>
@@ -3272,14 +3174,11 @@ public:
     /*!
      *  @brief Set argument 'choices' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value1 First value
      *  @param value2 Second value
      *  @param value3 Third value
      *  @param value4 Fourth value
-     *
      *  @since v1.9.3
-     *
      *  @return Current argument reference
      */
     template <class T>
@@ -3303,12 +3202,9 @@ public:
 
     /*!
      *  @brief Set argument 'choices' value
-     *
      *  @param value1 First value
      *  @param value2 Second value
-     *
      *  @since v1.7.1
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3318,13 +3214,10 @@ public:
 
     /*!
      *  @brief Set argument 'choices' value
-     *
      *  @param value1 First value
      *  @param value2 Second value
      *  @param value3 Third value
-     *
      *  @since v1.7.1
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3335,14 +3228,11 @@ public:
 
     /*!
      *  @brief Set argument 'choices' value
-     *
      *  @param value1 First value
      *  @param value2 Second value
      *  @param value3 Third value
      *  @param value4 Fourth value
-     *
      *  @since v1.7.1
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3356,11 +3246,8 @@ public:
     /*!
      *  @brief Set argument 'choices' value and argument 'type' name
      *  (for MetavarTypeHelpFormatter, Namespace::get/try_get\<T\> type check)
-     *
      *  @param value Choices value
-     *
      *  @since v1.9.3
-     *
      *  @return Current argument reference
      */
 #ifdef ARGPARSE_CXX_11
@@ -3385,9 +3272,7 @@ public:
 
     /*!
      *  @brief Set argument 'choices' value
-     *
      *  @param value Choices value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3396,9 +3281,7 @@ public:
 
     /*!
      *  @brief Set 'required' value for non-positionals arguments
-     *
      *  @param value Required flag
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3408,10 +3291,8 @@ public:
 
     /*!
      *  @brief Set argument 'help' message for selected language
-     *
      *  @param value Help message
      *  @param lang Language value (default: "")
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3421,9 +3302,7 @@ public:
 
     /*!
      *  @brief Suppress argument 'help' message
-     *
      *  @param value argparse::SUPPRESS
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3432,9 +3311,7 @@ public:
 
     /*!
      *  @brief Set argument 'version' for arguments with 'version' action
-     *
      *  @param value Version value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3443,9 +3320,7 @@ public:
 
     /*!
      *  @brief Set argument 'metavar' value
-     *
      *  @param value Metavar values
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3455,10 +3330,8 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  @brief Set argument 'metavar' value
-     *
      *  @param value First value
      *  @param args Other values
-     *
      *  @return Current argument reference
      */
     template <class... Args>
@@ -3472,11 +3345,8 @@ public:
 
     /*!
      *  @brief Set argument 'metavar' value
-     *
      *  @param value Metavar values
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3485,9 +3355,7 @@ public:
 #else
     /*!
      *  @brief Set argument 'metavar' value
-     *
      *  @param value Metavar value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3496,10 +3364,8 @@ public:
 
     /*!
      *  @brief Set argument 'metavar' value
-     *
      *  @param value1 First value
      *  @param value2 Second value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3509,11 +3375,9 @@ public:
 
     /*!
      *  @brief Set argument 'metavar' value
-     *
      *  @param value1 First value
      *  @param value2 Second value
      *  @param value3 Third value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3524,12 +3388,10 @@ public:
 
     /*!
      *  @brief Set argument 'metavar' value
-     *
      *  @param value1 First value
      *  @param value2 Second value
      *  @param value3 Third value
      *  @param value4 Fourth value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3542,9 +3404,7 @@ public:
 
     /*!
      *  @brief Set argument 'dest' value for non-positionals arguments
-     *
      *  @param value Destination value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3553,11 +3413,8 @@ public:
 
     /*!
      *  @brief Set argument 'deprecated' value
-     *
      *  @param value Deprecated value
-     *
      *  @since v1.9.5
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3568,9 +3425,7 @@ public:
     /*!
      *  @brief Set argument 'handle' function.
      *  Called when the argument is present and passed the value of the argument
-     *
      *  @param func Handle function
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -3579,7 +3434,6 @@ public:
 
     /*!
      *  @brief Get argument flags values
-     *
      *  @return Argument flags values
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3588,7 +3442,6 @@ public:
 
     /*!
      *  @brief Get argument 'action' value (default: argparse::store)
-     *
      *  @return Argument 'action' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3597,7 +3450,6 @@ public:
 
     /*!
      *  @brief Get argument 'nargs' value
-     *
      *  @return Argument 'nargs' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3606,7 +3458,6 @@ public:
 
     /*!
      *  @brief Get argument 'const' value
-     *
      *  @return Argument 'const' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3615,7 +3466,6 @@ public:
 
     /*!
      *  @brief Get argument 'default' value
-     *
      *  @return Argument 'default' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3625,7 +3475,6 @@ public:
     /*!
      *  @brief Get argument 'implicit' value (used with nargs="?" or "*",
      *  const_value alternative for optional arguments with nargs="?")
-     *
      *  @return Argument 'implicit' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3634,7 +3483,6 @@ public:
 
     /*!
      *  @brief Get argument 'type' name (for MetavarTypeHelpFormatter)
-     *
      *  @return Argument 'type' name
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3643,7 +3491,6 @@ public:
 
     /*!
      *  @brief Get argument 'choices' value
-     *
      *  @return Argument 'choices' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3652,7 +3499,6 @@ public:
 
     /*!
      *  @brief Get argument 'required' value
-     *
      *  @return Argument 'required' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3661,7 +3507,6 @@ public:
 
     /*!
      *  @brief Get argument 'help' message for default language
-     *
      *  @return Argument 'help' message
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3670,7 +3515,6 @@ public:
 
     /*!
      *  @brief Get argument 'version' value
-     *
      *  @return Argument 'version' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3679,7 +3523,6 @@ public:
 
     /*!
      *  @brief Get argument 'metavar' value
-     *
      *  @return Argument 'metavar' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3688,7 +3531,6 @@ public:
 
     /*!
      *  @brief Get argument 'dest' value
-     *
      *  @return Argument 'dest' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3697,9 +3539,7 @@ public:
 
     /*!
      *  @brief Get argument 'deprecated' value
-     *
      *  @since v1.9.5
-     *
      *  @return Argument 'deprecated' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -3708,11 +3548,8 @@ public:
 
     /*!
      *  @brief Convert argument value from string to type T
-     *
      *  @param value Argument value
-     *
      *  @since v1.9.8
-     *
      *  @return Converted value
      */
     template <class T>
@@ -4420,7 +4257,6 @@ public:
 
     /*!
      *  @brief Get group 'title' value for default language
-     *
      *  @return Group 'title' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -4429,7 +4265,6 @@ public:
 
     /*!
      *  @brief Get group 'description' value for default language
-     *
      *  @return Group 'description' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -4560,7 +4395,6 @@ protected:
 public:
     /*!
      *  @brief Create argument group object from another argument group
-     *
      *  @param orig Argument group object to copy
      */
     _ArgumentGroup(
@@ -4573,9 +4407,7 @@ public:
 
     /*!
      *  @brief Copy argument group object from another argument group
-     *
      *  @param rhs Argument group object to copy
-     *
      *  @return Current argument group reference
      */
     _ArgumentGroup&
@@ -4585,9 +4417,7 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  @brief Add argument with flags
-     *
      *  @param flags Flag values
-     *
      *  @return Current argument reference
      */
     template <class... Args>
@@ -4601,11 +4431,8 @@ public:
 
     /*!
      *  @brief Add argument with flags
-     *
      *  @param flags Flag values
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4615,9 +4442,7 @@ public:
 #else
     /*!
      *  @brief Add argument with flag
-     *
      *  @param flag Flag value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4627,10 +4452,8 @@ public:
 
     /*!
      *  @brief Add argument with 2 flags
-     *
      *  @param flag1 First value
      *  @param flag2 Second value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4641,13 +4464,10 @@ public:
 
     /*!
      *  @brief Add argument with 3 flags
-     *
      *  @param flag1 First value
      *  @param flag2 Second value
      *  @param flag3 Third value
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4659,14 +4479,11 @@ public:
 
     /*!
      *  @brief Add argument with 4 flags
-     *
      *  @param flag1 First value
      *  @param flag2 Second value
      *  @param flag3 Third value
      *  @param flag4 Fourth value
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4680,9 +4497,7 @@ public:
 
     /*!
      *  @brief Add argument with flags
-     *
      *  @param flags Flags values
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4732,7 +4547,6 @@ public:
     /*!
      *  @brief Create mutually exclusive group object from another
      *   mutually exclusive group
-     *
      *  @param orig Mutually exclusive group object to copy
      */
     MutuallyExclusiveGroup(
@@ -4741,9 +4555,7 @@ public:
     /*!
      *  @brief Copy mutually exclusive group object from another
      *  mutually exclusive group
-     *
      *  @param rhs Mutually exclusive group object to copy
-     *
      *  @return Current mutually exclusive group reference
      */
     MutuallyExclusiveGroup&
@@ -4752,9 +4564,7 @@ public:
 
     /*!
      *  @brief Set mutually exclusive group 'required' value
-     *
      *  @param value Required flag
-     *
      *  @return Current mutually exclusive group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4764,7 +4574,6 @@ public:
 
     /*!
      *  @brief Get mutually exclusive group 'required' value
-     *
      *  @return Mutually exclusive group 'required' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -4773,9 +4582,7 @@ public:
 
     /*!
      *  @brief Add argument
-     *
      *  @param argument Argument
-     *
      *  @return Current mutually exclusive group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4823,7 +4630,6 @@ public:
 
     /*!
      *  @brief Create argument group object from another argument group
-     *
      *  @param orig Argument group object to copy
      */
     ArgumentGroup(
@@ -4831,9 +4637,7 @@ public:
 
     /*!
      *  @brief Copy argument group object from another argument group
-     *
      *  @param rhs Argument group object to copy
-     *
      *  @return Current argument group reference
      */
     ArgumentGroup&
@@ -4842,10 +4646,8 @@ public:
 
     /*!
      *  @brief Set argument group 'title' value for selected language
-     *
      *  @param value Title value
      *  @param lang Language value (default: "")
-     *
      *  @return Current argument group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4855,10 +4657,8 @@ public:
 
     /*!
      *  @brief Set argument group 'description' value for selected language
-     *
      *  @param value Description value
      *  @param lang Language value (default: "")
-     *
      *  @return Current argument group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4869,11 +4669,8 @@ public:
 
     /*!
      *  @brief Set argument group 'argument_default' value
-     *
      *  @param value Argument default value
-     *
      *  @since v1.9.7
-     *
      *  @return Current argument group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4883,11 +4680,8 @@ public:
 
     /*!
      *  @brief Suppress argument group 'argument_default' value
-     *
      *  @param value argparse::SUPPRESS
-     *
      *  @since v1.9.7
-     *
      *  @return Current argument group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4897,11 +4691,8 @@ public:
 
     /*!
      *  @brief Set argument group 'conflict_handler' value
-     *
      *  @param value Conflict handler value
-     *
      *  @since v1.9.7
-     *
      *  @return Current argument group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4911,9 +4702,7 @@ public:
 
     /*!
      *  @brief Add argument
-     *
      *  @param argument Argument
-     *
      *  @return Current argument group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -4923,11 +4712,8 @@ public:
 
     /*!
      *  @brief Add mutually exclusive group
-     *
      *  @param required Required flag (default: false)
-     *
      *  @since v1.9.6
-     *
      *  @return Current mutually exclusive group reference
      */
     ARGPARSE_ATTR_NODISCARD
@@ -4937,9 +4723,7 @@ public:
 
     /*!
      *  @brief Get argument group 'argument_default' value
-     *
      *  @since v1.9.7
-     *
      *  @return Argument group 'argument_default' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -4948,9 +4732,7 @@ public:
 
     /*!
      *  @brief Get argument group 'conflict_handler' value
-     *
      *  @since v1.9.7
-     *
      *  @return Argument group 'conflict_handler' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5405,11 +5187,8 @@ ARGPARSE_EXPORT class Namespace
 public:
     /*!
      *  @brief Check if argument name exists and specified in parsed arguments
-     *
      *  @param key Argument destination name or flag
-     *
      *  @since v1.7.5
-     *
      *  @return True if argument name exists and specified, otherwise false
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5419,9 +5198,7 @@ public:
 
     /*!
      *  @brief Check if argument name exists and specified in parsed arguments
-     *
      *  @param key Argument destination name or flag
-     *
      *  @return True if argument name exists and specified, otherwise false
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5430,9 +5207,7 @@ public:
 
     /*!
      *  @brief Execute parser function with selected object
-     *
      *  @param args Object with parsed arguments
-     *
      *  @since v1.9.6
      */
     void
@@ -5440,9 +5215,7 @@ public:
 
     /*!
      *  @brief Check parser function exists in parsed arguments
-     *
      *  @since v1.9.6
-     *
      *  @return True if parser function exists, otherwise false
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5453,9 +5226,7 @@ public:
      *  @brief Get parsed argument value as boolean, byte, floating point,
      *  integer, stl span string, stl container, 2D stl containers, custom type.
      *  If argument not parsed, returns default value.
-     *
      *  @param key Argument destination name or flag
-     *
      *  @return Parsed argument value
      */
     template <class T>
@@ -5479,10 +5250,8 @@ public:
      *  @brief Get parsed argument value as paired container types,
      *  tupled container types, mapped types, paired types or tuple types.
      *  If argument not parsed, returns default constructed value.
-     *
      *  @param key Argument destination name or flag
      *  @param sep Separator (default: '=')
-     *
      *  @return Parsed argument value
      */
     template <class T>
@@ -5504,7 +5273,6 @@ public:
 
     /*!
      *  @brief Print namespace to output stream (default: std::cout)
-     *
      *  @param os Output stream
      */
     void
@@ -5512,9 +5280,7 @@ public:
 
     /*!
      *  @brief Get parsed argument value as args string
-     *
      *  @param key Argument destination name or flag
-     *
      *  @return Parsed argument value as args string
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5523,10 +5289,8 @@ public:
 
     /*!
      *  @brief Get parsed argument value as string
-     *
      *  @param key Argument destination name or flag
      *  @param quotes Value quotes (default: "")
-     *
      *  @return Parsed argument value as string
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5537,7 +5301,6 @@ public:
 
     /*!
      *  @brief Get namespace as string
-     *
      *  @return Namespace as string
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5550,9 +5313,7 @@ public:
      *  integer, string, stl container, 2D stl container or custom types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
-     *
      *  @param key Argument destination name or flag
-     *
      *  @return Parsed argument value or std::nullopt
      */
     template <class T>
@@ -5646,10 +5407,8 @@ public:
      *  tupled container, mapped, paired or tuple types.
      *  If invalid type, argument not exists, not parsed or can't be parsed,
      *  returns std::nullopt.
-     *
      *  @param key Argument destination name or flag
      *  @param sep Separator (default: '=')
-     *
      *  @return Parsed argument value or std::nullopt
      */
     template <class T>
@@ -5729,7 +5488,6 @@ public:
 
     /*!
      *  @brief Get unrecognized arguments
-     *
      *  @return Unrecognized arguments
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5738,7 +5496,6 @@ public:
 
     /*!
      *  @brief Get unrecognized arguments as args string
-     *
      *  @return Unrecognized arguments as args string
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5771,10 +5528,8 @@ private:
 
 /*!
  *  @brief Output stream overload for Namespace
- *
  *  @param os Output stream
  *  @param obj Namespace object
- *
  *  @return Output stream reference
  */
 inline std::ostream&
@@ -5811,7 +5566,6 @@ protected:
 public:
     /*!
      *  @brief Get parser group 'help' message for default language
-     *
      *  @return Parser group 'help' message
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5820,7 +5574,6 @@ public:
 
     /*!
      *  @brief Get parser group 'metavar' value
-     *
      *  @return Parser group 'metavar' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -5886,7 +5639,6 @@ class SubParsers;
 
 /*!
  *  @brief ParserGroup class
- *
  *  @since v1.9.0
  */
 ARGPARSE_EXPORT class ParserGroup : public _ParserGroup
@@ -5914,7 +5666,6 @@ public:
 
     /*!
      *  @brief Create parser group object from another parser group
-     *
      *  @param orig Parser group object to copy
      */
     ParserGroup(
@@ -5922,9 +5673,7 @@ public:
 
     /*!
      *  @brief Copy parser group object from another parser group
-     *
      *  @param rhs Parser group object to copy
-     *
      *  @return Current parser group reference
      */
     ParserGroup&
@@ -5933,10 +5682,8 @@ public:
 
     /*!
      *  @brief Set parser group 'title' value for selected language
-     *
      *  @param value Title value
      *  @param lang Language value (default: "")
-     *
      *  @return Current parser group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -5946,10 +5693,8 @@ public:
 
     /*!
      *  @brief Set parser group 'description' value for selected language
-     *
      *  @param value Description value
      *  @param lang Language value (default: "")
-     *
      *  @return Current parser group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -5960,10 +5705,8 @@ public:
 
     /*!
      *  @brief Set parser group 'help' message for selected language
-     *
      *  @param value Help message
      *  @param lang Language value (default: "")
-     *
      *  @return Current parser group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -5973,9 +5716,7 @@ public:
 
     /*!
      *  @brief Suppress parser group 'help' message
-     *
      *  @param value argparse::SUPPRESS
-     *
      *  @return Current parser group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -5984,9 +5725,7 @@ public:
 
     /*!
      *  @brief Set parser group 'metavar' value
-     *
      *  @param value Metavar value
-     *
      *  @return Current parser group reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -5995,9 +5734,7 @@ public:
 
     /*!
      *  @brief Add argument parser with concrete name
-     *
      *  @param name Parser name
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6007,7 +5744,6 @@ public:
 
     /*!
      *  @brief Get parser names
-     *
      *  @return Parser names container
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6050,10 +5786,8 @@ public:
 
     /*!
      *  @brief Set subparsers 'title' value for selected language
-     *
      *  @param value Title value
      *  @param lang Language value (default: "")
-     *
      *  @return Current subparsers reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6063,10 +5797,8 @@ public:
 
     /*!
      *  @brief Set subparsers 'description' value for selected language
-     *
      *  @param value Description value
      *  @param lang Language value (default: "")
-     *
      *  @return Current subparsers reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6077,9 +5809,7 @@ public:
 
     /*!
      *  @brief Set subparsers 'prog' value
-     *
      *  @param value Program value
-     *
      *  @return Current subparsers reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6088,9 +5818,7 @@ public:
 
     /*!
      *  @brief Set subparsers 'dest' value
-     *
      *  @param value Destination value
-     *
      *  @return Current subparsers reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6099,9 +5827,7 @@ public:
 
     /*!
      *  @brief Set subparsers 'required' value
-     *
      *  @param value Required flag
-     *
      *  @return Current subparsers reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6111,10 +5837,8 @@ public:
 
     /*!
      *  @brief Set subparsers 'help' message for selected language
-     *
      *  @param value Help message
      *  @param lang Language value (default: "")
-     *
      *  @return Current subparsers reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6124,11 +5848,8 @@ public:
 
     /*!
      *  @brief Suppress subparsers 'help' message
-     *
      *  @param value argparse::SUPPRESS
-     *
      *  @since v1.7.3
-     *
      *  @return Current subparsers reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6137,9 +5858,7 @@ public:
 
     /*!
      *  @brief Set subparsers 'metavar' value
-     *
      *  @param value Metavar value
-     *
      *  @return Current subparsers reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6148,7 +5867,6 @@ public:
 
     /*!
      *  @brief Get subparsers 'prog' value
-     *
      *  @return Subparsers 'prog' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6157,7 +5875,6 @@ public:
 
     /*!
      *  @brief Get subparsers 'dest' value
-     *
      *  @return Subparsers 'dest' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6166,7 +5883,6 @@ public:
 
     /*!
      *  @brief Get subparsers 'required' value
-     *
      *  @return Subparsers 'required' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6175,9 +5891,7 @@ public:
 
     /*!
      *  @brief Add argument parser with concrete name
-     *
      *  @param name Parser name
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6187,10 +5901,8 @@ public:
 
     /*!
      *  @brief Add parser group
-     *
      *  @param title Parser group title (default: "")
      *  @param description Parser group description (default: "")
-     *
      *  @return Current parser group reference
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6201,7 +5913,6 @@ public:
 
     /*!
      *  @brief Get parser names
-     *
      *  @return Parser names container
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6296,7 +6007,6 @@ public:
     /*!
      *  @brief Construct argument parser with concrete program name
      *  (default: "" don't override default program name "untitled")
-     *
      *  @param prog Program name (default: "")
      */
     explicit
@@ -6307,7 +6017,6 @@ public:
      *  @brief Construct argument parser from command line arguments
      *  with concrete program name
      *  (default: "" don't override argv[0] or default program name "untitled")
-     *
      *  @param argc Number of command line arguments
      *  @param argv Command line arguments data
      *  @param prog Program name (default: "")
@@ -6322,12 +6031,10 @@ public:
      *  @brief Construct argument parser from command line arguments
      *  with environment variables and concrete program name
      *  (default: "" don't override argv[0] or default program name "untitled")
-     *
      *  @param argc Number of command line arguments
      *  @param argv Command line arguments data
      *  @param envp Execution environment variables
      *  @param prog Program name (default: "")
-     *
      *  @since v1.8.0
      */
     explicit
@@ -6344,9 +6051,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'prog' value (default: argv[0] or "untitled")
-     *
      *  @param value Program name
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6355,10 +6060,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'usage' value for selected language
-     *
      *  @param value Usage value
      *  @param lang Language value (default: "")
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6368,11 +6071,8 @@ public:
 
     /*!
      *  @brief Suppress argument parser 'usage' value
-     *
      *  @param value argparse::SUPPRESS
-     *
      *  @since v1.9.0
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6382,12 +6082,9 @@ public:
     /*!
      *  @brief Set title for argument parser 'usage' (default: "usage")
      *  for selected language
-     *
      *  @param value Title for usage
      *  @param lang Language value (default: "")
-     *
      *  @since v1.7.1
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6398,10 +6095,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'description' value for selected language
-     *
      *  @param value Description value
      *  @param lang Language value (default: "")
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6413,12 +6108,9 @@ public:
     /*!
      *  @brief Set title for positional arguments
      *  (default: "positional arguments") for selected language
-     *
      *  @param value Title for positional arguments
      *  @param lang Language value (default: "")
-     *
      *  @since v1.7.0
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6430,12 +6122,9 @@ public:
     /*!
      *  @brief Set title for operand arguments
      *  (default: "operands") for selected language
-     *
      *  @param value Title for operand arguments
      *  @param lang Language value (default: "")
-     *
      *  @since v1.8.0
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6447,12 +6136,9 @@ public:
     /*!
      *  @brief Set title for optional arguments
      *  (default: "options") for selected language
-     *
      *  @param value Title for optional arguments
      *  @param lang Language value (default: "")
-     *
      *  @since v1.7.0
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6463,10 +6149,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'epilog' value for selected language
-     *
      *  @param value Epilog value
      *  @param lang Language value (default: "")
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6477,10 +6161,8 @@ public:
     /*!
      *  @brief Set argument parser 'help' message (for subparsers)
      *  for selected language
-     *
      *  @param value Help message
      *  @param lang Language value (default: "")
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6490,9 +6172,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'aliases' value (for subparsers)
-     *
      *  @param value Aliases values
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6502,10 +6182,8 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  @brief Set argument parser 'aliases' value (for subparsers)
-     *
      *  @param value First value
      *  @param args Other values
-     *
      *  @return Current argument parser reference
      */
     template <class... Args>
@@ -6519,11 +6197,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'aliases' value (for subparsers)
-     *
      *  @param value Aliases values
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6532,9 +6207,7 @@ public:
 #else
     /*!
      *  @brief Set argument parser 'aliases' value (for subparsers)
-     *
      *  @param value First value
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6543,10 +6216,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'aliases' value (for subparsers)
-     *
      *  @param value1 First value
      *  @param value2 Second value
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6557,9 +6228,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'parents' value
-     *
      *  @param value Parents values
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6569,10 +6238,8 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  @brief Set argument parser 'parents' value
-     *
      *  @param value Parent value
      *  @param args Parents values
-     *
      *  @return Current argument parser reference
      */
     template <class... Args>
@@ -6586,11 +6253,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'parents' value
-     *
      *  @param value Parents values
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6599,9 +6263,7 @@ public:
 #else
     /*!
      *  @brief Set argument parser 'parents' value
-     *
      *  @param value Parent value
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6610,10 +6272,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'parents' value
-     *
      *  @param value1 Parent value1
      *  @param value2 Parent value2
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6624,9 +6284,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'formatter_class' value
-     *
      *  @param value HelpFormatter value
-     *
      *  @return Current argument parser reference
      */
     template <class T>
@@ -6643,9 +6301,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'prefix_chars' value (default: "-")
-     *
      *  @param value Prefix chars values (only punctuation characters)
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6655,9 +6311,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'fromfile_prefix_chars' value
-     *
      *  @param value Fromfile prefix chars values (only punctuation characters)
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6667,11 +6321,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'comment_prefix_chars' value
-     *
      *  @param value Comment prefix chars values (only punctuation characters)
-     *
      *  @since v1.8.1
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6681,9 +6332,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'argument_default' value
-     *
      *  @param value Argument default value
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6693,9 +6342,7 @@ public:
 
     /*!
      *  @brief Suppress argument parser 'argument_default' value
-     *
      *  @param value argparse::SUPPRESS
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6705,9 +6352,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'conflict_handler' value
-     *
      *  @param value Conflict handler value
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6717,9 +6362,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'add_help' value (default: true)
-     *
      *  @param value Add help flag
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6728,9 +6371,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'allow_abbrev' value (default: true)
-     *
      *  @param value Allow abbrev flag
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6740,9 +6381,7 @@ public:
 
     /*!
      *  @brief Set argument parser 'exit_on_error' value (default: true)
-     *
      *  @param value Exit on error flag
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6752,11 +6391,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'suggest_on_error' value (default: false)
-     *
      *  @param value Suggest on error flag
-     *
      *  @since v1.9.6
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6766,11 +6402,8 @@ public:
 
     /*!
      *  @brief Set argument parser 'color' value (default: true)
-     *
      *  @param value Color flag
-     *
      *  @since v1.10.0
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6780,11 +6413,8 @@ public:
     /*!
      *  @brief Set argument parser 'deprecated' value (default: false)
      *  (for subparsers)
-     *
      *  @param value Deprecated flag
-     *
      *  @since v1.9.5
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6794,9 +6424,7 @@ public:
 
     /*!
      *  @brief Set output width value (default: auto-detected or 80, min 33)
-     *
      *  @param value Output width
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -6806,7 +6434,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'prog' value (default: argv[0] or "untitled")
-     *
      *  @return Argument parser 'prog' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6815,7 +6442,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'usage' value for default language
-     *
      *  @return Argument parser 'usage' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6825,9 +6451,7 @@ public:
     /*!
      *  @brief Get title for argument parser 'usage' for default language
      *  (default: "usage")
-     *
      *  @since v1.7.1
-     *
      *  @return Title for argument parser 'usage'
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6836,7 +6460,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'description' value for default language
-     *
      *  @return Argument parser 'description' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6846,9 +6469,7 @@ public:
     /*!
      *  @brief Get title for positional arguments for default language
      *  (default: "positional arguments")
-     *
      *  @since v1.7.0
-     *
      *  @return Title for positional arguments
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6858,9 +6479,7 @@ public:
     /*!
      *  @brief Get title for operand arguments for default language
      *  (default: "operands")
-     *
      *  @since v1.8.0
-     *
      *  @return Title for operand arguments
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6870,9 +6489,7 @@ public:
     /*!
      *  @brief Get title for optional arguments for default language
      *  (default: "options")
-     *
      *  @since v1.7.0
-     *
      *  @return Title for optional arguments
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6881,7 +6498,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'epilog' value for default language
-     *
      *  @return Argument parser 'epilog' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6891,7 +6507,6 @@ public:
     /*!
      *  @brief Get argument parser 'help' message for default language
      *  (for subparsers)
-     *
      *  @return Argument parser 'help' message
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6900,7 +6515,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'aliases' value (for subparsers)
-     *
      *  @return Argument parser 'aliases' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6909,9 +6523,7 @@ public:
 
     /*!
      *  @brief Get argument parser 'formatter_class' value
-     *
      *  @since v1.7.5
-     *
      *  @return Argument parser 'formatter_class' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6920,7 +6532,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'prefix_chars' value (default: "-")
-     *
      *  @return Argument parser 'prefix_chars' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6929,7 +6540,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'fromfile_prefix_chars' value
-     *
      *  @return Argument parser 'fromfile_prefix_chars' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6938,9 +6548,7 @@ public:
 
     /*!
      *  @brief Get argument parser 'comment_prefix_chars' value
-     *
      *  @since v1.8.1
-     *
      *  @return Argument parser 'comment_prefix_chars' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6949,7 +6557,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'argument_default' value
-     *
      *  @return Argument parser 'argument_default' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6958,7 +6565,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'conflict_handler' value
-     *
      *  @return Argument parser 'conflict_handler' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6967,7 +6573,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'add_help' value (default: true)
-     *
      *  @return Argument parser 'add_help' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6976,7 +6581,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'allow_abbrev' value (default: true)
-     *
      *  @return Argument parser 'allow_abbrev' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6985,7 +6589,6 @@ public:
 
     /*!
      *  @brief Get argument parser 'exit_on_error' value (default: true)
-     *
      *  @return Argument parser 'exit_on_error' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -6994,9 +6597,7 @@ public:
 
     /*!
      *  @brief Get argument parser 'suggest_on_error' value (default: false)
-     *
      *  @since v1.9.6
-     *
      *  @return Argument parser 'suggest_on_error' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7005,9 +6606,7 @@ public:
 
     /*!
      *  @brief Get argument parser 'color' value (default: true)
-     *
      *  @since v1.10.0
-     *
      *  @return Argument parser 'color' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7016,9 +6615,7 @@ public:
 
     /*!
      *  @brief Get argument parser 'deprecated' value (default: false)
-     *
      *  @since v1.9.5
-     *
      *  @return Argument parser 'deprecated' value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7027,7 +6624,6 @@ public:
 
     /*!
      *  @brief Get output width value (default: auto-detected or 80, min 33)
-     *
      *  @return Output width value
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7037,9 +6633,7 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  @brief Add argument with flags
-     *
      *  @param flags Flag values
-     *
      *  @return Current argument reference
      */
     template <class... Args>
@@ -7053,11 +6647,8 @@ public:
 
     /*!
      *  @brief Add argument with flags
-     *
      *  @param flags Flag values
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7067,9 +6658,7 @@ public:
 #else
     /*!
      *  @brief Add argument with flag
-     *
      *  @param flag Flag value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7079,10 +6668,8 @@ public:
 
     /*!
      *  @brief Add argument with 2 flags
-     *
      *  @param flag1 First value
      *  @param flag2 Second value
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7093,13 +6680,10 @@ public:
 
     /*!
      *  @brief Add argument with 3 flags
-     *
      *  @param flag1 First value
      *  @param flag2 Second value
      *  @param flag3 Third value
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7111,14 +6695,11 @@ public:
 
     /*!
      *  @brief Add argument with 4 flags
-     *
      *  @param flag1 First value
      *  @param flag2 Second value
      *  @param flag3 Third value
      *  @param flag4 Fourth value
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7132,9 +6713,7 @@ public:
 
     /*!
      *  @brief Add argument with flags
-     *
      *  @param flags Flags values
-     *
      *  @return Current argument reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7144,9 +6723,7 @@ public:
 
     /*!
      *  @brief Add argument
-     *
      *  @param argument Argument
-     *
      *  @return Current parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7156,10 +6733,8 @@ public:
 
     /*!
      *  @brief Add argument group
-     *
      *  @param title Group title (default: "")
      *  @param description Group description (default: "")
-     *
      *  @return Current argument group reference
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7170,9 +6745,7 @@ public:
 
     /*!
      *  @brief Add mutually exclusive group
-     *
      *  @param required Required flag (default: false)
-     *
      *  @return Current mutually exclusive group reference
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7182,10 +6755,8 @@ public:
 
     /*!
      *  @brief Add subparsers. Only arguments of one subparser are allowed
-     *
      *  @param title Subparsers title (default: "")
      *  @param description Subparsers description (default: "")
-     *
      *  @return Current subparsers reference
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7196,7 +6767,6 @@ public:
 
     /*!
      *  @brief Get subparsers. If no subparsers was added, returns nullptr
-     *
      *  @return Current subparsers pointer or nullptr
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7205,9 +6775,7 @@ public:
 
     /*!
      *  @brief Check if subparsers was added
-     *
      *  @since v1.8.3
-     *
      *  @return True if subparsers was added, false otherwise
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7218,9 +6786,7 @@ public:
      *  @brief Set argument parser 'handle' function.
      *  Called when the parser is executed and passed the value of the
      *  parser
-     *
      *  @param func Handle function
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7231,9 +6797,7 @@ public:
      *  @brief Set argument parser 'handle' function.
      *  Called when the parser is executed and passed the namespace
      *  of the parser
-     *
      *  @param func Parse handle function
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7243,9 +6807,7 @@ public:
     /*!
      *  @brief Get the default value for a specific argument.
      *  If argument not found, returns empty string.
-     *
      *  @param dest Argument destination name or flag
-     *
      *  @return Default value for a specific argument
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7256,11 +6818,8 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  @brief Set default values for a specific arguments
-     *
      *  @param pairs List of pairs: { 'argument flag', 'default value' }
-     *
      *  @since v1.7.2
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7271,9 +6830,7 @@ public:
 
     /*!
      *  @brief Set default values for a specific arguments
-     *
      *  @param pairs Vector of pairs: { 'argument flag', 'default value' }
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7284,11 +6841,8 @@ public:
     /*!
      *  @brief Set argument parser defaults function. This function may be
      *  called manually later
-     *
      *  @param func Function
-     *
      *  @since v1.9.6
-     *
      *  @return Current argument parser reference
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7298,9 +6852,7 @@ public:
 
     /*!
      *  @brief Parse command line arguments
-     *
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7310,10 +6862,8 @@ public:
 
     /*!
      *  @brief Parse concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7324,10 +6874,8 @@ public:
 
     /*!
      *  @brief Parse concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7338,9 +6886,7 @@ public:
 
     /*!
      *  @brief Parse known command line arguments
-     *
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7350,10 +6896,8 @@ public:
 
     /*!
      *  @brief Parse known concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7364,10 +6908,8 @@ public:
 
     /*!
      *  @brief Parse known concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7378,9 +6920,7 @@ public:
 
     /*!
      *  @brief Parse intermixed command line arguments
-     *
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7390,10 +6930,8 @@ public:
 
     /*!
      *  @brief Parse intermixed concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7404,10 +6942,8 @@ public:
 
     /*!
      *  @brief Parse intermixed concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7418,9 +6954,7 @@ public:
 
     /*!
      *  @brief Parse known intermixed command line arguments
-     *
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7430,10 +6964,8 @@ public:
 
     /*!
      *  @brief Parse known intermixed concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7444,10 +6976,8 @@ public:
 
     /*!
      *  @brief Parse known intermixed concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7459,12 +6989,9 @@ public:
 #ifdef ARGPARSE_CXX_11
     /*!
      *  @brief Parse concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.2
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7475,12 +7002,9 @@ public:
 
     /*!
      *  @brief Parse known concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.2
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7491,12 +7015,9 @@ public:
 
     /*!
      *  @brief Parse intermixed concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.2
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7507,12 +7028,9 @@ public:
 
     /*!
      *  @brief Parse known intermixed concrete arguments
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.2
-     *
      *  @return Object with parsed arguments
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7526,11 +7044,8 @@ public:
     /*!
      *  @brief Try parse command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7541,12 +7056,9 @@ public:
     /*!
      *  @brief Try parse concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7558,12 +7070,9 @@ public:
     /*!
      *  @brief Try parse concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.2
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7575,12 +7084,9 @@ public:
     /*!
      *  @brief Try parse concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7592,11 +7098,8 @@ public:
     /*!
      *  @brief Try parse known command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7607,12 +7110,9 @@ public:
     /*!
      *  @brief Try parse known concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7624,12 +7124,9 @@ public:
     /*!
      *  @brief Try parse known concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.2
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7641,12 +7138,9 @@ public:
     /*!
      *  @brief Try parse known concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7658,11 +7152,8 @@ public:
     /*!
      *  @brief Try parse intermixed command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7673,12 +7164,9 @@ public:
     /*!
      *  @brief Try parse intermixed concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7690,12 +7178,9 @@ public:
     /*!
      *  @brief Try parse intermixed concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.2
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7707,12 +7192,9 @@ public:
     /*!
      *  @brief Try parse intermixed concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7724,11 +7206,8 @@ public:
     /*!
      *  @brief Try parse known intermixed command line arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7739,12 +7218,9 @@ public:
     /*!
      *  @brief Try parse known intermixed concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7756,12 +7232,9 @@ public:
     /*!
      *  @brief Try parse known intermixed concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.2
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7773,12 +7246,9 @@ public:
     /*!
      *  @brief Try parse known intermixed concrete arguments.
      *  If arguments can't be parsed, returns std::nullopt.
-     *
      *  @param args Arguments to parse
      *  @param space Parsed arguments namespace (default: none)
-     *
      *  @since v1.7.1
-     *
      *  @return Object with parsed arguments or std::nullopt
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -7790,11 +7260,8 @@ public:
 
     /*!
      *  @brief Check if environment variable with name exists (from envp[])
-     *
      *  @param name Environment variable name
-     *
      *  @since v1.8.3
-     *
      *  @return True if environment variable name with exists, false otherwise
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7803,11 +7270,8 @@ public:
 
     /*!
      *  @brief Get environment variable value (from envp[])
-     *
      *  @param name Environment variable name
-     *
      *  @since v1.8.0
-     *
      *  @return Environment variable value if exists, empty string otherwise
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7816,9 +7280,7 @@ public:
 
     /*!
      *  @brief Get environment variables list (from envp[])
-     *
      *  @since v1.8.2
-     *
      *  @return Environment variable values list
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7827,7 +7289,6 @@ public:
 
     /*!
      *  @brief Print a program usage for default language to output stream
-     *
      *  @param os Output stream (default: std::cout)
      */
     void
@@ -7836,10 +7297,8 @@ public:
 
     /*!
      *  @brief Print a program usage for selected language to output stream
-     *
      *  @param lang Language value
      *  @param os Output stream (default: std::cout)
-     *
      *  @since v1.7.1
      */
     void
@@ -7849,7 +7308,6 @@ public:
 
     /*!
      *  @brief Print a help message for default language to output stream
-     *
      *  @param os Output stream (default: std::cout)
      */
     void
@@ -7858,10 +7316,8 @@ public:
 
     /*!
      *  @brief Print a help message for selected language to output stream
-     *
      *  @param lang Language value
      *  @param os Output stream (default: std::cout)
-     *
      *  @since v1.7.1
      */
     void
@@ -7871,9 +7327,7 @@ public:
 
     /*!
      *  @brief Return a string containing a program usage for selected language
-     *
      *  @param lang Language value (default: "")
-     *
      *  @return Program usage for selected language
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7883,9 +7337,7 @@ public:
 
     /*!
      *  @brief Return a string containing a help message for selected language
-     *
      *  @param lang Language value (default: "")
-     *
      *  @return Help message for selected language
      */
     ARGPARSE_ATTR_NODISCARD
@@ -7896,7 +7348,6 @@ public:
     /*!
      *  @brief Terminates the program, exiting with the specified status and,
      *  if given, prints a message before that
-     *
      *  @param status Status code (default: 0)
      *  @param message Error message (default: "")
      */
@@ -7907,7 +7358,6 @@ public:
     /*!
      *  @brief Prints a usage message including the message to the
      *  standard error and terminates the program with a status code of 2
-     *
      *  @param message Error message
      */
     void
@@ -7918,9 +7368,7 @@ public:
      *  (see the fromfile_prefix_chars function)
      *  are read one argument per line.
      *  convert_arg_line_to_args() can be overridden for fancier reading
-     *
      *  @param arg_line Line with arguments
-     *
      *  @return Arguments to parse
      */
     virtual std::vector<std::string>
@@ -8411,12 +7859,9 @@ public:
     /*!
      *  @brief Run self-test and print report to output stream
      *  for default language
-     *
      *  @param parser Argument parser
      *  @param os Output stream (default: std::cout)
-     *
      *  @since v1.9.7
-     *
      *  @return True if no warnings or errors were found, false otherwise
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -8428,13 +7873,10 @@ public:
     /*!
      *  @brief Run self-test and print report for selected language
      *  to output stream
-     *
      *  @param parser Argument parser
      *  @param lang Language value
      *  @param os Output stream (default: std::cout)
-     *
      *  @since v1.9.7
-     *
      *  @return True if no warnings or errors were found, false otherwise
      */
     ARGPARSE_ATTR_MAYBE_UNUSED
@@ -8449,11 +7891,8 @@ public:
      *  Put `prog` file with this content in the `completions` subdir of
      *  $BASH_COMPLETION_USER_DIR (defaults to $XDG_DATA_HOME/bash-completion
      *  or ~/.local/share/bash-completion if $XDG_DATA_HOME is not set)
-     *
      *  @param parser Argument parser
-     *
      *  @since v1.9.7
-     *
      *  @return Bash completion string
      */
     ARGPARSE_ATTR_NODISCARD
@@ -8465,11 +7904,8 @@ public:
      *  @brief Return a string containing a zsh completion.
      *  Copy content to file ${DIR}/_${PROG}, add ${DIR} to `fpath` in ~/.zshrc
      *  `fpath=(${DIR} $fpath)`
-     *
      *  @param parser Argument parser
-     *
      *  @since v1.9.8
-     *
      *  @return Zsh completion string
      */
     ARGPARSE_ATTR_NODISCARD
@@ -8482,10 +7918,8 @@ public:
      *  Put `prog` file with this content in the `completions` subdir of
      *  $BASH_COMPLETION_USER_DIR (defaults to $XDG_DATA_HOME/bash-completion
      *  or ~/.local/share/bash-completion if $XDG_DATA_HOME is not set)
-     *
      *  @param parser Argument parser
      *  @param os Output stream (default: std::cout)
-     *
      *  @since v1.9.7
      */
     static void
@@ -8497,10 +7931,8 @@ public:
      *  @brief Print a zsh completion to output stream.
      *  Copy content to file ${DIR}/_${PROG}, add ${DIR} to `fpath` in ~/.zshrc
      *  `fpath=(${DIR} $fpath)`
-     *
      *  @param parser Argument parser
      *  @param os Output stream (default: std::cout)
-     *
      *  @since v1.9.8
      */
     static void
@@ -8510,11 +7942,8 @@ public:
 
     /*!
      *  @brief Return a string containing a man page.
-     *
      *  @param parser Argument parser
-     *
      *  @since v1.10.0
-     *
      *  @return String with a man page
      */
     ARGPARSE_ATTR_NODISCARD
@@ -8524,10 +7953,8 @@ public:
 
     /*!
      *  @brief Print a man page to output stream.
-     *
      *  @param parser Argument parser
      *  @param os Output stream (default: std::cout)
-     *
      *  @since v1.10.0
      */
     static void
