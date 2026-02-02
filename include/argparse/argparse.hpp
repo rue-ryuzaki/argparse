@@ -16586,15 +16586,20 @@ utils::test_diagnostics(
         std::string const& lang,
         std::ostream& os)
 {
-    std::string const _ok    = "[ OK ]";
-    std::string const _warn  = "[WARN]";
-    std::string const _error = "[FAIL]";
+    std::string _o = "[ OK ] ";
+    std::string _w = "[WARN] ";
+    std::string _e = "[FAIL] ";
+    if (!p.m_name.empty()) {
+        _o += "parser '" + p.m_name + "': ";
+        _w += "parser '" + p.m_name + "': ";
+        _e += "parser '" + p.m_name + "': ";
+    }
     typedef std::pair<std::size_t, std::size_t> WarnErrAmount;
     WarnErrAmount diagnostics;
     // check prog
     if (p.prog() == detail::_prog) {
         ++diagnostics.first;
-        os << _warn << " used default `prog` value, "
+        os << _w << "used default `prog` value, "
            << "override it or pass command line options\n";
     }
     // check prefix chars
@@ -16603,7 +16608,7 @@ utils::test_diagnostics(
             char c = p.fromfile_prefix_chars().at(i);
             if (detail::_exists(c, p.prefix_chars())) {
                 ++diagnostics.first;
-                os << _warn << " fromfile prefix char '" << std::string(1, c)
+                os << _w << "fromfile prefix char '" << std::string(1, c)
                    << "' exists in prefix_chars\n";
             }
         }
@@ -16611,12 +16616,12 @@ utils::test_diagnostics(
             char c = p.comment_prefix_chars().at(i);
             if (detail::_exists(c, p.prefix_chars())) {
                 ++diagnostics.first;
-                os << _warn << " comment prefix char '" << std::string(1, c)
+                os << _w << "comment prefix char '" << std::string(1, c)
                    << "' exists in prefix_chars\n";
             }
             if (detail::_exists(c, p.fromfile_prefix_chars())) {
                 ++diagnostics.first;
-                os << _warn << " comment prefix char '" << std::string(1, c)
+                os << _w << "comment prefix char '" << std::string(1, c)
                    << "' exists in fromfile_prefix_chars\n";
             }
         }
@@ -16626,13 +16631,13 @@ utils::test_diagnostics(
     // end diagnostics
     bool res = diagnostics.first == 0 && diagnostics.second == 0;
     if (res) {
-        os << _ok << " no warning or errors detected\n";
+        os << _o << "no warning or errors detected\n";
     } else {
         if (diagnostics.first != 0) {
-            os << _warn << " detected warnings: " << diagnostics.first << "\n";
+            os << _w << "detected warnings: " << diagnostics.first << "\n";
         }
         if (diagnostics.second != 0) {
-            os << _error << " detected errors: " << diagnostics.second << "\n";
+            os << _e << "detected errors: " << diagnostics.second << "\n";
         }
     }
     return res;
@@ -16645,34 +16650,37 @@ utils::test_argument_parser(
         ArgumentParser const* p,
         std::pair<std::size_t, std::size_t>& diagnostics)
 {
-    std::string const _info  = "[INFO]";
-    std::string const _warn  = "[WARN]";
-    std::string const _error = "[FAIL]";
+    std::string _i = "[INFO] ";
+    std::string _w = "[WARN] ";
+    std::string _e = "[FAIL] ";
+    if (!p->m_name.empty()) {
+        _i += "parser '" + p->m_name + "': ";
+        _w += "parser '" + p->m_name + "': ";
+        _e += "parser '" + p->m_name + "': ";
+    }
     std::vector<std::string> dest_args;
     // check arguments
     for (arg_iterator i = p->m_data->m_arguments.begin();
          i != p->m_data->m_arguments.end(); ++i) {
         pArgument const& arg = (*i);
-        std::string argument = "argument with ";
-        argument += std::string(arg->dest().empty() ? "options" : "dest");
-        argument += " " + detail::_join(arg->get_argument_flags(), ", ", "'");
+        std::string name = "argument " + detail::_join(
+                    arg->get_argument_flags(), ", ", "'");
         // check flags
         bool is_optional = arg->m_type == Argument::Optional;
         for (std::size_t j = 0; j < arg->flags().size(); ++j) {
             std::string const& flag = arg->flags().at(j);
             if (!detail::_is_utf8_string(flag)) {
                 ++diagnostics.first;
-                os << _warn << " " << argument << ": flag '"
-                   << flag << "' is not utf-8\n";
+                os << _w << name << ": flag '" << flag << "' is not utf-8\n";
             }
             if (!detail::_is_flag_correct(flag, is_optional)) {
                 ++diagnostics.first;
-                os << _warn << " " << argument << ": flag '"
+                os << _w << name << ": flag '"
                    << flag << "' can be incorrect\n";
             }
             if (flag == detail::_pseudo_arg && arg->dest().empty()) {
                 ++diagnostics.second;
-                os << _error << " " << argument << ": dest= "
+                os << _e << name << ": dest= "
                    << "is required for options like '--'\n";
             }
         }
@@ -16680,12 +16688,12 @@ utils::test_argument_parser(
         if (arg->m_type == Argument::Positional) {
             if (arg->dest().empty() && arg->flags().empty()) {
                 ++diagnostics.second;
-                os << _error << " " << argument << ": missing 1 "
+                os << _e << name << ": missing 1 "
                    << "required positional argument: 'dest'\n";
             }
             if (!arg->dest().empty() && !arg->flags().empty()) {
                 ++diagnostics.second;
-                os << _error << " " << argument << ": dest supplied "
+                os << _e << name << ": dest supplied "
                    << "twice for positional argument\n";
             }
         }
@@ -16693,12 +16701,11 @@ utils::test_argument_parser(
             std::string const& flag = arg->dest();
             if (!detail::_is_utf8_string(flag)) {
                 ++diagnostics.first;
-                os << _warn << " " << argument << ": dest '"
-                   << flag << "' is not utf-8\n";
+                os << _w << name << ": dest '" << flag << "' is not utf-8\n";
             }
             if (!detail::_is_flag_correct(flag, is_optional)) {
                 ++diagnostics.first;
-                os << _warn << " " << argument << ": dest '"
+                os << _w << name << ": dest '"
                    << flag << "' can be incorrect\n";
             }
         }
@@ -16708,11 +16715,11 @@ utils::test_argument_parser(
                 if (detail::_exists(flag, dest_args)) {
                     if (p->conflict_handler() == "resolve") {
                         ++diagnostics.first;
-                        os << _warn << " " << argument << " resolve"
+                        os << _w << name << " resolve"
                            << ": conflicting option string: '" << flag << "'\n";
                     } else {
                         ++diagnostics.second;
-                        os << _error << " " << argument
+                        os << _e << name
                            << ": conflicting option string: '" << flag << "'\n";
                     }
                 }
@@ -16724,22 +16731,22 @@ utils::test_argument_parser(
             std::string const& str = arg->choices().at(j);
             if (str.size() > 1 && str.size() != detail::_trim_sw(str).size()) {
                 ++diagnostics.first;
-                os << _warn << " " << argument << ": choice '"
+                os << _w << name << ": choice '"
                    << str << "' can be incorrect\n";
             } else if (str.empty()) {
                 ++diagnostics.first;
-                os << _warn << " " << argument << ": empty choice\n";
+                os << _w << name << ": empty choice\n";
             }
         }
         if (arg->m_choices.has_value() && arg->choices().empty()) {
             ++diagnostics.first;
-            os << _warn << " " << argument << ": empty choices\n";
+            os << _w << name << ": empty choices\n";
         }
         // check help
         if (detail::_tr(arg->m_help.value(), lang).empty()
                 && !arg->m_help.suppress()) {
             ++diagnostics.first;
-            os << _warn << " " << argument << ": help is not set\n";
+            os << _w << name << ": help is not set\n";
         }
         // check metavar
         if ((arg->action() & (detail::_store_action
@@ -16749,7 +16756,7 @@ utils::test_argument_parser(
             if (size > 1 && (!(arg->m_nargs & detail::_NARGS_COMBINED)
                              || size != arg->m_num_args)) {
                 ++diagnostics.second;
-                os << _error << " " << argument << ": length of "
+                os << _e << name << ": length of "
                    << "metavar tuple does not match nargs\n";
             }
         }
@@ -16759,7 +16766,7 @@ utils::test_argument_parser(
                     && !(arg->action() & (detail::_bool_action
                                           | argparse::BooleanOptionalAction))) {
                 ++diagnostics.first;
-                os << _warn << " " << argument << ": danger to use `bool` type "
+                os << _w << name << ": danger to use `bool` type "
                    << "for non-boolean actions\n";
             }
         }
@@ -16769,13 +16776,11 @@ utils::test_argument_parser(
          i != p->m_mutex_groups.end(); ++i) {
         for (arg_iterator j = (*i).m_data->m_arguments.begin();
              j != (*i).m_data->m_arguments.end(); ++j) {
-            std::string argument = "argument with ";
-            argument += std::string((*j)->dest().empty() ? "options" : "dest");
-            argument += " " + detail::_join(
-                            (*j)->get_argument_flags(), ", ", "'");
+            std::string name = "argument " + detail::_join(
+                        (*j)->get_argument_flags(), ", ", "'");
             if ((*j)->required()) {
                 ++diagnostics.second;
-                os << _error << " " << argument << ": mutually "
+                os << _e << name << ": mutually "
                    << "exclusive arguments must be optional\n";
             }
         }
@@ -16785,32 +16790,31 @@ utils::test_argument_parser(
         std::list<pParser> const parsers = p->m_subparsers->list_parsers(true);
         if (parsers.empty()) {
             ++diagnostics.first;
-            os << _warn << " subparsers created but no parsers were added\n";
+            os << _w << "subparsers created but no parsers were added\n";
         }
         // check dest
         std::string const& flag = p->m_subparsers->dest();
         if (flag.empty()) {
-            os << _info << " you can specify `dest` for subparsers "
+            os << _i << "you can specify `dest` for subparsers "
                << "to determine used parser\n";
         } else {
             if (!detail::_is_utf8_string(flag)) {
                 ++diagnostics.first;
-                os << _warn << " subparsers dest '"
-                   << flag << "' is not utf-8\n";
+                os << _w << "subparsers dest '" << flag << "' is not utf-8\n";
             }
             if (!detail::_is_flag_correct(flag, false)) {
                 ++diagnostics.first;
-                os << _warn << " subparsers dest '"
+                os << _w << "subparsers dest '"
                    << flag << "' can be incorrect\n";
             }
             if (detail::_exists(flag, dest_args)) {
                 if (p->conflict_handler() == "resolve") {
                     ++diagnostics.first;
-                    os << _warn << " subparsers dest '" << flag << " resolve"
+                    os << _w << "subparsers dest '" << flag << " resolve"
                        << "': conflicting option string: '" << flag << "'\n";
                 } else {
                     ++diagnostics.second;
-                    os << _error << " subparsers dest '" << flag
+                    os << _e << "subparsers dest '" << flag
                        << "': conflicting option string: '" << flag << "'\n";
                 }
             }
@@ -16820,13 +16824,13 @@ utils::test_argument_parser(
         if (detail::_tr(p->m_subparsers->m_help.value(), lang).empty()
                 && !p->m_subparsers->is_suppress()) {
             ++diagnostics.first;
-            os << _warn << " help for subparsers is not set\n";
+            os << _w << "help for subparsers is not set\n";
         }
         for (SubParsers::pgr_iterator it = p->m_subparsers->m_groups.begin();
              it != p->m_subparsers->m_groups.end(); ++it) {
             if (detail::_tr((*it)->m_help.value(), lang).empty()) {
                 ++diagnostics.first;
-                os << _warn << " help for subparser group '"
+                os << _w << "help for subparser group '"
                    << detail::_tr((*it)->m_title, lang) << "' is not set\n";
             }
         }
@@ -16835,24 +16839,23 @@ utils::test_argument_parser(
             // check name
             if (!detail::_is_utf8_string(name)) {
                 ++diagnostics.first;
-                os << _warn << " name for parser '"
-                   << name << "' is not utf-8\n";
+                os << _w << "name for parser '" << name << "' is not utf-8\n";
             }
             if (!name.empty()
                     && detail::_exists(name.at(0), p->m_prefix_chars)) {
                 ++diagnostics.first;
-                os << _warn << " name for parser '" << name << "' incorrect, "
+                os << _w << "name for parser '" << name << "' incorrect, "
                    << "started with prefix chars '" << p->m_prefix_chars
                    << "'\n";
             } else if (!detail::_is_flag_correct(name, false)) {
                 ++diagnostics.first;
-                os << _warn << " name for parser '"
+                os << _w << "name for parser '"
                    << name << "' can be incorrect\n";
             }
             // check help
             if (detail::_tr((*it)->m_help, lang).empty()) {
                 ++diagnostics.first;
-                os << _warn << " help for parser '" << name << "' is not set\n";
+                os << _w << "help for parser '" << name << "' is not set\n";
             }
             // check parser
             test_argument_parser(lang, os, (*it).get(), diagnostics);
