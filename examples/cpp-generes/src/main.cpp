@@ -40,7 +40,6 @@
 #include <stdint.h>
 #endif  // C++11+
 
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 
