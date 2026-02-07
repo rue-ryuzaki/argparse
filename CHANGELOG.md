@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.10.2] - 2026-02-07
+
+  * Fix: Argument combined nargs implementation
+  * Update: docs comments
+  * Update: self_test checks
+
 ## [1.10.1] - 2026-01-10
 
   * Fix: docs generation

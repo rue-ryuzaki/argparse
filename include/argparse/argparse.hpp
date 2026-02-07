@@ -5,7 +5,7 @@
  *                         __| |
  * MIT License
  *
- * Argument parser for C++ (ArgumentParser v1.10.1)
+ * Argument parser for C++ (ArgumentParser v1.10.2)
  *
  * Copyright (c) 2021-2026 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  *
@@ -262,7 +262,7 @@
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
 #define ARGPARSE_VERSION_MINOR 10
-#define ARGPARSE_VERSION_PATCH 1
+#define ARGPARSE_VERSION_PATCH 2
 
 /**
  *  This macro turns the version numbers into a numeric value:
