@@ -17307,6 +17307,7 @@ utils::print_man_page(
 
 // -- #undef ------------------------------------------------------------------
 #undef ARGPARSE_INL
+#undef ARGPARSE_DEVELOP
 #ifndef ARGPARSE_KEEP_MACROS
 // -- standard ----------------------------------------------------------------
 # undef ARGPARSE_CXX_98
@@ -17341,7 +17342,6 @@ utils::print_man_page(
 #undef ARGPARSE_ATTR_ASSUME
 // C++26+
 #undef ARGPARSE_ATTR_INDETERMINATE
-#undef ARGPARSE_DEVELOP
 // -- specifiers --------------------------------------------------------------
 #undef ARGPARSE_CONSTEXPR
 #undef ARGPARSE_ENUM_TYPE
