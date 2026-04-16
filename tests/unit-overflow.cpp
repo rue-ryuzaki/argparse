@@ -5,7 +5,8 @@
 #define ARGPARSE_DECLARATION
 #include "./argparse_test.hpp"
 
-uint16_t const int16_t_max_plus_1 = static_cast<uint16_t>(std::numeric_limits<int16_t>::max()) + 1;
+uint16_t const int16_t_max_plus_1 = static_cast<uint16_t>(
+            static_cast<int32_t>(std::numeric_limits<int16_t>::max()) + 1);
 
 TEST_CASE("1. default_value", "[argument]")
 {

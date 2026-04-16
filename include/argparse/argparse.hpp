@@ -4064,7 +4064,7 @@ _get(std::string const& key,
             if (def > std::numeric_limits<T>::max() - res) {
                 throw TypeError("integer value overflow");
             }
-            return res + def;
+            return static_cast<T>(res + def);
         }
         return res;
     }
