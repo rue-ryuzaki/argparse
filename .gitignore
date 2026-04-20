@@ -59,6 +59,7 @@ x86/
 
 # QtCreator
 .qtcreator/
+.qtc_clangd/
 *.autosave
 
 # QMake
