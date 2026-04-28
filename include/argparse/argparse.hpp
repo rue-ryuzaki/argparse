@@ -43,10 +43,15 @@
 // -- standard ----------------------------------------------------------------
 #undef ARGPARSE_CXX_98
 #undef ARGPARSE_CXX_11
+#undef ARGPARSE_CXX_11_MACRO
 #undef ARGPARSE_CXX_14
+#undef ARGPARSE_CXX_14_MACRO
 #undef ARGPARSE_CXX_17
+#undef ARGPARSE_CXX_17_MACRO
 #undef ARGPARSE_CXX_20
+#undef ARGPARSE_CXX_20_MACRO
 #undef ARGPARSE_CXX_23
+#undef ARGPARSE_CXX_23_MACRO
 #undef ARGPARSE_CXX_26
 // -- features ----------------------------------------------------------------
 #undef ARGPARSE_HAS_OPTIONAL
@@ -159,43 +164,48 @@
 
 // -- standard ----------------------------------------------------------------
 #define ARGPARSE_CXX_98
+#define ARGPARSE_CXX_11_MACRO 201103L
+#define ARGPARSE_CXX_14_MACRO 201402L
+#define ARGPARSE_CXX_17_MACRO 201703L
+#define ARGPARSE_CXX_20_MACRO 202002L
+#define ARGPARSE_CXX_23_MACRO 202302L
 
 #ifdef _MSVC_LANG
-# if _MSVC_LANG >= 201103L
+# if _MSVC_LANG >= ARGPARSE_CXX_11_MACRO
 #  define ARGPARSE_CXX_11
 # endif  // C++11+
-# if _MSVC_LANG >  201103L
+# if _MSVC_LANG >  ARGPARSE_CXX_11_MACRO
 #  define ARGPARSE_CXX_14
 # endif  // C++14+
-# if _MSVC_LANG >  201402L
+# if _MSVC_LANG >  ARGPARSE_CXX_14_MACRO
 #  define ARGPARSE_CXX_17
 # endif  // C++17+
-# if _MSVC_LANG >  201703L
+# if _MSVC_LANG >  ARGPARSE_CXX_17_MACRO
 #  define ARGPARSE_CXX_20
 # endif  // C++20+
-# if _MSVC_LANG >  202002L
+# if _MSVC_LANG >  ARGPARSE_CXX_20_MACRO
 #  define ARGPARSE_CXX_23
 # endif  // C++23+
-# if _MSVC_LANG >  202302L
+# if _MSVC_LANG >  ARGPARSE_CXX_23_MACRO
 #  define ARGPARSE_CXX_26
 # endif  // C++26+
 #else
-# if __cplusplus >= 201103L
+# if __cplusplus >= ARGPARSE_CXX_11_MACRO
 #  define ARGPARSE_CXX_11
 # endif  // C++11+
-# if __cplusplus >  201103L
+# if __cplusplus >  ARGPARSE_CXX_11_MACRO
 #  define ARGPARSE_CXX_14
 # endif  // C++14+
-# if __cplusplus >  201402L
+# if __cplusplus >  ARGPARSE_CXX_14_MACRO
 #  define ARGPARSE_CXX_17
 # endif  // C++17+
-# if __cplusplus >  201703L
+# if __cplusplus >  ARGPARSE_CXX_17_MACRO
 #  define ARGPARSE_CXX_20
 # endif  // C++20+
-# if __cplusplus >  202002L
+# if __cplusplus >  ARGPARSE_CXX_20_MACRO
 #  define ARGPARSE_CXX_23
 # endif  // C++23+
-# if __cplusplus >  202302L
+# if __cplusplus >  ARGPARSE_CXX_23_MACRO
 #  define ARGPARSE_CXX_26
 # endif  // C++26+
 #endif  // _MSVC_LANG
@@ -17312,10 +17322,15 @@ utils::print_man_page(
 // -- standard ----------------------------------------------------------------
 # undef ARGPARSE_CXX_98
 # undef ARGPARSE_CXX_11
+# undef ARGPARSE_CXX_11_MACRO
 # undef ARGPARSE_CXX_14
+# undef ARGPARSE_CXX_14_MACRO
 # undef ARGPARSE_CXX_17
+# undef ARGPARSE_CXX_17_MACRO
 # undef ARGPARSE_CXX_20
+# undef ARGPARSE_CXX_20_MACRO
 # undef ARGPARSE_CXX_23
+# undef ARGPARSE_CXX_23_MACRO
 # undef ARGPARSE_CXX_26
 // -- features ----------------------------------------------------------------
 # undef ARGPARSE_HAS_OPTIONAL
