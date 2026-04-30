@@ -49,6 +49,7 @@
 #undef ARGPARSE_CXX_20
 #undef ARGPARSE_CXX_23
 #undef ARGPARSE_CXX_26
+#undef ARGPARSE_CXX_29
 // -- features ----------------------------------------------------------------
 #undef ARGPARSE_HAS_OPTIONAL
 #undef ARGPARSE_HAS_SPAN
@@ -184,6 +185,9 @@
 #if ARGPARSE_LANG >  202302L
 # define ARGPARSE_CXX_26
 #endif  // C++26+
+#if ARGPARSE_LANG >  202603L
+# define ARGPARSE_CXX_29
+#endif  // C++29+
 
 // -- #include ----------------------------------------------------------------
 #ifdef ARGPARSE_CXX_11
@@ -17303,6 +17307,7 @@ utils::print_man_page(
 # undef ARGPARSE_CXX_20
 # undef ARGPARSE_CXX_23
 # undef ARGPARSE_CXX_26
+# undef ARGPARSE_CXX_29
 // -- features ----------------------------------------------------------------
 # undef ARGPARSE_HAS_OPTIONAL
 # undef ARGPARSE_HAS_SPAN
