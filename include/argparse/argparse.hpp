@@ -13818,6 +13818,12 @@ ArgumentParser::read_env(
 ARGPARSE_INL void
 ArgumentParser::initialize_parser()
 {
+    // default values
+    m_allow_abbrev = true;
+    m_exit_on_error = true;
+    m_suggest_on_error = false;
+    m_deprecated = false;
+    //
     m_formatter = detail::make_shared<HelpFormatter>();
     m_data->update_help(true, m_prefix_chars);
     // init translations
@@ -13862,9 +13868,9 @@ ArgumentParser::ArgumentParser(
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
       m_default_func(ARGPARSE_NULLPTR),
-      m_allow_abbrev(true),
-      m_exit_on_error(true),
-      m_suggest_on_error(false),
+      m_allow_abbrev(),
+      m_exit_on_error(),
+      m_suggest_on_error(),
       m_deprecated()
 {
     initialize_parser();
@@ -13904,9 +13910,9 @@ ArgumentParser::ArgumentParser(
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
       m_default_func(ARGPARSE_NULLPTR),
-      m_allow_abbrev(true),
-      m_exit_on_error(true),
-      m_suggest_on_error(false),
+      m_allow_abbrev(),
+      m_exit_on_error(),
+      m_suggest_on_error(),
       m_deprecated()
 {
     initialize_parser();
@@ -13948,9 +13954,9 @@ ArgumentParser::ArgumentParser(
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
       m_default_func(ARGPARSE_NULLPTR),
-      m_allow_abbrev(true),
-      m_exit_on_error(true),
-      m_suggest_on_error(false),
+      m_allow_abbrev(),
+      m_exit_on_error(),
+      m_suggest_on_error(),
       m_deprecated()
 {
     initialize_parser();
