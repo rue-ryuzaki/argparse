@@ -6385,7 +6385,7 @@ public:
 
     /**
      *  @brief Set the 'suggest_on_error' value if the argument parser
-     *  (default: false).
+     *  (default: true).
      *  @param value Suggest on error flag.
      *  @since v1.9.6
      *  @return A reference to the current argument parser.
@@ -6589,7 +6589,7 @@ public:
     exit_on_error() const ARGPARSE_NOEXCEPT;
 
     /**
-     *  @brief Get the 'suggest_on_error' (default: false).
+     *  @brief Get the 'suggest_on_error' (default: true).
      *  @since v1.9.6
      *  @return The 'suggest_on_error' value of the argument parser.
      */
@@ -13821,7 +13821,7 @@ ArgumentParser::initialize_parser()
     // default values
     m_allow_abbrev = true;
     m_exit_on_error = true;
-    m_suggest_on_error = false;
+    m_suggest_on_error = true;
     m_deprecated = false;
     //
     m_formatter = detail::make_shared<HelpFormatter>();
