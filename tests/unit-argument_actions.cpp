@@ -11,9 +11,9 @@ TEST_CASE("1. argument actions", "[argument]")
     std::string const_value = "const";
     std::string new_value = "new";
 
-    SECTION("1.1. optional arguments") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+    argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
 
+    SECTION("1.1. optional arguments") {
         parser.add_argument("--store").action(argparse::store);
         parser.add_argument("--store_const").action(argparse::store_const).const_value(const_value);
         parser.add_argument("--store_true").action(argparse::store_true);
@@ -62,8 +62,6 @@ TEST_CASE("1. argument actions", "[argument]")
     }
 
     SECTION("1.2. positional arguments") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
-
         parser.add_argument("store").action(argparse::store);
         parser.add_argument("store_const").action(argparse::store_const).const_value(const_value);
         parser.add_argument("store_true").action(argparse::store_true);
@@ -99,8 +97,7 @@ TEST_CASE("1. argument actions", "[argument]")
     }
 
     SECTION("1.3. BooleanOptionalAction example") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser()
-                        .output_width(80).exit_on_error(false).color(false);
+        parser.output_width(80).color(false);
 
         std::string default_value = "default";
 
@@ -129,9 +126,23 @@ TEST_CASE("1. argument actions", "[argument]")
         CHECK(args2.to_string("foo") == "false");
     }
 
-    SECTION("1.4. BooleanOptionalAction conflict options [1]") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+    SECTION("1.3.1. BooleanOptionalAction single-dash long option") {
+        parser.output_width(80).color(false);
 
+        parser.add_argument("-single").action(argparse::BooleanOptionalAction);
+
+        CHECK(parser.format_usage() == "usage: untitled [-h] [-single]");
+    }
+
+    SECTION("1.3.2. BooleanOptionalAction triple-dash long option") {
+        parser.output_width(80).color(false);
+
+        parser.add_argument("---triple").action(argparse::BooleanOptionalAction);
+
+        CHECK(parser.format_usage() == "usage: untitled [-h] [---triple | --no--triple]");
+    }
+
+    SECTION("1.4. BooleanOptionalAction conflict options [1]") {
         parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
         parser.add_argument("--no-bar").action(argparse::store_true);
 
@@ -139,15 +150,11 @@ TEST_CASE("1. argument actions", "[argument]")
     }
 
     SECTION("1.5. BooleanOptionalAction conflict options [2]") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
-
         parser.add_argument("--foo").action(argparse::BooleanOptionalAction);
         REQUIRE_THROWS(parser.add_argument("--no-foo"));
     }
 
     SECTION("1.6. BooleanOptionalAction conflict options [3]") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
-
         parser.add_argument("--no-foo").action(argparse::store_true);
         REQUIRE_THROWS(parser.add_argument("--foo").action(argparse::BooleanOptionalAction));
     }
@@ -187,7 +194,7 @@ TEST_CASE("1. argument actions", "[argument]")
     }
 
     SECTION("1.8. BooleanOptionalAction conflict options resolved [2]") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().conflict_handler("resolve").exit_on_error(false);
+        parser.conflict_handler("resolve");
 
         std::string default_value = "default";
 
@@ -216,8 +223,6 @@ TEST_CASE("1. argument actions", "[argument]")
     }
 
     SECTION("1.9. shared argument dest") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
-
         std::string default_value = "default";
 
         parser.add_argument("--arg").dest("arg").default_value(default_value);
@@ -230,8 +235,6 @@ TEST_CASE("1. argument actions", "[argument]")
     }
 
     SECTION("1.10. shared argument dest action count") {
-        argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
-
         parser.add_argument("--arg").action("count").dest("arg");
         parser.add_argument("--no-arg").action("count").dest("arg");
 
