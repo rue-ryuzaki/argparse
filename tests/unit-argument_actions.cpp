@@ -131,7 +131,7 @@ TEST_CASE("1. argument actions", "[argument]")
 
         parser.add_argument("-single").action(argparse::BooleanOptionalAction);
 
-        CHECK(parser.format_usage() == "usage: untitled [-h] [-single]");
+        CHECK(parser.format_usage() == "usage: untitled [-h] [-single | -nosingle]");
     }
 
     SECTION("1.3.2. BooleanOptionalAction triple-dash long option") {
@@ -140,6 +140,22 @@ TEST_CASE("1. argument actions", "[argument]")
         parser.add_argument("---triple").action(argparse::BooleanOptionalAction);
 
         CHECK(parser.format_usage() == "usage: untitled [-h] [---triple | --no--triple]");
+    }
+
+    SECTION("1.3.3. BooleanOptionalAction single-dash long option with alternate prefix_chars") {
+        parser.output_width(80).color(false).prefix_chars("+-");
+
+        parser.add_argument("+single").action(argparse::BooleanOptionalAction);
+
+        CHECK(parser.format_usage() == "usage: untitled [-h] [+single | +nosingle]");
+    }
+
+    SECTION("1.3.4. BooleanOptionalAction triple-dash long option with alternate prefix_chars") {
+        parser.output_width(80).color(false).prefix_chars("+-");
+
+        parser.add_argument("+++triple").action(argparse::BooleanOptionalAction);
+
+        CHECK(parser.format_usage() == "usage: untitled [-h] [+++triple | ++no-+triple]");
     }
 
     SECTION("1.4. BooleanOptionalAction conflict options [1]") {

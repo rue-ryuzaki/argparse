@@ -11489,7 +11489,11 @@ Argument::make_no_flags()
         std::string::const_iterator it = flag.begin();
         for ( ; it != flag.end() && *it == prefix; ++it) {
         }
-        if (std::distance(flag.begin(), it) > 1) {
+        std::string::difference_type distance = std::distance(flag.begin(), it);
+        if (distance == 1) {
+            m_all_flags.push_back(flag);
+            m_all_flags.back().insert(static_cast<std::size_t>(1), "no");
+        } else if (distance > 1) {
             m_all_flags.push_back(flag);
             m_all_flags.back().insert(static_cast<std::size_t>(2), "no-");
         }
