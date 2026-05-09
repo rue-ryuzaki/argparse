@@ -16486,10 +16486,15 @@ ArgumentParser::parse_handle(
 ARGPARSE_INL std::string
 utils::date()
 {
-    time_t     now = time(0);
+    time_t     now = time(NULL);
     struct tm  tstruct;
     char       buf[80];
-    tstruct = *localtime(&now);
+#ifdef _WIN32
+    localtime_s(&tstruct, &now);
+#else
+    // POSIX SUSv2/1997
+    localtime_r(&now, &tstruct);
+#endif // _WIN32
     strftime(buf, sizeof(buf), "%m/%d/%Y", &tstruct);
     return buf;
 }
