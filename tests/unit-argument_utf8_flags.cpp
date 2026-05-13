@@ -5,7 +5,7 @@
 #define ARGPARSE_DECLARATION
 #include "./argparse_test.hpp"
 
-TEST_CASE("1. utf8 abbreviations", "[argument_parser]")
+TEST_CASE("1. utf8 abbreviations", "[argument]")
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
 

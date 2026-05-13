@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+ * Copyright (c) 2021-2026 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  */
 
 #define ARGPARSE_DECLARATION
@@ -48,6 +48,18 @@ TEST_CASE("1. argument choices", "[argument]")
         argparse::Namespace args2 = parser.parse_args(_make_vec("--foo=F", "--bar", "R"));
         CHECK(args2.get<std::string>("--foo") == "F");
         CHECK(args2.get<std::string>("--bar") == "R");
+    }
+
+    SECTION("1.2.1. choices as utf-8 string") {
+        parser.add_argument("--foo").choices("αβγδ");
+
+        CHECK_THROWS(parser.parse_args("--foo=bar"));
+
+        argparse::Namespace args1 = parser.parse_args("");
+        CHECK(args1.get<std::string>("--foo") == global_default);
+
+        argparse::Namespace args2 = parser.parse_args("--foo=δ");
+        CHECK(args2.get<std::string>("--foo") == "δ");
     }
 
     SECTION("1.3. empty choices") {
