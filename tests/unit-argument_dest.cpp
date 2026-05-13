@@ -7,6 +7,20 @@
 
 TEST_CASE("1. argument dest", "[argument]")
 {
+    argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
+
+    SECTION("1.1. positional arguments") {
+        CHECK(parser.add_argument("bar").dest() == "bar");
+    }
+
+    SECTION("1.2. optional arguments") {
+        CHECK(parser.add_argument("-f", "--foo-bar", "--foo").dest() == "foo_bar");
+        CHECK(parser.add_argument("-x", "-y").dest() == "x");
+    }
+
+    SECTION("1.3. operand arguments") {
+        CHECK(parser.add_argument("FOO=").dest() == "FOO");
+    }
 }
 
 TEST_CASE("2. argument dest override", "[argument]")
