@@ -3586,9 +3586,6 @@ private:
     std::string
     get_default() const;
 
-    std::string const&
-    get_dest() const ARGPARSE_NOEXCEPT;
-
     std::string
     get_metavar() const;
 
@@ -10167,14 +10164,14 @@ ARGPARSE_INL std::string
 HelpFormatter::_get_default_metavar_for_optional(
         Argument const* action) const
 {
-    return detail::_to_upper(action->get_dest());
+    return detail::_to_upper(action->dest());
 }
 
 ARGPARSE_INL std::string
 HelpFormatter::_get_default_metavar_for_positional(
         Argument const* action) const
 {
-    return action->get_dest();
+    return action->dest();
 }
 
 ARGPARSE_INL std::string
@@ -11430,7 +11427,7 @@ Argument::metavar() const
 ARGPARSE_INL std::string const&
 Argument::dest() const ARGPARSE_NOEXCEPT
 {
-    return m_dest.front();
+    return m_dest.front().empty() ? m_name : m_dest.front();
 }
 
 ARGPARSE_INL bool
@@ -11451,7 +11448,7 @@ Argument::handle(
 ARGPARSE_INL void
 Argument::validate() const
 {
-    if (!dest().empty()) {
+    if (!m_dest.front().empty()) {
         return;
     }
     if (m_type == Positional && m_flags.empty()) {
@@ -11580,12 +11577,6 @@ Argument::get_default() const
     }
 }
 
-ARGPARSE_INL std::string const&
-Argument::get_dest() const ARGPARSE_NOEXCEPT
-{
-    return dest().empty() ? m_name : dest();
-}
-
 ARGPARSE_INL std::string
 Argument::get_metavar() const
 {
@@ -11647,10 +11638,8 @@ Argument::get_help(
         { "%(choices)s",        [this]() { return get_choices();    } },
         { "%(const)s",          [this]() { return get_const();      } },
         { "%(default)s",        [this]() { return get_default();    } },
-        { "%(dest)s",
-            [this] () -> std::string const& { return get_dest();    } },
-        { "%(help)s",
-            [&help]() -> std::string const& { return help;          } },
+        { "%(dest)s", [this] () -> std::string const& { return dest();  } },
+        { "%(help)s", [&help]() -> std::string const& { return help;    } },
         { "%(metavar)s",        [this]() { return get_metavar();    } },
         { "%(nargs)s",          [this]() { return get_nargs();      } },
         { "%(option_strings)s", [this]() { return option_strings(); } },
@@ -11682,7 +11671,7 @@ Argument::get_help(
         } else if (specifier == "%(default)s") {
             text += get_default();
         } else if (specifier == "%(dest)s") {
-            text += get_dest();
+            text += dest();
         } else if (specifier == "%(metavar)s") {
             text += get_metavar();
         } else if (specifier == "%(nargs)s") {
@@ -11773,7 +11762,7 @@ Argument::get_argument_name(
 ARGPARSE_INL std::vector<std::string> const&
 Argument::get_argument_flags() const ARGPARSE_NOEXCEPT
 {
-    return dest().empty() ? m_flags : m_dest;
+    return m_dest.front().empty() ? m_flags : m_dest;
 }
 
 ARGPARSE_INL void
@@ -11833,12 +11822,15 @@ ARGPARSE_INL bool
 Argument::is_match_name(
         std::string const& value) const
 {
-    if (!dest().empty()) {
-        return dest() == value;
+    if (!m_dest.front().empty()) {
+        return m_dest.front() == value;
+    }
+    if (m_name == value) {
+        return true;
     }
     switch (m_type) {
         case Positional :
-            return m_name == value;
+            return false;
         case Operand :
             for (std::size_t j = 0; j < m_flags.size(); ++j) {
                 if (m_flags.at(j) == value || (m_flags.at(j) + "=" == value)) {
@@ -11848,7 +11840,7 @@ Argument::is_match_name(
             return false;
         case Optional :
             for (std::size_t j = 0; j < m_flags.size(); ++j) {
-                if (m_flags.at(j) == value || m_name == value
+                if (m_flags.at(j) == value
                         || detail::_flag_name(m_flags.at(j)) == value) {
                     return true;
                 }
@@ -11870,7 +11862,8 @@ ARGPARSE_INL bool
 Argument::operator ==(
         std::string const& rhs) const
 {
-    return !dest().empty() ? dest() == rhs : detail::_exists(rhs, m_flags);
+    return !m_dest.front().empty() ? m_dest.front() == rhs
+                                   : detail::_exists(rhs, m_flags);
 }
 
 // -- _Group ------------------------------------------------------------------
@@ -12120,7 +12113,7 @@ _ArgumentData::validate_argument(
     std::vector<std::string>& flags = arg.m_flags;
     arg.m_type = Argument::Positional;
     if (flags.empty()) {
-        arg.m_name = arg.dest();
+        arg.m_name = arg.m_dest.front();
     } else {
         std::string flag = flags.front();
         detail::_check_flag_name(flag);
@@ -12145,7 +12138,7 @@ _ArgumentData::validate_argument(
     }
     // check
     if (arg.m_type == Argument::Positional) {
-        if (arg.dest().empty() && flags.empty()) {
+        if (arg.m_dest.front().empty() && flags.empty()) {
             throw TypeError("missing 1 required positional argument: 'dest'");
         }
         if (arg.action()
@@ -12157,7 +12150,7 @@ _ArgumentData::validate_argument(
             throw
             TypeError("'required' is an invalid argument for positionals");
         }
-        if (!arg.dest().empty() && !flags.empty()) {
+        if (!arg.m_dest.front().empty() && !flags.empty()) {
             throw ValueError("dest supplied twice for positional argument");
         }
         if (arg.m_const.has_value()
@@ -12850,9 +12843,10 @@ _Storage::on_process_store(
         key_type const& key,
         std::string const& value)
 {
-    if (!key->dest().empty()) {
+    if (!key->m_dest.front().empty()) {
         for (iterator it = begin(); it != end(); ++it) {
-            if (it->first != key && it->first->dest() == key->dest()) {
+            if (it->first != key
+                    && it->first->m_dest.front() == key->m_dest.front()) {
                 if (it->first->action() & (argparse::store
                                            | argparse::store_const
                                            | detail::_bool_action
@@ -12870,9 +12864,10 @@ _Storage::on_process_store(
         key_type const& key,
         std::vector<std::string> const& values)
 {
-    if (!key->dest().empty()) {
+    if (!key->m_dest.front().empty()) {
         for (iterator it = begin(); it != end(); ++it) {
-            if (it->first != key && it->first->dest() == key->dest()) {
+            if (it->first != key
+                    && it->first->m_dest.front() == key->m_dest.front()) {
                 if (it->first->action() & (argparse::store
                                            | argparse::store_const
                                            | detail::_bool_action
@@ -13060,7 +13055,7 @@ Namespace::to_string() const
         if (str.empty()) {
             continue;
         }
-        detail::_append_value_to(pair.first->get_dest() + detail::_equals
+        detail::_append_value_to(pair.first->dest() + detail::_equals
                                  + to_string(str.front(), "'"), res, ", ");
     }
     if (!m_unrecognized_args.has_value()) {
@@ -15302,7 +15297,7 @@ ArgumentParser::check_namespace(
 {
     if (space.m_unrecognized_args.has_value() && !m_data->m_arguments.empty()) {
         throw AttributeError("'tuple' object has no attribute '"
-                             + m_data->m_arguments.front()->get_dest() + "'");
+                             + m_data->m_arguments.front()->dest() + "'");
     }
 }
 
@@ -15359,7 +15354,7 @@ ArgumentParser::validate_argument_value(
         if (!value.empty() && !detail::_exists(value, arg.m_choices.value())) {
             parser->throw_error(
                         "argument " + (arg.m_flags.empty()
-                                       ? arg.dest() : arg.m_flags.front())
+                                     ? arg.m_dest.front() : arg.m_flags.front())
                         + detail::_invalid_choice(
                             value, arg.m_choices.value(), m_suggest_on_error));
         }
@@ -15810,7 +15805,7 @@ ArgumentParser::match_positionals(
     }
     if (positional.at(pos)->deprecated()) {
         std::cerr << parsers.back().parser->prog()
-                  << ": warning: argument '" << positional.at(pos)->get_dest()
+                  << ": warning: argument '" << positional.at(pos)->dest()
                   << "' is deprecated" << std::endl;
     }
     if (min_args == arguments.size()) {
@@ -16683,7 +16678,7 @@ utils::test_argument_parser(
                 os << _w << name << ": flag '"
                    << flag << "' may be incorrect\n";
             }
-            if (flag == detail::_pseudo_arg && arg->dest().empty()) {
+            if (flag == detail::_pseudo_arg && arg->m_dest.front().empty()) {
                 ++diagnostics.second;
                 os << _e << name << ": dest= "
                    << "is required for options like '--'\n";
@@ -16691,19 +16686,19 @@ utils::test_argument_parser(
         }
         // check dest
         if (arg->m_type == Argument::Positional) {
-            if (arg->dest().empty() && arg->flags().empty()) {
+            if (arg->m_dest.front().empty() && arg->flags().empty()) {
                 ++diagnostics.second;
                 os << _e << name << ": missing 1 "
                    << "required positional argument: 'dest'\n";
             }
-            if (!arg->dest().empty() && !arg->flags().empty()) {
+            if (!arg->m_dest.front().empty() && !arg->flags().empty()) {
                 ++diagnostics.second;
                 os << _e << name << ": dest supplied "
                    << "twice for positional argument\n";
             }
         }
-        if (!arg->dest().empty()) {
-            std::string const& flag = arg->dest();
+        if (!arg->m_dest.front().empty()) {
+            std::string const& flag = arg->m_dest.front();
             if (!detail::_is_utf8_string(flag)) {
                 ++diagnostics.first;
                 os << _w << name << ": dest '" << flag
