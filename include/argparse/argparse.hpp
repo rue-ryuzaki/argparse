@@ -8542,6 +8542,86 @@ _to_upper_codepoint(
     return cp;
 }
 
+ARGPARSE_INL codepoint
+_codepoint_at(
+        std::string const& str,
+        std::size_t& i)
+{
+    std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str.at(i)));
+    codepoint cp = 0;
+    switch (cp_size) {
+        case 1:
+            cp =  (_char_to_u32(str.at(i    )) & ~_utf8_1b_mask);
+            break;
+        case 2:
+            cp = ((_char_to_u32(str.at(i    )) & ~_utf8_2b_mask) <<  6)
+               |  (_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask);
+            break;
+        case 3:
+            cp = ((_char_to_u32(str.at(i    )) & ~_utf8_3b_mask) << 12)
+               | ((_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask) <<  6)
+               |  (_char_to_u32(str.at(i + 2)) & ~_utf8_ct_mask);
+            break;
+        case 4:
+            cp = ((_char_to_u32(str.at(i    )) & ~_utf8_4b_mask) << 18)
+               | ((_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask) << 12)
+               | ((_char_to_u32(str.at(i + 2)) & ~_utf8_ct_mask) <<  6)
+               |  (_char_to_u32(str.at(i + 3)) & ~_utf8_ct_mask);
+            break;
+        default:
+            // should never happen
+            break;
+    }
+    i += cp_size;
+    return cp;
+}
+
+ARGPARSE_INL void
+_append_codepoint(
+        std::string& res,
+        codepoint cp)
+{
+    if (cp < 0x80) {
+        // one octet
+        res += _u32_to_char(cp);
+    } else if (cp < 0x800) {
+        // two octets
+        res += _u32_to_char((cp >> 6)                    | _utf8_2b_bits);
+        res += _u32_to_char((cp         & _utf8_ct_invm) | _utf8_ct_bits);
+    } else if (cp < 0x10000) {
+        // three octets
+        res += _u32_to_char((cp >> 12)                   | _utf8_3b_bits);
+        res += _u32_to_char(((cp >> 6)  & _utf8_ct_invm) | _utf8_ct_bits);
+        res += _u32_to_char((cp         & _utf8_ct_invm) | _utf8_ct_bits);
+    } else {
+        // four octets
+        res += _u32_to_char((cp >> 18)                   | _utf8_4b_bits);
+        res += _u32_to_char(((cp >> 12) & _utf8_ct_invm) | _utf8_ct_bits);
+        res += _u32_to_char(((cp >>  6) & _utf8_ct_invm) | _utf8_ct_bits);
+        res += _u32_to_char((cp         & _utf8_ct_invm) | _utf8_ct_bits);
+    }
+}
+
+ARGPARSE_INL std::vector<std::string>
+_utf8_chars(
+        std::string const& str)
+{
+    std::pair<bool, std::size_t> num_chars = _utf8_length(str);
+    std::vector<std::string> res;
+    if (!num_chars.first) {
+        for (std::size_t i = 0; i < str.size(); ++i) {
+            res.push_back(std::string(1, str.at(i)));
+        }
+        return res;
+    }
+    std::size_t i = 0;
+    for (std::size_t n = 0; n < num_chars.second; ++n) {
+        res.push_back(std::string());
+        _append_codepoint(res.back(), _codepoint_at(str, i));
+    }
+    return res;
+}
+
 ARGPARSE_INL std::string
 _to_upper(
         std::string const& str,
@@ -8559,54 +8639,11 @@ _to_upper(
     }
     std::size_t i = 0;
     for (std::size_t n = 0; n < num_chars.second; ++n) {
-        std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str.at(i)));
-        codepoint cp = 0;
-        switch (cp_size) {
-            case 1:
-                cp =  (_char_to_u32(str.at(i    )) & ~_utf8_1b_mask);
-                break;
-            case 2:
-                cp = ((_char_to_u32(str.at(i    )) & ~_utf8_2b_mask) <<  6)
-                   |  (_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask);
-                break;
-            case 3:
-                cp = ((_char_to_u32(str.at(i    )) & ~_utf8_3b_mask) << 12)
-                   | ((_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_u32(str.at(i + 2)) & ~_utf8_ct_mask);
-                break;
-            case 4:
-                cp = ((_char_to_u32(str.at(i    )) & ~_utf8_4b_mask) << 18)
-                   | ((_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask) << 12)
-                   | ((_char_to_u32(str.at(i + 2)) & ~_utf8_ct_mask) <<  6)
-                   |  (_char_to_u32(str.at(i + 3)) & ~_utf8_ct_mask);
-                break;
-            default:
-                // should never happen
-                break;
-        }
-        i += cp_size;
+        codepoint cp = _codepoint_at(str, i);
         if (n == 0 || !title) {
             cp = _to_upper_codepoint(cp);
         }
-        if (cp < 0x80) {
-            // one octet
-            res += _u32_to_char(cp);
-        } else if (cp < 0x800) {
-            // two octets
-            res += _u32_to_char((cp >> 6)                    | _utf8_2b_bits);
-            res += _u32_to_char((cp         & _utf8_ct_invm) | _utf8_ct_bits);
-        } else if (cp < 0x10000) {
-            // three octets
-            res += _u32_to_char((cp >> 12)                   | _utf8_3b_bits);
-            res += _u32_to_char(((cp >> 6)  & _utf8_ct_invm) | _utf8_ct_bits);
-            res += _u32_to_char((cp         & _utf8_ct_invm) | _utf8_ct_bits);
-        } else {
-            // four octets
-            res += _u32_to_char((cp >> 18)                   | _utf8_4b_bits);
-            res += _u32_to_char(((cp >> 12) & _utf8_ct_invm) | _utf8_ct_bits);
-            res += _u32_to_char(((cp >>  6) & _utf8_ct_invm) | _utf8_ct_bits);
-            res += _u32_to_char((cp         & _utf8_ct_invm) | _utf8_ct_bits);
-        }
+        _append_codepoint(res, cp);
     }
     return res;
 }
@@ -11174,12 +11211,7 @@ Argument::choices(
     if (!(action() & (detail::_store_action | argparse::language))) {
         throw TypeError("got an unexpected keyword argument 'choices'");
     }
-    std::vector<std::string> values;
-    values.reserve(value.size());
-    for (std::size_t i = 0; i < value.size(); ++i) {
-        values.push_back(std::string(1, value.at(i)));
-    }
-    m_choices = ARGPARSE_MOVE(values);
+    m_choices = detail::_utf8_chars(value);
     return *this;
 }
 
