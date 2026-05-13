@@ -15,6 +15,7 @@ TEST_CASE("1. argument dest", "[argument]")
 
     SECTION("1.2. optional arguments") {
         CHECK(parser.add_argument("-f", "--foo-bar", "--foo").dest() == "foo_bar");
+        CHECK(parser.add_argument("-q", "-quz").dest() == "quz");
         CHECK(parser.add_argument("-x", "-y").dest() == "x");
     }
 

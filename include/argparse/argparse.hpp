@@ -9491,10 +9491,15 @@ _update_flag_name_func(
         std::string& flag,
         std::size_t& count)
 {
+    if (count > 1) {
+        return;
+    }
     std::string name = _flag_name(arg);
     std::size_t count_prefixes = arg.size() - name.size();
     if (count < count_prefixes) {
         count = count_prefixes;
+        flag = ARGPARSE_MOVE(name);
+    } else if (count == count_prefixes && flag.size() < name.size()) {
         flag = ARGPARSE_MOVE(name);
     }
 }
