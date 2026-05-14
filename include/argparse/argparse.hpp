@@ -11543,8 +11543,9 @@ Argument::usage(
     if (m_type == Optional) {
         std::string flag = action() == argparse::BooleanOptionalAction
                 ? detail::_join(flags(), " | ") : m_flags.front();
-        res << (flag.size() > 2 ? detail::clr_summary_long_option
-                                : detail::clr_summary_short_option) << flag;
+        res << (detail::_utf8_length(flag).second > 2
+                ? detail::clr_summary_long_option
+                : detail::clr_summary_short_option) << flag;
         if (!suffix.empty()) {
             res << suffix.substr(0, 1)
                 << detail::clr_summary_label << suffix.substr(1);
@@ -11571,8 +11572,8 @@ Argument::flags_to_string(
             if (i != 0) {
                 res << detail::clr_reset << ", ";
             }
-            res << (flags().at(i).size() > 2 ? detail::clr_long_option
-                                             : detail::clr_short_option)
+            res << (detail::_utf8_length(flags().at(i)).second > 2
+                    ? detail::clr_long_option : detail::clr_short_option)
                 << flags().at(i);
         }
         std::string suffix = nargs_suffix(formatter);
