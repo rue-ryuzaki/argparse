@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+ * Copyright (c) 2021-2026 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  */
 
 #define ARGPARSE_DECLARATION
@@ -197,6 +197,20 @@ TEST_CASE("1. argument nargs", "[argument]")
         CHECK_THROWS(args0.get<std::string>("extend"));  // return array value
         CHECK(args0.get<std::vector<std::string> >("extend").size() == 3);
         CHECK(args0.to_string() == "Namespace(extend=['n', 'e', 'w'])");
+
+        argparse::Namespace args1 = parser.parse_args(_make_vec("--extend", new_value));
+        CHECK_THROWS(args1.get<std::string>("extend"));  // return array value
+        CHECK(args1.get<std::vector<std::string> >("extend").size() == 3);
+        CHECK(args1.to_string() == "Namespace(extend=['n', 'e', 'w'])");
+    }
+
+    SECTION("1.4.4. nargs ? optional extend with const utf-8 value") {
+        parser.add_argument("--extend").action(argparse::extend).zero_or_one().const_value("αβγ");
+
+        argparse::Namespace args0 = parser.parse_args(_make_vec("--extend"));
+        CHECK_THROWS(args0.get<std::string>("extend"));  // return array value
+        CHECK(args0.get<std::vector<std::string> >("extend").size() == 3);
+        CHECK(args0.to_string() == "Namespace(extend=['α', 'β', 'γ'])");
 
         argparse::Namespace args1 = parser.parse_args(_make_vec("--extend", new_value));
         CHECK_THROWS(args1.get<std::string>("extend"));  // return array value

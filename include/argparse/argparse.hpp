@@ -11816,8 +11816,9 @@ Argument::push_value(
         std::vector<std::string>& values) const
 {
     if (action() == argparse::extend && m_nargs == detail::ZERO_OR_ONE) {
-        for (std::size_t i = 0; i < value.size(); ++i) {
-            values.push_back(std::string(1, value.at(i)));
+        std::vector<std::string> chars = detail::_utf8_chars(value);
+        for (std::size_t i = 0; i < chars.size(); ++i) {
+            values.push_back(chars.at(i));
         }
     } else if (!value.empty() || m_num_args <= 1) {
         values.push_back(value);
