@@ -12591,8 +12591,8 @@ ArgumentGroup::limit_help_flags(
 {
     for (arg_iterator it = m_data->m_arguments.begin();
          it != m_data->m_arguments.end(); ++it) {
-        detail::_limit_to_min(
-                    limit, (*it)->flags_to_string(formatter).str().size());
+        detail::_limit_to_min(limit, detail::_utf8_length(
+                               (*it)->flags_to_string(formatter).str()).second);
     }
 }
 
@@ -13227,9 +13227,11 @@ _ParserGroup::limit_help_flags(
     if (m_help.suppress()) {
         return;
     }
-    detail::_limit_to_min(limit, _flags_to_string().size());
+    detail::_limit_to_min(
+                limit, detail::_utf8_length(_flags_to_string()).second);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
-        detail::_limit_to_min(limit, (*it)->m_name.size() + 2);
+        detail::_limit_to_min(
+                    limit, detail::_utf8_length((*it)->m_name).second + 2);
     }
 }
 
