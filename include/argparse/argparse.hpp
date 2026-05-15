@@ -1655,6 +1655,12 @@ _to_vecstring(
     return res;
 }
 
+std::string&
+_inplace(
+        std::string& str,
+        std::string const& old,
+        std::string const& value);
+
 std::string
 _replace(
         std::string str,
@@ -1784,7 +1790,7 @@ public:
     {
         std::string str
                 = _replace(_get_type_name<T>(), "__cxx11::", std::string());
-        str = _replace(str, "__1::", std::string());
+        _inplace(str, "__1::", std::string());
         return str.substr(0, str.find('<'))
                 + "<" + name<typename T::value_type>() + ">";
     }
@@ -8937,9 +8943,9 @@ _remove_quotes(
     return _has_quotes(str) ? str.substr(1, str.size() - 2) : str;
 }
 
-ARGPARSE_INL std::string
-_replace(
-        std::string str,
+ARGPARSE_INL std::string&
+_inplace(
+        std::string& str,
         std::string const& old,
         std::string const& value)
 {
@@ -8948,6 +8954,16 @@ _replace(
         str.replace(pos, old.length(), value);
         pos = str.find(old, pos + value.size());
     }
+    return str;
+}
+
+ARGPARSE_INL std::string
+_replace(
+        std::string str,
+        std::string const& old,
+        std::string const& value)
+{
+    _inplace(str, old, value);
     return str;
 }
 
@@ -9228,7 +9244,7 @@ _vector_to_string(
     for (value_const_iterator it = begvec; it != endvec; ++it) {
         std::string val = *it;
         if (quotes.empty() && replace_space && !_has_quotes(val)) {
-            val = _replace(val, _spaces, "\\ ");
+            _inplace(val, _spaces, "\\ ");
         }
         _append_value_to(quotes + val + quotes, res, separator);
     }
@@ -9801,9 +9817,9 @@ _zsh_help(
         std::string const& str)
 {
     std::string help = _replace(str, "'", "\\'");
-    help = _replace(help, "\"", "\\\"");
-    help = _replace(help, "[", "\\[");
-    help = _replace(help, "]", "\\]");
+    _inplace(help, "\"", "\\\"");
+    _inplace(help, "[", "\\[");
+    _inplace(help, "]", "\\]");
     return _replace(ARGPARSE_MOVE(help), "`", "\\`");
 }
 
@@ -12139,7 +12155,7 @@ _ArgumentData::create_argument(
     detail::_update_flag_name(flags, prefix_chars, flag, prefixes,
                               type == Argument::Optional);
     if (type == Argument::Optional) {
-        flag = detail::_replace(flag, "-", "_");
+        detail::_inplace(flag, "-", "_");
     }
     pArgument arg = Argument::make_argument(
                 ARGPARSE_MOVE(flags), ARGPARSE_MOVE(flag), type);
