@@ -8235,7 +8235,7 @@ _utf8_codepoint_size(
 }
 
 ARGPARSE_INL std::pair<bool, std::size_t>
-_utf8_length(
+_utf8_size(
         std::string const& str,
         std::ostream& err = std::cerr)
 {
@@ -8278,7 +8278,7 @@ _is_utf8_string(
         std::string const& str)
 {
     std::stringstream ss;
-    return _utf8_length(str, ss).first;
+    return _utf8_size(str, ss).first;
 }
 
 // since v1.7.3
@@ -8606,7 +8606,7 @@ ARGPARSE_INL std::vector<std::string>
 _utf8_chars(
         std::string const& str)
 {
-    std::pair<bool, std::size_t> num_chars = _utf8_length(str);
+    std::pair<bool, std::size_t> num_chars = _utf8_size(str);
     std::vector<std::string> res;
     if (!num_chars.first) {
         for (std::size_t i = 0; i < str.size(); ++i) {
@@ -8627,7 +8627,7 @@ _to_upper(
         std::string const& str,
         bool title = false)
 {
-    std::pair<bool, std::size_t> num_chars = _utf8_length(str);
+    std::pair<bool, std::size_t> num_chars = _utf8_size(str);
     std::string res;
     if (!num_chars.first) {
         res = str;
@@ -8810,6 +8810,15 @@ _limit_to_min(
     if (value < to) {
         value = to;
     }
+}
+
+ARGPARSE_INL void
+_limit_to_min(
+        std::size_t& value,
+        std::string const& str,
+        std::size_t indent = 0)
+{
+    _limit_to_min(value, _utf8_size(str).second + indent);
 }
 
 ARGPARSE_INL void
@@ -9387,7 +9396,7 @@ _format_output(
         std::size_t width)
 {
     colorstream res;
-    std::size_t head_size = _utf8_length(head).second;
+    std::size_t head_size = _utf8_size(head).second;
     if (head_size + interlayer > indent) {
         res << clr_reset << "\n";
         head_size = 0;
@@ -9402,7 +9411,7 @@ _format_output(
             _format_output_func(indent, width, res, head_size, size, tmp, word);
         } else {
             tmp << (*it).first << str;
-            word += _utf8_length(str).second;
+            word += _utf8_size(str).second;
         }
     }
     _format_output_func(indent, width, res, head_size, size, tmp, word);
@@ -9418,7 +9427,7 @@ _help_formatter(
         std::size_t indent)
 {
     std::size_t const interlayer = 2;
-    std::size_t head_size = _utf8_length(head).second;
+    std::size_t head_size = _utf8_size(head).second;
     std::vector<std::string> res;
     std::string value;
     if (head_size + interlayer > indent) {
@@ -9429,7 +9438,7 @@ _help_formatter(
         std::vector<std::string> lines
                 = formatter._split_lines(help, width - indent);
         for (std::size_t i = 0; i < lines.size(); ++i) {
-            std::size_t const size = _utf8_length(value).second;
+            std::size_t const size = _utf8_size(value).second;
             if (size + head_size < indent) {
                 value.resize(value.size() + indent - size - head_size, _space);
             }
@@ -9654,7 +9663,7 @@ _process_separate_arg_abbrev(
     for (std::size_t j = 0; j < args.size() && !argument; ++j) {
         for (std::size_t k = 0; k < args.at(j)->flags().size(); ++k) {
             std::string const& flag = args.at(j)->flags().at(k);
-            if (_utf8_length(flag).second == 2
+            if (_utf8_size(flag).second == 2
                     && flag.substr(1) == abbrev
                     && flag.at(0) == arg.at(0)) {
                 flags.push_back(flag);
@@ -10191,7 +10200,7 @@ HelpFormatter::_fill_text(
     std::string value;
     std::vector<std::string> lines = _split_lines(text, width - indent);
     for (std::size_t i = 0; i < lines.size(); ++i) {
-        std::size_t const size = detail::_utf8_length(value).second;
+        std::size_t const size = detail::_utf8_size(value).second;
         if (size < indent) {
             value.resize(value.size() + indent - size, detail::_space);
         }
@@ -10233,8 +10242,8 @@ HelpFormatter::_split_lines(
     std::vector<std::string> res;
     std::vector<std::string> split_str = detail::_split(text, "");
     for (std::size_t i = 0; i < split_str.size(); ++i) {
-        if (detail::_utf8_length(value).second + 1
-                + detail::_utf8_length(split_str.at(i)).second > width) {
+        if (detail::_utf8_size(value).second + 1
+                + detail::_utf8_size(split_str.at(i)).second > width) {
             detail::_store_value_to(value, res);
         }
         if (!value.empty() && !split_str.at(i).empty()) {
@@ -10316,7 +10325,7 @@ HelpFormatter::_format_usage(
     } else {
         std::size_t const w = p->output_width();
         std::string head_prog = tr_usage_title + " " + p->prog();
-        std::size_t indent = 1 + detail::_utf8_length(
+        std::size_t indent = 1 + detail::_utf8_size(
                     w > detail::_min_width ? head_prog : tr_usage_title).second;
         ss << detail::clr_usage << tr_usage_title << " ";
         ss << detail::clr_prog << p->prog() << detail::clr_reset
@@ -10350,15 +10359,15 @@ HelpFormatter::_format_help(
     bool sub_positional = subparsers && subparsers->is_positional();
     for (std::size_t i = 0; i < positional.size(); ++i) {
         std::string str = positional.at(i)->flags_to_string(*this).str();
-        detail::_limit_to_min(size, detail::_utf8_length(str).second);
+        detail::_limit_to_min(size, str);
     }
     for (std::size_t i = 0; i < operand.size(); ++i) {
         std::string str = operand.at(i)->flags_to_string(*this).str();
-        detail::_limit_to_min(size, detail::_utf8_length(str).second);
+        detail::_limit_to_min(size, str);
     }
     for (std::size_t i = 0; i < optional.size(); ++i) {
         std::string str = optional.at(i)->flags_to_string(*this).str();
-        detail::_limit_to_min(size, detail::_utf8_length(str).second);
+        detail::_limit_to_min(size, str);
     }
     for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
         (*it)->limit_help_flags(*this, size);
@@ -10428,7 +10437,7 @@ _RawDescriptionHelpFormatter::_fill_text(
     std::string value;
     std::vector<std::string> lines = _split_lines_raw(text, width - indent);
     for (std::size_t i = 0; i < lines.size(); ++i) {
-        std::size_t const size = detail::_utf8_length(value).second;
+        std::size_t const size = detail::_utf8_size(value).second;
         if (size < indent) {
             value.resize(value.size() + indent - size, detail::_space);
         }
@@ -10462,7 +10471,7 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
                         = detail::_split(sub_split_str.at(j), "\t");
                 for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
                     if (k != 0) {
-                        std::size_t size = detail::_utf8_length(value).second;
+                        std::size_t size = detail::_utf8_size(value).second;
                         std::size_t tbsize = _tab_size() - (size % _tab_size());
                         if (size + 1 + tbsize > width) {
                             detail::_store_value_to(value, res);
@@ -10471,8 +10480,8 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
                         }
                     }
                     std::string sub = tab_split_str.at(k);
-                    if (detail::_utf8_length(value).second + 1
-                            + detail::_utf8_length(sub).second > width) {
+                    if (detail::_utf8_size(value).second + 1
+                            + detail::_utf8_size(sub).second > width) {
                         detail::_store_value_to(value, res);
                     }
                     value += sub;
@@ -11543,7 +11552,7 @@ Argument::usage(
     if (m_type == Optional) {
         std::string flag = action() == argparse::BooleanOptionalAction
                 ? detail::_join(flags(), " | ") : m_flags.front();
-        res << (detail::_utf8_length(flag).second > 2
+        res << (detail::_utf8_size(flag).second > 2
                 ? detail::clr_summary_long_option
                 : detail::clr_summary_short_option) << flag;
         if (!suffix.empty()) {
@@ -11572,7 +11581,7 @@ Argument::flags_to_string(
             if (i != 0) {
                 res << detail::clr_reset << ", ";
             }
-            res << (detail::_utf8_length(flags().at(i)).second > 2
+            res << (detail::_utf8_size(flags().at(i)).second > 2
                     ? detail::clr_long_option : detail::clr_short_option)
                 << flags().at(i);
         }
@@ -12591,8 +12600,7 @@ ArgumentGroup::limit_help_flags(
 {
     for (arg_iterator it = m_data->m_arguments.begin();
          it != m_data->m_arguments.end(); ++it) {
-        detail::_limit_to_min(limit, detail::_utf8_length(
-                               (*it)->flags_to_string(formatter).str()).second);
+        detail::_limit_to_min(limit, (*it)->flags_to_string(formatter).str());
     }
 }
 
@@ -13227,11 +13235,9 @@ _ParserGroup::limit_help_flags(
     if (m_help.suppress()) {
         return;
     }
-    detail::_limit_to_min(
-                limit, detail::_utf8_length(_flags_to_string()).second);
+    detail::_limit_to_min(limit, _flags_to_string());
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
-        detail::_limit_to_min(
-                    limit, detail::_utf8_length((*it)->m_name).second + 2);
+        detail::_limit_to_min(limit, (*it)->m_name, 2);
     }
 }
 
@@ -16055,7 +16061,7 @@ ArgumentParser::check_abbreviations(
                                                  args, ",");
                         break;
                     }
-                    if (detail::_utf8_length(flag).second == 2
+                    if (detail::_utf8_size(flag).second == 2
                             && detail::_starts_with(arg, flag)) {
                         keys.push_back(arg);
                         detail::_append_value_to(detail::_spaces + flag,
@@ -16771,7 +16777,8 @@ utils::test_argument_parser(
         // check choices
         for (std::size_t j = 0; j < arg->choices().size(); ++j) {
             std::string const& str = arg->choices().at(j);
-            if (str.size() > 1 && str.size() != detail::_trim_sw(str).size()) {
+            if (detail::_utf8_size(str).second > 1
+                    && str.size() != detail::_trim_sw(str).size()) {
                 ++diagnostics.first;
                 os << _w << name << ": choice '"
                    << str << "' may be incorrect\n";
@@ -17286,7 +17293,7 @@ utils::format_man_page(
             break;
         }
     }
-    std::size_t indent = 1 + detail::_utf8_length(p.prog()).second;
+    std::size_t indent = 1 + detail::_utf8_size(p.prog()).second;
     ss << ".\\\" Manpage for " << p.prog() << ".\n";
     ss << ".\\\" Generated with cpp-argparse v"
        << ARGPARSE_VERSION_MAJOR << "."
