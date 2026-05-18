@@ -16548,10 +16548,14 @@ utils::date()
     struct tm  tstruct;
     char       buf[80];
 #ifdef _WIN32
-    localtime_s(&tstruct, &now);
+    if (localtime_s(&tstruct, &now) != 0) {
+        return "MM/DD/YYYY";
+    }
 #else
     // POSIX SUSv2/1997
-    localtime_r(&now, &tstruct);
+    if (localtime_r(&now, &tstruct) == NULL) {
+        return "MM/DD/YYYY";
+    }
 #endif // _WIN32
     strftime(buf, sizeof(buf), "%m/%d/%Y", &tstruct);
     return buf;
