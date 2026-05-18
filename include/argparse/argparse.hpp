@@ -16553,6 +16553,7 @@ utils::date()
     }
 #else
     // POSIX SUSv2/1997
+    tzset();
     if (localtime_r(&now, &tstruct) == NULL) {
         return "MM/DD/YYYY";
     }
