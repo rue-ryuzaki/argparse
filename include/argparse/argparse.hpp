@@ -2303,8 +2303,11 @@ _push_to_container(
 }
 
 // -- colorstream -------------------------------------------------------------
-typedef std::pair<uint32_t, std::string> color_word;
-typedef std::list<color_word> color_text;
+typedef std::pair<uint32_t, std::string> colorword;
+typedef std::list<colorword> colortext;
+
+typedef colorword color_word;
+typedef colortext color_text;
 
 class colorstream
 {
@@ -2330,12 +2333,20 @@ public:
 
     colorstream&
     operator <<(
+            colortext const& text);
+
+    colorstream&
+    operator <<(
             colorstream const& text);
+
+    colorstream&
+    replace(std::string const& old,
+            std::string const& value);
 
     void
     print(std::ostream& os) const;
 
-    color_text const&
+    colortext const&
     text() const;
 
     bool
@@ -2343,6 +2354,9 @@ public:
 
     static std::string
     code(uint32_t type);
+
+    uint32_t
+    type() const;
 
     std::string
     reset_code() const;
@@ -2358,7 +2372,7 @@ private:
     can_colorize();
 
     // -- data ----------------------------------------------------------------
-    color_text m_text;
+    colortext m_text;
     bool m_colorize;
 };
 }  // namespace detail
@@ -9420,7 +9434,7 @@ _format_output(
     std::size_t size = 0;
     std::size_t word = 0;
     colorstream tmp;
-    for (std::list<color_word>::const_iterator it = cs.text().begin();
+    for (std::list<colorword>::const_iterator it = cs.text().begin();
          it != cs.text().end(); ++it) {
         std::string const& str = (*it).second;
         if (str == "\n") {
@@ -9986,9 +10000,31 @@ colorstream::operator <<(
 
 ARGPARSE_INL colorstream&
 colorstream::operator <<(
+        colortext const& text)
+{
+    _insert_to_end(text, m_text);
+    return *this;
+}
+
+ARGPARSE_INL colorstream&
+colorstream::operator <<(
         colorstream const& text)
 {
-    _insert_to_end(text.text(), m_text);
+    if (this != &text) {
+        _insert_to_end(text.text(), m_text);
+    }
+    return *this;
+}
+
+ARGPARSE_INL colorstream&
+colorstream::replace(
+        std::string const& old,
+        std::string const& value)
+{
+    for (std::list<colorword>::iterator it = m_text.begin();
+         it != m_text.end(); ++it) {
+        _inplace((*it).second, old, value);
+    }
     return *this;
 }
 
@@ -9997,7 +10033,7 @@ colorstream::print(
         std::ostream& os) const
 {
     bool const use_color = colorize();
-    for (std::list<color_word>::const_iterator it = text().begin();
+    for (std::list<colorword>::const_iterator it = text().begin();
          it != text().end(); ++it) {
         if (use_color && (*it).first != 0 && !(*it).second.empty()) {
             os << code((*it).first) << (*it).second
@@ -10008,7 +10044,7 @@ colorstream::print(
     }
 }
 
-ARGPARSE_INL color_text const&
+ARGPARSE_INL colortext const&
 colorstream::text() const
 {
     return m_text;
@@ -10055,6 +10091,15 @@ colorstream::code(
 #endif  // _WIN32
 }
 
+ARGPARSE_INL uint32_t
+colorstream::type() const
+{
+    if (!text().empty()) {
+        return text().back().first;
+    }
+    return clr_reset;
+}
+
 ARGPARSE_INL std::string
 colorstream::reset_code() const
 {
@@ -10070,7 +10115,7 @@ ARGPARSE_INL std::string
 colorstream::str() const
 {
     std::string res;
-    for (std::list<color_word>::const_iterator it = text().begin();
+    for (std::list<colorword>::const_iterator it = text().begin();
          it != text().end(); ++it) {
         res += (*it).second;
     }
