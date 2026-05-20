@@ -2333,6 +2333,10 @@ public:
 
     colorstream&
     operator <<(
+            colorword const& word);
+
+    colorstream&
+    operator <<(
             colortext const& text);
 
     colorstream&
@@ -2351,6 +2355,9 @@ public:
 
     bool
     colorize() const;
+
+    bool
+    empty() const;
 
     static std::string
     code(uint32_t type);
@@ -10000,6 +10007,14 @@ colorstream::operator <<(
 
 ARGPARSE_INL colorstream&
 colorstream::operator <<(
+        colorword const& word)
+{
+    m_text.push_back(word);
+    return *this;
+}
+
+ARGPARSE_INL colorstream&
+colorstream::operator <<(
         colortext const& text)
 {
     _insert_to_end(text, m_text);
@@ -10054,6 +10069,12 @@ ARGPARSE_INL bool
 colorstream::colorize() const
 {
     return m_colorize && can_colorize();
+}
+
+ARGPARSE_INL bool
+colorstream::empty() const
+{
+    return text().empty();
 }
 
 ARGPARSE_INL std::string
