@@ -9464,28 +9464,24 @@ _help_formatter(
         std::size_t indent)
 {
     std::size_t const interlayer = 2;
-    std::size_t head_size = _utf8_size(head).second;
-    std::vector<std::string> res;
-    std::string value;
-    if (head_size + interlayer > indent) {
-        head_size = 0;
-        _store_value_to(value, res, true);
+    std::size_t offset = _utf8_size(head).second;
+    std::string res;
+    if (offset + interlayer > indent) {
+        offset = 0;
     }
-    if (!help.empty()) {
-        std::vector<std::string> lines
-                = formatter._split_lines(help, width - indent);
-        for (std::size_t i = 0; i < lines.size(); ++i) {
-            std::size_t const size = _utf8_size(value).second;
-            if (size + head_size < indent) {
-                value.resize(value.size() + indent - size - head_size, _space);
-            }
-            value += lines.at(i);
-            _store_value_to(value, res, true);
-            head_size = 0;
+    std::vector<std::string> lines
+            = formatter._split_lines(help, width - indent);
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        if (offset == 0) {
+            res += "\n";
         }
+        if (offset < indent) {
+            res += std::string(indent - offset, _space);
+        }
+        res += lines.at(i);
+        offset = 0;
     }
-    _store_value_to(value, res);
-    return _join(res, "\n");
+    return res;
 }
 
 ARGPARSE_INL void
@@ -10278,19 +10274,15 @@ HelpFormatter::_fill_text(
         std::size_t width,
         std::size_t indent) const
 {
-    std::vector<std::string> res;
-    std::string value;
+    std::string res;
     std::vector<std::string> lines = _split_lines(text, width - indent);
     for (std::size_t i = 0; i < lines.size(); ++i) {
-        std::size_t const size = detail::_utf8_size(value).second;
-        if (size < indent) {
-            value.resize(value.size() + indent - size, detail::_space);
+        if (i != 0) {
+            res += "\n";
         }
-        value += lines.at(i);
-        detail::_store_value_to(value, res, true);
+        res += std::string(indent, detail::_space) + lines.at(i);
     }
-    detail::_store_value_to(value, res);
-    return detail::_join(res, "\n");
+    return res;
 }
 
 ARGPARSE_INL std::string
@@ -10515,19 +10507,15 @@ _RawDescriptionHelpFormatter::_fill_text(
         std::size_t width,
         std::size_t indent) const
 {
-    std::vector<std::string> res;
-    std::string value;
+    std::string res;
     std::vector<std::string> lines = _split_lines_raw(text, width - indent);
     for (std::size_t i = 0; i < lines.size(); ++i) {
-        std::size_t const size = detail::_utf8_size(value).second;
-        if (size < indent) {
-            value.resize(value.size() + indent - size, detail::_space);
+        if (i != 0) {
+            res += "\n";
         }
-        value += lines.at(i);
-        detail::_store_value_to(value, res, true);
+        res += std::string(indent, detail::_space) + lines.at(i);
     }
-    detail::_store_value_to(value, res);
-    return detail::_join(res, "\n");
+    return res;
 }
 
 ARGPARSE_INL std::vector<std::string>
@@ -10535,44 +10523,43 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
         std::string const& text,
         std::size_t width) const
 {
-    std::string value;
     std::vector<std::string> res;
     std::vector<std::string> split_str = detail::_split_lines(text);
     for (std::size_t i = 0; i < split_str.size(); ++i) {
         std::string const& str = split_str.at(i);
         if (str.empty()) {
-            detail::_store_value_to(value, res, true);
-        } else {
-            std::vector<std::string> sub_split_str
-                    = detail::_split(str, detail::_spaces);
-            for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
-                if (j != 0) {
-                    value += detail::_spaces;
-                }
-                std::vector<std::string> tab_split_str
-                        = detail::_split(sub_split_str.at(j), "\t");
-                for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
-                    if (k != 0) {
-                        std::size_t size = detail::_utf8_size(value).second;
-                        std::size_t tbsize = _tab_size() - (size % _tab_size());
-                        if (size + 1 + tbsize > width) {
-                            detail::_store_value_to(value, res);
-                        } else {
-                            value += std::string(tbsize, detail::_space);
-                        }
-                    }
-                    std::string sub = tab_split_str.at(k);
-                    if (detail::_utf8_size(value).second + 1
-                            + detail::_utf8_size(sub).second > width) {
-                        detail::_store_value_to(value, res);
-                    }
-                    value += sub;
-                }
-            }
-            detail::_store_value_to(value, res);
+            res.push_back(std::string());
+            continue;
         }
+        std::string value;
+        std::vector<std::string> sub_split_str
+                = detail::_split(str, detail::_spaces);
+        for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
+            if (j != 0) {
+                value += detail::_spaces;
+            }
+            std::vector<std::string> tab_split_str
+                    = detail::_split(sub_split_str.at(j), "\t");
+            for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
+                if (k != 0) {
+                    std::size_t size = detail::_utf8_size(value).second;
+                    std::size_t tbsize = _tab_size() - (size % _tab_size());
+                    if (size + 1 + tbsize > width) {
+                        detail::_store_value_to(value, res);
+                    } else {
+                        value += std::string(tbsize, detail::_space);
+                    }
+                }
+                std::string sub = tab_split_str.at(k);
+                if (detail::_utf8_size(value).second + 1
+                        + detail::_utf8_size(sub).second > width) {
+                    detail::_store_value_to(value, res);
+                }
+                value += sub;
+            }
+        }
+        detail::_store_value_to(value, res);
     }
-    detail::_store_value_to(value, res);
     return res;
 }
 
