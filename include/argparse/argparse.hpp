@@ -2435,7 +2435,7 @@ public:
     _get_default_metavar_for_positional(
             Argument const* action) const;
 
-    virtual std::string
+    virtual detail::colorstream
     _get_help_string(
             Argument const* action,
             std::string const& lang) const;
@@ -2527,7 +2527,7 @@ class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
 public:
     ~_ArgumentDefaultsHelpFormatter() ARGPARSE_NOEXCEPT ARGPARSE_OVERRIDE { }
 
-    std::string
+    detail::colorstream
     _get_help_string(
             Argument const* action,
             std::string const& lang) const ARGPARSE_OVERRIDE;
@@ -9444,6 +9444,7 @@ _ignore_explicit(
 // -- ColorType ---------------------------------------------------------------
 enum ColorType {
     clr_reset = 0,
+    clr_default,
     clr_heading,
     clr_label,
     clr_long_option,
@@ -9967,6 +9968,8 @@ public:
     use(WORD type)
     {
         switch (type) {
+            case clr_default :
+                return set_attribute(FOREGROUND_INTENSITY);
             case clr_heading :
                 return set_attribute(FOREGROUND_INTENSITY | FOREGROUND_BLUE);
             case clr_label :
@@ -10171,6 +10174,8 @@ colorstream::code(
     return "";
 #else
     switch (type) {
+        case clr_default :
+            return "\033[0;90m";
         case clr_heading :
             return "\033[1;34m";
         case clr_label :
@@ -10388,12 +10393,14 @@ HelpFormatter::_get_default_metavar_for_positional(
     return action->dest();
 }
 
-ARGPARSE_INL std::string
+ARGPARSE_INL detail::colorstream
 HelpFormatter::_get_help_string(
         Argument const* action,
         std::string const& lang) const
 {
-    return detail::_tr(action->m_help.value(), lang);
+    detail::colorstream res;
+    res << detail::_tr(action->m_help.value(), lang);
+    return res;
 }
 
 ARGPARSE_INL std::vector<std::string>
@@ -10756,18 +10763,22 @@ _RawTextHelpFormatter::_split_lines(
 }
 
 // -- _ArgumentDefaultsHelpFormatter ------------------------------------------
-ARGPARSE_INL std::string
+ARGPARSE_INL detail::colorstream
 _ArgumentDefaultsHelpFormatter::_get_help_string(
         Argument const* action,
         std::string const& lang) const
 {
-    std::string res = detail::_tr(action->m_help.value(), lang);
-    if (!res.empty() && !detail::_contains_substr(res, "%(default)s")) {
+    detail::colorstream res;
+    std::string help = detail::_tr(action->m_help.value(), lang);
+    res << help;
+    if (!help.empty() && !detail::_contains_substr(help, "%(default)s")) {
         if (((action->m_type & (Argument::Optional | Argument::Operand))
              || (action->m_nargs & (detail::ZERO_OR_ONE
                                     | detail::ZERO_OR_MORE)))
                 && !(action->action() & (argparse::help | argparse::version))) {
-            res += " (default: %(default)s)";
+            res << " " << detail::clr_default << "(default: "
+                << detail::clr_reset << "%(default)s"
+                << detail::clr_default << ")";
         }
     }
     return res;
@@ -11925,9 +11936,8 @@ Argument::get_help(
         HelpFormatter const& formatter,
         std::string const& lang) const
 {
-    std::string help = formatter._get_help_string(this, lang);
-    std::string res = help;
     detail::colorstream text;
+    detail::colorstream help = formatter._get_help_string(this, lang);
 #ifdef ARGPARSE_CXX_11
     std::regex const r("%[(]([a-z_]*)[)]s");
     std::smatch match;
@@ -11938,65 +11948,81 @@ Argument::get_help(
         { "%(const)s",          [this]() { return get_const();      } },
         { "%(default)s",        [this]() { return get_default();    } },
         { "%(dest)s", [this] () -> std::string const& { return dest();  } },
-        { "%(help)s", [&help]() -> std::string const& { return help;    } },
+        { "%(help)s",           [&help]() { return help.str();      } },
         { "%(metavar)s",        [this]() { return get_metavar();    } },
         { "%(nargs)s",          [this]() { return get_nargs();      } },
         { "%(option_strings)s", [this]() { return option_strings(); } },
         { "%(required)s",       [this]() { return get_required();   } },
         { "%(type)s",           [this]() { return get_type();       } },
     };
-    while (std::regex_search(res, match, r)) {
-        text << match.prefix();
-        auto specifier = std::string(match[0]);
-        auto it = specifiers.find(specifier);
-        if (it != specifiers.end()) {
-            auto prev = text.type();
-            text << detail::clr_summary_label << it ->second() << prev;
-        } else {
-            text << specifier;
+    for (auto const& line : help.text()) {
+        if (line.first != detail::clr_reset) {
+            text << line;
+            continue;
         }
-        res = match.suffix();
+        std::string res = line.second;
+        while (std::regex_search(res, match, r)) {
+            text << match.prefix();
+            auto specifier = std::string(match[0]);
+            auto it = specifiers.find(specifier);
+            if (it != specifiers.end()) {
+                auto prev = text.type();
+                text << detail::clr_summary_label << it ->second() << prev;
+            } else {
+                text << specifier;
+            }
+            res = match.suffix();
+        }
+        text << res;
     }
 #else
     std::string const beg = "%(";
     std::string const end = ")s";
-    std::string::size_type pos = res.find(beg);
-    while (pos != std::string::npos) {
-        std::string::size_type next = res.find(end, pos + beg.size());
-        if (next == std::string::npos) {
-            break;
+    for (std::list<detail::colorword>::const_iterator it = help.text().begin();
+         it != help.text().end(); ++it) {
+        if ((*it).first != detail::clr_reset) {
+            text << *it;
+            continue;
         }
-        text << res.substr(0, pos);
-        uint32_t prev = text.type();
-        std::string specifier = res.substr(pos, next + end.size() - pos);
-        if (specifier == "%(choices)s") {
-            text << detail::clr_summary_label << get_choices() << prev;
-        } else if (specifier == "%(const)s") {
-            text << detail::clr_summary_label << get_const() << prev;
-        } else if (specifier == "%(default)s") {
-            text << detail::clr_summary_label << get_default() << prev;
-        } else if (specifier == "%(dest)s") {
-            text << detail::clr_summary_label << dest() << prev;
-        } else if (specifier == "%(metavar)s") {
-            text << detail::clr_summary_label << get_metavar() << prev;
-        } else if (specifier == "%(nargs)s") {
-            text << detail::clr_summary_label << get_nargs() << prev;
-        } else if (specifier == "%(option_strings)s") {
-            text << detail::clr_summary_label << option_strings() << prev;
-        } else if (specifier == "%(required)s") {
-            text << detail::clr_summary_label << get_required() << prev;
-        } else if (specifier == "%(type)s") {
-            text << detail::clr_summary_label << get_type() << prev;
-        } else if (specifier == "%(help)s") {
-            text << detail::clr_summary_label << help << prev;
-        } else {
-            text << specifier;
+        std::string res = (*it).second;
+        std::string::size_type pos = res.find(beg);
+        while (pos != std::string::npos) {
+            std::string::size_type next = res.find(end, pos + beg.size());
+            if (next == std::string::npos) {
+                break;
+            }
+            text << res.substr(0, pos);
+            uint32_t prev = text.type();
+            std::string specifier = res.substr(pos, next + end.size() - pos);
+            if (specifier == "%(choices)s") {
+                text << detail::clr_summary_label << get_choices() << prev;
+            } else if (specifier == "%(const)s") {
+                text << detail::clr_summary_label << get_const() << prev;
+            } else if (specifier == "%(default)s") {
+                text << detail::clr_summary_label << get_default() << prev;
+            } else if (specifier == "%(dest)s") {
+                text << detail::clr_summary_label << dest() << prev;
+            } else if (specifier == "%(metavar)s") {
+                text << detail::clr_summary_label << get_metavar() << prev;
+            } else if (specifier == "%(nargs)s") {
+                text << detail::clr_summary_label << get_nargs() << prev;
+            } else if (specifier == "%(option_strings)s") {
+                text << detail::clr_summary_label << option_strings() << prev;
+            } else if (specifier == "%(required)s") {
+                text << detail::clr_summary_label << get_required() << prev;
+            } else if (specifier == "%(type)s") {
+                text << detail::clr_summary_label << get_type() << prev;
+            } else if (specifier == "%(help)s") {
+                text << detail::clr_summary_label << help.str() << prev;
+            } else {
+                text << specifier;
+            }
+            res = res.substr(next + end.size());
+            pos = res.find(beg);
         }
-        res = res.substr(next + end.size());
-        pos = res.find(beg);
+        text << res;
     }
 #endif  // C++11+
-    text << res;
     return text;
 }
 
