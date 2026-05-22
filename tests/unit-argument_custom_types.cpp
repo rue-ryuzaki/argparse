@@ -54,8 +54,17 @@ inline void coord_type_builder(std::string const& str, void* res)
     ss >> *reinterpret_cast<Coord*>(res);
 }
 
+struct NoStreamOp
+{
+};
+
 TEST_CASE("1. custom types", "[argument]")
 {
+    CHECK(argparse::detail::has_operator_in<NoStreamOp>::value == false);
+    CHECK(argparse::detail::has_operator_out<NoStreamOp>::value == false);
+    CHECK(argparse::detail::has_operator_in<Coord>::value == true);
+    CHECK(argparse::detail::has_operator_out<Coord>::value == true);
+
     argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
 
     SECTION("1.1. custom type with factory function") {
