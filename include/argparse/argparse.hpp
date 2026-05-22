@@ -9544,7 +9544,7 @@ _format_output(
     return res;
 }
 
-ARGPARSE_INL colorstream&
+ARGPARSE_INL void
 _help_formatter(
         colorstream& os,
         std::string const& head,
@@ -9571,7 +9571,6 @@ _help_formatter(
         }
         head_size = 0;
     }
-    return os;
 }
 
 ARGPARSE_INL void
@@ -10577,9 +10576,9 @@ HelpFormatter::_format_help(
                                 *this, p->prog(), size, width, lang, ss);
             detail::colorstream f = positional.at(i)->flags_to_string(*this);
             detail::colorstream h = positional.at(i)->get_help(*this, lang);
-            ss << detail::clr_reset << "\n  " << f << detail::clr_reset
-               << detail::_help_formatter(
-                      ss, "  " + f.str(), *this, p->despecify(h), width, size);
+            ss << detail::clr_reset << "\n  " << f << detail::clr_reset;
+            detail::_help_formatter(
+                       ss, "  " + f.str(), *this, p->despecify(h), width, size);
         }
         p->print_subparsers(sub_positional, sub_info, positional.size(),
                             *this, p->prog(), size, width, lang, ss);
@@ -10591,9 +10590,9 @@ HelpFormatter::_format_help(
         for (std::size_t i = 0; i < operand.size(); ++i) {
             detail::colorstream f = operand.at(i)->flags_to_string(*this);
             detail::colorstream h = operand.at(i)->get_help(*this, lang);
-            ss << detail::clr_reset << "\n  " << f << detail::clr_reset
-               << detail::_help_formatter(
-                      ss, "  " + f.str(), *this, p->despecify(h), width, size);
+            ss << detail::clr_reset << "\n  " << f << detail::clr_reset;
+            detail::_help_formatter(
+                       ss, "  " + f.str(), *this, p->despecify(h), width, size);
         }
     }
     if (!optional.empty()) {
@@ -10603,9 +10602,9 @@ HelpFormatter::_format_help(
         for (std::size_t i = 0; i < optional.size(); ++i) {
             detail::colorstream f = optional.at(i)->flags_to_string(*this);
             detail::colorstream h = optional.at(i)->get_help(*this, lang);
-            ss << detail::clr_reset << "\n  " << f << detail::clr_reset
-               << detail::_help_formatter(
-                      ss, "  " + f.str(), *this, p->despecify(h), width, size);
+            ss << detail::clr_reset << "\n  " << f << detail::clr_reset;
+            detail::_help_formatter(
+                       ss, "  " + f.str(), *this, p->despecify(h), width, size);
         }
     }
     for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
@@ -12894,9 +12893,9 @@ ArgumentGroup::print_help(
             detail::colorstream f = (*it)->flags_to_string(formatter);
             detail::colorstream h = (*it)->get_help(formatter, lang)
                     .replace("%(prog)s", prog);
-            os << detail::clr_reset << "\n  " << f << detail::clr_reset
-               << detail::_help_formatter(
-                      os, "  " + f.str(), formatter, h, width, limit);
+            os << detail::clr_reset << "\n  " << f << detail::clr_reset;
+            detail::_help_formatter(
+                        os, "  " + f.str(), formatter, h, width, limit);
         }
     }
 }
@@ -13613,7 +13612,8 @@ _ParserGroup::print_parser_group(
     }
     std::string f = _flags_to_string();
     os << detail::clr_reset << "\n  " << detail::clr_short_option << f
-       << detail::clr_reset << detail::_help_formatter(
+       << detail::clr_reset;
+    detail::_help_formatter(
          os, "  " + f, formatter, get_help(prog, required, lang), width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
         // despecify group's parser help
@@ -13689,9 +13689,8 @@ _ParserGroup::print_parser_group(
 #endif  // C++11+
             text << res;
             os << detail::clr_reset << "\n    "
-               << detail::clr_short_option << metavar << detail::clr_reset
-               << detail::_help_formatter(
-                      os, name, formatter, text, width, limit);
+               << detail::clr_short_option << metavar << detail::clr_reset;
+            detail::_help_formatter(os, name, formatter, text, width, limit);
         }
     }
 }
