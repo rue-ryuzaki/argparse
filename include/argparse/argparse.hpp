@@ -8596,25 +8596,25 @@ _codepoint_at(
     std::size_t cp_size = _utf8_codepoint_size(_char_to_u8(str.at(i)));
     codepoint cp = 0;
     switch (cp_size) {
-        case 1:
+        case 1 :
             cp =  (_char_to_u32(str.at(i    )) & ~_utf8_1b_mask);
             break;
-        case 2:
+        case 2 :
             cp = ((_char_to_u32(str.at(i    )) & ~_utf8_2b_mask) <<  6)
                |  (_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask);
             break;
-        case 3:
+        case 3 :
             cp = ((_char_to_u32(str.at(i    )) & ~_utf8_3b_mask) << 12)
                | ((_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask) <<  6)
                |  (_char_to_u32(str.at(i + 2)) & ~_utf8_ct_mask);
             break;
-        case 4:
+        case 4 :
             cp = ((_char_to_u32(str.at(i    )) & ~_utf8_4b_mask) << 18)
                | ((_char_to_u32(str.at(i + 1)) & ~_utf8_ct_mask) << 12)
                | ((_char_to_u32(str.at(i + 2)) & ~_utf8_ct_mask) <<  6)
                |  (_char_to_u32(str.at(i + 3)) & ~_utf8_ct_mask);
             break;
-        default:
+        default :
             // should never happen
             break;
     }
@@ -9991,7 +9991,7 @@ public:
                 return set_attribute(FOREGROUND_GREEN);
             case clr_usage :
                 return set_attribute(FOREGROUND_INTENSITY | FOREGROUND_BLUE);
-            default:
+            default :
                 return set_attribute(m_fore);
         }
     }
