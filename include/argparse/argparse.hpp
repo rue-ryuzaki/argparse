@@ -740,43 +740,36 @@ struct voider { typedef void type; };
 
 // -- library type traits -----------------------------------------------------
 namespace _stream_check {
-    struct anyx { template <class T> anyx(T const&); };
+template <class S, class T>
+class has_loading_support {
+public:
+    template <class U>
+    static _yes test(S& is, U& u, char (*)[sizeof((is >> u), 0)] = 0);
 
-    _no operator <<(anyx const&, anyx const&);
-    _no operator >>(anyx const&, anyx const&);
-
-    template <class T>
-    static _yes test(T const&);
-
-    template <class T>
     static _no test(...);
 
-    template <class StreamType, class T>
-    struct has_loading_support
-    {
-        static StreamType& stream;
-        static T& x;
-        static bool const value = sizeof(test(stream >> x)) == sizeof(_yes);
-    };
+    static bool const value = sizeof(test(*static_cast<S*>(0),
+                                          *static_cast<T*>(0))) == sizeof(_yes);
+};
 
-    template <class StreamType, class T>
-    struct has_saving_support
-    {
-        static StreamType& stream;
-        static T& x;
-        static bool const value = sizeof(test(stream << x)) == sizeof(_yes);
-    };
+template <class S, class T>
+class has_saving_support {
+public:
+    template <class U>
+    static _yes test(S& os, const U& u, char (*)[sizeof((os << u), 0)] = 0);
 
-    template <class StreamType, class T>
-    struct has_stream_operators
-    {
-        static bool const value = has_loading_support<StreamType, T>::value
-                                && has_saving_support<StreamType, T>::value;
-    };
+    static _no test(...);
+
+    static bool const value = sizeof(test(*static_cast<S*>(0),
+                                          *static_cast<T*>(0))) == sizeof(_yes);
+};
 }  // namespace _stream_check
 
 template <class T>
 struct has_operator_in : _stream_check::has_loading_support<std::istream, T> {};
+
+template <class T>
+struct has_operator_out : _stream_check::has_saving_support<std::ostream, T> {};
 
 template <class T>
 struct is_byte_type
