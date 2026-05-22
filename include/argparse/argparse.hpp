@@ -2445,6 +2445,11 @@ public:
             std::string const& text,
             std::size_t width) const;
 
+    virtual std::vector<detail::colorstream>
+    _split_lines(
+            detail::colorstream const& text,
+            std::size_t width) const;
+
 private:
     detail::colorstream
     _usage_args(
@@ -2485,6 +2490,11 @@ protected:
     _split_lines_raw(
             std::string const& text,
             std::size_t width) const;
+
+    std::vector<detail::colorstream>
+    _split_lines_raw(
+            detail::colorstream const& text,
+            std::size_t width) const;
 } ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
 
 /**
@@ -2499,6 +2509,11 @@ public:
     std::vector<std::string>
     _split_lines(
             std::string const& text,
+            std::size_t width) const ARGPARSE_OVERRIDE;
+
+    std::vector<detail::colorstream>
+    _split_lines(
+            detail::colorstream const& text,
             std::size_t width) const ARGPARSE_OVERRIDE;
 } ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
 
@@ -3628,7 +3643,7 @@ private:
     std::string
     get_type() const;
 
-    std::string
+    detail::colorstream
     get_help(
             HelpFormatter const& formatter,
             std::string const& lang) const;
@@ -5615,7 +5630,7 @@ protected:
             std::size_t width,
             std::string const& lang) const ARGPARSE_OVERRIDE;
 
-    std::string
+    detail::colorstream
     get_help(
             std::string const& prog,
             bool required,
@@ -7448,6 +7463,10 @@ private:
     despecify(
             std::string const& str) const;
 
+    detail::colorstream&
+    despecify(
+            detail::colorstream& cs) const;
+
     void
     process_add_argument();
 
@@ -9138,6 +9157,18 @@ _store_value_to(
     }
 }
 
+ARGPARSE_INL bool
+_is_split_char(
+        char c,
+        std::string const& sep)
+{
+    if (sep.empty()) {
+        return std::isspace(static_cast<unsigned char>(c));
+    } else {
+        return _exists(c, sep);
+    }
+}
+
 ARGPARSE_INL std::vector<std::string>
 _split(std::string const& str,
         std::string const& sep,
@@ -9147,25 +9178,47 @@ _split(std::string const& str,
     std::string value;
     for (std::size_t i = 0; i < str.size(); ++i) {
         char c = str.at(i);
-        if (sep.empty()) {
-            if (std::isspace(static_cast<unsigned char>(c))
-                    && (maxsplit < 0
-                        || static_cast<int32_t>(res.size()) < maxsplit)) {
-                _store_value_to(value, res, true);
-            } else {
-                value += c;
-            }
+        if (_is_split_char(c, sep)
+                && (maxsplit < 0
+                    || static_cast<int32_t>(res.size()) < maxsplit)) {
+            _store_value_to(value, res, true);
         } else {
-            if (_exists(c, sep)
-                    && (maxsplit < 0
-                        || static_cast<int32_t>(res.size()) < maxsplit)) {
-                _store_value_to(value, res, true);
-            } else {
-                value += c;
-            }
+            value += c;
         }
     }
     res.push_back(ARGPARSE_MOVE(value));
+    return res;
+}
+
+ARGPARSE_INL std::vector<detail::colortext>
+_split(colortext const& text,
+        std::string const& sep)
+{
+    std::vector<detail::colortext> res;
+    detail::colortext tmp;
+    for (std::list<colorword>::const_iterator it = text.begin();
+         it != text.end(); ++it) {
+        colorword const& str = *it;
+        colorword value;
+        value.first = str.first;
+        for (std::size_t i = 0; i < str.second.size(); ++i) {
+            char c = str.second.at(i);
+            if (_is_split_char(c, sep)) {
+                tmp.push_back(value);
+                res.push_back(tmp);
+                tmp.clear();
+                value.second.clear();
+            } else {
+                value.second += c;
+            }
+        }
+        if (!value.second.empty()) {
+            tmp.push_back(ARGPARSE_MOVE(value));
+        }
+    }
+    if (!tmp.empty()) {
+        res.push_back(ARGPARSE_MOVE(tmp));
+    }
     return res;
 }
 
@@ -9188,6 +9241,42 @@ _split_lines(
         }
     }
     _store_value_to(value, res);
+    return res;
+}
+
+ARGPARSE_INL std::vector<detail::colortext>
+_split_lines(
+        colortext const& text,
+        bool keepends = false)
+{
+    std::vector<detail::colortext> res;
+    detail::colortext tmp;
+    for (std::list<colorword>::const_iterator it = text.begin();
+         it != text.end(); ++it) {
+        colorword const& str = *it;
+        colorword value;
+        value.first = str.first;
+        for (std::size_t i = 0; i < str.second.size(); ++i) {
+            char c = str.second.at(i);
+            if (c == '\n') {
+                if (keepends) {
+                    value.second += c;
+                }
+                tmp.push_back(value);
+                res.push_back(tmp);
+                tmp.clear();
+                value.second.clear();
+            } else {
+                value.second += c;
+            }
+        }
+        if (!value.second.empty()) {
+            tmp.push_back(ARGPARSE_MOVE(value));
+        }
+    }
+    if (!tmp.empty()) {
+        res.push_back(ARGPARSE_MOVE(tmp));
+    }
     return res;
 }
 
@@ -9455,33 +9544,34 @@ _format_output(
     return res;
 }
 
-ARGPARSE_INL std::string
+ARGPARSE_INL colorstream&
 _help_formatter(
+        colorstream& os,
         std::string const& head,
         HelpFormatter const& formatter,
-        std::string const& help,
+        colorstream const& help,
         std::size_t width,
         std::size_t indent)
 {
     std::size_t const interlayer = 2;
-    std::size_t offset = _utf8_size(head).second;
-    std::string res;
-    if (offset + interlayer > indent) {
-        offset = 0;
+    std::size_t head_size = _utf8_size(head).second;
+    if (head_size + interlayer > indent) {
+        head_size = 0;
+        os << "\n";
     }
-    std::vector<std::string> lines
-            = formatter._split_lines(help, width - indent);
+    std::vector<colorstream> lines
+            = formatter._split_lines(help, width);
     for (std::size_t i = 0; i < lines.size(); ++i) {
-        if (offset == 0) {
-            res += "\n";
+        if (head_size < indent) {
+            os << detail::clr_reset << std::string(indent - head_size, _space);
         }
-        if (offset < indent) {
-            res += std::string(indent - offset, _space);
+        os << lines.at(i);
+        if (i + 1 != lines.size()) {
+            os << "\n";
         }
-        res += lines.at(i);
-        offset = 0;
+        head_size = 0;
     }
-    return res;
+    return os;
 }
 
 ARGPARSE_INL void
@@ -10070,7 +10160,7 @@ colorstream::colorize() const
 ARGPARSE_INL bool
 colorstream::empty() const
 {
-    return text().empty();
+    return str().empty();
 }
 
 ARGPARSE_INL std::string
@@ -10329,6 +10419,36 @@ HelpFormatter::_split_lines(
     return res;
 }
 
+ARGPARSE_INL std::vector<detail::colorstream>
+HelpFormatter::_split_lines(
+        detail::colorstream const& text,
+        std::size_t width) const
+{
+    std::vector<detail::colorstream> res;
+    if (!text.empty()) {
+        detail::colorstream value;
+        std::vector<detail::colortext> split_str
+                = detail::_split(text.text(), "");
+        for (std::size_t i = 0; i < split_str.size(); ++i) {
+            detail::colorstream tmp;
+            tmp << split_str.at(i);
+            if (detail::_utf8_size(value.str()).second + 1
+                    + detail::_utf8_size(tmp.str()).second > width) {
+                res.push_back(value);
+                value.clear();
+            }
+            if (!value.empty() && !tmp.empty()) {
+                value << detail::_spaces;
+            }
+            value << tmp;
+        }
+        if (!value.empty()) {
+            res.push_back(ARGPARSE_MOVE(value));
+        }
+    }
+    return res;
+}
+
 ARGPARSE_INL detail::colorstream
 HelpFormatter::_usage_args(
         ArgumentParser const* p) const
@@ -10456,10 +10576,10 @@ HelpFormatter::_format_help(
             p->print_subparsers(sub_positional, sub_info, i,
                                 *this, p->prog(), size, width, lang, ss);
             detail::colorstream f = positional.at(i)->flags_to_string(*this);
-            std::string h = positional.at(i)->get_help(*this, lang);
+            detail::colorstream h = positional.at(i)->get_help(*this, lang);
             ss << detail::clr_reset << "\n  " << f << detail::clr_reset
                << detail::_help_formatter(
-                      "  " + f.str(), *this, p->despecify(h), width, size);
+                      ss, "  " + f.str(), *this, p->despecify(h), width, size);
         }
         p->print_subparsers(sub_positional, sub_info, positional.size(),
                             *this, p->prog(), size, width, lang, ss);
@@ -10470,10 +10590,10 @@ HelpFormatter::_format_help(
            << detail::_tr(p->m_operands_title, lang) << ":";
         for (std::size_t i = 0; i < operand.size(); ++i) {
             detail::colorstream f = operand.at(i)->flags_to_string(*this);
-            std::string h = operand.at(i)->get_help(*this, lang);
+            detail::colorstream h = operand.at(i)->get_help(*this, lang);
             ss << detail::clr_reset << "\n  " << f << detail::clr_reset
                << detail::_help_formatter(
-                      "  " + f.str(), *this, p->despecify(h), width, size);
+                      ss, "  " + f.str(), *this, p->despecify(h), width, size);
         }
     }
     if (!optional.empty()) {
@@ -10482,10 +10602,10 @@ HelpFormatter::_format_help(
            << detail::_tr(p->m_optionals_title, lang) << ":";
         for (std::size_t i = 0; i < optional.size(); ++i) {
             detail::colorstream f = optional.at(i)->flags_to_string(*this);
-            std::string h = optional.at(i)->get_help(*this, lang);
+            detail::colorstream h = optional.at(i)->get_help(*this, lang);
             ss << detail::clr_reset << "\n  " << f << detail::clr_reset
                << detail::_help_formatter(
-                      "  " + f.str(), *this, p->despecify(h), width, size);
+                      ss, "  " + f.str(), *this, p->despecify(h), width, size);
         }
     }
     for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
@@ -10550,7 +10670,7 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
                         value += std::string(tbsize, detail::_space);
                     }
                 }
-                std::string sub = tab_split_str.at(k);
+                std::string const& sub = tab_split_str.at(k);
                 if (detail::_utf8_size(value).second + 1
                         + detail::_utf8_size(sub).second > width) {
                     detail::_store_value_to(value, res);
@@ -10563,10 +10683,74 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
     return res;
 }
 
+ARGPARSE_INL std::vector<detail::colorstream>
+_RawDescriptionHelpFormatter::_split_lines_raw(
+        detail::colorstream const& text,
+        std::size_t width) const
+{
+    std::vector<detail::colorstream> res;
+    std::vector<detail::colortext> split_str
+            = detail::_split_lines(text.text());
+    for (std::size_t i = 0; i < split_str.size(); ++i) {
+        detail::colorstream str;
+        str << split_str.at(i);
+        if (str.empty()) {
+            res.push_back(detail::colorstream());
+            continue;
+        }
+        detail::colorstream value;
+        std::vector<detail::colortext> sub_split_str
+                = detail::_split(str.text(), detail::_spaces);
+        for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
+            if (j != 0) {
+                value << detail::_spaces;
+            }
+            std::vector<detail::colortext> tab_split_str
+                    = detail::_split(sub_split_str.at(j), "\t");
+            for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
+                if (k != 0) {
+                    std::size_t size = detail::_utf8_size(value.str()).second;
+                    std::size_t tbsize = _tab_size() - (size % _tab_size());
+                    if (size + 1 + tbsize > width) {
+                        if (!value.empty()) {
+                            res.push_back(value);
+                            value.clear();
+                        }
+                    } else {
+                        value << std::string(tbsize, detail::_space);
+                    }
+                }
+                detail::colorstream sub;
+                sub << tab_split_str.at(k);
+                if (detail::_utf8_size(value.str()).second + 1
+                        + detail::_utf8_size(sub.str()).second > width) {
+                    if (!value.empty()) {
+                        res.push_back(value);
+                        value.clear();
+                    }
+                }
+                value << sub;
+            }
+        }
+        if (!value.empty()) {
+            res.push_back(ARGPARSE_MOVE(value));
+        }
+    }
+    return res;
+}
+
 // -- _RawTextHelpFormatter ---------------------------------------------------
 ARGPARSE_INL std::vector<std::string>
 _RawTextHelpFormatter::_split_lines(
         std::string const& text,
+        std::size_t width) const
+{
+    return _RawDescriptionHelpFormatter::_split_lines_raw(text, width);
+}
+
+ARGPARSE_INL std::vector<detail::colorstream>
+_RawTextHelpFormatter::_split_lines(
+        detail::colorstream const& text,
         std::size_t width) const
 {
     return _RawDescriptionHelpFormatter::_split_lines_raw(text, width);
@@ -11737,14 +11921,14 @@ Argument::get_type() const
     return m_type_name.value_or(detail::_none);
 }
 
-ARGPARSE_INL std::string
+ARGPARSE_INL detail::colorstream
 Argument::get_help(
         HelpFormatter const& formatter,
         std::string const& lang) const
 {
     std::string help = formatter._get_help_string(this, lang);
     std::string res = help;
-    std::string text;
+    detail::colorstream text;
 #ifdef ARGPARSE_CXX_11
     std::regex const r("%[(]([a-z_]*)[)]s");
     std::smatch match;
@@ -11763,10 +11947,15 @@ Argument::get_help(
         { "%(type)s",           [this]() { return get_type();       } },
     };
     while (std::regex_search(res, match, r)) {
-        text += match.prefix();
+        text << match.prefix();
         auto specifier = std::string(match[0]);
         auto it = specifiers.find(specifier);
-        text += (it != specifiers.end() ? it->second() : std::move(specifier));
+        if (it != specifiers.end()) {
+            auto prev = text.type();
+            text << detail::clr_summary_label << it ->second() << prev;
+        } else {
+            text << specifier;
+        }
         res = match.suffix();
     }
 #else
@@ -11778,36 +11967,38 @@ Argument::get_help(
         if (next == std::string::npos) {
             break;
         }
-        text += res.substr(0, pos);
+        text << res.substr(0, pos);
+        uint32_t prev = text.type();
         std::string specifier = res.substr(pos, next + end.size() - pos);
         if (specifier == "%(choices)s") {
-            text += get_choices();
+            text << detail::clr_summary_label << get_choices() << prev;
         } else if (specifier == "%(const)s") {
-            text += get_const();
+            text << detail::clr_summary_label << get_const() << prev;
         } else if (specifier == "%(default)s") {
-            text += get_default();
+            text << detail::clr_summary_label << get_default() << prev;
         } else if (specifier == "%(dest)s") {
-            text += dest();
+            text << detail::clr_summary_label << dest() << prev;
         } else if (specifier == "%(metavar)s") {
-            text += get_metavar();
+            text << detail::clr_summary_label << get_metavar() << prev;
         } else if (specifier == "%(nargs)s") {
-            text += get_nargs();
+            text << detail::clr_summary_label << get_nargs() << prev;
         } else if (specifier == "%(option_strings)s") {
-            text += option_strings();
+            text << detail::clr_summary_label << option_strings() << prev;
         } else if (specifier == "%(required)s") {
-            text += get_required();
+            text << detail::clr_summary_label << get_required() << prev;
         } else if (specifier == "%(type)s") {
-            text += get_type();
+            text << detail::clr_summary_label << get_type() << prev;
         } else if (specifier == "%(help)s") {
-            text += help;
+            text << detail::clr_summary_label << help << prev;
         } else {
-            text += specifier;
+            text << specifier;
         }
         res = res.substr(next + end.size());
         pos = res.find(beg);
     }
 #endif  // C++11+
-    return text + res;
+    text << res;
+    return text;
 }
 
 ARGPARSE_INL std::string
@@ -12701,11 +12892,11 @@ ArgumentGroup::print_help(
         for (arg_iterator it = m_data->m_arguments.begin();
              it != m_data->m_arguments.end(); ++it) {
             detail::colorstream f = (*it)->flags_to_string(formatter);
-            std::string h = (*it)->get_help(formatter, lang);
+            detail::colorstream h = (*it)->get_help(formatter, lang)
+                    .replace("%(prog)s", prog);
             os << detail::clr_reset << "\n  " << f << detail::clr_reset
                << detail::_help_formatter(
-                      "  " + f.str(), formatter, detail::_replace(
-                          ARGPARSE_MOVE(h), "%(prog)s", prog), width, limit);
+                      os, "  " + f.str(), formatter, h, width, limit);
         }
     }
 }
@@ -13335,7 +13526,7 @@ _ParserGroup::print_help(
     print_parser_group(os, formatter, prog, required, limit, width, lang);
 }
 
-ARGPARSE_INL std::string
+ARGPARSE_INL detail::colorstream
 _ParserGroup::get_help(
         std::string const& prog,
         bool required,
@@ -13344,7 +13535,7 @@ _ParserGroup::get_help(
     // despecify parser group help
     std::string help = detail::_tr(m_help.value(), lang);
     std::string res = help;
-    std::string text;
+    detail::colorstream text;
 #ifdef ARGPARSE_CXX_11
     std::regex const r("%[(]([a-z_]*)[)]s");
     std::smatch match;
@@ -13360,10 +13551,15 @@ _ParserGroup::get_help(
             [required](){ return detail::_bool_to_string(required); } },
     };
     while (std::regex_search(res, match, r)) {
-        text += match.prefix();
+        text << match.prefix();
         auto specifier = std::string(match[0]);
         auto it = specifiers.find(specifier);
-        text += (it != specifiers.end() ? it->second() : std::move(specifier));
+        if (it != specifiers.end()) {
+            auto prev = text.type();
+            text << detail::clr_summary_label << it ->second() << prev;
+        } else {
+            text << specifier;
+        }
         res = match.suffix();
     }
 #else
@@ -13375,28 +13571,31 @@ _ParserGroup::get_help(
         if (next == std::string::npos) {
             break;
         }
-        text += res.substr(0, pos);
+        text << res.substr(0, pos);
+        uint32_t prev = text.type();
         std::string specifier = res.substr(pos, next + end.size() - pos);
         if (specifier == "%(prog)s") {
-            text += prog;
+            text << detail::clr_summary_label << prog << prev;
         } else if (specifier == "%(choices)s") {
-            text += get_choices();
+            text << detail::clr_summary_label << get_choices() << prev;
         } else if (specifier == "%(metavar)s") {
-            text += get_metavar();
+            text << detail::clr_summary_label << get_metavar() << prev;
         } else if (specifier == "%(option_strings)s") {
-            text += "[]";
+            text << detail::clr_summary_label << "[]" << prev;
         } else if (specifier == "%(required)s") {
-            text += detail::_bool_to_string(required);
+            text << detail::clr_summary_label
+                 << detail::_bool_to_string(required) << prev;
         } else if (specifier == "%(help)s") {
-            text += help;
+            text << detail::clr_summary_label << help << prev;
         } else {
-            text += specifier;
+            text << specifier;
         }
         res = res.substr(next + end.size());
         pos = res.find(beg);
     }
 #endif  // C++11+
-    return text + res;
+    text << res;
+    return text;
 }
 
 ARGPARSE_INL void
@@ -13415,7 +13614,7 @@ _ParserGroup::print_parser_group(
     std::string f = _flags_to_string();
     os << detail::clr_reset << "\n  " << detail::clr_short_option << f
        << detail::clr_reset << detail::_help_formatter(
-             "  " + f, formatter, get_help(prog, required, lang), width, limit);
+         os, "  " + f, formatter, get_help(prog, required, lang), width, limit);
     for (prs_iterator it = m_parsers.begin(); it != m_parsers.end(); ++it) {
         // despecify group's parser help
         std::string help = detail::_tr((*it)->m_help, lang);
@@ -13427,7 +13626,7 @@ _ParserGroup::print_parser_group(
             }
             std::string name = "    " + metavar;
             std::string res = help;
-            std::string text;
+            detail::colorstream text;
 #ifdef ARGPARSE_CXX_11
             std::regex const r("%[(]([a-z_]*)[)]s");
             std::smatch match;
@@ -13445,11 +13644,15 @@ _ParserGroup::print_parser_group(
                 { "%(required)s",       []() { return "False";          } },
             };
             while (std::regex_search(res, match, r)) {
-                text += match.prefix();
+                text << match.prefix();
                 auto specifier = std::string(match[0]);
                 auto it2 = specifiers2.find(specifier);
-                text += (it2 != specifiers2.end() ? it2->second()
-                                                  : std::move(specifier));
+                if (it2 != specifiers2.end()) {
+                    auto prev = text.type();
+                    text << detail::clr_summary_label << it2 ->second() << prev;
+                } else {
+                    text << specifier;
+                }
                 res = match.suffix();
             }
 #else
@@ -13461,32 +13664,34 @@ _ParserGroup::print_parser_group(
                 if (next == std::string::npos) {
                     break;
                 }
-                text += res.substr(0, pos);
+                text << res.substr(0, pos);
+                uint32_t prev = text.type();
                 std::string specifier
                         = res.substr(pos, next + end.size() - pos);
                 if (specifier == "%(prog)s") {
-                    text += prog;
+                    text << detail::clr_summary_label << prog << prev;
                 } else if (specifier == "%(choices)s") {
-                    text += detail::_none;
+                    text << detail::clr_summary_label << detail::_none << prev;
                 } else if (specifier == "%(metavar)s") {
-                    text += metavar;
+                    text << detail::clr_summary_label << metavar << prev;
                 } else if (specifier == "%(option_strings)s") {
-                    text += "[]";
+                    text << detail::clr_summary_label << "[]" << prev;
                 } else if (specifier == "%(required)s") {
-                    text += "False";
+                    text << detail::clr_summary_label << "False" << prev;
                 } else if (specifier == "%(help)s") {
-                    text += help;
+                    text << detail::clr_summary_label << help << prev;
                 } else {
-                    text += specifier;
+                    text << specifier;
                 }
                 res = res.substr(next + end.size());
                 pos = res.find(beg);
             }
 #endif  // C++11+
-            text += res;
+            text << res;
             os << detail::clr_reset << "\n    "
                << detail::clr_short_option << metavar << detail::clr_reset
-               << detail::_help_formatter(name, formatter, text, width, limit);
+               << detail::_help_formatter(
+                      os, name, formatter, text, width, limit);
         }
     }
 }
@@ -15171,6 +15376,14 @@ ArgumentParser::despecify(
         std::string const& str) const
 {
     return detail::_replace(str, "%(prog)s", prog());
+}
+
+ARGPARSE_INL detail::colorstream&
+ArgumentParser::despecify(
+        detail::colorstream& cs) const
+{
+    cs.replace("%(prog)s", prog());
+    return cs;
 }
 
 ARGPARSE_INL void
@@ -17167,7 +17380,7 @@ utils::_print_parser_zsh_completion(
             os << "'" << arg->flags().front() << "'";
         }
         os << "\"[" << detail::_zsh_help(
-                  p->despecify(arg->get_help(*p->m_formatter, ""))) << "]\"";
+               p->despecify(arg->get_help(*p->m_formatter, "").str())) << "]\"";
         if (arg->m_nargs != detail::SUPPRESSING
             && (arg->action() & (detail::_store_action | argparse::language))) {
             os << "'" << detail::_argument_action(
@@ -17201,7 +17414,7 @@ utils::_print_parser_zsh_completion(
             pArgument const& arg = operand.at(i);
             op << "    ";
             op << "\"" << arg->flags().front() << "[" << detail::_zsh_help(
-                     p->despecify(arg->get_help(*p->m_formatter, ""))) << "]\"";
+               p->despecify(arg->get_help(*p->m_formatter, "").str())) << "]\"";
             op << "'" << detail::_argument_action(
                       arg, arg->get_metavar(), arg->m_num_args) << "'";
             op << "\n";
@@ -17248,7 +17461,7 @@ utils::_print_parser_zsh_completion(
         os << "        )\n";
         os << "        _describe '" << detail::_zsh_help(
                   p->despecify(p->subparsers()->get_help(
-                                   p->prog(), p->subparsers()->required(), "")))
+                             p->prog(), p->subparsers()->required(), "").str()))
            << "' subcommands && ret=0\n";
         os << "      fi\n";
         os << "      ;;\n";
