@@ -6065,6 +6065,8 @@ ARGPARSE_EXPORT class ArgumentParser
     typedef std::list<MutuallyExclusiveGroup>::const_iterator mtx_it;
     typedef detail::shared_ptr<SubParsers> pSubParsers;
     typedef std::pair<pSubParsers, std::size_t> SubParsersInfo;
+    typedef detail::_map<std::string, detail::func2<
+                            std::string const&, void*>::type> register_type_map;
 
     void
     read_args(
@@ -6506,6 +6508,19 @@ public:
     ArgumentParser&
     output_width(
             std::size_t value) ARGPARSE_NOEXCEPT;
+
+    /**
+     *  @brief Register type with a parser.
+     *  @param value The key under which the object will be registeredt.
+     *  @param object The callable to be registered.
+     *  @since NEXT_RELEASE
+     *  @return A reference to the current argument parser.
+     */
+    ARGPARSE_ATTR_NODISCARD
+    ArgumentParser&
+    register_type(
+            std::string const& value,
+            detail::func2<std::string const&, void*>::type object);
 
     /**
      *  @brief Get the 'prog' (default: argv[0] or "untitled").
@@ -7540,6 +7555,9 @@ private:
             Namespace const& space) const;
 
     void
+    setup_registry() const;
+
+    void
     check_namespace(
             Namespace const& space) const;
 
@@ -7861,6 +7879,7 @@ private:
     detail::func1<std::string const&>::type m_handle;
     detail::func1<Namespace const&>::type m_parse_handle;
     detail::func1<Namespace const&>::type m_default_func;
+    register_type_map m_type_registry;
     bool m_allow_abbrev;
     bool m_exit_on_error;
     bool m_suggest_on_error;
@@ -14714,6 +14733,15 @@ ArgumentParser::output_width() const
             ? m_output_width : detail::_get_terminal_size().first;
 }
 
+ARGPARSE_INL ArgumentParser&
+ArgumentParser::register_type(
+        std::string const& value,
+        detail::func2<std::string const&, void*>::type object)
+{
+    m_type_registry[value] = ARGPARSE_MOVE(object);
+    return *this;
+}
+
 #ifdef ARGPARSE_CXX_11
 ARGPARSE_INL Argument&
 ArgumentParser::add_argument(
@@ -15495,6 +15523,7 @@ ArgumentParser::parse_arguments(
 {
     handle(prog());
     check_namespace(space);
+    setup_registry();
     std::vector<std::string> parsed_arguments = read_args_from_file(in_args);
 
     Parsers parsers;
@@ -15603,6 +15632,24 @@ ArgumentParser::parse_arguments(
     return create_namespace(only_known, parsers.back().parser->m_default_func,
                             ARGPARSE_MOVE(parsers.front().storage),
                             ARGPARSE_MOVE(unrecognized_args));
+}
+
+ARGPARSE_INL void
+ArgumentParser::setup_registry() const
+{
+    for (arg_iterator it = m_data->m_arguments.begin();
+         it != m_data->m_arguments.end(); ++it) {
+        if ((*it)->m_type_name.has_value()
+                || (*it)->m_type_name.value().empty()
+                || (*it)->m_factory != ARGPARSE_NULLPTR) {
+            continue;
+        }
+        register_type_map::const_iterator it2
+                = m_type_registry.find((*it)->m_type_name.value());
+        if (it2 != m_type_registry.end()) {
+            (*it)->m_factory = (*it2).second;
+        }
+    }
 }
 
 ARGPARSE_INL void
