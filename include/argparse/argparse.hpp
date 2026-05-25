@@ -740,29 +740,38 @@ struct voider { typedef void type; };
 
 // -- library type traits -----------------------------------------------------
 namespace _stream_check {
-template <class S, class T>
-class has_loading_support {
-public:
-    template <class U>
-    static _yes test(S& is, U& u, char (*)[sizeof((is >> u), 0)] = 0);
+    struct anyx { template <class T> anyx(T const&); };
 
-    static _no test(...);
+    _no operator <<(anyx const&, anyx const&);
+    _no operator >>(anyx const&, anyx const&);
 
-    static bool const value = sizeof(test(*static_cast<S*>(0),
-                                          *static_cast<T*>(0))) == sizeof(_yes);
-};
+    template <class T>
+    _yes test(T const&);
 
-template <class S, class T>
-class has_saving_support {
-public:
-    template <class U>
-    static _yes test(S& os, const U& u, char (*)[sizeof((os << u), 0)] = 0);
+    _no test(_no);
 
-    static _no test(...);
+    template <class StreamType, class T>
+    struct has_loading_support
+    {
+        static StreamType& stream;
+        static T& x;
+        static bool const value = sizeof(test(stream >> x)) == sizeof(_yes);
+    };
 
-    static bool const value = sizeof(test(*static_cast<S*>(0),
-                                          *static_cast<T*>(0))) == sizeof(_yes);
-};
+    template <class StreamType, class T>
+    struct has_saving_support
+    {
+        static StreamType& stream;
+        static T& x;
+        static bool const value = sizeof(test(stream << x)) == sizeof(_yes);
+    };
+
+    template <class StreamType, class T>
+    struct has_stream_operators
+    {
+        static bool const value = has_loading_support<StreamType, T>::value
+                                && has_saving_support<StreamType, T>::value;
+    };
 }  // namespace _stream_check
 
 template <class T>
