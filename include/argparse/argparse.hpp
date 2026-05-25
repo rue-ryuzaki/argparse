@@ -14192,6 +14192,7 @@ ArgumentParser::ArgumentParser(
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
       m_default_func(ARGPARSE_NULLPTR),
+      m_type_registry(),
       m_allow_abbrev(),
       m_exit_on_error(),
       m_suggest_on_error(),
@@ -14234,6 +14235,7 @@ ArgumentParser::ArgumentParser(
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
       m_default_func(ARGPARSE_NULLPTR),
+      m_type_registry(),
       m_allow_abbrev(),
       m_exit_on_error(),
       m_suggest_on_error(),
@@ -14278,6 +14280,7 @@ ArgumentParser::ArgumentParser(
       m_handle(ARGPARSE_NULLPTR),
       m_parse_handle(ARGPARSE_NULLPTR),
       m_default_func(ARGPARSE_NULLPTR),
+      m_type_registry(),
       m_allow_abbrev(),
       m_exit_on_error(),
       m_suggest_on_error(),
@@ -15639,9 +15642,8 @@ ArgumentParser::setup_registry() const
 {
     for (arg_iterator it = m_data->m_arguments.begin();
          it != m_data->m_arguments.end(); ++it) {
-        if ((*it)->m_type_name.has_value()
-                || (*it)->m_type_name.value().empty()
-                || (*it)->m_factory != ARGPARSE_NULLPTR) {
+        if ((*it)->m_type_name.has_value() || (*it)->m_type_name.value().empty()
+                || (*it)->m_factory) {
             continue;
         }
         register_type_map::const_iterator it2
