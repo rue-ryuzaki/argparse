@@ -58,13 +58,40 @@ struct NoStreamOp
 {
 };
 
-TEST_CASE("1. custom types", "[argument]")
+struct OnlyStreamIn
 {
+};
+
+inline std::istream& operator >>(std::istream& is, OnlyStreamIn&)
+{
+    return is;
+}
+
+struct OnlyStreamOut
+{
+};
+
+inline std::ostream& operator <<(std::ostream& os, OnlyStreamOut const&)
+{
+    return os;
+}
+
+TEST_CASE("0. stream operators", "[detail]") {
     CHECK(argparse::detail::has_operator_in<NoStreamOp>::value == false);
     CHECK(argparse::detail::has_operator_out<NoStreamOp>::value == false);
+
+    CHECK(argparse::detail::has_operator_in<OnlyStreamIn>::value == true);
+    CHECK(argparse::detail::has_operator_out<OnlyStreamIn>::value == false);
+
+    CHECK(argparse::detail::has_operator_in<OnlyStreamOut>::value == false);
+    CHECK(argparse::detail::has_operator_out<OnlyStreamOut>::value == true);
+
     CHECK(argparse::detail::has_operator_in<Coord>::value == true);
     CHECK(argparse::detail::has_operator_out<Coord>::value == true);
+}
 
+TEST_CASE("1. custom types", "[argument]")
+{
     argparse::ArgumentParser parser = argparse::ArgumentParser().exit_on_error(false);
 
     SECTION("1.1. custom type with factory function") {
