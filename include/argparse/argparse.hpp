@@ -739,39 +739,33 @@ struct voider { typedef void type; };
 #endif  // C++11+
 
 // -- library type traits -----------------------------------------------------
+// slightly modified version of https://stackoverflow.com/a/4434734
 namespace _stream_check {
-    struct anyx { template <class T> anyx(T const&); };
+struct anyx { template <class T> anyx(T const&); };
 
-    _no operator <<(anyx const&, anyx const&);
-    _no operator >>(anyx const&, anyx const&);
+_no operator <<(anyx const&, anyx const&);
+_no operator >>(anyx const&, anyx const&);
 
-    template <class T>
-    _yes test(T const&);
+template <class T>
+_yes test(T const&);
 
-    _no test(_no);
+_no test(_no);
 
-    template <class StreamType, class T>
-    struct has_loading_support
-    {
-        static StreamType& stream;
-        static T& x;
-        static bool const value = sizeof(test(stream >> x)) == sizeof(_yes);
-    };
+template <class StreamType, class T>
+struct has_loading_support
+{
+    static StreamType& stream;
+    static T& x;
+    static bool const value = sizeof(test(stream >> x)) == sizeof(_yes);
+};
 
-    template <class StreamType, class T>
-    struct has_saving_support
-    {
-        static StreamType& stream;
-        static T& x;
-        static bool const value = sizeof(test(stream << x)) == sizeof(_yes);
-    };
-
-    template <class StreamType, class T>
-    struct has_stream_operators
-    {
-        static bool const value = has_loading_support<StreamType, T>::value
-                                && has_saving_support<StreamType, T>::value;
-    };
+template <class StreamType, class T>
+struct has_saving_support
+{
+    static StreamType& stream;
+    static T& x;
+    static bool const value = sizeof(test(stream << x)) == sizeof(_yes);
+};
 }  // namespace _stream_check
 
 template <class T>
