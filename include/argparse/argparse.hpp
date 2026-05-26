@@ -2359,7 +2359,8 @@ class colorstream
 public:
     explicit
     colorstream(
-            bool colorize = false);
+            bool colorize = false,
+            bool no_color = false);
 
     void
     clear();
@@ -2426,6 +2427,7 @@ private:
     // -- data ----------------------------------------------------------------
     colortext m_text;
     bool m_colorize;
+    bool m_no_color;
 };
 }  // namespace detail
 
@@ -10038,9 +10040,11 @@ private:
 // -- colorstream -------------------------------------------------------------
 ARGPARSE_INL
 colorstream::colorstream(
-        bool colorize)
+        bool colorize,
+        bool no_color)
     : m_text(),
-      m_colorize(colorize)
+      m_colorize(colorize),
+      m_no_color(no_color)
 { }
 
 ARGPARSE_INL void
@@ -10139,7 +10143,7 @@ colorstream::text() const
 ARGPARSE_INL bool
 colorstream::colorize() const
 {
-    return m_colorize && can_colorize();
+    return m_colorize && can_colorize() && !m_no_color;
 }
 
 ARGPARSE_INL bool
@@ -10495,7 +10499,7 @@ HelpFormatter::_format_usage(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::colorstream ss(m_color);
+    detail::colorstream ss(m_color, !p->get_env("NO_COLOR").empty());
     if (p->m_usage.suppress()) {
         return ss;
     }
@@ -10522,7 +10526,7 @@ HelpFormatter::_format_help(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::colorstream ss(m_color);
+    detail::colorstream ss(m_color, !p->get_env("NO_COLOR").empty());
     typedef std::list<ArgumentParser::pGroup>::const_iterator grp_iterator;
     std::string lang = !language.empty() ? language : p->default_language();
     detail::pArguments positional = p->m_data->get_positional(false, false);
