@@ -7352,7 +7352,7 @@ public:
 
     /**
      *  @brief Check if an environment variable with chosen name exists
-     *  (from envp[]).
+     *  (from envp[] or std::getenv()).
      *  @param name Environment variable name.
      *  @since v1.8.3
      *  @return True if an environment variable exists, false otherwise.
@@ -7362,7 +7362,8 @@ public:
     has_env(std::string const& name) const;
 
     /**
-     *  @brief Get the value of an environment variable (from envp[]).
+     *  @brief Get the value of an environment variable
+     *  (from envp[] or std::getenv()).
      *  @param name Environment variable name.
      *  @since v1.8.0
      *  @return The value of an environment variable if exists,
@@ -15188,6 +15189,9 @@ ARGPARSE_INL bool
 ArgumentParser::has_env(
         std::string const& name) const
 {
+    if (m_env_variables.empty()) {
+        return std::getenv(name.c_str());
+    }
     std::list<std::pair<std::string, std::string> >::const_iterator it
             = m_env_variables.begin();
     for ( ; it != m_env_variables.end() && it->first != name; ++it) {
@@ -15199,6 +15203,10 @@ ARGPARSE_INL std::string
 ArgumentParser::get_env(
         std::string const& name) const
 {
+    if (m_env_variables.empty()) {
+        char const* env = std::getenv(name.c_str());
+        return env ? std::string(env) : std::string();
+    }
     std::list<std::pair<std::string, std::string> >::const_iterator it
             = m_env_variables.begin();
     for ( ; it != m_env_variables.end() && it->first != name; ++it) {
