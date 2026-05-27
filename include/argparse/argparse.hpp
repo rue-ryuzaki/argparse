@@ -9431,6 +9431,7 @@ enum ColorType {
     clr_reset = 0,
     clr_default,
     clr_heading,
+    clr_inline,
     clr_label,
     clr_long_option,
     clr_prog,
@@ -9966,6 +9967,7 @@ public:
             case clr_prog :
                 return set_attribute(FOREGROUND_INTENSITY
                                      | FOREGROUND_RED | FOREGROUND_BLUE);
+            case clr_inline :
             case clr_prog_extra :
                 return set_attribute(FOREGROUND_RED | FOREGROUND_BLUE);
             case clr_short_option :
@@ -10171,6 +10173,7 @@ colorstream::code(
             return "\033[1;36m";
         case clr_prog :
             return "\033[1;95m";
+        case clr_inline :
         case clr_prog_extra :
             return "\033[0;35m";
         case clr_short_option :
