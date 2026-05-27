@@ -15297,9 +15297,11 @@ ARGPARSE_INL bool
 ArgumentParser::has_env(
         std::string const& name) const
 {
+#ifndef _WIN32
     if (m_env_variables.empty()) {
         return std::getenv(name.c_str());
     }
+#endif  // _WIN32
     std::list<std::pair<std::string, std::string> >::const_iterator it
             = m_env_variables.begin();
     for ( ; it != m_env_variables.end() && it->first != name; ++it) {
@@ -15311,10 +15313,12 @@ ARGPARSE_INL std::string
 ArgumentParser::get_env(
         std::string const& name) const
 {
+#ifndef _WIN32
     if (m_env_variables.empty()) {
         char const* env = std::getenv(name.c_str());
         return env ? std::string(env) : std::string();
     }
+#endif  // _WIN32
     std::list<std::pair<std::string, std::string> >::const_iterator it
             = m_env_variables.begin();
     for ( ; it != m_env_variables.end() && it->first != name; ++it) {
