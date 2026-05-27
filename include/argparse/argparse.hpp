@@ -2467,9 +2467,21 @@ public:
         return m_tab_size;
     }
 
+    inline bool
+    _color() const ARGPARSE_NOEXCEPT
+    {
+        return m_color && !m_no_color;
+    }
+
     virtual std::string
     _fill_text(
             std::string const& text,
+            std::size_t width,
+            std::size_t indent) const;
+
+    virtual detail::colorstream
+    _fill_text(
+            detail::colorstream const& text,
             std::size_t width,
             std::size_t indent) const;
 
@@ -2529,6 +2541,12 @@ public:
     std::string
     _fill_text(
             std::string const& text,
+            std::size_t width,
+            std::size_t indent) const ARGPARSE_OVERRIDE;
+
+    detail::colorstream
+    _fill_text(
+            detail::colorstream const& text,
             std::size_t width,
             std::size_t indent) const ARGPARSE_OVERRIDE;
 
@@ -9144,6 +9162,24 @@ _store_value_to(
     }
 }
 
+// -- ColorType ---------------------------------------------------------------
+enum ColorType {
+    clr_reset = 0,
+    clr_default,
+    clr_heading,
+    clr_inline,
+    clr_label,
+    clr_long_option,
+    clr_prog,
+    clr_prog_extra,
+    clr_short_option,
+    clr_summary_label,
+    clr_summary_long_option,
+    clr_summary_short_option,
+    clr_usage,
+};
+// ----------------------------------------------------------------------------
+
 ARGPARSE_INL bool
 _is_split_char(
         char c,
@@ -9179,7 +9215,8 @@ _split(std::string const& str,
 
 ARGPARSE_INL std::vector<detail::colortext>
 _split(colortext const& text,
-        std::string const& sep)
+        std::string const& sep,
+        bool keepsep = false)
 {
     std::vector<detail::colortext> res;
     detail::colortext tmp;
@@ -9188,20 +9225,39 @@ _split(colortext const& text,
         colorword const& str = *it;
         colorword value;
         value.first = str.first;
+        bool inline_code = false;
         for (std::size_t i = 0; i < str.second.size(); ++i) {
             char c = str.second.at(i);
             if (_is_split_char(c, sep)) {
+                if (keepsep) {
+                    value.second += c;
+                }
                 tmp.push_back(value);
                 res.push_back(tmp);
                 tmp.clear();
                 value.second.clear();
+            } else if (c == '`') {
+                if (inline_code) {
+                    inline_code = false;
+                    tmp.push_back(value);
+                    value.second.clear();
+                    value.first = str.first;
+                } else {
+                    std::string::size_type pos = str.second.find("`", i + 1);
+                    if (pos == i + 1 || pos == std::string::npos) {
+                        value.second += c;
+                    } else {
+                        inline_code = true;
+                        tmp.push_back(value);
+                        value.second.clear();
+                        value.first = clr_inline;
+                    }
+                }
             } else {
                 value.second += c;
             }
         }
-        if (!value.second.empty()) {
-            tmp.push_back(ARGPARSE_MOVE(value));
-        }
+        tmp.push_back(ARGPARSE_MOVE(value));
     }
     if (!tmp.empty()) {
         res.push_back(ARGPARSE_MOVE(tmp));
@@ -9243,6 +9299,7 @@ _split_lines(
         colorword const& str = *it;
         colorword value;
         value.first = str.first;
+        bool inline_code = false;
         for (std::size_t i = 0; i < str.second.size(); ++i) {
             char c = str.second.at(i);
             if (c == '\n') {
@@ -9253,13 +9310,28 @@ _split_lines(
                 res.push_back(tmp);
                 tmp.clear();
                 value.second.clear();
+            } else if (c == '`') {
+                if (inline_code) {
+                    inline_code = false;
+                    tmp.push_back(value);
+                    value.second.clear();
+                    value.first = str.first;
+                } else {
+                    std::string::size_type pos = str.second.find("`", i + 1);
+                    if (pos == i + 1 || pos == std::string::npos) {
+                        value.second += c;
+                    } else {
+                        inline_code = true;
+                        tmp.push_back(value);
+                        value.second.clear();
+                        value.first = clr_inline;
+                    }
+                }
             } else {
                 value.second += c;
             }
         }
-        if (!value.second.empty()) {
-            tmp.push_back(ARGPARSE_MOVE(value));
-        }
+        tmp.push_back(ARGPARSE_MOVE(value));
     }
     if (!tmp.empty()) {
         res.push_back(ARGPARSE_MOVE(tmp));
@@ -9428,24 +9500,6 @@ _ignore_explicit(
     return "argument " + arg + ": ignored explicit argument '" + value + "'";
 }
 
-// -- ColorType ---------------------------------------------------------------
-enum ColorType {
-    clr_reset = 0,
-    clr_default,
-    clr_heading,
-    clr_inline,
-    clr_label,
-    clr_long_option,
-    clr_prog,
-    clr_prog_extra,
-    clr_short_option,
-    clr_summary_label,
-    clr_summary_long_option,
-    clr_summary_short_option,
-    clr_usage,
-};
-// ----------------------------------------------------------------------------
-
 ARGPARSE_INL void
 _eat_ln(colorstream& os,
         bool& eat_ln,
@@ -9575,7 +9629,9 @@ _print_raw_text_formatter(
 {
     if (!text.empty()) {
         _eat_ln(os, eat_ln, begin);
-        os << clr_reset << formatter._fill_text(text, width, indent) << end;
+        colorstream cs;
+        cs << text;
+        os << clr_reset << formatter._fill_text(cs, width, indent) << end;
     }
 }
 
@@ -10137,7 +10193,10 @@ colorstream::print(
         if (use_color && (*it).first != 0 && !(*it).second.empty()) {
             os << code((*it).first) << (*it).second
                << reset_code();
-        } else {
+        } else if (!use_color
+                   && (*it).first == clr_inline && !(*it).second.empty()) {
+            os << "`" << (*it).second << "`";
+         } else {
             os << (*it).second;
         }
     }
@@ -10222,10 +10281,15 @@ colorstream::reset_code() const
 ARGPARSE_INL std::string
 colorstream::str() const
 {
+    bool const use_color = colorize();
     std::string res;
     for (std::list<colorword>::const_iterator it = text().begin();
          it != text().end(); ++it) {
-        res += (*it).second;
+        if (!use_color && (*it).first == clr_inline && !(*it).second.empty()) {
+            res += "`" + (*it).second + "`";
+        } else {
+            res += (*it).second;
+        }
     }
     return res;
 }
@@ -10376,6 +10440,24 @@ HelpFormatter::_fill_text(
     return res;
 }
 
+ARGPARSE_INL detail::colorstream
+HelpFormatter::_fill_text(
+        detail::colorstream const& text,
+        std::size_t width,
+        std::size_t indent) const
+{
+    detail::colorstream res;
+    std::vector<detail::colorstream> lines = _split_lines(text, width - indent);
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        if (i != 0) {
+            res << detail::clr_reset << "\n";
+        }
+        res << detail::clr_reset << std::string(indent, detail::_space)
+            << lines.at(i);
+    }
+    return res;
+}
+
 ARGPARSE_INL std::string
 HelpFormatter::_get_default_metavar_for_optional(
         Argument const* action) const
@@ -10433,7 +10515,7 @@ HelpFormatter::_split_lines(
         std::vector<detail::colortext> split_str
                 = detail::_split(text.text(), "");
         for (std::size_t i = 0; i < split_str.size(); ++i) {
-            detail::colorstream tmp;
+            detail::colorstream tmp(_color());
             tmp << split_str.at(i);
             if (detail::_utf8_size(value.str()).second + 1
                     + detail::_utf8_size(tmp.str()).second > width) {
@@ -10445,9 +10527,7 @@ HelpFormatter::_split_lines(
             }
             value << tmp;
         }
-        if (!value.empty()) {
-            res.push_back(ARGPARSE_MOVE(value));
-        }
+        res.push_back(ARGPARSE_MOVE(value));
     }
     return res;
 }
@@ -10509,7 +10589,7 @@ HelpFormatter::_format_usage(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::colorstream ss(m_color && !m_no_color);
+    detail::colorstream ss(_color());
     if (p->m_usage.suppress()) {
         return ss;
     }
@@ -10536,7 +10616,7 @@ HelpFormatter::_format_help(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::colorstream ss(m_color && !m_no_color);
+    detail::colorstream ss(_color());
     typedef std::list<ArgumentParser::pGroup>::const_iterator grp_iterator;
     std::string lang = !language.empty() ? language : p->default_language();
     detail::pArguments positional = p->m_data->get_positional(false, false);
@@ -10641,6 +10721,25 @@ _RawDescriptionHelpFormatter::_fill_text(
     return res;
 }
 
+ARGPARSE_INL detail::colorstream
+_RawDescriptionHelpFormatter::_fill_text(
+        detail::colorstream const& text,
+        std::size_t width,
+        std::size_t indent) const
+{
+    detail::colorstream res;
+    std::vector<detail::colorstream> lines
+            = _split_lines_raw(text, width - indent);
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        if (i != 0) {
+            res << detail::clr_reset << "\n";
+        }
+        res << detail::clr_reset << std::string(indent, detail::_space)
+            << lines.at(i);
+    }
+    return res;
+}
+
 ARGPARSE_INL std::vector<std::string>
 _RawDescriptionHelpFormatter::_split_lines_raw(
         std::string const& text,
@@ -10701,43 +10800,39 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
             res.push_back(detail::colorstream());
             continue;
         }
-        detail::colorstream value;
+        detail::colorstream value(_color());
         std::vector<detail::colortext> sub_split_str
-                = detail::_split(str.text(), detail::_spaces);
+                = detail::_split(str.text(), detail::_spaces, true);
         for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
-            if (j != 0) {
-                value << detail::_spaces;
-            }
             std::vector<detail::colortext> tab_split_str
                     = detail::_split(sub_split_str.at(j), "\t");
             for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
                 if (k != 0) {
                     std::size_t size = detail::_utf8_size(value.str()).second;
+                    if (size != 0 && !value.colorize()
+                            && value.text().back().first == detail::clr_inline
+                            && !value.text().back().second.empty()) {
+                        --size;
+                    }
                     std::size_t tbsize = _tab_size() - (size % _tab_size());
                     if (size + 1 + tbsize > width) {
-                        if (!value.empty()) {
-                            res.push_back(value);
-                            value.clear();
-                        }
+                        res.push_back(value);
+                        value.clear();
                     } else {
                         value << std::string(tbsize, detail::_space);
                     }
                 }
-                detail::colorstream sub;
+                detail::colorstream sub(_color());
                 sub << tab_split_str.at(k);
                 if (detail::_utf8_size(value.str()).second + 1
                         + detail::_utf8_size(sub.str()).second > width) {
-                    if (!value.empty()) {
-                        res.push_back(value);
-                        value.clear();
-                    }
+                    res.push_back(value);
+                    value.clear();
                 }
                 value << sub;
             }
         }
-        if (!value.empty()) {
-            res.push_back(ARGPARSE_MOVE(value));
-        }
+        res.push_back(ARGPARSE_MOVE(value));
     }
     return res;
 }
