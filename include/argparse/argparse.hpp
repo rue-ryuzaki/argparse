@@ -10086,7 +10086,11 @@ ARGPARSE_INL colorstream&
 colorstream::operator <<(
         colorword const& word)
 {
-    m_text.push_back(word);
+    if (text().empty() || text().back().first != word.first) {
+        m_text.push_back(word);
+    } else {
+        m_text.back().second += word.second;
+    }
     return *this;
 }
 
@@ -10094,7 +10098,10 @@ ARGPARSE_INL colorstream&
 colorstream::operator <<(
         colortext const& text)
 {
-    _insert_to_end(text, m_text);
+    for (std::list<colorword>::const_iterator it = text.begin();
+         it != text.end(); ++it) {
+        *this << *it;
+    }
     return *this;
 }
 
@@ -10103,7 +10110,7 @@ colorstream::operator <<(
         colorstream const& text)
 {
     if (this != &text) {
-        _insert_to_end(text.text(), m_text);
+        *this << text.text();
     }
     return *this;
 }
