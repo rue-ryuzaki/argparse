@@ -10142,11 +10142,7 @@ ARGPARSE_INL colorstream&
 colorstream::operator <<(
         colorword const& word)
 {
-    if (text().empty() || text().back().first != word.first) {
-        m_text.push_back(word);
-    } else {
-        m_text.back().second += word.second;
-    }
+    m_text.push_back(word);
     return *this;
 }
 
