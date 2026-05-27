@@ -2359,8 +2359,7 @@ class colorstream
 public:
     explicit
     colorstream(
-            bool colorize = false,
-            bool no_color = false);
+            bool colorize = false);
 
     void
     clear();
@@ -2427,7 +2426,6 @@ private:
     // -- data ----------------------------------------------------------------
     colortext m_text;
     bool m_colorize;
-    bool m_no_color;
 };
 }  // namespace detail
 
@@ -2451,7 +2449,8 @@ ARGPARSE_EXPORT class HelpFormatter
 public:
     HelpFormatter()
         : m_tab_size(c_default_tab_size),
-          m_color(true)
+          m_color(true),
+          m_no_color(false)
     { }
     virtual ~HelpFormatter() ARGPARSE_NOEXCEPT { }
 
@@ -2515,6 +2514,7 @@ private:
     // -- data ----------------------------------------------------------------
     std::size_t m_tab_size;
     bool m_color;
+    bool m_no_color;
 };
 
 /**
@@ -6376,8 +6376,10 @@ public:
             T const& value)
     {
         bool tmp = m_formatter->m_color;
+        bool tmp2 = m_formatter->m_no_color;
         m_formatter = detail::make_shared<T>(value);
         m_formatter->m_color = tmp;
+        m_formatter->m_no_color = tmp2;
         return *this;
     }
 
@@ -10042,11 +10044,9 @@ private:
 // -- colorstream -------------------------------------------------------------
 ARGPARSE_INL
 colorstream::colorstream(
-        bool colorize,
-        bool no_color)
+        bool colorize)
     : m_text(),
-      m_colorize(colorize),
-      m_no_color(no_color)
+      m_colorize(colorize)
 { }
 
 ARGPARSE_INL void
@@ -10145,7 +10145,7 @@ colorstream::text() const
 ARGPARSE_INL bool
 colorstream::colorize() const
 {
-    return m_colorize && can_colorize() && !m_no_color;
+    return m_colorize && can_colorize();
 }
 
 ARGPARSE_INL bool
@@ -10502,7 +10502,7 @@ HelpFormatter::_format_usage(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::colorstream ss(m_color, !p->get_env("NO_COLOR").empty());
+    detail::colorstream ss(m_color && !m_no_color);
     if (p->m_usage.suppress()) {
         return ss;
     }
@@ -10529,7 +10529,7 @@ HelpFormatter::_format_help(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::colorstream ss(m_color, !p->get_env("NO_COLOR").empty());
+    detail::colorstream ss(m_color && !m_no_color);
     typedef std::list<ArgumentParser::pGroup>::const_iterator grp_iterator;
     std::string lang = !language.empty() ? language : p->default_language();
     detail::pArguments positional = p->m_data->get_positional(false, false);
@@ -14210,6 +14210,7 @@ ArgumentParser::ArgumentParser(
       m_deprecated()
 {
     initialize_parser();
+    m_formatter->m_no_color = !get_env("NO_COLOR").empty();
     this->prog(prog);
 }
 
@@ -14254,6 +14255,7 @@ ArgumentParser::ArgumentParser(
 {
     initialize_parser();
     read_args(argc, argv);
+    m_formatter->m_no_color = !get_env("NO_COLOR").empty();
     this->prog(prog);
 }
 
@@ -14300,6 +14302,7 @@ ArgumentParser::ArgumentParser(
     initialize_parser();
     read_args(argc, argv);
     read_env(envp);
+    m_formatter->m_no_color = !get_env("NO_COLOR").empty();
     this->prog(prog);
 }
 
