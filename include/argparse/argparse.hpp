@@ -14263,6 +14263,7 @@ ArgumentParser::initialize_parser()
     m_deprecated = false;
     //
     m_formatter = detail::make_shared<HelpFormatter>();
+    m_formatter->m_no_color = !get_env("NO_COLOR").empty();
     m_data->update_help(true, m_prefix_chars);
     // init translations
     m_usage.will_have()[std::string()] = std::string();
@@ -14313,7 +14314,6 @@ ArgumentParser::ArgumentParser(
       m_deprecated()
 {
     initialize_parser();
-    m_formatter->m_no_color = !get_env("NO_COLOR").empty();
     this->prog(prog);
 }
 
@@ -14356,9 +14356,8 @@ ArgumentParser::ArgumentParser(
       m_suggest_on_error(),
       m_deprecated()
 {
-    initialize_parser();
     read_args(argc, argv);
-    m_formatter->m_no_color = !get_env("NO_COLOR").empty();
+    initialize_parser();
     this->prog(prog);
 }
 
@@ -14402,10 +14401,9 @@ ArgumentParser::ArgumentParser(
       m_suggest_on_error(),
       m_deprecated()
 {
-    initialize_parser();
     read_args(argc, argv);
     read_env(envp);
-    m_formatter->m_no_color = !get_env("NO_COLOR").empty();
+    initialize_parser();
     this->prog(prog);
 }
 
