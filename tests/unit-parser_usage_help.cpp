@@ -96,7 +96,7 @@ TEST_CASE("2. subparser usage", "[argument_parser]")
 TEST_CASE("3. help", "[argument_parser]")
 {
     argparse::ArgumentParser parser = argparse::ArgumentParser()
-            .description("description").epilog("epilog").output_width(80).exit_on_error(false).color(false);
+            .description("`descr``iption` `as is`").epilog("epilog").output_width(80).exit_on_error(false).color(false);
 
     parser.add_argument("--action").action(argparse::BooleanOptionalAction).help("action help");
     parser.add_argument("-c", "--count").help("count help");
@@ -106,14 +106,14 @@ TEST_CASE("3. help", "[argument_parser]")
         mutex.add_argument("--option1").help("option1 help");
         mutex.add_argument("--option2").help("option2 help");
 
-        argparse::ArgumentGroup& group = parser.add_argument_group("title", "description");
+        argparse::ArgumentGroup& group = parser.add_argument_group("title", "description `is as`");
         group.add_argument("--option3").help("option3 help");
         group.add_argument("option4").help("option4 help");
         CHECK(parser.format_help()
               == "usage: untitled [-h] [--action | --no-action] [-c COUNT] [--option3 OPTION3]\n"
                  "                [--option1 OPTION1 | --option2 OPTION2] option4\n"
                  "\n"
-                 "description\n"
+                 "`descr``iption` `as is`\n"
                  "\n"
                  "options:\n"
                  "  -h, --help            show this help message and exit\n"
@@ -124,7 +124,7 @@ TEST_CASE("3. help", "[argument_parser]")
                  "  --option2 OPTION2     option2 help\n"
                  "\n"
                  "title:\n"
-                 "  description\n"
+                 "  description `is as`\n"
                  "\n"
                  "  --option3 OPTION3     option3 help\n"
                  "  option4               option4 help\n"
@@ -139,14 +139,14 @@ TEST_CASE("3. help", "[argument_parser]")
         argparse::ArgumentGroup& group2 = parser.add_argument_group().title("title");
         group2.add_argument("--option2").help("option2 help");
 
-        argparse::ArgumentGroup& group3 = parser.add_argument_group().description("description");
+        argparse::ArgumentGroup& group3 = parser.add_argument_group().description("description `is as`");
         group3.add_argument("--option3").help("option3 help");
 
         CHECK(parser.format_help()
               == "usage: untitled [-h] [--action | --no-action] [-c COUNT] [--option1 OPTION1]\n"
                  "                [--option2 OPTION2] [--option3 OPTION3]\n"
                  "\n"
-                 "description\n"
+                 "`descr``iption` `as is`\n"
                  "\n"
                  "options:\n"
                  "  -h, --help            show this help message and exit\n"
@@ -159,7 +159,7 @@ TEST_CASE("3. help", "[argument_parser]")
                  "title:\n"
                  "  --option2 OPTION2     option2 help\n"
                  "\n"
-                 "  description\n"
+                 "  description `is as`\n"
                  "\n"
                  "  --option3 OPTION3     option3 help\n"
                  "\n"
