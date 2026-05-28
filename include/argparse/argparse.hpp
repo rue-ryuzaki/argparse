@@ -9573,14 +9573,15 @@ _format_output(
     std::size_t size = 0;
     std::size_t word = 0;
     colorstream tmp;
-    for (std::list<colorword>::const_iterator it = cs.text().begin();
-         it != cs.text().end(); ++it) {
-        std::string const& str = (*it).second;
-        if (str == "\n") {
+    std::vector<colortext> split_str = _split_lines(cs.text());
+    for (std::size_t i = 0; i < split_str.size(); ++i) {
+        if (i != 0) {
             _format_output_func(indent, width, res, head_size, size, tmp, word);
-        } else {
-            tmp << (*it).first << str;
-            word += _utf8_size(str).second;
+        }
+        for (std::list<colorword>::const_iterator it = split_str.at(i).begin();
+             it != split_str.at(i).end(); ++it) {
+            tmp << (*it);
+            word += _utf8_size((*it).second).second;
         }
     }
     _format_output_func(indent, width, res, head_size, size, tmp, word);
@@ -10142,7 +10143,11 @@ ARGPARSE_INL colorstream&
 colorstream::operator <<(
         colorword const& word)
 {
-    m_text.push_back(word);
+    if (text().empty() || text().back().first != word.first) {
+        m_text.push_back(word);
+    } else {
+        m_text.back().second += word.second;
+    }
     return *this;
 }
 
