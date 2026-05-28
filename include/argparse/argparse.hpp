@@ -16971,6 +16971,7 @@ utils::date()
     struct tm  tstruct;
     char       buf[80];
 #ifdef _WIN32
+    // vs 2005/msvc 8.0
     if (localtime_s(&tstruct, &now) != 0) {
         return "MM/DD/YYYY";
     }
