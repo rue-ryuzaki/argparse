@@ -2489,6 +2489,15 @@ public:
         return text.str();
     }
 
+    inline text_type
+    _to_text_type(
+            std::string const& text) const
+    {
+        text_type res(_color());
+        res << text;
+        return res;
+    }
+
     virtual std::string
     _fill_text(
             std::string const& text,
