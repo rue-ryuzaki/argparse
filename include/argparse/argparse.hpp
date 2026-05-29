@@ -10896,7 +10896,7 @@ _ArgumentDefaultsHelpFormatter::_get_help_string(
                 && !(action->action() & (argparse::help | argparse::version))) {
             res << " " << detail::clr_default << "(default: "
                 << detail::clr_reset << "%(default)s"
-                << detail::clr_default << ")";
+                << detail::clr_default << ")" << detail::clr_reset;
         }
     }
     return res;
