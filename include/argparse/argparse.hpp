@@ -15300,11 +15300,16 @@ ARGPARSE_INL bool
 ArgumentParser::has_env(
         std::string const& name) const
 {
-#ifndef _WIN32
     if (m_env_variables.empty()) {
+#ifdef _WIN32
+        // vs 2005 | msvc 8.0
+        std::size_t size = 0;
+        getenv_s(&size, NULL, 0, name.c_str());
+        return size > 0;
+#else
         return std::getenv(name.c_str());
-    }
 #endif  // _WIN32
+    }
     std::list<std::pair<std::string, std::string> >::const_iterator it
             = m_env_variables.begin();
     for ( ; it != m_env_variables.end() && it->first != name; ++it) {
@@ -15316,12 +15321,22 @@ ARGPARSE_INL std::string
 ArgumentParser::get_env(
         std::string const& name) const
 {
-#ifndef _WIN32
     if (m_env_variables.empty()) {
+#ifdef _WIN32
+        // vs 2005 | msvc 8.0
+        std::size_t size = 0;
+        getenv_s(&size, NULL, 0, name.c_str());
+        if (size > 0) {
+            std::vector<char> res(size);
+            getenv_s(&size, res.data(), res.size(), name.c_str());
+            return std::string(res.data());
+        }
+        return std::string();
+#else
         char const* env = std::getenv(name.c_str());
         return env ? std::string(env) : std::string();
-    }
 #endif  // _WIN32
+    }
     std::list<std::pair<std::string, std::string> >::const_iterator it
             = m_env_variables.begin();
     for ( ; it != m_env_variables.end() && it->first != name; ++it) {
