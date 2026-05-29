@@ -2475,6 +2475,20 @@ public:
         return m_color && !m_no_color;
     }
 
+    inline std::string const&
+    _to_string(
+            std::string const& text) const ARGPARSE_NOEXCEPT
+    {
+        return text;
+    }
+
+    inline std::string
+    _to_string(
+            text_type const& text) const
+    {
+        return text.str();
+    }
+
     virtual std::string
     _fill_text(
             std::string const& text,
