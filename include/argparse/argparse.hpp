@@ -2447,6 +2447,8 @@ ARGPARSE_EXPORT class HelpFormatter
     static std::size_t const c_default_tab_size = 4;
 
 public:
+    typedef detail::colorstream text_type;
+
     HelpFormatter()
         : m_tab_size(c_default_tab_size),
           m_color(true),
@@ -2479,9 +2481,9 @@ public:
             std::size_t width,
             std::size_t indent) const;
 
-    virtual detail::colorstream
+    virtual text_type
     _fill_text(
-            detail::colorstream const& text,
+            text_type const& text,
             std::size_t width,
             std::size_t indent) const;
 
@@ -2493,7 +2495,7 @@ public:
     _get_default_metavar_for_positional(
             Argument const* action) const;
 
-    virtual detail::colorstream
+    virtual text_type
     _get_help_string(
             Argument const* action,
             std::string const& lang) const;
@@ -2503,22 +2505,22 @@ public:
             std::string const& text,
             std::size_t width) const;
 
-    virtual std::vector<detail::colorstream>
+    virtual std::vector<text_type>
     _split_lines(
-            detail::colorstream const& text,
+            text_type const& text,
             std::size_t width) const;
 
 private:
-    detail::colorstream
+    text_type
     _usage_args(
             ArgumentParser const* parser) const;
 
-    detail::colorstream
+    text_type
     _format_usage(
             ArgumentParser const* parser,
             std::string const& lang) const;
 
-    detail::colorstream
+    text_type
     _format_help(
             ArgumentParser const* parser,
             std::string const& lang) const;
@@ -2544,9 +2546,9 @@ public:
             std::size_t width,
             std::size_t indent) const ARGPARSE_OVERRIDE;
 
-    detail::colorstream
+    text_type
     _fill_text(
-            detail::colorstream const& text,
+            text_type const& text,
             std::size_t width,
             std::size_t indent) const ARGPARSE_OVERRIDE;
 
@@ -2556,9 +2558,9 @@ protected:
             std::string const& text,
             std::size_t width) const;
 
-    std::vector<detail::colorstream>
+    std::vector<text_type>
     _split_lines_raw(
-            detail::colorstream const& text,
+            text_type const& text,
             std::size_t width) const;
 } ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
 
@@ -2576,9 +2578,9 @@ public:
             std::string const& text,
             std::size_t width) const ARGPARSE_OVERRIDE;
 
-    std::vector<detail::colorstream>
+    std::vector<text_type>
     _split_lines(
-            detail::colorstream const& text,
+            text_type const& text,
             std::size_t width) const ARGPARSE_OVERRIDE;
 } ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
 
@@ -2592,7 +2594,7 @@ class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
 public:
     ~_ArgumentDefaultsHelpFormatter() ARGPARSE_NOEXCEPT ARGPARSE_OVERRIDE { }
 
-    detail::colorstream
+    text_type
     _get_help_string(
             Argument const* action,
             std::string const& lang) const ARGPARSE_OVERRIDE;
@@ -10441,14 +10443,14 @@ HelpFormatter::_fill_text(
     return res;
 }
 
-ARGPARSE_INL detail::colorstream
+ARGPARSE_INL HelpFormatter::text_type
 HelpFormatter::_fill_text(
-        detail::colorstream const& text,
+        text_type const& text,
         std::size_t width,
         std::size_t indent) const
 {
-    detail::colorstream res;
-    std::vector<detail::colorstream> lines = _split_lines(text, width - indent);
+    text_type res;
+    std::vector<text_type> lines = _split_lines(text, width - indent);
     for (std::size_t i = 0; i < lines.size(); ++i) {
         if (i != 0) {
             res << detail::clr_reset << "\n";
@@ -10473,12 +10475,12 @@ HelpFormatter::_get_default_metavar_for_positional(
     return action->dest();
 }
 
-ARGPARSE_INL detail::colorstream
+ARGPARSE_INL HelpFormatter::text_type
 HelpFormatter::_get_help_string(
         Argument const* action,
         std::string const& lang) const
 {
-    detail::colorstream res;
+    text_type res;
     res << detail::_tr(action->m_help.value(), lang);
     return res;
 }
@@ -10505,18 +10507,18 @@ HelpFormatter::_split_lines(
     return res;
 }
 
-ARGPARSE_INL std::vector<detail::colorstream>
+ARGPARSE_INL std::vector<HelpFormatter::text_type>
 HelpFormatter::_split_lines(
-        detail::colorstream const& text,
+        text_type const& text,
         std::size_t width) const
 {
-    std::vector<detail::colorstream> res;
+    std::vector<text_type> res;
     if (!text.empty()) {
-        detail::colorstream value;
+        text_type value;
         std::vector<detail::colortext> split_str
                 = detail::_split(text.text(), "");
         for (std::size_t i = 0; i < split_str.size(); ++i) {
-            detail::colorstream tmp(_color());
+            text_type tmp(_color());
             tmp << split_str.at(i);
             if (detail::_utf8_size(value.str()).second + 1
                     + detail::_utf8_size(tmp.str()).second > width) {
@@ -10533,7 +10535,7 @@ HelpFormatter::_split_lines(
     return res;
 }
 
-ARGPARSE_INL detail::colorstream
+ARGPARSE_INL HelpFormatter::text_type
 HelpFormatter::_usage_args(
         ArgumentParser const* p) const
 {
@@ -10543,7 +10545,7 @@ HelpFormatter::_usage_args(
     detail::pArguments operand = p->m_data->get_operand(false, true);
     detail::pArguments options = p->m_data->get_optional(false, true);
     ArgumentParser::SubParsersInfo const info = p->subparsers_info(false);
-    detail::colorstream res;
+    text_type res;
     for (_mt i = p->m_mutex_groups.begin(); i != p->m_mutex_groups.end(); ++i) {
         for (_arg j = (*i).m_data->m_arguments.begin();
              j != (*i).m_data->m_arguments.end(); ++j) {
@@ -10569,7 +10571,7 @@ HelpFormatter::_usage_args(
             }
             res << detail::clr_summary_short_option << info.first->usage();
         }
-        detail::colorstream str = positional.at(i)->usage(*this);
+        text_type str = positional.at(i)->usage(*this);
         if (str.str().empty()) {
             continue;
         }
@@ -10585,12 +10587,12 @@ HelpFormatter::_usage_args(
     return res;
 }
 
-ARGPARSE_INL detail::colorstream
+ARGPARSE_INL HelpFormatter::text_type
 HelpFormatter::_format_usage(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::colorstream ss(_color());
+    text_type ss(_color());
     if (p->m_usage.suppress()) {
         return ss;
     }
@@ -10612,12 +10614,12 @@ HelpFormatter::_format_usage(
     return ss;
 }
 
-ARGPARSE_INL detail::colorstream
+ARGPARSE_INL HelpFormatter::text_type
 HelpFormatter::_format_help(
         ArgumentParser const* p,
         std::string const& language) const
 {
-    detail::colorstream ss(_color());
+    text_type ss(_color());
     typedef std::list<ArgumentParser::pGroup>::const_iterator grp_iterator;
     std::string lang = !language.empty() ? language : p->default_language();
     detail::pArguments positional = p->m_data->get_positional(false, false);
@@ -10659,8 +10661,8 @@ HelpFormatter::_format_help(
         for (std::size_t i = 0; i < positional.size(); ++i) {
             p->print_subparsers(sub_positional, sub_info, i,
                                 *this, p->prog(), size, width, lang, ss);
-            detail::colorstream f = positional.at(i)->flags_to_string(*this);
-            detail::colorstream h = positional.at(i)->get_help(*this, lang);
+            text_type f = positional.at(i)->flags_to_string(*this);
+            text_type h = positional.at(i)->get_help(*this, lang);
             ss << detail::clr_reset << "\n  " << f << detail::clr_reset;
             detail::_help_formatter(
                        ss, "  " + f.str(), *this, p->despecify(h), width, size);
@@ -10673,8 +10675,8 @@ HelpFormatter::_format_help(
         ss << detail::clr_heading
            << detail::_tr(p->m_operands_title, lang) << ":";
         for (std::size_t i = 0; i < operand.size(); ++i) {
-            detail::colorstream f = operand.at(i)->flags_to_string(*this);
-            detail::colorstream h = operand.at(i)->get_help(*this, lang);
+            text_type f = operand.at(i)->flags_to_string(*this);
+            text_type h = operand.at(i)->get_help(*this, lang);
             ss << detail::clr_reset << "\n  " << f << detail::clr_reset;
             detail::_help_formatter(
                        ss, "  " + f.str(), *this, p->despecify(h), width, size);
@@ -10685,8 +10687,8 @@ HelpFormatter::_format_help(
         ss << detail::clr_heading
            << detail::_tr(p->m_optionals_title, lang) << ":";
         for (std::size_t i = 0; i < optional.size(); ++i) {
-            detail::colorstream f = optional.at(i)->flags_to_string(*this);
-            detail::colorstream h = optional.at(i)->get_help(*this, lang);
+            text_type f = optional.at(i)->flags_to_string(*this);
+            text_type h = optional.at(i)->get_help(*this, lang);
             ss << detail::clr_reset << "\n  " << f << detail::clr_reset;
             detail::_help_formatter(
                        ss, "  " + f.str(), *this, p->despecify(h), width, size);
@@ -10722,14 +10724,14 @@ _RawDescriptionHelpFormatter::_fill_text(
     return res;
 }
 
-ARGPARSE_INL detail::colorstream
+ARGPARSE_INL HelpFormatter::text_type
 _RawDescriptionHelpFormatter::_fill_text(
-        detail::colorstream const& text,
+        text_type const& text,
         std::size_t width,
         std::size_t indent) const
 {
-    detail::colorstream res;
-    std::vector<detail::colorstream> lines
+    text_type res;
+    std::vector<text_type> lines
             = _split_lines_raw(text, width - indent);
     for (std::size_t i = 0; i < lines.size(); ++i) {
         if (i != 0) {
@@ -10786,22 +10788,22 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
     return res;
 }
 
-ARGPARSE_INL std::vector<detail::colorstream>
+ARGPARSE_INL std::vector<HelpFormatter::text_type>
 _RawDescriptionHelpFormatter::_split_lines_raw(
-        detail::colorstream const& text,
+        text_type const& text,
         std::size_t width) const
 {
-    std::vector<detail::colorstream> res;
+    std::vector<text_type> res;
     std::vector<detail::colortext> split_str
             = detail::_split_lines(text.text());
     for (std::size_t i = 0; i < split_str.size(); ++i) {
-        detail::colorstream str;
+        text_type str;
         str << split_str.at(i);
         if (str.empty()) {
-            res.push_back(detail::colorstream());
+            res.push_back(text_type());
             continue;
         }
-        detail::colorstream value(_color());
+        text_type value(_color());
         std::vector<detail::colortext> sub_split_str
                 = detail::_split(str.text(), detail::_spaces, true);
         for (std::size_t j = 0; j < sub_split_str.size(); ++j) {
@@ -10823,7 +10825,7 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
                         value << std::string(tbsize, detail::_space);
                     }
                 }
-                detail::colorstream sub(_color());
+                text_type sub(_color());
                 sub << tab_split_str.at(k);
                 if (detail::_utf8_size(value.str()).second + 1
                         + detail::_utf8_size(sub.str()).second > width) {
@@ -10847,21 +10849,21 @@ _RawTextHelpFormatter::_split_lines(
     return _RawDescriptionHelpFormatter::_split_lines_raw(text, width);
 }
 
-ARGPARSE_INL std::vector<detail::colorstream>
+ARGPARSE_INL std::vector<HelpFormatter::text_type>
 _RawTextHelpFormatter::_split_lines(
-        detail::colorstream const& text,
+        text_type const& text,
         std::size_t width) const
 {
     return _RawDescriptionHelpFormatter::_split_lines_raw(text, width);
 }
 
 // -- _ArgumentDefaultsHelpFormatter ------------------------------------------
-ARGPARSE_INL detail::colorstream
+ARGPARSE_INL HelpFormatter::text_type
 _ArgumentDefaultsHelpFormatter::_get_help_string(
         Argument const* action,
         std::string const& lang) const
 {
-    detail::colorstream res;
+    text_type res;
     std::string help = detail::_tr(action->m_help.value(), lang);
     res << help;
     if (!help.empty() && !detail::_contains_substr(help, "%(default)s")) {
