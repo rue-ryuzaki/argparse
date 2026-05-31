@@ -8,7 +8,7 @@
 | (C++2b/latest) C++23 | gcc: (11.1) 11.1 or higher<br />clang: (12.0.0-16.0.6) 17.0.1 or higher<br />msvc: (v19.29 vs16.10 or higher) | gcc: 11.1 or higher<br />clang: 12.0.0 or higher<br />msvc: v19.29 vs16.10 or higher |
 | (C++2c/latest) C++26 | gcc: (14.1) 14.1 or higher<br />clang: (17.0.1) 17.0.1 or higher<br />msvc: v19.43 vs17.13 or higher | gcc: 14.1 or higher<br />clang: 17.0.1 or higher<br />msvc: v19.43 vs17.13 or higher |
 
-msvc: versions starting from 19.20 (visual studio 2019) are tracked; doesn't support C++98 and C++11
+msvc: at least v14.00 vs8.0 (2005); versions starting from 19.20 (2019) are tracked; doesn't support C++98 and C++11
 
 other compilers: no actual data
 
