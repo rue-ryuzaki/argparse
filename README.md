@@ -367,6 +367,7 @@ int main(int argc, char const* const argv[])
     return 0;
 }
 ```
+Note: A custom type must have default constructor.
 ## Features
 ### Handle
 #### ArgumentParser::handle(std::function<void(argparse::Namespace const&)> func)
