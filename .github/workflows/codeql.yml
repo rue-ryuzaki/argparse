@@ -2,9 +2,16 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "develop", "master" ]
+    branches: [ develop, master ]
+    paths:
+      - 'CMakeLists.txt'
+      - '.github/workflows/*'
+      - 'cmake/*'
+      - 'include/argparse/*'
+      - 'src/*'
+      - 'tests/*'
   pull_request:
-    branches: [ "develop" ]
+    branches: [ develop ]
   schedule:
     - cron: "29 7 * * 3"
 
