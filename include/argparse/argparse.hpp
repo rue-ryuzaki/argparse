@@ -1111,6 +1111,13 @@ struct has_push_front
 };
 #endif  // C++11+
 
+template <class T>
+T
+_default_value()
+{
+    return T();
+}
+
 #ifdef ARGPARSE_CXX_11
 template <class T>
 struct rval { typedef T&& type; };
@@ -2001,7 +2008,7 @@ public:
 #endif  // C++11+
 
     inline void
-    reset(T const& value = T())
+    reset(T const& value = _default_value<T>())
     {
         m_value     = value;
         m_has_value = false;
@@ -2125,7 +2132,7 @@ public:
 #endif  // C++11+
 
     inline void
-    reset(T const& value = T())
+    reset(T const& value = _default_value<T>())
     {
         m_value     = value;
         m_has_value = false;
@@ -2226,7 +2233,7 @@ _to_type(
         typename enable_if<has_operator_in<T>::value
                            && need_operator_in<T>::value, bool>::type = true)
 {
-    T res = T();
+    T res = _default_value<T>();
     std::stringstream ss(data);
     ss >> res;
     if (ss.fail() || !ss.eof()) {
@@ -3679,13 +3686,14 @@ public:
     get(std::string const& value) const
     {
         if (m_factory) {
-            T res = T();
+            T res = detail::_default_value<T>();
             if (!value.empty()) {
                 m_factory(value, &res);
             }
             return res;
         }
-        return value.empty() ? T() : detail::_to_type<T>(value);
+        return value.empty() ? detail::_default_value<T>()
+                             : detail::_to_type<T>(value);
     }
 
 private:
@@ -4003,7 +4011,8 @@ _single_value(
         throw TypeError("got a data-array for argument '" + key + "'");
     }
     return value.second.empty()
-            ? T() : _as_type<T>(value.first, value.second.front());
+            ? _default_value<T>()
+            : _as_type<T>(value.first, value.second.front());
 }
 
 template <class T>
@@ -4012,7 +4021,8 @@ _custom_value(
         storage_value const& value)
 {
     return value.second.empty()
-            ? T() : _as_type<T>(value.first, _join(value.second()));
+            ? _default_value<T>()
+            : _as_type<T>(value.first, _join(value.second()));
 }
 
 template <class T>
@@ -4296,7 +4306,7 @@ _get(std::string const& key,
     _check_type(type_name, Type::basic<T>());
     typedef typename T::key_type K;
     typedef typename T::mapped_type V;
-    T res = T();
+    T res = _default_value<T>();
     std::vector<std::pair<K, V> > vector
             = _as_vector_pair<K, V>(key, args, sep);
     for (std::size_t i = 0; i < vector.size(); ++i) {
@@ -4316,7 +4326,7 @@ _get(std::string const& key,
 {
     _check_type(type_name, Type::name<T>());
     if (args.second.empty()) {
-        return T();
+        return _default_value<T>();
     }
     typedef typename T::first_type K;
     typedef typename T::second_type V;
@@ -4347,7 +4357,7 @@ _get(std::string const& key,
 {
     _check_type(type_name, Type::name<T>());
     if (args.second.empty()) {
-        return T();
+        return _default_value<T>();
     }
     return _as_tuple<T>(
           key, args.first, args.second().begin(), args.second().end(), sep);
