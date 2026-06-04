@@ -17052,6 +17052,8 @@ utils::test_overview(
         if (!tr_usage.empty()) {
             os << "usage: " << p.despecify(tr_usage) << "\n";
         }
+    } else {
+        os << "usage: " << detail::_suppress << "\n";
     }
     std::string tr_description = detail::_tr(p.m_description, lang);
     if (!tr_description.empty()) {
@@ -17080,6 +17082,7 @@ utils::test_overview(
        << "\n";
     os << "suggest_on_error: " << detail::_bool_to_string(p.suggest_on_error())
        << "\n";
+    os << "color: " << detail::_bool_to_string(p.color()) << "\n";
     if (p.m_output_width != 0) {
         os << "output_width [override]: " << p.output_width() << "\n";
     } else {
@@ -17215,16 +17218,16 @@ utils::test_argument_parser(
             }
             if (flag == detail::_pseudo_arg && arg->m_dest.front().empty()) {
                 ++diagnostics.second;
-                os << _e << name << ": dest= "
-                   << "is required for options like '--'\n";
+                os << _e << name
+                   << ": dest= is required for options like '--'\n";
             }
         }
         // check dest
         if (arg->m_type == Argument::Positional) {
             if (arg->m_dest.front().empty() && arg->flags().empty()) {
                 ++diagnostics.second;
-                os << _e << name << ": missing 1 "
-                   << "required positional argument: 'dest'\n";
+                os << _e << name
+                   << ": missing 1 required positional argument: 'dest'\n";
             }
             if (!arg->m_dest.front().empty() && !arg->flags().empty()) {
                 ++diagnostics.second;
@@ -17317,8 +17320,8 @@ utils::test_argument_parser(
                         (*j)->get_argument_flags(), ", ", "'");
             if ((*j)->required()) {
                 ++diagnostics.second;
-                os << _e << name << ": mutually "
-                   << "exclusive arguments must be optional\n";
+                os << _e << name
+                   << ": mutually exclusive arguments must be optional\n";
             }
         }
     }
