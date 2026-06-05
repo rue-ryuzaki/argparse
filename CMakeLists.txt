@@ -14,7 +14,8 @@ set(LIBRARY_VERSION_MINOR ${CMAKE_MATCH_1})
 string(REGEX MATCH "\#define ARGPARSE_VERSION_PATCH +([0-9]+)" PATCH_VERSION ${CURRENT_VERSION_H})
 set(LIBRARY_VERSION_PATCH ${CMAKE_MATCH_1})
 
-project("ArgumentParser"
+project(
+    "ArgumentParser"
     VERSION ${LIBRARY_VERSION_MAJOR}.${LIBRARY_VERSION_MINOR}.${LIBRARY_VERSION_PATCH}
     LANGUAGES CXX
 )
@@ -35,7 +36,7 @@ set(LIBRARY_NAME argparse)
 message(STATUS "${LIBRARY_NAME} version: ${PROJECT_VERSION}")
 message(STATUS "${LIBRARY_NAME} build standard: C++${CMAKE_CXX_STANDARD}")
 
-file(GLOB LIBRARY_HEADER "include/argparse/argparse*.hpp")
+file(GLOB LIBRARY_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/argparse/argparse*.hpp")
 
 if (${CMAKE_VERSION} VERSION_LESS "3.19")
     add_library(${LIBRARY_NAME} INTERFACE)
@@ -60,12 +61,17 @@ option(ARGPARSE_STATIC_PIC "Build ${STATIC_LIBRARY_NAME} with -fPIC" ON)
 if (ARGPARSE_STATIC)
     message(STATUS "Build ${LIBRARY_NAME} as a static lib ${STATIC_LIBRARY_NAME}")
 
-    add_library(${STATIC_LIBRARY_NAME} STATIC src/argparse_impl.cpp)
+    add_library(
+        ${STATIC_LIBRARY_NAME}
+            STATIC "${CMAKE_CURRENT_SOURCE_DIR}/src/argparse_impl.cpp"
+    )
     add_library(argparse::${STATIC_LIBRARY_NAME} ALIAS ${STATIC_LIBRARY_NAME})
 
     foreach(DEFINITION ${ARGPARSE_STATIC_DEFINITIONS})
         if (NOT ${DEFINITION} STREQUAL "ARGPARSE_DECLARATION")
-            target_compile_definitions(${STATIC_LIBRARY_NAME} PRIVATE ${DEFINITION})
+            target_compile_definitions(
+                ${STATIC_LIBRARY_NAME} PRIVATE ${DEFINITION}
+            )
         endif()
     endforeach()
 
@@ -88,8 +94,10 @@ if (NOT PROJECT_IS_TOP_LEVEL)
     return()
 endif()
 
-file(GLOB LIBRARY_MARKDOWN "*.md")
-add_custom_target(${LIBRARY_NAME}.md SOURCES ${LIBRARY_MARKDOWN})
+file(GLOB LIBRARY_MARKDOWN "${CMAKE_CURRENT_SOURCE_DIR}/*.md")
+add_custom_target(
+    ${LIBRARY_NAME}.md SOURCES ${LIBRARY_MARKDOWN}
+)
 
 if (DEFERED_CMAKE_INSTALL_PREFIX)
     configure_file(
@@ -124,9 +132,11 @@ if (ARGPARSE_BUILD_DOCS)
     find_package(Doxygen)
     if (DOXYGEN_FOUND)
         set(LIBRARY_DOCS ${LIBRARY_NAME}_docs)
-        add_custom_target(${LIBRARY_DOCS} ALL ${DOXYGEN_EXECUTABLE}
-            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/docs"
-            COMMENT "Generating ${LIBRARY_NAME} documentation")
+        add_custom_target(
+            ${LIBRARY_DOCS} ALL ${DOXYGEN_EXECUTABLE}
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/docs"
+            COMMENT "Generating ${LIBRARY_NAME} documentation"
+        )
         add_dependencies(${LIBRARY_DOCS} ${LIBRARY_NAME})
     else()
         message(WARNING "Doxygen not found")
@@ -137,17 +147,19 @@ if (ARGPARSE_BUILD_EXAMPLES OR ARGPARSE_BUILD_TESTS)
     # argparse implementation (internal)
     set(LIBRARY_IMPL_NAME ${LIBRARY_NAME}_impl)
     add_library(
-        ${LIBRARY_IMPL_NAME} OBJECT
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/argparse_impl.cpp"
+        ${LIBRARY_IMPL_NAME}
+            OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/src/argparse_impl.cpp"
     )
     target_include_directories(
-        ${LIBRARY_IMPL_NAME} PUBLIC
-        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        ${LIBRARY_IMPL_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
     )
-    target_compile_definitions(${LIBRARY_IMPL_NAME} PRIVATE ARGPARSE_DISABLE_UTILS)
-    set_target_properties(${LIBRARY_IMPL_NAME} PROPERTIES
-        COMPILE_DEFINITIONS "$<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>"
-        COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:/EHsc;$<$<CONFIG:Release>:/Od>>"
+    target_compile_definitions(
+        ${LIBRARY_IMPL_NAME} PRIVATE ARGPARSE_DISABLE_UTILS
+    )
+    set_target_properties(
+        ${LIBRARY_IMPL_NAME} PROPERTIES
+            COMPILE_DEFINITIONS "$<$<CXX_COMPILER_ID:MSVC>:_SCL_SECURE_NO_WARNINGS>"
+            COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:/EHsc;$<$<CONFIG:Release>:/Od>>"
     )
 
     set(ARGPARSE_THIRD_PARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
