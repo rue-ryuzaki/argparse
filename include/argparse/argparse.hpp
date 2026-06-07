@@ -9922,7 +9922,8 @@ _match_pattern(
                     && j + length < b.size()
                     && a.at(i + length) == b.at(j + length)) {
                 for (k = i + 1, m = j + 1;
-                  k < a.size() && m < b.size() && a.at(k) == b.at(m); ++k, ++m);
+                     k < a.size() && m < b.size() && a[k] == b[m]; ++k, ++m) {
+                }
 
                 if (k > length + i) {
                     leftReset = i;
@@ -9944,7 +9945,7 @@ _match_pattern(
     right -= j;
 
     std::size_t leftMatch = (leftReset != 0 && rightReset != 0)
-            ? _match_pattern(a, leftReset, b, rightReset): 0;
+            ? _match_pattern(a, leftReset, b, rightReset) : 0;
     std::size_t rightMatch = (left != 0 && right != 0)
             ? _match_pattern(a.substr(i), left, b.substr(j), right) : 0;
     return length + leftMatch + rightMatch;
