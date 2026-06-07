@@ -2482,16 +2482,16 @@ public:
         return m_color && !m_no_color;
     }
 
-    inline std::string const&
+    static inline std::string const&
     _to_string(
-            std::string const& text) const ARGPARSE_NOEXCEPT
+            std::string const& text) ARGPARSE_NOEXCEPT
     {
         return text;
     }
 
-    inline std::string
+    static inline std::string
     _to_string(
-            text_type const& text) const
+            text_type const& text)
     {
         return text.str();
     }
@@ -2502,6 +2502,18 @@ public:
     {
         text_type res(_color());
         res << text;
+        return res;
+    }
+
+    inline std::vector<text_type>
+    _to_text_type(
+            std::vector<std::string> const& text) const
+    {
+        std::vector<text_type> res;
+        res.reserve(text.size());
+        for (std::size_t i = 0; i < text.size(); ++i) {
+            res.push_back(_to_text_type(text.at(i)));
+        }
         return res;
     }
 
@@ -10482,6 +10494,9 @@ HelpFormatter::_fill_text(
         std::size_t width,
         std::size_t indent) const
 {
+    if (!_color()) {
+        return _to_text_type(_fill_text(text.str(), width, indent));
+    }
     text_type res;
     std::vector<text_type> lines = _split_lines(text, width - indent);
     for (std::size_t i = 0; i < lines.size(); ++i) {
@@ -10545,6 +10560,9 @@ HelpFormatter::_split_lines(
         text_type const& text,
         std::size_t width) const
 {
+    if (!_color()) {
+        return _to_text_type(_split_lines(text.str(), width));
+    }
     std::vector<text_type> res;
     if (!text.empty()) {
         text_type value;
@@ -10763,6 +10781,9 @@ _RawDescriptionHelpFormatter::_fill_text(
         std::size_t width,
         std::size_t indent) const
 {
+    if (!_color()) {
+        return _to_text_type(_fill_text(text.str(), width, indent));
+    }
     text_type res;
     std::vector<text_type> lines
             = _split_lines_raw(text, width - indent);
@@ -10887,6 +10908,9 @@ _RawTextHelpFormatter::_split_lines(
         text_type const& text,
         std::size_t width) const
 {
+    if (!_color()) {
+        return _to_text_type(_split_lines_raw(text.str(), width));
+    }
     return _RawDescriptionHelpFormatter::_split_lines_raw(text, width);
 }
 
