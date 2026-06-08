@@ -15585,7 +15585,11 @@ ArgumentParser::throw_error(
         std::ostream& os) const
 {
     print_usage(!lang.empty() ? lang : default_language(), os);
-    throw std::logic_error(prog() + ": error: " + message);
+    detail::colorstream cs(m_formatter->_color());
+    cs << prog() << ": " << detail::clr_prog << "error:"
+       << detail::clr_reset << " " << detail::clr_prog_extra << message;
+    cs.print(os);
+    throw std::logic_error("");
 }
 
 ARGPARSE_INL std::string
