@@ -5603,12 +5603,12 @@ public:
             return detail::_make_container<T>(vector.value());
         }
         if constexpr (detail::is_stl_map<typename std::decay<T>::type>::value) {
-            T res{};
             auto vector = _Storage::as_opt_vector_pair<
               typename T::key_type, typename T::mapped_type>(args.value(), sep);
             if (!vector.has_value()) {
                 return std::nullopt;
             }
+            T res{};
             for (auto const& pair : vector.value()) {
                 res.emplace(std::make_pair(pair.first, pair.second));
             }
