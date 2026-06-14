@@ -5,7 +5,7 @@
  *                         __| |
  * MIT License
  *
- * Argument parser for C++ (ArgumentParser v1.10.2)
+ * Argument parser for C++ (ArgumentParser v1.11.0)
  *
  * Copyright (c) 2021-2026 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  *
@@ -250,8 +250,8 @@
 
 // -- version -----------------------------------------------------------------
 #define ARGPARSE_VERSION_MAJOR 1
-#define ARGPARSE_VERSION_MINOR 10
-#define ARGPARSE_VERSION_PATCH 2
+#define ARGPARSE_VERSION_MINOR 11
+#define ARGPARSE_VERSION_PATCH 0
 
 /**
  *  This macro turns the version numbers into a numeric value:
@@ -6583,9 +6583,9 @@ public:
 
     /**
      *  @brief Register type with a parser.
-     *  @param value The key under which the object will be registeredt.
+     *  @param value The key under which the object will be registered.
      *  @param object The callable to be registered.
-     *  @since NEXT_RELEASE
+     *  @since v1.11.0
      *  @return A reference to the current argument parser.
      */
     ARGPARSE_ATTR_NODISCARD

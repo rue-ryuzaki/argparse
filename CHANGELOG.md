@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.11.0] - 2026-06-14
+
+  * Add: BooleanOptionalAction: support for single-dash options (3.15)
+  * Add: Change default value of `suggest_on_error` to `true` (3.15)
+  * Add: Single-dash long option now takes precedence over short options (3.15)
+  * Add: color output in help for specifiers (3.15)
+  * Add: color for the text inside backticks (3.15)
+  * Add: ArgumentParser::register_type support
+  * Add: std::getenv call in has_env & get_env
+  * Fix: gcc-9 build warning
+  * Fix: MSVC compile definitions
+  * Fix: use thread-safe localtime
+  * Fix: Argument::dest() value
+  * Fix: Argument::choices() for utf-8 string
+  * Fix: Argument::zero_or_one() 'extend' action with utf-8 const_value
+  * Fix: color of the utf-8 short options
+  * Fix: help formatting for utf-8 text
+  * Fix: std::istream SFINAE check
+  * Fix: don't use color if NO_COLOR is set
+
 ## [1.10.2] - 2026-02-07
 
   * Fix: Argument combined nargs implementation
