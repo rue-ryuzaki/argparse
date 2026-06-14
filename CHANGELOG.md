@@ -19,6 +19,7 @@
   * Fix: Argument & ArgumentGroup help generation
   * Fix: compilation warnings
   * Use: format '-s, --long ARGS' for options (3.13)
+  * Remove: deprecated code
 
 ## [1.9.10] - 2025-06-24
 
@@ -187,7 +188,7 @@
   * Fix: build with mxe
   * Update: diagnostic checks
   * Add: argparse::SUPPRESS support for Subparser::help
-  * Add: detail::_to_u8upper for utf-8 non-latin symbols
+  * Add: detail::_to_upper for utf-8 non-latin symbols
   * Add: pkg-config support
 
 ## [1.7.2] - 2022-12-19
