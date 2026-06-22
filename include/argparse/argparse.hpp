@@ -9748,20 +9748,20 @@ _check_flag_name(
 
 ARGPARSE_INL void
 _update_flag_name_func(
-        std::string const& arg,
-        std::string& flag,
+        std::string const& flag,
+        std::string& flag_name,
         std::size_t& count)
 {
     if (count > 1) {
         return;
     }
-    std::string name = _flag_name(arg);
-    std::size_t count_prefixes = arg.size() - name.size();
+    std::string name = _flag_name(flag);
+    std::size_t count_prefixes = flag.size() - name.size();
     if (count < count_prefixes) {
         count = count_prefixes;
-        flag = ARGPARSE_MOVE(name);
-    } else if (count == count_prefixes && flag.size() < name.size()) {
-        flag = ARGPARSE_MOVE(name);
+        flag_name = ARGPARSE_MOVE(name);
+    } else if (count == count_prefixes && flag_name.size() < name.size()) {
+        flag_name = ARGPARSE_MOVE(name);
     }
 }
 
