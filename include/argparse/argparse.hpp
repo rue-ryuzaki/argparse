@@ -1954,6 +1954,8 @@ public:
           m_has_value(true)
     { }
 
+    ~Value() ARGPARSE_NOEXCEPT { }
+
     inline Value&
     operator =(
             Value const& rhs)
@@ -2063,6 +2065,8 @@ public:
           m_has_value(true),
           m_suppress(false)
     { }
+
+    ~SValue() ARGPARSE_NOEXCEPT { }
 
     inline SValue&
     operator =(
@@ -7961,7 +7965,7 @@ private:
 
 #ifdef ARGPARSE_ENABLE_UTILS
 /**
- *  @brief utils class.
+ *  @brief argparse utils class.
  */
 ARGPARSE_EXPORT class utils
 {
