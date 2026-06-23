@@ -12601,26 +12601,26 @@ _ArgumentData::validate_argument(
     if (flags.empty()) {
         arg.m_name = arg.m_dest.front();
     } else {
-        std::string flag = flags.front();
-        detail::_check_flag_name(flag);
+        arg.m_name = flags.front();
+        detail::_check_flag_name(arg.m_name);
         std::size_t prefixes = 0;
-        if (detail::_exists(flag.at(0), prefix_chars)) {
+        if (detail::_exists(arg.m_name.at(0), prefix_chars)) {
             arg.m_type = Argument::Optional;
-        } else if (detail::_ends_with(flag, detail::_equals)) {
+        } else if (detail::_ends_with(arg.m_name, detail::_equals)) {
             flags.front().resize(flags.front().size() - 1);
-            flag = flags.front();
-            detail::_check_flag_name(flag);
+            arg.m_name = flags.front();
+            detail::_check_flag_name(arg.m_name);
             arg.m_type = Argument::Operand;
             arg.m_all_flags = arg.m_flags;
             if (!arg.m_required.has_value()) {
                 arg.m_required.reset(true);
             }
         }
-        detail::_update_flag_name(flags, prefix_chars, flag, prefixes,
+        detail::_update_flag_name(flags, prefix_chars, arg.m_name, prefixes,
                                   arg.m_type == Argument::Optional);
-        arg.m_name = arg.m_type == Argument::Optional
-                ? detail::_replace(ARGPARSE_MOVE(flag), "-", "_")
-                : ARGPARSE_MOVE(flag);
+        if (arg.m_type == Argument::Optional) {
+            detail::_inplace(arg.m_name, "-", "_");
+        }
     }
     // check
     if (arg.m_type == Argument::Positional) {
