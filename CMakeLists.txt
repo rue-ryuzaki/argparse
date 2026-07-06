@@ -20,8 +20,6 @@ project(
     LANGUAGES CXX
 )
 
-set(PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
-
 include(cmake/project-is-top-level.cmake)
 include(cmake/warnings.cmake)
 
@@ -93,6 +91,9 @@ endif()
 if (NOT PROJECT_IS_TOP_LEVEL)
     return()
 endif()
+
+set(PROJECT_HOMEPAGE_URL "https://github.com/rue-ryuzaki/argparse")
+set(PROJECT_DESCRIPTION "Python-like header-only C++ argument parser")
 
 file(GLOB LIBRARY_MARKDOWN "${CMAKE_CURRENT_SOURCE_DIR}/*.md")
 add_custom_target(
