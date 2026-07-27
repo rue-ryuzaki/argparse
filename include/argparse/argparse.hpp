@@ -7668,13 +7668,13 @@ private:
     storage_store_value(
             Parsers& parsers,
             pArgument const& arg,
-            std::string const& value) const;
+            std::string& value) const;
 
     void
     storage_store_values(
             Parsers& parsers,
             pArgument const& arg,
-            std::vector<std::string> const& values) const;
+            std::vector<std::string>& values) const;
 
     void
     storage_store_n_values(
@@ -9032,11 +9032,13 @@ _has_quotes(
             && (str.at(0) == '\'' || str.at(0) == '\"');
 }
 
-ARGPARSE_INL std::string
+ARGPARSE_INL void
 _remove_quotes(
-        std::string const& str)
+        std::string& str)
 {
-    return _has_quotes(str) ? str.substr(1, str.size() - 2) : str;
+    if (_has_quotes(str)) {
+        str = str.substr(1, str.size() - 2);
+    }
 }
 
 ARGPARSE_INL std::string&
@@ -15946,25 +15948,25 @@ ARGPARSE_INL void
 ArgumentParser::storage_store_value(
         Parsers& parsers,
         pArgument const& arg,
-        std::string const& value) const
+        std::string& value) const
 {
-    std::string val = detail::_remove_quotes(value);
-    validate_argument_value(parsers.back().parser, *arg, val);
-    parsers.front().storage.store_value(arg, val);
+    detail::_remove_quotes(value);
+    validate_argument_value(parsers.back().parser, *arg, value);
+    parsers.front().storage.store_value(arg, value);
 }
 
 ARGPARSE_INL void
 ArgumentParser::storage_store_values(
         Parsers& parsers,
         pArgument const& arg,
-        std::vector<std::string> const& values) const
+        std::vector<std::string>& values) const
 {
-    std::vector<std::string> vals = values;
-    for (std::size_t i = 0; i < vals.size(); ++i) {
-        vals.at(i) = detail::_remove_quotes(vals.at(i));
-        validate_argument_value(parsers.back().parser, *arg, vals.at(i));
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        std::string& str = values.at(i);
+        detail::_remove_quotes(str);
+        validate_argument_value(parsers.back().parser, *arg, str);
     }
-    parsers.front().storage.store_values(arg, vals);
+    parsers.front().storage.store_values(arg, values);
 }
 
 ARGPARSE_INL void
@@ -16063,13 +16065,13 @@ ArgumentParser::storage_optional_store(
         std::string const& arg,
         pArgument const& tmp) const
 {
+    std::vector<std::string> values;
     if (equals.size() == 1) {
         if (tmp->m_type == Argument::Operand) {
             parsers.back().parser->throw_error(
                         "argument " + arg + " is operand: expected A=...");
         }
         std::size_t n = 0;
-        std::vector<std::string> values;
         bool read_next = true;
         do {
             if (++i == args.size()) {
@@ -16122,7 +16124,6 @@ ArgumentParser::storage_optional_store(
             parsers.back().parser->throw_error(
                        detail::_ignore_explicit(equals.front(), equals.back()));
         }
-        std::vector<std::string> values;
         tmp->push_value(equals.back(), values);
         switch (tmp->m_nargs) {
             case detail::ONE_OR_MORE :
@@ -16155,9 +16156,9 @@ ArgumentParser::storage_optional_store_const(
 {
     if (equals.size() == 1) {
         if (tmp->action() == argparse::BooleanOptionalAction) {
-            bool exist = detail::_exists(equals.front(), tmp->m_flags);
-            storage_store_value(parsers, tmp,
-                                exist ? tmp->const_value() : std::string());
+            std::string value = detail::_exists(equals.front(), tmp->m_flags)
+                    ? tmp->const_value() : std::string();
+            storage_store_value(parsers, tmp, value);
         } else {
             parsers.front().storage.self_value_stored(tmp);
         }
