@@ -2427,6 +2427,12 @@ public:
     std::string
     str() const;
 
+    std::size_t
+    str_size() const;
+
+    std::size_t
+    str_u8size() const;
+
     std::string
     colored() const;
 
@@ -10272,7 +10278,7 @@ colorstream::colorize() const
 ARGPARSE_INL bool
 colorstream::empty() const
 {
-    return str().empty();
+    return str_size() == 0;
 }
 
 ARGPARSE_INL std::string
@@ -10344,6 +10350,36 @@ colorstream::str() const
             res += "`" + (*it).second + "`";
         } else {
             res += (*it).second;
+        }
+    }
+    return res;
+}
+
+ARGPARSE_INL std::size_t
+colorstream::str_size() const
+{
+    bool const use_color = colorize();
+    std::size_t res = 0;
+    for (std::list<colorword>::const_iterator it = text().begin();
+         it != text().end(); ++it) {
+        res += (*it).second.size();
+        if (!use_color && (*it).first == clr_inline && !(*it).second.empty()) {
+            res += 2;  // 2x "`"
+        }
+    }
+    return res;
+}
+
+ARGPARSE_INL std::size_t
+colorstream::str_u8size() const
+{
+    bool const use_color = colorize();
+    std::size_t res = 0;
+    for (std::list<colorword>::const_iterator it = text().begin();
+         it != text().end(); ++it) {
+        res += detail::_utf8_size((*it).second).second;
+        if (!use_color && (*it).first == clr_inline && !(*it).second.empty()) {
+            res += 2;  // 2x "`"
         }
     }
     return res;
@@ -10578,8 +10614,7 @@ HelpFormatter::_split_lines(
         for (std::size_t i = 0; i < split_str.size(); ++i) {
             text_type tmp(_color());
             tmp << split_str.at(i);
-            if (detail::_utf8_size(value.str()).second + 1
-                    + detail::_utf8_size(tmp.str()).second > width) {
+            if (value.str_u8size() + 1 + tmp.str_u8size() > width) {
                 res.push_back(value);
                 value.clear();
             }
@@ -10630,7 +10665,7 @@ HelpFormatter::_usage_args(
             res << detail::clr_summary_short_option << info.first->usage();
         }
         text_type str = positional.at(i)->usage(*this);
-        if (str.str().empty()) {
+        if (str.empty()) {
             continue;
         }
         detail::_add_arg_usage(res, str, true);
@@ -10696,15 +10731,15 @@ HelpFormatter::_format_help(
     detail::pSubParsers subparsers = sub_info.first;
     bool sub_positional = subparsers && subparsers->is_positional();
     for (std::size_t i = 0; i < positional.size(); ++i) {
-        std::string str = positional.at(i)->flags_to_string(*this).str();
+        std::size_t str = positional.at(i)->flags_to_string(*this).str_u8size();
         detail::_limit_to_min(size, str);
     }
     for (std::size_t i = 0; i < operand.size(); ++i) {
-        std::string str = operand.at(i)->flags_to_string(*this).str();
+        std::size_t str = operand.at(i)->flags_to_string(*this).str_u8size();
         detail::_limit_to_min(size, str);
     }
     for (std::size_t i = 0; i < optional.size(); ++i) {
-        std::string str = optional.at(i)->flags_to_string(*this).str();
+        std::size_t str = optional.at(i)->flags_to_string(*this).str_u8size();
         detail::_limit_to_min(size, str);
     }
     for (grp_iterator it = p->m_groups.begin(); it != p->m_groups.end(); ++it) {
@@ -10872,7 +10907,7 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
                     = detail::_split(sub_split_str.at(j), "\t");
             for (std::size_t k = 0; k < tab_split_str.size(); ++k) {
                 if (k != 0) {
-                    std::size_t size = detail::_utf8_size(value.str()).second;
+                    std::size_t size = value.str_u8size();
                     if (size != 0 && !value.colorize()
                             && value.text().back().first == detail::clr_inline
                             && !value.text().back().second.empty()) {
@@ -10888,8 +10923,7 @@ _RawDescriptionHelpFormatter::_split_lines_raw(
                 }
                 text_type sub(_color());
                 sub << tab_split_str.at(k);
-                if (detail::_utf8_size(value.str()).second + 1
-                        + detail::_utf8_size(sub.str()).second > width) {
+                if (value.str_u8size() + 1 + sub.str_u8size() > width) {
                     res.push_back(value);
                     value.clear();
                 }
@@ -13039,12 +13073,12 @@ ArgumentGroup::conflict_handler() const ARGPARSE_NOEXCEPT
 
 ARGPARSE_INL void
 ArgumentGroup::limit_help_flags(
-        HelpFormatter const& formatter,
+        HelpFormatter const& fmt,
         std::size_t& limit) const
 {
     for (arg_iterator it = m_data->m_arguments.begin();
          it != m_data->m_arguments.end(); ++it) {
-        detail::_limit_to_min(limit, (*it)->flags_to_string(formatter).str());
+        detail::_limit_to_min(limit, (*it)->flags_to_string(fmt).str_u8size());
     }
 }
 
