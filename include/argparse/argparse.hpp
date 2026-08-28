@@ -15809,16 +15809,25 @@ ArgumentParser::parse_arguments(
                 = get_optional_arg_by_flag(was_pseudo_arg, parsers.back(), arg);
         if (tmp && !remainder) {
             if (tmp->deprecated()) {
+                detail::colorstream cs(m_formatter->_color());
                 switch (tmp->m_type) {
                     case Argument::Optional :
-                        std::cerr << parsers.back().parser->prog()
-                                  << ": warning: option '" << arg
-                                  << "' is deprecated" << std::endl;
+                        cs << parsers.back().parser->prog() << ": "
+                           << detail::clr_label << "warning:"
+                           << detail::clr_reset << " "
+                           << detail::clr_prog_extra << "option '" << arg
+                           << "' is deprecated";
+                        cs.print(std::cerr);
+                        std::cerr << std::endl;
                         break;
                     case Argument::Operand :
-                        std::cerr << parsers.back().parser->prog()
-                                  << ": warning: operand '" << arg
-                                  << "' is deprecated" << std::endl;
+                        cs << parsers.back().parser->prog() << ": "
+                           << detail::clr_label << "warning:"
+                           << detail::clr_reset << " "
+                           << detail::clr_prog_extra << "operand '" << arg
+                           << "' is deprecated";
+                        cs.print(std::cerr);
+                        std::cerr << std::endl;
                         break;
                     default :
                         break;
@@ -16411,9 +16420,13 @@ ArgumentParser::match_positionals(
         return;
     }
     if (positional.at(pos)->deprecated()) {
-        std::cerr << parsers.back().parser->prog()
-                  << ": warning: argument '" << positional.at(pos)->dest()
-                  << "' is deprecated" << std::endl;
+        detail::colorstream cs(m_formatter->_color());
+        cs << parsers.back().parser->prog() << ": "
+           << detail::clr_label << "warning:" << detail::clr_reset << " "
+           << detail::clr_prog_extra << "argument '"
+           << positional.at(pos)->dest() << "' is deprecated";
+        cs.print(std::cerr);
+        std::cerr << std::endl;
     }
     if (min_args == arguments.size()) {
         for ( ; pos < finish; ++pos) {
@@ -16555,9 +16568,13 @@ ArgumentParser::try_capture_parser(
     for (prs_iterator it = lst_parsers.begin(); it != lst_parsers.end(); ++it) {
         if ((*it)->m_name == name || detail::_exists(name, (*it)->aliases())) {
             if ((*it)->deprecated()) {
-                std::cerr << parsers.back().parser->prog()
-                          << ": warning: command '" << name
-                          << "' is deprecated" << std::endl;
+                detail::colorstream cs(m_formatter->_color());
+                cs << parsers.back().parser->prog() << ": "
+                   << detail::clr_label << "warning:" << detail::clr_reset
+                   << " " << detail::clr_prog_extra << "command '" << name
+                   << "' is deprecated";
+                cs.print(std::cerr);
+                std::cerr << std::endl;
             }
             std::string const& lang = parsers.back().lang;
             parsers.push_back(parser_info((*it).get(), _Storage(),
