@@ -9978,16 +9978,17 @@ _get_close_matches(
         std::vector<std::string> const& possibilities,
         float cutoff = 0.6f)
 {
-    std::pair<std::string, float> best;
+    std::pair<std::size_t, float> b = std::make_pair(possibilities.size(), 0.f);
     for (std::size_t i = 0; i < possibilities.size(); ++i) {
         std::string const& str = possibilities.at(i);
         float ratio = _gestalt(str, word);
-        if (ratio >= cutoff && ratio > best.second) {
-            best.first = str;
-            best.second = ratio;
+        if (ratio >= cutoff && ratio > b.second) {
+            b.first = i;
+            b.second = ratio;
         }
     }
-    return best.first;
+    return b.first < possibilities.size() ? possibilities.at(b.first)
+                                          : std::string();
 }
 
 ARGPARSE_INL std::string
