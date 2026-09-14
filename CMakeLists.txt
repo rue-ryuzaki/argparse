@@ -123,6 +123,12 @@ set(LIBRARY_CONFIG "${CMAKE_CURRENT_BINARY_DIR}/cpp-argparse.pc")
 install(FILES ${LIBRARY_HEADER} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/argparse")
 install(FILES ${LIBRARY_CONFIG} DESTINATION "${CMAKE_INSTALL_DATADIR}/pkgconfig")
 
+set(PACKAGE_NAME "cpp-argparse-dev")
+set(PACKAGE_MAINTAINER "Mikhail Golubchikov")
+set(PACKAGE_SUMMARY "C++ argument parser")
+set(PACKAGE_SECTION "devel")
+set(PACKAGE_LICENSE "MIT")
+
 include(cmake/packaging.cmake)
 
 option(ARGPARSE_BUILD_DOCS      "Build ${LIBRARY_NAME} docs"        OFF)
