@@ -12,6 +12,8 @@
 # endif  // C++11+
 #endif  // _MSVC_LANG
 
+#include <new>
+
 #define CATCH_CONFIG_MAIN
 #ifdef CATCH_CXX_11
 # include <catch2/catch.hpp>
