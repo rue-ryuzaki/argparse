@@ -11048,7 +11048,7 @@ Argument::Argument(
         std::string const& name,
         Type type)
     : m_flags(flags),
-      m_all_flags(m_flags),
+      m_all_flags(),
       m_name(name),
       m_num_args(1),
       m_nargs_str("1"),
@@ -11090,7 +11090,7 @@ Argument::Argument(
         std::string&& name,
         Type type)
     : m_flags(std::move(flags)),
-      m_all_flags(m_flags),
+      m_all_flags(),
       m_name(std::move(name)),
       m_num_args(1),
       m_nargs_str("1"),
@@ -11253,7 +11253,7 @@ ARGPARSE_INL
 Argument::Argument(
         std::vector<std::string> const& flags)
     : m_flags(flags),
-      m_all_flags(m_flags),
+      m_all_flags(),
       m_name(),
       m_num_args(1),
       m_nargs_str("1"),
@@ -11856,7 +11856,7 @@ Argument::handle(
 ARGPARSE_INL std::vector<std::string> const&
 Argument::flags() const ARGPARSE_NOEXCEPT
 {
-    return m_all_flags;
+    return m_all_flags.empty() ? m_flags : m_all_flags;
 }
 
 ARGPARSE_INL Action
@@ -11973,8 +11973,6 @@ Argument::prepare_action(
         if (detail::shared_ptr<_ArgumentData> ptr = m_post_trigger.lock()) {
             ptr->check_conflict_arg(this);
         }
-    } else {
-        m_all_flags = m_flags;
     }
 }
 
@@ -12652,7 +12650,6 @@ _ArgumentData::validate_argument(
             arg.m_name = flags.front();
             detail::_check_flag_name(arg.m_name);
             arg.m_type = Argument::Operand;
-            arg.m_all_flags = arg.m_flags;
             if (!arg.m_required.has_value()) {
                 arg.m_required.reset(true);
             }
