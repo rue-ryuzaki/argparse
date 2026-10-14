@@ -36,12 +36,12 @@ macro(add_example EXAMPLE_NAME)
             "${CMAKE_CURRENT_SOURCE_DIR}/${EXAMPLE_NAME}/include/*.h*"
     )
 
-    add_executable(
-        ${EXAMPLE_NAME} $<TARGET_OBJECTS:argparse_impl> ${EXAMPLE_SOURCES}
-    )
+    add_executable(${EXAMPLE_NAME} ${EXAMPLE_SOURCES})
     target_include_directories(
-        ${EXAMPLE_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/${EXAMPLE_NAME}/include"
+        ${EXAMPLE_NAME} PRIVATE
+            "${CMAKE_CURRENT_SOURCE_DIR}/${EXAMPLE_NAME}/include"
     )
+    target_link_libraries(${EXAMPLE_NAME} PRIVATE ${LIBRARY_IMPL_NAME})
 
     if (ARGPARSE_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${EXAMPLE_NAME}/tests")
         message(STATUS "Build ${EXAMPLE_NAME} unit tests")
