@@ -8476,7 +8476,7 @@ ARGPARSE_INL codepoint
 _to_upper_codepoint(
         codepoint cp)
 {
-    // unicode 17 to upper case
+    // unicode 18 to upper case
     // BASIC LATIN
     if (0x0061 <= cp && cp <= 0x007a) return cp - 0x20;
     // LATIN-1 SUPPLEMENT
@@ -8554,6 +8554,7 @@ _to_upper_codepoint(
     if (cp == 0x0271) return 0x2c6e;
     if (cp == 0x0272) return 0x019d;
     if (cp == 0x0275) return 0x019f;
+    if (cp == 0x0277 || cp == 0x027c) return cp + 0xa566;
     if (cp == 0x027d) return 0x2c64;
     if (cp == 0x0280 || cp == 0x0283 || cp == 0x0288) return cp - 0xda;
     if (cp == 0x0282) return 0xa7c5;
@@ -8702,7 +8703,8 @@ _to_upper_codepoint(
         return cp - 0x1;
     }
     if (cp == 0xa794) return cp + 0x30;
-    // LATIN SMALL LETTER CHI
+    // LATIN SMALL LETTER
+    if (cp == 0xab4b || cp == 0xab4c) return cp + 0x21;
     if (cp == 0xab53) return 0xa7b3;
     // CHEROKEE
     if (0xab70 <= cp && cp <= 0xabbf) return cp - 0x97d0;
@@ -8727,6 +8729,13 @@ _to_upper_codepoint(
     if (0x16e60 <= cp && cp <= 0x16e7f) return cp - 0x20;
     // BERIA ERFE
     if (0x16ebb <= cp && cp <= 0x16ed3) return cp - 0x1b;
+    // LATIN SMALL LETTER
+    if (cp == 0x1df41 || cp == 0x1df49 || cp == 0x1df4b
+            || cp == 0x1df4e || cp == 0x1df52) return cp - 0x01;
+    if ((cp & 1) &&
+       ((0x1df69 <= cp && cp <= 0x1df6f) || (0x1df73 <= cp && cp <= 0x1df7f))) {
+        return cp - 0x1;
+    }
     // ADLAM
     if (0x1e922 <= cp && cp <= 0x1e943) return cp - 0x22;
     return cp;

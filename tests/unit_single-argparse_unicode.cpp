@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Golubchikov Mihail <https://github.com/rue-ryuzaki>
+ * Copyright (c) 2021-2026 Golubchikov Mihail <https://github.com/rue-ryuzaki>
  */
 
 #include "./argparse_test.hpp"
@@ -243,6 +243,8 @@ TEST_CASE("1. unicode to upper", "[detail]")
         table_map[0x0271] = 0x2c6e;
         table_map[0x0272] = 0x019d;
         table_map[0x0275] = 0x019f;
+        table_map[0x0277] = 0xa7dd;
+        table_map[0x027c] = 0xa7e2;
         table_map[0x027d] = 0x2c64;
         table_map[0x0280] = 0x01a6;
         table_map[0x0282] = 0xa7c5;
@@ -1101,6 +1103,8 @@ TEST_CASE("1. unicode to upper", "[detail]")
         table_map[0xa7d9] = 0xa7d8;
         table_map[0xa7db] = 0xa7da;
         table_map[0xa7f6] = 0xa7f5;
+        table_map[0xab4b] = 0xab6c;
+        table_map[0xab4c] = 0xab6d;
         table_map[0xab53] = 0xa7b3;
         table_map[0xab70] = 0x13a0;
         table_map[0xab71] = 0x13a1;
@@ -1481,6 +1485,22 @@ TEST_CASE("1. unicode to upper", "[detail]")
         table_map[0x16ed1] = 0x16eb6;
         table_map[0x16ed2] = 0x16eb7;
         table_map[0x16ed3] = 0x16eb8;
+        table_map[0x1df41] = 0x1df40;
+        table_map[0x1df49] = 0x1df48;
+        table_map[0x1df4b] = 0x1df4a;
+        table_map[0x1df4e] = 0x1df4d;
+        table_map[0x1df52] = 0x1df51;
+        table_map[0x1df69] = 0x1df68;
+        table_map[0x1df6b] = 0x1df6a;
+        table_map[0x1df6d] = 0x1df6c;
+        table_map[0x1df6f] = 0x1df6e;
+        table_map[0x1df73] = 0x1df72;
+        table_map[0x1df75] = 0x1df74;
+        table_map[0x1df77] = 0x1df76;
+        table_map[0x1df79] = 0x1df78;
+        table_map[0x1df7b] = 0x1df7a;
+        table_map[0x1df7d] = 0x1df7c;
+        table_map[0x1df7f] = 0x1df7e;
         table_map[0x1e922] = 0x1e900;
         table_map[0x1e923] = 0x1e901;
         table_map[0x1e924] = 0x1e902;
