@@ -9429,7 +9429,7 @@ _split_equal(
     }
 }
 
-ARGPARSE_INL void
+ARGPARSE_INL bool
 _process_quotes(
         std::list<char>& quotes,
         std::string const& s,
@@ -9438,10 +9438,13 @@ _process_quotes(
     if ((c == '\"' || c == '\'') && (s.empty() || s.at(s.size() - 1) != '\\')) {
         if (quotes.empty()) {
             quotes.push_back(c);
+            return false;
         } else if (quotes.back() == c) {
             quotes.pop_back();
+            return false;
         }
     }
+    return true;
 }
 
 ARGPARSE_INL bool
@@ -11036,8 +11039,7 @@ split_to_args(
                  && std::isspace(static_cast<unsigned char>(c))))
                 && quotes.empty()) {
             detail::_store_value_to(value, res);
-        } else {
-            detail::_process_quotes(quotes, value, c);
+        } else if (detail::_process_quotes(quotes, value, c)) {
             value += c;
         }
         skip = false;
