@@ -7674,13 +7674,13 @@ private:
     storage_store_value(
             Parsers& parsers,
             pArgument const& arg,
-            std::string& value) const;
+            std::string const& value) const;
 
     void
     storage_store_values(
             Parsers& parsers,
             pArgument const& arg,
-            std::vector<std::string>& values) const;
+            std::vector<std::string> const& values) const;
 
     void
     storage_store_n_values(
@@ -9045,15 +9045,6 @@ _has_quotes(
 {
     return str.size() > 1 && str.at(0) == str.at(str.size() - 1)
             && (str.at(0) == '\'' || str.at(0) == '\"');
-}
-
-ARGPARSE_INL void
-_remove_quotes(
-        std::string& str)
-{
-    if (_has_quotes(str)) {
-        str = str.substr(1, str.size() - 2);
-    }
 }
 
 ARGPARSE_INL std::string&
@@ -16000,9 +15991,8 @@ ARGPARSE_INL void
 ArgumentParser::storage_store_value(
         Parsers& parsers,
         pArgument const& arg,
-        std::string& value) const
+        std::string const& value) const
 {
-    detail::_remove_quotes(value);
     validate_argument_value(parsers.back().parser, *arg, value);
     parsers.front().storage.store_value(arg, value);
 }
@@ -16011,12 +16001,10 @@ ARGPARSE_INL void
 ArgumentParser::storage_store_values(
         Parsers& parsers,
         pArgument const& arg,
-        std::vector<std::string>& values) const
+        std::vector<std::string> const& values) const
 {
     for (std::size_t i = 0; i < values.size(); ++i) {
-        std::string& str = values.at(i);
-        detail::_remove_quotes(str);
-        validate_argument_value(parsers.back().parser, *arg, str);
+        validate_argument_value(parsers.back().parser, *arg, values.at(i));
     }
     parsers.front().storage.store_values(arg, values);
 }

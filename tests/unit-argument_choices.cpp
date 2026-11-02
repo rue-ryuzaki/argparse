@@ -83,7 +83,14 @@ TEST_CASE("1. argument choices", "[argument]")
         CHECK(args3.get<std::string>("--foo") == "");
         CHECK(args3.get<std::string>("--bar") == "R");
 
-        argparse::Namespace args4 = parser.parse_args(_make_vec("--foo=''", "--bar", "R"));
+        // argparse::Namespace args4 = parser.parse_args(_make_vec("--foo=''", "--bar", "R"));
+        // vector of arguments does not undergo any changes
+        // (such as those that occur when input is provided via a CLI):
+        // { "--foo=''", "--bar", "R" } => "--foo='' --bar R"
+        //
+        // check for the presence of an empty string within quotation marks '':
+        // "--foo='' --bar R"           => "--foo= --bar R"
+        argparse::Namespace args4 = parser.parse_args("--foo='' --bar R");
         CHECK(args4.get<std::string>("--foo") == "");
         CHECK(args4.get<std::string>("--bar") == "R");
 
