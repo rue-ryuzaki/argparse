@@ -3430,7 +3430,7 @@ public:
     choices(std::vector<std::string> const& value);
 
     /**
-     *  @brief Set the 'required' value for non-positionals arguments.
+     *  @brief Set the 'required' value for non-positional arguments.
      *  @param value Required flag.
      *  @return A reference to the current argument.
      */
@@ -3553,7 +3553,7 @@ public:
 #endif  // C++11+
 
     /**
-     *  @brief Set the 'dest' value for non-positionals arguments.
+     *  @brief Set the 'dest' value for non-positional arguments.
      *  @param value Destination value.
      *  @return A reference to the current argument.
      */
@@ -4407,7 +4407,7 @@ public:
 
     /**
      *  @brief Get the 'title' value for the default language.
-     *  @return Group 'title' value of the group.
+     *  @return The 'title' value of the group.
      */
     ARGPARSE_ATTR_NODISCARD
     std::string const&
@@ -6163,7 +6163,7 @@ ARGPARSE_EXPORT class ArgumentParser
 public:
     /**
      *  @brief Create an argument parser with concrete program name
-     *  (default: "" don't override default program name "untitled").
+     *  (default: "", doesn't override default program name "untitled").
      *  @param prog Program name (default: "").
      */
     explicit
@@ -6172,8 +6172,8 @@ public:
 
     /**
      *  @brief Create an argument parser from command line arguments
-     *  with concrete program name
-     *  (default: "" don't override argv[0] or default program name "untitled").
+     *  with concrete program name (default: "",
+     *  doesn't override argv[0] or default program name "untitled").
      *  @param argc Number of command line arguments.
      *  @param argv Command line arguments.
      *  @param prog Program name (default: "").
@@ -6186,8 +6186,8 @@ public:
 
     /**
      *  @brief Create an argument parser from command line arguments
-     *  with environment variables and concrete program name
-     *  (default: "" don't override argv[0] or default program name "untitled").
+     *  with environment variables and concrete program name (default: "",
+     *  doesn't override argv[0] or default program name "untitled").
      *  @param argc Number of command line arguments.
      *  @param argv Command line arguments.
      *  @param envp Execution environment variables.
@@ -6549,7 +6549,7 @@ public:
             bool value) ARGPARSE_NOEXCEPT;
 
     /**
-     *  @brief Set the 'suggest_on_error' value if the argument parser
+     *  @brief Set the 'suggest_on_error' value of the argument parser
      *  (default: true).
      *  @param value Suggest on error flag.
      *  @since v1.9.6
@@ -6760,7 +6760,7 @@ public:
 
     /**
      *  @brief Get the 'exit_on_error' (default: true).
-     *  @return The 'allow_abbrev' value of the argument parser.
+     *  @return The 'exit_on_error' value of the argument parser.
      */
     ARGPARSE_ATTR_NODISCARD
     bool
@@ -6925,7 +6925,7 @@ public:
             bool required = false);
 
     /**
-     *  @brief Add a subparsers. Arguments for only one subparser are allowed.
+     *  @brief Add subparsers. Arguments for only one subparser are allowed.
      *  @param title Subparsers title (default: "").
      *  @param description Subparsers description (default: "").
      *  @return A reference to the current subparsers.
@@ -6988,7 +6988,7 @@ public:
 
 #ifdef ARGPARSE_CXX_11
     /**
-     *  @brief Set default values for a given arguments.
+     *  @brief Set default values for the given arguments.
      *  @param pairs List of pairs: { 'argument flag', 'default value' }.
      *  @since v1.7.2
      *  @return A reference to the current argument parser.
@@ -7000,7 +7000,7 @@ public:
 #endif  // C++11+
 
     /**
-     *  @brief Set default values for a given arguments.
+     *  @brief Set default values for the given arguments.
      *  @param pairs Vector of pairs: { 'argument flag', 'default value' }.
      *  @return A reference to the current argument parser.
      */
@@ -7455,7 +7455,7 @@ public:
     /**
      *  @brief Get a list of environment variables (from envp[]).
      *  @since v1.8.2
-     *  @return A list of environment variable.
+     *  @return A list of environment variables.
      */
     ARGPARSE_ATTR_NODISCARD
     std::list<std::pair<std::string, std::string> > const&
@@ -9793,7 +9793,7 @@ _update_flag_name(
     } else if (flags.size() > 1) {
         // no positional or operand multiflag
         throw ValueError("invalid option string " + flags.front() + ": must "
-                         + "starts with a character '" + prefix_chars + "'");
+                         + "start with a character '" + prefix_chars + "'");
     }
     for (std::size_t i = 1; i < flags.size(); ++i) {
         // check arguments
@@ -9801,7 +9801,7 @@ _update_flag_name(
         _check_flag_name(flag);
         if (!_exists(flag.at(0), prefix_chars)) {
             // no positional or operand arguments with optional flags
-            throw ValueError("invalid option string " + flag + ": must starts "
+            throw ValueError("invalid option string " + flag + ": must start "
                              + "with a character '" + prefix_chars + "'");
         }
         _update_flag_name_func(flag, flag_name, prefixes);
@@ -17260,7 +17260,7 @@ utils::test_diagnostics(
     // end diagnostics
     bool res = diagnostics.first == 0 && diagnostics.second == 0;
     if (res) {
-        os << _o << "no warning or errors found\n";
+        os << _o << "no warnings or errors found\n";
     } else {
         if (diagnostics.first != 0) {
             os << _w << "warnings found: " << diagnostics.first << "\n";
