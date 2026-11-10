@@ -17103,7 +17103,7 @@ ARGPARSE_INL std::string
 utils::date()
 {
     time_t     now = time(NULL);
-    struct tm  tstruct;
+    struct tm  tstruct = tm();
     char       buf[80];
 #ifdef _WIN32
     // vs 2005/msvc 8.0
