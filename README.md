@@ -17,7 +17,7 @@ Python-like argument parser for C++ projects (with similar syntax).
 
 This project is a C++ adaptation of Python argparse and supports most of its features (actions, nargs, subparsers, argument groups, help formatting, auto-generated usage and help, and more).
 ## Supported compilers
-C++ support compiler (see [C++ standard support](https://github.com/rue-ryuzaki/argparse/blob/develop/COMPILERS.md)):
+Supported C++ compilers (see [C++ standard support](https://github.com/rue-ryuzaki/argparse/blob/develop/COMPILERS.md)):
  - gcc: 3.0 or higher
  - clang: 2.7 or higher
  - other compilers: no actual data
@@ -37,7 +37,7 @@ The work of the parser on older versions of compilers is not guaranteed.
 
 ```ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely `<Windows.h>` on Windows OS). Does not make sense to use with ```ARGPARSE_DECLARATION```
 
-```ARGPARSE_DISABLE_UTILS``` - If you don't want to use utils (bash completion, self test).
+```ARGPARSE_DISABLE_UTILS``` - If you don't want to use utilites (bash/zsh completion, self test).
 ### Can be read
 ```ARGPARSE_VERSION_MAJOR``` - Major version of the argparse library
 
@@ -290,7 +290,7 @@ int main(int argc, char const* const argv[])
 - plain C arrays
 - Namespace::try_get<> with non-owning C++17+ types and containers (std::string_view, std::span)
 ### Note:
-For types with std::pair and std::tuple (also for std::map) it is nessesary to specify a delimiter (by default it ```'='```) between key and value (for std::pair/std::map/std::tuple) / values (for std::tuple). For space delimiter ```' '``` all values are parsed from separated command line arguments, otherwise from individual command line argument.
+For types with std::pair and std::tuple (also for std::map) it is necessary to specify a delimiter (by default it is ```'='```) between key and value (for std::pair/std::map/std::tuple) / values (for std::tuple). For space delimiter ```' '``` all values are parsed from separated command line arguments, otherwise from individual command line argument.
 
 For example:
 - ```':'``` : auto args = parser.parse_args("--foo key1:value1 'key2':'value2'"); args.get<std::map<std::string, std::string> >("foo", ':');
@@ -344,7 +344,7 @@ inline std::ostream& operator <<(std::ostream& os, Coord const& c)
 inline void coord_type_builder(std::string const& str, void* res)
 {
     std::stringstream ss(str);
-    // just use operator >>
+    // Just use operator >>
     ss >> *reinterpret_cast<Coord*>(res);
 }
 
@@ -480,14 +480,14 @@ int main(int argc, char const* const argv[], char const* const envp[])
 }
 ```
 ### Operand argument
-Operand arguments are position independent with required = true (by default). To create operand argument use flag with suffix ```=``` (indicates, that argument will be operand):
+Operand arguments are position-independent with required = true (by default). To create operand argument use flag with suffix ```=``` (indicates, that argument will be operand):
 ```cpp
 parser.add_argument("flag=");
 ```
 Operand argument restrictions:
 - argument can have only one flag
 - actions "store" and "language" are allowed
-- nargs are not allowed
+- nargs is not allowed
 - const_value is not allowed
 - metavar with single value is allowed
 

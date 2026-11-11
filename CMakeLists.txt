@@ -99,6 +99,9 @@ file(GLOB LIBRARY_MARKDOWN "${CMAKE_CURRENT_SOURCE_DIR}/*.md")
 add_custom_target(
     ${LIBRARY_NAME}.md SOURCES ${LIBRARY_MARKDOWN}
 )
+add_custom_target(
+    ${LIBRARY_NAME}.docs SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile"
+)
 
 if (DEFERED_CMAKE_INSTALL_PREFIX)
     configure_file(

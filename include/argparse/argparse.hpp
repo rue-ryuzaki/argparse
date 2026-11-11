@@ -254,15 +254,17 @@
 #define ARGPARSE_VERSION_PATCH 0
 
 /**
- *  This macro turns the version numbers into a numeric value:
+ *  @brief This macro turns the version numbers into a numeric value:
  *  @verbatim
     (1,2,3) -> (10203)
     @endverbatim
+ *  @def ARGPARSE_VERSION_NUM(X, Y, Z)
  */
 #define ARGPARSE_VERSION_NUM(X, Y, Z) ((X) * 10000 + (Y) * 100 + (Z))
 
 /**
- *  This is the version number macro for the current argparse version.
+ *  @brief This is the version number macro for the current argparse version.
+ *  @def ARGPARSE_VERSION_COMPILED
  */
 #define ARGPARSE_VERSION_COMPILED \
     ARGPARSE_VERSION_NUM(ARGPARSE_VERSION_MAJOR, \
@@ -270,7 +272,9 @@
                          ARGPARSE_VERSION_PATCH)
 
 /**
- *  This macro will evaluate to true if compiled with argparse at least X.Y.Z.
+ *  @brief This macro will evaluate to true if compiled
+ *  with argparse at least X.Y.Z.
+ *  @def ARGPARSE_VERSION_AT_LEAST(X, Y, Z)
  */
 #define ARGPARSE_VERSION_AT_LEAST(X, Y, Z) \
     (ARGPARSE_VERSION_COMPILED >= ARGPARSE_VERSION_NUM(X, Y, Z))
