@@ -31,13 +31,13 @@ The work of the parser on older versions of compilers is not guaranteed.
 ```cpp-argparse-dev``` [MacPorts](https://ports.macports.org/port/cpp-argparse-dev)
 ## Available macros:
 ### Can be set
-```ARGPARSE_IMPLEMENTATION``` - Use to build argparse library to object. To avoid `multiple definition of ...` use argparse declaration header.
+```ARGPARSE_IMPLEMENTATION``` - Use to build the argparse library into an object file. To avoid `multiple definition of ...` use argparse declaration header.
 
 ```ARGPARSE_DECLARATION``` - Use argparse library as a declaration header. You can use ```#include <argparse/argparse_decl.hpp>``` instead of ```#include <argparse/argparse.hpp>```
 
-```ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely <Windows.h> on OS Windows). Does not make sense to use with ```ARGPARSE_DECLARATION```
+```ARGPARSE_DISABLE_TERMINAL_SIZE_DETECTION``` - If you don't want to use terminal size auto-detection feature (for example to avoid using platform specific header files, namely `<Windows.h>` on Windows OS). Does not make sense to use with ```ARGPARSE_DECLARATION```
 
-```ARGPARSE_DISABLE_UTILS`` - If you don't want to use utils (bash completion, self test).
+```ARGPARSE_DISABLE_UTILS``` - If you don't want to use utils (bash completion, self test).
 ### Can be read
 ```ARGPARSE_VERSION_MAJOR``` - Major version of the argparse library
 
@@ -175,7 +175,7 @@ int main(int argc, char const* const argv[])
 ```
 ## Nargs example
 Supported nargs:
-- ```"?"``` or ```zero_ore_one()``` or ```optional()```, argument must have zero or one value
+- ```"?"``` or ```zero_or_one()``` or ```optional()```, argument must have zero or one value
 - ```"*"``` or ```zero_or_more()```, argument must have zero or more values
 - ```"+"``` or ```one_or_more()```, argument must have one or more values
 - ```N``` (positive number), argument must have N values
@@ -209,11 +209,11 @@ int main(int argc, char const* const argv[])
 ## Subparsers example
 If you want to use subcommands with arguments (like git commands: git clone URL -b BRANCH, git merge --ff, git status), use subparsers.
 
-If you need to get the subparsers's parser name, set dest value to the subparsers, or use [handle](#argumentparserhandlestdfunctionvoidargparsenamespace-const-func) in parsers.
+If you need to get the subparsers parser name, set dest value to the subparsers, or use [handle](#argumentparserhandlestdfunctionvoidargparsenamespace-const-func) in parsers.
 
 Note:
 
-If subparsers not selected in parsed arguments, it is not added to the Namespace, like the arguments of its parsers.
+If subparsers are not selected in parsed arguments, it is not added to the Namespace, like the arguments of its parsers.
 
 Check if value exists first (Namespace::exists()), or use Namespace::try_get<>() instead of Namespace::get<>() (since C++17).
 
@@ -280,7 +280,7 @@ int main(int argc, char const* const argv[])
 - containers (std::array (since C++11), std::deque, std::forward_list (since C++11), std::list, std::multiset, std::priority_queue, std::queue, std::set, std::stack, std::vector, std::unordered_multiset (since C++11), std::unordered_set (since C++11))
 - containers with std::pair/std::tuple (since C++11)
 - 2 dimensional containers
-- non-own std::span<std::string const>
+- non-owning std::span<std::string const>
 - mapped types (std::map, std::multimap, std::unordered_map (since C++11), std::unordered_multimap (since C++11))
 - std::pair
 - std::tuple (since C++11)
@@ -288,16 +288,16 @@ int main(int argc, char const* const argv[])
 ### Don't work:
 - pointer and reference types
 - plain C arrays
-- Namespace::try_get<> with non-own C++17+ types and containers (std::string_view, std::span)
+- Namespace::try_get<> with non-owning C++17+ types and containers (std::string_view, std::span)
 ### Note:
-For types with std::pair and std::tuple (also for std::map) needs to specify delimiter (by default it ```'='```) between key and value (for std::pair/std::map/std::tuple) / values (for std::tuple). For space delimiter ```' '``` all values are parsed from separated command line arguments, otherwise from individual command line argument.
+For types with std::pair and std::tuple (also for std::map) it is nessesary to specify a delimiter (by default it ```'='```) between key and value (for std::pair/std::map/std::tuple) / values (for std::tuple). For space delimiter ```' '``` all values are parsed from separated command line arguments, otherwise from individual command line argument.
 
 For example:
 - ```':'``` : auto args = parser.parse_args("--foo key1:value1 'key2':'value2'"); args.get<std::map<std::string, std::string> >("foo", ':');
 - ```' '``` : auto args = parser.parse_args("--foo key1 value1 'key2' 'value2'"); args.get<std::vector<std::pair<std::string, std::string> > >("foo", ' ');
 ## Custom type example
 ### Namespace::get<>
-Required std::istream& operator >>(std::istream& is, Type& t) or Argument::type(std::function<void(std::istream&, void*)>) conversion function.
+Required std::istream& operator >>(std::istream& is, Type& t) or Argument::type(std::function<void(std::string const&, void*)>) conversion function.
 ### Argument::default_value<> and Argument::const_value<>
 Required std::ostream& operator <<(std::ostream& os, Type const& t).
 ```cpp
@@ -366,7 +366,7 @@ int main(int argc, char const* const argv[])
     return 0;
 }
 ```
-Note: A custom type must have default constructor.
+Note: A custom type must have a default constructor.
 ## Features
 ### Handle
 #### ArgumentParser::handle(std::function<void(argparse::Namespace const&)> func)
@@ -480,14 +480,14 @@ int main(int argc, char const* const argv[], char const* const envp[])
 }
 ```
 ### Operand argument
-Operand arguments is position independent with required = true (by default). To create operand argument use flag with suffix ```=``` (indicates, that argument will be operand):
+Operand arguments are position independent with required = true (by default). To create operand argument use flag with suffix ```=``` (indicates, that argument will be operand):
 ```cpp
 parser.add_argument("flag=");
 ```
 Operand argument restrictions:
 - argument can have only one flag
-- actions "store" and "language" is allowed
-- nargs is not allowed
+- actions "store" and "language" are allowed
+- nargs are not allowed
 - const_value is not allowed
 - metavar with single value is allowed
 
@@ -700,7 +700,7 @@ auto parser = argparse::ArgumentParser(argc, argv)
             .comment_prefix_chars("#");
 ```
 ### Parser groups
-This library allows you to create groups of parsers in your SubParsers. By default, all parsers created in the main subparsers group constitute the main parser group. You can create a new parser group using ```add_parser_group(title, description)`` and group other parsers into it.
+This library allows you to create groups of parsers in your SubParsers. By default, all parsers created in the main subparsers group constitute the main parser group. You can create a new parser group using ```add_parser_group(title, description)``` and group other parsers into it.
 ```cpp
 #include <iostream>
 
@@ -777,26 +777,26 @@ int main(int argc, char const* const argv[])
 - [x] "extend" - This stores a list, and extends each argument value to the list.
 - [x] argparse::BooleanOptionalAction - Adds support for boolean actions such as ```--foo``` and ```--no-foo```
 ## Bash completion
-ArgumentParser can help you to create bash completion file for your program, create file in the ```completions``` subdir of ```$BASH_COMPLETION_USER_DIR``` (defaults to ```$XDG_DATA_HOME/bash-completion``` or ```~/.local/share/bash-completion``` if $XDG_DATA_HOME is not set), [see bash-completion readme](https://github.com/scop/bash-completion/blob/main/README.md):
+ArgumentParser can help you to create a bash completion file for your program, create a file in the ```completions``` subdir of ```$BASH_COMPLETION_USER_DIR``` (defaults to ```$XDG_DATA_HOME/bash-completion``` or ```~/.local/share/bash-completion``` if $XDG_DATA_HOME is not set), [see bash-completion readme](https://github.com/scop/bash-completion/blob/main/README.md):
 ```cpp
 std::ofstream file;
 file.open("bash-completion-user-dir/completions/" + parser.prog(), std::ios::trunc);
 argparse::utils::print_bash_completion(parser, file);
 ```
 ## Zsh completion
-ArgumentParser can help you to create zsh completion (this function is experimental and under development) file (with name beginning with an underscore _) for your program, this file should be placed in a directory listed in the $fpath variable. You can add a directory to $fpath by adding a line like this to your ~/.zshrc file: ```fpath=(~/zsh-completion-user-dir $fpath)```, [see zsh-completion readme](https://github.com/zsh-users/zsh-completions/blob/master/zsh-completions-howto.org#telling-zsh-which-function-to-use-for-completing-a-command):
+ArgumentParser can help you to create a zsh completion (this function is experimental and under development) file (with name beginning with an underscore _) for your program, this file should be placed in a directory listed in the $fpath variable. You can add a directory to $fpath by adding a line like this to your ~/.zshrc file: ```fpath=(~/zsh-completion-user-dir $fpath)```, [see zsh-completion readme](https://github.com/zsh-users/zsh-completions/blob/master/zsh-completions-howto.org#telling-zsh-which-function-to-use-for-completing-a-command):
 ```cpp
 std::ofstream file;
 file.open("zsh-completion-user-dir/_" + parser.prog(), std::ios::trunc);
 argparse::utils::print_zsh_completion(parser, file);
 ```
 ## Man pages
-ArgumentParser can help you to create man page for your program (this function is experimental and under development).
+ArgumentParser can help you to create a man page for your program (this function is experimental and under development).
 ```cpp
 argparse::utils::print_man_page(parser);
 ```
 ## Self test
-You can check that you parser is created correctly by calling the ```self_test``` function.
+You can check that your parser is created correctly by calling the ```self_test``` function.
 ```cpp
 argparse::utils::self_test(parser);
 ```

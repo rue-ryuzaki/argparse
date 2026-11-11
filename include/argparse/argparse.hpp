@@ -6776,7 +6776,7 @@ public:
     suggest_on_error() const ARGPARSE_NOEXCEPT;
 
     /**
-     *  @brief Get the 'color' (default: false).
+     *  @brief Get the 'color' (default: true).
      *  @since v1.10.0
      *  @return The 'color' value of the argument parser.
      */
@@ -6977,7 +6977,7 @@ public:
 
     /**
      *  @brief Get the default value for a given argument.
-     *  If argument not found, returns empty string.
+     *  If the argument is not found, returns an empty string.
      *  @param dest Argument destination name or flag.
      *  @return Default value for a given argument.
      */
@@ -7441,11 +7441,11 @@ public:
     has_env(std::string const& name) const;
 
     /**
-     *  @brief Get the value of an environment variable
+     *  @brief Get the value of the environment variable
      *  (from envp[] or std::getenv()).
      *  @param name Environment variable name.
      *  @since v1.8.0
-     *  @return The value of an environment variable if exists,
+     *  @return The value of the environment variable if it exists,
      *  empty string otherwise.
      */
     ARGPARSE_ATTR_NODISCARD
