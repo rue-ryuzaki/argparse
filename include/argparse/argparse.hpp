@@ -5491,13 +5491,15 @@ public:
         }
         if constexpr (detail::has_value_type<T>::value
                 && !detail::has_string_ctor<T>::value) {
-            if (!detail::_is_type_correct(args->first->type_name(),
-                                          detail::Type::basic<T>())) {
+            if (args->first->m_type_name.has_value()
+                    && !detail::_is_type_correct(args->first->type_name(),
+                                                 detail::Type::basic<T>())) {
                 return std::nullopt;
             }
         } else {
-            if (!detail::_is_type_correct(args->first->type_name(),
-                                          detail::Type::name<T>())) {
+            if (args->first->m_type_name.has_value()
+                    && !detail::_is_type_correct(args->first->type_name(),
+                                                 detail::Type::name<T>())) {
                 return std::nullopt;
             }
         }
@@ -5586,14 +5588,16 @@ public:
             return std::nullopt;
         }
         if constexpr (detail::has_value_type<T>::value) {
-            if (!detail::_is_type_correct(args->first->type_name(),
-                                          detail::Type::basic<T>())) {
+            if (args->first->m_type_name.has_value()
+                    && !detail::_is_type_correct(args->first->type_name(),
+                                                 detail::Type::basic<T>())) {
                 return std::nullopt;
             }
         } else {
             if (args->second.empty()
-                    || !detail::_is_type_correct(args->first->type_name(),
-                                                 detail::Type::name<T>())) {
+                    || (args->first->m_type_name.has_value()
+                        && !detail::_is_type_correct(args->first->type_name(),
+                                                    detail::Type::name<T>()))) {
                 return std::nullopt;
             }
         }
