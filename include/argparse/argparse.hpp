@@ -10124,11 +10124,17 @@ private:
     {
         if (is_active()) {
             CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
-            GetConsoleScreenBufferInfo(m_handle, &csbiInfo);
-            m_fore = static_cast<WORD>(csbiInfo.wAttributes & ~(BACKGROUND_RED
+            if (GetConsoleScreenBufferInfo(m_handle, &csbiInfo)) {
+                m_fore = static_cast<WORD>(
+                            csbiInfo.wAttributes & ~(BACKGROUND_RED
                   | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY));
-            m_back = static_cast<WORD>(csbiInfo.wAttributes & ~(FOREGROUND_RED
+                m_back = static_cast<WORD>(
+                            csbiInfo.wAttributes & ~(FOREGROUND_RED
                   | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY));
+            } else {
+                // reset handle
+                m_handle = NULL;
+            }
         }
     }
 
