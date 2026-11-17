@@ -4261,6 +4261,11 @@ _get(std::string const& key,
         std::size_t /*num_args*/,
         typename enable_if<is_stl_span<T>::value, bool>::type = true)
 {
+#ifdef ARGPARSE_CXX_14
+    static_assert(std::is_same<typename std::decay_t<T>::element_type,
+                               std::string const>::value,
+                  "std::span is only supported for 'std::string const'");
+#endif  // C++14+
     _check_non_count_action(key, args.first->action());
     _check_type(type_name, Type::basic<T>());
     return _make_container<T>(args.second());
@@ -5511,8 +5516,8 @@ public:
         && !detail::is_stl_tuple<std::decay_t<T> >::value, T> >
     try_get(std::string const& key) const
     {
-        auto args = opt_data(key);
-        if (!args.has_value()) {
+        auto args = storage().find_arg(key);
+        if (args == storage().end()) {
             return std::nullopt;
         }
         if constexpr (detail::has_value_type<T>::value
@@ -5549,7 +5554,7 @@ public:
                 }
                 return res;
             }
-            return _Storage::opt_single_value<T>(args.value());
+            return _Storage::opt_single_value<T>(*args);
         }
         if (args->first->action() == argparse::count) {
             return std::nullopt;
@@ -5561,8 +5566,11 @@ public:
                             | detail::ZERO_OR_MORE))) {
                 return std::nullopt;
             }
-            return _Storage::opt_matrix<T>(args.value());
+            return _Storage::opt_matrix<T>(*args);
         } else if constexpr (detail::is_stl_span<std::decay_t<T> >::value) {
+            static_assert(std::is_same<typename std::decay_t<T>::element_type,
+                                       std::string const>::value,
+                         "std::span is only supported for 'std::string const'");
             return detail::_make_container<T>(args->second());
         } else if constexpr ((detail::is_stl_container<std::decay_t<T> >::value
                 && !detail::is_stl_container_paired<std::decay_t<T> >::value
@@ -5571,8 +5579,7 @@ public:
                 || ((detail::is_stl_array<std::decay_t<T> >::value
                    || detail::is_stl_queue<std::decay_t<T> >::value)
                     && !detail::is_stl_matrix<std::decay_t<T> >::value)) {
-            auto vector = _Storage::opt_vector<
-                    typename T::value_type>(args.value());
+            auto vector = _Storage::opt_vector<typename T::value_type>(*args);
             if (!vector.has_value()) {
                 return std::nullopt;
             }
@@ -5582,9 +5589,9 @@ public:
                     || std::is_floating_point<T>::value
                     || std::is_same<bool, T>::value
                     || detail::is_byte_type<T>::value) {
-                return _Storage::opt_single_value<T>(args.value());
+                return _Storage::opt_single_value<T>(*args);
             } else {
-                return _Storage::opt_custom_value<T>(args.value());
+                return _Storage::opt_custom_value<T>(*args);
             }
         }
     }
@@ -5609,8 +5616,9 @@ public:
     try_get(std::string const& key,
             char sep = detail::_equal) const
     {
-        auto args = opt_data(key);
-        if (!args.has_value() || args->first->action() == argparse::count) {
+        auto args = storage().find_arg(key);
+        if (args == storage().end()
+                || args->first->action() == argparse::count) {
             return std::nullopt;
         }
         if constexpr (detail::has_value_type<T>::value) {
@@ -5631,7 +5639,7 @@ public:
                 typename std::decay<T>::type>::value) {
             auto vector = _Storage::as_opt_vector_pair<
                     typename T::value_type::first_type,
-                    typename T::value_type::second_type>(args.value(), sep);
+                    typename T::value_type::second_type>(*args, sep);
             if (!vector.has_value()) {
                 return std::nullopt;
             }
@@ -5640,7 +5648,7 @@ public:
         if constexpr (detail::is_stl_container_tupled<
                 typename std::decay<T>::type>::value) {
             auto vector = _Storage::as_opt_vector_tuple<
-                    typename T::value_type>(args.value(), sep);
+                    typename T::value_type>(*args, sep);
             if (!vector.has_value()) {
                 return std::nullopt;
             }
@@ -5648,7 +5656,7 @@ public:
         }
         if constexpr (detail::is_stl_map<typename std::decay<T>::type>::value) {
             auto vector = _Storage::as_opt_vector_pair<
-              typename T::key_type, typename T::mapped_type>(args.value(), sep);
+                    typename T::key_type, typename T::mapped_type>(*args, sep);
             if (!vector.has_value()) {
                 return std::nullopt;
             }
@@ -5702,12 +5710,6 @@ private:
 
     _Storage const&
     storage() const ARGPARSE_NOEXCEPT;
-
-#ifdef ARGPARSE_HAS_OPTIONAL
-    std::optional<_Storage::value_type>
-    opt_data(
-            std::string const& key) const;
-#endif  // ARGPARSE_HAS_OPTIONAL
 
     // -- data ----------------------------------------------------------------
     _Storage m_storage;
@@ -13732,19 +13734,6 @@ Namespace::storage() const ARGPARSE_NOEXCEPT
 {
     return m_storage;
 }
-
-#ifdef ARGPARSE_HAS_OPTIONAL
-ARGPARSE_INL std::optional<_Storage::value_type>
-Namespace::opt_data(
-        std::string const& key) const
-{
-    auto it = storage().find_arg(key);
-    if (it != storage().end()) {
-        return *it;
-    }
-    return std::nullopt;
-}
-#endif  // ARGPARSE_HAS_OPTIONAL
 
 // -- _ParserGroup ------------------------------------------------------------
 ARGPARSE_INL
