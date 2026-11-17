@@ -11,7 +11,7 @@ jobs:
     env:
       BUILD_TYPE: Release
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Get Changelog
       run: tail -n +5 CHANGELOG.md | sed '/^$/,$d' >> changelog
