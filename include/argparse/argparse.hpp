@@ -9614,6 +9614,9 @@ _add_arg_usage(
         colorstream const& str,
         bool required)
 {
+    if (str.empty()) {
+        return;
+    }
     if (!ss.text().empty()) {
         ss << clr_reset << "\n";
     }
@@ -12045,6 +12048,9 @@ Argument::usage(
         HelpFormatter const& formatter) const
 {
     detail::colorstream res;
+    if (m_flags.empty()) {
+        return res;
+    }
     std::string suffix = nargs_suffix(formatter);
     if (m_type == Optional) {
         std::string flag = action() == argparse::BooleanOptionalAction
@@ -12961,18 +12967,48 @@ MutuallyExclusiveGroup::usage(
         HelpFormatter const& formatter) const
 {
     detail::colorstream ss;
-    if (m_data->m_arguments.empty()) {
-        return ss;
-    }
-    ss << detail::clr_reset << (m_required ? "(" : "[");
+    std::size_t non_empty = 0;
     for (arg_iterator it = m_data->m_arguments.begin();
          it != m_data->m_arguments.end(); ++it) {
-        if (it != m_data->m_arguments.begin()) {
-            ss << detail::clr_reset << " | ";
+        if ((*it)->m_flags.empty()) {
+            continue;
+        }
+        ++non_empty;
+    }
+    if (non_empty == 0) {
+        return ss;
+    }
+    bool first = true;
+    for (arg_iterator it = m_data->m_arguments.begin();
+         it != m_data->m_arguments.end(); ++it) {
+        if ((*it)->m_flags.empty()) {
+            continue;
+        }
+        ss << detail::clr_reset;
+        if (first) {
+            first = false;
+            if (m_required) {
+                if (non_empty > 1) {
+                    ss << "(";
+                }
+            } else {
+                ss << "[";
+            }
+        } else {
+            ss << " | ";
         }
         ss << (*it)->usage(formatter);
     }
-    ss << detail::clr_reset << (m_required ? ")" : "]");
+    if (!first) {
+        ss << detail::clr_reset;
+        if (m_required) {
+            if (non_empty > 1) {
+                ss << ")";
+            }
+        } else {
+            ss << "]";
+        }
+    }
     return ss;
 }
 
@@ -16828,7 +16864,12 @@ ArgumentParser::check_mutex_groups(
             for (arg_iterator k = (*j).m_data->m_arguments.begin();
                  k != (*j).m_data->m_arguments.end(); ++k) {
                 std::string flags = detail::_join((*k)->flags(), "/");
-                args += detail::_spaces + flags;
+                if ((*k)->flags().empty()) {
+                    args += detail::_spaces + (*k)->dest();
+                    continue;
+                } else {
+                    args += detail::_spaces + flags;
+                }
                 if (!parsers.front().storage.at(*k).empty()) {
                     if (!found.empty()) {
                         (*i).parser->throw_error("argument " + flags + ": not "
