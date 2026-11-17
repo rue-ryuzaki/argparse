@@ -1375,13 +1375,13 @@ private:
     shared_ptr(
             element_type* pvalue_arg,
             reference_count* pn_arg) throw()
-        : px(pvalue_arg),
-          pn(pn_arg)
+        : px(NULL),
+          pn(NULL)
     {
-        if (px) {
+        if (pvalue_arg && pn_arg && pn_arg->use_count() > 0) {
+            px = pvalue_arg;
+            pn = pn_arg;
             pn->add_shared_ref();
-        } else {
-            pn = NULL;
         }
     }
 
@@ -1415,10 +1415,13 @@ public:
     explicit
     weak_ptr(
             weak_ptr<U> const& orig) throw()
-        : px(static_cast<typename shared_ptr<T>::element_type*>(orig.px)),
+        : px(NULL),
           pn(orig.pn)
     {
         if (pn) {
+            if (pn->use_count() > 0) {
+                px = static_cast<T*>(orig.px);
+            }
             pn->add_weak_ref();
         }
     }
@@ -1454,6 +1457,23 @@ public:
                 pn = NULL;
             }
         }
+    }
+
+    inline weak_ptr&
+    operator =(
+            shared_ptr<T> const& rhs) throw()
+    {
+        weak_ptr(rhs).swap(*this);
+        return *this;
+    }
+
+    template <class U>
+    inline weak_ptr&
+    operator =(
+            shared_ptr<U> const& rhs) throw()
+    {
+        weak_ptr(rhs).swap(*this);
+        return *this;
     }
 
     inline weak_ptr&
@@ -1505,6 +1525,9 @@ public:
     }
 
 private:
+    template <class U>
+    friend class weak_ptr;
+
     // -- data ----------------------------------------------------------------
     element_type* px;
     reference_count* pn;
