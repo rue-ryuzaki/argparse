@@ -10061,6 +10061,20 @@ _invalid_choice(
 }
 
 ARGPARSE_INL std::string
+_bash_func(
+        std::string const& str)
+{
+    std::string res = str;
+    for (std::size_t i = 0; i < res.size(); ++i) {
+        unsigned char c = static_cast<unsigned char>(res.at(i));
+        if (!std::isalnum(c) && c != '_') {
+            res.at(i) = '_';
+        }
+    }
+    return res;
+}
+
+ARGPARSE_INL std::string
 _zsh_action(
         std::string const& str)
 {
@@ -17647,7 +17661,8 @@ utils::_print_parser_bash_completion(
         std::list<pParser> const parsers = p->m_subparsers->list_parsers(false);
         for (prs_iterator it = parsers.begin(); it != parsers.end(); ++it) {
             _print_parser_bash_completion(
-                        os, (*it).get(), prog + "_" + (*it)->m_name, false);
+                        os, (*it).get(),
+                        prog + "_" + detail::_bash_func((*it)->m_name), false);
         }
     }
     os << "_" << prog << "()\n";
@@ -17666,7 +17681,8 @@ utils::_print_parser_bash_completion(
                 name += "|" + detail::_join((*it)->aliases(), "|", "\"");
             }
             os << "      " << name << ")\n";
-            os << "        _" << prog << "_" << (*it)->m_name << " $((i+1))\n";
+            os << "        _" << prog
+               << "_" << detail::_bash_func((*it)->m_name) << " $((i+1))\n";
             os << "        return;;\n";
         }
         os << "      *);;\n";
@@ -17885,8 +17901,9 @@ utils::format_bash_completion(
        << ARGPARSE_VERSION_MAJOR << "."
        << ARGPARSE_VERSION_MINOR << "."
        << ARGPARSE_VERSION_PATCH << "\n\n";
-    _print_parser_bash_completion(ss, &parser, parser.prog(), true);
-    ss << "complete -F _" << parser.prog() << " " << parser.prog();
+    std::string function = detail::_bash_func(parser.prog());
+    _print_parser_bash_completion(ss, &parser, function, true);
+    ss << "complete -F _" << function << " " << parser.prog();
     return ss.str();
 }
 
