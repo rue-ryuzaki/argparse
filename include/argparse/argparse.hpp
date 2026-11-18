@@ -15786,8 +15786,8 @@ ArgumentParser::read_args_from_file(
 {
     std::vector<std::string> res = arguments;
     if (!fromfile_prefix_chars().empty()) {
-        for (std::size_t i = 0; i < res.size(); ++i) {
-            while (!res.at(i).empty()
+        for (std::size_t i = 0; i < res.size(); ) {
+            if (!res.at(i).empty()
                    && detail::_exists(res.at(i).at(0),
                                       fromfile_prefix_chars())) {
                 std::string file = res.at(i).substr(1);
@@ -15805,6 +15805,8 @@ ArgumentParser::read_args_from_file(
                 }
                 is.close();
                 detail::_move_replace_at(args, res, i);
+            } else {
+                ++i;
             }
         }
     }
