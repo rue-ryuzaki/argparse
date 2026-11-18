@@ -17681,6 +17681,7 @@ utils::_print_parser_bash_completion(
             os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
             if (a.first->action() & (detail::_const_action
                                      | detail::_bool_action
+                                     | argparse::count
                                      | argparse::BooleanOptionalAction)) {
                 os << "      ;;\n";
             } else {
