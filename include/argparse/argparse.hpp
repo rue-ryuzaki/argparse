@@ -6486,11 +6486,10 @@ public:
     formatter_class(
             T const& value)
     {
-        bool tmp = m_formatter->m_color;
-        bool tmp2 = m_formatter->m_no_color;
-        m_formatter = detail::make_shared<T>(value);
-        m_formatter->m_color = tmp;
-        m_formatter->m_no_color = tmp2;
+        detail::shared_ptr<T> tmp = detail::make_shared<T>(value);
+        tmp->m_color = m_formatter->m_color;
+        tmp->m_no_color = m_formatter->m_no_color;
+        m_formatter = ARGPARSE_MOVE(tmp);
         return *this;
     }
 
