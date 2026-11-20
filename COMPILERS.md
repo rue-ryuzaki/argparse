@@ -24,6 +24,7 @@ other compilers: no actual data
  - iostream
  - limits
  - list
+ - locale
  - queue
  - set
  - sstream

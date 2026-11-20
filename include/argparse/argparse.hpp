@@ -211,6 +211,7 @@
 #include <iostream>
 #include <limits>
 #include <list>
+#include <locale>
 #include <queue>
 #include <sstream>
 #include <stdexcept>
@@ -1711,6 +1712,7 @@ _to_string(
         typename enable_if<!is_same<bool, T>::value, bool>::type = true)
 {
     std::ostringstream ss;
+    ss.imbue(std::locale::classic());
     ss << value;
     return ss.str();
 }
@@ -2269,6 +2271,7 @@ _to_type(
 {
     T res = _default_value<T>();
     std::istringstream ss(data);
+    ss.imbue(std::locale::classic());
     ss >> res;
     if (ss.fail() || !ss.eof()) {
         throw
@@ -5075,6 +5078,7 @@ class _Storage
                 && detail::need_operator_in<T>::value) {
             T res{};
             std::istringstream ss(data);
+            ss.imbue(std::locale::classic());
             ss >> res;
             if (ss.fail() || !ss.eof()) {
                 return std::nullopt;
@@ -9191,6 +9195,7 @@ _is_negative_number(
 {
     double value;
     std::istringstream ss(str);
+    ss.imbue(std::locale::classic());
     ss >> value;
     return !ss.fail() && ss.eof() && value < 0;
 }
