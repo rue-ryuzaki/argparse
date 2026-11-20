@@ -124,4 +124,20 @@ TEST_CASE("1. namespace", "[argument_parser]")
         CHECK(args4.get<std::string>("--baz") == baz);
         CHECK(args4.get<std::string>("baz") == baz);
     }
+
+    SECTION("1.3 value with left whitespaces") {
+        argparse::ArgumentParser parser1 = argparse::ArgumentParser().exit_on_error(false);
+
+        parser1.add_argument("-f");
+
+        argparse::Namespace args = parser1.parse_args("-f '100    '");
+
+        CHECK_NOTHROW(args.get<int>("f"));
+        CHECK(args.get<int>("f") == 100);
+
+#ifdef ARGPARSE_HAS_OPTIONAL
+        CHECK(args.try_get<int>("f").has_value());
+        CHECK(args.try_get<int>("f").value() == 100);
+#endif  // ARGPARSE_HAS_OPTIONAL
+    }
 }

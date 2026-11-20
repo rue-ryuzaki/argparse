@@ -1762,6 +1762,10 @@ _split(std::string const& str,
         int32_t maxsplit = -1);
 
 bool
+_only_whitespace_left(
+        std::istringstream& ss);
+
+bool
 _string_to_bool(
         std::string const& str) ARGPARSE_NOEXCEPT;
 
@@ -2273,7 +2277,7 @@ _to_type(
     std::istringstream ss(data);
     ss.imbue(std::locale::classic());
     ss >> res;
-    if (ss.fail() || !ss.eof()) {
+    if (ss.fail() || (!ss.eof() && !_only_whitespace_left(ss))) {
         throw
         TypeError("invalid " + Type::name<T>() + " value: '" + data + "'");
     }
@@ -5080,7 +5084,7 @@ class _Storage
             std::istringstream ss(data);
             ss.imbue(std::locale::classic());
             ss >> res;
-            if (ss.fail() || !ss.eof()) {
+            if (ss.fail() || (!ss.eof() && !detail::_only_whitespace_left(ss))){
                 return std::nullopt;
             }
             return res;
@@ -9458,6 +9462,19 @@ _split_equal(
     } else {
         return _vector(str);
     }
+}
+
+ARGPARSE_INL bool
+_only_whitespace_left(
+        std::istringstream& ss)
+{
+    char c;
+    while (ss.get(c)) {
+        if (!std::isspace(static_cast<unsigned char>(c))) {
+            return false;
+        }
+    }
+    return true;
 }
 
 ARGPARSE_INL bool
