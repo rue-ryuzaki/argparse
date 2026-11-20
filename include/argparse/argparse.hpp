@@ -1710,7 +1710,7 @@ _to_string(
         T const& value,
         typename enable_if<!is_same<bool, T>::value, bool>::type = true)
 {
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << value;
     return ss.str();
 }
@@ -2268,7 +2268,7 @@ _to_type(
                            && need_operator_in<T>::value, bool>::type = true)
 {
     T res = _default_value<T>();
-    std::stringstream ss(data);
+    std::istringstream ss(data);
     ss >> res;
     if (ss.fail() || !ss.eof()) {
         throw
@@ -5074,7 +5074,7 @@ class _Storage
         if constexpr (detail::has_operator_in<T>::value
                 && detail::need_operator_in<T>::value) {
             T res{};
-            std::stringstream ss(data);
+            std::istringstream ss(data);
             ss >> res;
             if (ss.fail() || !ss.eof()) {
                 return std::nullopt;
@@ -8502,7 +8502,7 @@ ARGPARSE_INL bool
 _is_utf8_string(
         std::string const& str)
 {
-    std::stringstream ss;
+    std::ostringstream ss;
     return _utf8_size(str, ss).first;
 }
 
@@ -9190,7 +9190,7 @@ _is_negative_number(
         std::string const& str)
 {
     double value;
-    std::stringstream ss(str);
+    std::istringstream ss(str);
     ss >> value;
     return !ss.fail() && ss.eof() && value < 0;
 }
@@ -10450,7 +10450,7 @@ colorstream::str_u8size() const
 ARGPARSE_INL std::string
 colorstream::colored() const
 {
-    std::stringstream ss;
+    std::ostringstream ss;
     print(ss);
     return ss.str();
 }
@@ -17793,7 +17793,7 @@ utils::_print_parser_zsh_completion(
     os << "  )\n";
     os << "\n";
     if (!operand.empty()) {
-        std::stringstream op;
+        std::ostringstream op;
         for (std::size_t i = 0; i < operand.size(); ++i) {
             pArgument const& arg = operand.at(i);
             op << "    ";
@@ -17873,7 +17873,7 @@ utils::self_test(
     std::string lang = !language.empty() ? language : parser.default_language();
     std::size_t const limit = detail::_def_width - 1;
     char const filler = '-';
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << "cpp-argparse v"
        << ARGPARSE_VERSION_MAJOR << "."
        << ARGPARSE_VERSION_MINOR << "."
@@ -17894,7 +17894,7 @@ ARGPARSE_INL std::string
 utils::format_bash_completion(
         ArgumentParser const& parser)
 {
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << "# bash completion for " << parser.prog() << "\n";
     ss << "# generated with cpp-argparse v"
        << ARGPARSE_VERSION_MAJOR << "."
@@ -17911,7 +17911,7 @@ utils::format_zsh_completion(
         ArgumentParser const& parser)
 {
     char const filler = '-';
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << "#compdef " << parser.prog() << "\n";
     ss << "# " << std::string(detail::_def_width - 3, filler) << "\n";
     ss << "# generated with cpp-argparse v"
@@ -17956,7 +17956,7 @@ ARGPARSE_INL std::string
 utils::format_man_page(
         ArgumentParser const& p)
 {
-    std::stringstream ss;
+    std::ostringstream ss;
     std::string version = detail::_to_upper(p.prog(), true) + " version";
     for (arg_iterator it = p.m_data->m_arguments.begin();
          it != p.m_data->m_arguments.end(); ++it) {
