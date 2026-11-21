@@ -10081,54 +10081,6 @@ _invalid_choice(
             + " (choose from " + _join(choices, ", ", "'") + ")";
 }
 
-ARGPARSE_INL std::string
-_bash_func(
-        std::string const& str)
-{
-    std::string res = str;
-    for (std::size_t i = 0; i < res.size(); ++i) {
-        unsigned char c = static_cast<unsigned char>(res.at(i));
-        if (!std::isalnum(c) && c != '_') {
-            res.at(i) = '_';
-        }
-    }
-    return res;
-}
-
-ARGPARSE_INL std::string
-_zsh_action(
-        std::string const& str)
-{
-    return _replace(str, "'", " ");
-}
-
-ARGPARSE_INL std::string
-_zsh_help(
-        std::string const& str)
-{
-    std::string help = _replace(str, "'", "\\'");
-    _inplace(help, "\"", "\\\"");
-    _inplace(help, "[", "\\[");
-    _inplace(help, "]", "\\]");
-    return _replace(ARGPARSE_MOVE(help), "`", "\\`");
-}
-
-ARGPARSE_INL std::string
-_argument_action(
-        pArgument const& arg,
-        std::string const& metavar,
-        std::size_t num_args)
-{
-    std::string str = ":" + _zsh_action(metavar) + ":" + (
-         arg->choices().empty() ? "_files" : "(" + _join(arg->choices()) + ")");
-    std::string res;
-    res.reserve(str.size() * num_args);
-    for (std::size_t i = 0; i < num_args; ++i) {
-        res += str;
-    }
-    return res;
-}
-
 #ifdef _WIN32
 // -- win_stdout --------------------------------------------------------------
 class win_stdout
@@ -17206,6 +17158,56 @@ ArgumentParser::parse_handle(
 
 // -- utils -------------------------------------------------------------------
 #ifdef ARGPARSE_ENABLE_UTILS
+namespace detail {
+ARGPARSE_INL std::string
+_bash_func(
+        std::string const& str)
+{
+    std::string res = str;
+    for (std::size_t i = 0; i < res.size(); ++i) {
+        unsigned char c = static_cast<unsigned char>(res.at(i));
+        if (!std::isalnum(c) && c != '_') {
+            res.at(i) = '_';
+        }
+    }
+    return res;
+}
+
+ARGPARSE_INL std::string
+_zsh_action(
+        std::string const& str)
+{
+    return _replace(str, "'", " ");
+}
+
+ARGPARSE_INL std::string
+_zsh_help(
+        std::string const& str)
+{
+    std::string help = _replace(str, "'", "\\'");
+    _inplace(help, "\"", "\\\"");
+    _inplace(help, "[", "\\[");
+    _inplace(help, "]", "\\]");
+    return _replace(ARGPARSE_MOVE(help), "`", "\\`");
+}
+
+ARGPARSE_INL std::string
+_argument_action(
+        pArgument const& arg,
+        std::string const& metavar,
+        std::size_t num_args)
+{
+    std::string str = ":" + _zsh_action(metavar) + ":" + (
+         arg->choices().empty() ? "_files" : "(" + _join(arg->choices()) + ")");
+    std::string res;
+    res.reserve(str.size() * num_args);
+    for (std::size_t i = 0; i < num_args; ++i) {
+        res += str;
+    }
+    return res;
+}
+}  // namespace detail
+
 ARGPARSE_INL std::string
 utils::date()
 {
