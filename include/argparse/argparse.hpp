@@ -8055,16 +8055,28 @@ ARGPARSE_EXPORT class utils
             ArgumentParser const* parser,
             std::pair<std::size_t, std::size_t>& diagnostics);
 
-    struct CompletionInfo
+    struct CompgenInfo
     {
-        CompletionInfo()
-            : args(),
-              options()
+        CompgenInfo()
+            : words(),
+              files(false)
         { }
 
         // -- data ------------------------------------------------------------
-        std::string args;
-        std::vector<std::pair<pArgument, std::string> > options;
+        std::string words;
+        bool files;
+    };
+
+    struct CompletionInfo
+    {
+        CompletionInfo()
+            : options(),
+              compgen()
+        { }
+
+        // -- data ------------------------------------------------------------
+        std::vector<std::pair<pArgument, CompgenInfo> > options;
+        CompgenInfo compgen;
     };
 
     static CompletionInfo
@@ -17622,14 +17634,14 @@ utils::_bash_completion_info(
     for (std::size_t i = 0; i < optional.size(); ++i) {
         pArgument const& arg = optional.at(i);
         detail::_insert_to_end(arg->flags(), options);
-        res.options.push_back(std::make_pair(arg, std::string()));
+        res.options.push_back(std::make_pair(arg, CompgenInfo()));
         if (arg->m_nargs != detail::SUPPRESSING
             && (arg->action() & (detail::_store_action | argparse::language))) {
             if (!arg->choices().empty()) {
-                res.options.back().second
+                res.options.back().second.words
                         = " -W \"" + detail::_join(arg->choices()) + "\"";
             } else {
-                res.options.back().second = " -df";
+                res.options.back().second.files = true;
             }
         }
     }
@@ -17640,13 +17652,12 @@ utils::_bash_completion_info(
             options.push_back(options.back() + "A");
         }
     }
-    bool has_fs_args = false;
     for (std::size_t i = 0; i < positional.size(); ++i) {
         pArgument const& arg = positional.at(i);
-        if (!(arg->action() & detail::_store_action)) {
-            continue;
+        if ((arg->action() & detail::_store_action)
+                && arg->m_nargs != detail::SUPPRESSING) {
+            res.compgen.files = true;
         }
-        has_fs_args = has_fs_args || (arg->m_nargs != detail::SUPPRESSING);
     }
     if (parser->has_subparsers()) {
         if (!parser->m_subparsers->m_help.suppress()) {
@@ -17662,11 +17673,8 @@ utils::_bash_completion_info(
             }
         }
     }
-    if (has_fs_args) {
-        res.args += " -df";
-    }
     if (!options.empty()) {
-        res.args += " -W \"" + detail::_join(options) + "\"";
+        res.compgen.words = " -W \"" + detail::_join(options) + "\"";
     }
     return res;
 }
@@ -17712,11 +17720,12 @@ utils::_print_parser_bash_completion(
         os << "    esac\n";
         os << "  done\n";
     }
+    os << "  COMPREPLY=()\n";
     CompletionInfo info = _bash_completion_info(p);
     if (!info.options.empty()) {
         os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
         for (std::size_t j = 0; j < info.options.size(); ++j) {
-            std::pair<pArgument, std::string> const& a = info.options.at(j);
+            std::pair<pArgument, CompgenInfo> const& a = info.options.at(j);
             os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
             if (a.first->action() & (detail::_const_action
                                      | detail::_bool_action
@@ -17724,8 +17733,12 @@ utils::_print_parser_bash_completion(
                                      | argparse::BooleanOptionalAction)) {
                 os << "      ;;\n";
             } else {
-                if (!a.second.empty()) {
-                    os << "      COMPREPLY=($(compgen" << a.second
+                if (!a.second.words.empty()) {
+                    os << "      COMPREPLY+=($(compgen" << a.second.words
+                       << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+                }
+                if (a.second.files) {
+                    os << "      COMPREPLY+=($(compgen -df"
                        << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
                 }
                 os << "      return;;\n";
@@ -17734,8 +17747,12 @@ utils::_print_parser_bash_completion(
         os << "    *);;\n";
         os << "  esac\n";
     }
-    if (!info.args.empty()) {
-        os << "  COMPREPLY=($(compgen" << info.args
+    if (!info.compgen.words.empty()) {
+        os << "  COMPREPLY+=($(compgen" << info.compgen.words
+           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+    }
+    if (info.compgen.files) {
+        os << "  COMPREPLY+=($(compgen -df"
            << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
     }
     os << "  return\n";
