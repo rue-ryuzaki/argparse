@@ -17186,6 +17186,43 @@ _bash_func(
 }
 
 ARGPARSE_INL std::string
+_bash_escape_ansi_c(
+        std::string const& str)
+{
+    std::string res;
+    res.reserve(str.size() + 8);
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        switch (str.at(i)) {
+            case '\\' : res += "\\\\";      break;
+            case '\'' : res += "\\'";       break;
+            case '\n' : res += "\\n";       break;
+            case '\r' : res += "\\r";       break;
+            case '\t' : res += "\\t";       break;
+            default   : res += str.at(i);   break;
+        }
+    }
+    return res;
+}
+
+ARGPARSE_INL std::string
+_bash_join_choices(
+        std::vector<std::string> const& choices)
+{
+    if (choices.empty()) {
+        return "$''";
+    }
+    std::string res = "$'";
+    for (std::size_t i = 0; i < choices.size(); ++i) {
+        if (i != 0) {
+            res += "\\n";
+        }
+        res += _bash_escape_ansi_c(choices.at(i));
+    }
+    res += "'";
+    return res;
+}
+
+ARGPARSE_INL std::string
 _zsh_action(
         std::string const& str)
 {
@@ -17639,7 +17676,7 @@ utils::_bash_completion_info(
             && (arg->action() & (detail::_store_action | argparse::language))) {
             if (!arg->choices().empty()) {
                 res.options.back().second.words
-                        = " -W \"" + detail::_join(arg->choices()) + "\"";
+                        = detail::_bash_join_choices(arg->choices());
             } else {
                 res.options.back().second.files = true;
             }
@@ -17674,7 +17711,7 @@ utils::_bash_completion_info(
         }
     }
     if (!options.empty()) {
-        res.compgen.words = " -W \"" + detail::_join(options) + "\"";
+        res.compgen.words = detail::_bash_join_choices(options);
     }
     return res;
 }
@@ -17720,10 +17757,12 @@ utils::_print_parser_bash_completion(
         os << "    esac\n";
         os << "  done\n";
     }
+    os << "  local prev=${COMP_WORDS[${COMP_CWORD}-1]}\n";
+    os << "  local cur=${COMP_WORDS[${COMP_CWORD}]}\n";
     os << "  COMPREPLY=()\n";
     CompletionInfo info = _bash_completion_info(p);
     if (!info.options.empty()) {
-        os << "  case \"${COMP_WORDS[${COMP_CWORD}-1]}\" in\n";
+        os << "  case \"${prev}\" in\n";
         for (std::size_t j = 0; j < info.options.size(); ++j) {
             std::pair<pArgument, CompgenInfo> const& a = info.options.at(j);
             os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
@@ -17734,12 +17773,11 @@ utils::_print_parser_bash_completion(
                 os << "      ;;\n";
             } else {
                 if (!a.second.words.empty()) {
-                    os << "      COMPREPLY+=($(compgen" << a.second.words
-                       << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+                    os << "      _cpp_argparse_compgen_words \"${cur}\" "
+                       << a.second.words << " \"\"\n";
                 }
                 if (a.second.files) {
-                    os << "      COMPREPLY+=($(compgen -df"
-                       << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+                    os << "      COMPREPLY+=($(compgen -df -- \"${cur}\"))\n";
                 }
                 os << "      return;;\n";
             }
@@ -17748,12 +17786,11 @@ utils::_print_parser_bash_completion(
         os << "  esac\n";
     }
     if (!info.compgen.words.empty()) {
-        os << "  COMPREPLY+=($(compgen" << info.compgen.words
-           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+        os << "      _cpp_argparse_compgen_words \"${cur}\" "
+           << info.compgen.words << " \"\"\n";
     }
     if (info.compgen.files) {
-        os << "  COMPREPLY+=($(compgen -df"
-           << " -- \"${COMP_WORDS[${COMP_CWORD}]}\"))\n";
+        os << "  COMPREPLY+=($(compgen -df -- \"${cur}\"))\n";
     }
     os << "  return\n";
     os << "}\n\n";
@@ -17941,6 +17978,26 @@ utils::format_bash_completion(
        << ARGPARSE_VERSION_MAJOR << "."
        << ARGPARSE_VERSION_MINOR << "."
        << ARGPARSE_VERSION_PATCH << "\n\n";
+    ss << "_cpp_argparse_compgen_words()\n";
+    ss << "{\n";
+    ss << "  local cur=\"$1\"\n";
+    ss << "  local words=\"$2\"\n";
+    ss << "  local prefix=\"$3\"\n";
+    ss << "  local unescaped_cur=\"${cur}\"\n";
+    ss << "  if [[ \"${cur}\" == *\\\\* ]]; then\n";
+    ss << "    eval \"unescaped_cur=${cur}\" 2>/dev/null\n";
+    ss << "  fi\n";
+    ss << "  local item\n";
+    ss << "\n";
+    ss << "  while IFS= read -r item; do\n";
+    ss << "    [[ -z \"${item}\" ]] && continue\n";
+    ss << "    if [[ \"${item}\" == \"${unescaped_cur}\"* ]]; then\n";
+    ss << "      local escaped\n";
+    ss << "      printf -v escaped \"%q\" \"${item}\"\n";
+    ss << "      COMPREPLY+=(\"${prefix}${escaped}\")\n";
+    ss << "    fi\n";
+    ss << "  done <<< \"${words}\"\n";
+    ss << "}\n\n";
     std::string function = detail::_bash_func(parser.prog());
     _print_parser_bash_completion(ss, &parser, function, true);
     ss << "complete -F _" << function << " " << parser.prog();
