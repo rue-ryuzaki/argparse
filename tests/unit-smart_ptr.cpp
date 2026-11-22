@@ -21,6 +21,10 @@ struct Data
 
 struct Base
 {
+    Base()
+        : x()
+    { }
+
     virtual ~Base() {}
 
     int x;
@@ -28,6 +32,11 @@ struct Base
 
 struct Derived : virtual public Base
 {
+    Derived()
+        : Base(),
+          y()
+    { }
+
     int y;
 };
 
