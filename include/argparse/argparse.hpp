@@ -17777,8 +17777,9 @@ utils::_print_parser_bash_completion(
                        << a.second.words << " \"\"\n";
                 }
                 if (a.second.files) {
-                    os << "      COMPREPLY+=($(compgen -df -- \"${cur}\"))\n";
+                    os << "      _cpp_argparse_compgen_files \"${cur}\" \"\"\n";
                 }
+                os << "      _cpp_argparse_compopt\n";
                 os << "      return;;\n";
             }
         }
@@ -17790,8 +17791,9 @@ utils::_print_parser_bash_completion(
            << info.compgen.words << " \"\"\n";
     }
     if (info.compgen.files) {
-        os << "  COMPREPLY+=($(compgen -df -- \"${cur}\"))\n";
+        os << "  _cpp_argparse_compgen_files \"${cur}\" \"\"\n";
     }
+    os << "  _cpp_argparse_compopt\n";
     os << "  return\n";
     os << "}\n\n";
 }
@@ -17997,6 +17999,38 @@ utils::format_bash_completion(
     ss << "      COMPREPLY+=(\"${prefix}${escaped}\")\n";
     ss << "    fi\n";
     ss << "  done <<< \"${words}\"\n";
+    ss << "}\n\n";
+    ss << "_cpp_argparse_compgen_files()\n";
+    ss << "{\n";
+    ss << "  local cur=\"$1\"\n";
+    ss << "  local prefix=\"$2\"\n";
+    ss << "  local unescaped_cur=\"${cur}\"\n";
+    ss << "  if [[ \"${cur}\" == *\\\\* ]]; then\n";
+    ss << "    eval \"unescaped_cur=${cur}\" 2>/dev/null\n";
+    ss << "  fi\n";
+    ss << "  local IFS=$\'\\n\'\n";
+    ss << "  set -f\n";
+    ss << "  local files=($(compgen -f -- \"${unescaped_cur}\"))\n";
+    ss << "  set +f\n";
+    ss << "\n";
+    ss << "  for f in \"${files[@]}\"; do\n";
+    ss << "    [[ -z \"${f}\" ]] && continue\n";
+    ss << "    local escaped=$(printf \"%q\" \"${f}\")\n";
+    ss << "    if [[ -d \"${f}\" ]]; then\n";
+    ss << "      COMPREPLY+=(\"${prefix}${escaped}/\")\n";
+    ss << "    else\n";
+    ss << "      COMPREPLY+=(\"${prefix}${escaped}\")\n";
+    ss << "    fi\n";
+    ss << "  done\n";
+    ss << "}\n\n";
+    ss << "_cpp_argparse_compopt()\n";
+    ss << "{\n";
+    ss << "  if [[ ${#COMPREPLY[@]} -eq 1 ]]; then\n";
+    ss << "    if [[ \"${COMPREPLY[0]}\" == *= || \"${COMPREPLY[0]}\" == */ ]];"
+       << " then\n";
+    ss << "      compopt -o nospace 2>/dev/null\n";
+    ss << "    fi\n";
+    ss << "  fi\n";
     ss << "}\n\n";
     std::string function = detail::_bash_func(parser.prog());
     _print_parser_bash_completion(ss, &parser, function, true);
