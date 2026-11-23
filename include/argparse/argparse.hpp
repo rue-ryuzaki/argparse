@@ -17706,7 +17706,11 @@ utils::_bash_completion_info(
         pArgument const& arg = positional.at(i);
         if ((arg->action() & detail::_store_action)
                 && arg->m_nargs != detail::SUPPRESSING) {
-            res.compgen.files = true;
+            if (!arg->choices().empty()) {
+                detail::_insert_to_end(arg->choices(), options);
+            } else {
+                res.compgen.files = true;
+            }
         }
     }
     if (parser->has_subparsers()) {
