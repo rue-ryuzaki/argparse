@@ -1754,7 +1754,8 @@ _replace(
 std::string
 _join(std::vector<std::string> const& values,
         std::string const& separator = _spaces,
-        std::string const& quotes = std::string());
+        std::string const& quotes = std::string(),
+        std::string const& suffix = std::string());
 
 std::vector<std::string>
 _split(std::string const& str,
@@ -8070,11 +8071,13 @@ ARGPARSE_EXPORT class utils
     struct CompletionInfo
     {
         CompletionInfo()
-            : options(),
+            : operands(),
+              options(),
               compgen()
         { }
 
         // -- data ------------------------------------------------------------
+        std::vector<std::pair<pArgument, CompgenInfo> > operands;
         std::vector<std::pair<pArgument, CompgenInfo> > options;
         CompgenInfo compgen;
     };
@@ -9241,14 +9244,15 @@ _not_optional(
 ARGPARSE_INL std::string
 _join(std::vector<std::string> const& values,
         std::string const& separator,
-        std::string const& quotes)
+        std::string const& quotes,
+        std::string const& suffix)
 {
     if (values.empty()) {
         return std::string();
     }
-    std::string res = quotes + values.front() + quotes;
+    std::string res = quotes + values.front() + suffix + quotes;
     for (std::size_t i = 1; i < values.size(); ++i) {
-        res += separator + quotes + values.at(i) + quotes;
+        res += separator + quotes + values.at(i) + suffix + quotes;
     }
     return res;
 }
@@ -17680,13 +17684,22 @@ utils::_bash_completion_info(
             } else {
                 res.options.back().second.files = true;
             }
+            if (arg->m_num_args == 1) {
+                res.operands.push_back(res.options.back());
+            }
         }
     }
     for (std::size_t i = 0; i < operand.size(); ++i) {
         pArgument const& arg = operand.at(i);
         for (std::size_t j = 0; j < arg->flags().size(); ++j) {
             options.push_back(arg->flags().at(j) + "=");
-            options.push_back(options.back() + "A");
+        }
+        res.operands.push_back(std::make_pair(arg, CompgenInfo()));
+        if (!arg->choices().empty()) {
+            res.operands.back().second.words
+                    = detail::_bash_join_choices(arg->choices());
+        } else {
+            res.operands.back().second.files = true;
         }
     }
     for (std::size_t i = 0; i < positional.size(); ++i) {
@@ -17735,6 +17748,7 @@ utils::_print_parser_bash_completion(
     }
     os << "_" << prog << "()\n";
     os << "{\n";
+    os << "  # commands\n";
     if (p->has_subparsers() && !p->m_subparsers->is_suppress()) {
         if (is_root) {
             os << "  for (( i=1; i < ${COMP_CWORD}; ((++i)) )); do\n";
@@ -17757,37 +17771,63 @@ utils::_print_parser_bash_completion(
         os << "    esac\n";
         os << "  done\n";
     }
-    os << "  local prev=${COMP_WORDS[${COMP_CWORD}-1]}\n";
-    os << "  local cur=${COMP_WORDS[${COMP_CWORD}]}\n";
+    os << "  local prev cur\n";
+    os << "  _cpp_argparse_init_comp\n";
     os << "  COMPREPLY=()\n";
     CompletionInfo info = _bash_completion_info(p);
-    if (!info.options.empty()) {
-        os << "  case \"${prev}\" in\n";
-        for (std::size_t j = 0; j < info.options.size(); ++j) {
-            std::pair<pArgument, CompgenInfo> const& a = info.options.at(j);
-            os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
-            if (a.first->action() & (detail::_const_action
-                                     | detail::_bool_action
-                                     | argparse::count
-                                     | argparse::BooleanOptionalAction)) {
-                os << "      ;;\n";
-            } else {
-                if (!a.second.words.empty()) {
-                    os << "      _cpp_argparse_compgen_words \"${cur}\" "
-                       << a.second.words << " \"\"\n";
-                }
-                if (a.second.files) {
-                    os << "      _cpp_argparse_compgen_files \"${cur}\" \"\"\n";
-                }
-                os << "      _cpp_argparse_compopt\n";
-                os << "      return;;\n";
-            }
+    os << "  if [[ \"${cur}\" == *=* ]]; then\n";
+    os << "    local eq_key=\"${cur%%=*}=\"\n";
+    os << "    local eq_val=\"${cur#*=}\"\n";
+    os << "    local eq_prefix=\"\"\n";
+    os << "    if [[ \"${COMP_WORDBREAKS}\" != *=* ]]; then\n";
+    os << "      eq_prefix=\"${eq_key}\"\n";
+    os << "    fi\n";
+    os << "    # operands 'KEY=VALUE' or options '--FLAG=VALUE'\n";
+    os << "    case \"${eq_key}\" in\n";
+    for (std::size_t j = 0; j < info.operands.size(); ++j) {
+        std::pair<pArgument, CompgenInfo> const& a = info.operands.at(j);
+        os << "      " << detail::_join(a.first->flags(), "|", "\"", "=")
+           << ")\n";
+        if (!a.second.words.empty()) {
+            os << "        _cpp_argparse_compgen_words \"${eq_val}\" "
+               << a.second.words << " \"${eq_prefix}\"\n";
         }
-        os << "    *);;\n";
-        os << "  esac\n";
+        if (a.second.files) {
+            os << "        _cpp_argparse_compgen_files \"${eq_val}\" "
+               << "\"${eq_prefix}\"\n";
+        }
+        os << "        _cpp_argparse_compopt\n";
+        os << "        return;;\n";
     }
+    os << "      *)return;;\n";
+    os << "    esac\n";
+    os << "  fi\n";
+    os << "  # options\n";
+    os << "  case \"${prev}\" in\n";
+    for (std::size_t j = 0; j < info.options.size(); ++j) {
+        std::pair<pArgument, CompgenInfo> const& a = info.options.at(j);
+        os << "    " << detail::_join(a.first->flags(), "|", "\"") << ")\n";
+        if (a.first->action() & (detail::_const_action
+                                 | detail::_bool_action
+                                 | argparse::count
+                                 | argparse::BooleanOptionalAction)) {
+            os << "      ;;\n";
+        } else {
+            if (!a.second.words.empty()) {
+                os << "      _cpp_argparse_compgen_words \"${cur}\" "
+                   << a.second.words << " \"\"\n";
+            }
+            if (a.second.files) {
+                os << "      _cpp_argparse_compgen_files \"${cur}\" \"\"\n";
+            }
+            os << "      _cpp_argparse_compopt\n";
+            os << "      return;;\n";
+        }
+    }
+    os << "    *);;\n";
+    os << "  esac\n";
     if (!info.compgen.words.empty()) {
-        os << "      _cpp_argparse_compgen_words \"${cur}\" "
+        os << "  _cpp_argparse_compgen_words \"${cur}\" "
            << info.compgen.words << " \"\"\n";
     }
     if (info.compgen.files) {
@@ -17980,6 +18020,42 @@ utils::format_bash_completion(
        << ARGPARSE_VERSION_MAJOR << "."
        << ARGPARSE_VERSION_MINOR << "."
        << ARGPARSE_VERSION_PATCH << "\n\n";
+    ss << "_cpp_argparse_init_comp()\n";
+    ss << "{\n";
+    ss << "  local line=\"${COMP_LINE:0:COMP_POINT}\"\n";
+    ss << "  local -a words=()\n";
+    ss << "  local i=0\n";
+    ss << "  local current=\"\"\n";
+    ss << "  local pos=0\n";
+    ss << "\n";
+    ss << "  while (( i <= COMP_CWORD )); do\n";
+    ss << "    local w=\"${COMP_WORDS[${i}]}\"\n";
+    ss << "    local rest=\"${line:${pos}}\"\n";
+    ss << "    local trimmed=\"${rest#\"${rest%%[![:space:]]*}\"}\"\n";
+    ss << "    local skipped=$(( ${#rest} - ${#trimmed} ))\n";
+    ss << "\n";
+    ss << "    if (( i == 0 )); then\n";
+    ss << "      current=\"${w}\"\n";
+    ss << "    elif (( skipped == 0 )); then\n";
+    ss << "      current+=\"${w}\"\n";
+    ss << "    else\n";
+    ss << "      words+=(\"${current}\")\n";
+    ss << "      current=\"${w}\"\n";
+    ss << "    fi\n";
+    ss << "\n";
+    ss << "    pos=$(( pos + skipped + ${#w} ))\n";
+    ss << "    (( ++i ))\n";
+    ss << "  done\n";
+    ss << "  words+=(\"${current}\")\n";
+    ss << "\n";
+    ss << "  local count=${#words[@]}\n";
+    ss << "  cur=\"${words[$((count - 1))]}\"\n";
+    ss << "  if (( count >= 2 )); then\n";
+    ss << "    prev=\"${words[$((count - 2))]}\"\n";
+    ss << "  else\n";
+    ss << "    prev=\"\"\n";
+    ss << "  fi\n";
+    ss << "}\n\n";
     ss << "_cpp_argparse_compgen_words()\n";
     ss << "{\n";
     ss << "  local cur=\"$1\"\n";
