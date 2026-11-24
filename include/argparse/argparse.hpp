@@ -551,6 +551,15 @@ _NARGS_COMBINED = NARGS_NUM | ONE_OR_MORE | ZERO_OR_ONE | ZERO_OR_MORE;
 typedef int8_t _yes;
 typedef int16_t _no;
 
+template <class T>
+struct holder
+{
+    static const T instance;
+};
+
+template <class T>
+const T holder<T>::instance;
+
 template <class T, T>
 struct func_tag { };
 
@@ -2624,7 +2633,6 @@ private:
 /**
  *  @brief Help message formatter which retains any formatting in descriptions.
  */
-ARGPARSE_EXPORT
 class _RawDescriptionHelpFormatter : virtual public HelpFormatter
 {
 public:
@@ -2652,12 +2660,11 @@ protected:
     _split_lines_raw(
             text_type const& text,
             std::size_t width) const;
-} ARGPARSE_INLINE_VARIABLE RawDescriptionHelpFormatter;
+};
 
 /**
  *  @brief Help message formatter which retains formatting of all help text.
  */
-ARGPARSE_EXPORT
 class _RawTextHelpFormatter : virtual public _RawDescriptionHelpFormatter
 {
 public:
@@ -2672,13 +2679,12 @@ public:
     _split_lines(
             text_type const& text,
             std::size_t width) const ARGPARSE_OVERRIDE;
-} ARGPARSE_INLINE_VARIABLE RawTextHelpFormatter;
+};
 
 /**
  *  @brief Help message formatter which adds default values
  *  to the argument help.
  */
-ARGPARSE_EXPORT
 class _ArgumentDefaultsHelpFormatter : virtual public HelpFormatter
 {
 public:
@@ -2688,13 +2694,12 @@ public:
     _get_help_string(
             Argument const* action,
             std::string const& lang) const ARGPARSE_OVERRIDE;
-} ARGPARSE_INLINE_VARIABLE ArgumentDefaultsHelpFormatter;
+};
 
 /**
  *  @brief Help message formatter that uses the argument 'type' as the default
  *  metavar value (instead of the argument 'dest').
  */
-ARGPARSE_EXPORT
 class _MetavarTypeHelpFormatter : virtual public HelpFormatter
 {
 public:
@@ -2707,7 +2712,37 @@ public:
     std::string
     _get_default_metavar_for_positional(
             Argument const* action) const ARGPARSE_OVERRIDE;
-} ARGPARSE_INLINE_VARIABLE MetavarTypeHelpFormatter;
+};
+
+namespace {
+/**
+ *  @brief An instance of RawDescriptionHelpFormatter.
+ */
+ARGPARSE_EXPORT
+_RawDescriptionHelpFormatter const& RawDescriptionHelpFormatter
+    = detail::holder<_RawDescriptionHelpFormatter>::instance;
+
+/**
+ *  @brief An instance of RawTextHelpFormatter.
+ */
+ARGPARSE_EXPORT
+_RawTextHelpFormatter const& RawTextHelpFormatter
+    = detail::holder<_RawTextHelpFormatter>::instance;
+
+/**
+ *  @brief An instance of ArgumentDefaultsHelpFormatter.
+ */
+ARGPARSE_EXPORT
+_ArgumentDefaultsHelpFormatter const& ArgumentDefaultsHelpFormatter
+    = detail::holder<_ArgumentDefaultsHelpFormatter>::instance;
+
+/**
+ *  @brief An instance of MetavarTypeHelpFormatter.
+ */
+ARGPARSE_EXPORT
+_MetavarTypeHelpFormatter const& MetavarTypeHelpFormatter
+    = detail::holder<_MetavarTypeHelpFormatter>::instance;
+}  // namespace
 
 // -- standAlone functions ----------------------------------------------------
 /**
