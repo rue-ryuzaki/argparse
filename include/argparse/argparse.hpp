@@ -554,11 +554,11 @@ typedef int16_t _no;
 template <class T>
 struct holder
 {
-    static const T instance;
+    static T const instance;
 };
 
 template <class T>
-const T holder<T>::instance;
+T const holder<T>::instance;
 
 template <class T, T>
 struct func_tag { };
@@ -8455,6 +8455,16 @@ _exists(typename T::value_type const& value,
     return it != container.end();
 }
 
+template <class T>
+void
+_check_not_empty(
+        T const& container)
+{
+    if (container.empty()) {
+        throw IndexError("string index out of range");
+    }
+}
+
 // -- utf8 support ------------------------------------------------------------
 // since v1.7.0
 typedef uint32_t codepoint;
@@ -9187,6 +9197,7 @@ ARGPARSE_INL std::string
 _flag_name(
         std::string const& str)
 {
+    _check_not_empty(str);
     char prefix = str.at(0);
     std::string::const_iterator it = str.begin();
     for ( ; it != str.end() && *it == prefix; ++it) {
@@ -9200,6 +9211,7 @@ ARGPARSE_INL std::string_view
 _flag_name(
         std::string_view str)
 {
+    _check_not_empty(str);
     char prefix = str.front();
     auto it = str.begin();
     for ( ; it != str.end() && *it == prefix; ++it) {
@@ -9845,15 +9857,6 @@ _check_argument_type(
 }
 
 ARGPARSE_INL void
-_check_flag_name(
-        std::string const& flag)
-{
-    if (flag.empty()) {
-        throw IndexError("string index out of range");
-    }
-}
-
-ARGPARSE_INL void
 _update_flag_name_func(
         std::string const& flag,
         std::string& flag_name,
@@ -9890,7 +9893,7 @@ _update_flag_name(
     for (std::size_t i = 1; i < flags.size(); ++i) {
         // check arguments
         std::string& flag = flags.at(i);
-        _check_flag_name(flag);
+        _check_not_empty(flag);
         if (!_exists(flag.at(0), prefix_chars)) {
             // no positional or operand arguments with optional flags
             throw ValueError("invalid option string " + flag + ": must start "
@@ -12671,7 +12674,7 @@ _ArgumentData::create_argument(
     }
     flags.front() = detail::_trim_copy(flags.front());
     std::string flag = flags.front();
-    detail::_check_flag_name(flag);
+    detail::_check_not_empty(flag);
     std::size_t prefixes = 0;
     Argument::Type type = Argument::Positional;
     if (detail::_exists(flag.at(0), prefix_chars)) {
@@ -12679,7 +12682,7 @@ _ArgumentData::create_argument(
     } else if (detail::_ends_with(flag, detail::_equals)) {
         flags.front().resize(flags.front().size() - 1);
         flag = flags.front();
-        detail::_check_flag_name(flag);
+        detail::_check_not_empty(flag);
         type = Argument::Operand;
     }
     detail::_update_flag_name(flags, prefix_chars, flag, prefixes,
@@ -12710,14 +12713,14 @@ _ArgumentData::validate_argument(
         arg.m_name = arg.m_dest.front();
     } else {
         arg.m_name = flags.front();
-        detail::_check_flag_name(arg.m_name);
+        detail::_check_not_empty(arg.m_name);
         std::size_t prefixes = 0;
         if (detail::_exists(arg.m_name.at(0), prefix_chars)) {
             arg.m_type = Argument::Optional;
         } else if (detail::_ends_with(arg.m_name, detail::_equals)) {
             flags.front().resize(flags.front().size() - 1);
             arg.m_name = flags.front();
-            detail::_check_flag_name(arg.m_name);
+            detail::_check_not_empty(arg.m_name);
             arg.m_type = Argument::Operand;
             if (!arg.m_required.has_value()) {
                 arg.m_required.reset(true);
